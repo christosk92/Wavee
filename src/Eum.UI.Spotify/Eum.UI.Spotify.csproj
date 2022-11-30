@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\WinuiTest3\src\Eum.UI.Desktop\Eum.UI.csproj" />
+    <ProjectReference Include="..\..\src\Eum.Connections.Spotify\Eum.Connections.Spotify.csproj" />
+  </ItemGroup>
+
+</Project>

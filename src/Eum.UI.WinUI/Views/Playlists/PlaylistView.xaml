@@ -1,0 +1,450 @@
+﻿<!-- Copyright (c) Microsoft Corporation. All rights reserved. -->
+<!-- Licensed under the MIT License. See LICENSE in the project root for license information. -->
+
+<UserControl
+    x:Class="Eum.UI.WinUI.Views.Playlists.PlaylistView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:Eum.UI.WinUI.Views.Playlists"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:ui="using:CommunityToolkit.WinUI.UI"
+    xmlns:animations="using:CommunityToolkit.WinUI.UI.Animations"
+    xmlns:media="using:CommunityToolkit.WinUI.UI.Media"
+    xmlns:controls="using:Eum.UI.WinUI.Controls"
+    xmlns:playlists="using:Eum.UI.ViewModels.Playlists"
+    mc:Ignorable="d">
+    <UserControl.Transitions>
+        <TransitionCollection>
+            <EntranceThemeTransition />
+        </TransitionCollection>
+    </UserControl.Transitions>
+    <UserControl.Resources>
+        <Style x:Key="TransparentTextBox" TargetType="TextBox">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Grid x:Name="Grd">
+                            <Grid.Resources>
+                                <Style x:Name="DeleteButtonStyle" TargetType="Button">
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="Button">
+                                                <Grid x:Name="ButtonLayoutGrid" BorderBrush="{ThemeResource TextBoxButtonBorderThemeBrush}"
+                                                      BorderThickness="{TemplateBinding BorderThickness}"
+                                                      Background="{ThemeResource TextBoxButtonBackgroundThemeBrush}"
+                                                >
+                                                    <VisualStateManager.VisualStateGroups>
+                                                        <VisualStateGroup x:Name="CommonStates">
+                                                            <VisualState x:Name="Normal"/>
+                                                            <VisualState x:Name="PointerOver">
+                                                                <Storyboard>
+                                                                    <ObjectAnimationUsingKeyFrames Storyboard.TargetName="GlyphElement" Storyboard.TargetProperty="Foreground">
+                                                                        <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource SystemControlHighlightAccentBrush}"/>
+                                                                    </ObjectAnimationUsingKeyFrames>
+                                                                </Storyboard>
+                                                            </VisualState>
+                                                            <VisualState x:Name="Pressed">
+                                                                <Storyboard>
+                                                                    <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ButtonLayoutGrid" Storyboard.TargetProperty="Background">
+                                                                        <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource SystemControlHighlightAccentBrush}"/>
+                                                                    </ObjectAnimationUsingKeyFrames>
+                                                                    <ObjectAnimationUsingKeyFrames Storyboard.TargetName="GlyphElement" Storyboard.TargetProperty="Foreground">
+                                                                        <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource SystemControlHighlightAltChromeWhiteBrush}"/>
+                                                                    </ObjectAnimationUsingKeyFrames>
+                                                                </Storyboard>
+                                                            </VisualState>
+                                                            <VisualState x:Name="Disabled">
+                                                                <Storyboard>
+                                                                    <DoubleAnimation Storyboard.TargetName="ButtonLayoutGrid" Storyboard.TargetProperty="Opacity" To="0" Duration="0"/>
+                                                                </Storyboard>
+                                                            </VisualState>
+                                                        </VisualStateGroup>
+                                                    </VisualStateManager.VisualStateGroups>
+
+                                                    <TextBlock x:Name="GlyphElement"
+                                                       Foreground="{ThemeResource SystemControlForegroundChromeBlackMediumBrush}"
+                                                       VerticalAlignment="Center"
+                                                       HorizontalAlignment="Center"
+                                                       FontStyle="Normal"
+                                                       FontSize="12"
+                                                       Text="&#xE10A;"
+                                                       FontFamily="{ThemeResource SymbolThemeFontFamily}"
+                                                       AutomationProperties.AccessibilityView="Raw"
+                                                       />
+                                                </Grid>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </Grid.Resources>
+                            <VisualStateManager.VisualStateGroups>
+                                <VisualStateGroup x:Name="CommonStates">
+                                    <VisualState x:Name="Normal"/>
+                                    <VisualState x:Name="PointerOver"/>
+                                    <VisualState x:Name="Focused">
+                                        <Storyboard>
+                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetName="BorderElement" Storyboard.TargetProperty="Padding">
+                                                <DiscreteObjectKeyFrame KeyTime="0" Value="8"/>
+                                            </ObjectAnimationUsingKeyFrames>
+                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetName="BorderElement" Storyboard.TargetProperty="BorderBrush">
+                                                <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource CardStrokeColorDefaultBrush}"/>
+                                            </ObjectAnimationUsingKeyFrames>
+                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetName="BorderElement" Storyboard.TargetProperty="Background">
+                                                <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource LayerFillColorDefaultBrush}"/>
+                                            </ObjectAnimationUsingKeyFrames>
+                                        </Storyboard>
+                                    </VisualState>
+                                    <VisualState x:Name="Disabled"/>
+                                </VisualStateGroup>
+                                <VisualStateGroup x:Name="ButtonStates">
+                                    <VisualState x:Name="ButtonVisible">
+                                        <Storyboard>
+                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetName="DeleteButton" Storyboard.TargetProperty="Visibility">
+                                                <DiscreteObjectKeyFrame KeyTime="0">
+                                                    <DiscreteObjectKeyFrame.Value>
+                                                        <Visibility>Visible</Visibility>
+                                                    </DiscreteObjectKeyFrame.Value>
+                                                </DiscreteObjectKeyFrame>
+                                            </ObjectAnimationUsingKeyFrames>
+                                        </Storyboard>
+                                    </VisualState>
+                                    <VisualState x:Name="ButtonCollapsed"/>
+                                </VisualStateGroup>
+                            </VisualStateManager.VisualStateGroups>
+
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+
+                            <Border x:Name="BackgroundElement"
+                            Grid.Row="1"
+                            Background="{TemplateBinding Background}"
+                            Margin="{TemplateBinding BorderThickness}"
+                            Opacity="{ThemeResource TextControlBackgroundRestOpacity}"
+                            Grid.ColumnSpan="2"
+                            Grid.RowSpan="1"
+                            />
+                            <Border x:Name="BorderElement"
+                            Grid.Row="1" CornerRadius="8"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            Grid.ColumnSpan="2"
+                            Grid.RowSpan="1"
+                            />
+                            <ContentPresenter x:Name="HeaderContentPresenter"
+                                      x:DeferLoadStrategy="Lazy"
+                                      Visibility="Collapsed"
+                                      Grid.Row="0"
+                                      Foreground="{ThemeResource SystemControlForegroundBaseHighBrush}"
+                                      Margin="0,0,0,8"
+                                      Grid.ColumnSpan="2"
+                                      Content="{TemplateBinding Header}"
+                                      ContentTemplate="{TemplateBinding HeaderTemplate}"
+                                      FontWeight="Normal"
+                                      />
+                            <ScrollViewer x:Name="ContentElement"
+                                  Grid.Row="1"
+                                  HorizontalScrollMode="{TemplateBinding ScrollViewer.HorizontalScrollMode}"
+                                  HorizontalScrollBarVisibility="{TemplateBinding ScrollViewer.HorizontalScrollBarVisibility}"
+                                  VerticalScrollMode="{TemplateBinding ScrollViewer.VerticalScrollMode}"
+                                  VerticalScrollBarVisibility="{TemplateBinding ScrollViewer.VerticalScrollBarVisibility}"
+                                  IsHorizontalRailEnabled="{TemplateBinding ScrollViewer.IsHorizontalRailEnabled}"
+                                  IsVerticalRailEnabled="{TemplateBinding ScrollViewer.IsVerticalRailEnabled}"
+                                  IsDeferredScrollingEnabled="{TemplateBinding ScrollViewer.IsDeferredScrollingEnabled}"
+                                  Margin="{TemplateBinding BorderThickness}"
+                                  Padding="{TemplateBinding Padding}"
+                                  IsTabStop="False"
+                                  AutomationProperties.AccessibilityView="Raw"
+                                  ZoomMode="Disabled"
+                                  />
+                            <ContentControl x:Name="PlaceholderTextContentPresenter"
+                                    Grid.Row="1"
+                                    Foreground="{ThemeResource SystemControlPageTextBaseMediumBrush}"
+                                    Margin="{TemplateBinding BorderThickness}"
+                                    Padding="{TemplateBinding Padding}"
+                                    IsTabStop="False"
+                                    Grid.ColumnSpan="2"
+                                    Content="{TemplateBinding PlaceholderText}"
+                                    IsHitTestVisible="False"
+                                    />
+                            <Button x:Name="DeleteButton"
+                            Grid.Row="1"
+                            Style="{StaticResource DeleteButtonStyle}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            Margin="{ThemeResource HelperButtonThemePadding}"
+                            IsTabStop="False"
+                            Grid.Column="1"
+                            Visibility="Collapsed"
+                            FontSize="{TemplateBinding FontSize}"
+                            MinWidth="34"
+                            VerticalAlignment="Stretch"
+                            />
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <media:AttachedCardShadow
+            x:Key="LightShadowBottomOffset"
+            BlurRadius="8"
+            CornerRadius="8"
+            Opacity=".075"
+            Offset="0,4,0" />
+
+
+        <DataTemplate x:Key="PlaylistTrackTemplate" x:DataType="playlists:PlaylistTrackViewModel">
+            <controls:PlaylistTrackView ViewModel="{x:Bind }"/>
+        </DataTemplate>
+    </UserControl.Resources>
+    <Grid>
+        <ListView
+            ui:ScrollViewerExtensions.HorizontalScrollBarMargin="0,0,-56,0"
+            ItemTemplate="{StaticResource PlaylistTrackTemplate}"
+            Padding="56,44,56,16"
+            ItemsSource="{x:Bind ViewModel.Tracks}"
+            AllowDrop="True" Drop="TrackList_OnDrop" DragOver="TrackList_DragOver">
+            <ListView.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <ItemsStackPanel ItemsUpdatingScrollMode="KeepScrollOffset"/>
+                </ItemsPanelTemplate>
+            </ListView.ItemsPanel>
+            <ListView.Header>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <Border
+                    BorderThickness="1"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    Height="250"
+
+                        x:DefaultBindMode="OneWay"
+                        CornerRadius="8">
+                        <Grid>
+                            <Rectangle
+                                HorizontalAlignment="Stretch"
+                                VerticalAlignment="Stretch"
+                                Stretch="Fill">
+                                <Rectangle.Fill>
+                                    <controls:BlurredImageBrush
+                                    x:Name="Br" Blur="80"
+                                    x:FieldModifier="public"
+                                    Source="{x:Bind ViewModel.Playlist.ImagePath, Mode=OneWay}"
+                                    Stretch="Fill" />
+                                </Rectangle.Fill>
+                            </Rectangle>
+                            <Grid Padding="24,0" ColumnSpacing="24">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="192" />
+                                    <ColumnDefinition Width="1*" />
+                                </Grid.ColumnDefinitions>
+
+                                <Rectangle Grid.ColumnSpan="2"
+                                       Margin="-24,0"
+                                       Opacity=".4"
+                                       Fill="{ThemeResource ApplicationPageBackgroundThemeBrush}"/>
+
+                                <Border
+                                    Width="192"
+                                    Height="192"
+                                    ui:Effects.Shadow="{StaticResource LightShadowBottomOffset}">
+                                    <Grid>
+                                        <Border animations:Connected.Key="PlaylistArt"
+                                                x:Name="PlaylistArtBorder"
+                                                CornerRadius="8">
+                                            <Border.Background>
+                                                <ImageBrush Stretch="UniformToFill">
+                                                    <ImageBrush.ImageSource>
+                                                        <BitmapImage
+                                                            DecodePixelHeight="192"
+                                                            DecodePixelType="Logical"
+                                                            DecodePixelWidth="192"
+                                                            UriSource="{x:Bind ViewModel.Playlist.ImagePath, Mode=OneWay}" />
+                                                    </ImageBrush.ImageSource>
+                                                </ImageBrush>
+                                            </Border.Background>
+                                        </Border>
+                                        <Button AllowDrop="True" Drop="IMage_drop" DragOver="Image_DragOver" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Background="Transparent"/>
+                                    </Grid>
+                                </Border>
+
+                                <StackPanel
+                                    Grid.Column="1"
+                                    Padding="0,10,0,0"
+                                    VerticalAlignment="Center"
+                                    Orientation="Vertical"
+                                    Spacing="8">
+                                    <TextBox Style="{StaticResource TransparentTextBox}"
+                                        x:Name="PlaylistName"
+                                        FontSize="36"
+                                        FontWeight="SemiBold"
+                                        Text="{x:Bind ViewModel.Playlist.Name, Mode=TwoWay}"/>
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <TextBlock 
+                                        FontSize="16"
+                                        Opacity="1"
+                                        FontWeight="SemiBold"
+                                        Text="Playlist by"/>
+                                        <Button
+                                        Margin="-4,0,0,0"
+                                        FontSize="16"
+                                        Padding="0"
+                                        Content="{x:Bind ViewModel.Playlist.User.UserName}" 
+                                        FontWeight="Bold"
+                                        Style="{StaticResource TextBlockButtonStyle}"/>
+                                    </StackPanel>
+                                    <TextBlock
+                                        Margin="0,0,0,8"
+                                        FontSize="14"
+                                        Opacity=".9"
+                                        FontWeight="SemiBold"
+                                        Style="{StaticResource BodyTextBlockStyle}">
+                                        <Run Text="{x:Bind ViewModel.Tracks.Count, Mode=OneWay}" /> <Run Text="Songs" />
+                                        <Run Text="・" FontWeight="Bold"/>
+                                        <Run Text="{x:Bind ViewModel.TotalTrackDuration, Mode=OneWay, Converter={StaticResource TimeSpanToStringConverter}}" />
+                                        <!-- ,<Run Text="{x:Bind SelectedPlaylist.VideosCount, Mode=OneWay}" /> <Run Text="{x:Bind SelectedPlaylist.VideosCountString, Mode=OneWay}" /> -->
+                                    </TextBlock>
+                                    <TextBlock
+                                        x:Name="Description"
+                                        FontSize="16"
+                                        FontWeight="Bold"
+                                        MaxLines="2"
+                                        Opacity="0.6"
+                                        Style="{StaticResource BodyTextBlockStyle}"
+
+                                        TextTrimming="CharacterEllipsis" />
+
+
+
+                                    <StackPanel Spacing="8" Orientation="Horizontal">
+                                        <Button Style="{ThemeResource AccentButtonStyle}">
+                                            <StackPanel Spacing="8" Orientation="Horizontal">
+                                                <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE102;" />
+                                                <TextBlock Text="Play"/>
+                                            </StackPanel>
+                                        </Button>
+                                        <Button>
+                                            <StackPanel Spacing="8" Orientation="Horizontal">
+                                                <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE104;" />
+                                                <TextBlock Text="Edit"/>
+                                            </StackPanel>
+                                        </Button>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Grid>
+                        </Grid>
+                    </Border>
+                    <Border  Background="{ThemeResource LayerFillColorDefaultBrush}"
+                            VerticalAlignment="Top" 
+                            HorizontalAlignment="Stretch" 
+                            Margin="0,16,0,4"
+                            CornerRadius="8"
+                            Padding="8,4"
+                            BorderThickness="1"
+                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                            Grid.Row="1"
+                            x:DefaultBindMode="OneWay">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="120"/>
+                                <ColumnDefinition Width="1.5*"/>
+                                <ColumnDefinition/>
+                                <ColumnDefinition/>
+                                <ColumnDefinition Width="150"/>
+                                <ColumnDefinition Width="50"/>
+                            </Grid.ColumnDefinitions>
+                            <Button  Padding="4,8"
+                                     HorizontalAlignment="Stretch"
+                                     Command="{x:Bind ViewModel.SortCommand}"
+                                     HorizontalContentAlignment="Stretch"
+                                     Style="{ThemeResource TextBlockButtonStyle}">
+                                <Button.CommandParameter>
+                                    <playlists:PlaylistSortFieldType>Index</playlists:PlaylistSortFieldType>
+                                </Button.CommandParameter>
+                                <StackPanel>
+                                    <TextBlock Text="#"/>
+                                </StackPanel>
+                            </Button>
+                            <Button Grid.Column="1" Padding="4,8"
+                                    Command="{x:Bind ViewModel.SortCommand}"
+                                HorizontalContentAlignment="Stretch" HorizontalAlignment="Stretch"
+                                 Style="{ThemeResource TextBlockButtonStyle}">
+                                <Button.CommandParameter>
+                                    <playlists:PlaylistSortFieldType>Title</playlists:PlaylistSortFieldType>
+                                </Button.CommandParameter>
+                                <StackPanel>
+                                    <TextBlock Text="Title"/>
+                                </StackPanel>
+                            </Button>
+                            <Button  Grid.Column="2"   Padding="4,8"
+                                 HorizontalContentAlignment="Stretch"  Command="{x:Bind ViewModel.SortCommand}"
+                                 HorizontalAlignment="Stretch"
+                                 Style="{ThemeResource TextBlockButtonStyle}">
+                                <Button.CommandParameter>
+                                    <playlists:PlaylistSortFieldType>Artist</playlists:PlaylistSortFieldType>
+                                </Button.CommandParameter>
+                                <StackPanel>
+                                    <TextBlock Text="Artist"/>
+                                </StackPanel>
+                            </Button>
+                            <Button  Grid.Column="3"    Padding="4,8"
+                                 HorizontalContentAlignment="Stretch"
+                                 HorizontalAlignment="Stretch"  Command="{x:Bind ViewModel.SortCommand}"
+                                 Style="{ThemeResource TextBlockButtonStyle}">
+                                <Button.CommandParameter>
+                                    <playlists:PlaylistSortFieldType>Album</playlists:PlaylistSortFieldType>
+                                </Button.CommandParameter>
+                                <StackPanel>
+                                    <TextBlock Text="Album"/>
+                                </StackPanel>
+                            </Button>
+                            <Button Grid.Column="4"    HorizontalAlignment="Stretch"   Padding="4,8"
+                                HorizontalContentAlignment="Stretch"  Command="{x:Bind ViewModel.SortCommand}"
+                                Style="{ThemeResource TextBlockButtonStyle}">
+                                <Button.CommandParameter>
+                                    <playlists:PlaylistSortFieldType>Added</playlists:PlaylistSortFieldType>
+                                </Button.CommandParameter>
+                                <StackPanel>
+                                    <FontIcon FontSize="14" FontFamily="Segoe Fluent Icons" Glyph="&#xE787;" />
+                                </StackPanel>
+                            </Button>
+                            <Button Grid.Column="5"    HorizontalAlignment="Stretch"   Padding="4,8"
+                                HorizontalContentAlignment="Stretch"  Command="{x:Bind ViewModel.SortCommand}"
+                                Style="{ThemeResource TextBlockButtonStyle}">
+                                <Button.CommandParameter>
+                                    <playlists:PlaylistSortFieldType>Duration</playlists:PlaylistSortFieldType>
+                                </Button.CommandParameter>
+                                <StackPanel>
+                                    <FontIcon FontSize="14" FontFamily="Segoe Fluent Icons" Glyph="&#xE916;" />
+                                </StackPanel>
+                            </Button>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </ListView.Header>
+        </ListView>
+
+        <StackPanel 
+            Visibility="{x:Bind ViewModel.HasTracks, Mode=OneWay, Converter={StaticResource TrueToCollapsedConverter}}"
+                    Spacing="8"
+            Margin="0,250,0,0" HorizontalAlignment="Center" VerticalAlignment="Center">
+            <FontIcon 
+                Opacity=".9"
+                FontSize="64" FontFamily="Segoe Fluent Icons" Glyph="&#xE943;" />
+            <TextBlock FontSize="18"
+                       Opacity=".9"
+                       FontWeight="SemiLight"
+                       Text="It's kinda empty here"/>
+        </StackPanel>
+    </Grid>
+</UserControl>

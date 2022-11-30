@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "Eum.UI.WinUI (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "Eum.UI.WinUI (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}

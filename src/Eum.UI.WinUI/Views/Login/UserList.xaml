@@ -1,0 +1,95 @@
+<!-- Copyright (c) Microsoft Corporation. All rights reserved. -->
+<!-- Licensed under the MIT License. See LICENSE in the project root for license information. -->
+
+<UserControl
+    x:Class="Eum.UI.WinUI.Views.Login.UserList"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:Eum.UI.WinUI.Views.Login"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:users="using:Eum.UI.ViewModels.Users"
+    xmlns:interactivity="using:Microsoft.Xaml.Interactivity"
+    xmlns:core="using:Microsoft.Xaml.Interactions.Core"
+    xmlns:users1="using:Eum.Users"
+    xmlns:users2="using:Eum.UI.Users"
+    mc:Ignorable="d">
+
+    <Grid>
+        <Border Background="{ThemeResource LayerFillColorDefaultBrush}"
+                VerticalAlignment="Stretch" 
+                HorizontalAlignment="Stretch" 
+                Margin="16" Padding="0,8"
+                CornerRadius="8"
+                BorderThickness="1"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
+
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center" Text="Select a profile to get started!" FontWeight="SemiBold"
+                           FontSize="16"
+                           Margin="0,12"/>
+
+                <TextBlock Text="You do not have any profiles. Sign in with Spotify or create a local profile."
+                           TextWrapping="Wrap" Margin="48,24"
+                           TextAlignment="Center"
+                           VerticalAlignment="Center"
+                           Visibility="{x:Bind ViewModel.HasUser, Mode=OneWay, Converter={StaticResource TrueToCollapsedConverter}}"
+                           Grid.Row="1"/>
+
+                <local:SelectProfileList MinHeight="200" x:Name="UsersLv"  VerticalAlignment="Stretch" Grid.Row="1" DataContext="{x:Bind ViewModel}"/>
+
+                <NavigationViewItemSeparator Grid.Row="2" VerticalAlignment="Top"/>
+                <Grid Grid.Row="2" HorizontalAlignment="Stretch"
+                      VerticalAlignment="Center"
+                      Margin="0,12,0,6">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition/>
+                        <ColumnDefinition/>
+                    </Grid.ColumnDefinitions>
+                    <Button
+                        Margin="12,0"
+                    HorizontalContentAlignment="Center"
+                    Height="84"
+                        Command="{x:Bind ViewModel.CreateProfileCommand}"
+                    VerticalAlignment="Center"
+                    HorizontalAlignment="Stretch">
+                        <Button.CommandParameter>
+                            <users2:ServiceType>Local</users2:ServiceType>
+                        </Button.CommandParameter>
+                        <StackPanel Spacing="4" Orientation="Vertical" HorizontalAlignment="Stretch">
+                            <FontIcon Height="38" Width="38" FontSize="28" Glyph="&#xE1E2;"/>
+
+                            <TextBlock  FontWeight="SemiBold"  Text="Local profile"/>
+                        </StackPanel>
+                    </Button>
+                    <Button
+                        Grid.Column="1"
+                        Margin="12,0"
+                        HorizontalContentAlignment="Center"
+                        Height="84"
+                        Command="{x:Bind ViewModel.CreateProfileCommand}"
+                        VerticalAlignment="Center"
+                        HorizontalAlignment="Stretch">
+                        <Button.CommandParameter>
+                            <users2:ServiceType>Spotify</users2:ServiceType>
+                        </Button.CommandParameter>
+                        <StackPanel Spacing="4" Orientation="Vertical" HorizontalAlignment="Stretch">
+                            <Image Height="38" Width="48">
+                                <Image.Source>
+                                    <BitmapImage UriSource="ms-appx:///Assets/spotify.png" DecodePixelWidth="48" DecodePixelHeight="48"/>
+                                </Image.Source>
+                            </Image>
+
+                            <TextBlock FontWeight="SemiBold" Text="Sign in with Spotify"/>
+                        </StackPanel>
+                    </Button>
+                </Grid>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>
