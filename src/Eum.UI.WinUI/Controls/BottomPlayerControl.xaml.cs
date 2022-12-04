@@ -16,6 +16,7 @@ using System.Windows.Forms;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Eum.UI.ViewModels.Playback;
+using Microsoft.UI.Xaml.Controls;
 using UserControl = Microsoft.UI.Xaml.Controls.UserControl;
 
 // To learn more about WinUI, the WinUI project structure,
@@ -36,6 +37,13 @@ namespace Eum.UI.WinUI.Controls
         {
             get => (PlaybackViewModel) GetValue(ViewModelProperty);
             set => SetValue(ViewModelProperty, value);
+        }
+
+        private async void ListViewBase_OnItemClick(object sender, ItemClickEventArgs e)
+        {
+            var clickedDevice = e.ClickedItem as RemoteDevice;
+
+            await ViewModel.SwitchRemoteDevice(clickedDevice.DeviceId);
         }
     }
 }

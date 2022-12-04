@@ -22,7 +22,7 @@ public class SpotifyPlaylistViewModel : PlaylistViewModel
     }
 
     private AsyncLock _syncLock = new AsyncLock();
-    public override async Task Sync()
+    public override async Task Sync(bool addTracks = false)
     {
         //fetch the data..
 
@@ -43,26 +43,29 @@ public class SpotifyPlaylistViewModel : PlaylistViewModel
                 var uris = data
                     .Contents.Items.Select(a => new ItemId(a.Uri))
                     .ToArray();
+                var tracks = (await Ioc.Default.GetRequiredService<ITrackAggregator>()
+                    .GetTracks(uris)).ToArray();
+                if (addTracks)
+                {
+                    for (var index = 0; index < tracks.Length; index++)
+                    {
+                        var eumTrack = tracks[index];
+                        if (_tracksSourceList.Items.Any(j => j.Index == index))
+                        {
+                            //update
+                        }
+                        else
+                        {
+                            _tracksSourceList.Add(new PlaylistTrackViewModel(eumTrack, index));
+                        }
+                    }
+                }
+
                 RxApp.MainThreadScheduler.Schedule(() =>
                 {
                     Playlist.Tracks = uris;
                 });
 
-                var tracks = (await Ioc.Default.GetRequiredService<ITrackAggregator>()
-                    .GetTracks(uris)).ToArray();
-
-                for (var index = 0; index < tracks.Length; index++)
-                {
-                    var eumTrack = tracks[index];
-                    if (_tracksSourceList.Items.Any(j => j.Index == index))
-                    {
-                        //update
-                    }
-                    else
-                    {
-                        _tracksSourceList.Add(new PlaylistTrackViewModel(eumTrack, index));
-                    }
-                }
             }
         }
         catch (Exception x)

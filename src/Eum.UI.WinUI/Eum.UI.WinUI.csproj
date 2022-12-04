@@ -12,11 +12,13 @@
     <EnableMsixTooling>true</EnableMsixTooling>
   </PropertyGroup>
   <ItemGroup>
+    <None Remove="Assets\amb.png" />
     <None Remove="Assets\MediaPlayerIcons.ttf" />
     <None Remove="Assets\spotify.png" />
     <None Remove="Controls\BottomPlayerControl.xaml" />
     <None Remove="Controls\SidebarControlStyles.xaml" />
     <None Remove="MainWindowContentWrapper.xaml" />
+    <None Remove="Views\Artists\ArtistRootView.xaml" />
     <None Remove="Views\Login\LoginView.xaml" />
     <None Remove="Views\Login\ProfilesView.xaml" />
     <None Remove="Views\Login\SpotifyLoginPage.xaml" />
@@ -79,6 +81,15 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Update="Controls\BottomPlayerControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Content Update="Assets\amb.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Update="Controls\ImageTransitionControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </None>
+    <Page Update="Views\Artists\ArtistRootView.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <None Update="Views\Playlists\PlaylistView.xaml">

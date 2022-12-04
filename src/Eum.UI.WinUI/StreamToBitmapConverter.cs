@@ -21,16 +21,16 @@ public class StreamToBitmapConverter : IValueConverter
         {
             var task = Task.Run(async () =>
             {
-                BitmapImage img = default;
                 using var mem = new MemoryStream();
                 await input.CopyToAsync(mem);
                 mem.Position = 0;
-                await App.MWindow.DispatcherQueue.EnqueueAsync(async () =>
+                var bmp = await App.MWindow.DispatcherQueue.EnqueueAsync(async () =>
                 {
-                    img = new BitmapImage();
+                    var img = new BitmapImage();
                     await img.SetSourceAsync(mem.AsRandomAccessStream());
+                    return img;
                 }, DispatcherQueuePriority.High);
-                return img;
+                return bmp;
             });
             return new TaskCompletionNotifier<BitmapImage>(task);
         }

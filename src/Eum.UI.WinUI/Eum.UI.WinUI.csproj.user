@@ -11,6 +11,12 @@
     <Page Update="Controls\BottomPlayerControl.xaml">
       <SubType>Designer</SubType>
     </Page>
+    <None Update="Controls\ImageTransitionControl.xaml">
+      <SubType>Designer</SubType>
+    </None>
+    <Page Update="Views\Artists\ArtistRootView.xaml">
+      <SubType>Designer</SubType>
+    </Page>
     <None Update="Views\Playlists\PlaylistView.xaml">
       <SubType>Designer</SubType>
     </None>

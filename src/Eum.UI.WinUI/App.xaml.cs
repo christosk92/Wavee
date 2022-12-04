@@ -37,6 +37,7 @@ using Eum.UI.Services.Directories;
 using Eum.UI.Services.Playlists;
 using Eum.UI.Users;
 using Windows.Storage;
+using Eum.UI.Services.Artists;
 using Eum.UI.Services.Tracks;
 using LiteDB;
 
@@ -73,6 +74,7 @@ namespace Eum.UI.WinUI
             serviceCollection.AddTransient<ITrackAggregator, TrackAggregator>();
             serviceCollection.AddSingleton<IEumUserManager, EumUserManager>();
             serviceCollection.AddSingleton<IEumUserViewModelManager, EumUserViewModelManager>();
+            serviceCollection.AddTransient<IArtistProvider, ArtistProvider>();
             //serviceCollection.AddTransient<IUsersService, UsersService>();
             serviceCollection.AddTransient<IAvailableServicesProvider, BetaAvailableServicesProvider>();
             serviceCollection.AddSingleton<ICommonDirectoriesProvider>(new CommonDirectoriesProvider(dataDir)); 

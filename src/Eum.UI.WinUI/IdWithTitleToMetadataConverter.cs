@@ -15,7 +15,9 @@ public class IdWithTitleToMetadataConverter : IValueConverter
         {
             return idWith.Select(a => new MetadataItem
             {
-                Label = a.Title
+                Label = a.Title,
+                Command = Commands.To(a.Id.Type),
+                CommandParameter = a.Id,
             });
         }
 

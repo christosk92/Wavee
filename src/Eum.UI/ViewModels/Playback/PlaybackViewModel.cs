@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Text;
@@ -7,6 +8,7 @@ using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Eum.Artwork;
 using Eum.Connections.Spotify;
+using Eum.Spotify.connectstate;
 using Eum.UI.Items;
 using ReactiveUI;
 
@@ -18,12 +20,20 @@ namespace Eum.UI.ViewModels.Playback
         [ObservableProperty]
         private CurrentlyPlayingHolder _item;
 
+        [ObservableProperty]
+        private bool _playingOnExternalDevice;
+
+        [ObservableProperty]
+        private RemoteDevice _externalDevice;
+
         [ObservableProperty] private double _timestamp;
 
         private IDisposable _disposable;
         protected PlaybackViewModel()
         {
         }
+
+        public ObservableCollection<RemoteDevice> RemoteDevices { get; } = new ObservableCollection<RemoteDevice>();
         public abstract ServiceType Service { get; }
 
         public virtual void Deconstruct()
@@ -48,7 +58,11 @@ namespace Eum.UI.ViewModels.Playback
                     Timestamp += 200;
                 });
         }
+
+        public abstract Task SwitchRemoteDevice(string deviceId);
     }
+
+    public record RemoteDevice(string DeviceId, string DeviceName, DeviceType Devicetype, ServiceType Service);
 
 
     public record CurrentlyPlayingHolder : IDisposable

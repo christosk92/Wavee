@@ -22,6 +22,7 @@ using Eum.UI.Services.Tracks;
 using Eum.UI.ViewModels.Playback;
 using Eum.UI.ViewModels.Playlists;
 using Flurl;
+using Flurl.Http;
 using LiteDB;
 using ReactiveUI;
 
@@ -189,6 +190,29 @@ public class SpotifyPlaybackViewModel : PlaybackViewModel
             int diff = (int)(_spotifyClient.TimeProvider.CurrentTimeMillis() - e.Cluster.PlayerState.Timestamp);
             var initial = Math.Max(0, (int)(e.Cluster.PlayerState.PositionAsOfTimestamp + diff));
             StartTimer(initial);
+
+
+            PlayingOnExternalDevice = e.Cluster.ActiveDeviceId != _spotifyClient
+                .Config.DeviceId;
+            if (PlayingOnExternalDevice)
+            {
+                RemoteDevices.Clear();
+
+                var currentDevice = e.Cluster.Device[_spotifyClient.Config.DeviceId];
+                RemoteDevices.Add(new RemoteDevice(currentDevice.DeviceId, currentDevice.Name, currentDevice.DeviceType, Service));
+                foreach (var deviceInfo in e.Cluster.Device)
+                {
+                    if (deviceInfo.Key == currentDevice.DeviceId) continue;
+
+                    RemoteDevices.Add(new RemoteDevice(deviceInfo.Key, deviceInfo.Value.Name, deviceInfo.Value.DeviceType, Service));
+                }
+
+                ExternalDevice = RemoteDevices.First(a => a.DeviceId == e.Cluster.ActiveDeviceId);
+            }
+            else
+            {
+                ExternalDevice = null;
+            }
         }
         catch (Exception ex)
         {
@@ -220,6 +244,18 @@ public class SpotifyPlaybackViewModel : PlaybackViewModel
     public override void Deconstruct()
     {
         _disposable.Dispose();
+    }
+
+    public override async Task SwitchRemoteDevice(string deviceId)
+    {
+        //https://gae2-spclient.spotify.com/connect-state/v1/connect/transfer/from/1ef2aa4cf31c7af8bf20b5d5776a54ce8930f9fe/to/1ef2aa4cf31c7af8bf20b5d5776a54ce8930f9fe
+        //TODO: ApResolver
+        //gae2-spclient.spotify.com:443
+        using var _ = await "https://gae2-spclient.spotify.com"
+            .AppendPathSegments("connect-state", "v1", "connect", "transfer", "from", _spotifyClient.Config.DeviceId,
+                "to", deviceId)
+            .WithOAuthBearerToken((await _spotifyClient.BearerClient.GetBearerTokenAsync()))
+            .PostAsync();
     }
 
     public override ServiceType Service => ServiceType.Spotify;

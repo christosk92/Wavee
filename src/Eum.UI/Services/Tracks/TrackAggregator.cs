@@ -10,6 +10,7 @@ using Eum.Connections.Spotify;
 using Eum.Connections.Spotify.Helpers;
 using Eum.Connections.Spotify.Models.Users;
 using Eum.Enums;
+using Eum.Logging;
 using Eum.Spotify.extendedmetadata;
 using Eum.Spotify.metadata;
 using Eum.UI.Items;
@@ -99,7 +100,7 @@ namespace Eum.UI.Services.Tracks
 
             if (item != null)
             {
-                _tracks.Insert(item);
+                _tracks.Upsert(item);
                 return Project(item);
             }
 
@@ -297,43 +298,63 @@ namespace Eum.UI.Services.Tracks
         }
 
         private static readonly HttpClient _httpClient = new HttpClient();
+
         public static async Task<CachedImage[]> UploadImages(ILiteDatabase db, ImageGroup images,
             CancellationToken ct = default)
         {
-            //https://i.scdn.co/image/ab67706c0000da8474ca565b7ad0c70e6c2973ce
             var items = images
                 .Image.Select(a => new
                 {
-                    Height = (int?)(a.HasHeight ? a.Height : null),
-                    Width = (int?)(a.HasWidth ? a.Width : null),
+                    Height = (int?) (a.HasHeight ? a.Height : null),
+                    Width = (int?) (a.HasWidth ? a.Width : null),
                     Url = $"https://i.scdn.co/image/{HexId(a.FileId)}",
                     Id = HexId(a.FileId)
                 });
 
+
+            //https://i.scdn.co/image/ab67706c0000da8474ca565b7ad0c70e6c2973ce
             var streams = items.Select(async a =>
             {
                 var imageExists = db.FileStorage.Exists(a.Id);
                 if (imageExists)
                     return db.FileStorage.FindById(a.Id);
 
-                await using var stream = await _httpClient.GetStreamAsync(a.Url, ct);
-                var info = db.FileStorage.Upload(a.Id, a.Id, stream, new BsonDocument
+                try
                 {
-                    {"height", a.Height},
-                    {"width", a.Width}
-                });
-                return info;
+                    await using var stream = await _httpClient.GetStreamAsync(a.Url, ct);
+                    var info = db.FileStorage.Upload(a.Id, a.Id, stream, new BsonDocument
+                    {
+                        {"height", a.Height},
+                        {"width", a.Width}
+                    });
+                    return info;
+                }
+                catch (LiteException x)
+                {
+                    S_Log.Instance.LogError(x);
+                    if (x.Message.StartsWith("Cannot insert duplicate key in unique index"))
+                    {
+                        imageExists = db.FileStorage.Exists(a.Id);
+                        if (imageExists)
+                            return db.FileStorage.FindById(a.Id);
+                    }
+
+                    return null;
+                }
             });
             var uploadedImages =
                 await Task.WhenAll(streams);
             return uploadedImages
+                .Where(a=> a != null)
                 .Select(a => new CachedImage
                 {
                     Height = a.Metadata["height"].IsNull ? null : a.Metadata["height"].AsInt32,
                     Width = a.Metadata["width"].IsNull ? null : a.Metadata["width"].AsInt32,
                     Id = a.Id
                 }).ToArray();
+
         }
+
         private static EumTrack Project(CachedPlayItem item)
         {
             return new EumTrack(item);

@@ -85,6 +85,8 @@ namespace Eum.UI.Users
                     AuthenticatedUser.ResuableCredentialsType, AuthenticatedUser.Username));
             _privateUser = client.PrivateUser;
             _authenticatedSpotifyUser = spotifyClient;
+            User.ProfileName = _privateUser.Name;
+            User.ProfilePicture = _privateUser.Avatar?.FirstOrDefault()?.Url;
             User.ReplaceMetadata("authenticatedUser", spotifyClient);
             User.ReplaceMetadata("privateUser", client.PrivateUser);
         }

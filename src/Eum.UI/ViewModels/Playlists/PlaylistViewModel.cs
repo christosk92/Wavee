@@ -36,8 +36,11 @@ namespace Eum.UI.ViewModels.Playlists
         public PlaylistViewModel(EumPlaylist playlist)
         {
             Playlist = playlist;
+            BigHeader = (playlist.Metadata?.ContainsKey("header_image_url_desktop") ?? false)
+                ? playlist.Metadata["header_image_url_desktop"]
+                : null;
         }
-
+        public string? BigHeader { get; }
         public void Connect()
         {
             _tracksListDisposable = _tracksSourceList.Connect()
@@ -55,7 +58,7 @@ namespace Eum.UI.ViewModels.Playlists
             {
                 try
                 {
-                    await Sync();
+                    await Sync(true);
                 }
                 catch (Exception x)
                 {
@@ -126,6 +129,6 @@ namespace Eum.UI.ViewModels.Playlists
             return default;
         }
 
-        public abstract Task Sync();
+        public abstract Task Sync(bool addTracks = false);
     }
 }
