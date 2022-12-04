@@ -7,6 +7,11 @@
     xmlns:local="using:Eum.UI.WinUI.Controls"
     x:Class="Eum.UI.WinUI.Controls.PlaylistStyles"
     xmlns:track="using:Eum.UI.ViewModels.Track"
-    xmlns:entities="using:Eum.UI.Models.Entities">
-
+    xmlns:entities="using:Eum.UI.Models.Entities"
+    xmlns:playback="using:Eum.UI.ViewModels.Playback">
+    <DataTemplate x:DataType="playback:IdWithTitle" x:Key="IdWithTitleItemTemplate">
+        <Button Content="{x:Bind Title}"
+                CornerRadius="8"
+                Style="{ThemeResource TextBlockButtonStyle}" Padding="0"/>
+    </DataTemplate>
 </ResourceDictionary>

@@ -17,4 +17,8 @@
     <ProjectReference Include="..\Eum.UI\Eum.UI.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="ViewModels\Playlists\" />
+  </ItemGroup>
+
 </Project>

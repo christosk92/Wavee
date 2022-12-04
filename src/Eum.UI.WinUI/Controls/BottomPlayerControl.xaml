@@ -27,8 +27,6 @@
             <Setter Property="BorderThickness" Value="0" />
             <Setter Property="CornerRadius" Value="6" />
         </Style>
-        <winUi:IdWithTitleToMetadataConverter x:Key="IdWithTitleToMetadataConverter" />
-        <xamlConverters:MsToTimeStampConverter x:Key="MsToTimestampConverter" />
     </UserControl.Resources>
     <Border ui:Effects.Shadow="{StaticResource CommonShadow}">
         <Border
@@ -52,11 +50,9 @@
                         x:Name="AlbumImage"
                         Width="70"
                         Height="70"
-                        Margin="3,0,0,0">
-                        <Image.Source>
-                            <BitmapImage UriSource="{Binding Item.SmallImage}"/>
-                        </Image.Source>
-                    </Image>
+                        DataContext="{x:Bind ViewModel.Item.SmallImage, Mode=OneWay, Converter={StaticResource StreamToBitmapConverter}}"
+                        Source="{Binding Result}"
+                        Margin="3,0,0,0"/>
 
                     <StackPanel
                         Grid.Column="1"

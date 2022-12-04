@@ -37,6 +37,8 @@ using Eum.UI.Services.Directories;
 using Eum.UI.Services.Playlists;
 using Eum.UI.Users;
 using Windows.Storage;
+using Eum.UI.Services.Tracks;
+using LiteDB;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -65,6 +67,10 @@ namespace Eum.UI.WinUI
             serviceCollection.AddSingleton<IEumPlaylistManager, EumPlaylistManager>();
             serviceCollection.AddSingleton<IEumUserPlaylistViewModelManager, EumPlaylistViewModelManager>();
 
+            var db = new LiteDatabase(Path.Combine(dataDir, "data.db"));
+
+            serviceCollection.AddSingleton<ILiteDatabase>(db);
+            serviceCollection.AddTransient<ITrackAggregator, TrackAggregator>();
             serviceCollection.AddSingleton<IEumUserManager, EumUserManager>();
             serviceCollection.AddSingleton<IEumUserViewModelManager, EumUserViewModelManager>();
             //serviceCollection.AddTransient<IUsersService, UsersService>();

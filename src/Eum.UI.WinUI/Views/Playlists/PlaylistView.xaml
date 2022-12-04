@@ -203,14 +203,17 @@
             Offset="0,4,0" />
         <xamlConverters:TimeSpanToStringConverter x:Key="TimeSpanToStringConverter" />
 
-
+        <DataTemplate x:Key="PlaylistTrackTemplate" x:DataType="playlists:PlaylistTrackViewModel">
+            <controls:PlaylistTrackView ViewModel="{x:Bind }"/>
+        </DataTemplate>
     </UserControl.Resources>
     <Grid>
-        <ListView
-            ui:ScrollViewerExtensions.HorizontalScrollBarMargin="0,0,-56,0"
-            Padding="56,44,56,16"
-            ItemsSource="{x:Bind ViewModel.Tracks}"
-            AllowDrop="True" Drop="TrackList_OnDrop" DragOver="TrackList_DragOver">
+        <ListView  ItemTemplate="{StaticResource PlaylistTrackTemplate}"
+                   ui:ScrollViewerExtensions.HorizontalScrollBarMargin="0,0,-56,0"
+                   Padding="56,44,56,16"
+                   SelectionMode="Extended"
+                   ItemsSource="{x:Bind ViewModel.Tracks}"
+                   AllowDrop="True" Drop="TrackList_OnDrop" DragOver="TrackList_DragOver">
             <ListView.ItemsPanel>
                 <ItemsPanelTemplate>
                     <ItemsStackPanel ItemsUpdatingScrollMode="KeepScrollOffset"/>
@@ -366,7 +369,7 @@
                             x:DefaultBindMode="OneWay">
                     <Grid>
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="120"/>
+                                <ColumnDefinition Width="80"/>
                             <ColumnDefinition Width="1.5*"/>
                             <ColumnDefinition/>
                             <ColumnDefinition/>

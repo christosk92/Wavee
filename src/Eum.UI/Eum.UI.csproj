@@ -9,6 +9,7 @@
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.1.0-preview1" />
     <PackageReference Include="DynamicData" Version="7.12.11" />
+    <PackageReference Include="LiteDB" Version="5.0.12" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
     <PackageReference Include="Nito.AsyncEx.Context" Version="5.1.2" />
     <PackageReference Include="Nito.AsyncEx.Coordination" Version="5.1.2" />

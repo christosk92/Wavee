@@ -24,6 +24,7 @@ namespace Eum.UI.WinUI.Controls
 {
     public sealed partial class PlaylistTrackView : UserControl
     {
+        public static readonly DependencyProperty ViewModelProperty = DependencyProperty.Register(nameof(ViewModel), typeof(PlaylistTrackViewModel), typeof(PlaylistTrackView), new PropertyMetadata(default(PlaylistTrackViewModel)));
         // public static readonly DependencyProperty ViewModelProperty = DependencyProperty.Register(nameof(ViewModel), typeof(PlaylistTrackViewModel), typeof(PlaylistTrackView), new PropertyMetadata(default(PlaylistTrackViewModel)));
 
         public PlaylistTrackView()
@@ -36,5 +37,10 @@ namespace Eum.UI.WinUI.Controls
         //     get => (PlaylistTrackViewModel) GetValue(ViewModelProperty);
         //     set => SetValue(ViewModelProperty, value);
         // }
+        public PlaylistTrackViewModel ViewModel
+        {
+            get => (PlaylistTrackViewModel) GetValue(ViewModelProperty);
+            set => SetValue(ViewModelProperty, value);
+        }
     }
 }

@@ -16,6 +16,7 @@ using CommunityToolkit.Mvvm.DependencyInjection;
 using Eum.UI.Users;
 using DynamicData;
 using DynamicData.Binding;
+using Eum.Logging;
 using Eum.UI.Services.Users;
 using Eum.Users;
 using ReactiveUI;
@@ -25,10 +26,9 @@ namespace Eum.UI.ViewModels.Playlists
     public abstract partial class PlaylistViewModel : SidebarItemViewModel, IComparable<PlaylistViewModel>, INavigatable
     {
         private EumUser? _eumUser;
-        [ObservableProperty]
-        private EumPlaylist _playlist;
+        [ObservableProperty] protected EumPlaylist _playlist;
         private IDisposable _tracksListDisposable;
-        private readonly SourceList<PlaylistTrackViewModel> _tracksSourceList = new();
+        protected readonly SourceList<PlaylistTrackViewModel> _tracksSourceList = new();
         private readonly ObservableCollectionExtended<PlaylistTrackViewModel> _tracks = new();
         private bool _hasTracks;
         private TimeSpan _totalTrackDuration;
@@ -48,15 +48,20 @@ namespace Eum.UI.ViewModels.Playlists
                 .Subscribe(set =>
                 {
                     HasTracks = _tracksSourceList.Count > 0;
+                    TotalTrackDuration = TimeSpan.FromMilliseconds(_tracksSourceList.Items.Sum(a => a.Track.Duration));
                 });
 
-            var items = (Playlist.Tracks ?? Array.Empty<ItemId>());
-            for (var index = 0; index < (Playlist.Tracks ?? Array.Empty<ItemId>()).Length; index++)
+            Task.Run(async () =>
             {
-                var track = items[index];
-                _tracksSourceList.Add(new PlaylistTrackViewModel(index));
-            }
-
+                try
+                {
+                    await Sync();
+                }
+                catch (Exception x)
+                {
+                    S_Log.Instance.LogError(x);
+                }
+            });
         }
 
         public void Disconnect()
@@ -117,23 +122,10 @@ namespace Eum.UI.ViewModels.Playlists
                 default:
                     throw new ArgumentOutOfRangeException();
             }
-
+        
             return default;
         }
 
         public abstract Task Sync();
-    }
-
-    public class SpotifyPlaylistViewModel : PlaylistViewModel
-    {
-        public SpotifyPlaylistViewModel(EumPlaylist playlist) : base(playlist)
-        {
-
-        }
-
-        public override async Task Sync()
-        {
-
-        }
     }
 }

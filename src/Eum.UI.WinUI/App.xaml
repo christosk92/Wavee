@@ -107,6 +107,11 @@
             <converters:BoolToVisibilityConverter TrueValue="Collapsed" FalseValue="Visible" x:Key="TrueToCollapsedConverter"/>
             <converters:BoolNegationConverter x:Key="BoolNegateConverter" />
             <local:ViewLocator x:Key="ViewLocator" />
+            <xamlConverters:MsToTimeStampConverter x:Key="MsToTimestampConverter" />
+            <local:StreamToBitmapConverter x:Key="StreamToBitmapConverter" />
+
+            <local:IdWithTitleToMetadataConverter x:Key="IdWithTitleToMetadataConverter" />
+            <xamlConverters:IndexToStringConverter x:Key="IndexToStringConverter" />
             <!-- Other app resources here -->
         </ResourceDictionary>
     </Application.Resources>

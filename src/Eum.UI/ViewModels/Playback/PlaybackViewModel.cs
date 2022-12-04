@@ -51,14 +51,20 @@ namespace Eum.UI.ViewModels.Playback
     }
 
 
-    public record CurrentlyPlayingHolder
+    public record CurrentlyPlayingHolder : IDisposable
     {
-        public string BigImage { get; init; }
-        public string SmallImage { get; init; }
+        public Stream BigImage { get; init; }
+        public Stream SmallImage { get; init; }
         public ItemId Context { get; init; }
         public IdWithTitle Title { get; init; }
         public IdWithTitle[] Artists { get; init; }
         public double Duration { get; init; }
+
+        public void Dispose()
+        {
+            BigImage.Dispose();
+            SmallImage.Dispose();
+        }
     }
 
     public class IdWithTitle
