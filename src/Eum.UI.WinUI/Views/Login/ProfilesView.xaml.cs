@@ -1,23 +1,15 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
+using System;
+using System.Threading;
+using System.Windows.Input;
+using Eum.UI.Items;
+using Eum.UI.Users;
+using Eum.UI.ViewModels.Users;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Controls.Primitives;
-using Microsoft.UI.Xaml.Data;
 using Microsoft.UI.Xaml.Input;
-using Microsoft.UI.Xaml.Media;
-using Microsoft.UI.Xaml.Navigation;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
-using Eum.UI.ViewModels.Login;
-using CommunityToolkit.Mvvm.DependencyInjection;
-using System.Globalization;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -26,24 +18,29 @@ namespace Eum.UI.WinUI.Views.Login
 {
     public sealed partial class ProfilesView : UserControl
     {
+        public static readonly DependencyProperty LoginViewModelProperty = DependencyProperty.Register(nameof(LoginViewModel), typeof(LoginViewModel), typeof(ProfilesView), new PropertyMetadata(default(LoginViewModel)));
+
         public ProfilesView()
         {
             this.InitializeComponent();
         }
 
-        public ProfilesViewModel ViewModel { get; } = Ioc.Default.GetRequiredService<ProfilesViewModel>();
 
-
-        public double Multiply(double d, string factor)
+        public LoginViewModel LoginViewModel
         {
-            //we input a string because on some machines, 1.5 gets parsed as 15...
-            var f = float.Parse(factor, CultureInfo.InvariantCulture);
-            return d * f;
+            get => (LoginViewModel)GetValue(LoginViewModelProperty);
+            set => SetValue(LoginViewModelProperty, value);
         }
 
-        private void LetsGetStartedBlock_OnSizeChanged(object sender, SizeChangedEventArgs e)
+        private void UIElement_OnTapped(object sender, TappedRoutedEventArgs e)
         {
-            ProgressBorder.Width = Multiply((sender as FrameworkElement)!.ActualWidth, "1.5");
+            LoginViewModel.AddUserCommand.Execute(ServiceType.Spotify);
+        }
+
+        private async void ListViewBase_OnItemClick(object sender, ItemClickEventArgs e)
+        {
+            var item = e.ClickedItem as EumUserViewModel;
+            await LoginViewModel.Login(item, CancellationToken.None);
         }
     }
 }

@@ -8,9 +8,5 @@
     x:Class="Eum.UI.WinUI.Controls.PlaylistStyles"
     xmlns:track="using:Eum.UI.ViewModels.Track"
     xmlns:entities="using:Eum.UI.Models.Entities">
-    <DataTemplate x:DataType="entities:TrackDetailRef" x:Key="TrackDetailReferenceItemTempalte">
-        <Button Content="{x:Bind Name}"
-                CornerRadius="8"
-                Style="{ThemeResource TextBlockButtonStyle}" Padding="0"/>
-    </DataTemplate>
+
 </ResourceDictionary>

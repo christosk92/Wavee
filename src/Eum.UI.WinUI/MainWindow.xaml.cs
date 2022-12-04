@@ -16,10 +16,6 @@ using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
-using CommunityToolkit.Mvvm.DependencyInjection;
-using Eum.UI.ViewModels;
-using WinUIEx;
-using System.Runtime.InteropServices; // For DllImport
 using WinRT; // required to support Window.As<ICompositionSupportsSystemBackdrop>()
 
 // To learn more about WinUI, the WinUI project structure,

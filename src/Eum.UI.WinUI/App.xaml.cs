@@ -1,26 +1,42 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
-using CommunityToolkit.Mvvm.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Controls.Primitives;
+using Microsoft.UI.Xaml.Data;
+using Microsoft.UI.Xaml.Input;
+using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Navigation;
+using Microsoft.UI.Xaml.Shapes;
+using System;
 using System.Collections.Generic;
 using System.IO;
-using Eum.Helpers;
-using Eum.Logging;
-using Eum.UI.Database;
-using Eum.UI.Helpers;
-using Eum.UI.Users;
+using System.Linq;
+using System.Runtime.InteropServices.WindowsRuntime;
+using Windows.ApplicationModel;
+using Windows.ApplicationModel.Activation;
+using Windows.Foundation;
+using Windows.Foundation.Collections;
+using CommunityToolkit.Mvvm.DependencyInjection;
+using Eum.Connections.Spotify;
+using Eum.Connections.Spotify.Enums;
+using Eum.Connections.Spotify.NAudio;
+using Eum.Spotify.connectstate;
+using Eum.UI.Items;
+using Eum.UI.Services;
+using Eum.UI.Spotify;
+using Microsoft.Extensions.DependencyInjection;
+using Eum.UI.Services.Users;
 using Eum.UI.ViewModels;
-using Eum.UI.ViewModels.Login;
-using Eum.UI.ViewModels.Profile.Create;
-using Eum.UI.WinUI.Helper;
-using Eum.Users;
+using Eum.UI.Services.Login;
+using Eum.Library.Logger.Helpers;
+using Eum.Logging;
 using Path = System.IO.Path;
-using ServiceCollection = Microsoft.Extensions.DependencyInjection.ServiceCollection;
-using Eum.UI.ViewModels.Sidebar;
-using LiteDB;
-using JsonSerializer = System.Text.Json.JsonSerializer;
+using Eum.UI.Services.Directories;
+using Eum.UI.Services.Playlists;
+using Eum.UI.Users;
+using Windows.Storage;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -38,36 +54,36 @@ namespace Eum.UI.WinUI
         /// </summary>
         public App()
         {
-            var serviceCollection = new ServiceCollection();
-      
-            // Initialize the logger.
-            string dataDir = EnvironmentHelpers.GetDataDir(Path.Combine("Eum", "WinUI"));
-            S_Log.Instance.InitializeDefaults(dataDir, null);
-            S_Log.Instance.LogDebug($"Eum was started with these argument(s): none");
+            var dataDir = ApplicationData.Current.LocalFolder.Path;
+            S_Log.Instance.InitializeDefaults(Path.Combine(dataDir, "Logs.txt"), null);
 
+            IServiceCollection serviceCollection = new ServiceCollection();
 
-            serviceCollection.AddSingleton<ILiteDatabase>(new LiteDatabase(Path.Combine(dataDir, "data.db")));
-            serviceCollection.AddTransient<TracksRepository>();
-            serviceCollection.AddTransient<ProfilesViewModel>();
             serviceCollection.AddSingleton<MainViewModel>();
-            serviceCollection.AddSingleton(new UserDirectories(dataDir));
-            serviceCollection.AddSingleton(s => new UserManager(dataDir, s.GetRequiredService<UserDirectories>()));
 
-            serviceCollection.AddSingleton<UserManagerViewModel>();
+          //  serviceCollection.AddSingleton<IIdentityService, EumIdentityService>();
+            serviceCollection.AddSingleton<IEumPlaylistManager, EumPlaylistManager>();
+            serviceCollection.AddSingleton<IEumUserPlaylistViewModelManager, EumPlaylistViewModelManager>();
 
-            serviceCollection.AddSingleton(_ =>
+            serviceCollection.AddSingleton<IEumUserManager, EumUserManager>();
+            serviceCollection.AddSingleton<IEumUserViewModelManager, EumUserViewModelManager>();
+            //serviceCollection.AddTransient<IUsersService, UsersService>();
+            serviceCollection.AddTransient<IAvailableServicesProvider, BetaAvailableServicesProvider>();
+            serviceCollection.AddSingleton<ICommonDirectoriesProvider>(new CommonDirectoriesProvider(dataDir)); 
+
+            serviceCollection.AddSpotify(new SpotifyConfig
             {
-                var assetsPics = Path.Combine(Windows.ApplicationModel.Package.Current.InstalledPath, "Assets",
-                    "pics.json");
-                using var fs = File.OpenRead(assetsPics);
-                return JsonSerializer.Deserialize<IList<GroupedprofilePictures>>(fs);
-            });
+                AudioQuality = AudioQuality.HIGH, 
+                DeviceName = "Eum WinUI",
+                DeviceType = DeviceType.Computer,
+                AutoplayEnabled = true,
+                CrossfadeDuration = 15000,
+                LogPath = Path.Combine(dataDir, "Logs.txt"),
+                CachePath = dataDir,
+                TimeSyncMethod = TimeSyncMethod.NTP
+            }, new NAudioPlayer());
 
-            serviceCollection.AddTransient<IDialogHelper, DialogHelper>();
             Ioc.Default.ConfigureServices(serviceCollection.BuildServiceProvider());
-
-
-
             this.InitializeComponent();
         }
 
@@ -82,7 +98,15 @@ namespace Eum.UI.WinUI
             MWindow.Activate();
         }
 
-        public static Window MWindow;
 
+        public static Window MWindow { get; private set; }
+    }
+
+    public class BetaAvailableServicesProvider : IAvailableServicesProvider
+    {
+        public ServiceType[] AvailableServices => new[]
+        {
+            ServiceType.Spotify
+        };
     }
 }

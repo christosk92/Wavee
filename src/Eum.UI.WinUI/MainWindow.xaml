@@ -8,9 +8,6 @@
     xmlns:local="using:Eum.UI.WinUI"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:shell="using:Eum.UI.WinUI.Views.Shell"
-    xmlns:login="using:Eum.UI.WinUI.Views.Login"
-    xmlns:winUiEx="using:WinUIEx"
     mc:Ignorable="d">
     <local:MainWindowContentWrapper/>
 </Window>

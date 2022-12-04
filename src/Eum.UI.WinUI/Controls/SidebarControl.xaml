@@ -6,16 +6,19 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:sidebar="using:Eum.UI.Core.ViewModels.Sidebar"
     xmlns:templateSelectors="using:Eum.UI.WinUI.TemplateSelectors"
-    xmlns:sidebar1="using:Eum.UI.ViewModels.Sidebar"
     xmlns:profile="using:Eum.UI.WinUI.Views.Profile"
     xmlns:playlists="using:Eum.UI.ViewModels.Playlists"
+    xmlns:sidebar1="using:Eum.UI.ViewModels.Sidebar"
+    xmlns:shell="using:Eum.UI.WinUI.Views.Shell"
     HorizontalAlignment="Stretch" Loaded="SidebarControl_OnLoaded"
     d:DesignHeight="768"
     d:DesignWidth="200"
     DisplayModeChanged="SidebarControl_DisplayModeChanged"
     IsBackButtonVisible="Collapsed"
+    Style="{StaticResource SidebarViewStyle}"
     IsSettingsVisible="False"
     IsTitleBarAutoPaddingEnabled="False"
+    FooterMenuItemsSource="{x:Bind ViewModel.Playlists, Mode=OneWay}"
     MenuItemsSource="{x:Bind ViewModel.SidebarItems, Mode=OneWay}"
     SelectedItem="{x:Bind ViewModel.SelectedSidebarItem, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
     mc:Ignorable="d">
@@ -218,7 +221,7 @@
                                         <CompositeTransform x:Name="PaneTransform" />
                                     </Grid.RenderTransform>
 
-                                    <profile:CurrentUserProfileCardView HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+                                    <shell:CurrentUserProfileCardView HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
 
                                     <NavigationViewItemSeparator VerticalAlignment="Bottom" Grid.Row="1" Margin="0,0,0,0"/>
                                     <Border Grid.Row="2" Child="{TemplateBinding Pane}" />

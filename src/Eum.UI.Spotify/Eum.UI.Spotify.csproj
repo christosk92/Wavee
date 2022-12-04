@@ -7,8 +7,14 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\WinuiTest3\src\Eum.UI.Desktop\Eum.UI.csproj" />
-    <ProjectReference Include="..\..\src\Eum.Connections.Spotify\Eum.Connections.Spotify.csproj" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="7.0.0" />
+    <PackageReference Include="TagLibSharp" Version="2.3.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Eum\src\Spotify\Eum.Connections.Spotify.Playback\Eum.Connections.Spotify.Playback.csproj" />
+    <ProjectReference Include="..\..\Eum\src\Spotify\Eum.Connections.Spotify\Eum.Connections.Spotify.csproj" />
+    <ProjectReference Include="..\Eum.UI\Eum.UI.csproj" />
   </ItemGroup>
 
 </Project>

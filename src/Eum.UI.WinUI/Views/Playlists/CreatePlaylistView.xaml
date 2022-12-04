@@ -76,20 +76,22 @@
                     <TextBox Text="{x:Bind ViewModel.PlaylistTitle, Mode=TwoWay}" HorizontalAlignment="Stretch" PlaceholderText="Playlist #1" Margin="0,8"/>
 
                     <StackPanel>
-                        <UserControl IsEnabled="False">
+                        <UserControl IsEnabled="{x:Bind ViewModel.CanSyncWithServices}">
                             <StackPanel  Margin="0,18,0,0">
                                 <TextBlock Text="Synchronize with"/>
                                 <ItemsRepeater Margin="0,4,0,0"  ItemsSource="{x:Bind ViewModel.SyncWithServices}">
                                     <ItemsRepeater.ItemTemplate>
                                         <DataTemplate x:DataType="playlists:ServiceTypeCheckedHolder">
-                                            <CheckBox Content="{x:Bind Service}" IsChecked="{x:Bind Selected, Mode=TwoWay}"/>
+                                            <CheckBox IsEnabled="{x:Bind Deselectable}" Content="{x:Bind Service}" IsChecked="{x:Bind Selected, Mode=TwoWay}"/>
                                         </DataTemplate>
                                     </ItemsRepeater.ItemTemplate>
                                 </ItemsRepeater>
                             </StackPanel>
                         </UserControl>
 
-                        <Button Content="Why can't I sync?" Tapped="WhyDisabledSync_OnTapped"
+                        <Button
+                            Visibility="{x:Bind ViewModel.CanSyncWithServices, Converter={StaticResource TrueToCollapsedConverter}}"
+                            Content="Why can't I sync?" Tapped="WhyDisabledSync_OnTapped"
                                 Style="{ThemeResource TextBlockButtonStyle}"
                                 x:Name="WhyDisabledSync" />
 

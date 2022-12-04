@@ -10,13 +10,17 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:controls="using:Eum.UI.WinUI.Controls"
     mc:Ignorable="d">
+
     <UserControl.Transitions>
         <TransitionCollection>
             <EntranceThemeTransition />
         </TransitionCollection>
     </UserControl.Transitions>
     <Grid>
-        <controls:SidebarControl ItemInvoked="NavigationView_OnItemInvoked" User="{x:Bind UserManager.SelectedUser, Mode=OneWay}">
+        <controls:SidebarControl
+            ItemInvoked="NavigationView_OnItemInvoked"
+            User="{x:Bind UserManager.CurrentUser, Mode=OneWay}"
+            >
             <controls:SidebarControl.TabContent>
                 <Grid
                     x:Name="RightMarginGrid"
@@ -29,7 +33,14 @@
                     </Grid.RowDefinitions>
                 </Grid>
             </controls:SidebarControl.TabContent>
-            <ContentControl VerticalContentAlignment="Stretch" HorizontalContentAlignment="Stretch" Content="{x:Bind ViewModel.MainScreen.CurrentPage, Mode=OneWay, Converter={StaticResource ViewLocator}}" />
+            <Grid>
+                <ContentControl VerticalContentAlignment="Stretch" HorizontalContentAlignment="Stretch" 
+                            Content="{x:Bind ViewModel.MainScreen.CurrentPage, Mode=OneWay, Converter={StaticResource ViewLocator}}" />
+
+                <controls:BottomPlayerControl 
+                    ViewModel="{x:Bind ViewModel.PlaybackViewModel, Mode=OneWay}"
+                    VerticalAlignment="Bottom"   Margin="12,30,12,16"/>
+            </Grid>
         </controls:SidebarControl>
     </Grid>
 </UserControl>

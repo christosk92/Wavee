@@ -13,6 +13,8 @@
     xmlns:media="using:CommunityToolkit.WinUI.UI.Media"
     xmlns:controls="using:Eum.UI.WinUI.Controls"
     xmlns:playlists="using:Eum.UI.ViewModels.Playlists"
+    xmlns:playlists1="using:Eum.UI.Playlists"
+    xmlns:xamlConverters="using:Eum.UI.WinUI.XamlConverters"
     mc:Ignorable="d">
     <UserControl.Transitions>
         <TransitionCollection>
@@ -199,16 +201,13 @@
             CornerRadius="8"
             Opacity=".075"
             Offset="0,4,0" />
+        <xamlConverters:TimeSpanToStringConverter x:Key="TimeSpanToStringConverter" />
 
 
-        <DataTemplate x:Key="PlaylistTrackTemplate" x:DataType="playlists:PlaylistTrackViewModel">
-            <controls:PlaylistTrackView ViewModel="{x:Bind }"/>
-        </DataTemplate>
     </UserControl.Resources>
     <Grid>
         <ListView
             ui:ScrollViewerExtensions.HorizontalScrollBarMargin="0,0,-56,0"
-            ItemTemplate="{StaticResource PlaylistTrackTemplate}"
             Padding="56,44,56,16"
             ItemsSource="{x:Bind ViewModel.Tracks}"
             AllowDrop="True" Drop="TrackList_OnDrop" DragOver="TrackList_DragOver">
@@ -231,18 +230,24 @@
                         x:DefaultBindMode="OneWay"
                         CornerRadius="8">
                         <Grid>
-                            <Rectangle
-                                HorizontalAlignment="Stretch"
-                                VerticalAlignment="Stretch"
-                                Stretch="Fill">
-                                <Rectangle.Fill>
-                                    <controls:BlurredImageBrush
-                                    x:Name="Br" Blur="80"
-                                    x:FieldModifier="public"
-                                    Source="{x:Bind ViewModel.Playlist.ImagePath, Mode=OneWay}"
-                                    Stretch="Fill" />
-                                </Rectangle.Fill>
-                            </Rectangle>
+                            <Grid>
+                                <Grid
+                                    x:Name="Wrapper"
+                                    x:Load="{x:Bind ViewModel.Playlist.ImagePath, Converter={StaticResource IsNullToBoolConverter}, ConverterParameter='false'}">
+                                    <Rectangle
+                                        HorizontalAlignment="Stretch"
+                                        VerticalAlignment="Stretch"
+                                        Stretch="Fill">
+                                        <Rectangle.Fill>
+                                            <controls:BlurredImageBrush
+                                                x:Name="Br" Blur="80"
+                                                x:FieldModifier="public"
+                                                Source="{Binding Playlist.ImagePath, Mode=OneWay}"
+                                                Stretch="Fill" />
+                                        </Rectangle.Fill>
+                                    </Rectangle>
+                                </Grid>
+                            </Grid>
                             <Grid Padding="24,0" ColumnSpacing="24">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="192" />
@@ -255,11 +260,15 @@
                                        Fill="{ThemeResource ApplicationPageBackgroundThemeBrush}"/>
 
                                 <Border
-                                    Width="192"
+                                    Width="192" 
                                     Height="192"
                                     ui:Effects.Shadow="{StaticResource LightShadowBottomOffset}">
                                     <Grid>
+                                        <FontIcon 
+                                            FontSize="64"
+                                            FontFamily="Segoe Fluent Icons" Glyph="&#xE93C;" />
                                         <Border animations:Connected.Key="PlaylistArt"
+                                                x:Load="{x:Bind ViewModel.Playlist.ImagePath, Converter={StaticResource IsNullToBoolConverter}, ConverterParameter='false'}"
                                                 x:Name="PlaylistArtBorder"
                                                 CornerRadius="8">
                                             <Border.Background>
@@ -269,7 +278,7 @@
                                                             DecodePixelHeight="192"
                                                             DecodePixelType="Logical"
                                                             DecodePixelWidth="192"
-                                                            UriSource="{x:Bind ViewModel.Playlist.ImagePath, Mode=OneWay}" />
+                                                            UriSource="{Binding Playlist.ImagePath, Mode=OneWay}" />
                                                     </ImageBrush.ImageSource>
                                                 </ImageBrush>
                                             </Border.Background>
@@ -289,24 +298,34 @@
                                         FontSize="36"
                                         FontWeight="SemiBold"
                                         Text="{x:Bind ViewModel.Playlist.Name, Mode=TwoWay}"/>
+                                    <TextBlock
+                                        x:Name="Description"
+                                        FontSize="14"
+                                        FontWeight="Normal"
+                                        MaxLines="2"
+                                        Opacity="0.8"
+                                        Margin="0,-6,0,2"
+                                        Style="{StaticResource BodyTextBlockStyle}"
+                                        Text="{Binding Playlist.Description}"
+                                        TextTrimming="CharacterEllipsis" />
                                     <StackPanel Orientation="Horizontal" Spacing="8">
                                         <TextBlock 
-                                        FontSize="16"
+                                        FontSize="14"
                                         Opacity="1"
                                         FontWeight="SemiBold"
                                         Text="Playlist by"/>
                                         <Button
                                         Margin="-4,0,0,0"
-                                        FontSize="16"
+                                        FontSize="14"
                                         Padding="0"
-                                        Content="{x:Bind ViewModel.Playlist.User.UserName}" 
+                                        Content="{x:Bind ViewModel.EumUser.ProfileName}" 
                                         FontWeight="Bold"
                                         Style="{StaticResource TextBlockButtonStyle}"/>
                                     </StackPanel>
                                     <TextBlock
-                                        Margin="0,0,0,8"
                                         FontSize="14"
                                         Opacity=".9"
+                                        Margin="0,0,0,8"
                                         FontWeight="SemiBold"
                                         Style="{StaticResource BodyTextBlockStyle}">
                                         <Run Text="{x:Bind ViewModel.Tracks.Count, Mode=OneWay}" /> <Run Text="Songs" />
@@ -314,15 +333,6 @@
                                         <Run Text="{x:Bind ViewModel.TotalTrackDuration, Mode=OneWay, Converter={StaticResource TimeSpanToStringConverter}}" />
                                         <!-- ,<Run Text="{x:Bind SelectedPlaylist.VideosCount, Mode=OneWay}" /> <Run Text="{x:Bind SelectedPlaylist.VideosCountString, Mode=OneWay}" /> -->
                                     </TextBlock>
-                                    <TextBlock
-                                        x:Name="Description"
-                                        FontSize="16"
-                                        FontWeight="Bold"
-                                        MaxLines="2"
-                                        Opacity="0.6"
-                                        Style="{StaticResource BodyTextBlockStyle}"
-
-                                        TextTrimming="CharacterEllipsis" />
 
 
 
@@ -341,10 +351,10 @@
                                         </Button>
                                     </StackPanel>
                                 </StackPanel>
-                            </Grid>
                         </Grid>
-                    </Border>
-                    <Border  Background="{ThemeResource LayerFillColorDefaultBrush}"
+                </Grid>
+                </Border>
+                <Border  Background="{ThemeResource LayerFillColorDefaultBrush}"
                             VerticalAlignment="Top" 
                             HorizontalAlignment="Stretch" 
                             Margin="0,16,0,4"
@@ -354,97 +364,97 @@
                             BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                             Grid.Row="1"
                             x:DefaultBindMode="OneWay">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="120"/>
-                                <ColumnDefinition Width="1.5*"/>
-                                <ColumnDefinition/>
-                                <ColumnDefinition/>
-                                <ColumnDefinition Width="150"/>
-                                <ColumnDefinition Width="50"/>
-                            </Grid.ColumnDefinitions>
-                            <Button  Padding="4,8"
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="120"/>
+                            <ColumnDefinition Width="1.5*"/>
+                            <ColumnDefinition/>
+                            <ColumnDefinition/>
+                            <ColumnDefinition Width="150"/>
+                            <ColumnDefinition Width="50"/>
+                        </Grid.ColumnDefinitions>
+                        <Button  Padding="4,8"
                                      HorizontalAlignment="Stretch"
                                      Command="{x:Bind ViewModel.SortCommand}"
                                      HorizontalContentAlignment="Stretch"
                                      Style="{ThemeResource TextBlockButtonStyle}">
-                                <Button.CommandParameter>
-                                    <playlists:PlaylistSortFieldType>Index</playlists:PlaylistSortFieldType>
-                                </Button.CommandParameter>
-                                <StackPanel>
-                                    <TextBlock Text="#"/>
-                                </StackPanel>
-                            </Button>
-                            <Button Grid.Column="1" Padding="4,8"
+                            <Button.CommandParameter>
+                                <playlists1:PlaylistSortFieldType>Index</playlists1:PlaylistSortFieldType>
+                            </Button.CommandParameter>
+                            <StackPanel>
+                                <TextBlock Text="#"/>
+                            </StackPanel>
+                        </Button>
+                        <Button Grid.Column="1" Padding="4,8"
                                     Command="{x:Bind ViewModel.SortCommand}"
                                 HorizontalContentAlignment="Stretch" HorizontalAlignment="Stretch"
                                  Style="{ThemeResource TextBlockButtonStyle}">
-                                <Button.CommandParameter>
-                                    <playlists:PlaylistSortFieldType>Title</playlists:PlaylistSortFieldType>
-                                </Button.CommandParameter>
-                                <StackPanel>
-                                    <TextBlock Text="Title"/>
-                                </StackPanel>
-                            </Button>
-                            <Button  Grid.Column="2"   Padding="4,8"
+                            <Button.CommandParameter>
+                                <playlists1:PlaylistSortFieldType>Title</playlists1:PlaylistSortFieldType>
+                            </Button.CommandParameter>
+                            <StackPanel>
+                                <TextBlock Text="Title"/>
+                            </StackPanel>
+                        </Button>
+                        <Button  Grid.Column="2"   Padding="4,8"
                                  HorizontalContentAlignment="Stretch"  Command="{x:Bind ViewModel.SortCommand}"
                                  HorizontalAlignment="Stretch"
                                  Style="{ThemeResource TextBlockButtonStyle}">
-                                <Button.CommandParameter>
-                                    <playlists:PlaylistSortFieldType>Artist</playlists:PlaylistSortFieldType>
-                                </Button.CommandParameter>
-                                <StackPanel>
-                                    <TextBlock Text="Artist"/>
-                                </StackPanel>
-                            </Button>
-                            <Button  Grid.Column="3"    Padding="4,8"
+                            <Button.CommandParameter>
+                                <playlists1:PlaylistSortFieldType>Artist</playlists1:PlaylistSortFieldType>
+                            </Button.CommandParameter>
+                            <StackPanel>
+                                <TextBlock Text="Artist"/>
+                            </StackPanel>
+                        </Button>
+                        <Button  Grid.Column="3"    Padding="4,8"
                                  HorizontalContentAlignment="Stretch"
                                  HorizontalAlignment="Stretch"  Command="{x:Bind ViewModel.SortCommand}"
                                  Style="{ThemeResource TextBlockButtonStyle}">
-                                <Button.CommandParameter>
-                                    <playlists:PlaylistSortFieldType>Album</playlists:PlaylistSortFieldType>
-                                </Button.CommandParameter>
-                                <StackPanel>
-                                    <TextBlock Text="Album"/>
-                                </StackPanel>
-                            </Button>
-                            <Button Grid.Column="4"    HorizontalAlignment="Stretch"   Padding="4,8"
+                            <Button.CommandParameter>
+                                <playlists1:PlaylistSortFieldType>Album</playlists1:PlaylistSortFieldType>
+                            </Button.CommandParameter>
+                            <StackPanel>
+                                <TextBlock Text="Album"/>
+                            </StackPanel>
+                        </Button>
+                        <Button Grid.Column="4"    HorizontalAlignment="Stretch"   Padding="4,8"
                                 HorizontalContentAlignment="Stretch"  Command="{x:Bind ViewModel.SortCommand}"
                                 Style="{ThemeResource TextBlockButtonStyle}">
-                                <Button.CommandParameter>
-                                    <playlists:PlaylistSortFieldType>Added</playlists:PlaylistSortFieldType>
-                                </Button.CommandParameter>
-                                <StackPanel>
-                                    <FontIcon FontSize="14" FontFamily="Segoe Fluent Icons" Glyph="&#xE787;" />
-                                </StackPanel>
-                            </Button>
-                            <Button Grid.Column="5"    HorizontalAlignment="Stretch"   Padding="4,8"
+                            <Button.CommandParameter>
+                                <playlists1:PlaylistSortFieldType>Added</playlists1:PlaylistSortFieldType>
+                            </Button.CommandParameter>
+                            <StackPanel>
+                                <FontIcon FontSize="14" FontFamily="Segoe Fluent Icons" Glyph="&#xE787;" />
+                            </StackPanel>
+                        </Button>
+                        <Button Grid.Column="5"    HorizontalAlignment="Stretch"   Padding="4,8"
                                 HorizontalContentAlignment="Stretch"  Command="{x:Bind ViewModel.SortCommand}"
                                 Style="{ThemeResource TextBlockButtonStyle}">
-                                <Button.CommandParameter>
-                                    <playlists:PlaylistSortFieldType>Duration</playlists:PlaylistSortFieldType>
-                                </Button.CommandParameter>
-                                <StackPanel>
-                                    <FontIcon FontSize="14" FontFamily="Segoe Fluent Icons" Glyph="&#xE916;" />
-                                </StackPanel>
-                            </Button>
-                        </Grid>
-                    </Border>
-                </Grid>
-            </ListView.Header>
-        </ListView>
+                            <Button.CommandParameter>
+                                <playlists1:PlaylistSortFieldType>Duration</playlists1:PlaylistSortFieldType>
+                            </Button.CommandParameter>
+                            <StackPanel>
+                                <FontIcon FontSize="14" FontFamily="Segoe Fluent Icons" Glyph="&#xE916;" />
+                            </StackPanel>
+                        </Button>
+                    </Grid>
+                </Border>
+    </Grid>
+    </ListView.Header>
+    </ListView>
 
-        <StackPanel 
+    <StackPanel 
             Visibility="{x:Bind ViewModel.HasTracks, Mode=OneWay, Converter={StaticResource TrueToCollapsedConverter}}"
                     Spacing="8"
             Margin="0,250,0,0" HorizontalAlignment="Center" VerticalAlignment="Center">
-            <FontIcon 
+        <FontIcon 
                 Opacity=".9"
                 FontSize="64" FontFamily="Segoe Fluent Icons" Glyph="&#xE943;" />
-            <TextBlock FontSize="18"
+        <TextBlock FontSize="18"
                        Opacity=".9"
                        FontWeight="SemiLight"
                        Text="It's kinda empty here"/>
-        </StackPanel>
+    </StackPanel>
     </Grid>
 </UserControl>

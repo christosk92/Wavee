@@ -10,10 +10,20 @@ public class ViewLocator : IValueConverter
     {
         if (value is { } routableViewModel)
         {
-            var name = routableViewModel.GetType().FullName!.Replace("ViewModel", "View")
+            var itemType = routableViewModel.GetType();
+
+
+            var name = itemType.FullName!.Replace("ViewModel", "View")
                 .Replace("Eum.UI", "Eum.UI.WinUI");
             var type = Type.GetType(name);
 
+            if (type == null)
+            {
+                //check base type
+                name = itemType.BaseType.FullName!.Replace("ViewModel", "View")
+                    .Replace("Eum.UI", "Eum.UI.WinUI");
+                type = Type.GetType(name);
+            }
             if (type != null)
             {
 

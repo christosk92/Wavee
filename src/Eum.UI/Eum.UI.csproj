@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.1.0-preview1" />
+    <PackageReference Include="DynamicData" Version="7.12.11" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
+    <PackageReference Include="Nito.AsyncEx.Context" Version="5.1.2" />
+    <PackageReference Include="Nito.AsyncEx.Coordination" Version="5.1.2" />
+    <PackageReference Include="ReactiveUI" Version="18.4.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Services\NewFolder\" />
+  </ItemGroup>
+
+	<ItemGroup>
+    <ProjectReference Include="..\..\Eum\src\Eum\Eum.csproj" />
+    <ProjectReference Include="..\..\Eum\src\Spotify\Eum.Connections.Spotify\Eum.Connections.Spotify.csproj" />
+  </ItemGroup>
+
+</Project>

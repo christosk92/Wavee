@@ -6,18 +6,19 @@ using Windows.System;
 using Windows.UI.Core;
 using CommunityToolkit.Mvvm.DependencyInjection;
 using CommunityToolkit.WinUI.UI;
+using Eum.UI.Services.Playlists;
+using Eum.UI.Services.Users;
 using Eum.UI.Users;
 using Eum.UI.ViewModels;
 using Eum.UI.ViewModels.Navigation;
 using Eum.UI.ViewModels.Playlists;
-using Eum.UI.ViewModels.Sidebar;
 using Eum.UI.ViewModels.Users;
-using Eum.UI.WinUI.Helper;
 using Microsoft.UI.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using Eum.Users;
+using Eum.UI.ViewModels.Sidebar;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -26,10 +27,10 @@ namespace Eum.UI.WinUI.Controls
 {
     public sealed partial class SidebarControl : NavigationView
     {
-        private readonly UserManagerViewModel _userManagerViewModel;
+        private readonly IEumUserViewModelManager _userManagerViewModel;
         public SidebarControl()
         {
-            _userManagerViewModel = Ioc.Default.GetRequiredService<UserManagerViewModel>();
+            _userManagerViewModel = Ioc.Default.GetRequiredService<IEumUserViewModelManager>();
             this.InitializeComponent();
         }
         /// <summary>
@@ -41,27 +42,21 @@ namespace Eum.UI.WinUI.Controls
 
         private bool lockFlag = false;
 
-        public UserDetailProvider UiConfig
-        {
-            get;
-            private set;
-        }
-
-        public static readonly DependencyProperty ViewModelProperty = DependencyProperty.Register(nameof(ViewModel), typeof(SidebarViewModel), 
+        public static readonly DependencyProperty ViewModelProperty = DependencyProperty.Register(nameof(ViewModel), typeof(SidebarViewModel),
             typeof(SidebarControl), new PropertyMetadata(default(SidebarViewModel)));
 
         public static readonly DependencyProperty TabContentProperty = DependencyProperty.Register(nameof(TabContent), typeof(UIElement), typeof(SidebarControl), new PropertyMetadata(null));
-        public static readonly DependencyProperty UserProperty = DependencyProperty.Register(nameof(User), typeof(UserViewModelBase), typeof(SidebarControl), new PropertyMetadata(default(UserViewModelBase), UserChanged));
+        public static readonly DependencyProperty UserProperty = DependencyProperty.Register(nameof(User), typeof(EumUserViewModel),
+            typeof(SidebarControl), new PropertyMetadata(default(EumUserViewModel), UserChanged));
 
         private static void UserChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             var sidebar = (d as SidebarControl);
             sidebar.ViewModel?.Deconstruct();
-            if (e.NewValue is UserViewModelBase v)
+            if (e.NewValue is EumUserViewModel v)
             {
-                sidebar.ViewModel = new SidebarViewModel(v);
-                sidebar.UiConfig = v.User.UserDetailProvider;
-                sidebar.OpenPaneLength = sidebar.UiConfig.SidebarWidth ?? sidebar.OpenPaneLength;
+                sidebar.ViewModel = new SidebarViewModel(v, Ioc.Default.GetRequiredService<IEumUserPlaylistViewModelManager>());
+                sidebar.OpenPaneLength = sidebar.NullOrSidebarWidth ?? sidebar.OpenPaneLength;
             }
 
             GC.Collect();
@@ -74,9 +69,9 @@ namespace Eum.UI.WinUI.Controls
             set => SetValue(TabContentProperty, value);
         }
 
-        public UserViewModelBase User
+        public EumUserViewModel User
         {
-            get => (UserViewModelBase)GetValue(UserProperty);
+            get => (EumUserViewModel)GetValue(UserProperty);
             set => SetValue(UserProperty, value);
         }
         public SidebarViewModel ViewModel
@@ -102,11 +97,26 @@ namespace Eum.UI.WinUI.Controls
             IsPaneToggleButtonVisible = args.DisplayMode == NavigationViewDisplayMode.Minimal;
         }
 
+        private double? NullOrSidebarWidth
+        {
+            get
+            {
+                if (User?.User == null) return null;
+                if (User.User.SidebarWidth == 0) return null;
+
+                return User.User.SidebarWidth;
+            }
+            set
+            {
+                User.User.SidebarWidth = value.Value;
+            }
+        }
+
         private void Border_KeyDown(object sender, KeyRoutedEventArgs e)
         {
             var step = 1;
             var ctrl = Microsoft.UI.Input.InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Control);
-            originalSize = IsPaneOpen ? (UiConfig.SidebarWidth ??= OpenPaneLength) : CompactPaneLength;
+            originalSize = IsPaneOpen ? (NullOrSidebarWidth ??= OpenPaneLength) : CompactPaneLength;
 
             if (ctrl.HasFlag(CoreVirtualKeyStates.Down))
             {
@@ -138,7 +148,7 @@ namespace Eum.UI.WinUI.Controls
                 return;
             }
 
-            UiConfig.SidebarWidth = OpenPaneLength;
+            User.User.SidebarWidth = OpenPaneLength;
         }
 
         private void Border_ManipulationDelta(object sender, ManipulationDeltaRoutedEventArgs e)
@@ -194,14 +204,14 @@ namespace Eum.UI.WinUI.Controls
                 }
             }
 
-            UiConfig.SidebarWidth = OpenPaneLength;
+            User.User.SidebarWidth = OpenPaneLength;
         }
 
         private void ResizeElementBorder_ManipulationCompleted(object sender, ManipulationCompletedRoutedEventArgs e)
         {
             (sender as Grid).ChangeCursor(InputSystemCursor.Create(InputSystemCursorShape.Arrow));
             VisualStateManager.GoToState((sender as Grid).FindAscendant<SplitView>(), "ResizerNormal", true);
-            UiConfig.SidebarWidth = OpenPaneLength;
+            User.User.SidebarWidth = OpenPaneLength;
             dragging = false;
         }
 
@@ -214,7 +224,7 @@ namespace Eum.UI.WinUI.Controls
         {
             if (DisplayMode == NavigationViewDisplayMode.Expanded)
             {
-                originalSize = IsPaneOpen ? (UiConfig.SidebarWidth ??= OpenPaneLength) : CompactPaneLength;
+                originalSize = IsPaneOpen ? (NullOrSidebarWidth ??= OpenPaneLength) : CompactPaneLength;
                 (sender as Grid).ChangeCursor(InputSystemCursor.Create(InputSystemCursorShape.SizeWestEast));
                 VisualStateManager.GoToState((sender as Grid).FindAscendant<SplitView>(), "ResizerPressed", true);
                 dragging = true;
@@ -226,14 +236,14 @@ namespace Eum.UI.WinUI.Controls
 
         private void SidebarControl_OnLoaded(object sender, RoutedEventArgs e)
         {
-            this.OpenPaneLength = UiConfig.SidebarWidth ?? OpenPaneLength;
+            this.OpenPaneLength = NullOrSidebarWidth ?? OpenPaneLength;
         }
 
         private void AddPlaylist_Tapped(object sender, TappedRoutedEventArgs e)
         {
             if (NavigationState.Instance.HomeScreenNavigation.CurrentPage is not CreatePlaylistViewModel)
             {
-                NavigationState.Instance.HomeScreenNavigation.To(new CreatePlaylistViewModel(), NavigationMode.Normal);
+                NavigationState.Instance.HomeScreenNavigation.To(new CreatePlaylistViewModel(Ioc.Default.GetRequiredService<IEumUserViewModelManager>()), NavigationMode.Normal);
             }
         }
     }

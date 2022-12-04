@@ -6,13 +6,10 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:Eum.UI.WinUI"
-    xmlns:shell="using:Eum.UI.WinUI.Views.Shell"
+    xmlns:xamlConverters="using:Eum.UI.WinUI.XamlConverters"
     xmlns:converters="using:CommunityToolkit.WinUI.UI.Converters"
     xmlns:xaml="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:ui="using:Windows.UI"
-    xmlns:converters1="using:Eum.UI.WinUI.Converters"
-    xmlns:system="using:System"
-    xmlns:track="using:Eum.UI.ViewModels.Track"
     xmlns:controls="using:Eum.UI.WinUI.Controls">
     <Application.Resources>
         <ResourceDictionary>
@@ -100,27 +97,16 @@
                     <CornerRadius x:Key="DetailsLayoutThumbnailCornerRadius">2</CornerRadius>
                     <!--  Workaround for https://github.com/microsoft/microsoft-ui-xaml/issues/5441  -->
                     <x:Double x:Key="MediaTransportControlsMinWidth">50</x:Double>
+                  
                 </ResourceDictionary>
+                <controls:SidebarControlStyles/>
             </ResourceDictionary.MergedDictionaries>
-            <StackLayout x:Key="HorizontalDiscoLayout" Orientation="Horizontal"/>
-
-            <UniformGridLayout x:Name="UniformGridLayout" MinRowSpacing="8" 
-                               VirtualizingStackPanel.VirtualizationMode="Recycling"
-                               ItemsJustification="Start" MinItemHeight="180" MinItemWidth="180"
-                               ItemsStretch="Fill"  
-                               MinColumnSpacing="8"/>
-
-            <local:TemplateTypeTolayoutConverter 
-                GridLayout="{StaticResource UniformGridLayout}"
-                HorizontalStack="{StaticResource HorizontalDiscoLayout}"
-                x:Key="TemplateTypeToLayoutConverter" />
-            <converters:BoolNegationConverter x:Key="BoolNegateConverter" />
+            <xamlConverters:IsNullToBoolConverter x:Key="IsNullToBoolConverter" />
+            <xamlConverters:IsNullToVisibilityConverter x:Key="IsNullToVisibilityConverter" />
             <converters:BoolToVisibilityConverter TrueValue="Visible" FalseValue="Collapsed" x:Key="TrueToVisibleConverter" />
-            <converters:BoolToVisibilityConverter TrueValue="Collapsed" FalseValue="Visible" x:Key="TrueToCollapsedConverter" />
+            <converters:BoolToVisibilityConverter TrueValue="Collapsed" FalseValue="Visible" x:Key="TrueToCollapsedConverter"/>
+            <converters:BoolNegationConverter x:Key="BoolNegateConverter" />
             <local:ViewLocator x:Key="ViewLocator" />
-            <converters1:IsEmptyToBoolConverter x:Key="IsEmptyToBoolConverter" />
-            <converters1:TimeSpanToStringConverter x:Key="TimeSpanToStringConverter" />
-            <local:IndexToStringConverter x:Key="IndexToStringConverter" />
             <!-- Other app resources here -->
         </ResourceDictionary>
     </Application.Resources>
