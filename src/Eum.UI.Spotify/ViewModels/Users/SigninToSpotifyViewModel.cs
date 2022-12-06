@@ -38,10 +38,6 @@ namespace Eum.UI.Spotify.ViewModels.Users
 
 
 
-        public void OnNavigatedTo(bool isInHistory) { }
-
-        public void OnNavigatedFrom(bool isInHistory) { }
-
         public bool IsActive { get; set; }
         public ServiceType Service => ServiceType.Spotify;
 
@@ -88,5 +84,16 @@ namespace Eum.UI.Spotify.ViewModels.Users
 
             IsBusy = false;
         }
+
+        public void OnNavigatedTo(object parameter)
+        {
+            
+        }
+
+        public void OnNavigatedFrom()
+        {
+        }
+
+        public int MaxDepth => 1;
     }
 }

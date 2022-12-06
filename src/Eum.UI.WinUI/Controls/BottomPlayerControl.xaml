@@ -1,19 +1,19 @@
-<!-- Copyright (c) Microsoft Corporation. All rights reserved. -->
-<!-- Licensed under the MIT License. See LICENSE in the project root for license information. -->
+<!--  Copyright (c) Microsoft Corporation. All rights reserved.  -->
+<!--  Licensed under the MIT License. See LICENSE in the project root for license information.  -->
 
 <UserControl
     x:Class="Eum.UI.WinUI.Controls.BottomPlayerControl"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:Eum.UI.WinUI.Controls"
-    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:controls="using:CommunityToolkit.WinUI.UI.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="using:Eum.UI.WinUI.Controls"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:media="using:CommunityToolkit.WinUI.UI.Media"
+    xmlns:playback="using:Eum.UI.ViewModels.Playback"
     xmlns:ui="using:CommunityToolkit.WinUI.UI"
     xmlns:winUi="using:Eum.UI.WinUI"
     xmlns:xamlConverters="using:Eum.UI.WinUI.XamlConverters"
-    xmlns:playback="using:Eum.UI.ViewModels.Playback"
     DataContext="{x:Bind ViewModel, Mode=OneWay}"
     mc:Ignorable="d">
     <UserControl.Resources>
@@ -33,14 +33,14 @@
     <Border ui:Effects.Shadow="{StaticResource CommonShadow}">
         <Grid>
             <Grid.RowDefinitions>
-                <RowDefinition Height="*"/>
-                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
             <Border
-        Background="{ThemeResource AcrylicInAppFillColorDefaultBrush}"
-        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
-        CornerRadius="8,8,0,0">
+                Background="{ThemeResource AcrylicInAppFillColorDefaultBrush}"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                CornerRadius="8,8,0,0">
                 <Grid x:Name="MainGrid" Padding="5">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition />
@@ -48,8 +48,8 @@
                         <ColumnDefinition />
                     </Grid.ColumnDefinitions>
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="*"/>
-                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
 
                     <Grid>
@@ -59,29 +59,33 @@
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <Image
-                        x:Name="AlbumImage"
-                        Width="70"
-                        Height="70"
-                        DataContext="{x:Bind ViewModel.Item.SmallImage, Mode=OneWay, Converter={StaticResource StreamToBitmapConverter}}"
-                        Source="{Binding Result}"
-                        Margin="3,0,0,0"/>
+                            x:Name="AlbumImage"
+                            Width="70"
+                            Height="70"
+                            Margin="3,0,0,0"
+                            DataContext="{x:Bind ViewModel.Item.SmallImage, Mode=OneWay, Converter={StaticResource StreamToBitmapConverter}}"
+                            Source="{Binding Result}" />
 
                         <StackPanel
-                        Grid.Column="1"
-                        Margin="8,0"
-                        VerticalAlignment="Center"
-                        Orientation="Vertical">
+                            Grid.Column="1"
+                            Margin="8,0"
+                            VerticalAlignment="Center"
+                            Orientation="Vertical">
                             <Button
-                            Padding="0"
-                            FontSize="15"
-                            FontWeight="SemiBold"
-                            Style="{ThemeResource TextBlockButtonStyle}">
-                                <TextBlock x:Name="Title" Text="{Binding Item.Title.Title}" TextTrimming="CharacterEllipsis" />
+                                Padding="0"
+                                FontSize="15"
+                                FontWeight="SemiBold"
+                                Style="{ThemeResource TextBlockButtonStyle}">
+                                <TextBlock
+                                    x:Name="Title"
+                                    Text="{Binding Item.Title.Title}"
+                                    TextTrimming="CharacterEllipsis" />
                             </Button>
                             <controls:MetadataControl
-                            x:Name="Artists"
-                            FontSize="14" Items="{Binding Item.Artists, Converter={StaticResource IdWithTitleToMetadataConverter}}"
-                            Opacity=".8">
+                                x:Name="Artists"
+                                FontSize="14"
+                                Items="{Binding Item.Artists, Converter={StaticResource IdWithTitleToMetadataConverter}}"
+                                Opacity=".8">
                                 <controls:MetadataControl.TextBlockStyle>
                                     <Style TargetType="TextBlock">
                                         <Setter Property="TextTrimming" Value="CharacterEllipsis" />
@@ -90,15 +94,16 @@
                             </controls:MetadataControl>
                         </StackPanel>
                         <Button
-                        Grid.Column="2"
-                        VerticalAlignment="Center"
-                        Background="Transparent" Margin="0,0,8,0"
-                        BorderThickness="0"
-                        RelativePanel.RightOf="Metadatapnale">
+                            Grid.Column="2"
+                            Margin="0,0,8,0"
+                            VerticalAlignment="Center"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            RelativePanel.RightOf="Metadatapnale">
                             <FontIcon
-                            FontFamily="{ThemeResource SymbolThemeFontFamily}"
-                            FontSize="16"
-                            Glyph="&#xEB51;" />
+                                FontFamily="{ThemeResource SymbolThemeFontFamily}"
+                                FontSize="16"
+                                Glyph="&#xEB51;" />
                         </Button>
                     </Grid>
 
@@ -113,81 +118,82 @@
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <StackPanel
-                        Grid.ColumnSpan="3"
-                        HorizontalAlignment="Center"
-                        Orientation="Horizontal">
+                            Grid.ColumnSpan="3"
+                            HorizontalAlignment="Center"
+                            Orientation="Horizontal">
                             <Button Style="{StaticResource F}">
                                 <FontIcon
-                                FontFamily="Segoe Fluent Icons"
-                                FontSize="20"
-                                Glyph="&#xE14B;" />
+                                    FontFamily="Segoe Fluent Icons"
+                                    FontSize="20"
+                                    Glyph="&#xE14B;" />
                             </Button>
                             <Button Style="{StaticResource F}">
                                 <FontIcon
-                                FontFamily="Segoe Fluent Icons"
-                                FontSize="20"
-                                Glyph="&#xE100;" />
+                                    FontFamily="Segoe Fluent Icons"
+                                    FontSize="20"
+                                    Glyph="&#xE100;" />
                             </Button>
                             <Button Style="{StaticResource F}">
                                 <FontIcon
-                                x:Name="PausePlayIcon"
-                                FontFamily="Segoe Fluent Icons"
-                                FontSize="28"
-                                Glyph="&#xE102;" />
+                                    x:Name="PausePlayIcon"
+                                    FontFamily="Segoe Fluent Icons"
+                                    FontSize="28"
+                                    Glyph="&#xE102;" />
                             </Button>
                             <Button Style="{StaticResource F}">
                                 <FontIcon
-                                FontFamily="Segoe Fluent Icons"
-                                FontSize="20"
-                                Glyph="&#xE101;" />
+                                    FontFamily="Segoe Fluent Icons"
+                                    FontSize="20"
+                                    Glyph="&#xE101;" />
                             </Button>
                             <Button Style="{StaticResource F}">
                                 <FontIcon
-                                FontFamily="Segoe Fluent Icons"
-                                FontSize="20"
-                                Glyph="&#xE1CD;" />
+                                    FontFamily="Segoe Fluent Icons"
+                                    FontSize="20"
+                                    Glyph="&#xE1CD;" />
                             </Button>
                         </StackPanel>
 
                         <TextBlock
-                        x:Name="TimestampText"
-                        Grid.Row="1"
-                        VerticalAlignment="Center"
-                        FontSize="12"
-                        FontWeight="SemiBold"
-                        Opacity=".8"
-                        Text="{x:Bind ViewModel.Timestamp, Mode=OneWay, Converter={StaticResource MsToTimestampConverter}}" />
+                            x:Name="TimestampText"
+                            Grid.Row="1"
+                            VerticalAlignment="Center"
+                            FontSize="12"
+                            FontWeight="SemiBold"
+                            Opacity=".8"
+                            Text="{x:Bind ViewModel.Timestamp, Mode=OneWay, Converter={StaticResource MsToTimestampConverter}}" />
 
                         <Grid
-                        Grid.Row="1"
-                        Grid.Column="1"
-                        Margin="8,0"
-                        VerticalAlignment="Center">
-                            <Slider x:Name="TimestampSlider"
-                                Value="{x:Bind ViewModel.Timestamp, Mode=OneWay}"
+                            Grid.Row="1"
+                            Grid.Column="1"
+                            Margin="8,0"
+                            VerticalAlignment="Center">
+                            <Slider
+                                x:Name="TimestampSlider"
+                                ManipulationMode="All"
                                 Maximum="{x:Bind ViewModel.Item.Duration, Mode=OneWay}"
-                                ManipulationMode="All" />
+                                Value="{x:Bind ViewModel.Timestamp, Mode=OneWay}" />
                             <ProgressBar
-                            x:Name="BufferingBar"
-                            IsIndeterminate="True"
-                            Visibility="Collapsed" />
+                                x:Name="BufferingBar"
+                                IsIndeterminate="True"
+                                Visibility="Collapsed" />
                         </Grid>
 
                         <TextBlock
-                        x:Name="DurationText"
-                        Grid.Row="1"
-                        Grid.Column="2"
-                        VerticalAlignment="Center"
-                        FontSize="12"
-                        FontWeight="SemiBold"
-                        Opacity=".8"
-                        Text="{x:Bind ViewModel.Item.Duration, Mode=OneWay, Converter={StaticResource MsToTimestampConverter}}" />
+                            x:Name="DurationText"
+                            Grid.Row="1"
+                            Grid.Column="2"
+                            VerticalAlignment="Center"
+                            FontSize="12"
+                            FontWeight="SemiBold"
+                            Opacity=".8"
+                            Text="{x:Bind ViewModel.Item.Duration, Mode=OneWay, Converter={StaticResource MsToTimestampConverter}}" />
                     </Grid>
 
                     <Grid
-                    Grid.Column="2"
-                    Margin="55,0,12,0"
-                    HorizontalAlignment="Right">
+                        Grid.Column="2"
+                        Margin="55,0,12,0"
+                        HorizontalAlignment="Right">
                         <Grid.RowDefinitions>
                             <RowDefinition />
                             <RowDefinition />
@@ -205,16 +211,16 @@
                             <AppBarButton x:Name="DevicesBt" Width="38">
                                 <AppBarButton.Flyout>
                                     <Flyout>
-                                        <ListView 
+                                        <ListView
                                             IsItemClickEnabled="True"
                                             ItemClick="ListViewBase_OnItemClick"
-                                            SelectedItem="{x:Bind ViewModel.ExternalDevice, Mode=OneWay}"
-                                            ItemsSource="{x:Bind ViewModel.RemoteDevices}">
+                                            ItemsSource="{x:Bind ViewModel.RemoteDevices}"
+                                            SelectedItem="{x:Bind ViewModel.ExternalDevice, Mode=OneWay}">
                                             <ListView.ItemTemplate>
                                                 <DataTemplate x:DataType="playback:RemoteDevice">
                                                     <StackPanel Orientation="Horizontal" Spacing="8">
-                                                        <FontIcon Glyph="{x:Bind Devicetype, Converter={StaticResource DeviceToIconConverter}}"/>
-                                                        <TextBlock Text="{x:Bind DeviceName}"/>
+                                                        <FontIcon Glyph="{x:Bind Devicetype, Converter={StaticResource DeviceToIconConverter}}" />
+                                                        <TextBlock Text="{x:Bind DeviceName}" />
                                                     </StackPanel>
                                                 </DataTemplate>
                                             </ListView.ItemTemplate>
@@ -233,41 +239,46 @@
                         </CommandBar>
 
                         <Button
-                        x:Name="VolumeButton"
-                        Grid.Row="1"
-                        HorizontalAlignment="Right"
-                        Style="{StaticResource F}">
+                            x:Name="VolumeButton"
+                            Grid.Row="1"
+                            HorizontalAlignment="Right"
+                            Style="{StaticResource F}">
                             <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE15D;" />
                         </Button>
 
                         <Slider
-                        x:Name="VolumeSlider"
-                        Grid.Row="1"
-                        Grid.Column="1"
-                        Maximum="100"
-                        Value="50" />
+                            x:Name="VolumeSlider"
+                            Grid.Row="1"
+                            Grid.Column="1"
+                            Maximum="100"
+                            Value="50" />
                     </Grid>
                 </Grid>
             </Border>
 
-            <Border  Grid.Row="1"
-                     CornerRadius="0,0,8,8">
+            <Border Grid.Row="1" CornerRadius="0,0,8,8">
                 <Grid
-                      Height="24"
-                      Visibility="{x:Bind ViewModel.PlayingOnExternalDevice, Mode=OneWay, Converter={StaticResource TrueToVisibleConverter}}"
-                      Background="{ThemeResource SystemAccentColorLight2}">
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="12,0,0,0"
-                                VerticalAlignment="Center">
-                        <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE15D;"  Margin="0,0,8,0"
-                                  VerticalAlignment="Center"
-                                  Foreground="{ThemeResource ApplicationPageBackgroundThemeBrush}"
-                                  FontSize="14"
-                                  />
-                        <TextBlock Foreground="{ThemeResource ApplicationPageBackgroundThemeBrush}"
-                                   FontSize="14"
-                                   FontWeight="SemiBold">
-                            <Run Text="Listening on"/>
-                            <Run Text="{x:Bind ViewModel.ExternalDevice.DeviceName, Mode=OneWay}"/>
+                    Height="24"
+                    Background="{ThemeResource SystemAccentColorLight2}"
+                    Visibility="{x:Bind ViewModel.PlayingOnExternalDevice, Mode=OneWay, Converter={StaticResource TrueToVisibleConverter}}">
+                    <StackPanel
+                        Margin="12,0,0,0"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Center"
+                        Orientation="Horizontal">
+                        <FontIcon
+                            Margin="0,0,8,0"
+                            VerticalAlignment="Center"
+                            FontFamily="Segoe Fluent Icons"
+                            FontSize="14"
+                            Foreground="{ThemeResource ApplicationPageBackgroundThemeBrush}"
+                            Glyph="&#xE15D;" />
+                        <TextBlock
+                            FontSize="14"
+                            FontWeight="SemiBold"
+                            Foreground="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+                            <Run Text="Listening on" />
+                            <Run Text="{x:Bind ViewModel.ExternalDevice.DeviceName, Mode=OneWay}" />
                         </TextBlock>
                     </StackPanel>
                 </Grid>

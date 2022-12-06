@@ -241,9 +241,9 @@ namespace Eum.UI.WinUI.Controls
 
         private void AddPlaylist_Tapped(object sender, TappedRoutedEventArgs e)
         {
-            if (NavigationState.Instance.HomeScreenNavigation.CurrentPage is not CreatePlaylistViewModel)
+            if (NavigationService.Instance.Current is not CreatePlaylistViewModel)
             {
-                NavigationState.Instance.HomeScreenNavigation.To(new CreatePlaylistViewModel(Ioc.Default.GetRequiredService<IEumUserViewModelManager>()), NavigationMode.Normal);
+                NavigationService.Instance.To(new CreatePlaylistViewModel(Ioc.Default.GetRequiredService<IEumUserViewModelManager>()));
             }
         }
     }

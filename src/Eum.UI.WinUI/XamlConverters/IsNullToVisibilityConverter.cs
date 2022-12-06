@@ -13,7 +13,7 @@ namespace Eum.UI.WinUI.XamlConverters
             {
                 return negate ? Visibility.Visible : Visibility.Collapsed;
             }
-            return Visibility.Collapsed;
+            return negate ? Visibility.Collapsed : Visibility.Visible;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, string language)

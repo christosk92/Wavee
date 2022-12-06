@@ -14,6 +14,8 @@
     xmlns:interactivity="using:Microsoft.Xaml.Interactivity"
     xmlns:local="using:Eum.UI.WinUI.Views.Artists"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:media="using:CommunityToolkit.WinUI.UI.Media"
+    xmlns:ui="using:CommunityToolkit.WinUI.UI"
     xmlns:xamlConverters="using:Eum.UI.WinUI.XamlConverters"
     mc:Ignorable="d">
     <UserControl.Transitions>
@@ -41,6 +43,11 @@
             <Setter Property="HorizontalAlignment" Value="Center" />
             <Setter Property="VerticalAlignment" Value="Center" />
         </Style>
+        <media:AttachedCardShadow
+            x:Key="CommonShadow"
+            CornerRadius="4"
+            Opacity=".3"
+            Offset="4" />
     </UserControl.Resources>
     <ScrollViewer>
         <StackPanel Padding="56,44,56,16">
@@ -92,19 +99,180 @@
                 </StackPanel>
             </Grid>
 
-            <ItemsRepeater ItemsSource="{x:Bind ViewModel.Discography, Mode=OneWay}">
+
+            <Grid Margin="0,24,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition />
+                </Grid.ColumnDefinitions>
+                <Grid
+                    x:Name="LatestRelease"
+                    MaxWidth="260"
+                    Margin="0,0,24,0"
+                    x:Load="{x:Bind ViewModel.LatestRelease, Mode=OneWay, Converter={StaticResource IsNullToBoolConverter}, ConverterParameter='false'}">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="180" />
+                        <RowDefinition />
+                    </Grid.RowDefinitions>
+                    <TextBlock
+                        FontSize="18"
+                        FontWeight="SemiBold"
+                        Text="Latest Release" />
+                    <TextBlock
+                        Grid.Row="1"
+                        Margin="0,0,0,8"
+                        FontSize="11"
+                        FontWeight="SemiBold"
+                        Opacity=".7"
+                        Text="{x:Bind ViewModel.LatestRelease.ReleaseDateString, Mode=OneWay}" />
+                    <Grid
+                        Grid.Row="2"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Top">
+                        <Border ui:Effects.Shadow="{StaticResource CommonShadow}">
+                            <Border CornerRadius="4">
+                                <Image Source="{Binding LatestRelease.ImageUrl}" />
+                            </Border>
+                        </Border>
+
+                    </Grid>
+                    <StackPanel
+                        Grid.Row="3"
+                        Margin="0,12,0,0"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Top">
+                        <TextBlock
+                            FontSize="18"
+                            FontWeight="Bold"
+                            MaxLines="2"
+                            Text="{x:Bind ViewModel.LatestRelease.Title, Mode=OneWay}"
+                            TextTrimming="CharacterEllipsis"
+                            TextWrapping="Wrap" />
+                        <TextBlock
+                            FontSize="12"
+                            FontWeight="Normal"
+                            Opacity=".7"
+                            Text="{x:Bind ViewModel.LatestRelease.TrackCountString, Mode=OneWay}" />
+                    </StackPanel>
+                </Grid>
+
+                <Grid x:Name="TopTracks" Grid.Column="1">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="38" />
+                        <RowDefinition />
+                    </Grid.RowDefinitions>
+                    <TextBlock
+                        FontSize="18"
+                        FontWeight="SemiBold"
+                        Text="Top Songs" />
+                    <ListView
+                        Grid.Row="1"
+                        ItemContainerStyle="{StaticResource SongGridViewItemStyle}"
+                        ItemsSource="{x:Bind ViewModel.TopTracks, Mode=OneWay}"
+                        SelectionMode="Extended"
+                        SizeChanged="GridView_SizeCHanged">
+                        <ListView.ItemTemplate>
+                            <DataTemplate x:DataType="artists:TopTrackViewModel">
+                                <Border
+                                    Padding="12,0,12,0"
+                                    HorizontalAlignment="Stretch"
+                                    VerticalAlignment="Stretch"
+                                    Background="{ThemeResource LayerFillColorDefaultBrush}"
+                                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="8">
+                                    <Grid x:DefaultBindMode="OneWay">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="120" />
+                                            <ColumnDefinition Width="1.5*" />
+                                            <ColumnDefinition />
+                                        </Grid.ColumnDefinitions>
+
+
+                                        <Grid VerticalAlignment="Stretch">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="24" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="36" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock
+                                                VerticalAlignment="Center"
+                                                FontWeight="Bold"
+                                                Opacity=".7"
+                                                Text="{x:Bind Track.Index, Converter={StaticResource IndexToStringConverter}}" />
+                                            <Image
+                                                Grid.Column="1"
+                                                Margin="3"
+                                                HorizontalAlignment="Center">
+                                                <Image.Source>
+                                                    <BitmapImage
+                                                        DecodePixelHeight="48"
+                                                        DecodePixelWidth="48"
+                                                        UriSource="{x:Bind Track.Track.Images[0].Id}" />
+                                                </Image.Source>
+                                            </Image>
+                                            <ToggleButton
+                                                Grid.Column="2"
+                                                Margin="0,0,6,0"
+                                                Padding="0"
+                                                HorizontalAlignment="Center"
+                                                Background="Transparent"
+                                                BorderThickness="0">
+                                                <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xEB51;" />
+                                            </ToggleButton>
+                                        </Grid>
+                                        <TextBlock
+                                            Grid.Column="1"
+                                            Margin="0,0,8,0"
+                                            VerticalAlignment="Center"
+                                            Text="{x:Bind Track.Track.Name}"
+                                            TextTrimming="CharacterEllipsis" />
+
+
+                                        <!--  <ContentPresenter  -->
+                                        <!--  Grid.Column="2"  -->
+                                        <!--  VerticalAlignment="Center"  -->
+                                        <!--  Content="{x:Bind Track.Track.Group}"  -->
+                                        <!--  ContentTemplate="{StaticResource IdWithTitleItemTemplate}" />  -->
+
+                                        <TextBlock
+                                            Grid.Column="2"
+                                            HorizontalAlignment="Right"
+                                            VerticalAlignment="Center"
+                                            Text="{x:Bind Track.Playcount, Converter={StaticResource PlaycountToStringConverter}}" />
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                        <ListView.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <ItemsWrapGrid
+                                    ItemHeight="48"
+                                    MaximumRowsOrColumns="5"
+                                    Orientation="Vertical" />
+                            </ItemsPanelTemplate>
+                        </ListView.ItemsPanel>
+                    </ListView>
+                </Grid>
+            </Grid>
+
+            <ItemsRepeater Margin="0,48" ItemsSource="{x:Bind ViewModel.Discography, Mode=OneWay}">
                 <ItemsRepeater.ItemTemplate>
                     <DataTemplate x:DataType="artists:DiscographyGroup">
                         <controls1:DockPanel Margin="0,0,0,48" LastChildFill="True">
-                            <Grid Margin="0,0,0,12" controls1:DockPanel.Dock="Top">
+                            <Grid Margin="0,0,0,6" controls1:DockPanel.Dock="Top">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition />
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
-
+                                <Grid.Resources>
+                                    <SolidColorBrush x:Key="NavigationViewItemSeparatorForeground" Color="Red" />
+                                </Grid.Resources>
                                 <TextBlock
                                     VerticalAlignment="Center"
-                                    FontSize="24"
+                                    FontSize="18"
                                     FontWeight="SemiBold"
                                     Text="{x:Bind Title}" />
 
@@ -113,11 +281,17 @@
                                     Margin="0,0,-230,0"
                                     HorizontalAlignment="Right"
                                     HorizontalContentAlignment="Right"
+                                    Background="Transparent"
+                                    BorderBrush="Transparent"
+                                    BorderThickness="0"
                                     IsBackButtonVisible="Collapsed"
                                     IsSettingsVisible="False"
                                     PaneDisplayMode="Top"
                                     Visibility="{x:Bind CanSwitchTemplates, Converter={StaticResource TrueToVisibleConverter}}">
-
+                                    <NavigationView.Resources>
+                                        <SolidColorBrush x:Key="NavigationViewItemSeparatorForeground" Color="Red" />
+                                        <Thickness x:Key="NavigationViewBorderThickness">0</Thickness>
+                                    </NavigationView.Resources>
                                     <interactivity:Interaction.Behaviors>
                                         <core:EventTriggerBehavior EventName="ItemInvoked">
                                             <core:EventTriggerBehavior.Actions>

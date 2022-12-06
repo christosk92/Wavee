@@ -34,7 +34,7 @@
                 <ContentControl
                     HorizontalContentAlignment="Stretch"
                     VerticalContentAlignment="Stretch"
-                    Content="{x:Bind ViewModel.MainScreen.CurrentPage, Mode=OneWay, Converter={StaticResource ViewLocator}}" />
+                    Content="{x:Bind ViewModel.MainScreen.Current, Mode=OneWay, Converter={StaticResource ViewLocator}}" />
 
                 <controls:BottomPlayerControl
                     Margin="12,30,12,16"

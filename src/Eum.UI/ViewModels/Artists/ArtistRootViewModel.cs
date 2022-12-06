@@ -22,9 +22,15 @@ namespace Eum.UI.ViewModels.Artists
 
         [ObservableProperty]
         public DiscographyGroup[] _discography;
+
+        [ObservableProperty]
+        private IList<TopTrackViewModel> _topTracks;
+
+        [ObservableProperty] 
+        private LatestReleaseWrapper? _latestRelease;
         public ItemId Id { get; init; }
 
-        public async void OnNavigatedTo(bool isInHistory)
+        public async void OnNavigatedTo(object parameter)
         {
             var provider = Ioc.Default.GetRequiredService<IArtistProvider>();
 
@@ -52,15 +58,34 @@ namespace Eum.UI.ViewModels.Artists
                     }).ToArray()
                 })
                 .ToArray();
+
+            TopTracks = artist.TopTrack
+                .Select(a => new TopTrackViewModel(a))
+                .ToArray();
+            LatestRelease = artist.LatestRelease;
         }
 
-        public void OnNavigatedFrom(bool isInHistory)
+        public void OnNavigatedFrom()
         {
-
+            
         }
 
-        public bool IsActive { get; set; }
+        public int MaxDepth => 2;
+
     }
+
+    [INotifyPropertyChanged]
+    public partial class TopTrackViewModel 
+    {
+        public TopTrackViewModel(ArtistTopTrack track)
+        {
+            Track = track;
+        }
+
+        public ArtistTopTrack Track { get; }
+
+    }
+
     [INotifyPropertyChanged]
     public partial class DiscographyGroup
     {

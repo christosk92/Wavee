@@ -1,4 +1,6 @@
-﻿using Eum.UI.Items;
+﻿using System.Collections.Concurrent;
+using Eum.Connections.Spotify.Models.Artists;
+using Eum.UI.Items;
 using Eum.UI.ViewModels.Playback;
 
 namespace Eum.UI.Services.Tracks
@@ -22,6 +24,24 @@ namespace Eum.UI.Services.Tracks
             };
             Images = cachedPlayItem.Album.Images;
             Duration = cachedPlayItem.Duration;
+        }
+
+        public EumTrack(MercuryArtistTopTrack cachedPlayItem)
+        {
+            Name = cachedPlayItem.Name;
+            Group = new IdWithTitle
+            {
+                Id = new ItemId(cachedPlayItem.Release.Uri.Uri),
+                Title = cachedPlayItem.Release.Name
+            };
+
+            Images = new CachedImage[]
+            {
+                new CachedImage
+                {
+                    Id = cachedPlayItem.Release.Cover.Uri
+                }
+            };
         }
 
         public ItemId Id { get; }

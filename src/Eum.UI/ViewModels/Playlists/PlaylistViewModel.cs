@@ -101,16 +101,6 @@ namespace Eum.UI.ViewModels.Playlists
             if (ReferenceEquals(null, other)) return 1;
             return Playlist.Order.CompareTo(other.Playlist.Order);
         }
-        public void OnNavigatedTo(bool isInHistory)
-        {
-            Connect();
-        }
-
-        public void OnNavigatedFrom(bool isInHistory)
-        {
-            Disconnect();
-        }
-
         public bool IsActive { get; set; }
         public ICommand SortCommand { get; }
 
@@ -130,5 +120,16 @@ namespace Eum.UI.ViewModels.Playlists
         }
 
         public abstract Task Sync(bool addTracks = false);
+        public void OnNavigatedTo(object parameter)
+        {
+            Connect();
+        }
+
+        public void OnNavigatedFrom()
+        {
+            Disconnect();
+        }
+
+        public int MaxDepth => 2;
     }
 }

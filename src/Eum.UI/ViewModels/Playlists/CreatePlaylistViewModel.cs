@@ -45,7 +45,7 @@ namespace Eum.UI.ViewModels.Playlists
                             await user.CreatePlaylist(title, image, SyncWithServices.Where(a => a.Selected)
                                 .Select(a => a.Service).ToArray());
 
-                        NavigationState.Instance.HomeScreenNavigation.To(addedPlaylist);
+                        NavigationService.Instance.To(addedPlaylist);
                     }
                     catch (Exception x)
                     {
@@ -55,7 +55,7 @@ namespace Eum.UI.ViewModels.Playlists
                     return;
                 }
 
-                NavigationState.Instance.HomeScreenNavigation.Back();
+                NavigationService.Instance.GoBack();
             });
         }
 
@@ -73,17 +73,15 @@ namespace Eum.UI.ViewModels.Playlists
 
         public string Title { get; protected set; }
         public string SelectedImage { get; set; }
-        public void OnNavigatedTo(bool isInHistory)
+        public void OnNavigatedTo(object parameter)
         {
-
         }
 
-        public void OnNavigatedFrom(bool isInHistory)
+        public void OnNavigatedFrom()
         {
-
         }
 
-        public bool IsActive { get; set; }
+        public int MaxDepth => 0;
     }
 
     [INotifyPropertyChanged]

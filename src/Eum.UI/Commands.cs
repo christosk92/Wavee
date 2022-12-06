@@ -22,7 +22,7 @@ namespace Eum.UI
                     Id = id
                 };
 
-                NavigationState.Instance.HomeScreenNavigation.To(artistViewmodel);
+                NavigationService.Instance.To(artistViewmodel);
             });
         }
         public static ICommand ToArtist { get; }

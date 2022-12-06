@@ -219,6 +219,7 @@
             AllowDrop="True"
             DragOver="TrackList_DragOver"
             Drop="TrackList_OnDrop"
+            ItemContainerStyle="{StaticResource SongGridViewItemStyle}"
             ItemTemplate="{StaticResource PlaylistTrackTemplate}"
             ItemsSource="{x:Bind ViewModel.Tracks}"
             SelectionMode="Extended">

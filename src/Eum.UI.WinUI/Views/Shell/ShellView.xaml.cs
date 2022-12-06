@@ -43,8 +43,8 @@ namespace Eum.UI.WinUI.Views.Shell
         private void NavigationView_OnItemInvoked(NavigationView sender, NavigationViewItemInvokedEventArgs args)
         {
             if (args.InvokedItemContainer.DataContext is INavigatable routable)
-            {
-                NavigationState.Instance.HomeScreenNavigation.To(routable);
+                {
+                NavigationService.Instance.To(routable);
             }
         }
     }

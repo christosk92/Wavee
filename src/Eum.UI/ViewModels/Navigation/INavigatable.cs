@@ -2,9 +2,9 @@ namespace Eum.UI.ViewModels.Navigation;
 
 public interface INavigatable
 {
-    void OnNavigatedTo(bool isInHistory);
+    void OnNavigatedTo(object parameter);
 
-    void OnNavigatedFrom(bool isInHistory);
-
-    bool IsActive { get; set; }
+    void OnNavigatedFrom();
+    int MaxDepth { get; }
+    
 }

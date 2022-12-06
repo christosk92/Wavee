@@ -118,6 +118,7 @@
 
             <local:IdWithTitleToMetadataConverter x:Key="IdWithTitleToMetadataConverter" />
             <xamlConverters:IndexToStringConverter x:Key="IndexToStringConverter" />
+            <xamlConverters:PlaycountToStringConverter x:Key="PlaycountToStringConverter" />
             <!--  Other app resources here  -->
         </ResourceDictionary>
     </Application.Resources>

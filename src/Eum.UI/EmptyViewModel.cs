@@ -7,16 +7,6 @@ namespace Eum.UI
 {
     public class EmptyViewModel : ISignInToXViewModel
     {
-        public void OnNavigatedTo(bool isInHistory)
-        {
-            
-        }
-
-        public void OnNavigatedFrom(bool isInHistory)
-        {
-            
-        }
-
         public bool IsActive { get; set; }
         public ServiceType Service { get; }
         public string? FatalLoginError { get; set; } = null;
@@ -34,5 +24,16 @@ namespace Eum.UI
             OnPropertyChanged(propertyName);
             return true;
         }
+
+        public void OnNavigatedTo(object parameter)
+        {
+          
+        }
+
+        public void OnNavigatedFrom()
+        {
+        }
+
+        public int MaxDepth => 0;
     }
 }

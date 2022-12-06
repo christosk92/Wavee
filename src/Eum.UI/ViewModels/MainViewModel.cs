@@ -26,9 +26,8 @@ namespace Eum.UI.ViewModels
         public MainViewModel(IEumUserViewModelManager userViewModelManager)
         {
             UserViewModelManager = userViewModelManager;
-            MainScreen = new NavigationStack<INavigatable>();
-            NavigationState.Register(MainScreen);
-
+            MainScreen = new NavigationService();
+       
             Observable
                 .FromEventPattern<EumUserViewModel>(userViewModelManager, nameof(IEumUserViewModelManager.CurrentUserChanged))
                 .ObserveOn(RxApp.MainThreadScheduler)
@@ -46,7 +45,7 @@ namespace Eum.UI.ViewModels
                     };
                 });
         }
-        public NavigationStack<INavigatable> MainScreen { get; }
+        public NavigationService MainScreen { get; }
         public IEumUserViewModelManager UserViewModelManager { get; }
 
         public EumUserViewModel CurrentUser
