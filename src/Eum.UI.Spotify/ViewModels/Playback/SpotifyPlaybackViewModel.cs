@@ -24,6 +24,7 @@ using Eum.UI.ViewModels.Playlists;
 using Flurl;
 using Flurl.Http;
 using LiteDB;
+using MoreLinq.Extensions;
 using ReactiveUI;
 
 namespace Eum.UI.Spotify.ViewModels.Playback;
@@ -182,8 +183,8 @@ public class SpotifyPlaybackViewModel : PlaybackViewModel
                     Title = obj.item.Name
                 },
                 Artists = obj.item.Artists,
-                BigImage = (await obj.item.Images.MaxBy(a => a.Height ?? 0).ImageStream),
-                SmallImage = (await obj.item.Images.MinBy(a => a.Height ?? 0).ImageStream),
+                BigImage = (await obj.item.Images.OrderByDescending(a => a.Height ?? 0).First().ImageStream),
+                SmallImage = (await obj.item.Images.OrderBy(a => a.Height ?? 0).First().ImageStream),
                 Duration = obj.item.Duration,
                 Context = contextId
             };

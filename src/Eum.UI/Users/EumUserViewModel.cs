@@ -114,7 +114,7 @@ namespace Eum.UI.Users
                     Name = title,
                 });
 
-            var bytes = await File.ReadAllBytesAsync(image);
+            var bytes = File.ReadAllBytes(image);
             var file = Convert.ToBase64String(bytes);
             try
             {

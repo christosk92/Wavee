@@ -42,6 +42,14 @@ namespace Eum.UI.ViewModels.Artists
                     Type = a.Key,
                     Items = a.Value.Select(k => new DiscographyViewModel
                     {
+                        TemplateType = a.Key switch
+                        {
+                            DiscographyType.Album => TemplateTypeOrientation.Grid,
+                            DiscographyType.Single => TemplateTypeOrientation.Grid,
+                            DiscographyType.Compilation => TemplateTypeOrientation.Grid,
+                            DiscographyType.AppearsOn => TemplateTypeOrientation.HorizontalStack,
+                            _ => throw new ArgumentOutOfRangeException()
+                        },
                         Title = k.Name,
                         Description = k.Year.ToString(),
                         Image = k.Cover.Uri,
@@ -55,7 +63,15 @@ namespace Eum.UI.ViewModels.Artists
                                 {
                                     IsLoading = true
                                 })).ToArray()
-                    }).ToArray()
+                    }).ToArray(),
+                    TemplateType = a.Key switch
+                    {
+                        DiscographyType.Album => TemplateTypeOrientation.Grid,
+                        DiscographyType.Single => TemplateTypeOrientation.Grid,
+                        DiscographyType.Compilation => TemplateTypeOrientation.Grid,
+                        DiscographyType.AppearsOn => TemplateTypeOrientation.HorizontalStack,
+                        _ => throw new ArgumentOutOfRangeException()
+                    }
                 })
                 .ToArray();
 
@@ -63,6 +79,7 @@ namespace Eum.UI.ViewModels.Artists
                 .Select(a => new TopTrackViewModel(a))
                 .ToArray();
             LatestRelease = artist.LatestRelease;
+
         }
 
         public void OnNavigatedFrom()
@@ -98,21 +115,44 @@ namespace Eum.UI.ViewModels.Artists
 
         private void SwitchTemplates()
         {
-            TemplateType = (TemplateTypeOrientation)(((int)_templateType + 1) % 2);
+            switch (_templateType)
+            {
+                case TemplateTypeOrientation.Grid:
+                    TemplateType = TemplateTypeOrientation.VerticalStack;
+                    foreach (var discographyViewModel in Items)
+                    {
+                        discographyViewModel.TemplateType = TemplateType;
+                    }
+                    break;
+                case TemplateTypeOrientation.VerticalStack:
+                    TemplateType = TemplateTypeOrientation.Grid;
+                    foreach (var discographyViewModel in Items)
+                    {
+                        discographyViewModel.TemplateType = TemplateType;
+                    }
+                    break;
+                case TemplateTypeOrientation.HorizontalStack:
+                    throw new NotSupportedException();
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
         }
 
         public string Title => Type.ToString();
         public DiscographyViewModel[] Items { get; set; }
         public bool CanSwitchTemplates => Type is DiscographyType.Album or DiscographyType.Single;
-        public DiscographyType Type { get; set; }
+        public DiscographyType Type { get; init; }
         public ICommand SwitchTemplateCommand { get; }
     }
-    public class DiscographyViewModel
+    [INotifyPropertyChanged]
+    public partial class DiscographyViewModel
     {
         public string Title { get; set; }
         public string Description { get; set; }
         public string Image { get; set; }
         public DiscographyTrackViewModel[] Tracks { get; set; }
+        [ObservableProperty]
+        private TemplateTypeOrientation _templateType;
     }
 
     public class DiscographyTrackViewModel
@@ -122,7 +162,8 @@ namespace Eum.UI.ViewModels.Artists
     public enum TemplateTypeOrientation
     {
         Grid,
-        VerticalStack
+        VerticalStack,
+        HorizontalStack
     }
 
 }

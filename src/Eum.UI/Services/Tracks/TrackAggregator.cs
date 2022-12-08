@@ -18,6 +18,7 @@ using Flurl;
 using Flurl.Http;
 using Google.Protobuf;
 using LiteDB;
+using MoreLinq;
 using Nito.AsyncEx;
 
 namespace Eum.UI.Services.Tracks
@@ -42,6 +43,7 @@ namespace Eum.UI.Services.Tracks
                 //  .Limit(10)
                 .ToArray();
 
+            
             var didNotFoundItems = uris.ExceptBy(results.Select(a => a.Id),
                 a => a)
                 .Select(a => new ItemId(a));
@@ -321,7 +323,7 @@ namespace Eum.UI.Services.Tracks
 
                 try
                 {
-                    await using var stream = await _httpClient.GetStreamAsync(a.Url, ct);
+                    using var stream = await _httpClient.GetStreamAsync(a.Url);
                     var info = db.FileStorage.Upload(a.Id, a.Id, stream, new BsonDocument
                     {
                         {"height", a.Height},

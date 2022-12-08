@@ -133,7 +133,7 @@ namespace Eum.UI.Services.Playlists
         }
         public ObservableCollection<PlaylistViewModel> Playlists => _playlists;
 
-        private bool TryGetPlaylistViewModel(EumPlaylist playlist, [NotNullWhen(true)] out PlaylistViewModel? playlistViewModel)
+        private bool TryGetPlaylistViewModel(EumPlaylist playlist, out PlaylistViewModel? playlistViewModel)
         {
             playlistViewModel = Playlists.FirstOrDefault(x => x.Playlist.Id == playlist.Id);
             return playlistViewModel is { };

@@ -56,8 +56,10 @@ namespace Eum.UI.JsonConverters; public class JsonElementComparer : IEqualityCom
                         return false;
                     var xProperties = xPropertiesUnsorted.OrderBy(p => p.Name, StringComparer.Ordinal);
                     var yProperties = yPropertiesUnsorted.OrderBy(p => p.Name, StringComparer.Ordinal);
-                    foreach (var (px, py) in xProperties.Zip(yProperties))
+                    foreach (var pxpy in xProperties.Zip(yProperties, (property, jsonProperty) => (property, jsonProperty)))
                     {
+                        var px = pxpy.property;
+                        var py = pxpy.jsonProperty;
                         if (px.Name != py.Name)
                             return false;
                         if (!Equals(px.Value, py.Value))

@@ -130,7 +130,7 @@ namespace Eum.UI.Services.Playlists
             {
                 if (File.Exists(userFullPath))
                 {
-                    await using (var fs = File.Open(userFullPath, FileMode.OpenOrCreate, FileAccess.Read, FileShare.ReadWrite))
+                    using (var fs = File.Open(userFullPath, FileMode.OpenOrCreate, FileAccess.Read, FileShare.ReadWrite))
                     {
                         playlist = await JsonSerializer.DeserializeAsync<EumPlaylist>(fs,
                             SystemTextJsonSerializationOptions.Default);

@@ -146,7 +146,7 @@ namespace Eum.UI.Services.Users
             {
                 if (File.Exists(userFullPath))
                 {
-                    await using var fs = File.OpenRead(userFullPath);
+                    using var fs = File.OpenRead(userFullPath);
                     user = await JsonSerializer.DeserializeAsync<EumUser>(fs,
                         SystemTextJsonSerializationOptions.Default);
                 }

@@ -68,18 +68,18 @@ public readonly struct ItemId : IComparable<ItemId>, IEquatable<ItemId>
     }
     public int Compare(ItemId x, ItemId y)
     {
-        return string.Compare(new string(x.Uri), new string(y.Uri), StringComparison.Ordinal);
+        return string.Compare(x.Uri, y.Uri, StringComparison.Ordinal);
     }
 
     public int CompareTo(ItemId other)
     {
-        return string.Compare(new string(Uri), new string(other.Uri),
+        return string.Compare(Uri, other.Uri,
             StringComparison.Ordinal);
     }
 
     public bool Equals(ItemId other)
     {
-        return new string(Uri) == new string(other.Uri);
+        return Uri == other.Uri;
     }
 
 

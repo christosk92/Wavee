@@ -118,7 +118,7 @@ namespace Eum.UI.Services.Users
         public ObservableCollection<EumUserViewModel> CanLoginUsers => _canLoginUsers;
         public ObservableCollection<EumUserViewModel> Users => _users;
         public event EventHandler<EumUserViewModel> CurrentUserChanged; 
-        private bool TryGetUserViewModel(EumUser user, [NotNullWhen(true)] out EumUserViewModel? userViewModel)
+        private bool TryGetUserViewModel(EumUser user,  out EumUserViewModel? userViewModel)
         {
             userViewModel = Users.FirstOrDefault(x => x.User.Id == user.Id);
             return userViewModel is { };
