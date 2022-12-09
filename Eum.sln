@@ -7,7 +7,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Library", "Library", "{B96D
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Eum.Connections.Spotify", "Eum\src\Spotify\Eum.Connections.Spotify\Eum.Connections.Spotify.csproj", "{38F9FAFD-5392-4818-9BB1-2EA3B9615971}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Eum.Connections.Spotify.NAudio", "Eum\src\Spotify\Eum.Connections.Spotify.NAudio\Eum.Connections.Spotify.NAudio.csproj", "{97693087-D58B-4AD2-B8C2-0E96C39C1120}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Eum.Connections.Spotify.NAudio", "Eum\src\Spotify\Players\Eum.Connections.Spotify.NAudio\Eum.Connections.Spotify.NAudio.csproj", "{97693087-D58B-4AD2-B8C2-0E96C39C1120}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Eum", "Eum\src\Eum\Eum.csproj", "{CF9E4D47-B173-488C-A32C-0ACC68E0CE28}"
 EndProject
