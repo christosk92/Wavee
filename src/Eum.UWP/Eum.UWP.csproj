@@ -107,6 +107,7 @@
     <ErrorReport>prompt</ErrorReport>
     <Prefer32Bit>true</Prefer32Bit>
     <LangVersion>preview</LangVersion>
+    <UseDotNetNativeToolchain>false</UseDotNetNativeToolchain>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
     <OutputPath>bin\x64\Release\</OutputPath>
@@ -196,6 +197,7 @@
       <DependentUpon>SidebarControlStyles.xaml</DependentUpon>
     </Compile>
     <Compile Include="IdWithTitleToMetadataConverter.cs" />
+    <Compile Include="IsGridOrVerticalToLoadedConverter.cs" />
     <Compile Include="StreamToBitmapConverter.cs" />
     <Compile Include="TemplateSelectors\NavItemDataTemplateSelector.cs" />
     <Compile Include="ViewLocator.cs" />
@@ -357,31 +359,39 @@
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
-    <ProjectReference Include="..\Eum\src\Eum\Eum.csproj">
+    <ProjectReference Include="..\..\Eum\src\Eum\Eum.csproj">
       <Project>{CF9E4D47-B173-488C-A32C-0ACC68E0CE28}</Project>
       <Name>Eum</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Eum\src\Spotify\Eum.Connections.Spotify.Playback\Eum.Connections.Spotify.Playback.csproj">
+    <ProjectReference Include="..\..\Eum\src\Spotify\Eum.Connections.Spotify.Playback\Eum.Connections.Spotify.Playback.csproj">
       <Project>{F00F7BDD-7B0B-4966-9FBC-E2636845C5BC}</Project>
       <Name>Eum.Connections.Spotify.Playback</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Eum\src\Spotify\Eum.Connections.Spotify.VLC\Eum.Connections.Spotify.VLC.csproj">
+    <ProjectReference Include="..\..\Eum\src\Spotify\Players\Eum.Connections.Spotify.UWPMediaPlayer\Eum.Connections.Spotify.UWPMediaPlayer.csproj">
+      <Project>{6CFF28AB-802C-4E73-B6FA-A13881B6E837}</Project>
+      <Name>Eum.Connections.Spotify.UWPMediaPlayer</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Eum\src\Spotify\Players\Eum.Connections.Spotify.UWPEffects\Eum.Connections.Spotify.UWPEffects.csproj">
+      <Project>{6C186001-2419-4EC5-97AA-1838F5989201}</Project>
+      <Name>Eum.Connections.Spotify.UWPEffects</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Eum\src\Spotify\Players\Eum.Connections.Spotify.VLC\Eum.Connections.Spotify.VLC.csproj">
       <Project>{85B0D95B-A89C-4463-9806-AFEE1CB9880F}</Project>
       <Name>Eum.Connections.Spotify.VLC</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Eum\src\Spotify\Eum.Connections.Spotify\Eum.Connections.Spotify.csproj">
+    <ProjectReference Include="..\..\Eum\src\Spotify\Eum.Connections.Spotify\Eum.Connections.Spotify.csproj">
       <Project>{38F9FAFD-5392-4818-9BB1-2EA3B9615971}</Project>
       <Name>Eum.Connections.Spotify</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Eum\src\Spotify\Eum.Protobufs\Eum.Protobufs.csproj">
+    <ProjectReference Include="..\..\Eum\src\Spotify\Eum.Protobufs\Eum.Protobufs.csproj">
       <Project>{BED118E7-FD60-451A-9AD5-23552DC60B70}</Project>
       <Name>Eum.Protobufs</Name>
     </ProjectReference>
-    <ProjectReference Include="..\src\Eum.UI.Spotify\Eum.UI.Spotify.csproj">
+    <ProjectReference Include="..\Eum.UI.Spotify\Eum.UI.Spotify.csproj">
       <Project>{630CF98E-9027-4582-B26E-07218ECEF7EB}</Project>
       <Name>Eum.UI.Spotify</Name>
     </ProjectReference>
-    <ProjectReference Include="..\src\Eum.UI\Eum.UI.csproj">
+    <ProjectReference Include="..\Eum.UI\Eum.UI.csproj">
       <Project>{3030AE62-F80E-4E7D-AE46-2F69BD6D8A44}</Project>
       <Name>Eum.UI</Name>
     </ProjectReference>

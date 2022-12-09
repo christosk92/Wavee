@@ -3,18 +3,18 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="using:Microsoft.UI.Xaml.Controls"
-    xmlns:xamlConverters="using:Eum.UWP.XamlConverters"
+    xmlns:controls1="using:Eum.UWP.Controls"
     xmlns:converters="using:Microsoft.Toolkit.Uwp.UI.Converters"
-    xmlns:winUi="using:Eum.UI.WinUI"
     xmlns:uwp="using:Eum.UWP"
-    xmlns:controls1="using:Eum.UWP.Controls">
+    xmlns:winUi="using:Eum.UI.WinUI"
+    xmlns:xamlConverters="using:Eum.UWP.XamlConverters">
 
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <controls:XamlControlsResources>
                     <controls:XamlControlsResources.MergedDictionaries>
-                        <!-- Other app resources here -->
+                        <!--  Other app resources here  -->
                     </controls:XamlControlsResources.MergedDictionaries>
                 </controls:XamlControlsResources>
                 <controls1:PlaylistStyles />
@@ -100,7 +100,8 @@
                 <ResourceDictionary Source="/Styles/_Thickness.xaml" />
 
                 <ResourceDictionary Source="/Styles/TextBlock.xaml" />
-                <ResourceDictionary Source="/Styles/Page.xaml"/>
+                <ResourceDictionary Source="/Styles/Page.xaml" />
+
             </ResourceDictionary.MergedDictionaries>
             <xamlConverters:IsNullToBoolConverter x:Key="IsNullToBoolConverter" />
             <xamlConverters:IsNullToVisibilityConverter x:Key="IsNullToVisibilityConverter" />
@@ -120,6 +121,7 @@
             <uwp:IdWithTitleToMetadataConverter x:Key="IdWithTitleToMetadataConverter" />
             <xamlConverters:IndexToStringConverter x:Key="IndexToStringConverter" />
             <xamlConverters:PlaycountToStringConverter x:Key="PlaycountToStringConverter" />
+            <uwp:IsGridOrVerticalToLoadedConverter x:Key="IsGridOrVerticalToLoadedConverter" />
             <!--  Other app resources here  -->
         </ResourceDictionary>
     </Application.Resources>

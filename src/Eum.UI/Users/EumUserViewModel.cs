@@ -207,7 +207,7 @@ namespace Eum.UI.Users
             }
             catch (Exception x)
             {
-
+                S_Log.Instance.LogError(x);
             }
         }
     }

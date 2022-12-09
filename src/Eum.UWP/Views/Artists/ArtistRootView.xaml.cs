@@ -7,9 +7,12 @@ using System.ComponentModel;
 using System.Threading.Tasks;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using Eum.Logging;
 using Eum.UI.ViewModels.Artists;
 using Eum.UWP.XamlConverters;
 using Microsoft.UI.Xaml.Controls;
+using Windows.ApplicationModel.Core;
+using Windows.UI.Core;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -50,10 +53,17 @@ namespace Eum.UWP.Views.Artists
                 data.Close();
             }
 
-            _listeners[obj] = new TemplateChangedHolder(obj, (TemplateTypeTolayoutConverter)Application.Current.Resources["TemplateTypeToLayoutConverter"],
-                (TemplateTypeTolayoutConverter)this.Resources["TemplateTypeToItemTemplateConverter"]);
-            await Task.Delay(50);
-            _listeners[obj].Start();
+            try
+            {
+                _listeners[obj] = new TemplateChangedHolder(obj,
+                    (TemplateTypeTolayoutConverter)Application.Current.Resources["TemplateTypeToLayoutConverter"],
+                    (TemplateTypeTolayoutConverter)Application.Current.Resources["TemplateTypeToItemTemplateConverter"]);
+                await _listeners[obj].Start();
+            }
+            catch (Exception ex)
+            {
+                S_Log.Instance.LogError(ex);
+            }
         }
 
         private ConcurrentDictionary<ItemsRepeater, TemplateChangedHolder> _listeners =
@@ -86,20 +96,20 @@ namespace Eum.UWP.Views.Artists
             _templateTypeToItemTemplateConverter = itemTemplateConverter;
         }
 
-        public void Start()
+        public async Task Start()
         {
             dt = _itemsRepeater.Tag as DiscographyGroup;
             if (dt == null) return;
-            Set();
+            await Set();
             dt.PropertyChanged += DtOnPropertyChanged;
         }
 
-        private void DtOnPropertyChanged(object sender, PropertyChangedEventArgs e)
+        private async void DtOnPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             switch (e.PropertyName)
             {
                 case nameof(DiscographyGroup.TemplateType):
-                    Set();
+                    await Set();
                     break;
             }
         }
@@ -112,16 +122,29 @@ namespace Eum.UWP.Views.Artists
             _templateTypeTolayoutConverter = null;
             dt = null;
         }
-        void Set()
+
+        private bool Initial = true;
+        async Task Set()
         {
             if (_itemsRepeater != null)
             {
+                //await Task.Delay(50);
                 _itemsRepeater.ItemTemplate =
                     _templateTypeToItemTemplateConverter
                         .Convert(dt.TemplateType, null, null, null);
-                _itemsRepeater.Layout =
-                    (Layout) (_templateTypeTolayoutConverter
+
+                //await Task.Delay(200);
+                var toSetLayout =
+                    (Layout)(_templateTypeTolayoutConverter
                         .Convert(dt.TemplateType, null, null, null));
+                if (toSetLayout is StackLayout l && l.Orientation == Orientation.Horizontal)
+                {
+                    //do not set but wait? idk or else crash
+                }
+                else
+                {
+                    _itemsRepeater.Layout = toSetLayout;
+                }
             }
         }
     }

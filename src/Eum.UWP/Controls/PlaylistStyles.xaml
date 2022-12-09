@@ -5,9 +5,10 @@
     x:Class="Eum.UWP.Controls.PlaylistStyles"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:artists="using:Eum.UI.ViewModels.Artists"
+    xmlns:controls="using:Microsoft.UI.Xaml.Controls"
     xmlns:playback="using:Eum.UI.ViewModels.Playback"
-    xmlns:xamlConverters="using:Eum.UWP.XamlConverters"
-    xmlns:controls="using:Microsoft.UI.Xaml.Controls">
+    xmlns:xamlConverters="using:Eum.UWP.XamlConverters">
     <DataTemplate x:Key="IdWithTitleItemTemplate" x:DataType="playback:IdWithTitle">
         <Button
             Padding="0"
@@ -16,23 +17,31 @@
             Style="{ThemeResource TextBlockButtonStyle}" />
     </DataTemplate>
 
-    <controls:StackLayout x:Key="VerticalDisco" Orientation="Vertical" />
-    <controls:StackLayout x:Key="HorizontalDisco" Orientation="Horizontal" />
+    <controls:StackLayout
+        x:Key="VerticalDisco"
+        Orientation="Vertical"
+        VirtualizingStackPanel.VirtualizationMode="Recycling" />
+    <controls:StackLayout
+        x:Key="HorizontalDisco"
+        DisableVirtualization="False"
+        Orientation="Horizontal"
+        Spacing="24"
+        VirtualizingStackPanel.VirtualizationMode="Standard" />
 
     <controls:UniformGridLayout
         x:Name="UniformGridLayout"
         ItemsJustification="Start"
-        ItemsStretch="Fill"
+        ItemsStretch="None"
         MinColumnSpacing="24"
-        MinItemHeight="250"
+        MinItemHeight="200"
         MinItemWidth="200"
         MinRowSpacing="24"
         VirtualizingStackPanel.VirtualizationMode="Recycling" />
     <xamlConverters:TemplateTypeTolayoutConverter
         x:Key="TemplateTypeToLayoutConverter"
-        VerticalStack="{StaticResource VerticalDisco}"
         GridLayout="{StaticResource UniformGridLayout}"
-        HorizontalStack="{StaticResource HorizontalDisco}" />
+        HorizontalStack="{StaticResource HorizontalDisco}"
+        VerticalStack="{StaticResource VerticalDisco}" />
     <Style x:Key="SongGridViewItemStyle" TargetType="ListViewItem">
         <Setter Property="FontFamily" Value="{ThemeResource ContentControlThemeFontFamily}" />
         <Setter Property="FontSize" Value="{ThemeResource ControlContentThemeFontSize}" />
@@ -56,61 +65,119 @@
         <!-- <Setter Property="Template"> -->
         <!--     <Setter.Value> -->
         <!--         <ControlTemplate TargetType="ListViewItem"> -->
-        <!--             <ListViewItemPresenter -->
-        <!--                 x:Name="Root" -->
-        <!--                 ContentTransitions="{TemplateBinding ContentTransitions}" -->
-        <!--                 Control.IsTemplateFocusTarget="True" -->
-        <!--                 FocusVisualMargin="{TemplateBinding FocusVisualMargin}" -->
-        <!--                 FocusVisualPrimaryBrush="{TemplateBinding FocusVisualPrimaryBrush}" -->
-        <!--                 FocusVisualPrimaryThickness="{TemplateBinding FocusVisualPrimaryThickness}" -->
-        <!--                 FocusVisualSecondaryBrush="{TemplateBinding FocusVisualSecondaryBrush}" -->
-        <!--                 FocusVisualSecondaryThickness="{TemplateBinding FocusVisualSecondaryThickness}" -->
-        <!--                 SelectionCheckMarkVisualEnabled="{ThemeResource ListViewItemSelectionCheckMarkVisualEnabled}" -->
-        <!--                 CheckBrush="{ThemeResource ListViewItemCheckBrush}" -->
-        <!--                 CheckBoxBrush="{ThemeResource ListViewItemCheckBoxBrush}" -->
-        <!--                 DragBackground="{ThemeResource ListViewItemDragBackground}" -->
-        <!--                 DragForeground="{ThemeResource ListViewItemDragForeground}" -->
-        <!--                 FocusBorderBrush="{ThemeResource ListViewItemFocusBorderBrush}" -->
-        <!--                 FocusSecondaryBorderBrush="{ThemeResource ListViewItemFocusSecondaryBorderBrush}" -->
-        <!--                 PlaceholderBackground="{ThemeResource ListViewItemPlaceholderBackground}" -->
-        <!--                 PointerOverBackground="{ThemeResource ListViewItemBackgroundPointerOver}" -->
-        <!--                 PointerOverForeground="{ThemeResource ListViewItemForegroundPointerOver}" -->
-        <!--                 SelectedBackground="{ThemeResource ListViewItemBackgroundSelected}" -->
-        <!--                 SelectedForeground="{ThemeResource ListViewItemForegroundSelected}" -->
-        <!--                 SelectedPointerOverBackground="{ThemeResource ListViewItemBackgroundSelectedPointerOver}" -->
-        <!--                 PressedBackground="{ThemeResource ListViewItemBackgroundPressed}" -->
-        <!--                 SelectedPressedBackground="{ThemeResource ListViewItemBackgroundSelectedPressed}" -->
-        <!--                 DisabledOpacity="{ThemeResource ListViewItemDisabledThemeOpacity}" -->
-        <!--                 DragOpacity="{ThemeResource ListViewItemDragThemeOpacity}" -->
-        <!--                 ReorderHintOffset="{ThemeResource ListViewItemReorderHintThemeOffset}" -->
-        <!--                 HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}" -->
-        <!--                 VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}" -->
-        <!--                 ContentMargin="{TemplateBinding Padding}" -->
-        <!--                 CheckMode="{ThemeResource ListViewItemCheckMode}" -->
-        <!--                 CornerRadius='{ThemeResource ListViewItemCornerRadius}' -->
-        <!--                 CheckPressedBrush='{ThemeResource ListViewItemCheckPressedBrush}' -->
-        <!--                 CheckDisabledBrush='{ThemeResource ListViewItemCheckDisabledBrush}' -->
-        <!--                 CheckBoxPointerOverBrush='{ThemeResource ListViewItemCheckBoxPointerOverBrush}' -->
-        <!--                 CheckBoxPressedBrush='{ThemeResource ListViewItemCheckBoxPressedBrush}' -->
-        <!--                 CheckBoxDisabledBrush='{ThemeResource ListViewItemCheckBoxDisabledBrush}' -->
-        <!--                 CheckBoxSelectedBrush='{ThemeResource ListViewItemCheckBoxSelectedBrush}' -->
-        <!--                 CheckBoxSelectedPointerOverBrush='{ThemeResource ListViewItemCheckBoxSelectedPointerOverBrush}' -->
-        <!--                 CheckBoxSelectedPressedBrush='{ThemeResource ListViewItemCheckBoxSelectedPressedBrush}' -->
-        <!--                 CheckBoxSelectedDisabledBrush='{ThemeResource ListViewItemCheckBoxSelectedDisabledBrush}' -->
-        <!--                 CheckBoxBorderBrush='{ThemeResource ListViewItemCheckBoxBorderBrush}' -->
-        <!--                 CheckBoxPointerOverBorderBrush='{ThemeResource ListViewItemCheckBoxPointerOverBorderBrush}' -->
-        <!--                 CheckBoxPressedBorderBrush='{ThemeResource ListViewItemCheckBoxPressedBorderBrush}' -->
-        <!--                 CheckBoxDisabledBorderBrush='{ThemeResource ListViewItemCheckBoxDisabledBorderBrush}' -->
-        <!--                 CheckBoxCornerRadius='{ThemeResource ListViewItemCheckBoxCornerRadius}' -->
-        <!--                 SelectionIndicatorCornerRadius='{ThemeResource ListViewItemSelectionIndicatorCornerRadius}' -->
-        <!--                 SelectionIndicatorVisualEnabled='{ThemeResource ListViewItemSelectionIndicatorVisualEnabled}' -->
-        <!--                 SelectionIndicatorBrush='{ThemeResource ListViewItemSelectionIndicatorBrush}' -->
-        <!--                 SelectionIndicatorPointerOverBrush='{ThemeResource ListViewItemSelectionIndicatorPointerOverBrush}' -->
-        <!--                 SelectionIndicatorPressedBrush='{ThemeResource ListViewItemSelectionIndicatorPressedBrush}' -->
-        <!--                 SelectionIndicatorDisabledBrush='{ThemeResource ListViewItemSelectionIndicatorDisabledBrush}' -->
-        <!--                 SelectedDisabledBackground='{ThemeResource ListViewItemBackgroundSelectedDisabled}' /> -->
+        <!--  <ListViewItemPresenter  -->
+        <!--  x:Name="Root"  -->
+        <!--  ContentTransitions="{TemplateBinding ContentTransitions}"  -->
+        <!--  Control.IsTemplateFocusTarget="True"  -->
+        <!--  FocusVisualMargin="{TemplateBinding FocusVisualMargin}"  -->
+        <!--  FocusVisualPrimaryBrush="{TemplateBinding FocusVisualPrimaryBrush}"  -->
+        <!--  FocusVisualPrimaryThickness="{TemplateBinding FocusVisualPrimaryThickness}"  -->
+        <!--  FocusVisualSecondaryBrush="{TemplateBinding FocusVisualSecondaryBrush}"  -->
+        <!--  FocusVisualSecondaryThickness="{TemplateBinding FocusVisualSecondaryThickness}"  -->
+        <!--  SelectionCheckMarkVisualEnabled="{ThemeResource ListViewItemSelectionCheckMarkVisualEnabled}"  -->
+        <!--  CheckBrush="{ThemeResource ListViewItemCheckBrush}"  -->
+        <!--  CheckBoxBrush="{ThemeResource ListViewItemCheckBoxBrush}"  -->
+        <!--  DragBackground="{ThemeResource ListViewItemDragBackground}"  -->
+        <!--  DragForeground="{ThemeResource ListViewItemDragForeground}"  -->
+        <!--  FocusBorderBrush="{ThemeResource ListViewItemFocusBorderBrush}"  -->
+        <!--  FocusSecondaryBorderBrush="{ThemeResource ListViewItemFocusSecondaryBorderBrush}"  -->
+        <!--  PlaceholderBackground="{ThemeResource ListViewItemPlaceholderBackground}"  -->
+        <!--  PointerOverBackground="{ThemeResource ListViewItemBackgroundPointerOver}"  -->
+        <!--  PointerOverForeground="{ThemeResource ListViewItemForegroundPointerOver}"  -->
+        <!--  SelectedBackground="{ThemeResource ListViewItemBackgroundSelected}"  -->
+        <!--  SelectedForeground="{ThemeResource ListViewItemForegroundSelected}"  -->
+        <!--  SelectedPointerOverBackground="{ThemeResource ListViewItemBackgroundSelectedPointerOver}"  -->
+        <!--  PressedBackground="{ThemeResource ListViewItemBackgroundPressed}"  -->
+        <!--  SelectedPressedBackground="{ThemeResource ListViewItemBackgroundSelectedPressed}"  -->
+        <!--  DisabledOpacity="{ThemeResource ListViewItemDisabledThemeOpacity}"  -->
+        <!--  DragOpacity="{ThemeResource ListViewItemDragThemeOpacity}"  -->
+        <!--  ReorderHintOffset="{ThemeResource ListViewItemReorderHintThemeOffset}"  -->
+        <!--  HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"  -->
+        <!--  VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"  -->
+        <!--  ContentMargin="{TemplateBinding Padding}"  -->
+        <!--  CheckMode="{ThemeResource ListViewItemCheckMode}"  -->
+        <!--  CornerRadius='{ThemeResource ListViewItemCornerRadius}'  -->
+        <!--  CheckPressedBrush='{ThemeResource ListViewItemCheckPressedBrush}'  -->
+        <!--  CheckDisabledBrush='{ThemeResource ListViewItemCheckDisabledBrush}'  -->
+        <!--  CheckBoxPointerOverBrush='{ThemeResource ListViewItemCheckBoxPointerOverBrush}'  -->
+        <!--  CheckBoxPressedBrush='{ThemeResource ListViewItemCheckBoxPressedBrush}'  -->
+        <!--  CheckBoxDisabledBrush='{ThemeResource ListViewItemCheckBoxDisabledBrush}'  -->
+        <!--  CheckBoxSelectedBrush='{ThemeResource ListViewItemCheckBoxSelectedBrush}'  -->
+        <!--  CheckBoxSelectedPointerOverBrush='{ThemeResource ListViewItemCheckBoxSelectedPointerOverBrush}'  -->
+        <!--  CheckBoxSelectedPressedBrush='{ThemeResource ListViewItemCheckBoxSelectedPressedBrush}'  -->
+        <!--  CheckBoxSelectedDisabledBrush='{ThemeResource ListViewItemCheckBoxSelectedDisabledBrush}'  -->
+        <!--  CheckBoxBorderBrush='{ThemeResource ListViewItemCheckBoxBorderBrush}'  -->
+        <!--  CheckBoxPointerOverBorderBrush='{ThemeResource ListViewItemCheckBoxPointerOverBorderBrush}'  -->
+        <!--  CheckBoxPressedBorderBrush='{ThemeResource ListViewItemCheckBoxPressedBorderBrush}'  -->
+        <!--  CheckBoxDisabledBorderBrush='{ThemeResource ListViewItemCheckBoxDisabledBorderBrush}'  -->
+        <!--  CheckBoxCornerRadius='{ThemeResource ListViewItemCheckBoxCornerRadius}'  -->
+        <!--  SelectionIndicatorCornerRadius='{ThemeResource ListViewItemSelectionIndicatorCornerRadius}'  -->
+        <!--  SelectionIndicatorVisualEnabled='{ThemeResource ListViewItemSelectionIndicatorVisualEnabled}'  -->
+        <!--  SelectionIndicatorBrush='{ThemeResource ListViewItemSelectionIndicatorBrush}'  -->
+        <!--  SelectionIndicatorPointerOverBrush='{ThemeResource ListViewItemSelectionIndicatorPointerOverBrush}'  -->
+        <!--  SelectionIndicatorPressedBrush='{ThemeResource ListViewItemSelectionIndicatorPressedBrush}'  -->
+        <!--  SelectionIndicatorDisabledBrush='{ThemeResource ListViewItemSelectionIndicatorDisabledBrush}'  -->
+        <!--  SelectedDisabledBackground='{ThemeResource ListViewItemBackgroundSelectedDisabled}' />  -->
         <!--         </ControlTemplate> -->
         <!--     </Setter.Value> -->
         <!-- </Setter> -->
     </Style>
+
+    <DataTemplate x:Key="VerticalDiscoItem" x:DataType="artists:DiscographyViewModel">
+        <Grid Height="200" Background="Red" />
+    </DataTemplate>
+    <DataTemplate x:Key="HorizontalAndGridItem" x:DataType="artists:DiscographyViewModel">
+        <Border Width="200" Height="250">
+            <Border BorderThickness="0">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="4*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <Border>
+                        <Border.Background>
+                            <ImageBrush Stretch="UniformToFill">
+                                <ImageBrush.ImageSource>
+                                    <BitmapImage
+                                        DecodePixelHeight="250"
+                                        DecodePixelWidth="250"
+                                        UriSource="{x:Bind Image}" />
+                                </ImageBrush.ImageSource>
+                            </ImageBrush>
+                        </Border.Background>
+                    </Border>
+                    <StackPanel Grid.Row="1" Margin="0,4,0,0">
+                        <TextBlock
+                            HorizontalAlignment="Stretch"
+                            FontSize="15"
+                            FontWeight="SemiBold"
+                            MaxLines="1"
+                            Text="{x:Bind Title}"
+                            TextWrapping="Wrap" />
+
+                        <TextBlock
+                            HorizontalAlignment="Stretch"
+                            FontSize="13"
+                            FontWeight="Normal"
+                            MaxLines="1"
+                            Text="{x:Bind Description}" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Border>
+
+    </DataTemplate>
+    <xamlConverters:TemplateTypeTolayoutConverter
+        x:Key="TemplateTypeToItemTemplateConverter"
+        GridLayout="{StaticResource HorizontalAndGridItem}"
+        HorizontalStack="{StaticResource HorizontalAndGridItem}">
+        <xamlConverters:TemplateTypeTolayoutConverter.VerticalStack>
+            <DataTemplate x:DataType="artists:DiscographyViewModel">
+                <Grid
+                    Width="200"
+                    Height="200"
+                    Background="Red" />
+            </DataTemplate>
+        </xamlConverters:TemplateTypeTolayoutConverter.VerticalStack>
+    </xamlConverters:TemplateTypeTolayoutConverter>
 </ResourceDictionary>

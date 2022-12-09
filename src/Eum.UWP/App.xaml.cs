@@ -10,7 +10,7 @@ using Windows.UI.Xaml;
 using CommunityToolkit.Mvvm.DependencyInjection;
 using Eum.Connections.Spotify;
 using Eum.Connections.Spotify.Enums;
-using Eum.Connections.Spotify.VLC;
+using Eum.Connections.Spotify.UWPMediaPlayer;
 using Eum.Logging;
 using Eum.Spotify.connectstate;
 using Eum.UI.Services;
@@ -45,7 +45,7 @@ namespace Eum.UWP
             var db = new LiteDatabase(Path.Combine(dataDir, "data.db"));
 
             serviceCollection.AddSingleton<ILiteDatabase>(db);
-            serviceCollection.AddTransient<ITrackAggregator, TrackAggregator>();
+            serviceCollection.AddSingleton<ITrackAggregator, TrackAggregator>();
             serviceCollection.AddSingleton<IEumUserManager, EumUserManager>();
             serviceCollection.AddSingleton<IEumUserViewModelManager, EumUserViewModelManager>();
             serviceCollection.AddTransient<IArtistProvider, ArtistProvider>();
@@ -56,14 +56,14 @@ namespace Eum.UWP
             serviceCollection.AddSpotify(new SpotifyConfig
             {
                 AudioQuality = AudioQuality.HIGH,
-                DeviceName = "Eum WinUI",
+                DeviceName = "Eum Uwp",
                 DeviceType = DeviceType.Computer,
                 AutoplayEnabled = true,
                 CrossfadeDuration = 15000,
                 LogPath = Path.Combine(dataDir, "Logs.txt"),
                 CachePath = dataDir,
                 TimeSyncMethod = TimeSyncMethod.MELODY
-            }, new EumVlcPlayer());
+            }, new UwpMediaPlayer());
 
             Ioc.Default.ConfigureServices(serviceCollection.BuildServiceProvider());
             InitializeComponent();
@@ -93,7 +93,6 @@ namespace Eum.UWP
             // TODO: Please log and handle the exception as appropriate to your scenario
             // For more info see https://docs.microsoft.com/uwp/api/windows.ui.xaml.application.unhandledexception
         }
-
     }
     public class BetaAvailableServicesProvider : IAvailableServicesProvider
     {
