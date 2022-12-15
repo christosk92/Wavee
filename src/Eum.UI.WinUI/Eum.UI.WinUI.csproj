@@ -48,7 +48,7 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="7.0.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="7.0.0" />
     <PackageReference Include="Microsoft.Windows.CsWinRT" Version="2.0.1" />
-    <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.2.221116.1" />
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.2.221209.1" />
     <PackageReference Include="Microsoft.Xaml.Behaviors.WinUI.Managed" Version="2.0.9" />
     <PackageReference Include="ReactiveUI.WinUI" Version="18.4.1" />
     <PackageReference Include="VideoLAN.LibVLC.UWP" Version="3.3.2" />
@@ -64,7 +64,7 @@
     <ProjectCapability Include="Msix" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Eum\src\Spotify\Eum.Connections.Spotify.NAudio\Eum.Connections.Spotify.NAudio.csproj" />
+    <ProjectReference Include="..\..\Eum\src\Spotify\Players\Eum.Connections.Spotify.NAudio\Eum.Connections.Spotify.NAudio.csproj" />
     <ProjectReference Include="..\Eum.UI.Spotify\Eum.UI.Spotify.csproj" />
     <ProjectReference Include="..\Eum.UI\Eum.UI.csproj" />
   </ItemGroup>

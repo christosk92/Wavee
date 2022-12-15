@@ -27,7 +27,7 @@ namespace Eum.UWP.Views.Artists
             this.InitializeComponent();
             this.DataContext = viewModel;
         }
-        public ArtistRootViewModel ViewModel { get; }
+        public ArtistRootViewModel? ViewModel { get; set; }
 
         private void GridView_SizeCHanged(object sender, SizeChangedEventArgs e)
         {
@@ -45,107 +45,11 @@ namespace Eum.UWP.Views.Artists
             ((ItemsWrapGrid)s.ItemsPanelRoot).ItemWidth = e.NewSize.Width / columns;
         }
 
-        private async void ItemsREpeater_Loaded(object sender, RoutedEventArgs e)
-        {
-            var obj = (sender as ItemsRepeater);
-            if (_listeners.TryRemove(obj, out var data))
-            {
-                data.Close();
-            }
-
-            try
-            {
-                _listeners[obj] = new TemplateChangedHolder(obj,
-                    (TemplateTypeTolayoutConverter)Application.Current.Resources["TemplateTypeToLayoutConverter"],
-                    (TemplateTypeTolayoutConverter)Application.Current.Resources["TemplateTypeToItemTemplateConverter"]);
-                await _listeners[obj].Start();
-            }
-            catch (Exception ex)
-            {
-                S_Log.Instance.LogError(ex);
-            }
-        }
-
-        private ConcurrentDictionary<ItemsRepeater, TemplateChangedHolder> _listeners =
-            new ConcurrentDictionary<ItemsRepeater, TemplateChangedHolder>();
-
         private void ArtistRootView_OnUnloaded(object sender, RoutedEventArgs e)
         {
-            foreach (var templateChangedHolder in _listeners)
-            {
-                templateChangedHolder.Value.Close();
-            }
-
-            _listeners.Clear();
+            ViewModel = null;
+            this.DataContext = null;
         }
     }
 
-    internal class TemplateChangedHolder
-    {
-        private ItemsRepeater? _itemsRepeater;
-        private TemplateTypeTolayoutConverter? _templateTypeTolayoutConverter;
-        private TemplateTypeTolayoutConverter _templateTypeToItemTemplateConverter;
-
-        private DiscographyGroup? dt;
-        public TemplateChangedHolder(ItemsRepeater itemsRepeater,
-            TemplateTypeTolayoutConverter layoutConverter,
-            TemplateTypeTolayoutConverter itemTemplateConverter)
-        {
-            _itemsRepeater = itemsRepeater;
-            _templateTypeTolayoutConverter = layoutConverter;
-            _templateTypeToItemTemplateConverter = itemTemplateConverter;
-        }
-
-        public async Task Start()
-        {
-            dt = _itemsRepeater.Tag as DiscographyGroup;
-            if (dt == null) return;
-            await Set();
-            dt.PropertyChanged += DtOnPropertyChanged;
-        }
-
-        private async void DtOnPropertyChanged(object sender, PropertyChangedEventArgs e)
-        {
-            switch (e.PropertyName)
-            {
-                case nameof(DiscographyGroup.TemplateType):
-                    await Set();
-                    break;
-            }
-        }
-
-        public void Close()
-        {
-            dt.PropertyChanged -= DtOnPropertyChanged;
-            _itemsRepeater = null;
-            _templateTypeToItemTemplateConverter = null;
-            _templateTypeTolayoutConverter = null;
-            dt = null;
-        }
-
-        private bool Initial = true;
-        async Task Set()
-        {
-            if (_itemsRepeater != null)
-            {
-                //await Task.Delay(50);
-                _itemsRepeater.ItemTemplate =
-                    _templateTypeToItemTemplateConverter
-                        .Convert(dt.TemplateType, null, null, null);
-
-                //await Task.Delay(200);
-                var toSetLayout =
-                    (Layout)(_templateTypeTolayoutConverter
-                        .Convert(dt.TemplateType, null, null, null));
-                if (toSetLayout is StackLayout l && l.Orientation == Orientation.Horizontal)
-                {
-                    //do not set but wait? idk or else crash
-                }
-                else
-                {
-                    _itemsRepeater.Layout = toSetLayout;
-                }
-            }
-        }
-    }
 }

@@ -32,7 +32,8 @@ namespace Eum.UWP
         public App()
         {
             var dataDir = ApplicationData.Current.LocalFolder.Path;
-            S_Log.Instance.InitializeDefaults(Path.Combine(dataDir, "Logs.txt"), null);
+            var logpath = Path.Combine(dataDir, "Logs.log");
+            S_Log.Instance.InitializeDefaults(logpath, null);
 
             IServiceCollection serviceCollection = new ServiceCollection();
 
@@ -59,8 +60,8 @@ namespace Eum.UWP
                 DeviceName = "Eum Uwp",
                 DeviceType = DeviceType.Computer,
                 AutoplayEnabled = true,
-                CrossfadeDuration = 15000,
-                LogPath = Path.Combine(dataDir, "Logs.txt"),
+                CrossfadeDuration = 10000,
+                LogPath = logpath,
                 CachePath = dataDir,
                 TimeSyncMethod = TimeSyncMethod.MELODY
             }, new UwpMediaPlayer());

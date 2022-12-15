@@ -24,20 +24,6 @@
         </TransitionCollection>
     </UserControl.Transitions>
     <UserControl.Resources>
-
-
-        <xamlConverters:TemplateTypeTolayoutConverter x:Key="TemplateTypeToItemTemplateConverter">
-            <xamlConverters:TemplateTypeTolayoutConverter.GridLayout>
-                <DataTemplate x:DataType="artists:DiscographyViewModel">
-                    <Grid Height="200" Background="Red" />
-                </DataTemplate>
-            </xamlConverters:TemplateTypeTolayoutConverter.GridLayout>
-            <xamlConverters:TemplateTypeTolayoutConverter.HorizontalStack>
-                <DataTemplate x:DataType="artists:DiscographyViewModel">
-                    <Grid Height="200" Background="Red" />
-                </DataTemplate>
-            </xamlConverters:TemplateTypeTolayoutConverter.HorizontalStack>
-        </xamlConverters:TemplateTypeTolayoutConverter>
         <Style x:Key="GridViewImage" TargetType="Image">
             <Setter Property="Stretch" Value="UniformToFill" />
             <Setter Property="HorizontalAlignment" Value="Center" />
@@ -49,15 +35,15 @@
             Opacity=".3"
             Offset="4" />
     </UserControl.Resources>
-    <ScrollViewer>
-        <StackPanel Padding="56,44,56,16">
+    <ScrollViewer IsVerticalScrollChainingEnabled="False">
+        <StackPanel Padding="56,44,0,16">
             <Grid>
                 <controls:ImageTransitionControl
                     Height="450"
-                    Margin="-56,-44,-56,-16"
+                    Margin="-56,-44,0,-16"
                     Source="{x:Bind ViewModel.Artist.Header, Mode=OneWay}" />
                 <StackPanel
-                    Padding="0,10,0,24"
+                    Padding="0,10,56,24"
                     VerticalAlignment="Bottom"
                     Orientation="Vertical"
                     Spacing="8">
@@ -100,7 +86,7 @@
             </Grid>
 
 
-            <Grid Margin="0,24,0,0">
+            <Grid Margin="0,24,56,0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition />
@@ -258,7 +244,8 @@
                 </Grid>
             </Grid>
 
-            <ItemsRepeater Margin="0,48" ItemsSource="{x:Bind ViewModel.Discography, Mode=OneWay}">
+
+            <ItemsRepeater Margin="0,48,56,48" ItemsSource="{x:Bind ViewModel.Discography, Mode=OneWay}">
                 <ItemsRepeater.ItemTemplate>
                     <DataTemplate x:DataType="artists:DiscographyGroup">
                         <controls1:DockPanel Margin="0,0,0,48" LastChildFill="True">
@@ -316,32 +303,29 @@
                             </Grid>
 
                             <ItemsRepeater
+                                x:Name="Grid"
                                 VerticalAlignment="Top"
-                                controls1:DockPanel.Dock="Top"
+                                x:Load="{x:Bind TemplateType, Mode=OneWay, Converter={StaticResource IsGridOrVerticalToLoadedConverter}, ConverterParameter='Grid'}"
+                                HorizontalCacheLength="0"
                                 ItemsSource="{x:Bind Items}"
-                                Layout="{x:Bind TemplateType, Converter={StaticResource TemplateTypeToLayoutConverter}, Mode=OneWay}"
-                                VirtualizingStackPanel.VirtualizationMode="Recycling">
+                                Tag="{x:Bind}">
                                 <ItemsRepeater.ItemTemplate>
                                     <DataTemplate x:DataType="artists:DiscographyViewModel">
-                                        <Border>
+                                        <Border Width="200" Height="250">
                                             <Border BorderThickness="0">
                                                 <Grid>
                                                     <Grid.RowDefinitions>
-                                                        <RowDefinition Height="4*" />
+                                                        <RowDefinition Height="200" />
                                                         <RowDefinition Height="Auto" />
                                                     </Grid.RowDefinitions>
-                                                    <Border>
-                                                        <Border.Background>
-                                                            <ImageBrush Stretch="UniformToFill">
-                                                                <ImageBrush.ImageSource>
-                                                                    <BitmapImage
-                                                                        DecodePixelHeight="250"
-                                                                        DecodePixelWidth="250"
-                                                                        UriSource="{x:Bind Image}" />
-                                                                </ImageBrush.ImageSource>
-                                                            </ImageBrush>
-                                                        </Border.Background>
-                                                    </Border>
+                                                    <Image>
+                                                        <Image.Source>
+                                                            <BitmapImage
+                                                                DecodePixelHeight="200"
+                                                                DecodePixelWidth="200"
+                                                                UriSource="{x:Bind Image}" />
+                                                        </Image.Source>
+                                                    </Image>
                                                     <StackPanel Grid.Row="1" Margin="0,4,0,0">
                                                         <TextBlock
                                                             HorizontalAlignment="Stretch"
@@ -363,11 +347,274 @@
                                         </Border>
                                     </DataTemplate>
                                 </ItemsRepeater.ItemTemplate>
+                                <ItemsRepeater.Layout>
+                                    <UniformGridLayout
+                                        ItemsJustification="Start"
+                                        ItemsStretch="None"
+                                        MinColumnSpacing="24"
+                                        MinItemHeight="250"
+                                        MinItemWidth="200"
+                                        MinRowSpacing="24"
+                                        VirtualizingStackPanel.VirtualizationMode="Recycling" />
+                                </ItemsRepeater.Layout>
+                            </ItemsRepeater>
+                            <ItemsRepeater
+                                x:Name="Vertical"
+                                VerticalAlignment="Top"
+                                x:Load="{x:Bind TemplateType, Mode=OneWay, Converter={StaticResource IsGridOrVerticalToLoadedConverter}, ConverterParameter='VerticalStack'}"
+                                HorizontalCacheLength="0"
+                                ItemsSource="{x:Bind Items}"
+                                Tag="{x:Bind}">
+                                <ItemsRepeater.ItemTemplate>
+                                    <DataTemplate x:DataType="artists:DiscographyViewModel">
+                                        <Grid
+                                            Width="200"
+                                            Height="200"
+                                            Background="Red" />
+                                    </DataTemplate>
+                                </ItemsRepeater.ItemTemplate>
+                                <ItemsRepeater.Layout>
+                                    <StackLayout Orientation="Vertical" VirtualizingStackPanel.VirtualizationMode="Recycling" />
+                                </ItemsRepeater.Layout>
+                            </ItemsRepeater>
+                            <ItemsRepeater
+                                x:Name="Horizontal"
+                                VerticalAlignment="Top"
+                                x:Load="{x:Bind TemplateType, Mode=OneWay, Converter={StaticResource IsGridOrVerticalToLoadedConverter}, ConverterParameter='HorizontalStack'}"
+                                HorizontalCacheLength="0"
+                                ItemsSource="{x:Bind Items}">
+                                <ItemsRepeater.ItemTemplate>
+                                    <DataTemplate x:DataType="artists:DiscographyViewModel">
+                                        <Grid
+                                            Width="200"
+                                            Height="200"
+                                            Background="Red" />
+                                    </DataTemplate>
+                                </ItemsRepeater.ItemTemplate>
+                                <ItemsRepeater.Layout>
+                                    <StackLayout
+                                        Orientation="Horizontal"
+                                        Spacing="24"
+                                        VirtualizingStackPanel.VirtualizationMode="Standard" />
+                                </ItemsRepeater.Layout>
                             </ItemsRepeater>
                         </controls1:DockPanel>
                     </DataTemplate>
                 </ItemsRepeater.ItemTemplate>
             </ItemsRepeater>
+
+            <!--    -->
+            <!--  <Grid  -->
+            <!--  x:Name="Grid"  -->
+            <!--  Margin="0,0,0,6"  -->
+            <!--  controls2:DockPanel.Dock="Top"  -->
+            <!--  x:Load="{x:Bind ViewModel.HasAlbums, Mode=OneWay}">  -->
+            <!--     <Grid.ColumnDefinitions> -->
+            <!--         <ColumnDefinition /> -->
+            <!--         <ColumnDefinition Width="Auto" /> -->
+            <!--     </Grid.ColumnDefinitions> -->
+            <!--     <Grid.RowDefinitions> -->
+            <!--         <RowDefinition Height="Auto" /> -->
+            <!--         <RowDefinition /> -->
+            <!--     </Grid.RowDefinitions> -->
+            <!--     <Grid.Resources> -->
+            <!--         <SolidColorBrush x:Key="NavigationViewItemSeparatorForeground" Color="Red" /> -->
+            <!--     </Grid.Resources> -->
+            <!--  <TextBlock  -->
+            <!--  VerticalAlignment="Center"  -->
+            <!--  FontSize="18"  -->
+            <!--  FontWeight="SemiBold"  -->
+            <!--  Text="{x:Bind ViewModel.Albums.Title, Mode=OneWay}" />  -->
+            <!--    -->
+            <!--  ~1~  <NavigationView  @1@  -->
+            <!--  ~1~  Grid.Column="1"  @1@  -->
+            <!--  ~1~  Margin="0,0,-230,0"  @1@  -->
+            <!--  ~1~  HorizontalAlignment="Right"  @1@  -->
+            <!--  ~1~  HorizontalContentAlignment="Right"  @1@  -->
+            <!--  ~1~  Background="Transparent"  @1@  -->
+            <!--  ~1~  BorderBrush="Transparent"  @1@  -->
+            <!--  ~1~  BorderThickness="0"  @1@  -->
+            <!--  ~1~  IsBackButtonVisible="Collapsed"  @1@  -->
+            <!--  ~1~  IsSettingsVisible="False"  @1@  -->
+            <!--  ~1~  PaneDisplayMode="Top"  @1@  -->
+            <!--  ~1~  Visibility="{x:Bind ViewModel.Albums.CanSwitchTemplates, Converter={StaticResource TrueToVisibleConverter}}">  @1@  -->
+            <!--     ~1~     <NavigationView.Resources> @1@ -->
+            <!--     ~1~         <SolidColorBrush x:Key="NavigationViewItemSeparatorForeground" Color="Red" /> @1@ -->
+            <!--     ~1~         <Thickness x:Key="NavigationViewBorderThickness">0</Thickness> @1@ -->
+            <!--     ~1~     </NavigationView.Resources> @1@ -->
+            <!--     ~1~     <interactivity:Interaction.Behaviors> @1@ -->
+            <!--     ~1~         <core:EventTriggerBehavior EventName="ItemInvoked"> @1@ -->
+            <!--     ~1~             <core:EventTriggerBehavior.Actions> @1@ -->
+            <!--     ~1~                 <core:InvokeCommandAction Command="{x:Bind ViewModel.Albums.SwitchTemplateCommand}" /> @1@ -->
+            <!--     ~1~             </core:EventTriggerBehavior.Actions> @1@ -->
+            <!--     ~1~         </core:EventTriggerBehavior> @1@ -->
+            <!--     ~1~     </interactivity:Interaction.Behaviors> @1@ -->
+            <!--     ~1~     <NavigationView.MenuItems> @1@ -->
+            <!--     ~1~         <NavigationViewItem IsSelected="True" Tag="0"> @1@ -->
+            <!--     ~1~             <NavigationViewItem.Icon> @1@ -->
+            <!--     ~1~                 <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xF0E2;" /> @1@ -->
+            <!--     ~1~             </NavigationViewItem.Icon> @1@ -->
+            <!--     ~1~         </NavigationViewItem> @1@ -->
+            <!--  ~1~    @1@  -->
+            <!--     ~1~         <NavigationViewItem Tag="1"> @1@ -->
+            <!--     ~1~             <NavigationViewItem.Icon> @1@ -->
+            <!--     ~1~                 <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE14C;" /> @1@ -->
+            <!--     ~1~             </NavigationViewItem.Icon> @1@ -->
+            <!--     ~1~         </NavigationViewItem> @1@ -->
+            <!--     ~1~     </NavigationView.MenuItems> @1@ -->
+            <!--     ~1~ </NavigationView> @1@ -->
+            <!--    -->
+            <!--  <ItemsRepeater  -->
+            <!--  Grid.Row="1"  -->
+            <!--  Grid.ColumnSpan="2"  -->
+            <!--  VerticalAlignment="Top"  -->
+            <!--  controls2:DockPanel.Dock="Top"  -->
+            <!--  HorizontalCacheLength="0"  -->
+            <!--  ItemTemplate="{StaticResource HorizontalAndGridItem}"  -->
+            <!--  ItemsSource="{x:Bind ViewModel.Albums.Items, Mode=OneWay}"  -->
+            <!--  Layout="{StaticResource UniformGridLayout}"  -->
+            <!--  VirtualizingStackPanel.VirtualizationMode="Recycling" />  -->
+            <!-- </Grid> -->
+            <!--    -->
+            <!--  <Grid  -->
+            <!--  x:Name="Singles"  -->
+            <!--  Margin="0,0,0,6"  -->
+            <!--  x:Load="{x:Bind ViewModel.HasSingles, Mode=OneWay}">  -->
+            <!--     <Grid.ColumnDefinitions> -->
+            <!--         <ColumnDefinition /> -->
+            <!--         <ColumnDefinition Width="Auto" /> -->
+            <!--     </Grid.ColumnDefinitions> -->
+            <!--     <Grid.RowDefinitions> -->
+            <!--         <RowDefinition Height="Auto" /> -->
+            <!--         <RowDefinition /> -->
+            <!--     </Grid.RowDefinitions> -->
+            <!--     <Grid.Resources> -->
+            <!--         <SolidColorBrush x:Key="NavigationViewItemSeparatorForeground" Color="Red" /> -->
+            <!--     </Grid.Resources> -->
+            <!--  <TextBlock  -->
+            <!--  VerticalAlignment="Center"  -->
+            <!--  FontSize="18"  -->
+            <!--  FontWeight="SemiBold"  -->
+            <!--  Text="{x:Bind ViewModel.Singles.Title, Mode=OneWay}" />  -->
+            <!--    -->
+            <!--  ~1~  <NavigationView  @1@  -->
+            <!--  ~1~  Grid.Column="1"  @1@  -->
+            <!--  ~1~  Margin="0,0,-230,0"  @1@  -->
+            <!--  ~1~  HorizontalAlignment="Right"  @1@  -->
+            <!--  ~1~  HorizontalContentAlignment="Right"  @1@  -->
+            <!--  ~1~  Background="Transparent"  @1@  -->
+            <!--  ~1~  BorderBrush="Transparent"  @1@  -->
+            <!--  ~1~  BorderThickness="0"  @1@  -->
+            <!--  ~1~  IsBackButtonVisible="Collapsed"  @1@  -->
+            <!--  ~1~  IsSettingsVisible="False"  @1@  -->
+            <!--  ~1~  PaneDisplayMode="Top"  @1@  -->
+            <!--  ~1~  Visibility="{x:Bind ViewModel.Singles.CanSwitchTemplates, Converter={StaticResource TrueToVisibleConverter}}">  @1@  -->
+            <!--     ~1~     <NavigationView.Resources> @1@ -->
+            <!--     ~1~         <SolidColorBrush x:Key="NavigationViewItemSeparatorForeground" Color="Red" /> @1@ -->
+            <!--     ~1~         <Thickness x:Key="NavigationViewBorderThickness">0</Thickness> @1@ -->
+            <!--     ~1~     </NavigationView.Resources> @1@ -->
+            <!--     ~1~     <interactivity:Interaction.Behaviors> @1@ -->
+            <!--     ~1~         <core:EventTriggerBehavior EventName="ItemInvoked"> @1@ -->
+            <!--     ~1~             <core:EventTriggerBehavior.Actions> @1@ -->
+            <!--     ~1~                 <core:InvokeCommandAction Command="{x:Bind ViewModel.Singles.SwitchTemplateCommand}" /> @1@ -->
+            <!--     ~1~             </core:EventTriggerBehavior.Actions> @1@ -->
+            <!--     ~1~         </core:EventTriggerBehavior> @1@ -->
+            <!--     ~1~     </interactivity:Interaction.Behaviors> @1@ -->
+            <!--     ~1~     <NavigationView.MenuItems> @1@ -->
+            <!--     ~1~         <NavigationViewItem IsSelected="True" Tag="0"> @1@ -->
+            <!--     ~1~             <NavigationViewItem.Icon> @1@ -->
+            <!--     ~1~                 <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xF0E2;" /> @1@ -->
+            <!--     ~1~             </NavigationViewItem.Icon> @1@ -->
+            <!--     ~1~         </NavigationViewItem> @1@ -->
+            <!--  ~1~    @1@  -->
+            <!--     ~1~         <NavigationViewItem Tag="1"> @1@ -->
+            <!--     ~1~             <NavigationViewItem.Icon> @1@ -->
+            <!--     ~1~                 <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE14C;" /> @1@ -->
+            <!--     ~1~             </NavigationViewItem.Icon> @1@ -->
+            <!--     ~1~         </NavigationViewItem> @1@ -->
+            <!--     ~1~     </NavigationView.MenuItems> @1@ -->
+            <!--     ~1~ </NavigationView> @1@ -->
+            <!--    -->
+            <!--  <ItemsRepeater  -->
+            <!--  Grid.Row="1"  -->
+            <!--  Grid.ColumnSpan="2"  -->
+            <!--  VerticalAlignment="Top"  -->
+            <!--  controls2:DockPanel.Dock="Top"  -->
+            <!--  HorizontalCacheLength="0"  -->
+            <!--  ItemsSource="{x:Bind ViewModel.Singles.Items, Mode=OneWay}"  -->
+            <!--  VirtualizingStackPanel.VirtualizationMode="Recycling">  -->
+            <!--         <ItemsRepeater.Layout> -->
+            <!--  <UniformGridLayout  -->
+            <!--  x:Name="UniformGridLayout"  -->
+            <!--  ItemsJustification="Start"  -->
+            <!--  ItemsStretch="None"  -->
+            <!--  MinColumnSpacing="24"  -->
+            <!--  MinItemHeight="200"  -->
+            <!--  MinItemWidth="200"  -->
+            <!--  MinRowSpacing="24"  -->
+            <!--  VirtualizingStackPanel.VirtualizationMode="Recycling" />  -->
+            <!--         </ItemsRepeater.Layout> -->
+            <!--         <ItemsRepeater.ItemTemplate> -->
+            <!--             <DataTemplate x:DataType="artists:DiscographyViewModel"> -->
+            <!--  <Grid  -->
+            <!--  Width="200"  -->
+            <!--  Height="200"  -->
+            <!--  Background="Red" />  -->
+            <!--             </DataTemplate> -->
+            <!--         </ItemsRepeater.ItemTemplate> -->
+            <!--     </ItemsRepeater> -->
+            <!-- </Grid> -->
+            <!--    -->
+            <!--    -->
+            <!-- ~1~ <StackPanel x:Name="Comps" x:Load="{x:Bind ViewModel.HasComps, Mode=OneWay}"> @1@ -->
+            <!-- ~1~     <Grid Margin="0,0,0,6" controls2:DockPanel.Dock="Top"> @1@ -->
+            <!-- ~1~         <Grid.RowDefinitions> @1@ -->
+            <!-- ~1~             <RowDefinition Height="Auto" /> @1@ -->
+            <!-- ~1~             <RowDefinition /> @1@ -->
+            <!-- ~1~         </Grid.RowDefinitions> @1@ -->
+            <!--  ~1~  <TextBlock  @1@  -->
+            <!--  ~1~  VerticalAlignment="Center"  @1@  -->
+            <!--  ~1~  FontSize="18"  @1@  -->
+            <!--  ~1~  FontWeight="SemiBold"  @1@  -->
+            <!--  ~1~  Text="{x:Bind ViewModel.Comps.Title, Mode=OneWay}" />  @1@  -->
+            <!--  ~1~    @1@  -->
+            <!--  ~1~  <ItemsRepeater  @1@  -->
+            <!--  ~1~  Grid.Row="1"  @1@  -->
+            <!--  ~1~  Grid.ColumnSpan="2"  @1@  -->
+            <!--  ~1~  VerticalAlignment="Top"  @1@  -->
+            <!--  ~1~  controls2:DockPanel.Dock="Top"  @1@  -->
+            <!--  ~1~  HorizontalCacheLength="0"  @1@  -->
+            <!--  ~1~  ItemTemplate="{StaticResource HorizontalAndGridItem}"  @1@  -->
+            <!--  ~1~  ItemsSource="{x:Bind ViewModel.Comps.Items, Mode=OneWay}"  @1@  -->
+            <!--  ~1~  Layout="{StaticResource UniformGridLayout}"  @1@  -->
+            <!--  ~1~  VirtualizingStackPanel.VirtualizationMode="Recycling" />  @1@  -->
+            <!-- ~1~     </Grid> @1@ -->
+            <!-- ~1~ </StackPanel> @1@ -->
+            <!--  ~1~    @1@  -->
+            <!-- ~1~ <StackPanel x:Name="Appears" x:Load="{x:Bind ViewModel.HasAppears, Mode=OneWay}"> @1@ -->
+            <!-- ~1~     <Grid Margin="0,0,0,6" controls2:DockPanel.Dock="Top"> @1@ -->
+            <!-- ~1~         <Grid.RowDefinitions> @1@ -->
+            <!-- ~1~             <RowDefinition Height="Auto" /> @1@ -->
+            <!-- ~1~             <RowDefinition /> @1@ -->
+            <!-- ~1~         </Grid.RowDefinitions> @1@ -->
+            <!--  ~1~  <TextBlock  @1@  -->
+            <!--  ~1~  VerticalAlignment="Center"  @1@  -->
+            <!--  ~1~  FontSize="18"  @1@  -->
+            <!--  ~1~  FontWeight="SemiBold"  @1@  -->
+            <!--  ~1~  Text="{x:Bind ViewModel.Appears.Title, Mode=OneWay}" />  @1@  -->
+            <!--  ~1~    @1@  -->
+            <!--  ~1~  <ItemsRepeater  @1@  -->
+            <!--  ~1~  Grid.Row="1"  @1@  -->
+            <!--  ~1~  Grid.ColumnSpan="2"  @1@  -->
+            <!--  ~1~  VerticalAlignment="Top"  @1@  -->
+            <!--  ~1~  controls2:DockPanel.Dock="Top"  @1@  -->
+            <!--  ~1~  HorizontalCacheLength="0"  @1@  -->
+            <!--  ~1~  ItemTemplate="{StaticResource HorizontalAndGridItem}"  @1@  -->
+            <!--  ~1~  ItemsSource="{x:Bind ViewModel.Appears.Items, Mode=OneWay}"  @1@  -->
+            <!--  ~1~  Layout="{StaticResource HorizontalDisco}"  @1@  -->
+            <!--  ~1~  VirtualizingStackPanel.VirtualizationMode="Recycling" />  @1@  -->
+            <!-- ~1~     </Grid> @1@ -->
+            <!-- ~1~ </StackPanel> @1@ -->
         </StackPanel>
     </ScrollViewer>
 </UserControl>

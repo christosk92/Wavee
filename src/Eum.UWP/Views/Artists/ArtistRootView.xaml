@@ -15,9 +15,8 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:media="using:Microsoft.Toolkit.Uwp.UI.Media"
     xmlns:ui="using:Microsoft.Toolkit.Uwp.UI"
-    xmlns:uwp="using:Eum.UWP"
+    xmlns:uwp="using:Eum.UWP" Unloaded="ArtistRootView_OnUnloaded"
     xmlns:xamlConverters="using:Eum.UWP.XamlConverters"
-    Unloaded="ArtistRootView_OnUnloaded"
     mc:Ignorable="d">
     <UserControl.Transitions>
         <TransitionCollection>

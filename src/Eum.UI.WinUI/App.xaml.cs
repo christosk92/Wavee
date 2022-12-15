@@ -21,7 +21,6 @@ using Windows.Foundation.Collections;
 using CommunityToolkit.Mvvm.DependencyInjection;
 using Eum.Connections.Spotify;
 using Eum.Connections.Spotify.Enums;
-using Eum.Connections.Spotify.NAudio;
 using Eum.Spotify.connectstate;
 using Eum.UI.Items;
 using Eum.UI.Services;
@@ -88,8 +87,8 @@ namespace Eum.UI.WinUI
                 CrossfadeDuration = 15000,
                 LogPath = Path.Combine(dataDir, "Logs.txt"),
                 CachePath = dataDir,
-                TimeSyncMethod = TimeSyncMethod.NTP
-            }, new NAudioPlayer());
+                TimeSyncMethod = TimeSyncMethod.MELODY
+            }, new Eum.Connections.Spotify.NAudio.NAudioPlayer());
 
             Ioc.Default.ConfigureServices(serviceCollection.BuildServiceProvider());
             this.InitializeComponent();
