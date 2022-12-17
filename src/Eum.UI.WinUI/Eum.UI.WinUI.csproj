@@ -1,139 +1,150 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <OutputType>WinExe</OutputType>
-    <TargetFramework>net7.0-windows10.0.22000.0</TargetFramework>
-    <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
-    <RootNamespace>Eum.UI.WinUI</RootNamespace>
-    <ApplicationManifest>app.manifest</ApplicationManifest>
-    <Platforms>x86;x64;arm64</Platforms>
-    <RuntimeIdentifiers>win10-x86;win10-x64;win10-arm64</RuntimeIdentifiers>
-    <PublishProfile>win10-$(Platform).pubxml</PublishProfile>
-    <UseWinUI>true</UseWinUI>
-    <EnableMsixTooling>true</EnableMsixTooling>
-    <SupportedOSPlatformVersion>10.0.22000.0</SupportedOSPlatformVersion>
-  </PropertyGroup>
-  <ItemGroup>
-    <None Remove="Assets\amb.png" />
-    <None Remove="Assets\MediaPlayerIcons.ttf" />
-    <None Remove="Assets\spotify.png" />
-    <None Remove="Controls\BottomPlayerControl.xaml" />
-    <None Remove="Controls\SidebarControlStyles.xaml" />
-    <None Remove="MainWindowContentWrapper.xaml" />
-    <None Remove="Views\Artists\ArtistRootView.xaml" />
-    <None Remove="Views\Login\LoginView.xaml" />
-    <None Remove="Views\Login\ProfilesView.xaml" />
-    <None Remove="Views\Login\SpotifyLoginPage.xaml" />
-    <None Remove="Views\Playlists\CreatePlaylistView.xaml" />
-    <None Remove="Views\Shell\ShellView.xaml" />
-  </ItemGroup>
+	<PropertyGroup>
+		<OutputType>WinExe</OutputType>
+		<TargetFramework>net7.0-windows10.0.19041.0</TargetFramework>
+		<TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+		<RootNamespace>Eum.UI.WinUI</RootNamespace>
+		<ApplicationManifest>app.manifest</ApplicationManifest>
+		<Platforms>x86;x64;ARM64</Platforms>
+		<RuntimeIdentifiers>win10-x86;win10-x64;win10-arm64</RuntimeIdentifiers>
+		<PublishProfile>win10-$(Platform).pubxml</PublishProfile>
+		<UseWinUI>true</UseWinUI>
+		<EnableMsixTooling>true</EnableMsixTooling>
+		<SupportedOSPlatformVersion>10.0.19041.0</SupportedOSPlatformVersion>
+	</PropertyGroup>
 	<ItemGroup>
-    <Content Include="Assets\SplashScreen.scale-200.png" />
-    <Content Include="Assets\LockScreenLogo.scale-200.png" />
-    <Content Include="Assets\Square150x150Logo.scale-200.png" />
-    <Content Include="Assets\Square44x44Logo.scale-200.png" />
-    <Content Include="Assets\Square44x44Logo.targetsize-24_altform-unplated.png" />
-    <Content Include="Assets\StoreLogo.png" />
-    <Content Include="Assets\Wide310x150Logo.scale-200.png" />
-  </ItemGroup>
+		<None Remove="Assets\amb.png" />
+		<None Remove="Assets\MediaPlayerIcons.ttf" />
+		<None Remove="Assets\spotify.png" />
+		<None Remove="Controls\BottomPlayerControl.xaml" />
+		<None Remove="Controls\SidebarControlStyles.xaml" />
+		<None Remove="MainWindowContentWrapper.xaml" />
+		<None Remove="Views\Artists\ArtistRootView.xaml" />
+		<None Remove="Views\Login\LoginView.xaml" />
+		<None Remove="Views\Login\ProfilesView.xaml" />
+		<None Remove="Views\Login\SpotifyLoginPage.xaml" />
+		<None Remove="Views\Playlists\CreatePlaylistView.xaml" />
+		<None Remove="Views\Settings\AppSettingsView.xaml" />
+		<None Remove="Views\Settings\SettingsView.xaml" />
+		<None Remove="Views\Shell\ShellView.xaml" />
+	</ItemGroup>
+	<ItemGroup>
+		<Content Include="Assets\SplashScreen.scale-200.png" />
+		<Content Include="Assets\LockScreenLogo.scale-200.png" />
+		<Content Include="Assets\Square150x150Logo.scale-200.png" />
+		<Content Include="Assets\Square44x44Logo.scale-200.png" />
+		<Content Include="Assets\Square44x44Logo.targetsize-24_altform-unplated.png" />
+		<Content Include="Assets\StoreLogo.png" />
+		<Content Include="Assets\Wide310x150Logo.scale-200.png" />
+	</ItemGroup>
+	<ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.1.0-preview1" />
-    <PackageReference Include="CommunityToolkit.WinUI.UI" Version="7.1.2" />
-    <PackageReference Include="CommunityToolkit.WinUI.UI.Animations" Version="7.1.2" />
-    <PackageReference Include="CommunityToolkit.WinUI.UI.Behaviors" Version="7.1.2" />
-    <PackageReference Include="CommunityToolkit.WinUI.UI.Controls" Version="7.1.2" />
-    <PackageReference Include="CommunityToolkit.WinUI.UI.Controls.Media" Version="7.1.2" />
-    <PackageReference Include="CommunityToolkit.WinUI.UI.Media" Version="7.1.2" />
-    <PackageReference Include="Humanizer.Core" Version="2.14.1" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="7.0.0" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="7.0.0" />
-    <PackageReference Include="Microsoft.Windows.CsWinRT" Version="2.0.1" />
-    <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.2.221209.1" />
-    <PackageReference Include="Microsoft.Xaml.Behaviors.WinUI.Managed" Version="2.0.9" />
-    <PackageReference Include="ReactiveUI.WinUI" Version="18.4.1" />
-    <PackageReference Include="VideoLAN.LibVLC.UWP" Version="3.3.2" />
-    <Manifest Include="$(ApplicationManifest)" />
-  </ItemGroup>
+		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.1.0-preview2" />
+		<PackageReference Include="CommunityToolkit.WinUI.UI" Version="7.1.2" />
+		<PackageReference Include="CommunityToolkit.WinUI.UI.Animations" Version="7.1.2" />
+		<PackageReference Include="CommunityToolkit.WinUI.UI.Behaviors" Version="7.1.2" />
+		<PackageReference Include="CommunityToolkit.WinUI.UI.Controls" Version="7.1.2" />
+		<PackageReference Include="CommunityToolkit.WinUI.UI.Controls.Media" Version="7.1.2" />
+		<PackageReference Include="CommunityToolkit.WinUI.UI.Media" Version="7.1.2" />
+		<PackageReference Include="Humanizer.Core" Version="2.14.1" />
+		<!--
+      Exclude compile time assets so we don't pick up the interop assembly from the WinAppSDK Nuget
+      since we are building our own in our WinAppSDK projection project
+    -->
+		<PackageReference Include="Microsoft.WindowsAppSDK" Version="1.2.221209.1" />
+		<PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.22621.755" />
+		<PackageReference Include="Microsoft.Xaml.Behaviors.WinUI.Managed" Version="2.0.9" />
+		<PackageReference Include="ReactiveUI.WinUI" Version="18.4.1" />
+		<PackageReference Include="VideoLAN.LibVLC.Windows" Version="3.0.18" />
+		<Manifest Include="$(ApplicationManifest)" />
+	</ItemGroup>
 
-  <!-- 
+	<!-- 
     Defining the "Msix" ProjectCapability here allows the Single-project MSIX Packaging
     Tools extension to be activated for this project even if the Windows App SDK Nuget
     package has not yet been restored.
   -->
-  <ItemGroup Condition="'$(DisableMsixProjectCapabilityAddedByProject)'!='true' and '$(EnableMsixTooling)'=='true'">
-    <ProjectCapability Include="Msix" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\Eum\src\Spotify\Players\Eum.Connections.Spotify.NAudio\Eum.Connections.Spotify.NAudio.csproj" />
-    <ProjectReference Include="..\Eum.UI.Spotify\Eum.UI.Spotify.csproj" />
-    <ProjectReference Include="..\Eum.UI\Eum.UI.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Update="Assets\spotify.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
-  <ItemGroup>
-    <Page Update="Views\Playlists\CreatePlaylistView.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Content Update="Assets\MediaPlayerIcons.ttf">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Page Update="Controls\SidebarControlStyles.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Update="Controls\BottomPlayerControl.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Content Update="Assets\amb.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <None Update="Controls\ImageTransitionControl.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </None>
-    <Page Update="Views\Artists\ArtistRootView.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <None Update="Views\Playlists\PlaylistView.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </None>
-    <None Update="Views\Shell\CurrentUserProfileCardView.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
-    <Page Update="Views\Login\SpotifyLoginPage.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-  </ItemGroup>
-  <ItemGroup>
-    <Page Update="Views\Login\ProfilesView.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-  </ItemGroup>
-  <ItemGroup>
-    <Page Update="MainWindowContentWrapper.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-  </ItemGroup>
-  <ItemGroup>
-    <Page Update="Views\Shell\ShellView.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-  </ItemGroup>
-  <ItemGroup>
-    <Page Update="Views\Login\LoginView.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-  </ItemGroup>
+	<ItemGroup Condition="'$(DisableMsixProjectCapabilityAddedByProject)'!='true' and '$(EnableMsixTooling)'=='true'">
+		<ProjectCapability Include="Msix" />
+	</ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\..\Eum\src\Spotify\Players\Eum.Connections.Spotify.VLC\Eum.Connections.Spotify.VLC.csproj" />
+		<ProjectReference Include="..\Eum.UI.Spotify\Eum.UI.Spotify.csproj" />
+		<ProjectReference Include="..\Eum.UI\Eum.UI.csproj" />
+		<ProjectReference Include="..\WinRTLibrary\WinRTLibrary.csproj" />
+	</ItemGroup>
+	<ItemGroup>
+		<Content Update="Assets\spotify.png">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>
+	<ItemGroup>
+		<Page Update="Views\Playlists\CreatePlaylistView.xaml">
+			<Generator>MSBuild:Compile</Generator>
+		</Page>
+		<Content Update="Assets\MediaPlayerIcons.ttf">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+		<Page Update="Controls\SidebarControlStyles.xaml">
+			<Generator>MSBuild:Compile</Generator>
+		</Page>
+		<Page Update="Controls\BottomPlayerControl.xaml">
+			<Generator>MSBuild:Compile</Generator>
+		</Page>
+		<Content Update="Assets\amb.png">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+		<None Update="Controls\ImageTransitionControl.xaml">
+			<Generator>MSBuild:Compile</Generator>
+		</None>
+		<Page Update="Views\Settings\AppSettingsView.xaml">
+		  <Generator>MSBuild:Compile</Generator>
+		</Page>
+		<Page Update="Views\Settings\SettingsView.xaml">
+		  <Generator>MSBuild:Compile</Generator>
+		</Page>
+		<Page Update="Views\Artists\ArtistRootView.xaml">
+			<Generator>MSBuild:Compile</Generator>
+		</Page>
+		<None Update="Views\Playlists\PlaylistView.xaml">
+			<Generator>MSBuild:Compile</Generator>
+		</None>
+		<None Update="Views\Shell\CurrentUserProfileCardView.xaml">
+			<Generator>MSBuild:Compile</Generator>
+		</None>
+	</ItemGroup>
+	<ItemGroup>
+		<Page Update="Views\Login\SpotifyLoginPage.xaml">
+			<Generator>MSBuild:Compile</Generator>
+		</Page>
+	</ItemGroup>
+	<ItemGroup>
+		<Page Update="Views\Login\ProfilesView.xaml">
+			<Generator>MSBuild:Compile</Generator>
+		</Page>
+	</ItemGroup>
+	<ItemGroup>
+		<Page Update="MainWindowContentWrapper.xaml">
+			<Generator>MSBuild:Compile</Generator>
+		</Page>
+	</ItemGroup>
+	<ItemGroup>
+		<Page Update="Views\Shell\ShellView.xaml">
+			<Generator>MSBuild:Compile</Generator>
+		</Page>
+	</ItemGroup>
+	<ItemGroup>
+		<Page Update="Views\Login\LoginView.xaml">
+			<Generator>MSBuild:Compile</Generator>
+		</Page>
+	</ItemGroup>
 
-  <!-- 
+	<!-- 
     Defining the "HasPackageAndPublishMenuAddedByProject" property here allows the Solution 
     Explorer "Package and Publish" context menu entry to be enabled for this project even if 
     the Windows App SDK Nuget package has not yet been restored.
   -->
-  <PropertyGroup Condition="'$(DisableHasPackageAndPublishMenuAddedByProject)'!='true' and '$(EnableMsixTooling)'=='true'">
-    <HasPackageAndPublishMenu>true</HasPackageAndPublishMenu>
-  </PropertyGroup>
+	<PropertyGroup Condition="'$(DisableHasPackageAndPublishMenuAddedByProject)'!='true' and '$(EnableMsixTooling)'=='true'">
+		<HasPackageAndPublishMenu>true</HasPackageAndPublishMenu>
+	</PropertyGroup>
 </Project>

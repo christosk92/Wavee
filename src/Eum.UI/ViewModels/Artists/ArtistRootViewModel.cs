@@ -54,14 +54,18 @@ namespace Eum.UI.ViewModels.Artists
                         Description = k.Year.ToString(),
                         Image = k.Cover.Uri,
                         Tracks = (k.Discs != null
-                            ? k.Discs.SelectMany(j => j.Select(z => new DiscographyTrackViewModel
+                            ? k.Discs.SelectMany(j => j.Select((z,i) => new DiscographyTrackViewModel
                             {
-                                IsLoading = false
+                                IsLoading = false, 
+                                Duration = z.Duration,
+                                Index =i ,
+                                Title = z.Name,
+                                Playcount = (long) z.PlayCount
                             }))
                             : Enumerable.Range(0, (int)k.TrackCount)
                                 .Select(_ => new DiscographyTrackViewModel
                                 {
-                                    IsLoading = true
+                                    IsLoading = true,
                                 })).ToArray()
                     }).ToArray(),
                     TemplateType = a.Key switch
@@ -73,6 +77,7 @@ namespace Eum.UI.ViewModels.Artists
                         _ => throw new ArgumentOutOfRangeException()
                     }
                 })
+                .Where(a=> a.Items.Any())
                 .ToArray();
 
             TopTracks = artist.TopTrack
@@ -87,7 +92,7 @@ namespace Eum.UI.ViewModels.Artists
             
         }
 
-        public int MaxDepth => 2;
+        public int MaxDepth => 1;
 
     }
 
@@ -158,6 +163,10 @@ namespace Eum.UI.ViewModels.Artists
     public class DiscographyTrackViewModel
     {
         public bool IsLoading { get; set; }
+        public int Index { get; init; }
+        public string Title { get; init; }
+        public long Playcount { get; init; }
+        public int Duration { get; init; }
     }
     public enum TemplateTypeOrientation
     {

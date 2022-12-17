@@ -21,6 +21,8 @@ using Eum.UI.JsonConverters;
 using Eum.UI.Services.Directories;
 using Eum.UI.Spotify.ViewModels.Playback;
 using Eum.UI.ViewModels.Playback;
+using Eum.Logging;
+using System.Runtime.InteropServices.ComTypes;
 
 namespace Eum.UI.Spotify
 {
@@ -90,6 +92,11 @@ namespace Eum.UI.Spotify
             if (config.CachePath != null)
                 services.AddSingleton<ICacheManager>(new JournalCacheManager(config.CachePath));
             services.AddSingleton<ISpotifyPlaybackClient, SpotifyPlaybackClient>();
+
+            if (!string.IsNullOrEmpty(config.LogPath))
+            {
+                S_Log.Instance.InitializeDefaults(config.LogPath, null);
+            }
             return services;
         }
 

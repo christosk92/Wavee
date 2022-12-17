@@ -60,7 +60,6 @@ namespace Eum.UI.Services.Playlists
                     if (TryGetPlaylistViewModel(user, out var toUpdate))
                     {
                         toUpdate.Playlist = user;
-                        _ = Task.Run(async () => await toUpdate.Sync());
                     }
                 });
 
@@ -111,11 +110,6 @@ namespace Eum.UI.Services.Playlists
             //listen to changes on the external service.
             DisconnectListeners();
 
-            //sync each playlist first
-            foreach (var playlistViewModel in Playlists.ToList())
-            {
-                _ = Task.Run(async () => await playlistViewModel.Sync());
-            }
 
         }
 

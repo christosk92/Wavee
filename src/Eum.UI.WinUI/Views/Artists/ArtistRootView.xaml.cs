@@ -31,7 +31,7 @@ namespace Eum.UI.WinUI.Views.Artists
             this.InitializeComponent();
             this.DataContext = viewModel;
         }
-        public ArtistRootViewModel ViewModel { get; }
+        public ArtistRootViewModel ViewModel { get; set; }
 
         private void GridView_SizeCHanged(object sender, SizeChangedEventArgs e)
         {
@@ -47,6 +47,12 @@ namespace Eum.UI.WinUI.Views.Artists
             //     s.MaxHeight = Double.PositiveInfinity;
             // }
             ((ItemsWrapGrid)s.ItemsPanelRoot).ItemWidth = e.NewSize.Width / columns;
+        }
+
+        private void ArtistRootView_OnUnloaded(object sender, RoutedEventArgs e)
+        {
+            ViewModel = null;
+            this.DataContext = null;
         }
     }
 }

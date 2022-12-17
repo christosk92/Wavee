@@ -13,6 +13,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
@@ -34,11 +35,16 @@ using Eum.Logging;
 using Path = System.IO.Path;
 using Eum.UI.Services.Directories;
 using Eum.UI.Services.Playlists;
-using Eum.UI.Users;
 using Windows.Storage;
+using Windows.UI;
+using Eum.Connections.Spotify.VLC;
 using Eum.UI.Services.Artists;
 using Eum.UI.Services.Tracks;
 using LiteDB;
+using Microsoft.UI;
+using UnhandledExceptionEventArgs = Microsoft.UI.Xaml.UnhandledExceptionEventArgs;
+using ReactiveUI;
+using System.Reactive.Linq;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -57,13 +63,11 @@ namespace Eum.UI.WinUI
         public App()
         {
             var dataDir = ApplicationData.Current.LocalFolder.Path;
-            S_Log.Instance.InitializeDefaults(Path.Combine(dataDir, "Logs.txt"), null);
-
             IServiceCollection serviceCollection = new ServiceCollection();
 
             serviceCollection.AddSingleton<MainViewModel>();
 
-          //  serviceCollection.AddSingleton<IIdentityService, EumIdentityService>();
+            //  serviceCollection.AddSingleton<IIdentityService, EumIdentityService>();
             serviceCollection.AddSingleton<IEumPlaylistManager, EumPlaylistManager>();
             serviceCollection.AddSingleton<IEumUserPlaylistViewModelManager, EumPlaylistViewModelManager>();
 
@@ -76,22 +80,29 @@ namespace Eum.UI.WinUI
             serviceCollection.AddTransient<IArtistProvider, ArtistProvider>();
             //serviceCollection.AddTransient<IUsersService, UsersService>();
             serviceCollection.AddTransient<IAvailableServicesProvider, BetaAvailableServicesProvider>();
-            serviceCollection.AddSingleton<ICommonDirectoriesProvider>(new CommonDirectoriesProvider(dataDir)); 
+            serviceCollection.AddSingleton<ICommonDirectoriesProvider>(new CommonDirectoriesProvider(dataDir));
 
-            serviceCollection.AddSpotify(new SpotifyConfig
+            serviceCollection.AddTransient<IThemeSelectorServiceFactory, WinUiThemeSelectorServiceFactory>();
+
+                serviceCollection.AddSpotify(new SpotifyConfig
             {
-                AudioQuality = AudioQuality.HIGH, 
+                AudioQuality = AudioQuality.VERY_HIGH,
                 DeviceName = "Eum WinUI",
                 DeviceType = DeviceType.Computer,
                 AutoplayEnabled = true,
                 CrossfadeDuration = 15000,
-                LogPath = Path.Combine(dataDir, "Logs.txt"),
+                LogPath = Path.Combine(dataDir, "Logs_winui.log"),
                 CachePath = dataDir,
                 TimeSyncMethod = TimeSyncMethod.MELODY
-            }, new Eum.Connections.Spotify.NAudio.NAudioPlayer());
+            }, new EumVlcPlayer());
 
+            this.UnhandledException += OnUnhandledException;
             Ioc.Default.ConfigureServices(serviceCollection.BuildServiceProvider());
             this.InitializeComponent();
+        }
+
+        private void OnUnhandledException(object sender, UnhandledExceptionEventArgs e)
+        {
         }
 
         /// <summary>
@@ -115,5 +126,86 @@ namespace Eum.UI.WinUI
         {
             ServiceType.Spotify
         };
+    }
+    // Helper class to workaround custom title bar bugs.
+    // DISCLAIMER: The resource key names and color values used below are subject to change. Do not depend on them.
+    // https://github.com/microsoft/TemplateStudio/issues/4516
+    internal class TitleBarHelper
+    {
+        private const int WAINACTIVE = 0x00;
+        private const int WAACTIVE = 0x01;
+        private const int WMACTIVATE = 0x0006;
+
+        [DllImport("user32.dll")]
+        private static extern IntPtr GetActiveWindow();
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto)]
+        private static extern IntPtr SendMessage(IntPtr hWnd, int msg, int wParam, IntPtr lParam);
+
+        public static void UpdateTitleBar(ElementTheme theme)
+        {
+            if (App.MWindow.ExtendsContentIntoTitleBar)
+            {
+                if (theme != ElementTheme.Default)
+                {
+                    Application.Current.Resources["WindowCaptionForeground"] = theme switch
+                    {
+                        ElementTheme.Dark => new SolidColorBrush(Colors.White),
+                        ElementTheme.Light => new SolidColorBrush(Colors.Black),
+                        _ => new SolidColorBrush(Colors.Transparent)
+                    };
+
+                    Application.Current.Resources["WindowCaptionForegroundDisabled"] = theme switch
+                    {
+                        ElementTheme.Dark => new SolidColorBrush(Color.FromArgb(0x66, 0xFF, 0xFF, 0xFF)),
+                        ElementTheme.Light => new SolidColorBrush(Color.FromArgb(0x66, 0x00, 0x00, 0x00)),
+                        _ => new SolidColorBrush(Colors.Transparent)
+                    };
+
+                    Application.Current.Resources["WindowCaptionButtonBackgroundPointerOver"] = theme switch
+                    {
+                        ElementTheme.Dark => new SolidColorBrush(Color.FromArgb(0x33, 0xFF, 0xFF, 0xFF)),
+                        ElementTheme.Light => new SolidColorBrush(Color.FromArgb(0x33, 0x00, 0x00, 0x00)),
+                        _ => new SolidColorBrush(Colors.Transparent)
+                    };
+
+                    Application.Current.Resources["WindowCaptionButtonBackgroundPressed"] = theme switch
+                    {
+                        ElementTheme.Dark => new SolidColorBrush(Color.FromArgb(0x66, 0xFF, 0xFF, 0xFF)),
+                        ElementTheme.Light => new SolidColorBrush(Color.FromArgb(0x66, 0x00, 0x00, 0x00)),
+                        _ => new SolidColorBrush(Colors.Transparent)
+                    };
+
+                    Application.Current.Resources["WindowCaptionButtonStrokePointerOver"] = theme switch
+                    {
+                        ElementTheme.Dark => new SolidColorBrush(Colors.White),
+                        ElementTheme.Light => new SolidColorBrush(Colors.Black),
+                        _ => new SolidColorBrush(Colors.Transparent)
+                    };
+
+                    Application.Current.Resources["WindowCaptionButtonStrokePressed"] = theme switch
+                    {
+                        ElementTheme.Dark => new SolidColorBrush(Colors.White),
+                        ElementTheme.Light => new SolidColorBrush(Colors.Black),
+                        _ => new SolidColorBrush(Colors.Transparent)
+                    };
+                }
+
+                Application.Current.Resources["WindowCaptionBackground"] = new SolidColorBrush(Colors.Transparent);
+                Application.Current.Resources["WindowCaptionBackgroundDisabled"] = new SolidColorBrush(Colors.Transparent);
+
+                var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(App.MWindow);
+                if (hwnd == GetActiveWindow())
+                {
+                    SendMessage(hwnd, WMACTIVATE, WAINACTIVE, IntPtr.Zero);
+                    SendMessage(hwnd, WMACTIVATE, WAACTIVE, IntPtr.Zero);
+                }
+                else
+                {
+                    SendMessage(hwnd, WMACTIVATE, WAACTIVE, IntPtr.Zero);
+                    SendMessage(hwnd, WMACTIVATE, WAINACTIVE, IntPtr.Zero);
+                }
+            }
+        }
     }
 }

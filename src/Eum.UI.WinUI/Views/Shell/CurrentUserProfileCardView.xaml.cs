@@ -3,6 +3,9 @@
 
 using CommunityToolkit.Mvvm.DependencyInjection;
 using Eum.UI.Services.Users;
+using Eum.UI.ViewModels.Navigation;
+using Eum.UI.ViewModels.Settings;
+using Microsoft.UI.Xaml.Input;
 using UserControl = Microsoft.UI.Xaml.Controls.UserControl;
 
 // To learn more about WinUI, the WinUI project structure,
@@ -19,5 +22,10 @@ namespace Eum.UI.WinUI.Views.Shell
             this.DataContext = UserViewModel;
         }
         public IEumUserViewModelManager UserViewModel { get; }
+
+        private void Settings_tapped(object sender, TappedRoutedEventArgs e)
+        {
+            NavigationService.Instance.To(new SettingsViewModel(UserViewModel.CurrentUser.User));
+        }
     }
 }

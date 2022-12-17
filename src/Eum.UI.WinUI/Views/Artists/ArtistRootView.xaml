@@ -15,7 +15,7 @@
     xmlns:local="using:Eum.UI.WinUI.Views.Artists"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:media="using:CommunityToolkit.WinUI.UI.Media"
-    xmlns:ui="using:CommunityToolkit.WinUI.UI"
+    xmlns:ui="using:CommunityToolkit.WinUI.UI" Unloaded="ArtistRootView_OnUnloaded"
     xmlns:xamlConverters="using:Eum.UI.WinUI.XamlConverters"
     mc:Ignorable="d">
     <UserControl.Transitions>
@@ -245,7 +245,7 @@
             </Grid>
 
 
-            <ItemsRepeater Margin="0,48,56,48" ItemsSource="{x:Bind ViewModel.Discography, Mode=OneWay}">
+            <ItemsRepeater Margin="0,48,56,86" ItemsSource="{x:Bind ViewModel.Discography, Mode=OneWay}">
                 <ItemsRepeater.ItemTemplate>
                     <DataTemplate x:DataType="artists:DiscographyGroup">
                         <controls1:DockPanel Margin="0,0,0,48" LastChildFill="True">
@@ -362,15 +362,102 @@
                                 x:Name="Vertical"
                                 VerticalAlignment="Top"
                                 x:Load="{x:Bind TemplateType, Mode=OneWay, Converter={StaticResource IsGridOrVerticalToLoadedConverter}, ConverterParameter='VerticalStack'}"
-                                HorizontalCacheLength="0"
+                                HorizontalCacheLength="0" 
                                 ItemsSource="{x:Bind Items}"
                                 Tag="{x:Bind}">
                                 <ItemsRepeater.ItemTemplate>
                                     <DataTemplate x:DataType="artists:DiscographyViewModel">
-                                        <Grid
-                                            Width="200"
-                                            Height="200"
-                                            Background="Red" />
+                                        <controls1:DockPanel>
+                                            <NavigationViewItemSeparator Margin="0,12,0,24" controls1:DockPanel.Dock="Bottom"/>
+                                            <StackPanel Width="150" controls1:DockPanel.Dock="Left" Margin="0,0,24,0">
+                                                <Border CornerRadius="6">
+                                                    <Image Height="150">
+                                                        <Image.Source>
+                                                            <BitmapImage
+                                                                DecodePixelHeight="200"
+                                                                DecodePixelWidth="200"
+                                                                UriSource="{x:Bind Image}" />
+                                                        </Image.Source>
+                                                    </Image>
+                                                </Border>
+
+                                                <TextBlock  TextWrapping="Wrap" MaxLines="2" TextTrimming="CharacterEllipsis"
+                                                    Margin="0,4,0,0"
+                                                    FontWeight="SemiBold" Text="{x:Bind Title}"/>
+                                                <TextBlock Opacity=".7" FontSize="13"  Text="{x:Bind Description}"/>
+                                            </StackPanel>
+                                            <ListView controls1:DockPanel.Dock="Left"
+                                                ItemContainerStyle="{StaticResource SongGridViewItemStyle}"
+                        ItemsSource="{x:Bind Tracks, Mode=OneWay}"
+                        SelectionMode="Extended">
+                                                <ListView.ItemTemplate>
+                                                    <DataTemplate x:DataType="artists:DiscographyTrackViewModel">
+                                                        <Border
+                                    Padding="12,0,12,0"
+                                    HorizontalAlignment="Stretch"
+                                    VerticalAlignment="Stretch"
+                                    Background="{ThemeResource LayerFillColorDefaultBrush}"
+                                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="8">
+                                                            <Grid x:DefaultBindMode="OneWay">
+                                                                <Grid.ColumnDefinitions>
+                                                                    <ColumnDefinition Width="60" />
+                                                                    <ColumnDefinition Width="1*" />
+                                                                    <ColumnDefinition />
+                                                                    <ColumnDefinition />
+                                                                </Grid.ColumnDefinitions>
+
+
+                                                                <Grid VerticalAlignment="Stretch">
+                                                                    <Grid.ColumnDefinitions>
+                                                                        <ColumnDefinition Width="24" />
+                                                                        <ColumnDefinition Width="36" />
+                                                                    </Grid.ColumnDefinitions>
+                                                                    <TextBlock
+                                                VerticalAlignment="Center"
+                                                FontWeight="Bold"
+                                                Opacity=".7"
+                                                Text="{x:Bind Index, Converter={StaticResource IndexToStringConverter}}" />
+                                                                    <ToggleButton
+                                                Grid.Column="1"
+                                                Margin="0,0,6,0"
+                                                Padding="0"
+                                                HorizontalAlignment="Center"
+                                                Background="Transparent"
+                                                BorderThickness="0">
+                                                                        <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xEB51;" />
+                                                                    </ToggleButton>
+                                                                </Grid>
+                                                                <TextBlock
+                                            Grid.Column="1"
+                                            Margin="0,0,8,0"
+                                            VerticalAlignment="Center"
+                                            Text="{x:Bind Title}"
+                                            TextTrimming="CharacterEllipsis" />
+
+
+                                                                <!--  <ContentPresenter  -->
+                                                                <!--  Grid.Column="2"  -->
+                                                                <!--  VerticalAlignment="Center"  -->
+                                                                <!--  Content="{x:Bind Track.Track.Group}"  -->
+                                                                <!--  ContentTemplate="{StaticResource IdWithTitleItemTemplate}" />  -->
+                                                                <TextBlock
+                                                                    Grid.Column="3" Margin="8,0"
+                                                                    HorizontalAlignment="Right"
+                                                                    VerticalAlignment="Center"
+                                                                    Text="{x:Bind Duration, Converter={StaticResource MsToTimestampConverter}}" />
+                                                                <TextBlock
+                                            Grid.Column="2" 
+                                            HorizontalAlignment="Right"
+                                            VerticalAlignment="Center"
+                                            Text="{x:Bind Playcount, Converter={StaticResource PlaycountToStringConverter}}" />
+                                                            </Grid>
+                                                        </Border>
+                                                    </DataTemplate>
+                                                </ListView.ItemTemplate>
+                                            </ListView>
+                                        </controls1:DockPanel>
                                     </DataTemplate>
                                 </ItemsRepeater.ItemTemplate>
                                 <ItemsRepeater.Layout>
@@ -385,10 +472,40 @@
                                 ItemsSource="{x:Bind Items}">
                                 <ItemsRepeater.ItemTemplate>
                                     <DataTemplate x:DataType="artists:DiscographyViewModel">
-                                        <Grid
-                                            Width="200"
-                                            Height="200"
-                                            Background="Red" />
+                                        <Border Width="200" Height="250">
+                                            <Border BorderThickness="0">
+                                                <Grid>
+                                                    <Grid.RowDefinitions>
+                                                        <RowDefinition Height="200" />
+                                                        <RowDefinition Height="Auto" />
+                                                    </Grid.RowDefinitions>
+                                                    <Image>
+                                                        <Image.Source>
+                                                            <BitmapImage
+                                                                DecodePixelHeight="200"
+                                                                DecodePixelWidth="200"
+                                                                UriSource="{x:Bind Image}" />
+                                                        </Image.Source>
+                                                    </Image>
+                                                    <StackPanel Grid.Row="1" Margin="0,4,0,0">
+                                                        <TextBlock
+                                                            HorizontalAlignment="Stretch"
+                                                            FontSize="15"
+                                                            FontWeight="SemiBold"
+                                                            MaxLines="1"
+                                                            Text="{x:Bind Title}"
+                                                            TextWrapping="Wrap" />
+
+                                                        <TextBlock
+                                                            HorizontalAlignment="Stretch"
+                                                            FontSize="13"
+                                                            FontWeight="Normal"
+                                                            MaxLines="1"
+                                                            Text="{x:Bind Description}" />
+                                                    </StackPanel>
+                                                </Grid>
+                                            </Border>
+                                        </Border>
                                     </DataTemplate>
                                 </ItemsRepeater.ItemTemplate>
                                 <ItemsRepeater.Layout>

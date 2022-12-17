@@ -45,4 +45,20 @@
   <Capabilities>
     <rescap:Capability Name="runFullTrust" />
   </Capabilities>
+  <Extensions>
+	  <Extension Category="windows.activatableClass.inProcessServer">
+		  <InProcessServer>
+			  <Path>WinRT.Host.dll</Path>
+			  <ActivatableClass ActivatableClassId="WinRTLibrary.GainAudioEffect" ThreadingModel="both" />
+		  </InProcessServer>
+	  </Extension>
+  </Extensions>
+	<!-- <Extensions> -->
+	 <!--  <Extension Category="windows.activatableClass.inProcessServer"> -->
+		<!--   <InProcessServer> -->
+		<!-- 	  <Path>WinRT.Host.dll</Path> -->
+		<!-- 	  <ActivatableClass ActivatableClassId="Eum.Connections.Spotify.WinUIEffects.GainAudioEffect" ThreadingModel="both" /> -->
+		<!--   </InProcessServer> -->
+	 <!--  </Extension> -->
+  <!-- </Extensions> -->
 </Package>

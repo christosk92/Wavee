@@ -10,6 +10,8 @@ using System.Reactive.Linq;
 using Eum.UI.Bases;
 using Nito.AsyncEx;
 using Eum.Connections.Spotify.Models.Users;
+using Eum.UI.Services;
+using Eum.UI.ViewModels.Settings;
 
 namespace Eum.UI.Users;
 
@@ -46,6 +48,10 @@ public partial class EumUser : ConfigBase, IEquatable<EumUser>
     [property: JsonPropertyName("windowWidth")]
     private double _windowWidth;
 
+    [ObservableProperty]
+    [property: JsonPropertyName("appTheme")]
+    private AppTheme _appTheme;
+
     public EumUser()
     {
         this.WhenAnyValue(
@@ -56,15 +62,19 @@ public partial class EumUser : ConfigBase, IEquatable<EumUser>
                 x => x.IsDefault,
                 x => x.SidebarWidth,
                 x => x.Metadata,
-                (_, _, _, _, _, _, _) => Unit.Default)
+                x => x._appTheme,
+                (_, _, _, _, _, _, _, _) => Unit.Default)
             .Throttle(TimeSpan.FromMilliseconds(500))
             //.Skip(1) // Won't save on UiConfig creation.
             .ObserveOn(RxApp.MainThreadScheduler)
-            .Subscribe(_ =>
-            {
-                this.ToFile();
-            });
+            .Subscribe(_ => { this.ToFile(); });
+
+        ThemeService = Ioc.Default.GetRequiredService<IThemeSelectorServiceFactory>()
+            .GetThemeSelectorService(this);
     }
+
+    [JsonIgnore]
+    public IThemeSelectorService ThemeService { get; }
     public void ReplaceMetadata(string key, object value)
     {
         Metadata[key] = value;

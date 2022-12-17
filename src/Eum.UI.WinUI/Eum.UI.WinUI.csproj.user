@@ -19,6 +19,12 @@
     <None Update="Controls\ImageTransitionControl.xaml">
       <SubType>Designer</SubType>
     </None>
+    <Page Update="Views\Settings\AppSettingsView.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Views\Settings\SettingsView.xaml">
+      <SubType>Designer</SubType>
+    </Page>
     <Page Update="Views\Artists\ArtistRootView.xaml">
       <SubType>Designer</SubType>
     </Page>

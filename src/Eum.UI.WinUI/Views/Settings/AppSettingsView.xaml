@@ -1,0 +1,72 @@
+<!-- Copyright (c) Microsoft Corporation. All rights reserved. -->
+<!-- Licensed under the MIT License. See LICENSE in the project root for license information. -->
+
+<UserControl
+    x:Class="Eum.UI.WinUI.Views.Settings.AppSettingsView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:Eum.UI.WinUI.Views.Settings"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:xamlConverters="using:Eum.UI.WinUI.XamlConverters"
+    xmlns:settings="using:Eum.UI.ViewModels.Settings"
+    mc:Ignorable="d">
+
+    <UserControl.Resources>
+        <xamlConverters:EnumToBooleanConverter x:Key="EnumToBooleanConverter" />
+    </UserControl.Resources>
+    <StackPanel
+                                                       x:Name="ContentArea">
+        <TextBlock Text="Settings" Style="{ThemeResource TitleTextBlockStyle}" Margin="0,0,0,24"/>
+        <TextBlock x:Uid="Settings_Personalization" Style="{ThemeResource SubtitleTextBlockStyle}" />
+        <StackPanel Margin="{StaticResource SmallTopBottomMargin}" >
+            <TextBlock  x:Uid="Settings_Theme" />
+
+            <StackPanel Margin="{StaticResource XSmallTopMargin}">
+                <RadioButton  
+                                  Content="Light"
+                                  Command="{x:Bind ViewModel.SwitchThemeCommand}"
+                                  IsChecked="{x:Bind ViewModel.AppTheme, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=Light, Mode=OneWay}"
+                                  FontSize="15"
+                                  GroupName="AppTheme">
+                    <RadioButton.CommandParameter>
+                        <settings:AppTheme>Light</settings:AppTheme>
+                    </RadioButton.CommandParameter>
+                </RadioButton>
+                <RadioButton 
+                                 Content="Dark"
+                                 Command="{x:Bind ViewModel.SwitchThemeCommand}"
+                                 IsChecked="{x:Bind ViewModel.AppTheme, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=Dark, Mode=OneWay}"
+                                 FontSize="15"
+                                 GroupName="AppTheme">
+                    <RadioButton.CommandParameter>
+                        <settings:AppTheme>Dark</settings:AppTheme>
+                    </RadioButton.CommandParameter>
+                </RadioButton>
+                <RadioButton 
+
+                    Content="System Default"
+                                 Command="{x:Bind ViewModel.SwitchThemeCommand}"
+                                 IsChecked="{x:Bind ViewModel.AppTheme, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=SystemDefault, Mode=OneWay}"
+                                 FontSize="15"
+                                 GroupName="AppTheme">
+                    <RadioButton.CommandParameter>
+                        <settings:AppTheme>SystemDefault</settings:AppTheme>
+                    </RadioButton.CommandParameter>
+                </RadioButton>
+            </StackPanel>
+        </StackPanel>
+
+        <TextBlock x:Uid="Settings_About"   Style="{ThemeResource SubtitleTextBlockStyle}" />
+
+        <StackPanel Margin="{StaticResource XSmallTopMargin}">
+            <TextBlock   />
+
+            <TextBlock  
+                            x:Uid="Settings_AboutDescription"
+                            Margin="{StaticResource XSmallTopMargin}"
+                            Style="{ThemeResource BodyTextBlockStyle}" />
+            <HyperlinkButton   x:Uid="SettingsPage_PrivacyTermsLink" Margin="{StaticResource SettingsPageHyperlinkButtonMargin}" />
+        </StackPanel>
+    </StackPanel>
+</UserControl>

@@ -2,6 +2,7 @@
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
 using System;
+using System.Threading.Tasks;
 using Windows.System;
 using Windows.UI.Core;
 using CommunityToolkit.Mvvm.DependencyInjection;
@@ -33,15 +34,7 @@ namespace Eum.UI.WinUI.Controls
             _userManagerViewModel = Ioc.Default.GetRequiredService<IEumUserViewModelManager>();
             this.InitializeComponent();
         }
-        /// <summary>
-        /// true if the user is currently resizing the sidebar
-        /// </summary>
-        private bool dragging;
-
-        private double originalSize = 0;
-
-        private bool lockFlag = false;
-
+        
         public static readonly DependencyProperty ViewModelProperty = DependencyProperty.Register(nameof(ViewModel), typeof(SidebarViewModel),
             typeof(SidebarControl), new PropertyMetadata(default(SidebarViewModel)));
 
@@ -97,7 +90,7 @@ namespace Eum.UI.WinUI.Controls
             IsPaneToggleButtonVisible = args.DisplayMode == NavigationViewDisplayMode.Minimal;
         }
 
-        private double? NullOrSidebarWidth
+        internal double? NullOrSidebarWidth
         {
             get
             {
@@ -112,127 +105,6 @@ namespace Eum.UI.WinUI.Controls
             }
         }
 
-        private void Border_KeyDown(object sender, KeyRoutedEventArgs e)
-        {
-            var step = 1;
-            var ctrl = Microsoft.UI.Input.InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Control);
-            originalSize = IsPaneOpen ? (NullOrSidebarWidth ??= OpenPaneLength) : CompactPaneLength;
-
-            if (ctrl.HasFlag(CoreVirtualKeyStates.Down))
-            {
-                step = 5;
-            }
-
-            if (e.Key == VirtualKey.Space || e.Key == VirtualKey.Enter)
-            {
-                IsPaneOpen = !IsPaneOpen;
-                return;
-            }
-
-            if (IsPaneOpen)
-            {
-                if (e.Key == VirtualKey.Left)
-                {
-                    SetSize(-step, true);
-                    e.Handled = true;
-                }
-                else if (e.Key == VirtualKey.Right)
-                {
-                    SetSize(step, true);
-                    e.Handled = true;
-                }
-            }
-            else if (e.Key == VirtualKey.Right)
-            {
-                IsPaneOpen = !IsPaneOpen;
-                return;
-            }
-
-            User.User.SidebarWidth = OpenPaneLength;
-        }
-
-        private void Border_ManipulationDelta(object sender, ManipulationDeltaRoutedEventArgs e)
-        {
-            if (DisplayMode == NavigationViewDisplayMode.Expanded)
-            {
-                SetSize(e.Cumulative.Translation.X);
-            }
-        }
-
-        private void Border_PointerExited(object sender, PointerRoutedEventArgs e)
-        {
-            if (!dragging) // keep showing pressed event if currently resizing the sidebar
-            {
-                (sender as Grid).ChangeCursor(InputSystemCursor.Create(InputSystemCursorShape.Arrow));
-                VisualStateManager.GoToState((sender as Grid).FindAscendant<SplitView>(), "ResizerNormal", true);
-            }
-        }
-
-        private void Border_PointerEntered(object sender, PointerRoutedEventArgs e)
-        {
-            if (DisplayMode == NavigationViewDisplayMode.Expanded)
-            {
-                (sender as Grid).ChangeCursor(InputSystemCursor.Create(InputSystemCursorShape.SizeWestEast));
-                VisualStateManager.GoToState((sender as Grid).FindAscendant<SplitView>(), "ResizerPointerOver", true);
-            }
-        }
-
-        private void SetSize(double val, bool closeImmediatleyOnOversize = false)
-        {
-            if (IsPaneOpen)
-            {
-                var newSize = originalSize + val;
-                if (newSize <= MaximumSidebarWidth && newSize >= MinimumSidebarWidth)
-                {
-                    OpenPaneLength = newSize; // passing a negative value will cause an exception
-                }
-
-                if (newSize < MinimumSidebarWidth) // if the new size is below the minimum, check whether to toggle the pane
-                {
-                    if (MinimumSidebarWidth + val <= CompactPaneLength || closeImmediatleyOnOversize) // collapse the sidebar
-                    {
-                        IsPaneOpen = false;
-                    }
-                }
-            }
-            else
-            {
-                if (val >= MinimumSidebarWidth - CompactPaneLength || closeImmediatleyOnOversize)
-                {
-                    OpenPaneLength = MinimumSidebarWidth + (val + CompactPaneLength - MinimumSidebarWidth); // set open sidebar length to minimum value to keep it smooth
-                    IsPaneOpen = true;
-                }
-            }
-
-            User.User.SidebarWidth = OpenPaneLength;
-        }
-
-        private void ResizeElementBorder_ManipulationCompleted(object sender, ManipulationCompletedRoutedEventArgs e)
-        {
-            (sender as Grid).ChangeCursor(InputSystemCursor.Create(InputSystemCursorShape.Arrow));
-            VisualStateManager.GoToState((sender as Grid).FindAscendant<SplitView>(), "ResizerNormal", true);
-            User.User.SidebarWidth = OpenPaneLength;
-            dragging = false;
-        }
-
-        private void ResizeElementBorder_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
-        {
-            IsPaneOpen = !IsPaneOpen;
-        }
-
-        private void ResizeElementBorder_ManipulationStarted(object sender, ManipulationStartedRoutedEventArgs e)
-        {
-            if (DisplayMode == NavigationViewDisplayMode.Expanded)
-            {
-                originalSize = IsPaneOpen ? (NullOrSidebarWidth ??= OpenPaneLength) : CompactPaneLength;
-                (sender as Grid).ChangeCursor(InputSystemCursor.Create(InputSystemCursorShape.SizeWestEast));
-                VisualStateManager.GoToState((sender as Grid).FindAscendant<SplitView>(), "ResizerPressed", true);
-                dragging = true;
-            }
-        }
-        public const double MinimumSidebarWidth = 1;
-
-        public const double MaximumSidebarWidth = 500;
 
         private void SidebarControl_OnLoaded(object sender, RoutedEventArgs e)
         {
@@ -246,5 +118,6 @@ namespace Eum.UI.WinUI.Controls
                 NavigationService.Instance.To(new CreatePlaylistViewModel(Ioc.Default.GetRequiredService<IEumUserViewModelManager>()));
             }
         }
+
     }
 }
