@@ -16,17 +16,18 @@
             <EntranceThemeTransition />
         </TransitionCollection>
     </UserControl.Transitions>
-    <Grid >
+    <Grid Margin="0,48,0,0">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition/>
         </Grid.RowDefinitions>
-        <TextBlock VerticalAlignment="Center"
-            Margin="42,36,42,12"
-            Style="{ThemeResource TitleTextBlockStyle}"
-            Text="Settings" />
+        <TextBlock VerticalAlignment="Top" 
+                   Margin="42,0,42,12"
+                   Style="{ThemeResource TitleTextBlockStyle}"
+                   Text="Settings" />
         <NavigationView
             Grid.Row="1"
+            BorderThickness="0"
             PaneDisplayMode="Top" IsBackButtonVisible="Collapsed"
             MenuItemsSource="{x:Bind ViewModel.Components}"
             ItemInvoked="NavigationView_OnItemInvoked"
@@ -41,7 +42,7 @@
                     </NavigationViewItem>
                 </DataTemplate>
             </NavigationView.MenuItemTemplate>
-            <ContentControl Content="{x:Bind ViewModel.CurrentlySelectedComponent, Mode=OneWay,Converter={StaticResource ViewLocator}}"/>
+            <ContentControl HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Content="{x:Bind ViewModel.CurrentlySelectedComponent, Mode=OneWay,Converter={StaticResource ViewLocator}}"/>
         </NavigationView>
     </Grid>
 </UserControl>

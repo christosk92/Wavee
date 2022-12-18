@@ -61,6 +61,8 @@ namespace Eum.UI.Spotify.ViewModels.Users
                                 {"privateUser", _spotifyClient.PrivateUser},
                                 {"authenticatedUser", signInUser}
                              });
+                    user.ThemeService = Ioc.Default.GetRequiredService<IThemeSelectorServiceFactory>()
+                        .GetThemeSelectorService(user);
                     IdentityService.Instance.LoginUser(user);
                 }
             }

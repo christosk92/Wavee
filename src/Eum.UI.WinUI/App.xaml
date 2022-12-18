@@ -23,7 +23,7 @@
                     </XamlControlsResources.MergedDictionaries>
                 </XamlControlsResources>
                 <controls:PlaylistStyles />
-
+              
                 <ResourceDictionary>
                     <ResourceDictionary.ThemeDictionaries>
                         <ResourceDictionary x:Key="Light">
@@ -145,7 +145,7 @@
             <Thickness x:Key="XXSmallTopMargin">0,4,0,0</Thickness>
             <Thickness x:Key="XXSmallLeftTopRightBottomMargin">4,4,4,4</Thickness>
 
-            <Thickness x:Key="NavigationViewContentGridBorderThickness">1,1,0,0</Thickness>
+            <Thickness x:Key="NavigationViewContentGridBorderThickness">1,0,0,0</Thickness>
             <CornerRadius x:Key="NavigationViewContentGridCornerRadius">8,0,0,0</CornerRadius>
             <Thickness x:Key="NavigationViewContentMargin">0,48,0,0</Thickness>
             <Thickness x:Key="NavigationViewHeaderMargin">56,34,0,0</Thickness>
@@ -154,6 +154,7 @@
             <Thickness x:Key="MenuBarContentMargin">36,24,36,0</Thickness>
 
             <Thickness x:Key="SettingsPageHyperlinkButtonMargin">-12,4,0,0</Thickness>
+            <local:WindowsUIColorToHexConverter x:Key="WindowsUIColorToHexConverter" />
 
         </ResourceDictionary>
     </Application.Resources>

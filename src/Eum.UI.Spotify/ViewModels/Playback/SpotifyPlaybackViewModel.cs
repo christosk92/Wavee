@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO.Compression;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ColorThiefDotNet;
 using CommunityToolkit.Mvvm.DependencyInjection;
 using Eum.Connections.Spotify;
 using Eum.Connections.Spotify.Models.Users;
@@ -14,18 +16,22 @@ using Eum.Enums;
 using Eum.Logging;
 using Eum.Spotify.connectstate;
 using Eum.Spotify.metadata;
+using Eum.UI.Helpers;
 using Eum.UI.Items;
 using Eum.UI.Playlists;
 using Eum.UI.Services.Directories;
 using Eum.UI.Services.Playlists;
 using Eum.UI.Services.Tracks;
+using Eum.UI.ViewModels;
 using Eum.UI.ViewModels.Playback;
 using Eum.UI.ViewModels.Playlists;
 using Flurl;
 using Flurl.Http;
 using LiteDB;
 using MoreLinq.Extensions;
+using Org.BouncyCastle.Utilities.Encoders;
 using ReactiveUI;
+using Color = System.Drawing.Color;
 
 namespace Eum.UI.Spotify.ViewModels.Playback;
 public class SpotifyPlaybackViewModel : PlaybackViewModel
@@ -185,6 +191,7 @@ public class SpotifyPlaybackViewModel : PlaybackViewModel
                 Artists = obj.item.Artists,
                 BigImage = (await obj.item.Images.OrderByDescending(a => a.Height ?? 0).First().ImageStream),
                 SmallImage = (await obj.item.Images.OrderBy(a => a.Height ?? 0).First().ImageStream),
+                BigImageUrl = new Uri($"https://i.scdn.co/image/{obj.item.Images.OrderByDescending(a => a.Height ?? 0).First().Id.ToLower()}"),
                 Duration = obj.item.Duration,
                 Context = contextId
             };
@@ -213,6 +220,35 @@ public class SpotifyPlaybackViewModel : PlaybackViewModel
             else
             {
                 ExternalDevice = null;
+            }
+
+            if (Ioc.Default.GetRequiredService<MainViewModel>().CurrentUser.User.ThemeService
+                    .Glaze == "Playback Dependent")
+            {
+                Ioc.Default.GetRequiredService<MainViewModel>()
+                    .Glaze = await GetColorFromAlbumArt();
+            }
+            async Task<string> GetColorFromAlbumArt()
+            {
+                if (Item?.BigImage != null)
+                {
+                    return await Task.Run(async () =>
+                    {
+                        using var fs = await Ioc.Default.GetRequiredService<IFileHelper>()
+                            .GetStreamForString(Item?.BigImageUrl.ToString(), default);
+                        using var bmp = new Bitmap(fs);
+                        var colorThief = new ColorThief();
+                        var c = colorThief.GetPalette(bmp);
+
+                        var a =
+                            c[0].Color.ToHexString();
+
+                        var f = a.ToColor();
+                        return (Color.FromArgb(25, f.R, f.G, f.B)).ToHex();
+                    });
+                }
+
+                return "#00000000";
             }
         }
         catch (Exception ex)

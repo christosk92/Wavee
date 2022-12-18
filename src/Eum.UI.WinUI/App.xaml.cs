@@ -36,7 +36,6 @@ using Path = System.IO.Path;
 using Eum.UI.Services.Directories;
 using Eum.UI.Services.Playlists;
 using Windows.Storage;
-using Windows.UI;
 using Eum.Connections.Spotify.VLC;
 using Eum.UI.Services.Artists;
 using Eum.UI.Services.Tracks;
@@ -45,6 +44,12 @@ using Microsoft.UI;
 using UnhandledExceptionEventArgs = Microsoft.UI.Xaml.UnhandledExceptionEventArgs;
 using ReactiveUI;
 using System.Reactive.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using Windows.Storage.Streams;
+using ColorThiefDotNet;
+using Eum.UI.Helpers;
+using Color = Windows.UI.Color;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -73,6 +78,7 @@ namespace Eum.UI.WinUI
 
             var db = new LiteDatabase(Path.Combine(dataDir, "data.db"));
 
+            serviceCollection.AddTransient<IFileHelper, WinUI_RandomAccessStream>();
             serviceCollection.AddSingleton<ILiteDatabase>(db);
             serviceCollection.AddTransient<ITrackAggregator, TrackAggregator>();
             serviceCollection.AddSingleton<IEumUserManager, EumUserManager>();
@@ -118,6 +124,16 @@ namespace Eum.UI.WinUI
 
 
         public static Window MWindow { get; private set; }
+    }
+
+    public class WinUI_RandomAccessStream : IFileHelper
+    {
+        public async ValueTask<Stream> GetStreamForString(string playlistImagePath, CancellationToken cancellationToken)
+        {
+            var random = RandomAccessStreamReference.CreateFromUri(new Uri(playlistImagePath));
+            IRandomAccessStream stream = await Task.Run(async () => await random.OpenReadAsync(), cancellationToken);
+            return stream.AsStreamForRead();
+        }
     }
 
     public class BetaAvailableServicesProvider : IAvailableServicesProvider

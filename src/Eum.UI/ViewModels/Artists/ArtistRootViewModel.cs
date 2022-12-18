@@ -1,13 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using ColorThiefDotNet;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.DependencyInjection;
 using CommunityToolkit.Mvvm.Input;
 using Eum.Connections.Spotify.Models.Artists.Discography;
+using Eum.UI.Helpers;
 using Eum.UI.Items;
 using Eum.UI.Services.Artists;
 using Eum.UI.ViewModels.Navigation;
@@ -15,7 +18,7 @@ using Eum.UI.ViewModels.Navigation;
 namespace Eum.UI.ViewModels.Artists
 {
     [INotifyPropertyChanged]
-    public partial class ArtistRootViewModel : INavigatable
+    public partial class ArtistRootViewModel : INavigatable, IGlazeablePage
     {
         [ObservableProperty]
         private EumArtist? _artist;
@@ -93,7 +96,24 @@ namespace Eum.UI.ViewModels.Artists
         }
 
         public int MaxDepth => 1;
+        public bool ShouldSetPageGlaze => Ioc.Default.GetRequiredService<MainViewModel>().CurrentUser.User.ThemeService
+            .Glaze == "Page Dependent";
 
+        public async ValueTask<string> GetGlazeColor(CancellationToken ct = default)
+        {
+            if (!string.IsNullOrEmpty(Artist.Header))
+            {
+                using var fs = await Ioc.Default.GetRequiredService<IFileHelper>()
+                    .GetStreamForString(Artist.Header, ct);
+                using var bmp = new Bitmap(fs);
+                var colorThief = new ColorThief();
+                var c = colorThief.GetPalette(bmp);
+
+                return c[0].Color.ToHexString();
+            }
+
+            return string.Empty;
+        }
     }
 
     [INotifyPropertyChanged]

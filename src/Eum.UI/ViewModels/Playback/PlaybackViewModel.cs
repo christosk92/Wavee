@@ -69,6 +69,8 @@ namespace Eum.UI.ViewModels.Playback
     {
         public Stream BigImage { get; init; }
         public Stream SmallImage { get; init; }
+
+        public Uri BigImageUrl { get; init; }
         public ItemId Context { get; init; }
         public IdWithTitle Title { get; init; }
         public IdWithTitle[] Artists { get; init; }

@@ -52,6 +52,13 @@ public partial class EumUser : ConfigBase, IEquatable<EumUser>
     [property: JsonPropertyName("appTheme")]
     private AppTheme _appTheme;
 
+    [ObservableProperty]
+    [property: JsonPropertyName("accent")]
+    private string _accent;
+    [ObservableProperty]
+    [property: JsonPropertyName("lastAccent")]
+    private string _lastAccent;
+
     public EumUser()
     {
         this.WhenAnyValue(
@@ -62,19 +69,18 @@ public partial class EumUser : ConfigBase, IEquatable<EumUser>
                 x => x.IsDefault,
                 x => x.SidebarWidth,
                 x => x.Metadata,
-                x => x._appTheme,
-                (_, _, _, _, _, _, _, _) => Unit.Default)
+                x => x.AppTheme,
+                x=> x.Accent,
+                x=> x.LastAccent,
+                (_, _, _, _, _, _, _, _, _, _) => Unit.Default)
             .Throttle(TimeSpan.FromMilliseconds(500))
             //.Skip(1) // Won't save on UiConfig creation.
             .ObserveOn(RxApp.MainThreadScheduler)
             .Subscribe(_ => { this.ToFile(); });
-
-        ThemeService = Ioc.Default.GetRequiredService<IThemeSelectorServiceFactory>()
-            .GetThemeSelectorService(this);
     }
 
     [JsonIgnore]
-    public IThemeSelectorService ThemeService { get; }
+    public IThemeSelectorService ThemeService { get; set; }
     public void ReplaceMetadata(string key, object value)
     {
         Metadata[key] = value;
@@ -115,4 +121,5 @@ public partial class EumUser : ConfigBase, IEquatable<EumUser>
 
     [JsonIgnore]
     public override object This => this;
+
 }

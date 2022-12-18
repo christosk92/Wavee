@@ -8,7 +8,10 @@ public interface IThemeSelectorService
     {
         get;
     }
-    ValueTask SetThemeAsync(AppTheme theme);
+    string Glaze { get; set; }
+    bool GlazeIsCustomColor { get; }
+    void SetTheme(AppTheme theme);
+    void SetGlaze(string colorCodeHex);
 
-    ValueTask SetRequestedThemeAsync();
+    event EventHandler<string> GlazeChanged;
 }

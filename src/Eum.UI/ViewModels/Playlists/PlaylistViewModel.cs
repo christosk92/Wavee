@@ -3,6 +3,7 @@ using Org.BouncyCastle.Asn1.X509;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Drawing;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Text;
@@ -20,10 +21,12 @@ using Eum.Logging;
 using Eum.UI.Services.Users;
 using Eum.Users;
 using ReactiveUI;
+using ColorThiefDotNet;
+using Eum.UI.Helpers;
 
 namespace Eum.UI.ViewModels.Playlists
 {
-    public abstract partial class PlaylistViewModel : SidebarItemViewModel, IComparable<PlaylistViewModel>, INavigatable
+    public abstract partial class PlaylistViewModel : SidebarItemViewModel, IComparable<PlaylistViewModel>, INavigatable, IGlazeablePage
     {
         private EumUser? _eumUser;
         [ObservableProperty] protected EumPlaylist _playlist;
@@ -131,5 +134,24 @@ namespace Eum.UI.ViewModels.Playlists
         }
 
         public int MaxDepth => 2;
+
+        public bool ShouldSetPageGlaze => Ioc.Default.GetRequiredService<MainViewModel>().CurrentUser.User.ThemeService
+            .Glaze == "Page Dependent";
+
+        public async ValueTask<string> GetGlazeColor(CancellationToken ct = default)
+        {
+            if (!string.IsNullOrEmpty(Playlist.ImagePath))
+            {
+                using var fs = await Ioc.Default.GetRequiredService<IFileHelper>()
+                    .GetStreamForString(Playlist.ImagePath, ct);
+                using var bmp = new Bitmap(fs);
+                var colorThief = new ColorThief();
+                var c = colorThief.GetPalette(bmp);
+
+                return c[0].Color.ToHexString();
+            }
+
+            return string.Empty;
+        }
     }
 }

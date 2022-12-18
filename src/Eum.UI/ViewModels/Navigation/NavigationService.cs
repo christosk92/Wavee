@@ -1,7 +1,12 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using System.Drawing;
+using System.Reactive.Concurrency;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.DependencyInjection;
 using DynamicData;
+using Eum.UI.Helpers;
 using Eum.UI.ViewModels.Artists;
+using ReactiveUI;
 
 namespace Eum.UI.ViewModels.Navigation;
 
@@ -15,7 +20,7 @@ public partial class NavigationService
     private INavigatable? _current;
 
     public event OpenNavigatedEventHandler? Navigated;
-   // public event UnhandledNavigationEventHandler? UnhandledNavigation;
+    // public event UnhandledNavigationEventHandler? UnhandledNavigation;
 
 
     public bool CanGoBack => Current != null && _navigationBackStack.Count > 0;
@@ -153,6 +158,7 @@ public partial class NavigationService
     private readonly List<(Type PageType, INavigatable? Page, object Parameter)> _navigationBackStack = new();
     private readonly List<(Type PageType, INavigatable? Page, object? Parameter)> _navigationForwardStack = new();
 
+    private CancellationTokenSource? _navigationToken;
     public bool To(INavigatable navigateTo, object? parameter = null, bool clearNavigation = false)
     {
         if (_current != navigateTo || (parameter != null && !parameter.Equals(_lastParameterUsed)))
@@ -164,7 +170,39 @@ public partial class NavigationService
                 //Add this page to the backstack for backward navigation! the as cast will default to null 
                 _navigationBackStack.Add((_current.GetType(), _current, _lastParameterUsed));
             }
-         
+
+            try
+            {
+                _navigationToken?.Cancel();
+                _navigationToken?.Dispose();
+            }
+            catch (Exception)
+            {
+
+            }
+
+            if (navigateTo is IGlazeablePage glazeablePage)
+            {
+                if (glazeablePage.ShouldSetPageGlaze)
+                {
+                    _navigationToken = new CancellationTokenSource();
+                    Task.Run(async () =>
+                    {
+                        var glazeColor = await glazeablePage.GetGlazeColor(_navigationToken.Token);
+                        if (!_navigationToken.IsCancellationRequested)
+                        {
+                            var f = glazeColor.ToColor();
+                            var colorCodeHex = (Color.FromArgb(25, f.R, f.G, f.B)).ToHex();
+                            RxApp.MainThreadScheduler.Schedule(() =>
+                            {
+                                Ioc.Default.GetRequiredService<MainViewModel>()
+                                    .Glaze = colorCodeHex;
+                            });
+                        }
+
+                    }, _navigationToken .Token);
+                }
+            }
             Current = navigateTo;
             Navigated?.Invoke(this, new OpenNavigationEventArgs
             {
@@ -176,7 +214,7 @@ public partial class NavigationService
             vmBeforeNavigation?.OnNavigatedFrom();
 
             navigateTo.OnNavigatedTo(parameter);
-           
+
             CheckHistory();
             GC.Collect();
             return true;

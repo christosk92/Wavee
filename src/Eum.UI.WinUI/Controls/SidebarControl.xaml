@@ -12,7 +12,7 @@
     xmlns:shell="using:Eum.UI.WinUI.Views.Shell"
     HorizontalAlignment="Stretch" Loaded="SidebarControl_OnLoaded"
     d:DesignHeight="768"
-    d:DesignWidth="200"
+    d:DesignWidth="200" IsSettingsVisible="False"
     DisplayModeChanged="SidebarControl_DisplayModeChanged"
     IsBackButtonVisible="Collapsed"
     Style="{StaticResource SidebarViewStyle}"
@@ -23,6 +23,7 @@
     mc:Ignorable="d">
     <NavigationView.Resources>
         <ResourceDictionary>
+            <Thickness x:Key="NavigationViewContentMargin">0,0,0,0</Thickness>
             <Style x:Key="PlaylistNavHeaderStyle" TargetType="NavigationViewItemHeader">
                 <Setter Property="Foreground" Value="{ThemeResource NavigationViewItemHeaderForeground}" />
                 <Setter Property="IsEnabled" Value="True" />

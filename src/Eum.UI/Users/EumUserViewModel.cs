@@ -14,6 +14,7 @@ using Eum.UI.Services.Playlists;
 using Eum.UI.ViewModels.Playlists;
 using Refit;
 using System.Text.Json;
+using Eum.UI.Services;
 
 namespace Eum.UI.Users
 {
@@ -89,6 +90,8 @@ namespace Eum.UI.Users
             User.ProfilePicture = _privateUser.Avatar?.FirstOrDefault()?.Url;
             User.ReplaceMetadata("authenticatedUser", spotifyClient);
             User.ReplaceMetadata("privateUser", client.PrivateUser);
+            User.ThemeService = Ioc.Default.GetRequiredService<IThemeSelectorServiceFactory>()
+                .GetThemeSelectorService(User);
         }
 
 
