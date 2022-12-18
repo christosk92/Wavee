@@ -370,15 +370,25 @@ namespace Eum.UI.Services.Tracks
         }
     }
 
+    public class CachedAlbumPlayItem
+    {
+        [BsonId]
+        public string Id { get; set; }
+        public string Name { get; set; }
+        public CachedShortArtist[] Artists { get; set; }
+        public int Duration { get; set; }
+        public Dictionary<string, string> ExtraMetadata { get; set; }
+    }
     public class CachedPlayItem
     {
         [BsonId]
         public string Id { get; set; }
         public string Name { get; set; }
-        public CachedAlbum Album { get; set; }
+        public CachedAlbum? Album { get; set; }
         public CachedShortArtist[] Artists { get; set; }
         public int Duration { get; set; }
         public Dictionary<string, string> ExtraMetadata { get; set; }
+        public Dictionary<string, string> ExtraMetadataAlbum { get; set; }
     }
 
     public class CachedShortArtist
@@ -394,6 +404,7 @@ namespace Eum.UI.Services.Tracks
         public string Id { get; set; }
         public CachedImage[] Images { get; set; }
         public string Name { get; set; }
+        public List<CachedAlbumPlayItem> Tracks { get; set; }
     }
     public class CachedImage
     {

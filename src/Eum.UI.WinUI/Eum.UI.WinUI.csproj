@@ -69,6 +69,7 @@
 		<ProjectCapability Include="Msix" />
 	</ItemGroup>
 	<ItemGroup>
+		<ProjectReference Include="..\..\Eum\src\Spotify\Players\Eum.Connections.Spotify.NAudio\Eum.Connections.Spotify.NAudio.csproj" />
 		<ProjectReference Include="..\..\Eum\src\Spotify\Players\Eum.Connections.Spotify.VLC\Eum.Connections.Spotify.VLC.csproj" />
 		<ProjectReference Include="..\Eum.UI.Spotify\Eum.UI.Spotify.csproj" />
 		<ProjectReference Include="..\Eum.UI\Eum.UI.csproj" />

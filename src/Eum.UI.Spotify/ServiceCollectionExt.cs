@@ -75,7 +75,14 @@ namespace Eum.UI.Spotify
 
                     return BuildLoggableClient<IOpenArtistClient>(bearerClient);
                 });
-
+            services.AddTransient<IAlbumsClient, AlbumsCLientWrapper>()
+                .AddTransient<IMercuryAlbumsClient, MercuryAlbumClient>();
+                // .AddSingleton(provider =>
+                // {
+                //     var bearerClient = provider.GetRequiredService<IBearerClient>();
+                //
+                //     return BuildLoggableClient<IOpenArtistClient>(bearerClient);
+                // });
 
             services.AddTransient<ITracksClient, TracksClientWrapper>();
             services.AddSingleton<IEventService, EventService>();

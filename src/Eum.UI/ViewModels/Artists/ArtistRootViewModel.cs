@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Text;
@@ -12,8 +13,13 @@ using CommunityToolkit.Mvvm.Input;
 using Eum.Connections.Spotify.Models.Artists.Discography;
 using Eum.UI.Helpers;
 using Eum.UI.Items;
+using Eum.UI.Services.Albums;
 using Eum.UI.Services.Artists;
 using Eum.UI.ViewModels.Navigation;
+using Nito.AsyncEx;
+using ReactiveUI;
+using System.Reactive.Concurrency;
+using AsyncLock = Nito.AsyncEx.AsyncLock;
 
 namespace Eum.UI.ViewModels.Artists
 {
@@ -29,7 +35,7 @@ namespace Eum.UI.ViewModels.Artists
         [ObservableProperty]
         private IList<TopTrackViewModel> _topTracks;
 
-        [ObservableProperty] 
+        [ObservableProperty]
         private LatestReleaseWrapper? _latestRelease;
         public ItemId Id { get; init; }
 
@@ -56,14 +62,15 @@ namespace Eum.UI.ViewModels.Artists
                         Title = k.Name,
                         Description = k.Year.ToString(),
                         Image = k.Cover.Uri,
+                        Id = new ItemId(k.Uri.Uri),
                         Tracks = (k.Discs != null
-                            ? k.Discs.SelectMany(j => j.Select((z,i) => new DiscographyTrackViewModel
+                            ? k.Discs.SelectMany(j => j.Select((z, i) => new DiscographyTrackViewModel
                             {
-                                IsLoading = false, 
+                                IsLoading = false,
                                 Duration = z.Duration,
-                                Index =i ,
+                                Index =i,
                                 Title = z.Name,
-                                Playcount = (long) z.PlayCount
+                                Playcount = (long)z.PlayCount
                             }))
                             : Enumerable.Range(0, (int)k.TrackCount)
                                 .Select(_ => new DiscographyTrackViewModel
@@ -80,27 +87,35 @@ namespace Eum.UI.ViewModels.Artists
                         _ => throw new ArgumentOutOfRangeException()
                     }
                 })
-                .Where(a=> a.Items.Any())
+                .Where(a => a.Items.Any())
                 .ToArray();
 
             TopTracks = artist.TopTrack
                 .Select(a => new TopTrackViewModel(a))
                 .ToArray();
             LatestRelease = artist.LatestRelease;
-
+            _waitForArtist.Set();
         }
 
         public void OnNavigatedFrom()
         {
-            
+            foreach (var discographyGroup in Discography)
+            {
+                foreach (var discographyGroupItem in discographyGroup.Items)
+                {
+                    discographyGroupItem.Cancel();
+                }
+            }
         }
 
         public int MaxDepth => 1;
         public bool ShouldSetPageGlaze => Ioc.Default.GetRequiredService<MainViewModel>().CurrentUser.User.ThemeService
             .Glaze == "Page Dependent";
 
+        private readonly AsyncManualResetEvent _waitForArtist = new();
         public async ValueTask<string> GetGlazeColor(CancellationToken ct = default)
         {
+            await _waitForArtist.WaitAsync(ct);
             if (!string.IsNullOrEmpty(Artist.Header))
             {
                 using var fs = await Ioc.Default.GetRequiredService<IFileHelper>()
@@ -117,7 +132,7 @@ namespace Eum.UI.ViewModels.Artists
     }
 
     [INotifyPropertyChanged]
-    public partial class TopTrackViewModel 
+    public partial class TopTrackViewModel
     {
         public TopTrackViewModel(ArtistTopTrack track)
         {
@@ -172,21 +187,75 @@ namespace Eum.UI.ViewModels.Artists
     [INotifyPropertyChanged]
     public partial class DiscographyViewModel
     {
+        private readonly CancellationTokenSource _cts = new CancellationTokenSource();
         public string Title { get; set; }
         public string Description { get; set; }
         public string Image { get; set; }
-        public DiscographyTrackViewModel[] Tracks { get; set; }
+        public ItemId Id { get; init; }
+        public DiscographyTrackViewModel[] Tracks
+        {
+            get
+            {
+                _ = FetchIfNeccesary();
+                return _tracks;
+            }
+            set
+            {
+                _tracks = value;
+                OnPropertyChanged(nameof(Tracks));
+            }
+        }
+
+        private readonly AsyncLock _l = new AsyncLock();
+        private async Task FetchIfNeccesary()
+        {
+            using (await _l.LockAsync(_cts.Token))
+            {
+                if (_tracks.Any(a => !a.IsLoading)) return;
+
+                //todo fetch:
+                Debug.WriteLine($"{Title} is missing tracks. Fetching...");
+                var album = await Ioc.Default.GetRequiredService<IAlbumProvider>()
+                    .GetAlbum(Id, "en", _cts.Token);
+                RxApp.MainThreadScheduler.Schedule(() =>
+                {
+                    Tracks = album.Tracks
+                        .Select((z, i) => new DiscographyTrackViewModel
+                        {
+                            IsLoading = false,
+                            Duration = z.Duration,
+                            Index = i,
+                            Title = z.Name,
+                            Playcount = (long) z.PlayCount
+                        }).ToArray();
+                });
+            }
+        }
+
         [ObservableProperty]
         private TemplateTypeOrientation _templateType;
+
+        private DiscographyTrackViewModel[] _tracks;
+
+        public void Cancel()
+        {
+            _cts.Cancel();
+            _cts.Dispose();
+        }
     }
 
-    public class DiscographyTrackViewModel
+    [ObservableObject]
+    public partial class DiscographyTrackViewModel
     {
-        public bool IsLoading { get; set; }
+        [ObservableProperty]
+        private bool _isLoading;
+        [ObservableProperty]
+        private string _title;
+        [ObservableProperty]
+        private long _playcount;
+        [ObservableProperty]
+        private int _duration;
         public int Index { get; init; }
-        public string Title { get; init; }
-        public long Playcount { get; init; }
-        public int Duration { get; init; }
     }
     public enum TemplateTypeOrientation
     {

@@ -12,10 +12,13 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Numerics;
 using System.Runtime.InteropServices.WindowsRuntime;
+using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Eum.UI.ViewModels.Artists;
+using Eum.UI.WinUI.Transitions;
 using GridView = Microsoft.UI.Xaml.Controls.GridView;
 
 // To learn more about WinUI, the WinUI project structure,
@@ -25,6 +28,28 @@ namespace Eum.UI.WinUI.Views.Artists
 {
     public sealed partial class ArtistRootView : UserControl
     {
+        private TransitionHelper transitionHelper = new TransitionHelper
+        {
+            Configs = new List<TransitionConfig>
+            {
+                new TransitionConfig
+                {
+                    Id = "title",
+                    ScaleMode = ScaleMode.ScaleX,
+                },
+                new TransitionConfig
+                {
+                    Id = "floatpanel",
+                    ScaleMode = ScaleMode.None
+                },
+                new TransitionConfig
+                {
+                    Id = "bg", TransitionMode = TransitionMode.Image,
+                    ScaleMode = ScaleMode.None
+                }
+            }
+        };
+
         public ArtistRootView(ArtistRootViewModel viewModel)
         {
             ViewModel = viewModel;
@@ -53,6 +78,70 @@ namespace Eum.UI.WinUI.Views.Artists
         {
             ViewModel = null;
             this.DataContext = null;
+        }
+
+        // private void ScrollViewer_OnAnchorRequested(ScrollViewer sender, AnchorRequestedEventArgs args)
+        // {
+        //     if (_selected != null)
+        //     {
+        //         args.Anchor = _selected;
+        //         _selected = null;
+        //     }
+        // }
+        //
+        // private void NavigationView_OnItemInvoked(NavigationView sender, NavigationViewItemInvokedEventArgs args)
+        // {
+        //     _selected = sender;
+        // }
+        //
+        // public NavigationView _selected;
+        private double _old;
+
+        private void ScrollerOnViewChanged(object sender, ScrollViewerViewChangedEventArgs e)
+        {
+            if (Scroller.VerticalOffset > _old)
+            {
+                Scroller.ScrollToVerticalOffset(_old);
+                Scroller.ViewChanged -= ScrollerOnViewChanged;
+            }
+        }
+
+        private async void Scroller_OnViewChanged(object sender, ScrollViewerViewChangedEventArgs e)
+        {
+            if (Scroller.VerticalOffset > Header.ActualHeight / 1.4f)
+            {
+                _surpassedHeader = true;
+
+                var firstone = Header;
+                var secondone = OverlayPanel;
+
+                transitionHelper.Source = firstone;
+                transitionHelper.Target = secondone;
+                await transitionHelper.StartAsync();
+            }
+            else if (Scroller.VerticalOffset <= Header.ActualHeight && _surpassedHeader)
+            {
+                //go back
+                _surpassedHeader = false;
+
+
+                var firstone = Header;
+                var secondone = OverlayPanel;
+
+                transitionHelper.Source = secondone;
+                transitionHelper.Target = firstone;
+                await transitionHelper.StartAsync();
+            }
+        }
+
+        private bool _surpassedHeader;
+
+        private void Selector_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            Scroller.ViewChanged -= ScrollerOnViewChanged;
+            _old =
+                Scroller.VerticalOffset;
+            Scroller.ViewChanged += ScrollerOnViewChanged;
         }
     }
 }

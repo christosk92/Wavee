@@ -48,8 +48,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using Windows.Storage.Streams;
 using ColorThiefDotNet;
+using Eum.Connections.Spotify.NAudio;
 using Eum.UI.Helpers;
 using Color = Windows.UI.Color;
+using Eum.UI.Services.Albums;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -84,6 +86,7 @@ namespace Eum.UI.WinUI
             serviceCollection.AddSingleton<IEumUserManager, EumUserManager>();
             serviceCollection.AddSingleton<IEumUserViewModelManager, EumUserViewModelManager>();
             serviceCollection.AddTransient<IArtistProvider, ArtistProvider>();
+            serviceCollection.AddTransient<IAlbumProvider, AlbumProvider>();
             //serviceCollection.AddTransient<IUsersService, UsersService>();
             serviceCollection.AddTransient<IAvailableServicesProvider, BetaAvailableServicesProvider>();
             serviceCollection.AddSingleton<ICommonDirectoriesProvider>(new CommonDirectoriesProvider(dataDir));
@@ -100,7 +103,7 @@ namespace Eum.UI.WinUI
                 LogPath = Path.Combine(dataDir, "Logs_winui.log"),
                 CachePath = dataDir,
                 TimeSyncMethod = TimeSyncMethod.MELODY
-            }, new EumVlcPlayer());
+            }, new NAudioPlayer());
 
             this.UnhandledException += OnUnhandledException;
             Ioc.Default.ConfigureServices(serviceCollection.BuildServiceProvider());

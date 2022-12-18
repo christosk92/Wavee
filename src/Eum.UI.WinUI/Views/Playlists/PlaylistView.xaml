@@ -209,7 +209,9 @@
         <xamlConverters:TimeSpanToStringConverter x:Key="TimeSpanToStringConverter" />
 
         <DataTemplate x:Key="PlaylistTrackTemplate" x:DataType="playlists:PlaylistTrackViewModel">
-            <controls:PlaylistTrackView ViewModel="{x:Bind}" />
+            <controls:PlaylistTrackView ViewModel="{x:Bind}"
+                                        Padding="12,0,12,0"
+                                        />
         </DataTemplate>
     </UserControl.Resources>
     <Grid>
