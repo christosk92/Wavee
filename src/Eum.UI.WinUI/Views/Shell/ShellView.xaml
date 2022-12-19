@@ -20,7 +20,9 @@
         <Grid.Background>
             <SolidColorBrush Color="{x:Bind ViewModel.Glaze, Mode=OneWay}" />
         </Grid.Background>
-        <controls:SidebarControl ItemInvoked="NavigationView_OnItemInvoked" User="{x:Bind UserManager.CurrentUser, Mode=OneWay}">
+        <controls:SidebarControl
+            SearchBar="{x:Bind ViewModel.SearchBar, Mode=OneWay}"
+            ItemInvoked="NavigationView_OnItemInvoked" User="{x:Bind UserManager.CurrentUser, Mode=OneWay}">
             <controls:SidebarControl.TabContent>
                 <Grid
                     x:Name="RightMarginGrid"

@@ -46,6 +46,7 @@ namespace Eum.UI.Spotify
 
                 return BuildLoggableClient<IOpenTracksClient>(bearerClient);
             });
+            services.AddTransient<IMercurySearchClient, MercurySearchClient>();
 
             services.AddSingleton(provider =>
             {

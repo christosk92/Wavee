@@ -10,13 +10,16 @@
     xmlns:playlists="using:Eum.UI.ViewModels.Playlists"
     xmlns:sidebar1="using:Eum.UI.ViewModels.Sidebar"
     xmlns:shell="using:Eum.UI.WinUI.Views.Shell"
+    xmlns:search="using:Eum.UI.WinUI.Views.Search"
+    xmlns:interactivity="using:Microsoft.Xaml.Interactivity"
+    xmlns:behaviors="using:Eum.UI.WinUI.Behaviors"
     HorizontalAlignment="Stretch" Loaded="SidebarControl_OnLoaded"
     d:DesignHeight="768"
     d:DesignWidth="200" IsSettingsVisible="False"
     DisplayModeChanged="SidebarControl_DisplayModeChanged"
     IsBackButtonVisible="Collapsed"
     Style="{StaticResource SidebarViewStyle}"
-    IsTitleBarAutoPaddingEnabled="False"
+    IsTitleBarAutoPaddingEnabled="False" 
     FooterMenuItemsSource="{x:Bind ViewModel.Playlists, Mode=OneWay}"
     MenuItemsSource="{x:Bind ViewModel.SidebarItems, Mode=OneWay}"
     SelectedItem="{x:Bind ViewModel.SelectedSidebarItem, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
@@ -147,7 +150,14 @@
         </ResourceDictionary>
     </NavigationView.Resources>
     <NavigationView.AutoSuggestBox>
-        <AutoSuggestBox QueryIcon="Find" PlaceholderText="Search..."/>
+        <AutoSuggestBox Text="{x:Bind SearchBar.SearchText, Mode=TwoWay}"  QueryIcon="Find" PlaceholderText="Search...">
+            <interactivity:Interaction.Behaviors>
+                <behaviors:TextBoxAutoSelectTextBehavior />
+                <behaviors:SwallowEnterKeyBehavior />
+                <behaviors:ShowAttachedFlyoutWhenFocusedBehavior 
+                    IsSearchPageVisible="{x:Bind SearchBar.IsSearchPageVisible, Mode=TwoWay}" />
+            </interactivity:Interaction.Behaviors>
+        </AutoSuggestBox>
     </NavigationView.AutoSuggestBox>
     <NavigationView.MenuItemTemplateSelector>
         <templateSelectors:NavItemDataTemplateSelector

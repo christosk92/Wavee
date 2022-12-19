@@ -13,6 +13,7 @@ using Eum.UI.Users;
 using Eum.UI.ViewModels;
 using Eum.UI.ViewModels.Navigation;
 using Eum.UI.ViewModels.Playlists;
+using Eum.UI.ViewModels.Search;
 using Eum.UI.ViewModels.Users;
 using Microsoft.UI.Input;
 using Microsoft.UI.Xaml;
@@ -41,6 +42,8 @@ namespace Eum.UI.WinUI.Controls
         public static readonly DependencyProperty TabContentProperty = DependencyProperty.Register(nameof(TabContent), typeof(UIElement), typeof(SidebarControl), new PropertyMetadata(null));
         public static readonly DependencyProperty UserProperty = DependencyProperty.Register(nameof(User), typeof(EumUserViewModel),
             typeof(SidebarControl), new PropertyMetadata(default(EumUserViewModel), UserChanged));
+
+        public static readonly DependencyProperty SearchBarProperty = DependencyProperty.Register(nameof(SearchBar), typeof(SearchBarViewModel), typeof(SidebarControl), new PropertyMetadata(default(SearchBarViewModel)));
 
         private static void UserChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
@@ -103,6 +106,12 @@ namespace Eum.UI.WinUI.Controls
             {
                 User.User.SidebarWidth = value.Value;
             }
+        }
+
+        public SearchBarViewModel SearchBar
+        {
+            get => (SearchBarViewModel) GetValue(SearchBarProperty);
+            set => SetValue(SearchBarProperty, value);
         }
 
 

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using System.Text;
 using System.Threading.Tasks;
 using ColorThiefDotNet;
@@ -15,9 +16,12 @@ using Eum.UI.Services.Users;
 using Eum.UI.Users;
 using Eum.UI.ViewModels.Navigation;
 using Eum.UI.ViewModels.Playback;
+using Eum.UI.ViewModels.Search;
+using Eum.UI.ViewModels.Search.Sources;
 using Nito.AsyncEx;
 using ReactiveUI;
 using Color = System.Drawing.Color;
+using SearchBarViewModel = Eum.UI.ViewModels.Search.SearchBarViewModel;
 
 namespace Eum.UI.ViewModels
 {
@@ -32,6 +36,7 @@ namespace Eum.UI.ViewModels
         {
             UserViewModelManager = userViewModelManager;
             MainScreen = new NavigationService();
+            SearchBar = CreateSearchBar();
 
             Observable
                 .FromEventPattern<EumUserViewModel>(userViewModelManager, nameof(IEumUserViewModelManager.CurrentUserChanged))
@@ -64,6 +69,7 @@ namespace Eum.UI.ViewModels
 
                 });
         }
+        public SearchBarViewModel SearchBar { get; }
 
         private async void ThemeServiceOnGlazeChanged(object sender, string e)
         {
@@ -108,5 +114,23 @@ namespace Eum.UI.ViewModels
             set => this.SetProperty(ref _currentUser, value);
         }
 
+        private SearchBarViewModel CreateSearchBar()
+        {
+            // This subject is created to solve the circular dependency between the sources and SearchBarViewModel
+            var filterChanged = new Subject<string>();
+
+            var source = new CompositeSearchSource(
+                new SpotifySearchSource(filterChanged));
+
+            var searchBar = new SearchBarViewModel(source.Changes, source.GroupChanges);
+
+            searchBar
+                .WhenAnyValue(a => a.SearchText)
+                .Throttle(TimeSpan.FromMilliseconds(200))
+                .WhereNotNull()
+                .Subscribe(filterChanged);
+
+            return searchBar;
+        }
     }
 }
