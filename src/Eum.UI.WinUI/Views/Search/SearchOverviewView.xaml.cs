@@ -37,6 +37,12 @@ namespace Eum.UI.WinUI.Views.Search
             this.InitializeComponent();
             this.DataContext = SearchBar;
         }
-        public SearchBarViewModel SearchBar { get; }
+        public SearchBarViewModel SearchBar { get; set; }
+
+        private void SearchOverviewView_OnUnloaded(object sender, RoutedEventArgs e)
+        {
+            SearchBar = null;
+            this.DataContext = null;
+        }
     }
 }

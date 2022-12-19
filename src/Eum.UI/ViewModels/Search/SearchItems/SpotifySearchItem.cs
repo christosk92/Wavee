@@ -18,7 +18,7 @@ public class SpotifySearchItem : ISearchItem
 	public ItemId Id { get; }
 	public string Name { get; }
 	public string Description { get; }
-	public ComposedKey Key => new(Id.Id);
+	public ComposedKey Key => new($"{Id.Id}{CategoryOrder}");
 	public string? Image { get; set; }
 	public string Category { get; }
     public int CategoryOrder { get; }

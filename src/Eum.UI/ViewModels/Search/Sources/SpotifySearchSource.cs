@@ -150,7 +150,7 @@ public class SpotifySearchSource : ReactiveObject, ISearchSource, IDisposable
                 {
                     var order1 = order;
                     results.Add(cached.response.Results[category].Hits
-                        .Select(a => new SpotifySearchItem("1", "1", "1", a.Id, category, order1)));
+                        .Select(a => new SpotifySearchItem(a.Title, a.Description, a.Image, a.Id, category, order1)));
                     order += 1;
                 }
             }

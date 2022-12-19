@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using CommunityToolkit.Mvvm.ComponentModel;
 using DynamicData;
 using Eum.UI.ViewModels.Search.Patterns;
 using Eum.UI.ViewModels.Search.SearchItems;
@@ -8,8 +9,11 @@ using ReactiveUI;
 
 namespace Eum.UI.ViewModels.Search;
 
-public abstract class SearchItemGroup : IDisposable
+[INotifyPropertyChanged]
+public abstract partial class SearchItemGroup : IDisposable
 {
+    [ObservableProperty]
+    private ISearchItem? _firstOrDefault;
 	private readonly CompositeDisposable _disposables = new();
 	private readonly ReadOnlyObservableCollection<ISearchItem> _items;
 
@@ -18,14 +22,20 @@ public abstract class SearchItemGroup : IDisposable
 		Title = title;
         Order = order;
         changes
-			.Bind(out _items)
-			.DisposeMany()
-			.ObserveOn(RxApp.MainThreadScheduler)
-			.Subscribe()
-			.DisposeWith(_disposables);
-	}
+            .Bind(out _items)
+            .DisposeMany()
+            .ObserveOn(RxApp.MainThreadScheduler)
+            .Select(a =>
+            {
+                FirstOrDefault = _items.FirstOrDefault();
+                return a;
+            })
+            .Subscribe()
+            .DisposeWith(_disposables);
+    }
     public int Order { get; }
 	public string Title { get; }
+
 
 	public ReadOnlyObservableCollection<ISearchItem> Items => _items;
 

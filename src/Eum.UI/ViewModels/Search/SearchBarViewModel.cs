@@ -1,13 +1,14 @@
-using System.Collections.ObjectModel;
-using System.Reactive.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using DynamicData;
 using DynamicData.Aggregation;
+using DynamicData.PLinq;
 using Eum.UI.Items;
 using Eum.UI.ViewModels.Search.Patterns;
 using Eum.UI.ViewModels.Search.SearchItems;
 using Eum.UI.ViewModels.Search.Sources;
 using ReactiveUI;
+using System.Collections.ObjectModel;
+using System.Reactive.Linq;
 
 namespace Eum.UI.ViewModels.Search;
 
@@ -24,25 +25,31 @@ public partial class SearchBarViewModel
     {
         itemsObservable
             .SortBy(a => a.CategoryOrder)
-            .Group(s => s.Category)
-            .Where(a=> a.Count > 0)
+            .Group(s =>
+            {
+                return $"{s.Category}-{s.CategoryOrder}";
+            })
             .Transform(group =>
             {
-                return group.Key switch
+                var category2 = group.Key.Split('-');
+                var category = category2[0];
+                var order = int.Parse(category2[1]);
+                var item = category switch
                 {
-                    "topHit" => new TopResultGroup(group.Key, group.Cache.Items.FirstOrDefault()?.CategoryOrder ?? 0, group.Cache.Connect()),
-                    "topRecommendations" => new RecommendationsResultGroup(group.Key, group.Cache.Items.First().CategoryOrder, group.Cache.Connect()),
-                    _ => group.Cache.Items.First().Id.Type switch
+                    "topHit" => new TopResultGroup(category, order, group.Cache.Connect()),
+                    "topRecommendations" => new RecommendationsResultGroup(category, order, group.Cache.Connect()),
+                    _ => group.Cache.Items.FirstOrDefault()?.Id.Type switch
                     {
-                        EumEntityType.Track => new SongsResultGroup(group.Key,
-                            group.Cache.Items.First().CategoryOrder,
+                        EumEntityType.Track => new SongsResultGroup(category,
+                            order,
                             group.Cache.Connect()),
-                        EumEntityType.Artist => new ArtistResultGroup(group.Key, group.Cache.Items.First().CategoryOrder,group.Cache.Connect()),
-                        _ => new SquareImageResultGroup(group.Key, group.Cache.Items.First().CategoryOrder, group.Cache.Connect()) as SearchItemGroup
+                        EumEntityType.Artist => new ArtistResultGroup(category, order, group.Cache.Connect()),
+                        _ => new SquareImageResultGroup(category, order, group.Cache.Connect()) as SearchItemGroup
                     }
                 };
-            })
-            .SortBy(a=> a.Order)
+                return item;
+            }, false)
+            .SortBy(a => a.Order)
             .Bind(out _groups)
             .DisposeMany()
             .ObserveOn(RxApp.MainThreadScheduler)

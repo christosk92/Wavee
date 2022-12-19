@@ -163,8 +163,6 @@ namespace Eum.UI.WinUI.Views.Search
                 elements = elements
                     .OrderBy(a => (a.DataContext as SearchItemGroup).Order)
                     .ToList();
-                var dtx = elements.Select(a => a.DataContext as SearchItemGroup);
-
                 int row = 0;
                 foreach (var f in elements)
                 {
@@ -232,36 +230,13 @@ namespace Eum.UI.WinUI.Views.Search
                             break;
                     }
                 }
-                var lastRowIndex = Math.Min(
-                (int)(context.RealizationRect.Bottom / (this.MinItemSize.Height + this.RowSpacing)) + 1,
-                (int)(context.ItemCount / 3));
 
 
-                //
-                // for (int rowIndex = firstRowIndex; rowIndex < lastRowIndex; rowIndex++)
-                // {
-                //     int firstItemIndex = rowIndex * 2;
-                //     var boundsForCurrentRow = CalculateLayoutBoundsForRow(rowIndex, desiredItemWidth);
-                //
-                //     for (int columnIndex = 0; columnIndex < 2; columnIndex++)
-                //     {
-                //         var index = firstItemIndex + columnIndex;
-                //         var rect = boundsForCurrentRow[index % 2];
-                //         var container = context.GetOrCreateElementAt(index);
-                //
-                //         container.Measure(
-                //             new Size(boundsForCurrentRow[columnIndex].Width, boundsForCurrentRow[columnIndex].Height));
-                //
-                //         state.LayoutRects.Add(boundsForCurrentRow[columnIndex]);
-                //     }
-                // }
-
-                // Calculate and return the size of all the content (realized or not) by figuring out
-                // what the bottom/right position of the last item would be.
                 var extentHeight = ((int)(context.ItemCount / 2) - 1) * (this.MinItemSize.Height + this.RowSpacing) +
                                    this.MinItemSize.Height;
 
                 // Report this as the desired size for the layout
+                elements.Clear();
                 return new Size(desiredItemWidth * 4 + this.ColumnSpacing * 2, extentHeight);
             }
             catch (Exception x)
@@ -302,7 +277,7 @@ namespace Eum.UI.WinUI.Views.Search
             if (horizontalAlignment == HorizontalAlignment.Stretch)
             {
                 //fill full row
-                r.X = existingColumnRect.Right + this.ColumnSpacing;
+                r.X = existingColumnRect.Right + (existingColumnRect.Right > 0 ? this.ColumnSpacing : 0);
                 r.Y = yoffset;
                 r.Height = height;
                 r.Width = desiredItemWidth - existingColumnRect.Width;

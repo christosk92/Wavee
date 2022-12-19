@@ -1,4 +1,5 @@
-﻿using Eum.UI.Helpers;
+﻿using Eum.Enums;
+using Eum.UI.Helpers;
 
 namespace Eum.UI.Items;
 
@@ -21,16 +22,39 @@ public readonly struct ItemId : IComparable<ItemId>, IEquatable<ItemId>
             switch (i)
             {
                 case 0:
-                    Service = (ServiceType) GetServiceType(s.Current.Line);
+                    Service = (ServiceType)GetServiceType(s.Current.Line);
                     break;
                 case 1:
-                    Type = (EumEntityType) GetType(s.Current.Line);
+                    Type = (EumEntityType)GetType(s.Current.Line);
+                    //'user' case is inconclusive, the uri could also be "spotify:user:31q546bk2ufm6r4csxytjx6rb7ci:playlist:7tlqtq2KZEhLK38UOSiRFj" for example
+                    //in this case, the type is actually Playlist, we need a way to check this on case 'user':
+                    //next line is the user id,
+                    //if the next line is 'playlist' then the type is Playlist
+                    //if the next line is 'collection' then the type is Collection
+
+                    if (Type == EumEntityType.User)
+                    {
+                        if (s.MoveNext())
+                        {
+                            if (s.MoveNext())
+                            {
+                                if (s.Current.Line.SequenceEqual("playlist".AsSpan()))
+                                {
+                                    Type = EumEntityType.Playlist;
+                                }
+                                else if (s.Current.Line.SequenceEqual("collection".AsSpan()))
+                                {
+                                    Type = EumEntityType.Collection;
+                                }
+                            }
+                        }
+                    }
+
                     break;
             }
 
             i++;
         }
-
         Id = s.Current.Line.ToString();
     }
     public ServiceType Service { get; }

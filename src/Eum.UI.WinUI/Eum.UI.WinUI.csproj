@@ -18,6 +18,7 @@
 		<None Remove="Assets\spotify.png" />
 		<None Remove="Controls\BottomPlayerControl.xaml" />
 		<None Remove="Controls\SidebarControlStyles.xaml" />
+		<None Remove="Controls\TopHitView.xaml" />
 		<None Remove="MainWindowContentWrapper.xaml" />
 		<None Remove="Views\Artists\ArtistRootView.xaml" />
 		<None Remove="Views\Login\LoginView.xaml" />
@@ -102,6 +103,9 @@
 		<None Update="Controls\ImageTransitionControl.xaml">
 			<Generator>MSBuild:Compile</Generator>
 		</None>
+		<Page Update="Controls\TopHitView.xaml">
+		  <Generator>MSBuild:Compile</Generator>
+		</Page>
 		<Page Update="Views\Search\SearchOverviewView.xaml">
 		  <Generator>MSBuild:Compile</Generator>
 		</Page>

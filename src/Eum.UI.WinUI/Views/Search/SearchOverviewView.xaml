@@ -9,22 +9,91 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:search="using:Eum.UI.ViewModels.Search"
+    xmlns:controls="using:Eum.UI.WinUI.Controls"
+    xmlns:winUi="using:Eum.UI.WinUI"  Unloaded="SearchOverviewView_OnUnloaded"
+    xmlns:searchItems="using:Eum.UI.ViewModels.Search.SearchItems"
     mc:Ignorable="d">
     <UserControl.Resources>
+        <winUi:FirstItemOrDefault x:Key="FirstItemOrDefault" />
         <DataTemplate x:Key="Recommendations" x:DataType="search:RecommendationsResultGroup">
-            <Grid  Height="250"  HorizontalAlignment="Stretch" Background="Blue"/>
+            <Grid DataContext="{x:Bind}"   Height="280" HorizontalAlignment="Stretch">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition/>
+                </Grid.RowDefinitions>
+                <TextBlock
+                    FontSize="16"
+                    Opacity=".7"
+                    FontWeight="Bold"
+                    Text="SPOTIFY ALSO RECOMMENDS THESE PLAYLISTS"/>
+                <ItemsRepeater Margin="0,16,0,0"  Grid.Row="1" ItemsSource="{x:Bind Items}">
+                    <ItemsRepeater.Layout>
+                        <StackLayout Orientation="Horizontal"/>
+                    </ItemsRepeater.Layout>
+                    <ItemsRepeater.ItemTemplate>
+                        <DataTemplate x:DataType="searchItems:ISearchItem">
+                            <Border  Background="{ThemeResource LayerFillColorDefaultBrush}"
+                                    VerticalAlignment="Stretch"  Width="250" Margin="4,0"
+                                    HorizontalAlignment="Stretch" 
+                                    CornerRadius="8"
+                                    BorderThickness="1"
+                                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
+                                <Grid>
+                                    <controls:ImageTransitionControl Source="{x:Bind Image, Mode=OneWay}"/>
+
+                                    <StackPanel       Margin="18"
+                                                      VerticalAlignment="Bottom">
+                                        <TextBlock  
+                                            FontSize="18"
+                                            FontWeight="Bold"
+                                            Text="{x:Bind Name, Mode=OneWay}" />
+                                        <TextBlock  
+                                            FontSize="11"
+                                            Opacity=".6"
+                                            FontWeight="Bold"
+                                            Text="{x:Bind Description}" VerticalAlignment="Bottom"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsRepeater.ItemTemplate>
+                </ItemsRepeater>
+            </Grid>
         </DataTemplate>
         <DataTemplate x:Key="TopResult" x:DataType="search:TopResultGroup">
-            <Grid Height="250" MaxWidth="350"  HorizontalAlignment="Stretch" Background="Red"/>
+            <Grid DataContext="{x:Bind}"  Height="280" MaxWidth="350"  HorizontalAlignment="Stretch" >
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition/>
+                </Grid.RowDefinitions>
+                <TextBlock
+                    FontSize="16"
+                    Opacity=".7"
+                    FontWeight="Bold"
+                    Text="PERHAPS YOU ARE LOOKING FOR"/>
+                <controls:TopHitView Margin="0,16,0,0" Grid.Row="1" Item="{x:Bind FirstOrDefault, Mode=OneWay}"/>
+            </Grid>
         </DataTemplate>
         <DataTemplate x:Key="Songs" x:DataType="search:SongsResultGroup">
-            <Grid Height="250"  HorizontalAlignment="Stretch" Background="Orange"/>
+            <Grid DataContext="{x:Bind}"   Height="280" HorizontalAlignment="Stretch">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition/>
+                </Grid.RowDefinitions>
+                <TextBlock
+                        FontSize="16"
+                        Opacity=".7"
+                        FontWeight="Bold"
+                        Text="TRACKS"/>
+
+                <ListView Grid.Row="1" Margin="0,18,0,0" ItemsSource="{x:Bind Items}"/>
+            </Grid>
         </DataTemplate>
         <DataTemplate x:Key="SquareHorizontal" x:DataType="search:SquareImageResultGroup">
-            <Grid  Height="250"  HorizontalAlignment="Stretch" Background="Purple"/>
+            <Grid  Height="280"  HorizontalAlignment="Stretch" Background="Purple"/>
         </DataTemplate>
         <DataTemplate x:Key="Artists" x:DataType="search:ArtistResultGroup">
-            <Grid Height="250"  HorizontalAlignment="Stretch" Background="Green"/>
+            <Grid Height="280"  HorizontalAlignment="Stretch" Background="Green"/>
         </DataTemplate>
         <local:SearchTemplateSelector
             x:Name="T"
@@ -35,7 +104,7 @@
                                                      SquareImage="{StaticResource SquareHorizontal}"
                                                  />
 
-        <local:SearchFeedLayout x:Key="FeedLayout"  ColumnSpacing="12" RowSpacing="24"/>
+        <local:SearchFeedLayout x:Key="FeedLayout"  ColumnSpacing="24" RowSpacing="24"/>
     </UserControl.Resources>
     <Grid Margin="24">
         <ScrollViewer>
