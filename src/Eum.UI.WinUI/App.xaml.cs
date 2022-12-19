@@ -103,7 +103,7 @@ namespace Eum.UI.WinUI
                 LogPath = Path.Combine(dataDir, "Logs_winui.log"),
                 CachePath = dataDir,
                 TimeSyncMethod = TimeSyncMethod.MELODY
-            }, new NAudioPlayer());
+            }, new EumVlcPlayer());
 
             this.UnhandledException += OnUnhandledException;
             Ioc.Default.ConfigureServices(serviceCollection.BuildServiceProvider());
@@ -112,6 +112,8 @@ namespace Eum.UI.WinUI
 
         private void OnUnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
+            S_Log.Instance.LogError(e.Message);
+            S_Log.Instance.LogError(e.Exception);
         }
 
         /// <summary>

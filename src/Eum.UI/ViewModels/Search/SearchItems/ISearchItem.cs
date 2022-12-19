@@ -1,3 +1,4 @@
+using Eum.UI.Items;
 using Eum.UI.ViewModels.Search.Patterns;
 
 namespace Eum.UI.ViewModels.Search.SearchItems;
@@ -9,4 +10,6 @@ public interface ISearchItem
 	ComposedKey Key { get; }
 	string? Image { get; set; }
 	string Category { get; }
+    int CategoryOrder { get; }
+    public ItemId Id { get; }
 }

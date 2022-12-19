@@ -239,8 +239,15 @@ namespace Eum.UI.ViewModels.Artists
 
         public void Cancel()
         {
-            _cts.Cancel();
-            _cts.Dispose();
+            try
+            {
+                _cts.Cancel();
+                _cts.Dispose();
+            }
+            catch (Exception)
+            {
+
+            }
         }
     }
 

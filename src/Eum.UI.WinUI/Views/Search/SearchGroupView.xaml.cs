@@ -15,7 +15,6 @@ using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
-using Eum.UI.ViewModels.Search;
 using Eum.UI.ViewModels.Search.Sources;
 
 // To learn more about WinUI, the WinUI project structure,
@@ -23,22 +22,14 @@ using Eum.UI.ViewModels.Search.Sources;
 
 namespace Eum.UI.WinUI.Views.Search
 {
-    public sealed partial class SearchRootView : UserControl
+    public sealed partial class SearchGroupView : UserControl
     {
-        public SearchRootView(SearchRootViewModel viewModel)
+        public SearchGroupView(ISearchGroup viewModel)
         {
             ViewModel = viewModel;
             this.InitializeComponent();
             this.DataContext = ViewModel;
         }
-        public SearchRootViewModel ViewModel { get; }
-
-        private void NavigationView_OnItemInvoked(NavigationView sender, NavigationViewItemInvokedEventArgs args)
-        {
-            if (args.InvokedItemContainer.Tag is ISearchGroup v)
-            {
-                ViewModel.SelectedGroup = v;
-            }
-        }
+        public ISearchGroup ViewModel { get; }
     }
 }

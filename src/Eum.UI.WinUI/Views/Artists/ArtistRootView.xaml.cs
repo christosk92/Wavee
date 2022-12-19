@@ -26,7 +26,7 @@ using GridView = Microsoft.UI.Xaml.Controls.GridView;
 
 namespace Eum.UI.WinUI.Views.Artists
 {
-    public sealed partial class ArtistRootView : UserControl
+    public sealed partial class  ArtistRootView : UserControl
     {
         private TransitionHelper transitionHelper = new TransitionHelper
         {

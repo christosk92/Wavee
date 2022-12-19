@@ -20,13 +20,18 @@
             ConverterParameter='Results for \'{0}\''}"/>
 
         <NavigationView PaneDisplayMode="Top"  Margin="0,34" IsBackButtonVisible="Collapsed"
-                        MenuItemsSource="{x:Bind ViewModel.SearchBar.Headers}"
+                        MenuItemsSource="{x:Bind ViewModel.SearchBar.Headers}" ItemInvoked="NavigationView_OnItemInvoked"
+                        SelectedItem="{x:Bind ViewModel.SelectedGroup, Mode=OneWay}"
                         IsSettingsVisible="False">
             <NavigationView.MenuItemTemplate>
-                <DataTemplate x:DataType="sources:SearchGroup">
-                    <NavigationViewItem Content="{x:Bind Title}"/>
+                <DataTemplate x:DataType="sources:ISearchGroup">
+                    <NavigationViewItem Tag="{x:Bind}" Content="{x:Bind Title}"/>
                 </DataTemplate>
             </NavigationView.MenuItemTemplate>
+
+            <ContentControl HorizontalContentAlignment="Stretch"
+                            VerticalContentAlignment="Stretch"
+                            Content="{x:Bind ViewModel.SelectedGroup, Mode=OneWay, Converter={StaticResource ViewLocator}}"/>
         </NavigationView>
     </Grid>
 </UserControl>

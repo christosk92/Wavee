@@ -24,6 +24,8 @@
 		<None Remove="Views\Login\ProfilesView.xaml" />
 		<None Remove="Views\Login\SpotifyLoginPage.xaml" />
 		<None Remove="Views\Playlists\CreatePlaylistView.xaml" />
+		<None Remove="Views\Search\SearchGroupView.xaml" />
+		<None Remove="Views\Search\SearchOverviewView.xaml" />
 		<None Remove="Views\Search\SearchRootView.xaml" />
 		<None Remove="Views\Settings\AppSettingsView.xaml" />
 		<None Remove="Views\Settings\SettingsView.xaml" />
@@ -100,6 +102,12 @@
 		<None Update="Controls\ImageTransitionControl.xaml">
 			<Generator>MSBuild:Compile</Generator>
 		</None>
+		<Page Update="Views\Search\SearchOverviewView.xaml">
+		  <Generator>MSBuild:Compile</Generator>
+		</Page>
+		<Page Update="Views\Search\SearchGroupView.xaml">
+		  <Generator>MSBuild:Compile</Generator>
+		</Page>
 		<Page Update="Views\Search\SearchRootView.xaml">
 		  <Generator>MSBuild:Compile</Generator>
 		</Page>

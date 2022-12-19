@@ -13,8 +13,13 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
+using System.Threading;
+using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.DependencyInjection;
+using Eum.UI.ViewModels;
 using Eum.UI.ViewModels.Search;
 using Eum.UI.ViewModels.Search.Sources;
 
@@ -23,22 +28,15 @@ using Eum.UI.ViewModels.Search.Sources;
 
 namespace Eum.UI.WinUI.Views.Search
 {
-    public sealed partial class SearchRootView : UserControl
+    public sealed partial class SearchOverviewView : UserControl
     {
-        public SearchRootView(SearchRootViewModel viewModel)
+        public SearchOverviewView(SearchOverviewViewModel _)
         {
-            ViewModel = viewModel;
+            SearchBar = Ioc.Default.GetRequiredService<MainViewModel>()
+                .SearchBar;
             this.InitializeComponent();
-            this.DataContext = ViewModel;
+            this.DataContext = SearchBar;
         }
-        public SearchRootViewModel ViewModel { get; }
-
-        private void NavigationView_OnItemInvoked(NavigationView sender, NavigationViewItemInvokedEventArgs args)
-        {
-            if (args.InvokedItemContainer.Tag is ISearchGroup v)
-            {
-                ViewModel.SelectedGroup = v;
-            }
-        }
+        public SearchBarViewModel SearchBar { get; }
     }
 }

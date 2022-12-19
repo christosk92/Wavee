@@ -24,11 +24,11 @@ public class ViewLocator : IValueConverter
                     .Replace("Eum.UI", "Eum.UI.WinUI");
                 type = Type.GetType(name);
             }
-            if (type != null)
+            if (type != null && type != typeof(object))
             {
 
                 //return (Control)Activator.CreateInstance(type)!;
-
+                
                 return (Control)Activator.CreateInstance(type, value)!;
 
             }

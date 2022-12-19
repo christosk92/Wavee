@@ -19,6 +19,12 @@
     <None Update="Controls\ImageTransitionControl.xaml">
       <SubType>Designer</SubType>
     </None>
+    <Page Update="Views\Search\SearchOverviewView.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Views\Search\SearchGroupView.xaml">
+      <SubType>Designer</SubType>
+    </Page>
     <Page Update="Views\Search\SearchRootView.xaml">
       <SubType>Designer</SubType>
     </Page>

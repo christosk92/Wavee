@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Eum.UI.ViewModels.Navigation;
+using Eum.UI.ViewModels.Search.Sources;
 
 namespace Eum.UI.ViewModels.Search
 {
@@ -11,10 +12,12 @@ namespace Eum.UI.ViewModels.Search
     public partial class SearchRootViewModel : INavigatable
     {
         private INavigatable? _oldPage;
-
+        [ObservableProperty]
+        private ISearchGroup _selectedGroup;
         public SearchRootViewModel(SearchBarViewModel searchBar)
         {
             SearchBar = searchBar;
+            SelectedGroup = searchBar.Headers.FirstOrDefault();
         }
         public SearchBarViewModel SearchBar { get; }
 
