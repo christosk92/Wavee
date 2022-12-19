@@ -114,6 +114,7 @@ namespace Eum.UI.WinUI
         {
             S_Log.Instance.LogError(e.Message);
             S_Log.Instance.LogError(e.Exception);
+            e.Handled = true;
         }
 
         /// <summary>

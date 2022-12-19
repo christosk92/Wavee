@@ -30,7 +30,7 @@ public partial class SearchBarViewModel
             {
                 return group.Key switch
                 {
-                    "topHit" => new TopResultGroup(group.Key, group.Cache.Items.First().CategoryOrder, group.Cache.Connect()),
+                    "topHit" => new TopResultGroup(group.Key, group.Cache.Items.FirstOrDefault()?.CategoryOrder ?? 0, group.Cache.Connect()),
                     "topRecommendations" => new RecommendationsResultGroup(group.Key, group.Cache.Items.First().CategoryOrder, group.Cache.Connect()),
                     _ => group.Cache.Items.First().Id.Type switch
                     {

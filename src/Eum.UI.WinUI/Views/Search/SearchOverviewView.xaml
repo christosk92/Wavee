@@ -8,10 +8,41 @@
     xmlns:local="using:Eum.UI.WinUI.Views.Search"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:search="using:Eum.UI.ViewModels.Search"
     mc:Ignorable="d">
+    <UserControl.Resources>
+        <DataTemplate x:Key="Recommendations" x:DataType="search:RecommendationsResultGroup">
+            <Grid  Height="250"  HorizontalAlignment="Stretch" Background="Blue"/>
+        </DataTemplate>
+        <DataTemplate x:Key="TopResult" x:DataType="search:TopResultGroup">
+            <Grid Height="250" MaxWidth="350"  HorizontalAlignment="Stretch" Background="Red"/>
+        </DataTemplate>
+        <DataTemplate x:Key="Songs" x:DataType="search:SongsResultGroup">
+            <Grid Height="250"  HorizontalAlignment="Stretch" Background="Orange"/>
+        </DataTemplate>
+        <DataTemplate x:Key="SquareHorizontal" x:DataType="search:SquareImageResultGroup">
+            <Grid  Height="250"  HorizontalAlignment="Stretch" Background="Purple"/>
+        </DataTemplate>
+        <DataTemplate x:Key="Artists" x:DataType="search:ArtistResultGroup">
+            <Grid Height="250"  HorizontalAlignment="Stretch" Background="Green"/>
+        </DataTemplate>
+        <local:SearchTemplateSelector
+            x:Name="T"
+                                                     TopResult="{StaticResource TopResult}"
+                                                     Recommendations="{StaticResource Recommendations}" 
+                                                     Songs="{StaticResource Songs}"
+            Artists="{StaticResource Artists}"
+                                                     SquareImage="{StaticResource SquareHorizontal}"
+                                                 />
 
+        <local:SearchFeedLayout x:Key="FeedLayout"  ColumnSpacing="12" RowSpacing="24"/>
+    </UserControl.Resources>
     <Grid Margin="24">
-       <ItemsRepeater ItemsSource="{x:Bind SearchBar.Groups}">
-       </ItemsRepeater>
+        <ScrollViewer>
+            <ItemsRepeater 
+            Layout="{StaticResource FeedLayout}"
+            ItemTemplate="{StaticResource T}"
+            ItemsSource="{x:Bind SearchBar.Groups}"/>
+        </ScrollViewer>
     </Grid>
 </UserControl>

@@ -156,7 +156,6 @@
             <Thickness x:Key="SettingsPageHyperlinkButtonMargin">-12,4,0,0</Thickness>
             <local:WindowsUIColorToHexConverter x:Key="WindowsUIColorToHexConverter" />
             <converters:StringFormatConverter x:Key="StringFormatConverter" />
-
         </ResourceDictionary>
     </Application.Resources>
 </Application>
