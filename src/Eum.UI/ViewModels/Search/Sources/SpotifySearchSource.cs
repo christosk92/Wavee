@@ -5,6 +5,7 @@ using CommunityToolkit.Mvvm.DependencyInjection;
 using DynamicData;
 using Eum.Connections.Spotify;
 using Eum.Connections.Spotify.Clients;
+using Eum.Connections.Spotify.JsonConverters;
 using Eum.Connections.Spotify.Models.Search;
 using Eum.Enums;
 using Eum.Logging;
@@ -149,8 +150,18 @@ public class SpotifySearchSource : ReactiveObject, ISearchSource, IDisposable
                 if (cached.response.Results.ContainsKey(category))
                 {
                     var order1 = order;
-                    results.Add(cached.response.Results[category].Hits
-                        .Select(a => new SpotifySearchItem(a.Title, a.Description, a.Image, a.Id, category, order1)));
+                    if (category == "tracks")
+                    {
+                        results.Add(cached.response.Results[category].Hits
+                            .Select(a =>
+                                new SpotifyTrackSearchItem(a as MercurySearchTrack, category, order1)));
+                    }
+                    else
+                    {
+                        results.Add(cached.response.Results[category].Hits
+                            .Select(a =>
+                                new SpotifySearchItem(a.Title, a.Description, a.Image, a.Id, category, order1)));
+                    }
                     order += 1;
                 }
             }

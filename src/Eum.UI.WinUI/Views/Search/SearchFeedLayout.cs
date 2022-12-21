@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -12,7 +13,7 @@ using Eum.UI.ViewModels.Search.Sources;
 
 namespace Eum.UI.WinUI.Views.Search
 {
-    public class SearchFeedLayout : VirtualizingLayout
+    public class SearchFeedLayout : NonVirtualizingLayout
     {// STEP #2 - Parameterize the layout
         #region Layout parameters
 
@@ -93,7 +94,7 @@ namespace Eum.UI.WinUI.Views.Search
         #endregion
 
 
-        protected override void InitializeForContextCore(VirtualizingLayoutContext context)
+        protected override void InitializeForContextCore(NonVirtualizingLayoutContext context)
         {
             base.InitializeForContextCore(context);
 
@@ -106,21 +107,21 @@ namespace Eum.UI.WinUI.Views.Search
                 context.LayoutState = new SearchFeedLayoutState();
             }
         }
-        protected override void UninitializeForContextCore(VirtualizingLayoutContext context)
+        protected override void UninitializeForContextCore(NonVirtualizingLayoutContext context)
         {
             base.UninitializeForContextCore(context);
 
             // clear any state
             context.LayoutState = null;
         }
-        protected override Size MeasureOverride(VirtualizingLayoutContext context, Size availableSize)
+        protected override Size MeasureOverride(NonVirtualizingLayoutContext context, Size availableSize)
         {
             //Check if the first item 
             try
             {
                 if (this.MinItemSize == Size.Empty)
                 {
-                    var firstElement = context.GetOrCreateElementAt(0);
+                    var firstElement = context.Children[0];
                     firstElement.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
 
                     // setting the member value directly to skip invalidating layout
@@ -134,15 +135,19 @@ namespace Eum.UI.WinUI.Views.Search
                 //  contain at most 2 items.  Use that to determine the index for the first and last item that
                 // will be within that realization rect.
 
-                var firstRowIndex = Math.Max(
-                    (int)(context.RealizationRect.Y / (this.MinItemSize.Height + this.RowSpacing)) - 1,
-                    0);
+                // var firstRowIndex = Math.Max(
+                //     (int)(context.RealizationRect.Y / (this.MinItemSize.Height + this.RowSpacing)) - 1,
+                //     0);
+                //
+                // var lastRowIndex = Math.Min(
+                //     (int)(context.RealizationRect.Bottom / (this.MinItemSize.Height + this.RowSpacing)) + 1,
+                //     (int)(context.ItemCount));
 
                 // Determine which items will appear on those rows and what the rect will be for each item
                 var state = context.LayoutState as SearchFeedLayoutState;
                 state.LayoutRects.Clear();
 
-                state.FirstRealizedIndex = firstRowIndex * 2;
+                state.FirstRealizedIndex = 0;
 
 
                 // ideal item width that will expand/shrink to fill available space
@@ -150,18 +155,9 @@ namespace Eum.UI.WinUI.Views.Search
                     (availableSize.Width - this.ColumnSpacing * 2) / 4);
 
                 Rect topResultRect = default;
-                var elements = new List<FrameworkElement>();
-                for (int i = 0; i < context.ItemCount; i++)
-                {
-                    var element = context.GetOrCreateElementAt(i);
-                    if (element is FrameworkElement f2)
-                    {
-                        elements.Add(f2);
-                    }
-                }
-
-                elements = elements
-                    .OrderBy(a => (a.DataContext as SearchItemGroup).Order)
+                var elements = context.Children
+                    .OrderBy(a => ((a as FrameworkElement).DataContext as SearchItemGroup)?.Order ?? int.MaxValue)
+                    .Cast<FrameworkElement>()
                     .ToList();
                 int row = 0;
                 foreach (var f in elements)
@@ -185,7 +181,7 @@ namespace Eum.UI.WinUI.Views.Search
                         case RecommendationsResultGroup:
                             didStretchRowAfterTopResult = true;
                             var recommendationsResultRect = CalculateRect(HorizontalAlignment.Stretch,
-                                topResultRect, 0, context.RealizationRect.Width, f.Height);
+                                topResultRect, 0, availableSize.Width, f.Height);
                             f.Measure(
                                 new Size(recommendationsResultRect.Width, recommendationsResultRect.Height));
                             state.LayoutRects.Add(recommendationsResultRect);
@@ -198,7 +194,7 @@ namespace Eum.UI.WinUI.Views.Search
                                 {
                                     //set it next to topResult
                                     var tracksRect = CalculateRect(HorizontalAlignment.Stretch,
-                                        topResultRect, 0, context.RealizationRect.Width, f.Height);
+                                        topResultRect, 0, availableSize.Width, f.Height);
                                     f.Measure(
                                         new Size(tracksRect.Width, tracksRect.Height));
                                     state.LayoutRects.Add(tracksRect);
@@ -207,13 +203,19 @@ namespace Eum.UI.WinUI.Views.Search
                                 else
                                 {
                                     //already filled.. ignore
+                                    var regularRect2 = CalculateRect(HorizontalAlignment.Stretch,
+                                        default, row, availableSize.Width, f.Height);
+                                    f.Measure(
+                                        new Size(regularRect2.Width, regularRect2.Height));
+                                    state.LayoutRects.Add(regularRect2);
+                                    row++;
                                 }
                             }
                             else
                             {
                                 //did not have a top result..  Set as regular stack
                                 var regularRect2 = CalculateRect(HorizontalAlignment.Stretch,
-                                    default, row, context.RealizationRect.Width, f.Height);
+                                    default, row, availableSize.Width, f.Height);
                                 f.Measure(
                                     new Size(regularRect2.Width, regularRect2.Height));
                                 state.LayoutRects.Add(regularRect2);
@@ -222,7 +224,7 @@ namespace Eum.UI.WinUI.Views.Search
                             break;
                         default:
                             var regularRect = CalculateRect(HorizontalAlignment.Stretch,
-                                default, row, context.RealizationRect.Width, f.Height);
+                                default, row, availableSize.Width, f.Height);
                             f.Measure(
                                 new Size(regularRect.Width, regularRect.Height));
                             state.LayoutRects.Add(regularRect);
@@ -232,12 +234,11 @@ namespace Eum.UI.WinUI.Views.Search
                 }
 
 
-                var extentHeight = ((int)(context.ItemCount / 2) - 1) * (this.MinItemSize.Height + this.RowSpacing) +
-                                   this.MinItemSize.Height;
+                var extentHeight = ((int) (context.Children.Count) - 1) * (this.MinItemSize.Height + this.RowSpacing);
 
-                // Report this as the desired size for the layout
+                                   // Report this as the desired size for the layout
                 elements.Clear();
-                return new Size(desiredItemWidth * 4 + this.ColumnSpacing * 2, extentHeight);
+                return new Size(desiredItemWidth * 4 + this.ColumnSpacing * 2,  extentHeight);
             }
             catch (Exception x)
             {
@@ -245,16 +246,16 @@ namespace Eum.UI.WinUI.Views.Search
             }
         }
 
-        protected override Size ArrangeOverride(VirtualizingLayoutContext context, Size finalSize)
+        protected override Size ArrangeOverride(NonVirtualizingLayoutContext context, Size finalSize)
         {
             // walk through the cache of containers and arrange
             var state = context.LayoutState as SearchFeedLayoutState;
-            var virtualContext = context as VirtualizingLayoutContext;
+            var virtualContext = context as NonVirtualizingLayoutContext;
             int currentIndex = state.FirstRealizedIndex;
 
             foreach (var arrangeRect in state.LayoutRects)
             {
-                var container = virtualContext.GetOrCreateElementAt(currentIndex);
+                var container = virtualContext.Children[currentIndex];
                 if (arrangeRect.Width < 100000000)
                 {
                     container.Arrange(arrangeRect);

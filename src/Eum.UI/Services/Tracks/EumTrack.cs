@@ -2,6 +2,7 @@
 using Eum.Connections.Spotify.Models.Artists;
 using Eum.UI.Items;
 using Eum.UI.ViewModels.Playback;
+using Eum.UI.ViewModels.Search.SearchItems;
 
 namespace Eum.UI.Services.Tracks
 {
@@ -42,6 +43,31 @@ namespace Eum.UI.Services.Tracks
                     Id = cachedPlayItem.Release.Cover.Uri
                 }
             };
+        }
+
+        public EumTrack(SpotifyTrackSearchItem searchTrackItem)
+        {
+            Name = searchTrackItem.Name;
+            Group = new IdWithTitle
+            {
+                Id = new ItemId(searchTrackItem.Track.Album.Uri.Uri),
+                Title = searchTrackItem.Track.Album.Name
+            };
+
+            Artists = searchTrackItem.Track.Artists
+                .Select(a => new IdWithTitle
+                {
+                    Id = new ItemId(a.Uri.Uri),
+                    Title = a.Name
+                }).ToArray();
+            Images = new CachedImage[]
+            {
+                new CachedImage
+                {
+                    Id = searchTrackItem.Track.Image
+                }
+            };
+            Duration = (int) searchTrackItem.Track.Duration;
         }
 
         public ItemId Id { get; }

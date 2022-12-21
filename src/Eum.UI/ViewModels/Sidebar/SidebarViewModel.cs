@@ -11,6 +11,7 @@ using Eum.UI.Users;
 using Eum.UI.ViewModels.ForYou;
 using Eum.UI.ViewModels.Library;
 using Eum.UI.ViewModels.Playlists;
+using Eum.UI.ViewModels.Search;
 using ReactiveUI;
 
 namespace Eum.UI.ViewModels.Sidebar;

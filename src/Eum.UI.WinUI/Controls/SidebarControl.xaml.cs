@@ -29,6 +29,8 @@ namespace Eum.UI.WinUI.Controls
 {
     public sealed partial class SidebarControl : NavigationView
     {
+        private SearchRootViewModel? _searchRootViewModel;
+
         private readonly IEumUserViewModelManager _userManagerViewModel;
         public SidebarControl()
         {
@@ -53,6 +55,7 @@ namespace Eum.UI.WinUI.Controls
             {
                 sidebar.ViewModel = new SidebarViewModel(v, Ioc.Default.GetRequiredService<IEumUserPlaylistViewModelManager>());
                 sidebar.OpenPaneLength = sidebar.NullOrSidebarWidth ?? sidebar.OpenPaneLength;
+                sidebar._searchRootViewModel = new SearchRootViewModel(sidebar.SearchBar);
             }
 
             GC.Collect();
@@ -128,5 +131,9 @@ namespace Eum.UI.WinUI.Controls
             }
         }
 
+        private void UIElement_OnGotFocus(object sender, RoutedEventArgs e)
+        {
+            _searchRootViewModel.ForceShow(true);
+        }
     }
 }

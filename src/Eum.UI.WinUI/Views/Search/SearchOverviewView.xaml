@@ -12,6 +12,10 @@
     xmlns:controls="using:Eum.UI.WinUI.Controls"
     xmlns:winUi="using:Eum.UI.WinUI"  Unloaded="SearchOverviewView_OnUnloaded"
     xmlns:searchItems="using:Eum.UI.ViewModels.Search.SearchItems"
+    xmlns:models="using:Eum.Core.Contracts.Models"
+    xmlns:albums="using:Eum.Albums"
+    xmlns:controls1="using:CommunityToolkit.WinUI.UI.Controls"
+    xmlns:playlists="using:Eum.UI.ViewModels.Playlists"
     mc:Ignorable="d">
     <UserControl.Resources>
         <winUi:FirstItemOrDefault x:Key="FirstItemOrDefault" />
@@ -86,14 +90,195 @@
                         FontWeight="Bold"
                         Text="TRACKS"/>
 
-                <ListView Grid.Row="1" Margin="0,18,0,0" ItemsSource="{x:Bind Items}"/>
+                <ListView  HorizontalAlignment="Stretch"
+                           HorizontalContentAlignment="Stretch"
+                           ItemContainerStyle="{StaticResource SongGridViewItemStyle}"
+                    Grid.Row="1" Margin="0,18,0,0" ItemsSource="{x:Bind Tracks}"
+                    SelectionMode="Extended">
+                    <ListView.ItemTemplate>
+                        <DataTemplate x:DataType="playlists:PlaylistTrackViewModel">
+                            <Border
+                                Padding="12,0,12,0"
+                                    HorizontalAlignment="Stretch"
+                                    VerticalAlignment="Stretch"
+                                    Background="{ThemeResource LayerFillColorDefaultBrush}"
+                                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="8">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="80" />
+                                        <ColumnDefinition Width="1.5*" />
+                                        <ColumnDefinition Width="1*"/>
+                                        <ColumnDefinition  Width=".5*"/>
+                                        <ColumnDefinition Width="150" />
+                                        <ColumnDefinition Width="50" />
+                                    </Grid.ColumnDefinitions>
+
+
+                                    <Grid VerticalAlignment="Stretch">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock
+                VerticalAlignment="Center"
+                FontWeight="Bold"
+                Opacity=".7"
+                Text="{x:Bind Index, Converter={StaticResource IndexToStringConverter}}" />
+
+                                        <ToggleButton
+                Grid.Column="1"
+                Padding="0"
+                HorizontalAlignment="Center"
+                Background="Transparent"
+                BorderThickness="0">
+                                            <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xEB51;" />
+                                        </ToggleButton>
+                                    </Grid>
+                                    <TextBlock
+            Grid.Column="1"
+            Margin="0,0,8,0"
+            VerticalAlignment="Center"
+            Text="{x:Bind Track.Name}"
+            TextTrimming="CharacterEllipsis" />
+                                    <controls1:MetadataControl
+            Grid.Column="2"
+            Margin="0,0,8,0"
+            VerticalAlignment="Center"
+            Items="{x:Bind Track.Artists, Converter={StaticResource IdWithTitleToMetadataConverter}}">
+                                        <controls1:MetadataControl.TextBlockStyle>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+                                            </Style>
+                                        </controls1:MetadataControl.TextBlockStyle>
+                                    </controls1:MetadataControl>
+
+                                    <ContentPresenter
+            Grid.Column="3"
+            VerticalAlignment="Center"
+            Content="{x:Bind Track.Group}"
+            ContentTemplate="{StaticResource IdWithTitleItemTemplate}" />
+
+                                    <TextBlock
+            Grid.Column="5"
+            VerticalAlignment="Center"
+            Text="{x:Bind Track.Duration, Converter={StaticResource MsToTimestampConverter}}" />
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
             </Grid>
         </DataTemplate>
         <DataTemplate x:Key="SquareHorizontal" x:DataType="search:SquareImageResultGroup">
-            <Grid  Height="280"  HorizontalAlignment="Stretch" Background="Purple"/>
+            <Grid DataContext="{x:Bind}"   Height="280" HorizontalAlignment="Stretch">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="30"/>
+                    <RowDefinition/>
+                </Grid.RowDefinitions>
+                <TextBlock
+                        FontSize="16"
+                        Opacity=".7"
+                        FontWeight="Bold"
+                        Text="{x:Bind Title}"/>
+
+                <ListView  HorizontalAlignment="Stretch" 
+                           HorizontalContentAlignment="Stretch"
+                           Grid.Row="1" Margin="0,18,0,0" ItemsSource="{x:Bind Items}"
+                           SelectionMode="Extended">
+                    <ListView.ItemTemplate>
+                        <DataTemplate x:DataType="searchItems:ISearchItem">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="*"/>
+                                    <RowDefinition Height="40"/>
+                                </Grid.RowDefinitions>
+                                <Border Background="{ThemeResource LayerFillColorDefaultBrush}"
+                                        CornerRadius="8" 
+                                        BorderThickness="1"
+                                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
+                                    <Grid>
+                                        <FontIcon 
+                                            Height="180"
+                                            Width="180"
+                                            FontFamily="Segoe Fluent Icons"
+                                            FontSize="64"
+                                            Glyph="&#xE93C;" />
+                                        <controls1:ConstrainedBox 
+                                                x:Name="PlaylistArtBorder"
+                                                x:Load="{x:Bind Image, Converter={StaticResource IsNullToBoolConverter}, ConverterParameter='false'}"
+                                                AspectRatio="1:1">
+                                            <Image Stretch="UniformToFill" Source="{Binding Image}"/>
+                                        </controls1:ConstrainedBox>
+                                    </Grid>
+                                </Border>
+                                <TextBlock  MaxWidth="180" 
+                                            Grid.Row="1" HorizontalAlignment="Left"
+                                            Margin="0,0" MaxLines="2"
+                                            FontWeight="Bold"
+                                            TextWrapping="WrapWholeWords"
+                                            VerticalAlignment="Center"
+                                            Text="{x:Bind Name}"/>
+                            </Grid>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                    <ListView.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <ItemsStackPanel Orientation="Horizontal"/>
+                        </ItemsPanelTemplate>
+                    </ListView.ItemsPanel>
+                </ListView>
+            </Grid>
         </DataTemplate>
         <DataTemplate x:Key="Artists" x:DataType="search:ArtistResultGroup">
-            <Grid Height="280"  HorizontalAlignment="Stretch" Background="Green"/>
+            <Grid DataContext="{x:Bind}"   Height="280" HorizontalAlignment="Stretch">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition/>
+                </Grid.RowDefinitions>
+                <TextBlock
+                        FontSize="16"
+                        Opacity=".7"
+                        FontWeight="Bold"
+                        Text="ARTISTS"/>
+
+                <ListView  HorizontalAlignment="Stretch"
+                           HorizontalContentAlignment="Stretch"
+                           Grid.Row="1" Margin="0,18,0,0" ItemsSource="{x:Bind Items}"
+                           SelectionMode="Extended">
+                    <ListView.ItemTemplate>
+                        <DataTemplate x:DataType="searchItems:ISearchItem">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="180"/>
+
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <PersonPicture ProfilePicture="{Binding Image}"
+                                               Width="180" Height="180"/>
+                                <Rectangle Grid.Column="2" Fill="White" Width=".5"
+                                           
+                                           Margin="0 ,8"
+                                           Opacity=".1"/>
+                                <TextBlock  
+                                    Margin="6 ,0,14,0"
+                                            FontWeight="Bold"
+                                    MaxWidth="90" TextWrapping="WrapWholeWords"
+                                    VerticalAlignment="Center"
+                                    Grid.Column="1"
+                                    Text="{x:Bind Name}"/>
+                            </Grid>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                    <ListView.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Orientation="Horizontal"/>
+                        </ItemsPanelTemplate>
+                    </ListView.ItemsPanel>
+                </ListView>
+            </Grid>
         </DataTemplate>
         <local:SearchTemplateSelector
             x:Name="T"
@@ -106,9 +291,10 @@
 
         <local:SearchFeedLayout x:Key="FeedLayout"  ColumnSpacing="24" RowSpacing="24"/>
     </UserControl.Resources>
-    <Grid Margin="24">
+    <Grid>
         <ScrollViewer>
-            <ItemsRepeater 
+            <ItemsRepeater
+                Margin="36,24" VerticalAlignment="Top"
             Layout="{StaticResource FeedLayout}"
             ItemTemplate="{StaticResource T}"
             ItemsSource="{x:Bind SearchBar.Groups}"/>

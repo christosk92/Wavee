@@ -42,7 +42,6 @@ namespace Eum.UI.WinUI.Views.Search
         private void SearchOverviewView_OnUnloaded(object sender, RoutedEventArgs e)
         {
             SearchBar = null;
-            this.DataContext = null;
         }
     }
 }

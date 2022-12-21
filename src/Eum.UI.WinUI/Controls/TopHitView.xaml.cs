@@ -8,6 +8,7 @@ using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Eum.UI.Items;
 using Eum.UI.ViewModels.Search.SearchItems;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -35,6 +36,11 @@ namespace Eum.UI.WinUI.Controls
         {
             get => (ISearchItem) GetValue(ItemProperty);
             set => SetValue(ItemProperty, value);
+        }
+
+        public string ToUpper(EumEntityType eumEntityType)
+        {
+            return eumEntityType.ToString().ToUpper();
         }
     }
 }

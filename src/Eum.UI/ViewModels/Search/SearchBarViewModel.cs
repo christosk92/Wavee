@@ -17,7 +17,6 @@ public partial class SearchBarViewModel
 {
     private readonly ReadOnlyObservableCollection<SearchItemGroup> _groups;
     private readonly ReadOnlyObservableCollection<ISearchGroup> _headers;
-    [ObservableProperty] private bool _isSearchPageVisible;
     [ObservableProperty] private string _searchText = "";
 
     public SearchBarViewModel(IObservable<IChangeSet<ISearchItem, ComposedKey>> itemsObservable,

@@ -14,6 +14,7 @@
 	</PropertyGroup>
 	<ItemGroup>
 		<None Remove="Assets\amb.png" />
+		<None Remove="Assets\equaliser.gif" />
 		<None Remove="Assets\MediaPlayerIcons.ttf" />
 		<None Remove="Assets\spotify.png" />
 		<None Remove="Controls\BottomPlayerControl.xaml" />
@@ -99,6 +100,9 @@
 		</Page>
 		<Content Update="Assets\amb.png">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+		<Content Update="Assets\equaliser.gif">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Content>
 		<None Update="Controls\ImageTransitionControl.xaml">
 			<Generator>MSBuild:Compile</Generator>

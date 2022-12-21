@@ -12,7 +12,7 @@
     xmlns:sources="using:Eum.UI.ViewModels.Search.Sources"
     mc:Ignorable="d">
 
-    <Grid Margin="24">
+    <Grid Padding="24">
         <TextBlock 
             FontSize="24"
             FontWeight="SemiBold"
@@ -30,6 +30,7 @@
             </NavigationView.MenuItemTemplate>
 
             <ContentControl HorizontalContentAlignment="Stretch"
+                            Margin="-24,0"
                             VerticalContentAlignment="Stretch"
                             Content="{x:Bind ViewModel.SelectedGroup, Mode=OneWay, Converter={StaticResource ViewLocator}}"/>
         </NavigationView>

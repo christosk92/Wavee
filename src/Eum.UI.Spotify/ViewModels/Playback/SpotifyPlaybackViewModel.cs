@@ -88,6 +88,7 @@ public class SpotifyPlaybackViewModel : PlaybackViewModel
         {
             Item?.Dispose();
             Item = null;
+            OnPlayingItemChanged(default);
             return;
         }
         var playingUri = new SpotifyId(e.Cluster.PlayerState.Track.Uri);
@@ -189,12 +190,14 @@ public class SpotifyPlaybackViewModel : PlaybackViewModel
                     Title = obj.item.Name
                 },
                 Artists = obj.item.Artists,
+                Id = obj.item.Id,
                 BigImage = (await obj.item.Images.OrderByDescending(a => a.Height ?? 0).First().ImageStream),
                 SmallImage = (await obj.item.Images.OrderBy(a => a.Height ?? 0).First().ImageStream),
                 BigImageUrl = new Uri($"https://i.scdn.co/image/{obj.item.Images.OrderByDescending(a => a.Height ?? 0).First().Id.ToLower()}"),
                 Duration = obj.item.Duration,
                 Context = contextId
             };
+            OnPlayingItemChanged(Item.Id);
             int diff = (int)(_spotifyClient.TimeProvider.CurrentTimeMillis() - e.Cluster.PlayerState.Timestamp);
             var initial = Math.Max(0, (int)(e.Cluster.PlayerState.PositionAsOfTimestamp + diff));
             StartTimer(initial);

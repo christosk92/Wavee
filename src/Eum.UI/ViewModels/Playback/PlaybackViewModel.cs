@@ -59,7 +59,13 @@ namespace Eum.UI.ViewModels.Playback
                 });
         }
 
+        public event EventHandler<ItemId> PlayingItemChanged; 
         public abstract Task SwitchRemoteDevice(string deviceId);
+
+        protected virtual void OnPlayingItemChanged(ItemId e)
+        {
+            PlayingItemChanged?.Invoke(this, e);
+        }
     }
 
     public record RemoteDevice(string DeviceId, string DeviceName, DeviceType Devicetype, ServiceType Service);
@@ -75,7 +81,7 @@ namespace Eum.UI.ViewModels.Playback
         public IdWithTitle Title { get; init; }
         public IdWithTitle[] Artists { get; init; }
         public double Duration { get; init; }
-
+        public ItemId Id { get; init; }
         public void Dispose()
         {
             BigImage.Dispose();
