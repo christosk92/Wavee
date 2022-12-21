@@ -47,18 +47,19 @@ public class SpotifyPlaylistViewModel : PlaylistViewModel
                     .GetTracks(uris)).ToArray();
                 if (addTracks)
                 {
-                    for (var index = 0; index < tracks.Length; index++)
-                    {
-                        var eumTrack = tracks[index];
-                        if (_tracksSourceList.Items.Any(j => j.Index == index))
-                        {
-                            //update
-                        }
-                        else
-                        {
-                            _tracksSourceList.Add(new PlaylistTrackViewModel(eumTrack, index));
-                        }
-                    }
+                    _tracksSourceList.AddRange(tracks.Select((a,i)=> new PlaylistTrackViewModel(a, i)));
+                    // for (var index = 0; index < tracks.Length; index++)
+                    // {
+                    //     var eumTrack = tracks[index];
+                    //     if (_tracksSourceList.Items.Any(j => j.Index == index))
+                    //     {
+                    //         //update
+                    //     }
+                    //     else
+                    //     {
+                    //         _tracksSourceList.Add(new PlaylistTrackViewModel(eumTrack, index));
+                    //     }
+                    // }
                 }
 
                 RxApp.MainThreadScheduler.Schedule(() =>

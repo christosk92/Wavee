@@ -270,14 +270,25 @@
                                 Margin="0,0,8,0"
                                 VerticalAlignment="Center"
                                 Items="{x:Bind Track.Artists, Converter={StaticResource IdWithTitleToMetadataConverter}}">
-                                <controls1:MetadataControl.TextBlockStyle>
-                                    <Style TargetType="TextBlock">
-                                        <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+                                <controls1:MetadataControl.Style>
+                                    <Style TargetType="controls1:MetadataControl">
+                                        <Setter Property="Template">
+                                            <Setter.Value>
+                                                <ControlTemplate TargetType="controls1:MetadataControl">
+                                                    <TextBlock
+                                                        x:Name="TextContainer"
+                                                        AutomationProperties.AccessibilityView="{TemplateBinding AutomationProperties.AccessibilityView}"
+                                                        Style="{TemplateBinding TextBlockStyle}"
+                                                        TextTrimming="CharacterEllipsis" />
+                                                </ControlTemplate>
+                                            </Setter.Value>
+                                        </Setter>
                                     </Style>
-                                </controls1:MetadataControl.TextBlockStyle>
+                                </controls1:MetadataControl.Style>
                             </controls1:MetadataControl>
 
                             <ContentPresenter
+                                x:Name="AlbumBlock"
                                 Grid.Column="3"
                                 VerticalAlignment="Center"
                                 Content="{x:Bind Track.Group}"
@@ -304,16 +315,25 @@
                                                 Source="ms-appx:///Assets/equaliser.gif" />
                                         </Setter.Value>
                                     </Setter>
-                                    <Setter Target="TitleBlock.FontWeight" Value="Bold" />
-                                    <Setter Target="TitleBlock.FontSize" Value="16" />
+                                    <Setter Target="TitleBlock.FontWeight" Value="Normal" />
                                     <Setter Target="TitleBlock.Foreground" Value="{StaticResource SpotifyGreen}" />
                                     <Setter Target="DurationBlock.Foreground" Value="{StaticResource SpotifyGreen}" />
                                     <Setter Target="Artists.Foreground" Value="{StaticResource SpotifyGreen}" />
-                                    <Setter Target="Artists.TextBlockStyle">
+                                    <Setter Target="Artists.Style">
                                         <Setter.Value>
-                                            <Style TargetType="TextBlock">
-                                                <Setter Property="TextTrimming" Value="CharacterEllipsis" />
-                                                <Setter Property="Foreground" Value="{StaticResource SpotifyGreen}" />
+                                            <Style TargetType="controls1:MetadataControl">
+                                                <Setter Property="Template">
+                                                    <Setter.Value>
+                                                        <ControlTemplate TargetType="controls1:MetadataControl">
+                                                            <TextBlock
+                                                                x:Name="TextContainer"
+                                                                AutomationProperties.AccessibilityView="{TemplateBinding AutomationProperties.AccessibilityView}"
+                                                                Foreground="{StaticResource SpotifyGreen}"
+                                                                Style="{TemplateBinding TextBlockStyle}"
+                                                                TextTrimming="CharacterEllipsis" />
+                                                        </ControlTemplate>
+                                                    </Setter.Value>
+                                                </Setter>
                                             </Style>
                                         </Setter.Value>
                                     </Setter>
@@ -340,16 +360,24 @@
                                         </Setter.Value>
                                     </Setter>
 
-                                    <Setter Target="TitleBlock.FontWeight" Value="Bold" />
-                                    <Setter Target="TitleBlock.FontSize" Value="16" />
                                     <Setter Target="TitleBlock.Foreground" Value="{StaticResource SpotifyGreen}" />
                                     <Setter Target="DurationBlock.Foreground" Value="{StaticResource SpotifyGreen}" />
                                     <Setter Target="Artists.Foreground" Value="{StaticResource SpotifyGreen}" />
-                                    <Setter Target="Artists.TextBlockStyle">
+                                    <Setter Target="Artists.Style">
                                         <Setter.Value>
-                                            <Style TargetType="TextBlock">
-                                                <Setter Property="TextTrimming" Value="CharacterEllipsis" />
-                                                <Setter Property="Foreground" Value="{StaticResource SpotifyGreen}" />
+                                            <Style TargetType="controls1:MetadataControl">
+                                                <Setter Property="Template">
+                                                    <Setter.Value>
+                                                        <ControlTemplate TargetType="controls1:MetadataControl">
+                                                            <TextBlock
+                                                                x:Name="TextContainer"
+                                                                AutomationProperties.AccessibilityView="{TemplateBinding AutomationProperties.AccessibilityView}"
+                                                                Foreground="{StaticResource SpotifyGreen}"
+                                                                Style="{TemplateBinding TextBlockStyle}"
+                                                                TextTrimming="CharacterEllipsis" />
+                                                        </ControlTemplate>
+                                                    </Setter.Value>
+                                                </Setter>
                                             </Style>
                                         </Setter.Value>
                                     </Setter>

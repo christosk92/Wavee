@@ -55,13 +55,13 @@ public class SpotifyPlaybackViewModel : PlaybackViewModel
                 }
                 try
                 {
-                    var track = await trackAggregator.GetTrack(new ItemId(x.EventArgs.Cluster.PlayerState.Track.Uri));
+                    var track = await Task.Run(async () => await trackAggregator.GetTrack(new ItemId(x.EventArgs.Cluster.PlayerState.Track.Uri)));
                     return (x.EventArgs, track);
                 }
                 catch (Exception ex)
                 {
                     S_Log.Instance.LogError(ex);
-                    throw;
+                    return (x.EventArgs, null);
                 }
             })
             .ObserveOn(RxApp.MainThreadScheduler)
