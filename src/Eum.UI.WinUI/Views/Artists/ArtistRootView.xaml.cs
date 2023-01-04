@@ -15,11 +15,15 @@ using System.Linq;
 using System.Numerics;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using CommunityToolkit.WinUI.UI;
 using Eum.UI.ViewModels.Artists;
 using Eum.UI.WinUI.Transitions;
 using GridView = Microsoft.UI.Xaml.Controls.GridView;
+using ListView = Microsoft.UI.Xaml.Controls.ListView;
+using UserControl = Microsoft.UI.Xaml.Controls.UserControl;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -56,6 +60,11 @@ namespace Eum.UI.WinUI.Views.Artists
             this.InitializeComponent();
             this.DataContext = viewModel;
         }
+
+        ~ArtistRootView()
+        {
+            Bindings.StopTracking();
+        }
         public ArtistRootViewModel ViewModel { get; set; }
 
         private void GridView_SizeCHanged(object sender, SizeChangedEventArgs e)
@@ -76,8 +85,17 @@ namespace Eum.UI.WinUI.Views.Artists
 
         private void ArtistRootView_OnUnloaded(object sender, RoutedEventArgs e)
         {
-            ViewModel = null;
-            this.DataContext = null;
+            Scroller.ViewChanged -= Scroller_OnViewChanged;
+            Scroller.ViewChanged -= ScrollerOnViewChanged;
+            GridView.SizeChanged -= GridView_SizeCHanged;
+            var lvs = this.FindDescendants()
+                .Where(a => a is ListView {Name: "Lv"});
+            foreach (var dependencyObject in lvs)
+            {
+                (dependencyObject as ListView).SelectionChanged -= Selector_OnSelectionChanged;
+            }
+            ViewModel.OnNavigatedFrom();
+            Bindings.StopTracking();
         }
 
         // private void ScrollViewer_OnAnchorRequested(ScrollViewer sender, AnchorRequestedEventArgs args)
@@ -142,6 +160,12 @@ namespace Eum.UI.WinUI.Views.Artists
             _old =
                 Scroller.VerticalOffset;
             Scroller.ViewChanged += ScrollerOnViewChanged;
+
+            var lv = (sender as ListView).Tag as DiscographyGroup;
+            if (lv != null)
+            {
+                lv.SwitchTemplateCommand.Execute(lv);
+            }
         }
     }
 }

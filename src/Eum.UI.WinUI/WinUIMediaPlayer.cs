@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Windows.Foundation.Collections;
 using Windows.Media.Core;
+using Windows.Media.Effects;
 using Windows.Media.Playback;
 using Eum.Connections.Spotify.Playback.Audio.Streams;
 using Eum.Connections.Spotify.Playback.Enums;
@@ -77,15 +78,16 @@ namespace Eum.UI.WinUI
                     Source = m,
                     Properties = echoProperties,
                 };
-                // var echoEffectDefinition = new AudioEffectDefinition(typeof(GainAudioEffect).FullName, echoProperties);
-                newMediaPlayer.AddAudioEffect(typeof(GainAudioEffect).FullName, false, echoProperties);
-
-                newMediaPlayer.MediaFailed += (sender, args) =>
-                {
-                    var t = args.ExtendedErrorCode;
-                    var j = args.Error;
-                    var k = args.ErrorMessage;
-                };
+                newMediaPlayer.MediaFailed += NewMediaPlayerOnMediaFailed;
+               // var echoEffectDefinition = new AudioEffectDefinition(typeof(GainAudioEffect).FullName, echoProperties);
+               // newMediaPlayer.AddAudioEffect(typeof(GainAudioEffect).FullName, false, echoProperties);
+               //
+               //  newMediaPlayer.MediaFailed += (sender, args) =>
+               //  {
+               //      var t = args.ExtendedErrorCode;
+               //      var j = args.Error;
+               //      var k = args.ErrorMessage;
+               //  };
                 _holders[playbackId] = newHolder;
                 newMediaPlayer.Play();
 
@@ -122,6 +124,13 @@ namespace Eum.UI.WinUI
             }
         }
 
+        private void NewMediaPlayerOnMediaFailed(MediaPlayer sender, MediaPlayerFailedEventArgs args)
+        {
+            S_Log.Instance.LogError(args.ExtendedErrorCode);
+            S_Log.Instance.LogError(args.ErrorMessage);
+            S_Log.Instance.LogError(args.Error.ToString());
+        }
+
         public int Time(string playbackId)
         {
             if (_holders.TryGetValue(playbackId, out var item))
@@ -136,6 +145,7 @@ namespace Eum.UI.WinUI
         {
             if (_holders.TryRemove(playbackId, out var item))
             {
+                item.Player.MediaFailed -= NewMediaPlayerOnMediaFailed;
                 item.Dispose();
                 item._CancellationToken.Cancel();
                 item._CancellationToken.Dispose();
@@ -169,5 +179,7 @@ namespace Eum.UI.WinUI
                 state.Player.Volume = volume;
             }
         }
+
+        private bool _adjustingGain;
     }
 }

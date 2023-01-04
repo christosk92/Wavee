@@ -21,7 +21,7 @@ public class IdWithTitleToMetadataConverter : IValueConverter
             });
         }
 
-        return Array.Empty<MetadataItem[]>();
+        return Array.Empty<MetadataItem>();
     }
 
     public object ConvertBack(object value, Type targetType, object parameter, string language)

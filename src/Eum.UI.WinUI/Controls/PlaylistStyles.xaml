@@ -11,7 +11,7 @@
     xmlns:track="using:Eum.UI.ViewModels.Track"
     xmlns:xamlConverters="using:Eum.UI.WinUI.XamlConverters">
     <DataTemplate x:Key="IdWithTitleItemTemplate" x:DataType="playback:IdWithTitle">
-        <Button
+        <Button   Tag="{x:Bind }" Tapped="UIElement_OnTapped"
             Padding="0"
             Content="{x:Bind Title}"
             CornerRadius="8"

@@ -1,0 +1,281 @@
+﻿<UserControl   xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+               xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+               xmlns:local="using:Eum.UI.WinUI.Views.Playlists"
+               xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+               xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+               xmlns:playlists="using:Eum.UI.ViewModels.Playlists"
+               xmlns:playlists1="using:Eum.UI.Playlists"
+               xmlns:media="using:Microsoft.Toolkit.Uwp.UI.Media"
+               xmlns:xamlConverters="using:Eum.UWP.XamlConverters"
+               xmlns:controls="using:Eum.UWP.Controls"
+               xmlns:ui="using:Microsoft.Toolkit.Uwp.UI"
+               xmlns:controls1="using:Microsoft.Toolkit.Uwp.UI.Controls"
+               mc:Ignorable="d"
+               DataContext="{x:Bind ViewModel}"
+               x:Class="Eum.UWP.Views.Album.AlbumView">
+    <UserControl.Transitions>
+        <TransitionCollection>
+            <EntranceThemeTransition />
+        </TransitionCollection>
+    </UserControl.Transitions>
+    <UserControl.Resources>
+        <media:AttachedCardShadow
+            x:Key="LightShadowBottomOffset"
+            BlurRadius="8"
+            CornerRadius="8"
+            Opacity=".075"
+            Offset="0,4,0" />
+        <xamlConverters:TimeSpanToStringConverter x:Key="TimeSpanToStringConverter" />
+
+    </UserControl.Resources>
+    <Grid>
+        <ListView
+            SelectionMode="Extended"
+            Padding="56,44,56,16"
+            ItemsSource="{x:Bind ViewModel.Album.Tracks, Mode=OneWay}">
+            <ListView.Header>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <Border
+                        Height="250"
+                        x:DefaultBindMode="OneWay"
+                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                        BorderThickness="1"
+                        CornerRadius="8">
+                        <Grid>
+                            <Rectangle
+                                        HorizontalAlignment="Stretch"
+                                        VerticalAlignment="Stretch"
+                                        Stretch="Fill">
+                                <Rectangle.Fill>
+                                    <controls:BlurredImageBrush
+                                                x:Name="Br"
+                                                x:FieldModifier="public"
+                                                Blur="80"
+                                                Source="{Binding ImagePath, Mode=OneWay}"
+                                                Stretch="Fill" />
+                                </Rectangle.Fill>
+                            </Rectangle>
+                            <Grid Padding="24,0" ColumnSpacing="24">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="192" />
+                                    <ColumnDefinition Width="1*" />
+                                </Grid.ColumnDefinitions>
+
+                                <Rectangle
+                                    Grid.ColumnSpan="2"
+                                    Margin="-24,0"
+                                    Fill="{ThemeResource ApplicationPageBackgroundThemeBrush}"
+                                    Opacity=".4" />
+
+                                <Border
+                                    Width="192"
+                                    Height="192"
+                                    ui:Effects.Shadow="{StaticResource LightShadowBottomOffset}">
+                                    <Grid>
+                                        <Border
+                                            x:Name="PlaylistArtBorder"
+                                            CornerRadius="8">
+                                            <Border.Background>
+                                                <ImageBrush Stretch="UniformToFill">
+                                                    <ImageBrush.ImageSource>
+                                                        <BitmapImage
+                                                            DecodePixelHeight="192"
+                                                            DecodePixelType="Logical"
+                                                            DecodePixelWidth="192"
+                                                            UriSource="{Binding ImagePath, Mode=OneWay}" />
+                                                    </ImageBrush.ImageSource>
+                                                </ImageBrush>
+                                            </Border.Background>
+                                        </Border>
+                                    </Grid>
+                                </Border>
+
+                                <StackPanel
+                                    Grid.Column="1"
+                                    Padding="0,10,0,0"
+                                    VerticalAlignment="Center"
+                                    Orientation="Vertical"
+                                    Spacing="8">
+                                    <TextBlock
+                                        FontSize="36"
+                                        FontWeight="SemiBold"
+                                        Text="{x:Bind ViewModel.Album.Name, Mode=OneWay}" />
+                                    <controls1:MetadataControl
+                                        x:Name="Artists"
+                                        Grid.Column="2"
+                                        Margin="0,0,8,0"
+                                        VerticalAlignment="Center"
+                                        Items="{x:Bind ViewModel.Album.Artists, Converter={StaticResource IdWithTitleToMetadataConverter}}">
+                                        <controls1:MetadataControl.Style>
+                                            <Style TargetType="controls1:MetadataControl">
+                                                <Setter Property="Template">
+                                                    <Setter.Value>
+                                                        <ControlTemplate TargetType="controls1:MetadataControl">
+                                                            <TextBlock
+                                                                x:Name="TextContainer" TextWrapping="Wrap" MaxLines="2"
+                                                                AutomationProperties.AccessibilityView="{TemplateBinding AutomationProperties.AccessibilityView}"
+                                                                Style="{TemplateBinding TextBlockStyle}"
+                                                                TextTrimming="CharacterEllipsis" />
+                                                        </ControlTemplate>
+                                                    </Setter.Value>
+                                                </Setter>
+                                            </Style>
+                                        </controls1:MetadataControl.Style>
+                                    </controls1:MetadataControl>
+
+                                    <TextBlock
+                                        FontSize="14"
+                                        FontWeight="SemiBold"
+                                        Opacity="1"
+                                        Text="{x:Bind ViewModel.Album.AlbumType, Mode=OneWay}" />
+                                    <TextBlock
+                                        Margin="0,0,0,8"
+                                        FontSize="14"
+                                        FontWeight="SemiBold"
+                                        Opacity=".9"
+                                        Style="{StaticResource BodyTextBlockStyle}">
+                                        <Run FontWeight="Bold" Text="・" />
+                                        <Run Text="{x:Bind ViewModel.TotalTrackDuration, Mode=OneWay, Converter={StaticResource TimeSpanToStringConverter}}" />
+                                        <!-- ,<Run Text="{x:Bind SelectedPlaylist.VideosCount, Mode=OneWay}" /> <Run Text="{x:Bind SelectedPlaylist.VideosCountString, Mode=OneWay}" /> -->
+                                    </TextBlock>
+
+
+
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <Button Style="{ThemeResource AccentButtonStyle}">
+                                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                                <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE102;" />
+                                                <TextBlock Text="Play" />
+                                            </StackPanel>
+                                        </Button>
+                                        <Button>
+                                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                                <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE104;" />
+                                                <TextBlock Text="Edit" />
+                                            </StackPanel>
+                                        </Button>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Grid>
+                        </Grid>
+                    </Border>
+                    <Border
+                        Grid.Row="1"
+                        Margin="0,16,0,4"
+                        Padding="8,2"
+                        HorizontalAlignment="Stretch"
+                        VerticalAlignment="Top"
+                        x:DefaultBindMode="OneWay"
+                        Background="{ThemeResource LayerFillColorDefaultBrush}"
+                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                        BorderThickness="1"
+                        CornerRadius="8">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="80" />
+                                <ColumnDefinition Width="1.5*" />
+                                <ColumnDefinition />
+                                <ColumnDefinition />
+                                <ColumnDefinition Width="150" />
+                                <ColumnDefinition Width="50" />
+                            </Grid.ColumnDefinitions>
+                            <Button
+                                Padding="4,8"
+                                HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Stretch"
+                                Command="{x:Bind ViewModel.SortCommand}"
+                                Style="{ThemeResource TextBlockButtonStyle}">
+                                <Button.CommandParameter>
+                                    <playlists1:PlaylistSortFieldType>Index</playlists1:PlaylistSortFieldType>
+                                </Button.CommandParameter>
+                                <StackPanel>
+                                    <TextBlock Text="#" />
+                                </StackPanel>
+                            </Button>
+                            <Button
+                                Grid.Column="1"
+                                Padding="4,8"
+                                HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Stretch"
+                                Command="{x:Bind ViewModel.SortCommand}"
+                                Style="{ThemeResource TextBlockButtonStyle}">
+                                <Button.CommandParameter>
+                                    <playlists1:PlaylistSortFieldType>Title</playlists1:PlaylistSortFieldType>
+                                </Button.CommandParameter>
+                                <StackPanel>
+                                    <TextBlock Text="Title" />
+                                </StackPanel>
+                            </Button>
+                            <Button
+                                Grid.Column="2"
+                                Padding="4,8"
+                                HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Stretch"
+                                Command="{x:Bind ViewModel.SortCommand}"
+                                Style="{ThemeResource TextBlockButtonStyle}">
+                                <Button.CommandParameter>
+                                    <playlists1:PlaylistSortFieldType>Artist</playlists1:PlaylistSortFieldType>
+                                </Button.CommandParameter>
+                                <StackPanel>
+                                    <TextBlock Text="Artist" />
+                                </StackPanel>
+                            </Button>
+                            <Button
+                                Grid.Column="3"
+                                Padding="4,8"
+                                HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Stretch"
+                                Command="{x:Bind ViewModel.SortCommand}"
+                                Style="{ThemeResource TextBlockButtonStyle}">
+                                <Button.CommandParameter>
+                                    <playlists1:PlaylistSortFieldType>Album</playlists1:PlaylistSortFieldType>
+                                </Button.CommandParameter>
+                                <StackPanel>
+                                    <TextBlock Text="Album" />
+                                </StackPanel>
+                            </Button>
+                            <Button
+                                Grid.Column="4"
+                                Padding="4,8"
+                                HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Stretch"
+                                Command="{x:Bind ViewModel.SortCommand}"
+                                Style="{ThemeResource TextBlockButtonStyle}">
+                                <Button.CommandParameter>
+                                    <playlists1:PlaylistSortFieldType>Added</playlists1:PlaylistSortFieldType>
+                                </Button.CommandParameter>
+                                <StackPanel>
+                                    <FontIcon
+                                        FontFamily="Segoe Fluent Icons"
+                                        FontSize="14"
+                                        Glyph="&#xE787;" />
+                                </StackPanel>
+                            </Button>
+                            <Button
+                                Grid.Column="5"
+                                Padding="4,8"
+                                HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Stretch"
+                                Command="{x:Bind ViewModel.SortCommand}"
+                                Style="{ThemeResource TextBlockButtonStyle}">
+                                <Button.CommandParameter>
+                                    <playlists1:PlaylistSortFieldType>Duration</playlists1:PlaylistSortFieldType>
+                                </Button.CommandParameter>
+                                <StackPanel>
+                                    <FontIcon
+                                        FontFamily="Segoe Fluent Icons"
+                                        FontSize="14"
+                                        Glyph="&#xE916;" />
+                                </StackPanel>
+                            </Button>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </ListView.Header>
+        </ListView>
+    </Grid>
+</UserControl>

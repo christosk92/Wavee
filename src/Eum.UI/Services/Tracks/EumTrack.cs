@@ -43,6 +43,8 @@ namespace Eum.UI.Services.Tracks
                     Id = cachedPlayItem.Release.Cover.Uri
                 }
             };
+
+            Id = new ItemId(cachedPlayItem.Uri.Uri);
         }
 
         public EumTrack(SpotifyTrackSearchItem searchTrackItem)
@@ -68,6 +70,7 @@ namespace Eum.UI.Services.Tracks
                 }
             };
             Duration = (int) searchTrackItem.Track.Duration;
+            Id = searchTrackItem.Id;
         }
 
         public ItemId Id { get; }

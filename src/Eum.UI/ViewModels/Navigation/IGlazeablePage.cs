@@ -1,8 +1,10 @@
-﻿namespace Eum.UI.ViewModels.Navigation
+﻿using Eum.UI.ViewModels.Settings;
+
+namespace Eum.UI.ViewModels.Navigation
 {
     public interface IGlazeablePage
     {
         bool ShouldSetPageGlaze { get; }
-        ValueTask<string> GetGlazeColor(CancellationToken ct = default);
+        ValueTask<string> GetGlazeColor(AppTheme theme, CancellationToken ct = default);
     }
 }

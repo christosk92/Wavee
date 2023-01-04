@@ -18,10 +18,20 @@ public partial class SearchBarViewModel
     private readonly ReadOnlyObservableCollection<SearchItemGroup> _groups;
     private readonly ReadOnlyObservableCollection<ISearchGroup> _headers;
     [ObservableProperty] private string _searchText = "";
+    [ObservableProperty] private bool _isBusy;
 
-    public SearchBarViewModel(IObservable<IChangeSet<ISearchItem, ComposedKey>> itemsObservable,
+    public SearchBarViewModel(
+        IObservable<bool> isBusyObservable,
+        IObservable<IChangeSet<ISearchItem, ComposedKey>> itemsObservable,
         IObservable<IChangeSet<ISearchGroup>> sourceGroupChanges)
     {
+        isBusyObservable
+            .ObserveOn(RxApp.MainThreadScheduler)
+            .Subscribe(b =>
+            {
+                IsBusy = b;
+            });
+
         itemsObservable
             .SortBy(a => a.CategoryOrder)
             .Group(s =>

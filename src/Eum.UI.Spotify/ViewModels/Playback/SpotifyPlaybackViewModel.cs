@@ -10,6 +10,8 @@ using System.Threading.Tasks;
 using ColorThiefDotNet;
 using CommunityToolkit.Mvvm.DependencyInjection;
 using Eum.Connections.Spotify;
+using Eum.Connections.Spotify.Clients.Contracts;
+using Eum.Connections.Spotify.Clients;
 using Eum.Connections.Spotify.Models.Users;
 using Eum.Connections.Spotify.Playback;
 using Eum.Enums;
@@ -25,6 +27,7 @@ using Eum.UI.Services.Tracks;
 using Eum.UI.ViewModels;
 using Eum.UI.ViewModels.Playback;
 using Eum.UI.ViewModels.Playlists;
+using Eum.UI.ViewModels.Settings;
 using Flurl;
 using Flurl.Http;
 using LiteDB;
@@ -229,25 +232,45 @@ public class SpotifyPlaybackViewModel : PlaybackViewModel
                     .Glaze == "Playback Dependent")
             {
                 Ioc.Default.GetRequiredService<MainViewModel>()
-                    .Glaze = await GetColorFromAlbumArt();
+                    .Glaze = await GetColorFromAlbumArt(Ioc.Default.GetRequiredService<MainViewModel>().CurrentUser.User.ThemeService.ActualTheme);
             }
-            async Task<string> GetColorFromAlbumArt()
+            async Task<string> GetColorFromAlbumArt(AppTheme theme)
             {
                 if (Item?.BigImage != null)
                 {
                     return await Task.Run(async () =>
                     {
-                        using var fs = await Ioc.Default.GetRequiredService<IFileHelper>()
-                            .GetStreamForString(Item?.BigImageUrl.ToString(), default);
-                        using var bmp = new Bitmap(fs);
-                        var colorThief = new ColorThief();
-                        var c = colorThief.GetPalette(bmp);
+                        try
+                        {
+                            var colorsClient = Ioc.Default.GetRequiredService<IExtractedColorsClient>();
+                            var color = await
+                                colorsClient.GetColors(Item.BigImageUrl.ToString());
+                            switch (theme)
+                            {
+                                case AppTheme.Dark:
+                                    var f = color[ColorTheme.Dark].ToColor();
+                                    return (Color.FromArgb(25, f.R, f.G, f.B)).ToHex();
+                                case AppTheme.Light:
+                                    var f2 = color[ColorTheme.Light].ToColor();
+                                    return (Color.FromArgb(25, f2.R, f2.G, f2.B)).ToHex();
+                                default:
+                                    throw new ArgumentOutOfRangeException(nameof(theme), theme, null);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            using var fs = await Ioc.Default.GetRequiredService<IFileHelper>()
+                                .GetStreamForString(obj.item.Images.FirstOrDefault().Id, default);
+                            using var bmp = new Bitmap(fs);
+                            var colorThief = new ColorThief();
+                            var c = colorThief.GetPalette(bmp);
 
-                        var a =
-                            c[0].Color.ToHexString();
+                            var a =
+                                c[0].Color.ToHexString();
 
-                        var f = a.ToColor();
-                        return (Color.FromArgb(25, f.R, f.G, f.B)).ToHex();
+                            var f = a.ToColor();
+                            return (Color.FromArgb(25, f.R, f.G, f.B)).ToHex();
+                        }
                     });
                 }
 

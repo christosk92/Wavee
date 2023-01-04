@@ -71,7 +71,8 @@
                             Orientation="Vertical">
                             <Button
                                 Padding="0"
-                                FontSize="15"
+                                CommandParameter="{x:Bind ViewModel.Item.Title.Id, Mode=OneWay}"
+                                FontSize="15" Command="{x:Bind ViewModel.NavigateToAlbum}"
                                 FontWeight="SemiBold"
                                 Style="{ThemeResource TextBlockButtonStyle}">
                                 <TextBlock

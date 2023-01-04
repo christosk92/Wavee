@@ -10,6 +10,7 @@ using Microsoft.UI.Xaml.Media.Imaging;
 using Windows.UI.Core;
 using CommunityToolkit.WinUI;
 using Microsoft.UI.Dispatching;
+using Nito.AsyncEx;
 
 namespace Eum.UI.WinUI;
 
@@ -17,25 +18,46 @@ public class StreamToBitmapConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, string language)
     {
-        if (value is Stream input)
+        switch (value)
         {
-            var task = Task.Run(async () =>
+            case Stream input:
             {
-                using var mem = new MemoryStream();
-                await input.CopyToAsync(mem);
-                mem.Position = 0;
-                var bmp = await App.MWindow.DispatcherQueue.EnqueueAsync(async () =>
+                var task = Task.Run(async () =>
                 {
-                    var img = new BitmapImage();
-                    await img.SetSourceAsync(mem.AsRandomAccessStream());
-                    return img;
-                }, DispatcherQueuePriority.High);
-                return bmp;
-            });
-            return new TaskCompletionNotifier<BitmapImage>(task);
+                    using var mem = new MemoryStream();
+                    await input.CopyToAsync(mem);
+                    mem.Position = 0;
+                    var bmp = await App.MWindow.DispatcherQueue.EnqueueAsync(async () =>
+                    {
+                        var img = new BitmapImage();
+                        await img.SetSourceAsync(mem.AsRandomAccessStream());
+                        return img;
+                    }, DispatcherQueuePriority.High);
+                    return bmp;
+                });
+                return new TaskCompletionNotifier<BitmapImage>(task);
+            }
+            case AsyncLazy<Stream> lazyStream:
+            {
+                var task = Task.Run(async () =>
+                {
+                    var str = await lazyStream;
+                    using var mem = new MemoryStream();
+                    await str.CopyToAsync(mem);
+                    mem.Position = 0;
+                    var bmp = await App.MWindow.DispatcherQueue.EnqueueAsync(async () =>
+                    {
+                        var img = new BitmapImage();
+                        await img.SetSourceAsync(mem.AsRandomAccessStream());
+                        return img;
+                    }, DispatcherQueuePriority.High);
+                    return bmp;
+                });
+                return new TaskCompletionNotifier<BitmapImage>(task);
+            }
+            default:
+                return null;
         }
-
-        return null;
     }
 
     public object ConvertBack(object value, Type targetType, object parameter, string language)

@@ -5,7 +5,9 @@ using System.Linq;
 using System.Reactive.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using Eum.Artwork;
 using Eum.Connections.Spotify;
 using Eum.Spotify.connectstate;
@@ -33,6 +35,7 @@ namespace Eum.UI.ViewModels.Playback
         {
         }
 
+        public ICommand NavigateToAlbum => Commands.To(EumEntityType.Album);
         public ObservableCollection<RemoteDevice> RemoteDevices { get; } = new ObservableCollection<RemoteDevice>();
         public abstract ServiceType Service { get; }
 

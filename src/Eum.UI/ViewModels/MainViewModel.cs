@@ -14,6 +14,7 @@ using Eum.UI.Items;
 using Eum.UI.Services.Login;
 using Eum.UI.Services.Users;
 using Eum.UI.Users;
+using Eum.UI.ViewModels.Fullscreen;
 using Eum.UI.ViewModels.Navigation;
 using Eum.UI.ViewModels.Playback;
 using Eum.UI.ViewModels.Search;
@@ -32,12 +33,20 @@ namespace Eum.UI.ViewModels
         private PlaybackViewModel? _playbackViewModel;
         private EumUserViewModel _currentUser;
         [ObservableProperty] private string _glaze;
+        [ObservableProperty] private AbsFullscreenViewModel? _fullscreenViewModel;
         public MainViewModel(IEumUserViewModelManager userViewModelManager)
         {
             UserViewModelManager = userViewModelManager;
             MainScreen = new NavigationService();
             SearchBar = CreateSearchBar();
-
+            Observable
+                .FromEventPattern<AbsFullscreenViewModel>(NavigationService.Instance, nameof(NavigationService.OnFullscreenNavigation))
+                .ObserveOn(RxApp.MainThreadScheduler)
+                .Select(x => x.EventArgs as AbsFullscreenViewModel)
+                .Subscribe(fs =>
+                {
+                    FullscreenViewModel = fs;
+                });
             Observable
                 .FromEventPattern<EumUserViewModel>(userViewModelManager, nameof(IEumUserViewModelManager.CurrentUserChanged))
                 .ObserveOn(RxApp.MainThreadScheduler)
@@ -122,11 +131,13 @@ namespace Eum.UI.ViewModels
             var source = new CompositeSearchSource(
                 new SpotifySearchSource(filterChanged));
 
-            var searchBar = new SearchBarViewModel(source.Changes, source.GroupChanges);
+            var searchBar = new SearchBarViewModel(
+                source.IsBusy,
+                source.Changes, source.GroupChanges);
 
             searchBar
                 .WhenAnyValue(a => a.SearchText)
-                .Throttle(TimeSpan.FromMilliseconds(200))
+                .Throttle(TimeSpan.FromMilliseconds(100))
                 .WhereNotNull()
                 .Subscribe(filterChanged);
 

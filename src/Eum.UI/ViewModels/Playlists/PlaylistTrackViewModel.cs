@@ -16,6 +16,8 @@ namespace Eum.UI.ViewModels.Playlists
         {
             Index = index;
             Track = eumTrack;
+            _wasPlaying =  Ioc.Default.GetRequiredService<MainViewModel>()
+                .PlaybackViewModel?.Item?.Id == Track.Id;
         }
 
         public PlaylistTrackViewModel(SpotifyTrackSearchItem searchTrackItem, int index)
@@ -23,57 +25,44 @@ namespace Eum.UI.ViewModels.Playlists
             Index = index;
 
             Track = new EumTrack(searchTrackItem);
+            _wasPlaying =  Ioc.Default.GetRequiredService<MainViewModel>()
+                .PlaybackViewModel?.Item?.Id == Track.Id;
         }
 
-        public void RegisterEvents()
-        {
-            Ioc.Default.GetRequiredService<MainViewModel>()
-                .PlaybackViewModel.PlayingItemChanged += PlaybackViewModelOnPlayingItemChanged;
-        }
-
-        public void UnregisterEvents()
-        {
-            Ioc.Default.GetRequiredService<MainViewModel>()
-                .PlaybackViewModel.PlayingItemChanged -= PlaybackViewModelOnPlayingItemChanged;
-        }
-
-        private void PlaybackViewModelOnPlayingItemChanged(object sender, ItemId e)
-        {
-            if (_wasPlaying)
-            {
-                if (e != Track.Id)
-                {
-                    IsPlayingChanged?.Invoke(this, false);
-                    _wasPlaying = false;
-                }
-            }
-            else
-            {
-                if (e == Track.Id)
-                {
-                    IsPlayingChanged?.Invoke(this, true);
-                    _wasPlaying = true;
-                }
-            }
-        }
-
-        private bool _wasPlaying;
+        
         public int Index { get; }
         public EumTrack Track { get; }
+        public ItemId Id => Track.Id;
+
         public bool IsPlaying()
         {
             return Ioc.Default.GetRequiredService<MainViewModel>()
                 .PlaybackViewModel?.Item?.Id == Track.Id; 
         }
 
+        public bool WasPlaying => _wasPlaying;
+
+        private bool _wasPlaying;
+
         public event EventHandler<bool>? IsPlayingChanged;
+        public void ChangeIsPlaying(bool isPlaying)
+        {
+            if(_wasPlaying == isPlaying) return;
+            
+            _wasPlaying = isPlaying;
+            IsPlayingChanged?.Invoke(this, isPlaying);
+        }
     }
 
     public interface IIsPlaying
     {
+        ItemId Id { get; }
         bool IsPlaying();
+        bool WasPlaying { get; }
         event EventHandler<bool> IsPlayingChanged;
-        void RegisterEvents();
-        void UnregisterEvents();
+
+        void ChangeIsPlaying(bool isPlaying);
+        // void RegisterEvents();
+        // void UnregisterEvents();
     }
 }

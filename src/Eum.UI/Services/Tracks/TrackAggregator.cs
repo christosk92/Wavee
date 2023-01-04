@@ -145,12 +145,14 @@ namespace Eum.UI.Services.Tracks
                             }));
                             request.Header = new BatchedEntityRequestHeader
                             {
-                                Catalogue = "premium",
+                                Catalogue = "premium", 
                                 Country = spotifyClient.AuthenticatedUser.CountryCode
                             };
                             using var metadataResponse = await "https://gae2-spclient.spotify.com"
                                 .AppendPathSegments("extended-metadata", "v0", "extended-metadata")
                                 .WithOAuthBearerToken((await spotifyClient.BearerClient.GetBearerTokenAsync(ct)))
+                                .SetQueryParam("market", "from_token")
+                                .SetQueryParam("country", spotifyClient.AuthenticatedUser.CountryCode)
                                 .PostAsync(new ByteArrayContent(request.ToByteArray()), cancellationToken: ct);
                             var responseData =
                                 BatchedExtensionResponse.Parser.ParseFrom(await metadataResponse.GetStreamAsync());
@@ -262,7 +264,7 @@ namespace Eum.UI.Services.Tracks
                             var uri = new SpotifyId(id.Uri);
                             var spotifyClient = Ioc.Default.GetRequiredService<ISpotifyClient>();
                             var original =
-                                await spotifyClient.Tracks.MercuryTracks.GetTrack(uri.HexId(), ct);
+                                await spotifyClient.Tracks.MercuryTracks.GetTrack(uri.HexId(),  spotifyClient.PrivateUser.Country, ct);
                             var images = await UploadImages(_database, original.Album.CoverGroup, ct);
                             return new CachedPlayItem
                             {
@@ -378,6 +380,7 @@ namespace Eum.UI.Services.Tracks
         public CachedShortArtist[] Artists { get; set; }
         public int Duration { get; set; }
         public Dictionary<string, string> ExtraMetadata { get; set; }
+        public int DiscNumber { get; set; }
     }
     public class CachedPlayItem
     {
@@ -388,7 +391,6 @@ namespace Eum.UI.Services.Tracks
         public CachedShortArtist[] Artists { get; set; }
         public int Duration { get; set; }
         public Dictionary<string, string> ExtraMetadata { get; set; }
-        public Dictionary<string, string> ExtraMetadataAlbum { get; set; }
     }
 
     public class CachedShortArtist
@@ -405,6 +407,7 @@ namespace Eum.UI.Services.Tracks
         public CachedImage[] Images { get; set; }
         public string Name { get; set; }
         public List<CachedAlbumPlayItem> Tracks { get; set; }
+        public string? AlbumType { get; set; }
     }
     public class CachedImage
     {
@@ -425,6 +428,13 @@ namespace Eum.UI.Services.Tracks
                     {
                         return db.FileStorage.OpenRead(Id);
                     }
+
+                    var id = Id;
+
+                    if (Id.StartsWith("https://"))
+                    {
+                        id = Path.GetFileName(new Uri(Id).LocalPath);
+                    }
                     //else we download itp
                     var test = new ImageGroup
                     {
@@ -436,7 +446,7 @@ namespace Eum.UI.Services.Tracks
                                 {
                                     Width = Width ?? 0,
                                     Height = Height ?? 0,
-                                    FileId = ByteString.CopyFrom(Id.HexToBytes())
+                                    FileId = ByteString.CopyFrom(id.HexToBytes())
                                 }
                             }
                         }
@@ -445,7 +455,7 @@ namespace Eum.UI.Services.Tracks
                         TrackAggregator.UploadImages(db, test);
 
                     var fs =
-                        db.FileStorage.OpenRead(Id);
+                        db.FileStorage.OpenRead(id);
                     return fs;
                 });
             }

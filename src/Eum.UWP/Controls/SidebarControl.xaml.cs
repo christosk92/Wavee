@@ -18,6 +18,7 @@ using Microsoft.Toolkit.Uwp.UI;
 using NavigationView = Microsoft.UI.Xaml.Controls.NavigationView;
 using NavigationViewDisplayMode = Microsoft.UI.Xaml.Controls.NavigationViewDisplayMode;
 using NavigationViewDisplayModeChangedEventArgs = Microsoft.UI.Xaml.Controls.NavigationViewDisplayModeChangedEventArgs;
+using Eum.UI.ViewModels.Search;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -26,6 +27,8 @@ namespace Eum.UWP.Controls
 {
     public sealed partial class SidebarControl : Microsoft.UI.Xaml.Controls.NavigationView
     {
+        private SearchRootViewModel? _searchRootViewModel;
+
         private readonly IEumUserViewModelManager _userManagerViewModel;
         public SidebarControl()
         {
@@ -47,6 +50,7 @@ namespace Eum.UWP.Controls
         public static readonly DependencyProperty TabContentProperty = DependencyProperty.Register(nameof(TabContent), typeof(UIElement), typeof(SidebarControl), new PropertyMetadata(null));
         public static readonly DependencyProperty UserProperty = DependencyProperty.Register(nameof(User), typeof(EumUserViewModel),
             typeof(SidebarControl), new PropertyMetadata(default(EumUserViewModel), UserChanged));
+        public static readonly DependencyProperty SearchBarProperty = DependencyProperty.Register(nameof(SearchBar), typeof(SearchBarViewModel), typeof(SidebarControl), new PropertyMetadata(default(SearchBarViewModel)));
 
         private static void UserChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
@@ -56,6 +60,7 @@ namespace Eum.UWP.Controls
             {
                 sidebar.ViewModel = new SidebarViewModel(v, Ioc.Default.GetRequiredService<IEumUserPlaylistViewModelManager>());
                 sidebar.OpenPaneLength = sidebar.NullOrSidebarWidth ?? sidebar.OpenPaneLength;
+                sidebar._searchRootViewModel = new SearchRootViewModel(sidebar.SearchBar);
             }
 
             GC.Collect();
@@ -96,7 +101,7 @@ namespace Eum.UWP.Controls
             IsPaneToggleButtonVisible = args.DisplayMode == NavigationViewDisplayMode.Minimal;
         }
 
-        private double? NullOrSidebarWidth
+        public double? NullOrSidebarWidth
         {
             get
             {
@@ -110,131 +115,11 @@ namespace Eum.UWP.Controls
                 User.User.SidebarWidth = value.Value;
             }
         }
-
-        private void Border_KeyDown(object sender, KeyRoutedEventArgs e)
+        public SearchBarViewModel SearchBar
         {
-            var step = 1;
-            var ctrl = Window.Current.CoreWindow.GetKeyState(VirtualKey.Control);
-            originalSize = IsPaneOpen ? (NullOrSidebarWidth ??= OpenPaneLength) : CompactPaneLength;
-
-            if (ctrl.HasFlag(CoreVirtualKeyStates.Down))
-            {
-                step = 5;
-            }
-
-            if (e.Key == VirtualKey.Space || e.Key == VirtualKey.Enter)
-            {
-                IsPaneOpen = !IsPaneOpen;
-                return;
-            }
-
-            if (IsPaneOpen)
-            {
-                if (e.Key == VirtualKey.Left)
-                {
-                    SetSize(-step, true);
-                    e.Handled = true;
-                }
-                else if (e.Key == VirtualKey.Right)
-                {
-                    SetSize(step, true);
-                    e.Handled = true;
-                }
-            }
-            else if (e.Key == VirtualKey.Right)
-            {
-                IsPaneOpen = !IsPaneOpen;
-                return;
-            }
-
-            User.User.SidebarWidth = OpenPaneLength;
+            get => (SearchBarViewModel)GetValue(SearchBarProperty);
+            set => SetValue(SearchBarProperty, value);
         }
-
-        private void Border_ManipulationDelta(object sender, ManipulationDeltaRoutedEventArgs e)
-        {
-            if (DisplayMode == NavigationViewDisplayMode.Expanded)
-            {
-                SetSize(e.Cumulative.Translation.X);
-            }
-        }
-
-        private void Border_PointerExited(object sender, PointerRoutedEventArgs e)
-        {
-            if (!dragging) // keep showing pressed event if currently resizing the sidebar
-            {
-                Window.Current.CoreWindow.PointerCursor = new Windows.UI.Core.CoreCursor(Windows.UI.Core.CoreCursorType.Arrow, 0);
-                //(sender as Grid).ChangeCursor(InputSystemCursor.Create(InputSystemCursorShape.Arrow));
-                VisualStateManager.GoToState((sender as Grid).FindAscendant<SplitView>(), "ResizerNormal", true);
-            }
-        }
-
-        private void Border_PointerEntered(object sender, PointerRoutedEventArgs e)
-        {
-            if (DisplayMode == NavigationViewDisplayMode.Expanded)
-            {
-                Window.Current.CoreWindow.PointerCursor = new Windows.UI.Core.CoreCursor(Windows.UI.Core.CoreCursorType.SizeWestEast, 0);
-
-               // (sender as Grid).ChangeCursor(InputSystemCursor.Create(InputSystemCursorShape.SizeWestEast));
-                VisualStateManager.GoToState((sender as Grid).FindAscendant<SplitView>(), "ResizerPointerOver", true);
-            }
-        }
-
-        private void SetSize(double val, bool closeImmediatleyOnOversize = false)
-        {
-            if (IsPaneOpen)
-            {
-                var newSize = originalSize + val;
-                if (newSize <= MaximumSidebarWidth && newSize >= MinimumSidebarWidth)
-                {
-                    OpenPaneLength = newSize; // passing a negative value will cause an exception
-                }
-
-                if (newSize < MinimumSidebarWidth) // if the new size is below the minimum, check whether to toggle the pane
-                {
-                    if (MinimumSidebarWidth + val <= CompactPaneLength || closeImmediatleyOnOversize) // collapse the sidebar
-                    {
-                        IsPaneOpen = false;
-                    }
-                }
-            }
-            else
-            {
-                if (val >= MinimumSidebarWidth - CompactPaneLength || closeImmediatleyOnOversize)
-                {
-                    OpenPaneLength = MinimumSidebarWidth + (val + CompactPaneLength - MinimumSidebarWidth); // set open sidebar length to minimum value to keep it smooth
-                    IsPaneOpen = true;
-                }
-            }
-
-            User.User.SidebarWidth = OpenPaneLength;
-        }
-
-        private void ResizeElementBorder_ManipulationCompleted(object sender, ManipulationCompletedRoutedEventArgs e)
-        {
-            Window.Current.CoreWindow.PointerCursor = new Windows.UI.Core.CoreCursor(Windows.UI.Core.CoreCursorType.Arrow, 0);
-            VisualStateManager.GoToState((sender as Grid).FindAscendant<SplitView>(), "ResizerNormal", true);
-            User.User.SidebarWidth = OpenPaneLength;
-            dragging = false;
-        }
-
-        private void ResizeElementBorder_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
-        {
-            IsPaneOpen = !IsPaneOpen;
-        }
-
-        private void ResizeElementBorder_ManipulationStarted(object sender, ManipulationStartedRoutedEventArgs e)
-        {
-            if (DisplayMode == NavigationViewDisplayMode.Expanded)
-            {
-                originalSize = IsPaneOpen ? (NullOrSidebarWidth ??= OpenPaneLength) : CompactPaneLength;
-                Window.Current.CoreWindow.PointerCursor = new Windows.UI.Core.CoreCursor(Windows.UI.Core.CoreCursorType.SizeWestEast, 0);
-                VisualStateManager.GoToState((sender as Grid).FindAscendant<SplitView>(), "ResizerPressed", true);
-                dragging = true;
-            }
-        }
-        public const double MinimumSidebarWidth = 1;
-
-        public const double MaximumSidebarWidth = 500;
 
         private void SidebarControl_OnLoaded(object sender, RoutedEventArgs e)
         {
@@ -247,6 +132,11 @@ namespace Eum.UWP.Controls
             {
                 NavigationService.Instance.To(new CreatePlaylistViewModel(Ioc.Default.GetRequiredService<IEumUserViewModelManager>()));
             }
+        }
+
+        private void UIElement_OnGotFocus(object sender, RoutedEventArgs e)
+        {
+            _searchRootViewModel.ForceShow(true);
         }
     }
 }

@@ -11,6 +11,7 @@
     xmlns:login="using:Eum.UI.WinUI.Views.Login"
     xmlns:shell="using:Eum.UI.WinUI.Views.Shell"
     xmlns:converters="using:CommunityToolkit.WinUI.UI.Converters"
+    xmlns:fullscreen="using:Eum.UI.WinUI.Views.Fullscreen"
     mc:Ignorable="d">
     <UserControl.Resources>
         <converters:BoolNegationConverter x:Key="BoolNegateConverter" />
@@ -22,6 +23,13 @@
 
         <login:LoginView x:Name="ProfilesView" 
                             x:Load="{x:Bind ViewModel.CurrentUser, Mode=OneWay, 
-Converter={StaticResource IsNullToBoolConverter},ConverterParameter='true'}"/>
+                            Converter={StaticResource IsNullToBoolConverter},ConverterParameter='true'}"/>
+        
+        <ContentControl
+            Content="{x:Bind ViewModel.FullscreenViewModel, Converter={StaticResource ViewLocator}, Mode=OneWay}"
+            x:Name="FullscreenView"
+            x:Load="{x:Bind ViewModel.FullscreenViewModel, Mode=OneWay,
+                            Converter={StaticResource IsNullToBoolConverter}}"
+        />
     </Grid>
 </UserControl>

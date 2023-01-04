@@ -23,7 +23,7 @@ public class ViewLocator : IValueConverter
                     .Replace("Eum.UI", "Eum.UWP");
                 type = Type.GetType(name);
             }
-            if (type != null)
+            if (type != null && type != typeof(object))
             {
 
                 //return (Control)Activator.CreateInstance(type)!;

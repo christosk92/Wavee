@@ -289,7 +289,7 @@
 
                             <ContentPresenter
                                 x:Name="AlbumBlock"
-                                Grid.Column="3"
+                                Grid.Column="3" 
                                 VerticalAlignment="Center"
                                 Content="{x:Bind Track.Group}"
                                 ContentTemplate="{StaticResource IdWithTitleItemTemplate}" />
@@ -422,6 +422,9 @@
             ItemTemplate="{StaticResource PlaylistTrackTemplate}"
             ItemsSource="{x:Bind ViewModel.Tracks}"
             SelectionMode="Extended">
+            <interactivity:Interaction.Behaviors>
+                <behaviors:IsPlayingListBehavior />
+            </interactivity:Interaction.Behaviors>
             <ListView.ItemsPanel>
                 <ItemsPanelTemplate>
                     <ItemsStackPanel ItemsUpdatingScrollMode="KeepScrollOffset" />

@@ -46,8 +46,9 @@ namespace Eum.UI.Services.Albums
                         uploadedImage
                     };
                     var tracks = mercuryUrl.Discs
-                        .SelectMany(a => a.Select(j => new CachedAlbumPlayItem()
+                        .SelectMany((a,i) => a.Select(j => new CachedAlbumPlayItem()
                         {
+                            DiscNumber = i,
                             Artists = j.Artists
                                 .Select(k => new CachedShortArtist
                                 {
@@ -70,9 +71,10 @@ namespace Eum.UI.Services.Albums
                         Id = id.Uri,
                         Images = uploadImages,
                         Name = mercuryUrl.Name,
-                        Tracks = tracks
+                        Tracks = tracks,
+                        AlbumType = mercuryUrl.Type
                     });
-                    return new EumAlbum(mercuryUrl);
+                    return new EumAlbum(mercuryUrl, uploadImages);
                 default:
                     throw new ArgumentOutOfRangeException();
             }

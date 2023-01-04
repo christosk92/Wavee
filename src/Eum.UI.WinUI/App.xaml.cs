@@ -99,7 +99,7 @@ namespace Eum.UI.WinUI
                 DeviceName = "Eum WinUI",
                 DeviceType = DeviceType.Computer,
                 AutoplayEnabled = true,
-                CrossfadeDuration = 15000,
+                CrossfadeDuration = (int)TimeSpan.FromSeconds(10).TotalMilliseconds,
                 LogPath = Path.Combine(dataDir, "Logs_winui.log"),
                 CachePath = dataDir,
                 TimeSyncMethod = TimeSyncMethod.MELODY
@@ -140,6 +140,7 @@ namespace Eum.UI.WinUI
             IRandomAccessStream stream = await Task.Run(async () => await random.OpenReadAsync(), cancellationToken);
             return stream.AsStreamForRead();
         }
+        
     }
 
     public class BetaAvailableServicesProvider : IAvailableServicesProvider

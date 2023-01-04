@@ -44,7 +44,7 @@
 	</ItemGroup>
 	<ItemGroup>
 
-		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.1.0-preview2" />
+		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.1.0-preview3" />
 		<PackageReference Include="CommunityToolkit.WinUI.UI" Version="7.1.2" />
 		<PackageReference Include="CommunityToolkit.WinUI.UI.Animations" Version="7.1.2" />
 		<PackageReference Include="CommunityToolkit.WinUI.UI.Behaviors" Version="7.1.2" />
@@ -52,6 +52,7 @@
 		<PackageReference Include="CommunityToolkit.WinUI.UI.Controls.Media" Version="7.1.2" />
 		<PackageReference Include="CommunityToolkit.WinUI.UI.Media" Version="7.1.2" />
 		<PackageReference Include="Humanizer.Core" Version="2.14.1" />
+		<PackageReference Include="Microsoft.VCRTForwarders.140" Version="1.0.7" />
 		<!--
       Exclude compile time assets so we don't pick up the interop assembly from the WinAppSDK Nuget
       since we are building our own in our WinAppSDK projection project
@@ -61,7 +62,7 @@
 		<PackageReference Include="Microsoft.Xaml.Behaviors.WinUI.Managed" Version="2.0.9" />
 		<PackageReference Include="ReactiveUI.WinUI" Version="18.4.1" />
 		<PackageReference Include="VideoLAN.LibVLC.Windows" Version="3.0.18" />
-		<PackageReference Include="WinUIEx" Version="2.0.0" />
+		<PackageReference Include="WinUIEx" Version="2.1.0" />
 		<Manifest Include="$(ApplicationManifest)" />
 	</ItemGroup>
 
@@ -118,6 +119,9 @@
 		</Page>
 		<Page Update="Views\Search\SearchRootView.xaml">
 		  <Generator>MSBuild:Compile</Generator>
+		</Page>
+		<Page Update="Views\Fullscreen\LyricsRichFullscreenView.xaml">
+			<Generator>MSBuild:Compile</Generator>
 		</Page>
 		<Page Update="Views\Settings\AppSettingsView.xaml">
 		  <Generator>MSBuild:Compile</Generator>

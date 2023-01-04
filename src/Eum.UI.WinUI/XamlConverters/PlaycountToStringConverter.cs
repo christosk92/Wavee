@@ -17,6 +17,7 @@ namespace Eum.UI.WinUI.XamlConverters
         {
             return value switch
             {
+                ulong v=> v > 0 ? $"{v:#,##0}" : "< 1,000",
                 int count => count > 0 ? $"{count:#,##0}" : "< 1,000",
                 long val => val > 0 ? $"{val:#,##0}" : "< 1,000",
                 _ => $"< 1,00"

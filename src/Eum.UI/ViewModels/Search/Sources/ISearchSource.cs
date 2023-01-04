@@ -9,6 +9,7 @@ public interface ISearchSource
 	IObservable<IChangeSet<ISearchItem, ComposedKey>> Changes { get; }
 
     IObservable<IChangeSet<ISearchGroup>> GroupChanges { get; }
+    IObservable<bool> IsBusy { get; }
 }
 
 public interface ISearchGroup : IEquatable<ISearchGroup>

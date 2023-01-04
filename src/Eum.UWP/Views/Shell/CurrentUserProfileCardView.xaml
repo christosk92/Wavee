@@ -71,6 +71,7 @@
                                 </DataTemplate>
                             </ListView.ItemTemplate>
 
+
                             <ListView.Footer>
                                 <StackPanel>
                                     <NavigationViewItemSeparator />
@@ -85,7 +86,7 @@
 
                                     <Button
                                         HorizontalAlignment="Stretch"
-                                        HorizontalContentAlignment="Left"
+                                        HorizontalContentAlignment="Left" Tapped="Settings_tapped"
                                         Background="Transparent"
                                         BorderThickness="0">
                                         <StackPanel Orientation="Horizontal" Spacing="8">

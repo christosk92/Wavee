@@ -8,6 +8,10 @@ public interface IThemeSelectorService
     {
         get;
     }
+    AppTheme ActualTheme
+    {
+        get;
+    }
     string Glaze { get; set; }
     bool GlazeIsCustomColor { get; }
     void SetTheme(AppTheme theme);

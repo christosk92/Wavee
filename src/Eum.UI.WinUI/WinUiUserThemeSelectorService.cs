@@ -50,7 +50,20 @@ public partial class WinUiUserThemeSelectorService : IThemeSelectorService
 
     public AppTheme Theme { get; set; } = AppTheme.SystemDefault;
 
-     
+    public AppTheme ActualTheme
+    {
+        get
+        {
+            return (App.MWindow.Content as FrameworkElement).ActualTheme switch
+            {
+                ElementTheme.Default => AppTheme.Dark,
+                ElementTheme.Light => AppTheme.Light,
+                ElementTheme.Dark => AppTheme.Dark,
+                _ => throw new ArgumentOutOfRangeException()
+            };
+        }
+    }
+
 
     public void SetTheme(AppTheme theme)
     {

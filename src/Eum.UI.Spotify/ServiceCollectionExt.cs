@@ -23,6 +23,8 @@ using Eum.UI.Spotify.ViewModels.Playback;
 using Eum.UI.ViewModels.Playback;
 using Eum.Logging;
 using System.Runtime.InteropServices.ComTypes;
+using Eum.UI.Helpers;
+using Eum.UI.Services.Home;
 
 namespace Eum.UI.Spotify
 {
@@ -35,6 +37,7 @@ namespace Eum.UI.Spotify
             services.AddTransient<ISignInToXViewModel, SignInToSpotifyViewModel>();
             services.AddTransient<SelectProfileViewModel>();
 
+            services.AddSingleton<PersonalizedRecommendationsProvider>();
             services.AddScoped<LoginViewModel>();
             services.AddSingleton(config);
             services.AddSingleton<ISpotifyConnectionProvider, SpotifyConnectionProvider>();
@@ -68,6 +71,12 @@ namespace Eum.UI.Spotify
                 return BuildLoggableClient<ISpotifyUsersClient>(bearerClient);
             });
 
+            services.AddSingleton(provider =>
+            {
+                var v = provider.GetRequiredService<IBearerClient>();
+                return BuildLoggableClient<IViewsClient>(v);
+            });
+            services.AddTransient<IExtractedColorsClient, ExtractedColorClient>();
             services.AddTransient<IArtistClient, ArtistsClientWrapper>()
                 .AddTransient<IMercuryArtistClient, MercuryArtistClient>()
                 .AddSingleton(provider =>
@@ -76,6 +85,7 @@ namespace Eum.UI.Spotify
 
                     return BuildLoggableClient<IOpenArtistClient>(bearerClient);
                 });
+
             services.AddTransient<IAlbumsClient, AlbumsCLientWrapper>()
                 .AddTransient<IMercuryAlbumsClient, MercuryAlbumClient>();
                 // .AddSingleton(provider =>

@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using CommunityToolkit.Mvvm.DependencyInjection;
 using DynamicData;
 using Eum.Connections.Spotify;
@@ -25,7 +26,7 @@ public class SpotifySearchSource : ReactiveObject, ISearchSource, IDisposable
 
     private readonly CompositeDisposable _disposables = new();
     private readonly SourceList<ISearchGroup> _otherGroups = new();
-
+    private readonly Subject<bool> _isBusy;
     public SpotifySearchSource(IObservable<string> queries)
     {
         var sourceCache = new SourceCache<ISearchItem, ComposedKey>(x => x.Key)
@@ -39,8 +40,9 @@ public class SpotifySearchSource : ReactiveObject, ISearchSource, IDisposable
         sourceCache
             .RefillFrom(results)
             .DisposeWith(_disposables);
-
+        _isBusy = new Subject<bool>();
         Changes = sourceCache.Connect();
+
         GroupChanges = _otherGroups
             .Connect()
             .ObserveOn(RxApp.MainThreadScheduler);
@@ -121,12 +123,14 @@ public class SpotifySearchSource : ReactiveObject, ISearchSource, IDisposable
 
     public IObservable<IChangeSet<ISearchItem, ComposedKey>> Changes { get; }
     public IObservable<IChangeSet<ISearchGroup>> GroupChanges { get; }
+    public IObservable<bool> IsBusy => _isBusy;
 
 
-    private static async Task<IEnumerable<ISearchItem>> Search(string query)
+    private async Task<IEnumerable<ISearchItem>> Search(string query)
     {
         try
         {
+            _isBusy.OnNext(true);
             var cl = Ioc.Default.GetRequiredService<ISpotifyClient>();
 
             if (!_caches.TryGetValue(query, out var cached))
@@ -162,6 +166,7 @@ public class SpotifySearchSource : ReactiveObject, ISearchSource, IDisposable
                             .Select(a =>
                                 new SpotifySearchItem(a.Title, a.Description, a.Image, a.Id, category, order1)));
                     }
+
                     order += 1;
                 }
             }
@@ -172,6 +177,10 @@ public class SpotifySearchSource : ReactiveObject, ISearchSource, IDisposable
         {
             S_Log.Instance.LogError(x);
             return Enumerable.Empty<ISearchItem>();
+        }
+        finally
+        {
+            _isBusy.OnNext(false);
         }
     }
 

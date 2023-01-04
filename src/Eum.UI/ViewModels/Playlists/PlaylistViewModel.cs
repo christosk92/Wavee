@@ -23,6 +23,9 @@ using Eum.Users;
 using ReactiveUI;
 using ColorThiefDotNet;
 using Eum.UI.Helpers;
+using Eum.UI.ViewModels.Settings;
+using Eum.Connections.Spotify.Clients.Contracts;
+using Eum.Connections.Spotify.Clients;
 
 namespace Eum.UI.ViewModels.Playlists
 {
@@ -118,7 +121,7 @@ namespace Eum.UI.ViewModels.Playlists
                 default:
                     throw new ArgumentOutOfRangeException();
             }
-        
+
             return default;
         }
 
@@ -138,17 +141,36 @@ namespace Eum.UI.ViewModels.Playlists
         public bool ShouldSetPageGlaze => Ioc.Default.GetRequiredService<MainViewModel>().CurrentUser.User.ThemeService
             .Glaze == "Page Dependent";
 
-        public async ValueTask<string> GetGlazeColor(CancellationToken ct = default)
+        public async ValueTask<string> GetGlazeColor(AppTheme theme, CancellationToken ct = default)
         {
             if (!string.IsNullOrEmpty(Playlist.ImagePath))
             {
-                using var fs = await Ioc.Default.GetRequiredService<IFileHelper>()
-                    .GetStreamForString(Playlist.ImagePath, ct);
-                using var bmp = new Bitmap(fs);
-                var colorThief = new ColorThief();
-                var c = colorThief.GetPalette(bmp);
+                try
+                {
+                    var colorsClient = Ioc.Default.GetRequiredService<IExtractedColorsClient>();
+                    var uri = new Uri(Playlist.ImagePath);
+                    var color = await
+                        colorsClient.GetColors(uri.ToString(), ct);
+                    switch (theme)
+                    {
+                        case AppTheme.Dark:
+                            return color[ColorTheme.Dark];
+                        case AppTheme.Light:
+                            return color[ColorTheme.Light];
+                        default:
+                            throw new ArgumentOutOfRangeException(nameof(theme), theme, null);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    using var fs = await Ioc.Default.GetRequiredService<IFileHelper>()
+                        .GetStreamForString(Playlist.ImagePath, ct);
+                    using var bmp = new Bitmap(fs);
+                    var colorThief = new ColorThief();
+                    var c = colorThief.GetPalette(bmp);
 
-                return c[0].Color.ToHexString();
+                    return c[0].Color.ToHexString();
+                }
             }
 
             return string.Empty;

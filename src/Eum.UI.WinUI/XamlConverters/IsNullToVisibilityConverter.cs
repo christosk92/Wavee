@@ -26,7 +26,7 @@ namespace Eum.UI.WinUI.XamlConverters
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
-            var ifNull = bool.Parse(parameter.ToString());
+            var ifNull = bool.Parse(parameter?.ToString() ?? "false");
             if (value is null)
             {
                 return ifNull;
@@ -36,7 +36,7 @@ namespace Eum.UI.WinUI.XamlConverters
 
         public object ConvertBack(object value, Type targetType, object parameter, string language)
         {
-            var ifNull = bool.Parse(parameter.ToString());
+            var ifNull = bool.Parse(parameter?.ToString() ?? "false");
             return ((bool) value) ? ifNull : !ifNull;
         }
     }

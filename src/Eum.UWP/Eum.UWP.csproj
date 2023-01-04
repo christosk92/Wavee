@@ -127,10 +127,10 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm">
-      <Version>8.0.0</Version>
+      <Version>8.1.0-preview3</Version>
     </PackageReference>
     <PackageReference Include="LiteDB">
-      <Version>5.0.12</Version>
+      <Version>5.0.15</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.AppCenter.Analytics">
       <Version>4.3.0</Version>
@@ -176,6 +176,17 @@
     <PRIResource Include="Strings\en-us\Resources.resw" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Behaviors\AttachedToVisualTreeBehavior.cs" />
+    <Compile Include="Behaviors\DisposingBehavior.cs" />
+    <Compile Include="Behaviors\IDescription.cs" />
+    <Compile Include="Behaviors\ImageShadowBehavior.cs" />
+    <Compile Include="Behaviors\IsPlayingListBehavior.cs" />
+    <Compile Include="Behaviors\LightweightObservableBase.cs" />
+    <Compile Include="Behaviors\PlayingTrackPointerBehavior.cs" />
+    <Compile Include="Behaviors\PropertyObservable.cs" />
+    <Compile Include="Behaviors\ShowSearchPageWhenFocusedBehavior.cs" />
+    <Compile Include="Behaviors\SwallowEnterKeyBehavior.cs" />
+    <Compile Include="Behaviors\TextBoxAutoSelectTextBehavior.cs" />
     <Compile Include="Controls\AspectContentControl.cs" />
     <Compile Include="Controls\BlurredImageBrush.cs" />
     <Compile Include="Controls\BottomPlayerControl.xaml.cs">
@@ -200,7 +211,22 @@
     <Compile Include="IsGridOrVerticalToLoadedConverter.cs" />
     <Compile Include="StreamToBitmapConverter.cs" />
     <Compile Include="TemplateSelectors\NavItemDataTemplateSelector.cs" />
+    <Compile Include="Transitions\ArrayPoolBufferWriter.cs" />
+    <Compile Include="Transitions\ScaleMode.cs" />
+    <Compile Include="Transitions\Side.cs" />
+    <Compile Include="Transitions\T.cs" />
+    <Compile Include="Transitions\TransitionConfig.cs" />
+    <Compile Include="Transitions\TransitionHelper.AttachedProperty.cs" />
+    <Compile Include="Transitions\TransitionHelper.cs" />
+    <Compile Include="Transitions\TransitionHelper.Helpers.cs" />
+    <Compile Include="Transitions\TransitionHelper.Logic.cs" />
+    <Compile Include="Transitions\TransitionHelper.Properties.cs" />
+    <Compile Include="Transitions\TransitionMode.cs" />
+    <Compile Include="Transitions\VisualStateToggleMethod.cs" />
     <Compile Include="ViewLocator.cs" />
+    <Compile Include="Views\Album\AlbumView.xaml.cs">
+      <DependentUpon>AlbumView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Views\Artists\ArtistRootView.xaml.cs">
       <DependentUpon>ArtistRootView.xaml</DependentUpon>
     </Compile>
@@ -220,6 +246,26 @@
     <Compile Include="Views\Playlists\PlaylistView.xaml.cs">
       <DependentUpon>PlaylistView.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Views\Search\SearchFeedLayout.cs" />
+    <Compile Include="Views\Search\SearchGroupView.xaml.cs">
+      <DependentUpon>SearchGroupView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\Search\SearchOverviewView.xaml.cs">
+      <DependentUpon>SearchOverviewView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\Search\SearchRootView.xaml.cs">
+      <DependentUpon>SearchRootView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\Search\SearchTemplateSelector.cs" />
+    <Compile Include="Views\Search\TopHitView.xaml.cs">
+      <DependentUpon>TopHitView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\Settings\AppSettingsView.xaml.cs">
+      <DependentUpon>AppSettingsView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\Settings\SettingsView.xaml.cs">
+      <DependentUpon>SettingsView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Views\Shell\CurrentUserProfileCardView.xaml.cs">
       <DependentUpon>CurrentUserProfileCardView.xaml</DependentUpon>
     </Compile>
@@ -229,7 +275,9 @@
     <Compile Include="WindowContentWrapper.xaml.cs">
       <DependentUpon>WindowContentWrapper.xaml</DependentUpon>
     </Compile>
+    <Compile Include="XamlConverters\AppThemeToStringConverter.cs" />
     <Compile Include="XamlConverters\DeviceToIconConverter.cs" />
+    <Compile Include="XamlConverters\EnumToBooleanConverter.cs" />
     <Compile Include="XamlConverters\IndexToStringConverter.cs" />
     <Compile Include="XamlConverters\IsNullToVisibilityConverter.cs" />
     <Compile Include="XamlConverters\MsToTimeStampConverter.cs" />
@@ -288,6 +336,10 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Views\Album\AlbumView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Include="Views\Artists\ArtistRootView.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -309,6 +361,30 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Include="Views\Playlists\PlaylistView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Views\Search\SearchGroupView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Views\Search\SearchOverviewView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Views\Search\SearchRootView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Views\Search\TopHitView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Views\Settings\AppSettingsView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Views\Settings\SettingsView.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
@@ -335,6 +411,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Assets\amb.png" />
+    <Content Include="Assets\equaliser.gif" />
     <Content Include="Assets\spotify.png" />
     <Content Include="Properties\Default.rd.xml" />
     <Content Include="Assets\LockScreenLogo.scale-200.png" />

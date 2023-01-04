@@ -19,6 +19,10 @@
             Text="{x:Bind ViewModel.SearchBar.SearchText, Mode=OneWay, Converter={StaticResource StringFormatConverter},
             ConverterParameter='Results for \'{0}\''}"/>
 
+        <ProgressBar IsIndeterminate="True" VerticalAlignment="Top" 
+                     Visibility="{x:Bind ViewModel.SearchBar.IsBusy, Mode=OneWay}"
+                     Margin="-24,80"/>
+
         <NavigationView PaneDisplayMode="Top"  Margin="0,34" IsBackButtonVisible="Collapsed"
                         MenuItemsSource="{x:Bind ViewModel.SearchBar.Headers}" ItemInvoked="NavigationView_OnItemInvoked"
                         SelectedItem="{x:Bind ViewModel.SelectedGroup, Mode=OneWay}"

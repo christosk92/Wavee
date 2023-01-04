@@ -6,6 +6,7 @@ using CommunityToolkit.Mvvm.DependencyInjection;
 using DynamicData;
 using Eum.UI.Helpers;
 using Eum.UI.ViewModels.Artists;
+using Eum.UI.ViewModels.Fullscreen;
 using ReactiveUI;
 
 namespace Eum.UI.ViewModels.Navigation;
@@ -32,6 +33,7 @@ public partial class NavigationService
         Instance = this;
     }
     public static NavigationService Instance { get; private set; }
+    public event EventHandler<AbsFullscreenViewModel?> OnFullscreenNavigation;
 
     public bool GoBack()
     {
@@ -163,6 +165,14 @@ public partial class NavigationService
     {
         if (_current != navigateTo || (parameter != null && !parameter.Equals(_lastParameterUsed)))
         {
+            if (navigateTo is AbsFullscreenViewModel f)
+            {
+                OnFullscreenNavigation?.Invoke(this, f);
+            }
+            else
+            {
+                OnFullscreenNavigation?.Invoke(this, null);
+            }
             //_frame.Tag = clearNavigation;
             var vmBeforeNavigation = _current;
             if (_current != null)
@@ -188,7 +198,8 @@ public partial class NavigationService
                     _navigationToken = new CancellationTokenSource();
                     Task.Run(async () =>
                     {
-                        var glazeColor = await glazeablePage.GetGlazeColor(_navigationToken.Token);
+                        var theme = Ioc.Default.GetRequiredService<MainViewModel>().CurrentUser.User.ThemeService.Theme;
+                        var glazeColor = await glazeablePage.GetGlazeColor(theme, _navigationToken.Token);
                         if (!_navigationToken.IsCancellationRequested)
                         {
                             var f = glazeColor.ToColor();
@@ -216,7 +227,7 @@ public partial class NavigationService
             navigateTo.OnNavigatedTo(parameter);
 
             CheckHistory();
-            GC.Collect();
+            //GC.Collect();
             return true;
         }
 

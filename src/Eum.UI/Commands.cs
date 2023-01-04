@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 using CommunityToolkit.Mvvm.Input;
 using Eum.UI.Items;
+using Eum.UI.ViewModels.Album;
 using Eum.UI.ViewModels.Artists;
 using Eum.UI.ViewModels.Navigation;
 
@@ -24,8 +25,19 @@ namespace Eum.UI
 
                 NavigationService.Instance.To(artistViewmodel);
             });
+            
+            ToAlbum = new RelayCommand<ItemId>(id =>
+            {
+                var vm = new AlbumViewModel()
+                {
+                    Id = id
+                };
+
+                NavigationService.Instance.To(vm);
+            });
         }
         public static ICommand ToArtist { get; }
+        public static ICommand ToAlbum { get; }
 
         public static ICommand To(EumEntityType argId)
         {
@@ -33,6 +45,8 @@ namespace Eum.UI
             {
                 case EumEntityType.Artist:
                     return ToArtist;
+                case EumEntityType.Album:
+                    return ToAlbum;
             }
 
             return default;

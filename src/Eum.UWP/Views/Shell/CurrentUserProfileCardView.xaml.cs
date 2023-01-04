@@ -1,5 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.DependencyInjection;
 using Eum.UI.Services.Users;
+using Eum.UI.ViewModels.Navigation;
+using Eum.UI.ViewModels.Settings;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -28,5 +30,9 @@ namespace Eum.UWP.Views.Shell
             this.DataContext = UserViewModel;
         }
         public IEumUserViewModelManager UserViewModel { get; }
+        private void Settings_tapped(object sender, TappedRoutedEventArgs e)
+        {
+            NavigationService.Instance.To(new SettingsViewModel(UserViewModel.CurrentUser.User));
+        }
     }
 }

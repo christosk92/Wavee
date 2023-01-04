@@ -1,0 +1,38 @@
+<!-- Copyright (c) Microsoft Corporation. All rights reserved. -->
+<!-- Licensed under the MIT License. See LICENSE in the project root for license information. -->
+
+<UserControl
+    x:Class="Eum.UWP.Views.Search.SearchRootView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:search="using:Eum.UI.ViewModels.Search"
+    xmlns:sources="using:Eum.UI.ViewModels.Search.Sources"
+    xmlns:controls="using:Microsoft.UI.Xaml.Controls"
+    mc:Ignorable="d">
+
+    <Grid Padding="24">
+        <TextBlock 
+            FontSize="24"
+            FontWeight="SemiBold"
+            Text="{x:Bind ViewModel.SearchBar.SearchText, Mode=OneWay, Converter={StaticResource StringFormatConverter},
+            ConverterParameter='Results for \'{0}\''}"/>
+
+        <controls:NavigationView PaneDisplayMode="Top"  Margin="0,34" IsBackButtonVisible="Collapsed"
+                        MenuItemsSource="{x:Bind ViewModel.SearchBar.Headers}" ItemInvoked="NavigationView_OnItemInvoked"
+                        SelectedItem="{x:Bind ViewModel.SelectedGroup, Mode=OneWay}"
+                        IsSettingsVisible="False">
+            <controls:NavigationView.MenuItemTemplate>
+                <DataTemplate x:DataType="sources:ISearchGroup">
+                    <NavigationViewItem Tag="{x:Bind}" Content="{x:Bind Title}"/>
+                </DataTemplate>
+            </controls:NavigationView.MenuItemTemplate>
+
+            <ContentControl HorizontalContentAlignment="Stretch"
+                            Margin="-24,0"
+                            VerticalContentAlignment="Stretch"
+                            Content="{x:Bind ViewModel.SelectedGroup, Mode=OneWay, Converter={StaticResource ViewLocator}}"/>
+        </controls:NavigationView>
+    </Grid>
+</UserControl>
