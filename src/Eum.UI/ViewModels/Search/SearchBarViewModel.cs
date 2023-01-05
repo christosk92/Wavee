@@ -8,6 +8,7 @@ using Eum.UI.ViewModels.Search.SearchItems;
 using Eum.UI.ViewModels.Search.Sources;
 using ReactiveUI;
 using System.Collections.ObjectModel;
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
 
 namespace Eum.UI.ViewModels.Search;
