@@ -19,6 +19,9 @@
     <None Update="Controls\ImageTransitionControl.xaml">
       <SubType>Designer</SubType>
     </None>
+    <Page Update="Controls\LyricsControl.xaml">
+      <SubType>Designer</SubType>
+    </Page>
     <Page Update="Controls\TopHitView.xaml">
       <SubType>Designer</SubType>
     </Page>

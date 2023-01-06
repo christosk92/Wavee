@@ -24,6 +24,7 @@ using Eum.UI.Services.Users;
 using Eum.UI.Users;
 using WinRT;
 using ColorCode.Compilation.Languages;
+using Eum.Connections.Spotify.Models.Views;
 using Microsoft.UI.Xaml.Shapes;
 
 // To learn more about WinUI, the WinUI project structure,
@@ -88,6 +89,11 @@ namespace Eum.UI.WinUI.Views.Shell
             }
 
             return string.Empty;
+        }
+
+        private void SidebarNavView_OnItemInvoked(NavigationView sender, NavigationViewItemInvokedEventArgs args)
+        {
+            ViewModel.SidePanelView = args.InvokedItemContainer.Tag?.ToString();
         }
     }
 }

@@ -28,9 +28,13 @@ namespace Eum.UI.ViewModels.Playback
         [ObservableProperty]
         private RemoteDevice _externalDevice;
 
+        [ObservableProperty] private bool _isPaused;
+
         [ObservableProperty] private double _timestamp;
 
-        private IDisposable _disposable;
+        private IDisposable _disposable; 
+        private IDisposable _secondDisposable;
+
         private ItemId _activeDeviceId;
 
         protected PlaybackViewModel()
@@ -80,11 +84,18 @@ namespace Eum.UI.ViewModels.Playback
                 }
             }
         }
-
+        
+        public event EventHandler<double> Seeked;
+        public event EventHandler<bool> Paused;
         public event EventHandler<ItemId> ActiveDeviceChanged; 
         protected virtual void OnPlayingItemChanged(ItemId e)
         {
             PlayingItemChanged?.Invoke(this, e);
+        }
+
+        protected virtual void OnSeeked(double e)
+        {
+            Seeked?.Invoke(this, e);
         }
     }
 

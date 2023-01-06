@@ -84,7 +84,7 @@ namespace Eum.UI.WinUI
             var path = Path.Combine(dataDir, "data.db");
             var dbstring = $"filename={path}; journal=false";
             var db = new LiteDatabase(dbstring);
-            
+
             serviceCollection.AddTransient<IFileHelper, WinUI_RandomAccessStream>();
             serviceCollection.AddSingleton<ILiteDatabase>(db);
             serviceCollection.AddTransient<ITrackAggregator, TrackAggregator>();
@@ -99,7 +99,8 @@ namespace Eum.UI.WinUI
             serviceCollection.AddTransient<IErrorMessageShower, WinUI_ErrorMessageShower>();
             serviceCollection.AddTransient<IThemeSelectorServiceFactory, WinUiThemeSelectorServiceFactory>();
 
-                serviceCollection.AddSpotify(new SpotifyConfig
+            serviceCollection.AddTransient<ILyricsProvider, LyricsProvider>();
+            serviceCollection.AddSpotify(new SpotifyConfig
             {
                 AudioQuality = AudioQuality.VERY_HIGH,
                 DeviceName = "Eum WinUI",
@@ -145,7 +146,7 @@ namespace Eum.UI.WinUI
             IRandomAccessStream stream = await Task.Run(async () => await random.OpenReadAsync(), cancellationToken);
             return stream.AsStreamForRead();
         }
-        
+
     }
 
     public class BetaAvailableServicesProvider : IAvailableServicesProvider

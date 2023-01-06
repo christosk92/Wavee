@@ -89,24 +89,31 @@
                     </SplitView.Content>
                     <SplitView.Pane>
                         <Border 
+
                             Background="{ThemeResource LayerFillColorDefaultBrush}"
                             CornerRadius="0,8,8,0"
                             BorderThickness="1,1,0,1"
                             BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
 
                             <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition/>
+                                </Grid.RowDefinitions>
                                 <NavigationView IsBackButtonVisible="Visible"
                                                 x:Name="SidebarNavView"
                                                 SelectedItem="{x:Bind GetSelectedItem(ViewModel.SidePanelView), Mode=OneWay}"
+                                                ItemInvoked="SidebarNavView_OnItemInvoked"
                                                 Margin="-4,0,0,0"  IsBackEnabled="True" BackRequested="Sidepanel_CloseRequested" IsSettingsVisible="False" 
                                                 PaneDisplayMode="Top">
                                     <NavigationView.MenuItems>
-                                        <NavigationViewItem FontWeight="Bold">
+                                        <NavigationViewItem Tag="lyrics" FontWeight="Bold">
                                             <NavigationViewItem.Icon>
                                                 <FontIcon FontSize="14" FontFamily="Segoe Fluent Icons" Glyph="&#xE1D6;" />
                                             </NavigationViewItem.Icon>
                                         </NavigationViewItem>
-                                        <NavigationViewItem  FontWeight="Bold">
+                                        <NavigationViewItem  Tag="queue" FontWeight="Bold">
                                             <NavigationViewItem.Icon>
                                                 <FontIcon FontSize="14" FontFamily="/Assets/MediaPlayerIcons.ttf#Media Player Fluent Icons"  Glyph="&#xE93F;" />
                                             </NavigationViewItem.Icon>
@@ -119,16 +126,13 @@
                                         </NavigationViewItem>
                                     </NavigationView.MenuItems>
                                 </NavigationView>
+                                <TextBlock
+                                    Margin="12,12,0,0"
+                                    Grid.Row="1"  Text="{x:Bind GetTitle(ViewModel.SidePanelView), Mode=OneWay}" FontSize="24" FontWeight="SemiBold"/>
 
-                                <Grid Margin="12,48">
-                                    <TextBlock  Text="{x:Bind GetTitle(ViewModel.SidePanelView), Mode=OneWay}" Margin="0,12" FontSize="24" FontWeight="SemiBold"/>
-
-                                    <TextBlock  VerticalAlignment="Center"  
-                                                HorizontalTextAlignment="Center"
-                                                FontWeight="SemiBold" FontSize="16"
-                                                Text="You caught us on this one... &#x0a;Lyrics are not available." 
-                                                TextWrapping="Wrap"/>
-                                </Grid>
+                                <controls:LyricsControl
+                                    Margin="0,12,0,0"
+                                    Grid.Row="2" Item="{x:Bind ViewModel.PlaybackViewModel.Item.Id, Mode=OneWay}"/>
                             </Grid>
                         </Border>
                     </SplitView.Pane>

@@ -121,8 +121,7 @@ public class SpotifyPlaybackViewModel : PlaybackViewModel
             int diff = (int)(_spotifyClient.TimeProvider.CurrentTimeMillis() - e.Cluster.PlayerState.Timestamp);
             var initial = Math.Max(0, (int)(e.Cluster.PlayerState.PositionAsOfTimestamp + diff));
             StartTimer(initial);
-
-
+            OnSeeked(initial);
             PlayingOnExternalDevice = !string.IsNullOrEmpty(e.Cluster.ActiveDeviceId) && e.Cluster.ActiveDeviceId != _spotifyClient
                 .Config.DeviceId;
             if (PlayingOnExternalDevice)
