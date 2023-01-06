@@ -8,7 +8,6 @@ using Eum.UI.Services.Tracks;
 using Eum.UI.ViewModels.Artists;
 using Eum.Spotify.metadata;
 using Eum.UI.ViewModels.Playback;
-using MoreLinq.Extensions;
 
 namespace Eum.UI.Services.Albums
 {
@@ -28,6 +27,10 @@ namespace Eum.UI.Services.Albums
 
     public class EumAlbum
     {
+        public EumAlbum()
+        {
+
+        }
         public EumAlbum(MercuryAlbum album, CachedImage[] uploadImages)
         {
             Name = album.Name;
@@ -40,6 +43,7 @@ namespace Eum.UI.Services.Albums
 
             Images = uploadImages;
             AlbumType = album.Type;
+            Id = new ItemId(album.Uri.Uri);
         }
 
         public EumAlbum(CachedAlbum cachedAlbum)
@@ -67,17 +71,17 @@ namespace Eum.UI.Services.Albums
                 {
                     DiscNumber = a.Key
                 }).ToArray();
-
+            Id = new ItemId(cachedAlbum.Id);
             IsCache = true;
             AlbumType = cachedAlbum.AlbumType ?? "ALBUM";
         }
 
         public bool IsCache { get; }
-        public string Name { get; }
-        public CachedImage[] Images { get; }
+        public string Name { get; init; }
+        public CachedImage[] Images { get; init; }
         public EumDisc[] Discs { get; }
-
-        public IdWithTitle[] Artists => Discs.SelectMany(a => a.SelectMany(z => z.Artists.Select(k => new IdWithTitle
+        public IdWithTitle[]? ArtistsOverride { get; init; }
+        public IdWithTitle[] Artists => ArtistsOverride ?? Discs.SelectMany(a => a.SelectMany(z => z.Artists.Select(k => new IdWithTitle
             {
                 Id = new ItemId(k.Uri.Uri),
                 Title = k.Name
@@ -85,5 +89,6 @@ namespace Eum.UI.Services.Albums
             .DistinctBy(a => a.Id.Uri).ToArray();
 
         public string AlbumType { get; }
+        public ItemId Id { get; set; }
     }
 }

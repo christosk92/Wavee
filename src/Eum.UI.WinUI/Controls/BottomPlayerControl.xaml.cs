@@ -27,6 +27,7 @@ namespace Eum.UI.WinUI.Controls
     public sealed partial class BottomPlayerControl : UserControl
     {
         public static readonly DependencyProperty ViewModelProperty = DependencyProperty.Register(nameof(ViewModel), typeof(PlaybackViewModel), typeof(BottomPlayerControl), new PropertyMetadata(default(PlaybackViewModel)));
+        public static readonly DependencyProperty CommandBarProperty = DependencyProperty.Register(nameof(CommandBar), typeof(CommandBar), typeof(BottomPlayerControl), new PropertyMetadata(default(CommandBar)));
 
         public BottomPlayerControl()
         {
@@ -39,11 +40,19 @@ namespace Eum.UI.WinUI.Controls
             set => SetValue(ViewModelProperty, value);
         }
 
+        public CommandBar CommandBar
+        {
+            get => (CommandBar) GetValue(CommandBarProperty);
+            set => SetValue(CommandBarProperty, value);
+        }
+
         private async void ListViewBase_OnItemClick(object sender, ItemClickEventArgs e)
         {
             var clickedDevice = e.ClickedItem as RemoteDevice;
 
             await ViewModel.SwitchRemoteDevice(clickedDevice.DeviceId);
         }
+
+    
     }
 }

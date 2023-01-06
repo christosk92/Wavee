@@ -1,25 +1,34 @@
 using System;
 using System.Collections.Concurrent;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.Foundation.Collections;
 using Windows.Media.Core;
 using Windows.Media.Effects;
 using Windows.Media.Playback;
+using Windows.Storage;
+using Windows.Storage.Streams;
+using CommunityToolkit.WinUI;
 using Eum.Connections.Spotify.Playback.Audio.Streams;
 using Eum.Connections.Spotify.Playback.Enums;
 using Eum.Connections.Spotify.Playback.Player;
 using Eum.Logging;
+using Microsoft.UI.Dispatching;
+using Microsoft.UI.Xaml.Controls;
 using WinRTLibrary;
 
 namespace Eum.UI.WinUI
 {
     public class VorbisHolder : IDisposable
     {
+        public MediaPlayerElement MediaPlayerElement { get; init; }
         public MediaSource Source { get; set; }
-        public MediaPlayer Player { get; set; }
+        public MediaPlayer Player => MediaPlayerElement.MediaPlayer;
         public PropertySet Properties { get; set; }
+        public AbsChunkedInputStream stream { get; set; }
+        public IRandomAccessStream r { get; set; }
 
         public CancellationTokenSource _CancellationToken;
 
@@ -33,6 +42,12 @@ namespace Eum.UI.WinUI
     public class WinUIMediaPlayer : IAudioPlayer
     {
         private ConcurrentDictionary<string, VorbisHolder> _holders = new ConcurrentDictionary<string, VorbisHolder>();
+        private DispatcherQueue dispatcherQueue;
+
+        public WinUIMediaPlayer()
+        {
+            dispatcherQueue = DispatcherQueue.GetForCurrentThread();
+        }
         public ValueTask Pause(string playbackId, bool releaseResources)
         {
             if (_holders.TryGetValue(playbackId, out var item))
@@ -53,60 +68,76 @@ namespace Eum.UI.WinUI
             return new ValueTask();
         }
 
-        public ValueTask InitStream(SuperAudioFormat codec, AbsChunkedInputStream audioStreamStream, float normalizationFactor,
+        public async ValueTask InitStream(SuperAudioFormat codec, AbsChunkedInputStream audioStreamStream, float normalizationFactor,
             int duration, string playbackId, long playFrom)
         {
             try
             {
-                var m = MediaSource.CreateFromStream(audioStreamStream.AsRandomAccessStream(),
-                    "audio/ogg");
-                m.CustomProperties.Add("stream", audioStreamStream);
-
-                var newMediaPlayer = new MediaPlayer();
-                newMediaPlayer.Source = m;
-
-                newMediaPlayer.PlaybackSession.Position = TimeSpan.FromMilliseconds(playFrom);
-
-                var echoProperties = new PropertySet
+                MediaPlayer mp = default;
+                await dispatcherQueue.EnqueueAsync(async () =>
                 {
-                    {"Gain", 1f}
-                };
-                var newHolder = new VorbisHolder
-                {
-                    _CancellationToken = new CancellationTokenSource(),
-                    Player = newMediaPlayer,
-                    Source = m,
-                    Properties = echoProperties,
-                };
-                newMediaPlayer.MediaFailed += NewMediaPlayerOnMediaFailed;
-               // var echoEffectDefinition = new AudioEffectDefinition(typeof(GainAudioEffect).FullName, echoProperties);
-               // newMediaPlayer.AddAudioEffect(typeof(GainAudioEffect).FullName, false, echoProperties);
-               //
-               //  newMediaPlayer.MediaFailed += (sender, args) =>
-               //  {
-               //      var t = args.ExtendedErrorCode;
-               //      var j = args.Error;
-               //      var k = args.ErrorMessage;
-               //  };
-                _holders[playbackId] = newHolder;
-                newMediaPlayer.Play();
+                    var r = audioStreamStream.AsRandomAccessStream();
+                    var m = MediaSource.CreateFromStream(r, "audio/ogg");
+                  //  var m = MediaSource.CreateFromStorageFile(await StorageFile.GetFileFromPathAsync(Path.Combine(ApplicationData.Current.LocalFolder.Path, "test.mp3")));
+                      m.CustomProperties.Add("stream", audioStreamStream);
+                    var player = new MediaPlayerElement();
+                    mp = new MediaPlayer();
+                    player.SetMediaPlayer(mp);
+                    // player.Source = m;
 
+
+                    var item = new Windows.Media.Playback.MediaPlaybackItem(m!);
+                    player.MediaPlayer.Source = item;
+                    
+                    player.MediaPlayer.PlaybackSession.Position = TimeSpan.FromMilliseconds(playFrom);
+
+                    var echoProperties = new PropertySet
+                    {
+                        {"Gain", 1f}
+                    };
+                    var newHolder = new VorbisHolder
+                    {
+                        _CancellationToken = new CancellationTokenSource(),
+                        MediaPlayerElement = player,
+                        Source = m,
+                        Properties = echoProperties,
+                        stream = audioStreamStream,
+                      //  r = r,
+                    };
+                    player.MediaPlayer.MediaFailed += NewMediaPlayerOnMediaFailed;
+                    // var echoEffectDefinition = new AudioEffectDefinition(typeof(GainAudioEffect).FullName, echoProperties);
+                    // newMediaPlayer.AddAudioEffect(typeof(GainAudioEffect).FullName, false, echoProperties);
+                    //
+                    //  newMediaPlayer.MediaFailed += (sender, args) =>
+                    //  {
+                    //      var t = args.ExtendedErrorCode;
+                    //      var j = args.Error;
+                    //      var k = args.ErrorMessage;
+                    //  };
+                    _holders[playbackId] = newHolder;
+                    //   player.MediaPlayer.CurrentStateChanged += MediaPlayerOnCurrentStateChanged;
+
+                    player.MediaPlayer.Play();
+
+                }, DispatcherQueuePriority.High);
                 // wait here until playback stops or should stop
                 Task.Run(async () =>
                 {
-                    while (newMediaPlayer.CurrentState != MediaPlayerState.Stopped &&
-                           !newHolder._CancellationToken.IsCancellationRequested)
+
+                    while (mp.CurrentState != MediaPlayerState.Stopped &&
+                           !_holders[playbackId]._CancellationToken.IsCancellationRequested)
                     {
                         try
                         {
-                            await Task.Delay(100, newHolder._CancellationToken.Token);
+                            await Task.Delay(100, _holders[playbackId]._CancellationToken.Token);
                             TimeChanged?.Invoke(this,
-                                (playbackId, (int) newMediaPlayer.PlaybackSession.Position.TotalMilliseconds));
+                                (playbackId,
+                                    (int)mp.PlaybackSession.Position.TotalMilliseconds));
                         }
                         catch (Exception x)
                         {
                             S_Log.Instance.LogError(x);
-                            if (newHolder._CancellationToken.IsCancellationRequested)
+                            if (_holders[playbackId]._CancellationToken.IsCancellationRequested)
                             {
                                 break;
                             }
@@ -115,7 +146,6 @@ namespace Eum.UI.WinUI
 
                     TrackFinished?.Invoke(this, playbackId);
                 });
-                return new ValueTask();
             }
             catch (Exception x)
             {
@@ -124,6 +154,31 @@ namespace Eum.UI.WinUI
             }
         }
 
+        // private void MediaPlayerOnCurrentStateChanged(MediaPlayer sender, object args)
+        // {
+        //     var getPlayer = _holders.FirstOrDefault(a => a.Value.Player == sender);
+        //     if (getPlayer.Key != null)
+        //     {
+        //         switch (getPlayer.Value.Player.CurrentState)
+        //         {
+        //             case MediaPlayerState.Closed:
+        //                 break;
+        //             case MediaPlayerState.Opening:
+        //                 break;
+        //             case MediaPlayerState.Buffering:
+        //                 break;
+        //             case MediaPlayerState.Playing:
+        //                 break;
+        //             case MediaPlayerState.Paused:
+        //                 break;
+        //             case MediaPlayerState.Stopped:
+        //                 break;
+        //             default:
+        //                 throw new ArgumentOutOfRangeException();
+        //         }
+        //     }
+        // }
+
         private void NewMediaPlayerOnMediaFailed(MediaPlayer sender, MediaPlayerFailedEventArgs args)
         {
             S_Log.Instance.LogError(args.ExtendedErrorCode);
@@ -131,11 +186,11 @@ namespace Eum.UI.WinUI
             S_Log.Instance.LogError(args.Error.ToString());
         }
 
-        public int Time(string playbackId)
+        public async ValueTask<int> Time(string playbackId)
         {
             if (_holders.TryGetValue(playbackId, out var item))
             {
-                return (int)item.Player.PlaybackSession.Position.TotalMilliseconds;
+               return await dispatcherQueue.EnqueueAsync(() => (int) item.Player.PlaybackSession.Position.TotalMilliseconds);
             }
 
             return -1;
@@ -149,6 +204,9 @@ namespace Eum.UI.WinUI
                 item.Dispose();
                 item._CancellationToken.Cancel();
                 item._CancellationToken.Dispose();
+                item.stream.Dispose();
+                item.r.Dispose();
+
             }
         }
 

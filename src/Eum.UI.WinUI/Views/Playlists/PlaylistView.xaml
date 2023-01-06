@@ -19,11 +19,6 @@
     xmlns:ui="using:CommunityToolkit.WinUI.UI"
     xmlns:xamlConverters="using:Eum.UI.WinUI.XamlConverters"
     mc:Ignorable="d">
-    <UserControl.Transitions>
-        <TransitionCollection>
-            <EntranceThemeTransition />
-        </TransitionCollection>
-    </UserControl.Transitions>
     <UserControl.Resources>
         <Style x:Key="TransparentTextBox" TargetType="TextBox">
             <Setter Property="Background" Value="Transparent" />
@@ -422,6 +417,11 @@
             ItemTemplate="{StaticResource PlaylistTrackTemplate}"
             ItemsSource="{x:Bind ViewModel.Tracks}"
             SelectionMode="Extended">
+            <ListView.Transitions>
+                <TransitionCollection>
+                    <EntranceThemeTransition />
+                </TransitionCollection>
+            </ListView.Transitions>
             <interactivity:Interaction.Behaviors>
                 <behaviors:IsPlayingListBehavior />
             </interactivity:Interaction.Behaviors>

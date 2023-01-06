@@ -1147,7 +1147,7 @@
                                     <!--  Top footer menu ItemsRepeater  -->
                                     <ItemsRepeater
                                         x:Name="TopFooterMenuItemsHost"
-                                        Grid.Column="8"
+                                        Grid.Column="8" VerticalAlignment="Top"
                                         AutomationProperties.AccessibilityView="Content"
                                         AutomationProperties.LandmarkType="Navigation">
                                         <ItemsRepeater.Layout>
@@ -1306,18 +1306,20 @@
                                                 VerticalContentAlignment="Stretch"
                                                 IsTabStop="False" />
                                             <!--  FooterItems  -->
-                                            <ItemsRepeaterScrollHost Grid.Row="3">
-                                                <ScrollViewer
+                                            <ItemsRepeaterScrollHost  
+                                                VerticalAlignment="Top" Grid.Row="1">
+                                                <ScrollViewer  VerticalAlignment="Top"
                                                     x:Name="FooterItemsScrollViewer"
                                                     BringIntoViewOnFocusChange="False"
                                                     VerticalAnchorRatio="1"
                                                     VerticalScrollBarVisibility="Auto">
                                                     <ItemsRepeater
+                                                        VerticalAlignment="Top"
                                                         x:Name="FooterMenuItemsHost"
                                                         AutomationProperties.AccessibilityView="Content"
                                                         VerticalCacheLength="1000">
                                                         <ItemsRepeater.Layout>
-                                                            <StackLayout />
+                                                            <StackLayout  />
                                                         </ItemsRepeater.Layout>
                                                     </ItemsRepeater>
                                                 </ScrollViewer>

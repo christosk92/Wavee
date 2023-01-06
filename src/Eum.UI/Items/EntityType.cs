@@ -10,5 +10,6 @@ public enum EumEntityType
     Episode = 6, 
     Playlist =7, 
     Collection =8,
-    User = 9
+    User = 9,
+    Device = 11,
 }

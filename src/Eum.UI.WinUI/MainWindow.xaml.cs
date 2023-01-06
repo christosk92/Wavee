@@ -10,6 +10,7 @@ using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Navigation;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -62,14 +63,15 @@ namespace Eum.UI.WinUI
     /// </summary>
     public sealed partial class MainWindow : Window
     {
+        Stopwatch stopwatch = Stopwatch.StartNew();
+        int frameCount = 0;
+
         public MainWindow()
         {
             this.InitializeComponent();
             this.ExtendsContentIntoTitleBar = true;
             TrySetMicaBackdrop();
         }
-
-
         WindowsSystemDispatcherQueueHelper m_wsdqHelper; // See separate sample below for implementation
         Microsoft.UI.Composition.SystemBackdrops.MicaController m_micaController;
         Microsoft.UI.Composition.SystemBackdrops.SystemBackdropConfiguration m_configurationSource;

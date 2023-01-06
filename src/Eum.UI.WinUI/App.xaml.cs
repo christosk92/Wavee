@@ -52,6 +52,9 @@ using Eum.Connections.Spotify.NAudio;
 using Eum.UI.Helpers;
 using Color = Windows.UI.Color;
 using Eum.UI.Services.Albums;
+using Windows.ApplicationModel.DataTransfer;
+using LiteDB.Engine;
+using Eum.UI.WinUI.Services;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -78,8 +81,10 @@ namespace Eum.UI.WinUI
             serviceCollection.AddSingleton<IEumPlaylistManager, EumPlaylistManager>();
             serviceCollection.AddSingleton<IEumUserPlaylistViewModelManager, EumPlaylistViewModelManager>();
 
-            var db = new LiteDatabase(Path.Combine(dataDir, "data.db"));
-
+            var path = Path.Combine(dataDir, "data.db");
+            var dbstring = $"filename={path}; journal=false";
+            var db = new LiteDatabase(dbstring);
+            
             serviceCollection.AddTransient<IFileHelper, WinUI_RandomAccessStream>();
             serviceCollection.AddSingleton<ILiteDatabase>(db);
             serviceCollection.AddTransient<ITrackAggregator, TrackAggregator>();
@@ -90,7 +95,8 @@ namespace Eum.UI.WinUI
             //serviceCollection.AddTransient<IUsersService, UsersService>();
             serviceCollection.AddTransient<IAvailableServicesProvider, BetaAvailableServicesProvider>();
             serviceCollection.AddSingleton<ICommonDirectoriesProvider>(new CommonDirectoriesProvider(dataDir));
-
+            serviceCollection.AddTransient<IPlaybackService, PlaybackService>();
+            serviceCollection.AddTransient<IErrorMessageShower, WinUI_ErrorMessageShower>();
             serviceCollection.AddTransient<IThemeSelectorServiceFactory, WinUiThemeSelectorServiceFactory>();
 
                 serviceCollection.AddSpotify(new SpotifyConfig
@@ -103,13 +109,12 @@ namespace Eum.UI.WinUI
                 LogPath = Path.Combine(dataDir, "Logs_winui.log"),
                 CachePath = dataDir,
                 TimeSyncMethod = TimeSyncMethod.MELODY
-            }, new NAudioPlayer());
+            }, new EumVlcPlayer());
 
             this.UnhandledException += OnUnhandledException;
             Ioc.Default.ConfigureServices(serviceCollection.BuildServiceProvider());
             this.InitializeComponent();
         }
-
         private void OnUnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
             S_Log.Instance.LogError(e.Message);

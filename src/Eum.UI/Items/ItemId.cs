@@ -77,6 +77,7 @@ public readonly struct ItemId : IComparable<ItemId>, IEquatable<ItemId>
             "collection" => 8,
             "user" => 9,
             "local" => 10,
+            "device" => 11,
             _ => 0,
         };
     }
@@ -87,6 +88,7 @@ public readonly struct ItemId : IComparable<ItemId>, IEquatable<ItemId>
         {
             "local" => 0,
             "spotify" => 1,
+            "apple" => 2,
             _ => 0,
         };
     }

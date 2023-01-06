@@ -31,6 +31,8 @@ namespace Eum.UI.ViewModels.Playback
         [ObservableProperty] private double _timestamp;
 
         private IDisposable _disposable;
+        private ItemId _activeDeviceId;
+
         protected PlaybackViewModel()
         {
         }
@@ -63,15 +65,30 @@ namespace Eum.UI.ViewModels.Playback
         }
 
         public event EventHandler<ItemId> PlayingItemChanged; 
-        public abstract Task SwitchRemoteDevice(string deviceId);
+        public abstract Task SwitchRemoteDevice(ItemId? deviceId);
 
+        public ItemId ActiveDeviceId
+        {
+            get => _activeDeviceId;
+            protected set
+            {
+                if (_activeDeviceId != value)
+                {
+                    OnPropertyChanged(nameof(ActiveDeviceId));
+                    _activeDeviceId = value;
+                    ActiveDeviceChanged?.Invoke(this, value);
+                }
+            }
+        }
+
+        public event EventHandler<ItemId> ActiveDeviceChanged; 
         protected virtual void OnPlayingItemChanged(ItemId e)
         {
             PlayingItemChanged?.Invoke(this, e);
         }
     }
 
-    public record RemoteDevice(string DeviceId, string DeviceName, DeviceType Devicetype, ServiceType Service);
+    public record RemoteDevice(ItemId DeviceId, string DeviceName, DeviceType Devicetype);
 
 
     public record CurrentlyPlayingHolder : IDisposable

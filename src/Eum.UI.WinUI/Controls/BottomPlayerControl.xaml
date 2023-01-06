@@ -203,42 +203,9 @@
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition />
                         </Grid.ColumnDefinitions>
-                        <CommandBar Grid.ColumnSpan="2" Background="Transparent">
-                            <AppBarButton Width="38">
-                                <AppBarButton.Icon>
-                                    <FontIcon FontFamily="/Assets/MediaPlayerIcons.ttf#Media Player Fluent Icons" Glyph="&#xE93F;" />
-                                </AppBarButton.Icon>
-                            </AppBarButton>
-                            <AppBarButton x:Name="DevicesBt" Width="38">
-                                <AppBarButton.Flyout>
-                                    <Flyout>
-                                        <ListView
-                                            IsItemClickEnabled="True"
-                                            ItemClick="ListViewBase_OnItemClick"
-                                            ItemsSource="{x:Bind ViewModel.RemoteDevices}"
-                                            SelectedItem="{x:Bind ViewModel.ExternalDevice, Mode=OneWay}">
-                                            <ListView.ItemTemplate>
-                                                <DataTemplate x:DataType="playback:RemoteDevice">
-                                                    <StackPanel Orientation="Horizontal" Spacing="8">
-                                                        <FontIcon Glyph="{x:Bind Devicetype, Converter={StaticResource DeviceToIconConverter}}" />
-                                                        <TextBlock Text="{x:Bind DeviceName}" />
-                                                    </StackPanel>
-                                                </DataTemplate>
-                                            </ListView.ItemTemplate>
-                                        </ListView>
-                                    </Flyout>
-                                </AppBarButton.Flyout>
-                                <AppBarButton.Icon>
-                                    <FontIcon FontFamily="/Assets/MediaPlayerIcons.ttf#Media Player Fluent Icons" Glyph="&#xEC15;" />
-                                </AppBarButton.Icon>
-                            </AppBarButton>
-                            <AppBarButton Width="38">
-                                <AppBarButton.Icon>
-                                    <FontIcon FontFamily="/Assets/MediaPlayerIcons.ttf#Media Player Fluent Icons" Glyph="&#xE740;" />
-                                </AppBarButton.Icon>
-                            </AppBarButton>
-                        </CommandBar>
-
+                        <ContentControl Grid.ColumnSpan="2"
+                                        Content="{x:Bind CommandBar, Mode=OneWay}"/>
+                   
                         <Button
                             x:Name="VolumeButton"
                             Grid.Row="1"

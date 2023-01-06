@@ -9,11 +9,12 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="using:Eum.UI.WinUI.Views.Shell"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:playback="using:Eum.UI.ViewModels.Playback"
     mc:Ignorable="d">
 
     <UserControl.Transitions>
         <TransitionCollection>
-            <EntranceThemeTransition />
+            <EntranceThemeTransition  />
         </TransitionCollection>
     </UserControl.Transitions>
     <Grid>
@@ -21,6 +22,7 @@
             <SolidColorBrush Color="{x:Bind ViewModel.Glaze, Mode=OneWay}" />
         </Grid.Background>
         <controls:SidebarControl
+            x:Name="SidebarControl"
             SearchBar="{x:Bind ViewModel.SearchBar, Mode=OneWay}"
             ItemInvoked="NavigationView_OnItemInvoked" User="{x:Bind UserManager.CurrentUser, Mode=OneWay}">
             <controls:SidebarControl.TabContent>
@@ -36,15 +38,101 @@
                 </Grid>
             </controls:SidebarControl.TabContent>
             <Grid>
-                <ContentControl
-                    HorizontalContentAlignment="Stretch"
-                    VerticalContentAlignment="Stretch"
-                    Content="{x:Bind ViewModel.MainScreen.Current, Mode=OneWay, Converter={StaticResource ViewLocator}}" />
+                <SplitView PaneBackground="{ThemeResource LayerFillColorDefaultBrush}"
+                           IsPaneOpen="{x:Bind ViewModel.ShouldShowSidePanel, Mode=OneWay}" DisplayMode="Inline" 
+                           OpenPaneLength="280" 
+                           PanePlacement="Right" x:Name="Spl" >
+                    <SplitView.Content>
+                        <Grid>
+                            <ContentControl
+                               HorizontalContentAlignment="Stretch"
+                               VerticalContentAlignment="Stretch"
+                               Content="{x:Bind ViewModel.MainScreen.Current, Mode=OneWay, Converter={StaticResource ViewLocator}}" />
 
-                <controls:BottomPlayerControl
-                    Margin="12,30,12,16"
-                    VerticalAlignment="Bottom"
-                    ViewModel="{x:Bind ViewModel.PlaybackViewModel, Mode=OneWay}" />
+                            <controls:BottomPlayerControl 
+                               Margin="12,30,12,16"
+                               VerticalAlignment="Bottom"
+                               ViewModel="{x:Bind ViewModel.PlaybackViewModel, Mode=OneWay}" >
+                                <controls:BottomPlayerControl.CommandBar>
+                                    <CommandBar Background="Transparent">
+                                        <AppBarToggleButton Width="38"
+                                                             IsChecked="{x:Bind IsSidePanelView(ViewModel.SidePanelView, 'lyrics'), Mode=OneWay}"
+                                                            Command="{x:Bind ViewModel.ShowSidePanelCommand}"
+                                                            CommandParameter="lyrics">
+                                            <AppBarToggleButton.Icon>
+                                                <FontIcon Glyph="&#xE1D6;" />
+                                            </AppBarToggleButton.Icon>
+                                        </AppBarToggleButton>
+                                        <AppBarToggleButton Width="38"
+                                                            IsChecked="{x:Bind IsSidePanelView(ViewModel.SidePanelView, 'queue'), Mode=OneWay}"
+                                                            Command="{x:Bind ViewModel.ShowSidePanelCommand}"
+                                                            CommandParameter="queue">
+                                            <AppBarToggleButton.Icon>
+                                                <FontIcon FontFamily="/Assets/MediaPlayerIcons.ttf#Media Player Fluent Icons" Glyph="&#xE93F;" />
+                                            </AppBarToggleButton.Icon>
+                                        </AppBarToggleButton>
+                                        <AppBarButton x:Name="DevicesBt" Width="38">
+                                            <AppBarButton.Icon>
+                                                <FontIcon FontFamily="/Assets/MediaPlayerIcons.ttf#Media Player Fluent Icons" Glyph="&#xEC15;" />
+                                            </AppBarButton.Icon>
+                                        </AppBarButton>
+                                        <AppBarButton Width="38">
+                                            <AppBarButton.Icon>
+                                                <FontIcon FontFamily="/Assets/MediaPlayerIcons.ttf#Media Player Fluent Icons" Glyph="&#xE740;" />
+                                            </AppBarButton.Icon>
+                                        </AppBarButton>
+                                    </CommandBar>
+
+                                </controls:BottomPlayerControl.CommandBar>
+                            </controls:BottomPlayerControl>
+                        </Grid>
+                    </SplitView.Content>
+                    <SplitView.Pane>
+                        <Border 
+                            Background="{ThemeResource LayerFillColorDefaultBrush}"
+                            CornerRadius="0,8,8,0"
+                            BorderThickness="1,1,0,1"
+                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
+
+                            <Grid>
+                                <NavigationView IsBackButtonVisible="Visible"
+                                                x:Name="SidebarNavView"
+                                                SelectedItem="{x:Bind GetSelectedItem(ViewModel.SidePanelView), Mode=OneWay}"
+                                                Margin="-4,0,0,0"  IsBackEnabled="True" BackRequested="Sidepanel_CloseRequested" IsSettingsVisible="False" 
+                                                PaneDisplayMode="Top">
+                                    <NavigationView.MenuItems>
+                                        <NavigationViewItem FontWeight="Bold">
+                                            <NavigationViewItem.Icon>
+                                                <FontIcon FontSize="14" FontFamily="Segoe Fluent Icons" Glyph="&#xE1D6;" />
+                                            </NavigationViewItem.Icon>
+                                        </NavigationViewItem>
+                                        <NavigationViewItem  FontWeight="Bold">
+                                            <NavigationViewItem.Icon>
+                                                <FontIcon FontSize="14" FontFamily="/Assets/MediaPlayerIcons.ttf#Media Player Fluent Icons"  Glyph="&#xE93F;" />
+                                            </NavigationViewItem.Icon>
+                                        </NavigationViewItem>
+                                        <NavigationViewItem 
+                                           FontWeight="Bold">
+                                            <NavigationViewItem.Icon>
+                                                <FontIcon FontSize="14" FontFamily="Segoe Fluent Icons" Glyph="&#xED54;" />
+                                            </NavigationViewItem.Icon>
+                                        </NavigationViewItem>
+                                    </NavigationView.MenuItems>
+                                </NavigationView>
+
+                                <Grid Margin="12,48">
+                                    <TextBlock  Text="{x:Bind GetTitle(ViewModel.SidePanelView), Mode=OneWay}" Margin="0,12" FontSize="24" FontWeight="SemiBold"/>
+
+                                    <TextBlock  VerticalAlignment="Center"  
+                                                HorizontalTextAlignment="Center"
+                                                FontWeight="SemiBold" FontSize="16"
+                                                Text="You caught us on this one... &#x0a;Lyrics are not available." 
+                                                TextWrapping="Wrap"/>
+                                </Grid>
+                            </Grid>
+                        </Border>
+                    </SplitView.Pane>
+                </SplitView>
             </Grid>
         </controls:SidebarControl>
     </Grid>

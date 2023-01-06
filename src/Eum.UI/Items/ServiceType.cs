@@ -3,5 +3,6 @@
 public enum ServiceType
 {
     Local,
-    Spotify
+    Spotify,
+    Apple
 }

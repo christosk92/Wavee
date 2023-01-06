@@ -47,7 +47,7 @@
                     <Grid x:Name="Header">
                         <controls:ImageTransitionControl
                             Margin="-56,-44,0,-16"
-                            Source="{x:Bind ViewModel.Artist.Header, Mode=OneWay}" />
+                            Source="{x:Bind ViewModel.Header, Mode=OneWay}" />
                         <StackPanel
                             transitions:TransitionHelper.Id="bg"
                             Padding="0,10,56,24"
@@ -175,11 +175,11 @@
                             </interactivity:Interaction.Behaviors>
                             <ListView.ItemTemplate>
                                 <DataTemplate x:DataType="artists:TopTrackViewModel">
-                                    <UserControl Background="Transparent">
+                                    <UserControl>
                                         <interactivity:Interaction.Behaviors>
                                             <behaviors:PlayingTrackPointerBehavior />
                                         </interactivity:Interaction.Behaviors>
-                                        <Grid>
+                                        <Grid Background="Transparent">
                                             <VisualStateManager.VisualStateGroups>
                                                 <VisualStateGroup>
                                                     <VisualState x:Name="Normal" />
@@ -206,18 +206,16 @@
                                                             <Setter Target="IndexOrPlayButtonControl.Content">
                                                                 <Setter.Value>
                                                                     <Button
-                                                                        Width="32"
+                                                                        Width="32" 
+                                                                        Command="{Binding PlayCommand}"
+                                                                        CommandParameter="{Binding Id}"
                                                                         Height="32"
                                                                         Margin="-4,-8,-12,-8"
                                                                         Padding="0"
                                                                         HorizontalAlignment="Center"
                                                                         VerticalAlignment="Center"
                                                                         Background="Transparent">
-                                                                        <FontIcon
-                                                                            FontFamily="Segoe Fluent Icons"
-                                                                            FontSize="16"
-                                                                            Foreground="{ThemeResource SystemAccentColorLight3}"
-                                                                            Glyph="&#xE102;" />
+                                                                        <FontIcon FontSize="12" FontFamily="Segoe Fluent Icons" Glyph="&#xE103;" />
                                                                     </Button>
                                                                 </Setter.Value>
                                                             </Setter>
@@ -235,6 +233,8 @@
                                                                     <Button
                                                                         Width="32"
                                                                         Height="32"
+                                                                        Command="{Binding PlayCommand}"
+                                                                        CommandParameter="{Binding Id}"
                                                                         Margin="-8,-8,-12,-8"
                                                                         Padding="0"
                                                                         HorizontalAlignment="Center"
@@ -360,7 +360,7 @@
                                         VerticalAlignment="Center"
                                         FontSize="18"
                                         FontWeight="SemiBold"
-                                        Text="{x:Bind Title}" />
+                                        Text="{x:Bind Key}" />
 
                                     <ListView
                                         Grid.Column="1"

@@ -19,8 +19,12 @@ using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.UI.Composition;
 using Eum.UI.Services.Users;
 using Eum.UI.Users;
+using WinRT;
+using ColorCode.Compilation.Languages;
+using Microsoft.UI.Xaml.Shapes;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -43,9 +47,47 @@ namespace Eum.UI.WinUI.Views.Shell
         private void NavigationView_OnItemInvoked(NavigationView sender, NavigationViewItemInvokedEventArgs args)
         {
             if (args.InvokedItemContainer.DataContext is INavigatable routable)
-                {
+            {
                 NavigationService.Instance.To(routable);
             }
+        }
+
+        private void Sidepanel_CloseRequested(NavigationView sender, NavigationViewBackRequestedEventArgs args)
+        {
+            ViewModel.SidePanelView = null;
+            ViewModel.ShouldShowSidePanel = false;
+        }
+
+        public bool IsSidePanelView(string s, string s1)
+        {
+            return s == s1;
+        }
+
+        public object GetSelectedItem(string s)
+        {
+            switch (s)
+            {
+                case "queue":
+                    return SidebarNavView.MenuItems[1];
+                case "lyrics":
+                    return SidebarNavView.MenuItems[0];
+                    
+            }
+
+            return default;
+        }
+
+        public string GetTitle(string s)
+        {
+            switch (s)
+            {
+                case "queue":
+                    return "Up next";
+                case "lyrics":
+                    return "Lyrics";
+            }
+
+            return string.Empty;
         }
     }
 }

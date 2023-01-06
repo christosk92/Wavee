@@ -42,7 +42,7 @@ namespace Eum.UI.Spotify
             services.AddSingleton(config);
             services.AddSingleton<ISpotifyConnectionProvider, SpotifyConnectionProvider>();
             services.AddSingleton<IBearerClient, MercuryBearerClient>();
-            services.AddTransient<PlaybackViewModel, SpotifyPlaybackViewModel>();
+            services.AddSingleton<PlaybackViewModel, SpotifyPlaybackViewModel>();
             services.AddSingleton(provider =>
             {
                 var bearerClient = provider.GetRequiredService<IBearerClient>();

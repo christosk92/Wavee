@@ -18,7 +18,6 @@ using Flurl;
 using Flurl.Http;
 using Google.Protobuf;
 using LiteDB;
-using MoreLinq;
 using Nito.AsyncEx;
 
 namespace Eum.UI.Services.Tracks

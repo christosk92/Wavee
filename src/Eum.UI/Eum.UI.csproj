@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>net7.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
 	  <LangVersion>preview</LangVersion>
@@ -30,6 +30,7 @@
 
 	<ItemGroup>
     <ProjectReference Include="..\..\Eum\src\Eum\Eum.csproj" />
+    <ProjectReference Include="..\..\Eum\src\Spotify\Eum.Connections.Spotify.Playback\Eum.Connections.Spotify.Playback.csproj" />
     <ProjectReference Include="..\..\Eum\src\Spotify\Eum.Connections.Spotify\Eum.Connections.Spotify.csproj" />
   </ItemGroup>
 

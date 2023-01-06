@@ -6,9 +6,11 @@ using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Input;
 using ColorThiefDotNet;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.DependencyInjection;
+using CommunityToolkit.Mvvm.Input;
 using Eum.UI.Helpers;
 using Eum.UI.Items;
 using Eum.UI.Services.Login;
@@ -34,6 +36,8 @@ namespace Eum.UI.ViewModels
         private EumUserViewModel _currentUser;
         [ObservableProperty] private string _glaze;
         [ObservableProperty] private AbsFullscreenViewModel? _fullscreenViewModel;
+        [ObservableProperty] private bool _shouldShowSidePanel;
+        [ObservableProperty] private string _sidePanelView;
         public MainViewModel(IEumUserViewModelManager userViewModelManager)
         {
             UserViewModelManager = userViewModelManager;
@@ -121,6 +125,14 @@ namespace Eum.UI.ViewModels
         {
             get => _currentUser;
             set => this.SetProperty(ref _currentUser, value);
+        }
+        
+
+        [RelayCommand]
+        public void ShowSidePanel(string panelType)
+        {
+            SidePanelView = panelType;
+            ShouldShowSidePanel = true;
         }
 
         private SearchBarViewModel CreateSearchBar()

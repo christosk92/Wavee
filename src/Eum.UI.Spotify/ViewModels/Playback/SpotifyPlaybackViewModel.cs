@@ -95,91 +95,8 @@ public class SpotifyPlaybackViewModel : PlaybackViewModel
             return;
         }
         var playingUri = new SpotifyId(e.Cluster.PlayerState.Track.Uri);
-        // if (!e.Cluster.PlayerState.Track.Metadata.Any())
-        // {
-        //     //if not we fetch!
-        //     throw new NotImplementedException();
-        // }
-        //
-        // var original = obj.original;
-        //
-        // string smallImage = default;
-        // string bigImage = default;
-        // if (playingUri.Type != EntityType.Local)
-        // {
-        //     smallImage = e.Cluster.PlayerState.Track.Metadata["image_small_url"].Split(":").Last();
-        //     bigImage = e.Cluster.PlayerState.Track.Metadata["image_large_url"].Split(":").Last();
-        //
-        //     bigImage = $"https://i.scdn.co/image/{bigImage}";
-        //     smallImage = $"https://i.scdn.co/image/{smallImage}";
-        // }
-        // else
-        // {
-        //     //try fetch the file on disk
-        //     var smallImagePath
-        //         = Url.Decode(e.Cluster.PlayerState.Track.Metadata["image_small_url"].Split(":").Last(), true);
-        //     var bigImagePath
-        //         = Url.Decode(e.Cluster.PlayerState.Track.Metadata["image_large_url"].Split(":").Last(), true);
-        //
-        //     if (File.Exists(bigImagePath))
-        //     {
-        //         var cleanFileName = $"{MakeValidFileName(original.Album?.Name ?? original.Name)}-big";
-        //         var saveto = Path.Combine(Ioc.Default.GetRequiredService<ICommonDirectoriesProvider>()
-        //             .WorkDir, cleanFileName);
-        //         if (File.Exists(saveto))
-        //         {
-        //             bigImage = saveto;
-        //         }
-        //         else
-        //         {
-        //             using var tfile = TagLib.File.Create(bigImagePath);
-        //             if (tfile.Tag.Pictures.Length > 0)
-        //             {
-        //                 TagLib.IPicture pic = tfile.Tag.Pictures[0];
-        //                 using var ms = new MemoryStream(pic.Data.Data);
-        //                 ms.Seek(0, SeekOrigin.Begin);
-        //
-        //                 using var fs = File.Open(saveto, FileMode.OpenOrCreate);
-        //                 ms.CopyTo(fs);
-        //                 bigImage = saveto;
-        //             }
-        //         }
-        //     }
-        //     if (File.Exists(smallImagePath))
-        //     {
-        //         var cleanFileName = $"{MakeValidFileName(original.Album?.Name ?? original.Name)}-small";
-        //         var saveto = Path.Combine(Ioc.Default.GetRequiredService<ICommonDirectoriesProvider>()
-        //             .WorkDir, cleanFileName);
-        //         if (File.Exists(saveto))
-        //         {
-        //             smallImage = saveto;
-        //         }
-        //         else
-        //         {
-        //             using var tfile = TagLib.File.Create(smallImagePath);
-        //             if (tfile.Tag.Pictures.Length > 0)
-        //             {
-        //                 TagLib.IPicture pic = tfile.Tag.Pictures[0];
-        //                 using var ms = new MemoryStream(pic.Data.Data);
-        //                 ms.Seek(0, SeekOrigin.Begin);
-        //
-        //
-        //                 using var fs = File.Open(saveto, FileMode.OpenOrCreate);
-        //                 ms.CopyTo(fs);
-        //                 smallImage = saveto;
-        //             }
-        //         }
-        //     }
-        // }
-        //
-        // var albumName = e.Cluster.PlayerState.Track.Metadata["album_title"];
-        // var albumId =
-        //     e.Cluster.PlayerState.Track.Metadata.ContainsKey("album_uri") ?
-        //     new ItemId(e.Cluster.PlayerState.Track.Metadata["album_uri"]) : default;
-        // var contextId = new ItemId(e.Cluster.PlayerState.ContextUri);
-        // var duration = e.Cluster.PlayerState.Duration;
-        //
-        //
+
+
         try
         {
             var contextId = new ItemId(e.Cluster.PlayerState.ContextUri);
@@ -206,26 +123,28 @@ public class SpotifyPlaybackViewModel : PlaybackViewModel
             StartTimer(initial);
 
 
-            PlayingOnExternalDevice = e.Cluster.ActiveDeviceId != _spotifyClient
+            PlayingOnExternalDevice = !string.IsNullOrEmpty(e.Cluster.ActiveDeviceId) && e.Cluster.ActiveDeviceId != _spotifyClient
                 .Config.DeviceId;
             if (PlayingOnExternalDevice)
             {
                 RemoteDevices.Clear();
 
                 var currentDevice = e.Cluster.Device[_spotifyClient.Config.DeviceId];
-                RemoteDevices.Add(new RemoteDevice(currentDevice.DeviceId, currentDevice.Name, currentDevice.DeviceType, Service));
+                RemoteDevices.Add(new RemoteDevice(new ItemId($"spotify:device:{currentDevice.DeviceId}"), currentDevice.Name, currentDevice.DeviceType));
                 foreach (var deviceInfo in e.Cluster.Device)
                 {
                     if (deviceInfo.Key == currentDevice.DeviceId) continue;
 
-                    RemoteDevices.Add(new RemoteDevice(deviceInfo.Key, deviceInfo.Value.Name, deviceInfo.Value.DeviceType, Service));
+                    RemoteDevices.Add(new RemoteDevice(new ItemId($"spotify:device:{deviceInfo.Key}"), deviceInfo.Value.Name, deviceInfo.Value.DeviceType));
                 }
 
-                ExternalDevice = RemoteDevices.First(a => a.DeviceId == e.Cluster.ActiveDeviceId);
+                ExternalDevice = RemoteDevices.First(a => a.DeviceId.Id == e.Cluster.ActiveDeviceId);
+                ActiveDeviceId = ExternalDevice.DeviceId;
             }
             else
             {
                 ExternalDevice = null;
+                ActiveDeviceId = new ItemId($"spotify:device:{_spotifyClient.Config.DeviceId}");
             }
 
             if (Ioc.Default.GetRequiredService<MainViewModel>().CurrentUser.User.ThemeService
@@ -309,17 +228,20 @@ public class SpotifyPlaybackViewModel : PlaybackViewModel
         _disposable.Dispose();
     }
 
-    public override async Task SwitchRemoteDevice(string deviceId)
+    public override async Task SwitchRemoteDevice(ItemId? deviceId)
     {
-        //https://gae2-spclient.spotify.com/connect-state/v1/connect/transfer/from/1ef2aa4cf31c7af8bf20b5d5776a54ce8930f9fe/to/1ef2aa4cf31c7af8bf20b5d5776a54ce8930f9fe
-        //TODO: ApResolver
-        //gae2-spclient.spotify.com:443
+        if (deviceId is null)
+        {
+            //current device
+            deviceId = new ItemId($"spotify:device:{_spotifyClient.Config.DeviceId}");
+        }
         using var _ = await "https://gae2-spclient.spotify.com"
             .AppendPathSegments("connect-state", "v1", "connect", "transfer", "from", _spotifyClient.Config.DeviceId,
-                "to", deviceId)
+                "to", deviceId.Value.Id)
             .WithOAuthBearerToken((await _spotifyClient.BearerClient.GetBearerTokenAsync()))
             .PostAsync();
     }
+
 
     public override ServiceType Service => ServiceType.Spotify;
 }

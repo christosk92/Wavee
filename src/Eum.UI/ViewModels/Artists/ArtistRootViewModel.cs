@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
@@ -19,20 +20,29 @@ using Eum.UI.ViewModels.Navigation;
 using Nito.AsyncEx;
 using ReactiveUI;
 using System.Reactive.Concurrency;
+using System.Text.Json;
 using Eum.UI.ViewModels.Playlists;
 using AsyncLock = Nito.AsyncEx.AsyncLock;
 using Eum.UI.ViewModels.Settings;
 using Eum.Connections.Spotify.Clients.Contracts;
 using Eum.Connections.Spotify.Clients;
+using Eum.Connections.Spotify.Models.Users;
+using Eum.Connections.Spotify.Playback;
+using Eum.UI.Services;
+using Eum.UI.Services.Tracks;
+using Eum.UI.ViewModels.Playback;
+using Flurl;
+using Flurl.Http;
 
 namespace Eum.UI.ViewModels.Artists
 {
     [INotifyPropertyChanged]
     public partial class ArtistRootViewModel : INavigatable, IGlazeablePage
     {
+        [ObservableProperty] private string? _header;
         [ObservableProperty] private EumArtist? _artist;
 
-        [ObservableProperty] public DiscographyGroup[]? _discography;
+        [ObservableProperty] public ObservableCollection<DiscographyGroup>? _discography;
 
         [ObservableProperty] private IList<TopTrackViewModel> _topTracks;
 
@@ -64,10 +74,31 @@ namespace Eum.UI.ViewModels.Artists
             var provider = Ioc.Default.GetRequiredService<IArtistProvider>();
 
             var artist = await Task.Run(async () => await provider.GetArtist(Id, "en_us"));
+            var playCommand = new AsyncRelayCommand<ItemId>(async id =>
+            {
+                try
+                {
+                    await Ioc.Default.GetRequiredService<IPlaybackService>()
+                        .PlayOnDevice(Id, id);
+                }
+                catch (Exception notImplementedException)
+                {
+                    await Ioc.Default.GetRequiredService<IErrorMessageShower>()
+                        .ShowErrorAsync(notImplementedException, "Unexpected error", "Something went wrong while trying to play the track.");
+                }
+            });
             Artist = artist;
-            Discography = artist.DiscographyReleases
+            Header = artist.Header;
+            Discography = new ObservableCollection<DiscographyGroup>(artist.DiscographyReleases
                 .Select(a => new DiscographyGroup
                 {
+                    Key = a.Key switch
+                    {
+                        DiscographyType.Album => "Albums",
+                        DiscographyType.Single => "Singles",
+                        DiscographyType.Compilation => "Compilations",
+                        DiscographyType.AppearsOn => "Found On"
+                    },
                     Type = a.Key,
                     SwitchTemplateCommand = _switchTemplatesCommand,
                     Items = a.Value.Select(k => new DiscographyViewModel
@@ -84,9 +115,9 @@ namespace Eum.UI.ViewModels.Artists
                                 Duration = z.Duration,
                                 Index = i,
                                 Title = z.Name,
-                                Playcount = (long) z.PlayCount
+                                Playcount = (long)z.PlayCount
                             }))
-                            : Enumerable.Range(0, (int) k.TrackCount)
+                            : Enumerable.Range(0, (int)k.TrackCount)
                                 .Select(_ => new DiscographyTrackViewModel
                                 {
                                     IsLoading = true,
@@ -101,28 +132,176 @@ namespace Eum.UI.ViewModels.Artists
                         _ => throw new ArgumentOutOfRangeException()
                     }
                 })
-                .Where(a => a.Items.Any())
-                .ToArray();
+                .Where(a => a.Items.Any()));
 
             TopTracks = artist.TopTrack
-                .Select(a => new TopTrackViewModel(a))
+                .Select(a => new TopTrackViewModel(a, playCommand))
                 .ToArray();
             LatestRelease = artist.LatestRelease;
             _waitForArtist.Set();
+
+            var appleMusicArtist = await Task.Run(async () => await FetchAppleMusicArtist(artist.Name));
+            if (appleMusicArtist != null)
+            {
+                if (Header == null)
+                {
+                    Header = appleMusicArtist.Value.Header;
+                }
+
+                if (appleMusicArtist.Value.featuredAlbums != null)
+                {
+                    Discography.Insert(0, new DiscographyGroup
+                    {
+                        TemplateType = TemplateTypeOrientation.Grid,
+                        CanSwitchTemplatesOverride = false,
+                        Items = appleMusicArtist.Value.
+                            featuredAlbums.Value.Albums
+                            .Select(a => new DiscographyViewModel
+                            {
+                                Title = a.Name,
+                                Description = string.Join(", ", a.Artists
+                                    .Select(a => a.Title)),
+                                Id = a.Id,
+                                Image = a.Images.First().Id
+                                    .Replace("{w}", "250").Replace("{h}", "250")
+                            }).ToArray(),
+                        Key = appleMusicArtist.Value.featuredAlbums.Value.Title
+                    });
+                }
+            }
+
+            // if (artist.Header == null)
+            // {
+            //     //fetch from own api
+            //     var header = await Task.Run(async () => await FetchExternalHeader(artist.Name));
+            //     if (header != null)
+            //     {
+            //         Header = header;
+            //     }
+            // }
+        }
+
+        public record struct AppleMusicArtist((EumAlbum[] Albums, string Title)? featuredAlbums, string? Header);
+        private async Task<AppleMusicArtist?> FetchAppleMusicArtist(string artistName, CancellationToken ct = default)
+        {
+            await using var stream = await "https://eumhelperapi-p4naoifwjq-dt.a.run.app"
+                .AppendPathSegments("AppleSearch", "search", artistName)
+                .SetQueryParam("language", "en")
+                .SetQueryParam("types", "artists")
+                .WithOAuthBearerToken((await Ioc.Default.GetRequiredService<IBearerClient>().GetBearerTokenAsync(ct)))
+                .GetStreamAsync(cancellationToken: ct);
+
+            using var jsonDocument = await JsonDocument.ParseAsync(stream, cancellationToken: ct);
+            //results -> artists -> data[0] -> artwork -> url
+
+            AppleMusicArtist returnData = default;
+            using var artists = jsonDocument
+                .RootElement.GetProperty("results")
+                .GetProperty("artists")
+                .GetProperty("data")
+                .EnumerateArray();
+            if (artists.Any())
+            {
+                var artist = artists.First();
+                using var artwork = artist
+                    .GetProperty("artwork")
+                    .EnumerateArray();
+                if (artwork.Any())
+                {
+                    //https://is3-ssl.mzstatic.com/image/thumb/Features125/v4/53/0f/ac/530face7-e646-c919-e982-212fb79fbbe0/mzl.lydqqjql.jpg/1478x646vf-60.jpg
+                    var url = artwork.First().GetProperty("url").GetString()
+                        .Replace("{w}", "1478").Replace("{h}bb", "646vf-60")
+                        .Replace("{h}ac", "646ac");
+                    returnData = new AppleMusicArtist(null, url);
+                }
+
+                var id = artist.GetProperty("id").GetString();
+
+                //https://localhost:44316/artist/320569549
+                await using var artistStream = await "https://eumhelperapi-p4naoifwjq-dt.a.run.app"
+                    .AppendPathSegments("artist", id)
+                    .SetQueryParam("views", "featured-albums")
+                    .WithOAuthBearerToken((await Ioc.Default.GetRequiredService<IBearerClient>().GetBearerTokenAsync(ct)))
+                    .GetStreamAsync(cancellationToken: ct);
+                using var artistDoc = await JsonDocument.ParseAsync(artistStream, cancellationToken: ct);
+                //views ->  featured-albums
+
+                var featuredAlbumsView = artistDoc.RootElement.GetProperty("views")
+                    .GetProperty("featured-albums");
+
+                using var featuresAlbumsArray = featuredAlbumsView.GetProperty("data")
+                    .EnumerateArray();
+                if (featuresAlbumsArray.Any())
+                {
+                    var adaptedData = featuresAlbumsArray
+                        .Select(x =>
+                        {
+
+                            //Love Yourself 承 'Her'
+                            //"LOVE YOURSELF 承 'Her'"
+                            var attr = x.GetProperty("attributes");
+                            var id = x.GetProperty("id").GetString();
+                            var artwork = attr.GetProperty("artwork");
+                            var title = attr.GetProperty("name")
+                                .GetString();
+                            var eumAlbum = new EumAlbum
+                            {
+                                Name = attr.GetProperty("name")
+                                    .GetString()!,
+                                Id = _discography.SelectMany(a => a.Items)
+                                    .FirstOrDefault(a => string.Equals(title, a.Title, StringComparison.InvariantCultureIgnoreCase))?
+                                    .Id ?? new ItemId($"apple:album:{id}"),
+                                Images = new[]
+                                {
+                                    new CachedImage
+                                    {
+                                        Height = artwork.GetProperty("height")
+                                            .GetInt32(),
+                                        Width = artwork.GetProperty("width")
+                                            .GetInt32(),
+                                        Id = artwork.GetProperty("url")
+                                            .GetString()!,
+                                    }
+                                },
+                                ArtistsOverride = new IdWithTitle[]
+                                {
+                                    new IdWithTitle
+                                    {
+                                        Id = default,
+                                        Title = attr.GetProperty("artistName")
+                                            .GetString()!
+                                    }
+                                },
+                            };
+                            return eumAlbum;
+                        }).ToArray();
+                    returnData = returnData with
+                    {
+                        featuredAlbums = (adaptedData, featuredAlbumsView.GetProperty("attributes")
+                            .GetProperty("title").GetString()!),
+
+                    };
+                }
+
+                return returnData;
+            }
+
+            return null;
         }
 
         public async void OnNavigatedFrom()
         {
-            foreach (var discographyGroup in Discography ?? Array.Empty<DiscographyGroup>())
-            {
-                foreach (var discographyGroupItem in discographyGroup.Items)
+            if (Discography != null)
+                foreach (var discographyGroup in Discography)
                 {
-                    discographyGroupItem.Cancel();
-                    discographyGroupItem.Tracks = null;
-                }
+                    foreach (var discographyGroupItem in discographyGroup.Items)
+                    {
+                        discographyGroupItem.Cancel();
+                        discographyGroupItem.Tracks = null;
+                    }
 
-                discographyGroup.Items = null;
-            }
+                    discographyGroup.Items = null;
+                }
 
             Discography = null;
             foreach (var topTrackViewModel in TopTracks)
@@ -182,14 +361,16 @@ namespace Eum.UI.ViewModels.Artists
         }
     }
 
+
     [INotifyPropertyChanged]
     public partial class TopTrackViewModel : IIsPlaying
     {
-        public TopTrackViewModel(ArtistTopTrack track)
+        public TopTrackViewModel(ArtistTopTrack track, ICommand playCommand)
         {
             Track = track;
+            PlayCommand = playCommand;
         }
-
+        public ICommand PlayCommand { get; }
         public ArtistTopTrack Track { get; }
 
         public ItemId Id => Track.Track.Id;
@@ -220,11 +401,13 @@ namespace Eum.UI.ViewModels.Artists
     {
         [ObservableProperty] private TemplateTypeOrientation _templateType;
 
+        public bool? CanSwitchTemplatesOverride { get; init; }
         public string Title => Type.ToString();
         public DiscographyViewModel[] Items { get; set; }
-        public bool CanSwitchTemplates => Type is DiscographyType.Album or DiscographyType.Single;
+        public bool CanSwitchTemplates => CanSwitchTemplatesOverride ?? Type is DiscographyType.Album or DiscographyType.Single;
         public DiscographyType Type { get; init; }
         public ICommand SwitchTemplateCommand { get; set; }
+        public string Key { get; set; }
     }
 
     [INotifyPropertyChanged]
@@ -272,7 +455,7 @@ namespace Eum.UI.ViewModels.Artists
                         Index = i,
                         Id = new ItemId(z.Uri.Uri),
                         Title = z.Name,
-                        Playcount = (long) z.PlayCount
+                        Playcount = (long)z.PlayCount
                     }).ToArray();
                 r?.Dispose();
             });
