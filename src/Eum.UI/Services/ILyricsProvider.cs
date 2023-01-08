@@ -5,6 +5,7 @@ using CommunityToolkit.Mvvm.DependencyInjection;
 using Eum.Connections.Spotify;
 using Eum.Connections.Spotify.Clients.Contracts;
 using Eum.Connections.Spotify.Models.Users;
+using Eum.Logging;
 using Eum.UI.Items;
 using Eum.UI.Services.Tracks;
 using Flurl;
@@ -23,7 +24,7 @@ namespace Eum.UI.Services
     {
         private readonly ITrackAggregator _trackAggregator;
         private readonly ISpotifyClient _spotifyClient;
-        private ConcurrentDictionary<ItemId, LyricsLine[]?> _linesCache =
+        private static readonly ConcurrentDictionary<ItemId, LyricsLine[]?> _linesCache =
             new ConcurrentDictionary<ItemId, LyricsLine[]?>();
         public LyricsProvider(ISpotifyClient spotifyClient, ITrackAggregator trackAggregator)
         {
@@ -67,6 +68,10 @@ namespace Eum.UI.Services
                         {
                             throw;
                         }
+                    }
+                    catch (Exception x)
+                    {
+                        S_Log.Instance.LogError(x);
                     }
 
                     return null;

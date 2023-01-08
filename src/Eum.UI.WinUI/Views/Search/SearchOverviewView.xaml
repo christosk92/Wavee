@@ -279,7 +279,8 @@
                                                     </ContentPresenter.Content>
                                                 </ContentPresenter>
                                                 <controls:StarButton
-                                                    Grid.Column="1"
+                                                    IsChecked="{x:Bind IsSaved, Mode=OneWay}"
+                                                    Grid.Column="1" FontSize="18"
                                                     Padding="0"
                                                     HorizontalAlignment="Center"/>
                                             </Grid>

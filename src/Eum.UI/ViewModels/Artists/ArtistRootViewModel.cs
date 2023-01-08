@@ -26,19 +26,24 @@ using AsyncLock = Nito.AsyncEx.AsyncLock;
 using Eum.UI.ViewModels.Settings;
 using Eum.Connections.Spotify.Clients.Contracts;
 using Eum.Connections.Spotify.Clients;
+using Eum.Connections.Spotify.Connection;
 using Eum.Connections.Spotify.Models.Users;
 using Eum.Connections.Spotify.Playback;
+using Eum.Enums;
 using Eum.UI.Services;
 using Eum.UI.Services.Tracks;
 using Eum.UI.ViewModels.Playback;
 using Flurl;
 using Flurl.Http;
+using Eum.Users;
 
 namespace Eum.UI.ViewModels.Artists
 {
     [INotifyPropertyChanged]
     public partial class ArtistRootViewModel : INavigatable, IGlazeablePage
     {
+        [ObservableProperty] private bool _isPlaying;
+        [ObservableProperty] private bool _isSaved;
         [ObservableProperty] private string? _header;
         [ObservableProperty] private EumArtist? _artist;
 
@@ -47,6 +52,7 @@ namespace Eum.UI.ViewModels.Artists
         [ObservableProperty] private IList<TopTrackViewModel> _topTracks;
 
         [ObservableProperty] private LatestReleaseWrapper? _latestRelease;
+
         public ItemId Id { get; init; }
 
         private static readonly RelayCommand<DiscographyGroup> _switchTemplatesCommand =
@@ -71,8 +77,17 @@ namespace Eum.UI.ViewModels.Artists
 
         public async void OnNavigatedTo(object parameter)
         {
-            var provider = Ioc.Default.GetRequiredService<IArtistProvider>();
+            var main = Ioc.Default.GetRequiredService<MainViewModel>();
 
+            var user = main.CurrentUser.User;
+            var playback = main.PlaybackViewModel;
+
+            playback.PlayingItemChanged += PlaybackOnPlayingItemChanged;
+            PlaybackOnPlayingItemChanged(playback, playback.Item.Id);
+
+            RecheckIsSaved();
+            user.LibraryProvider.CollectionUpdated += LibraryProviderOnCollectionUpdated;
+            var provider = Ioc.Default.GetRequiredService<IArtistProvider>();
             var artist = await Task.Run(async () => await provider.GetArtist(Id, "en_us"));
             var playCommand = new AsyncRelayCommand<ItemId>(async id =>
             {
@@ -115,6 +130,7 @@ namespace Eum.UI.ViewModels.Artists
                                 Duration = z.Duration,
                                 Index = i,
                                 Title = z.Name,
+                                IsSaved = user.LibraryProvider.IsSaved(new ItemId(z.Uri.Uri)),
                                 Playcount = (long)z.PlayCount
                             }))
                             : Enumerable.Range(0, (int)k.TrackCount)
@@ -135,7 +151,10 @@ namespace Eum.UI.ViewModels.Artists
                 .Where(a => a.Items.Any()));
 
             TopTracks = artist.TopTrack
-                .Select(a => new TopTrackViewModel(a, playCommand))
+                .Select(a => new TopTrackViewModel(a, playCommand)
+                {
+                    IsSaved = user.LibraryProvider.IsSaved(a.Track.Id)
+                })
                 .ToArray();
             LatestRelease = artist.LatestRelease;
             _waitForArtist.Set();
@@ -163,7 +182,7 @@ namespace Eum.UI.ViewModels.Artists
                                     .Select(a => a.Title)),
                                 Id = a.Id,
                                 Image = a.Images.First().Id
-                                    .Replace("{w}", "250").Replace("{h}", "250")
+                                    .Replace("{w}", "250").Replace("{h}", "250"),
                             }).ToArray(),
                         Key = appleMusicArtist.Value.featuredAlbums.Value.Title
                     });
@@ -181,12 +200,68 @@ namespace Eum.UI.ViewModels.Artists
             // }
         }
 
+        private void LibraryProviderOnCollectionUpdated(object? sender, (EntityType Type, IReadOnlyList<CollectionUpdate> Ids) e)
+        {
+            if (e.Type is EntityType.Artist or EntityType.Track)
+            {
+                foreach (var topTrackViewModel in TopTracks ?? new List<TopTrackViewModel>(0))
+                {
+                    var updatedOrNahh = e.Ids.FirstOrDefault(a => a.Id.Uri == topTrackViewModel.Id.Uri);
+                    if (updatedOrNahh != null)
+                    {
+                        topTrackViewModel.IsSaved = !updatedOrNahh.Removed;
+                    }
+                }
+
+                foreach (var discographyGroup in Discography)
+                {
+                    foreach (var discographyItem in discographyGroup.Items)
+                    {
+                        foreach (var discographyTrackViewModel in discographyItem.Tracks)
+                        {
+                            var updatedOrNahh = e.Ids.FirstOrDefault(a => a.Id.Uri == discographyTrackViewModel.Id.Uri);
+                            if (updatedOrNahh != null)
+                            {
+                                discographyTrackViewModel.IsSaved = !updatedOrNahh.Removed;
+                            }
+                        }
+                    }
+                }
+
+                RecheckIsSaved();
+            }
+        }
+
+        private void PlaybackOnPlayingItemChanged(object? sender, ItemId e)
+        {
+            if ((sender is PlaybackViewModel p))
+            {
+                if (p.Item.Context.Equals(Id))
+                {
+                    if (_isPlaying != true)
+                    {
+                        RxApp.MainThreadScheduler.Schedule(() =>
+                        {
+                            IsPlaying = true;
+                        });
+                    }
+                }
+                else
+                {
+                    if (_isPlaying != false)
+                    {
+                        IsPlaying = false;
+                    }
+                }
+            }
+        }
+
         public record struct AppleMusicArtist((EumAlbum[] Albums, string Title)? featuredAlbums, string? Header);
         private async Task<AppleMusicArtist?> FetchAppleMusicArtist(string artistName, CancellationToken ct = default)
         {
             await using var stream = await "https://eumhelperapi-p4naoifwjq-dt.a.run.app"
                 .AppendPathSegments("AppleSearch", "search", artistName)
-                .SetQueryParam("language", "en")
+                .SetQueryParam("language", "en-GB")
                 .SetQueryParam("types", "artists")
                 .WithOAuthBearerToken((await Ioc.Default.GetRequiredService<IBearerClient>().GetBearerTokenAsync(ct)))
                 .GetStreamAsync(cancellationToken: ct);
@@ -202,17 +277,26 @@ namespace Eum.UI.ViewModels.Artists
                 .EnumerateArray();
             if (artists.Any())
             {
-                var artist = artists.First();
+                var artist = artists.FirstOrDefault(a => string.Equals(a.GetProperty("attributes")
+                        .GetProperty("name").GetString(), artistName,
+                    StringComparison.InvariantCultureIgnoreCase));
+                if (artist.ValueKind is JsonValueKind.Null or JsonValueKind.Undefined)
+                    artist = artists.First();
+
                 using var artwork = artist
                     .GetProperty("artwork")
                     .EnumerateArray();
                 if (artwork.Any())
                 {
-                    //https://is3-ssl.mzstatic.com/image/thumb/Features125/v4/53/0f/ac/530face7-e646-c919-e982-212fb79fbbe0/mzl.lydqqjql.jpg/1478x646vf-60.jpg
-                    var url = artwork.First().GetProperty("url").GetString()
-                        .Replace("{w}", "1478").Replace("{h}bb", "646vf-60")
-                        .Replace("{h}ac", "646ac");
-                    returnData = new AppleMusicArtist(null, url);
+                    var first = artwork.FirstOrDefault();
+                    if (first.ValueKind is not JsonValueKind.Null and not JsonValueKind.Undefined)
+                    {
+                        //https://is3-ssl.mzstatic.com/image/thumb/Features125/v4/53/0f/ac/530face7-e646-c919-e982-212fb79fbbe0/mzl.lydqqjql.jpg/1478x646vf-60.jpg
+                        var url = first.GetProperty("url").GetString()
+                            .Replace("{w}", "1478").Replace("{h}bb", "646vf-60")
+                            .Replace("{h}ac", "646ac");
+                        returnData = new AppleMusicArtist(null, url);
+                    }
                 }
 
                 var id = artist.GetProperty("id").GetString();
@@ -291,6 +375,14 @@ namespace Eum.UI.ViewModels.Artists
 
         public async void OnNavigatedFrom()
         {
+            var main = Ioc.Default.GetRequiredService<MainViewModel>();
+
+            var playback = main.PlaybackViewModel;
+            playback.PlayingItemChanged -= PlaybackOnPlayingItemChanged;
+
+            var user = main.CurrentUser.User;
+            user.LibraryProvider.CollectionUpdated -= LibraryProviderOnCollectionUpdated;
+
             if (Discography != null)
                 foreach (var discographyGroup in Discography)
                 {
@@ -359,12 +451,19 @@ namespace Eum.UI.ViewModels.Artists
 
             return string.Empty;
         }
+
+        public void RecheckIsSaved()
+        {
+            var user = Ioc.Default.GetRequiredService<MainViewModel>().CurrentUser.User;
+            IsSaved = user.LibraryProvider.IsSaved(Id);
+        }
     }
 
 
     [INotifyPropertyChanged]
-    public partial class TopTrackViewModel : IIsPlaying
+    public partial class TopTrackViewModel : IIsPlaying, IIsSaved
     {
+        [ObservableProperty] private bool _isSaved;
         public TopTrackViewModel(ArtistTopTrack track, ICommand playCommand)
         {
             Track = track;
@@ -394,6 +493,14 @@ namespace Eum.UI.ViewModels.Artists
             _wasPlaying = isPlaying;
             IsPlayingChanged?.Invoke(this, isPlaying);
         }
+
+    }
+
+    public interface IIsSaved
+    {
+        
+        bool IsSaved { get; set; }
+        ItemId Id { get; }
     }
 
     [INotifyPropertyChanged]
@@ -445,6 +552,7 @@ namespace Eum.UI.ViewModels.Artists
             var album = await Ioc.Default.GetRequiredService<IAlbumProvider>()
                 .GetAlbum(Id, "en", _cts.Token);
             IDisposable r = default;
+            var user = Ioc.Default.GetRequiredService<MainViewModel>().CurrentUser.User;
             r = RxApp.MainThreadScheduler.Schedule(() =>
             {
                 Tracks = album.Discs.SelectMany(a => a)
@@ -455,7 +563,8 @@ namespace Eum.UI.ViewModels.Artists
                         Index = i,
                         Id = new ItemId(z.Uri.Uri),
                         Title = z.Name,
-                        Playcount = (long)z.PlayCount
+                        Playcount = (long)z.PlayCount,
+                        IsSaved = user.LibraryProvider.IsSaved(new ItemId(z.Uri.Uri))
                     }).ToArray();
                 r?.Dispose();
             });
@@ -478,8 +587,9 @@ namespace Eum.UI.ViewModels.Artists
     }
 
     [ObservableObject]
-    public partial class DiscographyTrackViewModel : IIsPlaying
+    public partial class DiscographyTrackViewModel : IIsPlaying, IIsSaved
     {
+        [ObservableProperty] private bool _isSaved;
         [ObservableProperty] private bool _isLoading;
         [ObservableProperty] private string _title;
         [ObservableProperty] private long _playcount;

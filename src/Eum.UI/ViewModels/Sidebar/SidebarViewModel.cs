@@ -12,6 +12,7 @@ using Eum.UI.ViewModels.ForYou;
 using Eum.UI.ViewModels.Library;
 using Eum.UI.ViewModels.Playlists;
 using Eum.UI.ViewModels.Search;
+using Eum.Users;
 using ReactiveUI;
 
 namespace Eum.UI.ViewModels.Sidebar;
@@ -21,13 +22,45 @@ public sealed partial class SidebarViewModel
     [ObservableProperty]
     private SidebarItemViewModel? _selectedSidebarItem;
 
-    private readonly ObservableCollectionExtended<PlaylistViewModel> _playlists = new ();
+    private readonly ObservableCollectionExtended<PlaylistViewModel> _playlists = new();
     private EumUserViewModel _user;
     private readonly IDisposable _disposable;
     public SidebarViewModel(EumUserViewModel user,
         IEumUserPlaylistViewModelManager eumUserPlaylistViewModelManager)
     {
         _user = user;
+        SidebarItems =new()
+        {
+            new SidebarItemHeader
+            {
+                Title = "For you"
+            },
+            new HomeViewModel(),
+            new ForYouViewModel(),
+            new SidebarItemHeader
+            {
+                Title = "Library"
+            },
+            new LibraryViewModel(EntityType.Album, user.User)
+            {
+                LibraryCount = _user.User.LibraryProvider.LibraryCount(EntityType.Album)
+            },
+            new LibraryViewModel(EntityType.Artist, user.User) {
+                LibraryCount = _user.User.LibraryProvider.LibraryCount(EntityType.Artist)
+            },
+            new LibraryViewModel(EntityType.Track, user.User) {
+                LibraryCount = _user.User.LibraryProvider.LibraryCount(EntityType.Track)
+            },
+            new LibraryViewModel(EntityType.Show, user.User)
+            {
+                LibraryCount = _user.User.LibraryProvider.LibraryCount(EntityType.Show)
+            },
+            new SidebarPlaylistHeader()
+        };
+        foreach (var s in SidebarItems.Where(a=> a is LibraryViewModel))
+        {
+            (s as LibraryViewModel)!.RegisterEvents();
+        }
         // foreach (var playlist in eumUserPlaylistViewModelManager
         //              .Playlists.Where(a => a.Playlist.User == user.User.Id || a.Playlist.AlsoUnder.Contains(user.User.Id)))
         // {
@@ -90,28 +123,15 @@ public sealed partial class SidebarViewModel
 
     public void Deconstruct()
     {
+        foreach (var s in SidebarItems.Where(a => a is LibraryViewModel))
+        {
+            (s as LibraryViewModel)!.UnregisterEvents();
+        }
         _disposable?.Dispose();
     }
 
 
-    public ObservableCollection<ISidebarItem> SidebarItems { get; } = new()
-    {
-        new SidebarItemHeader
-        {
-            Title = "For you"
-        },
-        new HomeViewModel(),
-        new ForYouViewModel(),
-        new SidebarItemHeader
-        {
-            Title = "Library"
-        },
-        new LibraryViewModel(EntityType.Album),
-        new LibraryViewModel(EntityType.Artist),
-        new LibraryViewModel(EntityType.Track),
-        new LibraryViewModel(EntityType.Show),
-        new SidebarPlaylistHeader()
-    };
+    public ObservableCollection<ISidebarItem> SidebarItems { get; }
 
     public ObservableCollectionExtended<PlaylistViewModel> Playlists => _playlists;
 }

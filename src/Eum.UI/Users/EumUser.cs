@@ -11,6 +11,7 @@ using Eum.UI.Bases;
 using Nito.AsyncEx;
 using Eum.Connections.Spotify.Models.Users;
 using Eum.UI.Services;
+using Eum.UI.Services.Library;
 using Eum.UI.ViewModels.Settings;
 
 namespace Eum.UI.Users;
@@ -81,6 +82,8 @@ public partial class EumUser : ConfigBase, IEquatable<EumUser>
 
     [JsonIgnore]
     public IThemeSelectorService ThemeService { get; set; }
+    [JsonIgnore]
+    public ILibraryProvider LibraryProvider { get; set; }
     public void ReplaceMetadata(string key, object value)
     {
         Metadata[key] = value;

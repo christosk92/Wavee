@@ -1,21 +1,12 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Timers;
+﻿using System.Timers;
 using CommunityToolkit.Mvvm.ComponentModel;
-using Eum.Connections.Spotify.Clients.Contracts;
 using Eum.Logging;
 using Eum.UI.Items;
 using Eum.UI.Services;
 using Eum.UI.ViewModels.Playback;
-using Microsoft.UI.Dispatching;
 using Timer = System.Timers.Timer;
 
-namespace Eum.UI.WinUI.Controls
+namespace Eum.UI.ViewModels
 {
     [INotifyPropertyChanged]
     public partial class LyricsLineViewModel
@@ -23,40 +14,48 @@ namespace Eum.UI.WinUI.Controls
         [ObservableProperty] private bool _isActive;
         public string Words { get; init; }
         public double StartsAt { get; init; }
+
         public double ToFontSize(bool o, double s, double s1)
         {
             if (o) return s;
             return s1;
         }
     }
+
     [INotifyPropertyChanged]
     public partial class LyricsViewModel
     {
         public bool CompositeNoLyricsAndNotLoading => !HasLyrics && !Loading;
+
         [ObservableProperty]
         [NotifyPropertyChangedFor(nameof(CompositeNoLyricsAndNotLoading))]
         private bool _hasLyrics;
+
         [ObservableProperty]
-        [NotifyPropertyChangedFor(nameof(CompositeNoLyricsAndNotLoading))] 
+        [NotifyPropertyChangedFor(nameof(CompositeNoLyricsAndNotLoading))]
         private bool _loading;
+
         [ObservableProperty] private List<LyricsLineViewModel> _lyrics;
         [ObservableProperty] private LyricsLineViewModel? _activeLyricsLine;
         private readonly ILyricsProvider _lyricsProvider;
         private PlaybackViewModel _playbackViewModel;
         private Timer _timer;
         private double _ms;
-        private readonly DispatcherQueue _dispatcherQueue;
-        public LyricsViewModel(ILyricsProvider lyricsProvider, PlaybackViewModel playbackViewModel)
+        private readonly IDispatcherHelper _dispatcherHelper;
+        public LyricsViewModel(ILyricsProvider lyricsProvider,
+            PlaybackViewModel playbackViewModel,
+            IDispatcherHelper dispatcherHelper)
         {
-            _dispatcherQueue = DispatcherQueue.GetForCurrentThread();
             _lyricsProvider = lyricsProvider;
             _playbackViewModel = playbackViewModel;
+            _dispatcherHelper = dispatcherHelper;
             _timer = new Timer(TimeSpan.FromMilliseconds(20));
             _timer.Elapsed += TimerOnElapsed;
-            
+
             _playbackViewModel.Seeked += PlaybackViewModelOnSeeked;
             _playbackViewModel.Paused += PlaybackViewModelOnPaused;
             _playbackViewModel.PlayingItemChanged += PlaybackViewModelOnPlayingItemChanged;
+            PlaybackViewModelOnPlayingItemChanged(_playbackViewModel, _playbackViewModel.Item.Id);
         }
 
         private void PlaybackViewModelOnSeeked(object sender, double e)
@@ -66,7 +65,7 @@ namespace Eum.UI.WinUI.Controls
             var closestLyrics = FindClosestLyricsLine(e);
             if (closestLyrics != null)
             {
-                _dispatcherQueue.TryEnqueue(DispatcherQueuePriority.High, () => { SeekToLyrics(closestLyrics); });
+                _dispatcherHelper.TryEnqueue(QueuePriority.High, () => { SeekToLyrics(closestLyrics); });
             }
         }
 
@@ -88,12 +87,9 @@ namespace Eum.UI.WinUI.Controls
             if (ShouldChangeLyricsLine(_ms))
             {
                 var closestLyrics = FindClosestLyricsLine(_ms);
-                _dispatcherQueue.TryEnqueue(DispatcherQueuePriority.High, () =>
-                {
-                    SeekToLyrics(closestLyrics);
-                });
+                _dispatcherHelper.TryEnqueue(QueuePriority.High, () => { SeekToLyrics(closestLyrics); });
             }
-            
+
         }
 
         private bool ShouldChangeLyricsLine(double ms)
@@ -103,7 +99,7 @@ namespace Eum.UI.WinUI.Controls
             {
                 return false;
             }
-            
+
             //We advance to the next lyrics line if the current one is over with a small margin of 10ms.
             //get the next line and compare the start time with the current time
             var nextLine = _lyrics[_lyrics.IndexOf(_activeLyricsLine) + 1];
@@ -112,6 +108,7 @@ namespace Eum.UI.WinUI.Controls
             {
                 return true;
             }
+
             return false;
         }
 
@@ -136,8 +133,10 @@ namespace Eum.UI.WinUI.Controls
 
             ActiveLyricsLine = l;
         }
-        private void PlaybackViewModelOnPlayingItemChanged(object sender, ItemId e)
+
+        private async void PlaybackViewModelOnPlayingItemChanged(object sender, ItemId e)
         {
+            await TryFetchLyrics(e);
             _timer.Stop();
             _ms = 0;
             _timer.Start();
@@ -152,7 +151,7 @@ namespace Eum.UI.WinUI.Controls
                 var lines = await _lyricsProvider.GetLyrics(actualId, ct);
                 if (lines != null)
                 {
-                 
+
                     Lyrics = lines.Select((a, i) => new LyricsLineViewModel
                     {
                         Words = a.Words,
@@ -181,5 +180,22 @@ namespace Eum.UI.WinUI.Controls
                 Loading = false;
             }
         }
+    }
+
+    public interface IDispatcherHelper
+    {
+        bool TryEnqueue(QueuePriority priority, Action callback);
+    }
+
+    public enum QueuePriority
+    {
+        /// <summary>**Low** priority work will be scheduled when there isn't any other work to process. Work at **Low** priority can be preempted by new incoming **High** and **Normal** priority tasks.</summary>
+        Low = -10, // 0xFFFFFFF6
+
+        /// <summary>Work will be dispatched once all **High** priority tasks are dispatched. If a new **High** priority work is scheduled, all new **High** priority tasks are processed before resuming **Normal** tasks. This is the default priority.</summary>
+        Normal = 0,
+
+        /// <summary>Work scheduled at **High** priority will be dispatched first, along with other **High** priority System tasks, before processing **Normal** or **Low** priority work.</summary>
+        High = 10, // 0x0000000A
     }
 }

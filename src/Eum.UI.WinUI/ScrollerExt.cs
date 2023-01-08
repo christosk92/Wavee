@@ -55,22 +55,25 @@ public static partial class ListViewExtensions
         {
             isVirtualizing = true;
 
-            previousXOffset = scrollViewer.HorizontalOffset;
-            previousYOffset = scrollViewer.VerticalOffset;
-
-            var tcs = new TaskCompletionSource<object>();
-
-            void ViewChanged(object _, ScrollViewerViewChangedEventArgs __) => tcs.TrySetResult(result: default);
-
-            try
+            if (scrollViewer != null)
             {
-                scrollViewer.ViewChanged += ViewChanged;
-                listViewBase.ScrollIntoView(listViewBase.Items[index], ScrollIntoViewAlignment.Leading);
-                await tcs.Task;
-            }
-            finally
-            {
-                scrollViewer.ViewChanged -= ViewChanged;
+                previousXOffset = scrollViewer.HorizontalOffset;
+                previousYOffset = scrollViewer.VerticalOffset;
+
+                var tcs = new TaskCompletionSource<object>();
+
+                void ViewChanged(object _, ScrollViewerViewChangedEventArgs __) => tcs.TrySetResult(result: default);
+
+                try
+                {
+                    scrollViewer.ViewChanged += ViewChanged;
+                    listViewBase.ScrollIntoView(listViewBase.Items[index], ScrollIntoViewAlignment.Leading);
+                    await tcs.Task;
+                }
+                finally
+                {
+                    scrollViewer.ViewChanged -= ViewChanged;
+                }
             }
 
             selectorItem = (SelectorItem)listViewBase.ContainerFromIndex(index);

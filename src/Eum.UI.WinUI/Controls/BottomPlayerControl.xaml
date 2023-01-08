@@ -94,8 +94,9 @@
                                 </controls:MetadataControl.TextBlockStyle>
                             </controls:MetadataControl>
                         </StackPanel>
-                        <local:StarButton
-                            Grid.Column="2"
+                        <local:StarButton FontSize="22"
+                            Grid.Column="2" 
+                            IsChecked="{Binding IsSaved, Mode=OneWay}"
                             Margin="0,0,8,0"
                             VerticalAlignment="Center"
                             BorderThickness="0"

@@ -3,21 +3,24 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.DependencyInjection;
 using Eum.UI.Items;
 using Eum.UI.Services.Tracks;
+using Eum.UI.ViewModels.Artists;
 using Eum.UI.ViewModels.Search.SearchItems;
+using Eum.Users;
 
 namespace Eum.UI.ViewModels.Playlists
 {
-    public class PlaylistTrackViewModel : IIsPlaying
+    [INotifyPropertyChanged]
+    public partial  class PlaylistTrackViewModel : IIsPlaying, IIsSaved
     {
+        [ObservableProperty] private bool _isSaved;
         public PlaylistTrackViewModel(EumTrack eumTrack, int index)
         {
             Index = index;
             Track = eumTrack;
-            _wasPlaying =  Ioc.Default.GetRequiredService<MainViewModel>()
-                .PlaybackViewModel?.Item?.Id == Track.Id;
         }
 
         public PlaylistTrackViewModel(SpotifyTrackSearchItem searchTrackItem, int index)
@@ -25,11 +28,9 @@ namespace Eum.UI.ViewModels.Playlists
             Index = index;
 
             Track = new EumTrack(searchTrackItem);
-            _wasPlaying =  Ioc.Default.GetRequiredService<MainViewModel>()
-                .PlaybackViewModel?.Item?.Id == Track.Id;
         }
 
-        
+
         public int Index { get; }
         public EumTrack Track { get; }
         public ItemId Id => Track.Id;

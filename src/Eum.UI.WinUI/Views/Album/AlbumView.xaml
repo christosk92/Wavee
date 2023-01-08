@@ -242,7 +242,7 @@
                                             </ContentPresenter.Content>
                                         </ContentPresenter>
                                         <controls1:StarButton FontSize="18"
-                                                    Grid.Column="1"
+                                                    Grid.Column="1" IsChecked="{x:Bind IsSaved, Mode=OneTime}"
                                                     Padding="0"
                                                     HorizontalAlignment="Center"
                                                     Background="Transparent"
@@ -421,13 +421,13 @@
                                                 <TextBlock Text="Shuffle" />
                                             </StackPanel>
                                         </Button>
-                                        <Border Background="{x:Bind Bt.Background}"
-                                                BorderBrush="{x:Bind Bt.BorderBrush}"
-                                                CornerRadius="{x:Bind Bt.CornerRadius}"
-                                                Padding="{x:Bind Bt.Padding}"
+                                        <Border Background="{Binding Background, ElementName=Bt,Mode=OneWay}"
+                                                BorderBrush="{Binding BorderBrush, ElementName=Bt, Mode=OneWay}"
+                                                CornerRadius="{Binding CornerRadius,ElementName=Bt, Mode=OneWay}"
+                                                Padding="{Binding Padding, ElementName=Bt, Mode=OneWay}"
                                                 >
                                             <controls1:StarButton  ui:UIElementExtensions.ClipToBounds="False"
-                                                                   Canvas.ZIndex="1000"
+                                                                   Canvas.ZIndex="1000" IsChecked="{x:Bind ViewModel.IsSaved, Mode=OneWay}"
                                                                    FontSize="24"/>
                                         </Border>
                                         <SplitButton>

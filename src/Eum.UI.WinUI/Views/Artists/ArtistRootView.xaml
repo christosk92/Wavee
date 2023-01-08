@@ -41,7 +41,7 @@
     <Grid>
         <ScrollViewer
 
-            x:Name="Scroller" ViewChanged="Scroller_OnViewChanged" IsVerticalScrollChainingEnabled="False">
+            x:Name="Scroller" ViewChanged="Scroller_OnViewChanged" IsVerticalScrollChainingEnabled="True">
             <StackPanel Padding="56,44,0,16">
                 <Grid x:Name="HeaderWrapper" Height="450">
                     <Grid x:Name="Header">
@@ -84,7 +84,7 @@
                                         <TextBlock Text="Play" />
                                     </StackPanel>
                                 </Button>
-                                <Button>
+                                <Button x:Name="Bt">
                                     <StackPanel Orientation="Horizontal" Spacing="8">
                                         <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE14B;" />
                                         <TextBlock Text="Shuffle" />
@@ -96,7 +96,15 @@
                                         <TextBlock Text="Info" />
                                     </StackPanel>
                                 </Button>
-                                <controls:StarButton/>
+                                <Border Background="{Binding Background, ElementName=Bt,Mode=OneWay}"
+                                        BorderBrush="{Binding BorderBrush, ElementName=Bt, Mode=OneWay}"
+                                        CornerRadius="{Binding CornerRadius,ElementName=Bt, Mode=OneWay}"
+                                        Padding="{Binding Padding, ElementName=Bt, Mode=OneWay}">
+                                    <controls:StarButton  ui:UIElementExtensions.ClipToBounds="False"
+                                                           Canvas.ZIndex="1000"
+                                                           IsChecked="{x:Bind ViewModel.IsSaved, Mode=OneWay}"
+                                                           FontSize="24"/>
+                                </Border>
                                 <SplitButton>
                                     <SplitButton.Content>
                                         <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE10C;" />
@@ -230,7 +238,7 @@
                                                                         Height="32"
                                                                         Margin="-4,-8,-12,-8"
                                                                         Padding="0"
-                                                                        HorizontalAlignment="Center"
+                                                                        HorizontalAlignment="Left"
                                                                         VerticalAlignment="Center"
                                                                         Background="Transparent">
                                                                         <FontIcon FontSize="12" FontFamily="Segoe Fluent Icons" Glyph="&#xE103;" />
@@ -253,9 +261,9 @@
                                                                         Height="32"
                                                                         Command="{Binding PlayCommand}"
                                                                         CommandParameter="{Binding Id}"
-                                                                        Margin="-8,-8,-12,-8"
+                                                                        Margin="-4,-8,-12,-8"
                                                                         Padding="0"
-                                                                        HorizontalAlignment="Center"
+                                                                        HorizontalAlignment="Left"
                                                                         VerticalAlignment="Center"
                                                                         Background="Transparent">
                                                                         <FontIcon
@@ -280,7 +288,7 @@
                                                 CornerRadius="8">
                                                 <Grid x:DefaultBindMode="OneWay">
                                                     <Grid.ColumnDefinitions>
-                                                        <ColumnDefinition Width="120" />
+                                                        <ColumnDefinition Width="110" />
                                                         <ColumnDefinition Width="1.5*" />
                                                         <ColumnDefinition />
                                                     </Grid.ColumnDefinitions>
@@ -315,11 +323,16 @@
                                                                     UriSource="{x:Bind Track.Track.Images[0].Id}" />
                                                             </Image.Source>
                                                         </Image>
-                                                        <controls:StarButton
-                                                            Grid.Column="2"
+                                                        <controls:StarButton 
+                                                            IsChecked="{Binding IsSaved, Mode=OneWay}"
+                                                            Grid.Column="2" FontSize="18"
                                                             Margin="0,0,6,0"
                                                             Padding="0"
-                                                            HorizontalAlignment="Center"/>
+                                                            HorizontalAlignment="Center">
+                                                            <interactivity:Interaction.Behaviors>
+                                                                <behaviors:LikeTrackBehavior/>
+                                                            </interactivity:Interaction.Behaviors>
+                                                        </controls:StarButton>
                                                     </Grid>
                                                     <TextBlock
                                                         Grid.Column="1"
@@ -658,7 +671,7 @@
                                                                                                 Height="32"
                                                                                                 Margin="-8,-8,-12,-8"
                                                                                                 Padding="0"
-                                                                                                HorizontalAlignment="Center"
+                                                                                                HorizontalAlignment="Left"
                                                                                                 VerticalAlignment="Center"
                                                                                                 Background="Transparent">
                                                                                                 <FontIcon
@@ -705,8 +718,8 @@
                                                                                             Text="{x:Bind Index, Converter={StaticResource IndexToStringConverter}}" />
                                                                                     </ContentPresenter.Content>
                                                                                 </ContentPresenter>
-                                                                                <controls:StarButton
-                                                                                    Grid.Column="1"
+                                                                                <controls:StarButton  IsChecked="{x:Bind IsSaved, Mode=OneWay}"
+                                                                                    Grid.Column="1" FontSize="18"
                                                                                     Margin="0,0,6,0"
                                                                                     Padding="0"
                                                                                     HorizontalAlignment="Center"
@@ -842,9 +855,11 @@
                         Style="{ThemeResource AccentButtonStyle}">
                         <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE768;" />
                     </Button>
-                    <controls:StarButton CornerRadius="88" Width="48" Height="48"/>
+                    <controls:StarButton  FontSize="34"
+                        IsChecked="{x:Bind ViewModel.IsSaved, Mode=OneWay}"
+                        CornerRadius="88" Width="48" Height="48"/>
                 </StackPanel>
             </Grid>
         </Border>
     </Grid>
-</UserControl>
+</UserControl>  

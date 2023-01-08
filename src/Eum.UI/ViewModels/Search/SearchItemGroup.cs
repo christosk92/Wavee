@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.DependencyInjection;
 using DynamicData;
 using Eum.Spotify.playlist4;
 using Eum.UI.ViewModels.Playlists;
@@ -74,6 +75,7 @@ public class SongsResultGroup : SearchItemGroup
     public SongsResultGroup(string title, int categoryOrder, IObservable<IChangeSet<ISearchItem, ComposedKey>> changes) : base(title, categoryOrder, null)
     {
         int i = -1;
+        var main = Ioc.Default.GetRequiredService<MainViewModel>();
         changes
             .Select(a =>
             {
@@ -83,7 +85,10 @@ public class SongsResultGroup : SearchItemGroup
             .Transform(a=>
             {
                 i++;
-                return new PlaylistTrackViewModel((a as SpotifyTrackSearchItem)!, i);
+                return new PlaylistTrackViewModel((a as SpotifyTrackSearchItem)!, i)
+                {
+                    IsSaved = main.CurrentUser.User.LibraryProvider.IsSaved(a.Id),
+                };
             })
             .Bind(out _tracks)
             .DisposeMany()

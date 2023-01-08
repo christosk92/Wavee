@@ -2,6 +2,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using DynamicData;
 using DynamicData.Aggregation;
 using DynamicData.PLinq;
+using Eum.Enums;
 using Eum.UI.Items;
 using Eum.UI.ViewModels.Search.Patterns;
 using Eum.UI.ViewModels.Search.SearchItems;
@@ -50,10 +51,10 @@ public partial class SearchBarViewModel
                     "topRecommendations" => new RecommendationsResultGroup(category, order, group.Cache.Connect()),
                     _ => group.Cache.Items.FirstOrDefault()?.Id.Type switch
                     {
-                        EumEntityType.Track => new SongsResultGroup(category,
+                        EntityType.Track => new SongsResultGroup(category,
                             order,
                             group.Cache.Connect()),
-                        EumEntityType.Artist => new ArtistResultGroup(category, order, group.Cache.Connect()),
+                        EntityType.Artist => new ArtistResultGroup(category, order, group.Cache.Connect()),
                         _ => new SquareImageResultGroup(category, order, group.Cache.Connect()) as SearchItemGroup
                     }
                 };

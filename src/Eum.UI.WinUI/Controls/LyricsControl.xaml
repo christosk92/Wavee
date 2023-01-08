@@ -9,6 +9,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:contracts="using:Eum.Connections.Spotify.Clients.Contracts"
+    xmlns:viewModels="using:Eum.UI.ViewModels"
     mc:Ignorable="d">
 
     <Grid>
@@ -23,7 +24,7 @@
                 </ItemsPanelTemplate>
             </ListView.ItemsPanel>
             <ListView.ItemTemplate>
-                <DataTemplate x:DataType="local:LyricsLineViewModel">
+                <DataTemplate x:DataType="viewModels:LyricsLineViewModel">
                     <TextBlock FontSize="{x:Bind ToFontSize(IsActive, 24, 16), Mode=OneWay}" TextWrapping="Wrap" Margin="0,12"
                                FontWeight="SemiBold"
                                Opacity="{x:Bind ToFontSize(IsActive, 1, 0.5), Mode=OneWay}"

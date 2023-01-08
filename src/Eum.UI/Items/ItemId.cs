@@ -25,14 +25,14 @@ public readonly struct ItemId : IComparable<ItemId>, IEquatable<ItemId>
                     Service = (ServiceType)GetServiceType(s.Current.Line);
                     break;
                 case 1:
-                    Type = (EumEntityType)GetType(s.Current.Line);
+                    Type = (EntityType)GetType(s.Current.Line);
                     //'user' case is inconclusive, the uri could also be "spotify:user:31q546bk2ufm6r4csxytjx6rb7ci:playlist:7tlqtq2KZEhLK38UOSiRFj" for example
                     //in this case, the type is actually Playlist, we need a way to check this on case 'user':
                     //next line is the user id,
                     //if the next line is 'playlist' then the type is Playlist
                     //if the next line is 'collection' then the type is Collection
 
-                    if (Type == EumEntityType.User)
+                    if (Type == EntityType.User)
                     {
                         if (s.MoveNext())
                         {
@@ -40,11 +40,11 @@ public readonly struct ItemId : IComparable<ItemId>, IEquatable<ItemId>
                             {
                                 if (s.Current.Line.SequenceEqual("playlist".AsSpan()))
                                 {
-                                    Type = EumEntityType.Playlist;
+                                    Type = EntityType.Playlist;
                                 }
                                 else if (s.Current.Line.SequenceEqual("collection".AsSpan()))
                                 {
-                                    Type = EumEntityType.Collection;
+                                    Type = EntityType.Collection;
                                 }
                             }
                         }
@@ -59,7 +59,7 @@ public readonly struct ItemId : IComparable<ItemId>, IEquatable<ItemId>
     }
     public ServiceType Service { get; }
     public string Uri { get; }
-    public EumEntityType Type { get; }
+    public EntityType Type { get; }
     public string? Id { get; }
 
 

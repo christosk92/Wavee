@@ -11,6 +11,8 @@ using System.Reactive.Concurrency;
 using Eum.Logging;
 using AsyncLock = Nito.AsyncEx.AsyncLock;
 using Exception = System.Exception;
+using Eum.Spotify.metadata;
+using Eum.UI.ViewModels.Artists;
 
 namespace Eum.UI.ViewModels.Playlists;
 
@@ -47,7 +49,11 @@ public class SpotifyPlaylistViewModel : PlaylistViewModel
                     .GetTracks(uris)).ToArray();
                 if (addTracks)
                 {
-                    _tracksSourceList.AddRange(tracks.Select((a,i)=> new PlaylistTrackViewModel(a, i)));
+                    var main = Ioc.Default.GetRequiredService<MainViewModel>();
+                    _tracksSourceList.AddRange(tracks.Select((a, i) => new PlaylistTrackViewModel(a, i)
+                    {
+                        IsSaved = main.CurrentUser.User.LibraryProvider.IsSaved(a.Id),
+                    }));
                     // for (var index = 0; index < tracks.Length; index++)
                     // {
                     //     var eumTrack = tracks[index];

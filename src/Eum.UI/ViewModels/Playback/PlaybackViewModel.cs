@@ -7,9 +7,12 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.DependencyInjection;
 using CommunityToolkit.Mvvm.Input;
 using Eum.Artwork;
 using Eum.Connections.Spotify;
+using Eum.Connections.Spotify.Connection;
+using Eum.Enums;
 using Eum.Spotify.connectstate;
 using Eum.UI.Items;
 using ReactiveUI;
@@ -22,6 +25,8 @@ namespace Eum.UI.ViewModels.Playback
         [ObservableProperty]
         private CurrentlyPlayingHolder _item;
 
+        [ObservableProperty] private bool _isSaved;
+
         [ObservableProperty]
         private bool _playingOnExternalDevice;
 
@@ -32,22 +37,43 @@ namespace Eum.UI.ViewModels.Playback
 
         [ObservableProperty] private double _timestamp;
 
-        private IDisposable _disposable; 
+        private IDisposable _disposable;
         private IDisposable _secondDisposable;
 
         private ItemId _activeDeviceId;
 
-        protected PlaybackViewModel()
+        // protected PlaybackViewModel()
+        // {
+        //     Ioc.Default.GetRequiredService<MainViewModel>()
+        //         .CurrentUser.User.LibraryProvider.CollectionUpdated += LibraryProviderOnCollectionUpdated;
+        // }
+
+        private void LibraryProviderOnCollectionUpdated(object? sender, (EntityType Type, IReadOnlyList<CollectionUpdate> Ids) e)
         {
+            if (e.Type == EntityType.Track || e.Type == EntityType.Episode)
+            {
+                var interestedIn = e.Ids.FirstOrDefault(a => a.Id.Uri == Item.Id.Uri);
+                if (interestedIn != null)
+                {
+                    IsSaved = !interestedIn.Removed;
+                }
+            }
         }
 
-        public ICommand NavigateToAlbum => Commands.To(EumEntityType.Album);
+        public ICommand NavigateToAlbum => Commands.To(EntityType.Album);
         public ObservableCollection<RemoteDevice> RemoteDevices { get; } = new ObservableCollection<RemoteDevice>();
         public abstract ServiceType Service { get; }
 
+        public virtual void Construct()
+        {
+            Ioc.Default.GetRequiredService<MainViewModel>()
+                     .CurrentUser.User.LibraryProvider.CollectionUpdated += LibraryProviderOnCollectionUpdated;
+        }
         public virtual void Deconstruct()
         {
             StopTimer();
+            Ioc.Default.GetRequiredService<MainViewModel>()
+                .CurrentUser.User.LibraryProvider.CollectionUpdated -= LibraryProviderOnCollectionUpdated;
         }
 
         protected void StopTimer()
@@ -68,7 +94,7 @@ namespace Eum.UI.ViewModels.Playback
                 });
         }
 
-        public event EventHandler<ItemId> PlayingItemChanged; 
+        public event EventHandler<ItemId> PlayingItemChanged;
         public abstract Task SwitchRemoteDevice(ItemId? deviceId);
 
         public ItemId ActiveDeviceId
@@ -84,13 +110,15 @@ namespace Eum.UI.ViewModels.Playback
                 }
             }
         }
-        
+
         public event EventHandler<double> Seeked;
         public event EventHandler<bool> Paused;
-        public event EventHandler<ItemId> ActiveDeviceChanged; 
+        public event EventHandler<ItemId> ActiveDeviceChanged;
         protected virtual void OnPlayingItemChanged(ItemId e)
         {
             PlayingItemChanged?.Invoke(this, e);
+            IsSaved = Ioc.Default.GetRequiredService<MainViewModel>().CurrentUser.User.LibraryProvider
+                .IsSaved(e);
         }
 
         protected virtual void OnSeeked(double e)

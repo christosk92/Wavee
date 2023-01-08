@@ -1,14 +1,41 @@
-﻿using Eum.Enums;
+﻿using System.Reactive.Linq;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.DependencyInjection;
+using Eum.Connections.Spotify;
+using Eum.Connections.Spotify.Connection;
+using Eum.Enums;
+using Eum.UI.Services.Library;
+using Eum.UI.Users;
 using Eum.UI.ViewModels.Sidebar;
+using ReactiveUI;
 
 namespace Eum.UI.ViewModels.Library
 {
-    public sealed class LibraryViewModel : SidebarItemViewModel
+    public sealed partial class LibraryViewModel : SidebarItemViewModel
     {
+        [ObservableProperty] private int _libraryCount;
         private EntityType _libarEntityType;
-        public LibraryViewModel(EntityType libarEntityType)
+        private readonly EumUser _forUser;
+        public LibraryViewModel(EntityType libarEntityType, EumUser forUser)
         {
             _libarEntityType = libarEntityType;
+            _forUser = forUser;
+        }
+
+        public void RegisterEvents()
+        {
+            _forUser.LibraryProvider.CollectionUpdated += LibOnCollectionUpdated;
+        }
+
+        private void LibOnCollectionUpdated(object? sender, (EntityType Type, IReadOnlyList<CollectionUpdate> Ids) e)
+        {
+            if(e.Type != _libarEntityType) return;
+            LibraryCount = (sender as ILibraryProvider).LibraryCount(_libarEntityType);
+        }
+
+        public void UnregisterEvents()
+        {
+            _forUser.LibraryProvider.CollectionUpdated -= LibOnCollectionUpdated;
         }
 
         public override string Title
@@ -43,5 +70,6 @@ namespace Eum.UI.ViewModels.Library
                 };
             }
         }
+        
     }
 }

@@ -15,6 +15,8 @@ using Eum.UI.ViewModels.Playlists;
 using Refit;
 using System.Text.Json;
 using Eum.UI.Services;
+using Eum.UI.Services.Library;
+using Eum.Users;
 
 namespace Eum.UI.Users
 {
@@ -92,6 +94,9 @@ namespace Eum.UI.Users
             User.ReplaceMetadata("privateUser", client.PrivateUser);
             User.ThemeService = Ioc.Default.GetRequiredService<IThemeSelectorServiceFactory>()
                 .GetThemeSelectorService(User);
+            User.LibraryProvider = Ioc.Default.GetRequiredService<ILibraryProviderFactory>()
+                .GetLibraryProvider(User);
+            _ = Task.Run(() => User.LibraryProvider.InitializeLibrary(ct));
         }
 
 

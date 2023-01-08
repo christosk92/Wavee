@@ -57,6 +57,7 @@ namespace Eum.UI.WinUI.Views.Shell
         {
             ViewModel.SidePanelView = null;
             ViewModel.ShouldShowSidePanel = false;
+            ViewModel.LyricsViewModel = null;
         }
 
         public bool IsSidePanelView(string s, string s1)

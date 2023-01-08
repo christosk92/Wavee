@@ -13,6 +13,7 @@
     xmlns:sidebar="using:Eum.UI.Core.ViewModels.Sidebar"
     xmlns:sidebar1="using:Eum.UI.ViewModels.Sidebar"
     xmlns:templateSelectors="using:Eum.UI.WinUI.TemplateSelectors"
+    xmlns:library="using:Eum.UI.ViewModels.Library"
     HorizontalAlignment="Stretch"
     d:DesignHeight="768"
     d:DesignWidth="200"
@@ -143,8 +144,21 @@
             <DataTemplate x:Key="Item" x:DataType="sidebar1:SidebarItemViewModel">
                 <NavigationViewItem
                     Content="{x:Bind Title}"
-                    DataContext="{x:Bind}"
+                    DataContext="{x:Bind}" 
                     IsSelected="{x:Bind IsSelected, Mode=OneWay}">
+                    <NavigationViewItem.Icon>
+                        <FontIcon FontFamily="{x:Bind GlyphFontFamily}" Glyph="{x:Bind Glyph}" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+            </DataTemplate>
+            <DataTemplate x:Key="Library" x:DataType="library:LibraryViewModel">
+                <NavigationViewItem
+                    Content="{x:Bind Title}" 
+                    DataContext="{x:Bind}" 
+                    IsSelected="{x:Bind IsSelected, Mode=OneWay}">
+                    <NavigationViewItem.InfoBadge>
+                        <InfoBadge Value="{x:Bind LibraryCount, Mode=OneWay}"/>
+                    </NavigationViewItem.InfoBadge>
                     <NavigationViewItem.Icon>
                         <FontIcon FontFamily="{x:Bind GlyphFontFamily}" Glyph="{x:Bind Glyph}" />
                     </NavigationViewItem.Icon>
@@ -178,6 +192,7 @@
         <templateSelectors:NavItemDataTemplateSelector
             Header="{StaticResource Header}"
             Item="{StaticResource Item}"
+            Library="{StaticResource Library}"
             Playlist="{StaticResource Playlist}"
             PlaylistHeader="{StaticResource PlaylistHeader}" />
     </NavigationView.MenuItemTemplateSelector>

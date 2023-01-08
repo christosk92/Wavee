@@ -13,6 +13,7 @@ using CommunityToolkit.Mvvm.DependencyInjection;
 using CommunityToolkit.Mvvm.Input;
 using Eum.UI.Helpers;
 using Eum.UI.Items;
+using Eum.UI.Services;
 using Eum.UI.Services.Login;
 using Eum.UI.Services.Users;
 using Eum.UI.Users;
@@ -34,6 +35,7 @@ namespace Eum.UI.ViewModels
         [ObservableProperty]
         private PlaybackViewModel? _playbackViewModel;
         private EumUserViewModel _currentUser;
+        [ObservableProperty] private LyricsViewModel? _lyricsViewModel;
         [ObservableProperty] private string _glaze;
         [ObservableProperty] private AbsFullscreenViewModel? _fullscreenViewModel;
         [ObservableProperty] private bool _shouldShowSidePanel;
@@ -67,10 +69,15 @@ namespace Eum.UI.ViewModels
                         CurrentUser.User.ThemeService.GlazeChanged -= ThemeServiceOnGlazeChanged;
                     }
                     CurrentUser = user;
+                    if (PlaybackViewModel != null)
+                    {
+                        PlaybackViewModel.Deconstruct();
+                    }
                     PlaybackViewModel = user.User.Id.Service switch
                     {
                         ServiceType.Spotify => Ioc.Default.GetRequiredService<IEnumerable<PlaybackViewModel>>().FirstOrDefault(a => a.Service == ServiceType.Spotify)
                     };
+                    PlaybackViewModel.Construct();
                     Glaze = user.User.Accent switch
                     {
                         "System Color" => user.User.ThemeService.Glaze,
@@ -126,13 +133,31 @@ namespace Eum.UI.ViewModels
             get => _currentUser;
             set => this.SetProperty(ref _currentUser, value);
         }
-        
+
 
         [RelayCommand]
         public void ShowSidePanel(string panelType)
         {
-            SidePanelView = panelType;
-            ShouldShowSidePanel = true;
+            if (SidePanelView == panelType)
+            {
+                //close
+                SidePanelView = null;
+                ShouldShowSidePanel = false;
+            }
+            else
+            {
+                SidePanelView = panelType;
+                ShouldShowSidePanel = true;
+                if (panelType == "lyrics")
+                {
+                    LyricsViewModel = new LyricsViewModel(Ioc.Default.GetRequiredService<ILyricsProvider>(),
+                        PlaybackViewModel, Ioc.Default.GetRequiredService<IDispatcherHelper>());
+                }
+                else
+                {
+                    LyricsViewModel = null;
+                }
+            }
         }
 
         private SearchBarViewModel CreateSearchBar()

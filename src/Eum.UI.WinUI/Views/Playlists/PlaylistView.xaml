@@ -228,7 +228,7 @@
 
                             <Grid VerticalAlignment="Stretch">
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="20" />
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
                                 <ContentPresenter x:Name="IndexOrPlayButtonControl">
@@ -243,7 +243,7 @@
                                 </ContentPresenter>
 
                                 <controls:StarButton
-                                    Grid.Column="1"
+                                    Grid.Column="1" FontSize="18"
                                     Padding="0"
                                     HorizontalAlignment="Center"/>
                             </Grid>

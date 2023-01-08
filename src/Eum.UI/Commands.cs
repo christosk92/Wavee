@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using CommunityToolkit.Mvvm.Input;
+using Eum.Enums;
 using Eum.UI.Items;
 using Eum.UI.ViewModels.Album;
 using Eum.UI.ViewModels.Artists;
@@ -39,13 +40,13 @@ namespace Eum.UI
         public static ICommand ToArtist { get; }
         public static ICommand ToAlbum { get; }
 
-        public static ICommand To(EumEntityType argId)
+        public static ICommand To(EntityType argId)
         {
             switch (argId)
             {
-                case EumEntityType.Artist:
+                case EntityType.Artist:
                     return ToArtist;
-                case EumEntityType.Album:
+                case EntityType.Album:
                     return ToAlbum;
             }
 

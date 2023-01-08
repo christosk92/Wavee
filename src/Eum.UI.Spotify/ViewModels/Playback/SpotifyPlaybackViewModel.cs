@@ -35,6 +35,7 @@ using MoreLinq.Extensions;
 using Org.BouncyCastle.Utilities.Encoders;
 using ReactiveUI;
 using Color = System.Drawing.Color;
+using Eum.UI.Services.Library;
 
 namespace Eum.UI.Spotify.ViewModels.Playback;
 public class SpotifyPlaybackViewModel : PlaybackViewModel
@@ -91,6 +92,7 @@ public class SpotifyPlaybackViewModel : PlaybackViewModel
         {
             Item?.Dispose();
             Item = null;
+            IsSaved = false;
             OnPlayingItemChanged(default);
             return;
         }

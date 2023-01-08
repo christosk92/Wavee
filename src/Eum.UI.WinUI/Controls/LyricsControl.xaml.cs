@@ -20,6 +20,7 @@ using CommunityToolkit.Mvvm.DependencyInjection;
 using CommunityToolkit.WinUI.UI;
 using Eum.UI.Items;
 using Eum.UI.Services;
+using Eum.UI.ViewModels;
 using Eum.UI.ViewModels.Playback;
 using Nito.AsyncEx;
 
@@ -30,44 +31,20 @@ namespace Eum.UI.WinUI.Controls
 {
     public sealed partial class LyricsControl : UserControl
     {
-        public static readonly DependencyProperty ItemProperty = DependencyProperty.Register(nameof(Item), typeof(ItemId?), typeof(LyricsControl), new PropertyMetadata(default(ItemId?), PropertyChangedCallback));
-        private CancellationTokenSource _cts = new CancellationTokenSource();
-        private static async void PropertyChangedCallback(DependencyObject d, DependencyPropertyChangedEventArgs e)
-        {
-            if (d is LyricsControl lc)
-            {
-                if (e.NewValue is ItemId actualId)
-                {
-                    if (e.OldValue is ItemId oldId)
-                    {
-                        if(oldId == actualId) return;
-                    }
-                    lc._cts.Cancel();
-                    lc._cts.Dispose();
-                    lc._cts = new CancellationTokenSource();
-                    await lc.ViewModel.TryFetchLyrics(actualId, lc._cts.Token);
-                }
-                else
-                {
-                    lc.ViewModel.HasLyrics = false;
-                }
-            }
-        }
+        public static readonly DependencyProperty ViewModelProperty = DependencyProperty.Register(nameof(ViewModel), typeof(LyricsViewModel), typeof(LyricsControl), new PropertyMetadata(default(LyricsViewModel?)));
+
 
         public LyricsControl()
         {
-            ViewModel = new LyricsViewModel(Ioc.Default.GetRequiredService<ILyricsProvider>(), Ioc.Default.GetRequiredService<PlaybackViewModel>());
             this.InitializeComponent();
-            this.DataContext = ViewModel;
         }
 
-        public ItemId? Item
+
+        public LyricsViewModel? ViewModel
         {
-            get => (ItemId?)GetValue(ItemProperty);
-            set => SetValue(ItemProperty, value);
+            get => (LyricsViewModel?) GetValue(ViewModelProperty);
+            set => SetValue(ViewModelProperty, value);
         }
-
-        public LyricsViewModel ViewModel { get; }
 
         public bool Negate(bool b)
         {

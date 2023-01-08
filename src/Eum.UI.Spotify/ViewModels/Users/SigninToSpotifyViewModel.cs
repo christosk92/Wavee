@@ -8,6 +8,7 @@ using Eum.Logging;
 using Eum.Spotify;
 using Eum.UI.Items;
 using Eum.UI.Services;
+using Eum.UI.Services.Library;
 using Eum.UI.Services.Login;
 using Eum.UI.Services.Playlists;
 using Eum.UI.Services.Users;
@@ -63,6 +64,8 @@ namespace Eum.UI.Spotify.ViewModels.Users
                              });
                     user.ThemeService = Ioc.Default.GetRequiredService<IThemeSelectorServiceFactory>()
                         .GetThemeSelectorService(user);
+                    user.LibraryProvider = Ioc.Default.GetRequiredService<ILibraryProviderFactory>()
+                        .GetLibraryProvider(user);
                     IdentityService.Instance.LoginUser(user);
                 }
             }

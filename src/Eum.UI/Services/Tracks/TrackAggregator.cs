@@ -135,8 +135,8 @@ namespace Eum.UI.Services.Tracks
                                 {
                                     ExtensionKind = a.Type switch
                                     {
-                                        EumEntityType.Track=> ExtensionKind.TrackV4,
-                                        EumEntityType.Episode => ExtensionKind.EpisodeV4,
+                                        EntityType.Track=> ExtensionKind.TrackV4,
+                                        EntityType.Episode => ExtensionKind.EpisodeV4,
                                         _ => ExtensionKind.UnknownExtension
                                     }
                                 }
@@ -164,10 +164,10 @@ namespace Eum.UI.Services.Tracks
                                         var id = new ItemId(k.EntityUri);
                                         switch (id.Type)
                                         {
-                                            case EumEntityType.Episode:
+                                            case EntityType.Episode:
                                                 return null;
                                                 break;
-                                            case EumEntityType.Track:
+                                            case EntityType.Track:
                                                 var original = Track.Parser.ParseFrom(k.ExtensionData.Value);
                                                 var images = original.Album.CoverGroup?
                                                     .Image.Select(a => new CachedImage
@@ -257,9 +257,9 @@ namespace Eum.UI.Services.Tracks
                 case ServiceType.Spotify:
                     switch (id.Type)
                     {
-                        case EumEntityType.Episode:
+                        case EntityType.Episode:
                             break;
-                        case EumEntityType.Track:
+                        case EntityType.Track:
                             var uri = new SpotifyId(id.Uri);
                             var spotifyClient = Ioc.Default.GetRequiredService<ISpotifyClient>();
                             var original =

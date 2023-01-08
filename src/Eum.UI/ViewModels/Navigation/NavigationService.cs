@@ -219,6 +219,7 @@ public partial class NavigationService
             {
                 ToViewModelType = navigateTo.GetType()
             });
+            
             //var navigated = _frame.Navigate(pageType, parameter);
 
             _lastParameterUsed = parameter;

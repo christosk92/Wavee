@@ -1,4 +1,5 @@
-﻿using Eum.UI.ViewModels.Playlists;
+﻿using Eum.UI.ViewModels.Library;
+using Eum.UI.ViewModels.Playlists;
 using Eum.UI.ViewModels.Sidebar;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -9,6 +10,7 @@ namespace Eum.UI.WinUI.TemplateSelectors
     {
         public DataTemplate Header { get; set; }
         public DataTemplate Item { get; set; }
+        public DataTemplate Library { get; set; }
         public DataTemplate PlaylistHeader { get; set; }
         public DataTemplate Playlist { get; set; }
 
@@ -19,6 +21,7 @@ namespace Eum.UI.WinUI.TemplateSelectors
                 PlaylistViewModel => Playlist,
                 SidebarPlaylistHeader => PlaylistHeader,
                 SidebarItemHeader _ => Header,
+                LibraryViewModel _ => Library,
                 SidebarItemViewModel _=> Item,
                 _ => base.SelectTemplateCore(item, container)
             };

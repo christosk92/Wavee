@@ -55,6 +55,8 @@ using Eum.UI.Services.Albums;
 using Windows.ApplicationModel.DataTransfer;
 using LiteDB.Engine;
 using Eum.UI.WinUI.Services;
+using Eum.UI.Services.Library;
+using Microsoft.UI.Dispatching;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -85,6 +87,7 @@ namespace Eum.UI.WinUI
             var dbstring = $"filename={path}; journal=false";
             var db = new LiteDatabase(dbstring);
 
+            serviceCollection.AddTransient<IDispatcherHelper, WinUI_Dispatcher>();
             serviceCollection.AddTransient<IFileHelper, WinUI_RandomAccessStream>();
             serviceCollection.AddSingleton<ILiteDatabase>(db);
             serviceCollection.AddTransient<ITrackAggregator, TrackAggregator>();
@@ -98,7 +101,7 @@ namespace Eum.UI.WinUI
             serviceCollection.AddTransient<IPlaybackService, PlaybackService>();
             serviceCollection.AddTransient<IErrorMessageShower, WinUI_ErrorMessageShower>();
             serviceCollection.AddTransient<IThemeSelectorServiceFactory, WinUiThemeSelectorServiceFactory>();
-
+            serviceCollection.AddTransient<ILibraryProviderFactory, LibraryProviderFactory>();
             serviceCollection.AddTransient<ILyricsProvider, LyricsProvider>();
             serviceCollection.AddSpotify(new SpotifyConfig
             {
@@ -136,6 +139,21 @@ namespace Eum.UI.WinUI
 
 
         public static Window MWindow { get; private set; }
+    }
+
+    public class WinUI_Dispatcher : IDispatcherHelper
+    {
+
+        public bool TryEnqueue(QueuePriority priority, Action callback)
+        {
+            return App.MWindow.DispatcherQueue.TryEnqueue(priority switch
+            {
+                QueuePriority.Low => DispatcherQueuePriority.High,
+                QueuePriority.Normal => DispatcherQueuePriority.Normal,
+                QueuePriority.High => DispatcherQueuePriority.High,
+                _ => throw new ArgumentOutOfRangeException(nameof(priority), priority, null)
+            }, () => callback());
+        }
     }
 
     public class WinUI_RandomAccessStream : IFileHelper

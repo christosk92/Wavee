@@ -15,6 +15,11 @@ using System.Runtime.InteropServices.WindowsRuntime;
 using System.Windows.Forms;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.DependencyInjection;
+using Eum.UI.Items;
+using Eum.UI.ViewModels;
+using Eum.UI.ViewModels.Artists;
 using Eum.UI.ViewModels.Playback;
 using Microsoft.UI.Xaml.Controls;
 using UserControl = Microsoft.UI.Xaml.Controls.UserControl;
@@ -46,6 +51,7 @@ namespace Eum.UI.WinUI.Controls
             set => SetValue(CommandBarProperty, value);
         }
 
+ 
         private async void ListViewBase_OnItemClick(object sender, ItemClickEventArgs e)
         {
             var clickedDevice = e.ClickedItem as RemoteDevice;
@@ -55,4 +61,5 @@ namespace Eum.UI.WinUI.Controls
 
     
     }
+
 }
