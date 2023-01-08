@@ -21,6 +21,7 @@ using CommunityToolkit.WinUI.UI;
 using Eum.UI.Items;
 using Eum.UI.Services;
 using Eum.UI.ViewModels.Playback;
+using Nito.AsyncEx;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -35,15 +36,15 @@ namespace Eum.UI.WinUI.Controls
         {
             if (d is LyricsControl lc)
             {
-                lc._cts.Cancel();
-                lc._cts.Dispose();
-                lc._cts = new CancellationTokenSource();
                 if (e.NewValue is ItemId actualId)
                 {
                     if (e.OldValue is ItemId oldId)
                     {
                         if(oldId == actualId) return;
                     }
+                    lc._cts.Cancel();
+                    lc._cts.Dispose();
+                    lc._cts = new CancellationTokenSource();
                     await lc.ViewModel.TryFetchLyrics(actualId, lc._cts.Token);
                 }
                 else

@@ -110,7 +110,7 @@ namespace Eum.UI.WinUI
                 LogPath = Path.Combine(dataDir, "Logs_winui.log"),
                 CachePath = dataDir,
                 TimeSyncMethod = TimeSyncMethod.MELODY
-            }, new EumVlcPlayer());
+            }, new NAudioPlayer());
 
             this.UnhandledException += OnUnhandledException;
             Ioc.Default.ConfigureServices(serviceCollection.BuildServiceProvider());

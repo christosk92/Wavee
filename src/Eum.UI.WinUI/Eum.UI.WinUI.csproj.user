@@ -7,6 +7,9 @@
     <ActiveDebugProfile>Eum.UI.WinUI (Package)</ActiveDebugProfile>
   </PropertyGroup>
   <ItemGroup>
+    <Page Update="Themes\Generic.xaml">
+      <SubType>Designer</SubType>
+    </Page>
     <Page Update="Views\Playlists\CreatePlaylistView.xaml">
       <SubType>Designer</SubType>
     </Page>

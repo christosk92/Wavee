@@ -35,7 +35,7 @@
                       x:Load="{x:Bind ViewModel.Loading, Mode=OneWay}"/>
         <TextBlock  VerticalAlignment="Center"  
                     x:Name="NoData"
-                    x:Load="{x:Bind Negate(ViewModel.HasLyrics), Mode=OneWay}"
+                    x:Load="{x:Bind ViewModel.CompositeNoLyricsAndNotLoading, Mode=OneWay}"
                     HorizontalTextAlignment="Center"
                     FontWeight="SemiBold" FontSize="16"
                     Text="You caught us on this one... &#x0a;Lyrics are not available." 

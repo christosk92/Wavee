@@ -32,8 +32,13 @@ namespace Eum.UI.WinUI.Controls
     [INotifyPropertyChanged]
     public partial class LyricsViewModel
     {
-        [ObservableProperty] private bool _hasLyrics;
-        [ObservableProperty] private bool _loading;
+        public bool CompositeNoLyricsAndNotLoading => !HasLyrics && !Loading;
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(CompositeNoLyricsAndNotLoading))]
+        private bool _hasLyrics;
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(CompositeNoLyricsAndNotLoading))] 
+        private bool _loading;
         [ObservableProperty] private List<LyricsLineViewModel> _lyrics;
         [ObservableProperty] private LyricsLineViewModel? _activeLyricsLine;
         private readonly ILyricsProvider _lyricsProvider;
@@ -59,11 +64,10 @@ namespace Eum.UI.WinUI.Controls
             _ms = e;
             //TODO: invoke to go to accurate lyrics line
             var closestLyrics = FindClosestLyricsLine(e);
-
-            _dispatcherQueue.TryEnqueue(DispatcherQueuePriority.High, () =>
+            if (closestLyrics != null)
             {
-                SeekToLyrics(closestLyrics);
-            });
+                _dispatcherQueue.TryEnqueue(DispatcherQueuePriority.High, () => { SeekToLyrics(closestLyrics); });
+            }
         }
 
         private void PlaybackViewModelOnPaused(object sender, bool e)
@@ -114,8 +118,13 @@ namespace Eum.UI.WinUI.Controls
         private LyricsLineViewModel FindClosestLyricsLine(double ms)
         {
             //with a margin of 10ms
-            var closest = _lyrics.OrderBy(x => Math.Abs(x.StartsAt - ms)).First();
-            return closest;
+            if (_lyrics != null)
+            {
+                var closest = _lyrics.OrderBy(x => Math.Abs(x.StartsAt - ms)).First();
+                return closest;
+            }
+
+            return null;
         }
 
         private void SeekToLyrics(LyricsLineViewModel l)

@@ -242,14 +242,10 @@
                                     </ContentPresenter.Content>
                                 </ContentPresenter>
 
-                                <ToggleButton
+                                <controls:StarButton
                                     Grid.Column="1"
                                     Padding="0"
-                                    HorizontalAlignment="Center"
-                                    Background="Transparent"
-                                    BorderThickness="0">
-                                    <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xEB51;" />
-                                </ToggleButton>
+                                    HorizontalAlignment="Center"/>
                             </Grid>
                             <TextBlock
                                 x:Name="TitleBlock"

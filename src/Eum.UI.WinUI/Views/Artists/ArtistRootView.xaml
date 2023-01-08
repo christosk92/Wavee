@@ -90,6 +90,24 @@
                                         <TextBlock Text="Shuffle" />
                                     </StackPanel>
                                 </Button>
+                                <Button>
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE946;" />
+                                        <TextBlock Text="Info" />
+                                    </StackPanel>
+                                </Button>
+                                <controls:StarButton/>
+                                <SplitButton>
+                                    <SplitButton.Content>
+                                        <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE10C;" />
+                                    </SplitButton.Content>
+                                    <SplitButton.Flyout>
+                                        <Flyout Placement="Bottom">
+                                            <!-- flyout content -->
+                                        </Flyout>
+                                    </SplitButton.Flyout>
+
+                                </SplitButton>
                             </StackPanel>
                         </StackPanel>
                     </Grid>
@@ -297,15 +315,11 @@
                                                                     UriSource="{x:Bind Track.Track.Images[0].Id}" />
                                                             </Image.Source>
                                                         </Image>
-                                                        <ToggleButton
+                                                        <controls:StarButton
                                                             Grid.Column="2"
                                                             Margin="0,0,6,0"
                                                             Padding="0"
-                                                            HorizontalAlignment="Center"
-                                                            Background="Transparent"
-                                                            BorderThickness="0">
-                                                            <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xEB51;" />
-                                                        </ToggleButton>
+                                                            HorizontalAlignment="Center"/>
                                                     </Grid>
                                                     <TextBlock
                                                         Grid.Column="1"
@@ -691,17 +705,12 @@
                                                                                             Text="{x:Bind Index, Converter={StaticResource IndexToStringConverter}}" />
                                                                                     </ContentPresenter.Content>
                                                                                 </ContentPresenter>
-                                                                                <ToggleButton
+                                                                                <controls:StarButton
                                                                                     Grid.Column="1"
                                                                                     Margin="0,0,6,0"
                                                                                     Padding="0"
                                                                                     HorizontalAlignment="Center"
-                                                                                    Background="Transparent"
-                                                                                    BorderThickness="0">
-                                                                                    <FontIcon
-                                                                                        FontFamily="Segoe Fluent Icons"
-                                                                                        Glyph="&#xEB51;" />
-                                                                                </ToggleButton>
+                                                                                    />
                                                                             </Grid>
                                                                             <TextBlock
                                                                                 Grid.Column="1"
@@ -833,10 +842,7 @@
                         Style="{ThemeResource AccentButtonStyle}">
                         <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE768;" />
                     </Button>
-                    <Button CornerRadius="88" Width="48" Height="48">
-                        <FontIcon
-                            FontFamily="Segoe Fluent Icons" Glyph="&#xEB51;" />
-                    </Button>
+                    <controls:StarButton CornerRadius="88" Width="48" Height="48"/>
                 </StackPanel>
             </Grid>
         </Border>

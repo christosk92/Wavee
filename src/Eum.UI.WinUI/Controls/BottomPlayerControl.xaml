@@ -94,18 +94,12 @@
                                 </controls:MetadataControl.TextBlockStyle>
                             </controls:MetadataControl>
                         </StackPanel>
-                        <Button
+                        <local:StarButton
                             Grid.Column="2"
                             Margin="0,0,8,0"
                             VerticalAlignment="Center"
-                            Background="Transparent"
                             BorderThickness="0"
-                            RelativePanel.RightOf="Metadatapnale">
-                            <FontIcon
-                                FontFamily="{ThemeResource SymbolThemeFontFamily}"
-                                FontSize="16"
-                                Glyph="&#xEB51;" />
-                        </Button>
+                            RelativePanel.RightOf="Metadatapnale"/>
                     </Grid>
 
                     <Grid Grid.Column="1">

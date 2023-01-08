@@ -94,7 +94,7 @@
                         <interactivity:Interaction.Behaviors>
                             <behaviors:PlayingTrackPointerBehavior />
                         </interactivity:Interaction.Behaviors>
-                        <Grid>
+                        <Grid Background="Transparent">
                             <VisualStateManager.VisualStateGroups>
                                 <VisualStateGroup>
                                     <VisualState x:Name="Normal" />
@@ -190,8 +190,8 @@
                                             <Setter Target="IndexOrPlayButtonControl.Content">
                                                 <Setter.Value>
                                                     <Button
-                                                                Width="32"
-                                                                Height="32"
+                                                                Width="33"
+                                                                Height="33"
                                                                 Margin="-8,-8,-12,-8"
                                                                 Padding="0"
                                                                 HorizontalAlignment="Center"
@@ -218,7 +218,7 @@
                                         CornerRadius="8">
                                 <Grid>
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="80" />
+                                        <ColumnDefinition Width="60" />
                                         <ColumnDefinition Width="1.5*" />
                                         <ColumnDefinition />
                                         <ColumnDefinition Width=".5*" />
@@ -228,7 +228,7 @@
 
                                     <Grid VerticalAlignment="Stretch">
                                         <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="16" />
                                             <ColumnDefinition Width="*" />
                                         </Grid.ColumnDefinitions>
                                         <ContentPresenter x:Name="IndexOrPlayButtonControl">
@@ -241,14 +241,12 @@
                                                             Text="{x:Bind Index, Converter={StaticResource IndexToStringConverter}}" />
                                             </ContentPresenter.Content>
                                         </ContentPresenter>
-                                        <ToggleButton
+                                        <controls1:StarButton FontSize="18"
                                                     Grid.Column="1"
                                                     Padding="0"
                                                     HorizontalAlignment="Center"
                                                     Background="Transparent"
-                                                    BorderThickness="0">
-                                            <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xEB51;" />
-                                        </ToggleButton>
+                                                    BorderThickness="0"/>
                                     </Grid>
                                     <TextBlock
                                                 Grid.Column="1"
@@ -417,15 +415,21 @@
                                                 <TextBlock Text="Play" />
                                             </StackPanel>
                                         </Button>
-                                        <Button>
+                                        <Button x:Name="Bt">
                                             <StackPanel Orientation="Horizontal" Spacing="8">
                                                 <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE14B;" />
                                                 <TextBlock Text="Shuffle" />
                                             </StackPanel>
                                         </Button>
-                                        <ToggleButton>
-                                            <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xEB51;" />
-                                        </ToggleButton>
+                                        <Border Background="{x:Bind Bt.Background}"
+                                                BorderBrush="{x:Bind Bt.BorderBrush}"
+                                                CornerRadius="{x:Bind Bt.CornerRadius}"
+                                                Padding="{x:Bind Bt.Padding}"
+                                                >
+                                            <controls1:StarButton  ui:UIElementExtensions.ClipToBounds="False"
+                                                                   Canvas.ZIndex="1000"
+                                                                   FontSize="24"/>
+                                        </Border>
                                         <SplitButton>
                                             <SplitButton.Content>
                                                 <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE10C;" />
@@ -455,7 +459,7 @@
                         CornerRadius="8">
                         <Grid>
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="80" />
+                                <ColumnDefinition Width="60" />
                                 <ColumnDefinition Width="1.5*" />
                                 <ColumnDefinition />
                                 <ColumnDefinition Width=".5*" />

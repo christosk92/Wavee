@@ -33,14 +33,11 @@
                 Opacity=".7"
                 Text="{x:Bind ViewModel.Index, Converter={StaticResource IndexToStringConverter}}" />
 
-            <ToggleButton
+            <local:StarButton   
                 Grid.Column="1"
                 Padding="0"
                 HorizontalAlignment="Center"
-                Background="Transparent"
-                BorderThickness="0">
-                <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xEB51;" />
-            </ToggleButton>
+                BorderThickness="0"/>
         </Grid>
         <!--    -->
         <!--  <Border Grid.Column="2" Margin="0,2,8,2"  -->
