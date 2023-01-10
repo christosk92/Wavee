@@ -45,10 +45,41 @@ namespace Eum.UI.Services.Library
         }
     }
 
+    public readonly record struct CollectionUpdateNotification(ItemIdHolder Id, bool Added);
+    public readonly struct ItemIdHolder : IEquatable<ItemIdHolder>
+    {
+        public ItemId Id { get; init; }
+        public DateTimeOffset AddedAt { get; init; }
+
+        public bool Equals(ItemIdHolder other)
+        {
+            return Id.Equals(other.Id);
+        }
+
+        public override bool Equals(object? obj)
+        {
+            return obj is ItemIdHolder other && Equals(other);
+        }
+
+        public override int GetHashCode()
+        {
+            return Id.GetHashCode();
+        }
+
+        public static bool operator ==(ItemIdHolder left, ItemIdHolder right)
+        {
+            return left.Equals(right);
+        }
+
+        public static bool operator !=(ItemIdHolder left, ItemIdHolder right)
+        {
+            return !left.Equals(right);
+        }
+    }
     public class LibraryProvider : ILibraryProvider
     {
         private readonly ConcurrentDictionary<EntityType, AsyncManualResetEvent> _lock = new();
-        private readonly HashSet<ItemId> _collection = new();
+        private readonly HashSet<ItemIdHolder> _collection = new();
         private readonly ISpotifyClient _spotifyClient;
         private readonly EumUser _user;
         private IDisposable _listener;
@@ -80,14 +111,30 @@ namespace Eum.UI.Services.Library
                         {
                             if (collectionUpdate.Removed)
                             {
-                                _collection.Remove(new ItemId(collectionUpdate.Id.Uri));
+                                _collection.Remove(new ItemIdHolder
+                                {
+                                    Id = new ItemId(collectionUpdate.Id.Uri)
+                                });
                             }
                             else
                             {
-                                _collection.Add(new ItemId(collectionUpdate.Id.Uri));
+                                _collection.Add(new ItemIdHolder
+                                {
+                                    Id = new ItemId(collectionUpdate.Id.Uri),
+                                    AddedAt = collectionUpdate.AddedAt ?? DateTimeOffset.UtcNow
+                                });
                             }
                         }
-                        CollectionUpdated?.Invoke(this, (kvp.Key, assArr));
+                        CollectionUpdated?.Invoke(this, (kvp.Key, assArr
+                            .Select(a=> new CollectionUpdateNotification
+                            {
+                                Id = new ItemIdHolder
+                                {
+                                    Id = new ItemId(a.Id.Uri), 
+                                    AddedAt = a.AddedAt ?? DateTimeOffset.UtcNow
+                                },
+                                Added = !a.Removed
+                            }).ToArray()));
                     }
                 });
         }
@@ -109,6 +156,26 @@ namespace Eum.UI.Services.Library
                         _collection.Add(id);
                     }
                     _lock[EntityType.Track].Set();
+                    var res = new[]
+                    {
+                        EntityType.Album,
+                        EntityType.Artist,
+                        EntityType.Track,
+                        EntityType.Show,
+                    }.Select(a => (a, _collection.Where(j => j.Id.Type == a)
+                        .Select(k => new CollectionUpdateNotification
+                        {
+                            Added = true,
+                            Id = new ItemIdHolder
+                            {
+                                AddedAt = k.AddedAt,
+                                Id = k.Id
+                            }
+                        }).ToArray()));
+                    foreach (var valueTuple in res)
+                    {
+                        CollectionUpdated?.Invoke(this, valueTuple);
+                    }
                     break;
                 case ServiceType.Apple:
                     break;
@@ -124,19 +191,22 @@ namespace Eum.UI.Services.Library
         {
             if (_lock.ContainsKey(id.Type))
                 _lock[id.Type].Wait();
-            else Debugger.Break();
-            return _collection.Contains(id);
+            else return false;
+            return _collection.Contains(new ItemIdHolder
+            {
+                Id = id
+            });
         }
 
-        public int LibraryCount(EntityType type)
+        public async ValueTask<int> LibraryCount(EntityType type)
         {
-            _lock[type].Wait();
-            return _collection.Count(a => a.Type == type);
+            await Task.Run(async() => await _lock[type].WaitAsync());
+            return _collection.Count(a => a.Id.Type == type);
         }
 
         public int TotalLibraryCount => _collection.Count;
         public bool IsInitializing { get; private set; }
-        public event EventHandler<(EntityType Type, IReadOnlyList<CollectionUpdate> Ids)>? CollectionUpdated;
+        public event EventHandler<(EntityType Type, IReadOnlyList<CollectionUpdateNotification> Ids)>? CollectionUpdated;
 
         public void Deconstruct()
         {
@@ -150,6 +220,7 @@ namespace Eum.UI.Services.Library
                 case ServiceType.Local:
                     break;
                 case ServiceType.Spotify:
+                    var now = DateTimeOffset.UtcNow;
                     // var base64 =
                     //     "Chk3dWNnaGRncXVmNmJ5cXVzcWtsaWx0d2MyEgpjb2xsZWN0aW9uGigKJHNwb3RpZnk6dHJhY2s6NUZWYnZ0dGpFdlE4cjJCZ1VjSmdOZxgBIhBmYWYxYjZmOWE5ZGU0NjVm";
                     // var r = WriteRequest.Parser.ParseFrom(ByteString.FromBase64(base64));
@@ -168,14 +239,18 @@ namespace Eum.UI.Services.Library
                             new CollectionItem
                             {
                                 IsRemoved = false,
-                                AddedAt = (int)DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
+                                AddedAt = (int)now.ToUnixTimeSeconds(),
                                 Uri = id.Uri
                             }
                         }
                     };
                     //Content-Type: application/vnd.collection-v2.spotify.proto
                     //https://spclient.wg.spotify.com/collection/v2/write
-                    _collection.Add(id);
+                    _collection.Add(new ItemIdHolder
+                    {
+                        Id = id,
+                        AddedAt = now
+                    });
                     Task.Run(async () =>
                     {
                         using var by = new ByteArrayContent(req.ToByteArray());
@@ -220,7 +295,10 @@ namespace Eum.UI.Services.Library
                     };
                     //Content-Type: application/vnd.collection-v2.spotify.proto
                     //https://spclient.wg.spotify.com/collection/v2/write
-                    _collection.Remove(id);
+                    _collection.Remove(new ItemIdHolder
+                    {
+                        Id = id
+                    });
                     Task.Run(async () =>
                     {
                         using var by = new ByteArrayContent(req.ToByteArray());
@@ -237,7 +315,7 @@ namespace Eum.UI.Services.Library
             }
         }
 
-        private async Task<IEnumerable<ItemId>> FetchTracks(ServiceType serviceType, CancellationToken ct = default)
+        private async Task<IEnumerable<ItemIdHolder>> FetchTracks(ServiceType serviceType, CancellationToken ct = default)
         {
             try
             {
@@ -251,11 +329,15 @@ namespace Eum.UI.Services.Library
                         var tracks =
                             JsonSerializer.Deserialize<MercuryCollectionResponse>(
                                 mercuryResponse.Payload.Span, SystemTextJsonSerializationOptions.Default)?.Items ?? Enumerable.Empty<MercuryCollectionItem>();
-                        return tracks.Select(a => new ItemId(a.Id.Uri));
+                        return tracks.Select(a => new ItemIdHolder
+                        {
+                            Id = new ItemId(a.Id.Uri), 
+                            AddedAt = a.AddedAtDate
+                        });
                     case ServiceType.Local:
-                        return Enumerable.Empty<ItemId>();
+                        return Enumerable.Empty<ItemIdHolder>();
                     case ServiceType.Apple:
-                        return Enumerable.Empty<ItemId>();
+                        return Enumerable.Empty<ItemIdHolder>();
                     default:
                         throw new ArgumentOutOfRangeException(nameof(serviceType), serviceType, null);
                 }
@@ -263,14 +345,14 @@ namespace Eum.UI.Services.Library
             catch (Exception x)
             {
                 S_Log.Instance.LogError(x);
-                return Enumerable.Empty<ItemId>();
+                return Enumerable.Empty<ItemIdHolder>();
             }
             finally
             {
                 _lock[EntityType.Track].Set();
             }
         }
-        private async Task<IEnumerable<ItemId>> FetchAlbums(ServiceType spotify, CancellationToken ct)
+        private async Task<IEnumerable<ItemIdHolder>> FetchAlbums(ServiceType spotify, CancellationToken ct)
         {
             try
             {
@@ -286,19 +368,19 @@ namespace Eum.UI.Services.Library
                     default:
                         throw new ArgumentOutOfRangeException(nameof(spotify), spotify, null);
                 }
-                return Enumerable.Empty<ItemId>();
+                return Enumerable.Empty<ItemIdHolder>();
             }
             catch (Exception x)
             {
                 S_Log.Instance.LogError(x);
-                return Enumerable.Empty<ItemId>();
+                return Enumerable.Empty<ItemIdHolder>();
             }
             finally
             {
                 _lock[EntityType.Album].Set();
             }
         }
-        private async Task<IEnumerable<ItemId>> FetchArtists(ServiceType spotify, CancellationToken ct)
+        private async Task<IEnumerable<ItemIdHolder>> FetchArtists(ServiceType spotify, CancellationToken ct)
         {
             try
             {
@@ -313,31 +395,35 @@ namespace Eum.UI.Services.Library
                         var artists =
                             JsonSerializer.Deserialize<MercuryCollectionResponse>(
                                 mercuryResponse.Payload.Span, SystemTextJsonSerializationOptions.Default)?.Items ?? Enumerable.Empty<MercuryCollectionItem>();
-                        return artists.Select(a => new ItemId(a.Id.Uri));
+                        return artists.Select(a => new ItemIdHolder
+                        {
+                            Id = new ItemId(a.Id.Uri),
+                            AddedAt = a.AddedAtDate
+                        });
                 }
-                return Enumerable.Empty<ItemId>();
+                return Enumerable.Empty<ItemIdHolder>();
             }
             catch (Exception x)
             {
                 S_Log.Instance.LogError(x);
-                return Enumerable.Empty<ItemId>();
+                return Enumerable.Empty<ItemIdHolder>();
             }
             finally
             {
                 _lock[EntityType.Artist].Set();
             }
         }
-        private async Task<IEnumerable<ItemId>> FetchPodcasts(ServiceType spotify, CancellationToken ct)
+        private async Task<IEnumerable<ItemIdHolder>> FetchPodcasts(ServiceType spotify, CancellationToken ct)
         {
             try
             {
                 _lock[EntityType.Show].Set();
-                return Enumerable.Empty<ItemId>();
+                return Enumerable.Empty<ItemIdHolder>();
             }
             catch (Exception x)
             {
                 S_Log.Instance.LogError(x);
-                return Enumerable.Empty<ItemId>();
+                return Enumerable.Empty<ItemIdHolder>();
             }
             finally
             {

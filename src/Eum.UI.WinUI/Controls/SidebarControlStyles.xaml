@@ -1293,10 +1293,10 @@
                                             <NavigationViewItemSeparator
                                                 x:Name="VisualItemsSeparator"
                                                 Grid.Row="1"
-                                                Margin="0,0,0,2"
+                                                Margin="0,-42,0,0"
                                                 HorizontalAlignment="Stretch"
-                                                VerticalAlignment="Center"
-                                                Visibility="Collapsed" />
+                                                VerticalAlignment="Top"
+                                                Visibility="Visible" />
                                             <!--  PaneFooter  -->
                                             <ContentControl
                                                 x:Name="FooterContentBorder"

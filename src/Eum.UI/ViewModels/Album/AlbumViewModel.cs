@@ -15,6 +15,7 @@ using Eum.UI.Helpers;
 using Eum.UI.Items;
 using Eum.UI.Services.Albums;
 using Eum.UI.Services.Artists;
+using Eum.UI.Services.Library;
 using Eum.UI.ViewModels.Artists;
 using Eum.UI.ViewModels.Navigation;
 using Eum.UI.ViewModels.Playback;
@@ -92,7 +93,7 @@ public sealed partial class AlbumViewModel : INavigatable, IGlazeablePage, IIsSa
 
         main.CurrentUser.User.LibraryProvider.CollectionUpdated -= LibraryProviderOnCollectionUpdated;
     }
-    private void LibraryProviderOnCollectionUpdated(object? sender, (EntityType Type, IReadOnlyList<CollectionUpdate> Ids) e)
+    private void LibraryProviderOnCollectionUpdated(object? sender, (EntityType Type, IReadOnlyList<CollectionUpdateNotification> Ids) e)
     {
         if (e.Type is EntityType.Album or EntityType.Track)
         {
@@ -100,10 +101,10 @@ public sealed partial class AlbumViewModel : INavigatable, IGlazeablePage, IIsSa
             {
                 foreach (var discographyTrackViewModel in discographyGroup)
                 {
-                    var updatedOrNahh = e.Ids.FirstOrDefault(a => a.Id.Uri == discographyTrackViewModel.Id.Uri);
+                    var updatedOrNahh = e.Ids.FirstOrDefault(a => a.Id.Id.Uri == discographyTrackViewModel.Id.Uri);
                     if (updatedOrNahh != null)
                     {
-                        discographyTrackViewModel.IsSaved = !updatedOrNahh.Removed;
+                        discographyTrackViewModel.IsSaved = updatedOrNahh.Added;
                     }
                 }
             }

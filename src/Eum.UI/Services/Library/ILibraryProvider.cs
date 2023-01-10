@@ -9,10 +9,10 @@ namespace Eum.UI.Services.Library
     {
         ValueTask InitializeLibrary(CancellationToken ct = default);
         bool IsSaved(ItemId id);
-        int LibraryCount(EntityType type);
+        ValueTask<int> LibraryCount(EntityType type);
         int TotalLibraryCount { get; }
         bool IsInitializing { get; }
-        event EventHandler<(EntityType Type, IReadOnlyList<CollectionUpdate> Ids)>? CollectionUpdated; 
+        event EventHandler<(EntityType Type, IReadOnlyList<CollectionUpdateNotification> Ids)>? CollectionUpdated; 
         void Deconstruct();
         void SaveItem(ItemId id);
         void UnsaveItem(ItemId id);

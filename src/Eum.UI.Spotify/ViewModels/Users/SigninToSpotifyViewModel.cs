@@ -14,6 +14,7 @@ using Eum.UI.Services.Playlists;
 using Eum.UI.Services.Users;
 using Eum.UI.ViewModels.Navigation;
 using Eum.UI.ViewModels.Users;
+using Eum.Users;
 
 namespace Eum.UI.Spotify.ViewModels.Users
 {
@@ -66,6 +67,7 @@ namespace Eum.UI.Spotify.ViewModels.Users
                         .GetThemeSelectorService(user);
                     user.LibraryProvider = Ioc.Default.GetRequiredService<ILibraryProviderFactory>()
                         .GetLibraryProvider(user);
+                    _ = Task.Run(() => user.LibraryProvider.InitializeLibrary(ct));
                     IdentityService.Instance.LoginUser(user);
                 }
             }

@@ -22,15 +22,16 @@ namespace Eum.UI.ViewModels.Library
             _forUser = forUser;
         }
 
+        public EntityType LibraryType => _libarEntityType;
         public void RegisterEvents()
         {
             _forUser.LibraryProvider.CollectionUpdated += LibOnCollectionUpdated;
         }
 
-        private void LibOnCollectionUpdated(object? sender, (EntityType Type, IReadOnlyList<CollectionUpdate> Ids) e)
+        private async void LibOnCollectionUpdated(object? sender, (EntityType Type, IReadOnlyList<CollectionUpdateNotification> Ids) e)
         {
             if(e.Type != _libarEntityType) return;
-            LibraryCount = (sender as ILibraryProvider).LibraryCount(_libarEntityType);
+            LibraryCount = (await (sender as ILibraryProvider).LibraryCount(_libarEntityType));
         }
 
         public void UnregisterEvents()

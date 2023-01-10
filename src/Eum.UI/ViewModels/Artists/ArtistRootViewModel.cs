@@ -31,6 +31,7 @@ using Eum.Connections.Spotify.Models.Users;
 using Eum.Connections.Spotify.Playback;
 using Eum.Enums;
 using Eum.UI.Services;
+using Eum.UI.Services.Library;
 using Eum.UI.Services.Tracks;
 using Eum.UI.ViewModels.Playback;
 using Flurl;
@@ -200,16 +201,16 @@ namespace Eum.UI.ViewModels.Artists
             // }
         }
 
-        private void LibraryProviderOnCollectionUpdated(object? sender, (EntityType Type, IReadOnlyList<CollectionUpdate> Ids) e)
+        private void LibraryProviderOnCollectionUpdated(object? sender, (EntityType Type, IReadOnlyList<CollectionUpdateNotification> Ids) e)
         {
             if (e.Type is EntityType.Artist or EntityType.Track)
             {
                 foreach (var topTrackViewModel in TopTracks ?? new List<TopTrackViewModel>(0))
                 {
-                    var updatedOrNahh = e.Ids.FirstOrDefault(a => a.Id.Uri == topTrackViewModel.Id.Uri);
+                    var updatedOrNahh = e.Ids.FirstOrDefault(a => a.Id.Id.Uri == topTrackViewModel.Id.Uri);
                     if (updatedOrNahh != null)
                     {
-                        topTrackViewModel.IsSaved = !updatedOrNahh.Removed;
+                        topTrackViewModel.IsSaved = updatedOrNahh.Added;
                     }
                 }
 
@@ -219,10 +220,10 @@ namespace Eum.UI.ViewModels.Artists
                     {
                         foreach (var discographyTrackViewModel in discographyItem.Tracks)
                         {
-                            var updatedOrNahh = e.Ids.FirstOrDefault(a => a.Id.Uri == discographyTrackViewModel.Id.Uri);
+                            var updatedOrNahh = e.Ids.FirstOrDefault(a => a.Id.Id.Uri == discographyTrackViewModel.Id.Uri);
                             if (updatedOrNahh != null)
                             {
-                                discographyTrackViewModel.IsSaved = !updatedOrNahh.Removed;
+                                discographyTrackViewModel.IsSaved = updatedOrNahh.Added;
                             }
                         }
                     }

@@ -36,6 +36,7 @@ using Org.BouncyCastle.Utilities.Encoders;
 using ReactiveUI;
 using Color = System.Drawing.Color;
 using Eum.UI.Services.Library;
+using Eum.UI.Users;
 using Eum.UI.ViewModels.Artists;
 
 namespace Eum.UI.Spotify.ViewModels.Playback;
@@ -125,8 +126,8 @@ public class SpotifyPlaybackViewModel : PlaybackViewModel
             var initial = Math.Max(0, (int)(e.Cluster.PlayerState.PositionAsOfTimestamp + diff));
             StartTimer(initial);
             OnSeeked(initial);
-            IsSaved = Ioc.Default.GetRequiredService<MainViewModel>()
-                .CurrentUser.User.LibraryProvider.IsSaved(Item.Id);
+            IsSaved = await Task.Run(() => Ioc.Default.GetRequiredService<MainViewModel>()
+                .CurrentUser.User.LibraryProvider.IsSaved(Item.Id));
             PlayingOnExternalDevice = !string.IsNullOrEmpty(e.Cluster.ActiveDeviceId) && e.Cluster.ActiveDeviceId != _spotifyClient
                 .Config.DeviceId;
             if (PlayingOnExternalDevice)
@@ -227,7 +228,7 @@ public class SpotifyPlaybackViewModel : PlaybackViewModel
     private static readonly ConcurrentDictionary<string, Track> _tracksCache = new ConcurrentDictionary<string, Track>();
 
 
-    public override void Deconstruct()
+    public override void Deconstruct(EumUser user)
     {
         _disposable.Dispose();
     }

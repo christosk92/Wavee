@@ -59,25 +59,20 @@ namespace Eum.UI.ViewModels
                 .Select(x => x.EventArgs as EumUserViewModel)
                 .Subscribe(user =>
                 {
-                    if (PlaybackViewModel != null)
-                    {
-                        PlaybackViewModel.Deconstruct();
-                    }
-
                     if (CurrentUser != null)
                     {
                         CurrentUser.User.ThemeService.GlazeChanged -= ThemeServiceOnGlazeChanged;
                     }
-                    CurrentUser = user;
-                    if (PlaybackViewModel != null)
+                    if (PlaybackViewModel != null && CurrentUser != null)
                     {
-                        PlaybackViewModel.Deconstruct();
+                        PlaybackViewModel.Deconstruct(CurrentUser.User);
                     }
+                    CurrentUser = user;
                     PlaybackViewModel = user.User.Id.Service switch
                     {
                         ServiceType.Spotify => Ioc.Default.GetRequiredService<IEnumerable<PlaybackViewModel>>().FirstOrDefault(a => a.Service == ServiceType.Spotify)
                     };
-                    PlaybackViewModel.Construct();
+                    PlaybackViewModel.Construct(user.User);
                     Glaze = user.User.Accent switch
                     {
                         "System Color" => user.User.ThemeService.Glaze,

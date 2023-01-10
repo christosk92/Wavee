@@ -29,6 +29,7 @@ using Eum.Connections.Spotify.Clients.Contracts;
 using Eum.Connections.Spotify.Clients;
 using Eum.Connections.Spotify.Connection;
 using Eum.Enums;
+using Eum.UI.Services.Library;
 using Eum.UI.ViewModels.Artists;
 using Eum.UI.ViewModels.Playback;
 
@@ -84,16 +85,16 @@ namespace Eum.UI.ViewModels.Playlists
             PlaybackOnPlayingItemChanged(main.PlaybackViewModel, main.PlaybackViewModel.Item.Id);
             main.CurrentUser.User.LibraryProvider.CollectionUpdated += LibraryProviderOnCollectionUpdated;
         }
-        private void LibraryProviderOnCollectionUpdated(object? sender, (EntityType Type, IReadOnlyList<CollectionUpdate> Ids) e)
+        private void LibraryProviderOnCollectionUpdated(object? sender, (EntityType Type, IReadOnlyList<CollectionUpdateNotification> Ids) e)
         {
             if (e.Type is EntityType.Playlist or EntityType.Track)
             {
                 foreach (var track in Tracks)
                 {
-                    var updatedOrNahh = e.Ids.FirstOrDefault(a => a.Id.Uri == track.Id.Uri);
+                    var updatedOrNahh = e.Ids.FirstOrDefault(a => a.Id.Id.Uri == track.Id.Uri);
                     if (updatedOrNahh != null)
                     {
-                        track.IsSaved = !updatedOrNahh.Removed;
+                        track.IsSaved = updatedOrNahh.Added;
                     }
                 }
             }

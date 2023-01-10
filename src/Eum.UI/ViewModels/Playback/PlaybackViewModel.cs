@@ -15,6 +15,8 @@ using Eum.Connections.Spotify.Connection;
 using Eum.Enums;
 using Eum.Spotify.connectstate;
 using Eum.UI.Items;
+using Eum.UI.Services.Library;
+using Eum.UI.Users;
 using Eum.UI.ViewModels.Artists;
 using ReactiveUI;
 
@@ -49,14 +51,14 @@ namespace Eum.UI.ViewModels.Playback
         //         .CurrentUser.User.LibraryProvider.CollectionUpdated += LibraryProviderOnCollectionUpdated;
         // }
 
-        private void LibraryProviderOnCollectionUpdated(object? sender, (EntityType Type, IReadOnlyList<CollectionUpdate> Ids) e)
+        private void LibraryProviderOnCollectionUpdated(object? sender, (EntityType Type, IReadOnlyList<CollectionUpdateNotification> Ids) e)
         {
             if (e.Type == EntityType.Track || e.Type == EntityType.Episode)
             {
-                var interestedIn = e.Ids.FirstOrDefault(a => a.Id.Uri == Item.Id.Uri);
+                var interestedIn = e.Ids.FirstOrDefault(a => a.Id.Id.Uri == Item.Id.Uri);
                 if (interestedIn != null)
                 {
-                    IsSaved = !interestedIn.Removed;
+                    IsSaved = interestedIn.Added;
                 }
             }
         }
@@ -65,16 +67,14 @@ namespace Eum.UI.ViewModels.Playback
         public ObservableCollection<RemoteDevice> RemoteDevices { get; } = new ObservableCollection<RemoteDevice>();
         public abstract ServiceType Service { get; }
 
-        public virtual void Construct()
+        public virtual void Construct(EumUser user)
         {
-            Ioc.Default.GetRequiredService<MainViewModel>()
-                     .CurrentUser.User.LibraryProvider.CollectionUpdated += LibraryProviderOnCollectionUpdated;
+           user.LibraryProvider.CollectionUpdated += LibraryProviderOnCollectionUpdated;
         }
-        public virtual void Deconstruct()
+        public virtual void Deconstruct(EumUser user)
         {
             StopTimer();
-            Ioc.Default.GetRequiredService<MainViewModel>()
-                .CurrentUser.User.LibraryProvider.CollectionUpdated -= LibraryProviderOnCollectionUpdated;
+            user.LibraryProvider.CollectionUpdated -= LibraryProviderOnCollectionUpdated;
         }
 
         protected void StopTimer()
@@ -115,11 +115,11 @@ namespace Eum.UI.ViewModels.Playback
         public event EventHandler<double> Seeked;
         public event EventHandler<bool> Paused;
         public event EventHandler<ItemId> ActiveDeviceChanged;
-        protected virtual void OnPlayingItemChanged(ItemId e)
+        protected virtual async void OnPlayingItemChanged(ItemId e)
         {
             PlayingItemChanged?.Invoke(this, e);
-            IsSaved = Ioc.Default.GetRequiredService<MainViewModel>().CurrentUser.User.LibraryProvider
-                .IsSaved(e);
+            IsSaved = await Task.Run(() => Ioc.Default.GetRequiredService<MainViewModel>().CurrentUser.User.LibraryProvider
+                .IsSaved(e));
         }
 
         protected virtual void OnSeeked(double e)

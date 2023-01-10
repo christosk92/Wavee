@@ -1,6 +1,7 @@
 ﻿using System.Collections.ObjectModel;
 using System.Reactive.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.DependencyInjection;
 using DynamicData;
 using DynamicData.Alias;
 using DynamicData.Binding;
@@ -43,21 +44,22 @@ public sealed partial class SidebarViewModel
             },
             new LibraryViewModel(EntityType.Album, user.User)
             {
-                LibraryCount = _user.User.LibraryProvider.LibraryCount(EntityType.Album)
+                LibraryCount = 0
             },
             new LibraryViewModel(EntityType.Artist, user.User) {
-                LibraryCount = _user.User.LibraryProvider.LibraryCount(EntityType.Artist)
+                LibraryCount = 0
             },
             new LibraryViewModel(EntityType.Track, user.User) {
-                LibraryCount = _user.User.LibraryProvider.LibraryCount(EntityType.Track)
+                LibraryCount = 0
             },
             new LibraryViewModel(EntityType.Show, user.User)
             {
-                LibraryCount = _user.User.LibraryProvider.LibraryCount(EntityType.Show)
+                LibraryCount = 0
             },
             new SidebarPlaylistHeader()
         };
-        foreach (var s in SidebarItems.Where(a=> a is LibraryViewModel))
+        Task.Run(async() => await GetCountsFoLbVm());
+        foreach (var s in SidebarItems.Where(a => a is LibraryViewModel))
         {
             (s as LibraryViewModel)!.RegisterEvents();
         }
@@ -121,6 +123,32 @@ public sealed partial class SidebarViewModel
 
     }
 
+    private async Task GetCountsFoLbVm()
+    {
+        var album = await _user.User.LibraryProvider.LibraryCount(EntityType.Album);
+        var track = await _user.User.LibraryProvider.LibraryCount(EntityType.Track);
+        var show = await _user.User.LibraryProvider.LibraryCount(EntityType.Show);
+        var artist = await _user.User.LibraryProvider.LibraryCount(EntityType.Artist);
+
+        Ioc.Default.GetRequiredService<IDispatcherHelper>()
+            .TryEnqueue(QueuePriority.Normal, () =>
+            {
+                foreach (var sidebarItem in SidebarItems)
+                {
+                    if (sidebarItem is LibraryViewModel l)
+                    {
+                        l.LibraryCount = l.LibraryType switch
+                        {
+                            EntityType.Track => track,
+                            EntityType.Album => album,
+                            EntityType.Show => show,
+                            EntityType.Artist => artist,
+                            _ => l.LibraryCount
+                        };
+                    }
+                }
+            });
+    }
     public void Deconstruct()
     {
         foreach (var s in SidebarItems.Where(a => a is LibraryViewModel))
