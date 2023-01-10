@@ -244,8 +244,12 @@
 
                                 <controls:StarButton
                                     Grid.Column="1" FontSize="18"
-                                    Padding="0"
-                                    HorizontalAlignment="Center"/>
+                                    Padding="0" IsChecked="{x:Bind IsSaved, Mode=OneWay}"
+                                    HorizontalAlignment="Center">
+                                    <interactivity:Interaction.Behaviors>
+                                        <behaviors:LikeTrackBehavior/>
+                                    </interactivity:Interaction.Behaviors>
+                                </controls:StarButton>
                             </Grid>
                             <TextBlock
                                 x:Name="TitleBlock"

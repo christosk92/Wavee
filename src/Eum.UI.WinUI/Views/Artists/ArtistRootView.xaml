@@ -73,7 +73,7 @@
                                 MaxLines="2"
                                 Opacity="0.8"
                                 Style="{StaticResource BodyTextBlockStyle}"
-                                Text="1,357,781 monthly listeners"
+                                Text="4,606,650 monthly listeners"
                                 TextTrimming="CharacterEllipsis" />
 
                             <StackPanel transitions:TransitionHelper.Id="floatpanel" Orientation="Horizontal"
@@ -102,8 +102,13 @@
                                         Padding="{Binding Padding, ElementName=Bt, Mode=OneWay}">
                                     <controls:StarButton  ui:UIElementExtensions.ClipToBounds="False"
                                                            Canvas.ZIndex="1000"
+                                                           DataContext="{Binding }"
                                                            IsChecked="{x:Bind ViewModel.IsSaved, Mode=OneWay}"
-                                                           FontSize="24"/>
+                                                           FontSize="24">
+                                        <interactivity:Interaction.Behaviors>
+                                            <behaviors:LikeTrackBehavior/>
+                                        </interactivity:Interaction.Behaviors>
+                                    </controls:StarButton>
                                 </Border>
                                 <SplitButton>
                                     <SplitButton.Content>
@@ -721,9 +726,13 @@
                                                                                 <controls:StarButton  IsChecked="{x:Bind IsSaved, Mode=OneWay}"
                                                                                     Grid.Column="1" FontSize="18"
                                                                                     Margin="0,0,6,0"
+                                                                                    DataContext="{Binding }"
                                                                                     Padding="0"
-                                                                                    HorizontalAlignment="Center"
-                                                                                    />
+                                                                                    HorizontalAlignment="Center">
+                                                                                    <interactivity:Interaction.Behaviors>
+                                                                                        <behaviors:LikeTrackBehavior/>
+                                                                                    </interactivity:Interaction.Behaviors>
+                                                                                </controls:StarButton>
                                                                             </Grid>
                                                                             <TextBlock
                                                                                 Grid.Column="1"
@@ -856,8 +865,13 @@
                         <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE768;" />
                     </Button>
                     <controls:StarButton  FontSize="34"
+                                          DataContext="{Binding }"
                         IsChecked="{x:Bind ViewModel.IsSaved, Mode=OneWay}"
-                        CornerRadius="88" Width="48" Height="48"/>
+                        CornerRadius="88" Width="48" Height="48">
+                        <interactivity:Interaction.Behaviors>
+                            <behaviors:LikeTrackBehavior/>
+                        </interactivity:Interaction.Behaviors>
+                    </controls:StarButton>
                 </StackPanel>
             </Grid>
         </Border>

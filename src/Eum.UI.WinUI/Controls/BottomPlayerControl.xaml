@@ -14,6 +14,8 @@
     xmlns:ui="using:CommunityToolkit.WinUI.UI"
     xmlns:winUi="using:Eum.UI.WinUI"
     xmlns:xamlConverters="using:Eum.UI.WinUI.XamlConverters"
+    xmlns:interactivity="using:Microsoft.Xaml.Interactivity"
+    xmlns:behaviors="using:Eum.UI.WinUI.Behaviors"
     DataContext="{x:Bind ViewModel, Mode=OneWay}"
     mc:Ignorable="d">
     <UserControl.Resources>
@@ -96,11 +98,16 @@
                         </StackPanel>
                         <local:StarButton FontSize="22"
                             Grid.Column="2" 
-                            IsChecked="{Binding IsSaved, Mode=OneWay}"
+                            DataContext="{Binding }"
+                            IsChecked="{x:Bind ViewModel.IsSaved, Mode=OneWay}"
                             Margin="0,0,8,0"
                             VerticalAlignment="Center"
                             BorderThickness="0"
-                            RelativePanel.RightOf="Metadatapnale"/>
+                            RelativePanel.RightOf="Metadatapnale">
+                            <interactivity:Interaction.Behaviors>
+                                <behaviors:LikeTrackBehavior/>
+                            </interactivity:Interaction.Behaviors>
+                        </local:StarButton>
                     </Grid>
 
                     <Grid Grid.Column="1">

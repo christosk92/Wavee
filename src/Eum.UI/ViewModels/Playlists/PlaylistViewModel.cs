@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Drawing;
 using System.Linq;
+using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -26,11 +27,17 @@ using Eum.UI.Helpers;
 using Eum.UI.ViewModels.Settings;
 using Eum.Connections.Spotify.Clients.Contracts;
 using Eum.Connections.Spotify.Clients;
+using Eum.Connections.Spotify.Connection;
+using Eum.Enums;
+using Eum.UI.ViewModels.Artists;
+using Eum.UI.ViewModels.Playback;
 
 namespace Eum.UI.ViewModels.Playlists
 {
-    public abstract partial class PlaylistViewModel : SidebarItemViewModel, IComparable<PlaylistViewModel>, INavigatable, IGlazeablePage
+    public abstract partial class PlaylistViewModel : SidebarItemViewModel, IComparable<PlaylistViewModel>, INavigatable, IGlazeablePage, IIsSaved
     {
+        [ObservableProperty] private bool _isPlaying;
+        [ObservableProperty] private bool _isSaved;
         private EumUser? _eumUser;
         [ObservableProperty] protected EumPlaylist _playlist;
         private IDisposable _tracksListDisposable;
@@ -71,10 +78,57 @@ namespace Eum.UI.ViewModels.Playlists
                     S_Log.Instance.LogError(x);
                 }
             });
+
+            var main = Ioc.Default.GetRequiredService<MainViewModel>();
+            main.PlaybackViewModel.PlayingItemChanged += PlaybackOnPlayingItemChanged;
+            PlaybackOnPlayingItemChanged(main.PlaybackViewModel, main.PlaybackViewModel.Item.Id);
+            main.CurrentUser.User.LibraryProvider.CollectionUpdated += LibraryProviderOnCollectionUpdated;
         }
+        private void LibraryProviderOnCollectionUpdated(object? sender, (EntityType Type, IReadOnlyList<CollectionUpdate> Ids) e)
+        {
+            if (e.Type is EntityType.Playlist or EntityType.Track)
+            {
+                foreach (var track in Tracks)
+                {
+                    var updatedOrNahh = e.Ids.FirstOrDefault(a => a.Id.Uri == track.Id.Uri);
+                    if (updatedOrNahh != null)
+                    {
+                        track.IsSaved = !updatedOrNahh.Removed;
+                    }
+                }
+            }
+        }
+        private void PlaybackOnPlayingItemChanged(object? sender, ItemId e)
+        {
+            if ((sender is PlaybackViewModel p))
+            {
+                if (p.Item.Context.Equals(Id))
+                {
+                    if (_isPlaying != true)
+                    {
+                        RxApp.MainThreadScheduler.Schedule(() =>
+                        {
+                            IsPlaying = true;
+                        });
+                    }
+                }
+                else
+                {
+                    if (_isPlaying != false)
+                    {
+                        IsPlaying = false;
+                    }
+                }
+            }
+        }
+
+ 
 
         public void Disconnect()
         {
+            var main = Ioc.Default.GetRequiredService<MainViewModel>();
+            main.PlaybackViewModel.PlayingItemChanged -= PlaybackOnPlayingItemChanged;
+            main.CurrentUser.User.LibraryProvider.CollectionUpdated -= LibraryProviderOnCollectionUpdated;
             _tracksListDisposable?.Dispose();
             _tracksSourceList.Clear();
             _tracks.Clear();
@@ -175,5 +229,7 @@ namespace Eum.UI.ViewModels.Playlists
 
             return string.Empty;
         }
+
+        public ItemId Id => _playlist.Id;
     }
 }

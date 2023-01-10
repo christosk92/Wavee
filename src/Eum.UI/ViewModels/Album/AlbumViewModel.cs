@@ -26,7 +26,7 @@ using ReactiveUI;
 namespace Eum.UI.ViewModels.Album;
 
 [INotifyPropertyChanged]
-public sealed partial class AlbumViewModel : INavigatable, IGlazeablePage
+public sealed partial class AlbumViewModel : INavigatable, IGlazeablePage, IIsSaved
 {
     [ObservableProperty] private bool _isPlaying;
     [ObservableProperty] private bool _isSaved;
@@ -191,7 +191,7 @@ public class EumDiscViewModel : List<AlbumTrackViewModel>
     public string Key { get; init; }
 }
 [INotifyPropertyChanged]
-public partial class AlbumTrackViewModel : IIsPlaying
+public partial class AlbumTrackViewModel : IIsPlaying, IIsSaved
 {
     [ObservableProperty] private bool _isSaved;
     public AlbumTrackViewModel(DiscographyTrackRelease discographyTrackRelease, int i)

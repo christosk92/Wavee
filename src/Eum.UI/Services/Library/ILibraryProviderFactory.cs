@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Text.Json;
@@ -121,7 +122,9 @@ namespace Eum.UI.Services.Library
 
         public bool IsSaved(ItemId id)
         {
-            _lock[id.Type].Wait();
+            if (_lock.ContainsKey(id.Type))
+                _lock[id.Type].Wait();
+            else Debugger.Break();
             return _collection.Contains(id);
         }
 
@@ -153,13 +156,19 @@ namespace Eum.UI.Services.Library
                     var req = new WriteRequest
                     {
                         Username = _spotifyClient.AuthenticatedUser.Username,
-                        Set = "collection", 
+                        Set = id.Type switch
+                        {
+                            EntityType.Album => "collection",
+                            EntityType.Track => "collection",
+                            EntityType.Artist => "artist",
+                            _ => throw new NotImplementedException()
+                        },
                         Items =
                         {
                             new CollectionItem
                             {
-                                IsRemoved = false, 
-                                AddedAt = (int)DateTimeOffset.UtcNow.ToUnixTimeSeconds(), 
+                                IsRemoved = false,
+                                AddedAt = (int)DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
                                 Uri = id.Uri
                             }
                         }
@@ -193,7 +202,13 @@ namespace Eum.UI.Services.Library
                     var req = new WriteRequest
                     {
                         Username = _spotifyClient.AuthenticatedUser.Username,
-                        Set = "collection",
+                        Set = id.Type switch
+                        {
+                            EntityType.Album => "collection",
+                            EntityType.Track => "collection",
+                            EntityType.Artist => "artist",
+                            _=> throw new NotImplementedException()
+                        },
                         Items =
                         {
                             new CollectionItem
@@ -205,7 +220,7 @@ namespace Eum.UI.Services.Library
                     };
                     //Content-Type: application/vnd.collection-v2.spotify.proto
                     //https://spclient.wg.spotify.com/collection/v2/write
-                    _collection.Add(id);
+                    _collection.Remove(id);
                     Task.Run(async () =>
                     {
                         using var by = new ByteArrayContent(req.ToByteArray());

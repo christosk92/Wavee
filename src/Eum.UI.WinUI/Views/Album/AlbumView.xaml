@@ -242,11 +242,15 @@
                                             </ContentPresenter.Content>
                                         </ContentPresenter>
                                         <controls1:StarButton FontSize="18"
-                                                    Grid.Column="1" IsChecked="{x:Bind IsSaved, Mode=OneTime}"
+                                                    Grid.Column="1" IsChecked="{Binding IsSaved}"
                                                     Padding="0"
                                                     HorizontalAlignment="Center"
                                                     Background="Transparent"
-                                                    BorderThickness="0"/>
+                                                    BorderThickness="0">
+                                            <interactivity:Interaction.Behaviors>
+                                                <behaviors:LikeTrackBehavior/>
+                                            </interactivity:Interaction.Behaviors>
+                                        </controls1:StarButton>
                                     </Grid>
                                     <TextBlock
                                                 Grid.Column="1"
@@ -427,8 +431,12 @@
                                                 Padding="{Binding Padding, ElementName=Bt, Mode=OneWay}"
                                                 >
                                             <controls1:StarButton  ui:UIElementExtensions.ClipToBounds="False"
-                                                                   Canvas.ZIndex="1000" IsChecked="{x:Bind ViewModel.IsSaved, Mode=OneWay}"
-                                                                   FontSize="24"/>
+                                                                   Canvas.ZIndex="1000" IsChecked="{Binding IsSaved, Mode=OneWay}"
+                                                                   FontSize="24">
+                                                <interactivity:Interaction.Behaviors>
+                                                    <behaviors:LikeTrackBehavior/>
+                                                </interactivity:Interaction.Behaviors>
+                                            </controls1:StarButton>
                                         </Border>
                                         <SplitButton>
                                             <SplitButton.Content>

@@ -138,11 +138,13 @@ namespace Eum.UI.ViewModels
         [RelayCommand]
         public void ShowSidePanel(string panelType)
         {
+            LyricsViewModel?.Deconstruct();
             if (SidePanelView == panelType)
             {
                 //close
                 SidePanelView = null;
                 ShouldShowSidePanel = false;
+                LyricsViewModel?.Deconstruct();
             }
             else
             {

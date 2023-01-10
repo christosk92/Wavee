@@ -15,12 +15,13 @@ using Eum.Connections.Spotify.Connection;
 using Eum.Enums;
 using Eum.Spotify.connectstate;
 using Eum.UI.Items;
+using Eum.UI.ViewModels.Artists;
 using ReactiveUI;
 
 namespace Eum.UI.ViewModels.Playback
 {
     [INotifyPropertyChanged]
-    public abstract partial class PlaybackViewModel
+    public abstract partial class PlaybackViewModel :IIsSaved
     {
         [ObservableProperty]
         private CurrentlyPlayingHolder _item;
@@ -125,6 +126,8 @@ namespace Eum.UI.ViewModels.Playback
         {
             Seeked?.Invoke(this, e);
         }
+
+        public ItemId Id => Item?.Id ?? default;
     }
 
     public record RemoteDevice(ItemId DeviceId, string DeviceName, DeviceType Devicetype);

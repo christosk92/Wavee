@@ -58,6 +58,15 @@ namespace Eum.UI.ViewModels
             PlaybackViewModelOnPlayingItemChanged(_playbackViewModel, _playbackViewModel.Item.Id);
         }
 
+        public void Deconstruct()
+        {
+            _timer.Stop();
+            _timer.Dispose();
+
+            _playbackViewModel.Seeked -= PlaybackViewModelOnSeeked;
+            _playbackViewModel.Paused -= PlaybackViewModelOnPaused;
+            _playbackViewModel.PlayingItemChanged -= PlaybackViewModelOnPlayingItemChanged;
+        }
         private void PlaybackViewModelOnSeeked(object sender, double e)
         {
             _ms = e;
@@ -138,7 +147,7 @@ namespace Eum.UI.ViewModels
         {
             await TryFetchLyrics(e);
             _timer.Stop();
-            _ms = 0;
+            _ms = (sender as PlaybackViewModel).Timestamp;
             _timer.Start();
         }
 

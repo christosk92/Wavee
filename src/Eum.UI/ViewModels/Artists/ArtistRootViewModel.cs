@@ -40,7 +40,7 @@ using Eum.Users;
 namespace Eum.UI.ViewModels.Artists
 {
     [INotifyPropertyChanged]
-    public partial class ArtistRootViewModel : INavigatable, IGlazeablePage
+    public partial class ArtistRootViewModel : INavigatable, IGlazeablePage, IIsSaved
     {
         [ObservableProperty] private bool _isPlaying;
         [ObservableProperty] private bool _isSaved;
