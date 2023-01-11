@@ -161,7 +161,7 @@ public sealed partial class AlbumViewModel : INavigatable, IGlazeablePage, IIsSa
     {
         if ((sender is PlaybackViewModel p))
         {
-            if (p.Item.Context.Equals(Id))
+            if (p.Item?.Context != null && p.Item.Context.Equals(Id))
             {
                 if (_isPlaying != true)
                 {

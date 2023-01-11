@@ -159,7 +159,7 @@
 
                         <TextBlock
                             x:Name="TimestampText"
-                            Grid.Row="1"
+                            Grid.Row="1" 
                             VerticalAlignment="Center"
                             FontSize="12"
                             FontWeight="SemiBold"
@@ -171,11 +171,16 @@
                             Grid.Column="1"
                             Margin="8,0"
                             VerticalAlignment="Center">
-                            <Slider
+                            <Slider ThumbToolTipValueConverter="{StaticResource MsToTimestampConverter}"
                                 x:Name="TimestampSlider"
-                                ManipulationMode="All"
-                                Maximum="{x:Bind ViewModel.Item.Duration, Mode=OneWay}"
-                                Value="{x:Bind ViewModel.Timestamp, Mode=OneWay}" />
+                                ManipulationCompleted="PositionSlider_OnManipulationCompleted"
+                                ManipulationMode="All" Loaded="TimestampSlider_OnLoaded"
+                                ManipulationStarted="PositionSlider_OnManipulationStarted"
+                                ManipulationStarting="PositionSlider_OnManipulationStarting" Unloaded="TimestampSlider_OnUnloaded"
+                                PointerCaptureLost="PositionSlider_OnPointerCaptureLost"
+                                Tapped="PositionSlider_OnTapped"
+                                ValueChanged="PositionSlider_OnValueChanged"
+                                Maximum="{x:Bind ViewModel.Item.Duration, Mode=OneWay}"/>
                             <ProgressBar
                                 x:Name="BufferingBar"
                                 IsIndeterminate="True"

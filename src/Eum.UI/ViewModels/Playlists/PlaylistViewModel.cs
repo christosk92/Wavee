@@ -103,7 +103,7 @@ namespace Eum.UI.ViewModels.Playlists
         {
             if ((sender is PlaybackViewModel p))
             {
-                if (p.Item.Context.Equals(Id))
+                if (p.Item.Context != null && p.Item.Context.Equals(Id))
                 {
                     if (_isPlaying != true)
                     {

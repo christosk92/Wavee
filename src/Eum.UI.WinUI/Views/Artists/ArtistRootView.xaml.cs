@@ -167,5 +167,11 @@ namespace Eum.UI.WinUI.Views.Artists
                 lv.SwitchTemplateCommand.Execute(lv);
             }
         }
+
+        public string ToMonthlyListenersString(long val)
+        {
+            //4,606,650 monthly listeners
+            return val.ToString("N0", System.Globalization.CultureInfo.InvariantCulture) + " monthly listeners";
+        }
     }
 }

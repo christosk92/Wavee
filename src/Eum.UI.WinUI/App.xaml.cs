@@ -57,6 +57,8 @@ using LiteDB.Engine;
 using Eum.UI.WinUI.Services;
 using Eum.UI.Services.Library;
 using Microsoft.UI.Dispatching;
+using System.Diagnostics;
+using System.IO.Compression;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -117,6 +119,13 @@ namespace Eum.UI.WinUI
 
             this.UnhandledException += OnUnhandledException;
             Ioc.Default.ConfigureServices(serviceCollection.BuildServiceProvider());
+
+            // using var @in = new MemoryStream();
+            // using var outputStream = new MemoryStream(Convert.FromBase64String("H4sIAAAAAAAACqVW247jNgz9lcLPya7t+Ca/FUVbFAsUKIo+dRcCbdMZ7ciSV5KTyS7m30tJzkxmO5egfYtFHpI6PKTyLen1NIEakvZbgmqYtVAuaZNZwinZkFE5vHPR6IQ78cUIMttZOzGe2sWiacuxr8z8Od/ld3vjvn49Fl92qmbp57bXUmLvhFYU6/8gJSHXWtqP7z++/y9RJnQwgAN/GSms44sTkltt/H1Bdsv0TsGEP/z450+bQdj+92Xq0Gycgf42/qYg3l2o/bveCIdGwBnKiRyJm/jbo7mK8NXqg6xHyf0mMWidEaEy6+shBEipj3xGvKX4fDZ44AbBBoe/P23+7aKIjBdc7K2Y5zfCPPi8EmeGxXqX5610iWV62ez0fi+jeUZwfO3fld6RsTd87c0yjhJfuiE6/mXB5SU7DAOFetXFrlw/b6VRQWOW2QWqaWK6V2o2oOxI7lf4Gpy0w0CY0fLF5KT9kJnK0LGLgTR7HeDcjlcxBrUZ0ETQFTme+l+ZYtIHDxiNnq5Kcel/VYplprn3kGckeE/T6NvBtRF7ocIw4kH0yMXgV94oaGLbhEZ/JFku5rvzk14Ml6IzYE4XPgc01m+dNrmbF8HzNM+3Wb5NS55VdZqXVcbqXcU4dGNaFkDIg8Djulzpi4pEo8D33mvmXML566oaegnW4srFxcL57mL+/jRzQIjIw/ywlUAe4WTjsdW0P2+IxKQdQVqkVUgLhObHO86wJ17UgHdJm26SOLtP9304a+vswx8H/eHnQebNX/XxF1fhr78dkzPkHIJqEko4Qe07hSWEw2Pak3U48Wh3FwZfJlGz1s/1wQ/bgFQfhSMibLx7ZFJSh2ke/EtHghLL5Hf7MtNH8AvXnw0JjdQcdRJoGtH1N1ziAf2LpLRCwsEyCM2JX4SJTgccYZEuvp6j2C8GAu2XBT2I7pHsqEnCh60C1KqDD65njHiyUJsk9BjoEvt96J+YJhw8EdL3/pyDP31gVoa0IjpHTWLRPWkr6vwtYqlUSfs2rC0wMIVi1z8Nj870/k0UitS925Vlw7KyyDdnXVgHKgyUZzKp8q7AKk+39dAV2yJH2LJd1W2zFOu+hKrJxy75tHnkIbQtQIe8LjLWsC1Ld/226LDbdlkKFCQt8qbLsg6Zhz43wdWYsxGGIs9qxlhGY8dYXQwVdJSdlYxB3tdNUSe+OdQ5Ff84cHeavUxI/DSR6NvqC1MuSqkesS+6IWU9Y2nTNKxs8rxm2I1jAxQ+uf8H9AJTbWIJAAA="));
+            //
+            // using var decompressionStream =
+            //     new GZipStream(outputStream, CompressionMode.Decompress);
+            // decompressionStream.CopyTo(@in);
             this.InitializeComponent();
         }
         private void OnUnhandledException(object sender, UnhandledExceptionEventArgs e)

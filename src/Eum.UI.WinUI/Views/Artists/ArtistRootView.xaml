@@ -73,7 +73,7 @@
                                 MaxLines="2"
                                 Opacity="0.8"
                                 Style="{StaticResource BodyTextBlockStyle}"
-                                Text="4,606,650 monthly listeners"
+                                Text="{x:Bind ToMonthlyListenersString(ViewModel.Artist.MonthlyListeners), Mode=OneWay}"
                                 TextTrimming="CharacterEllipsis" />
 
                             <StackPanel transitions:TransitionHelper.Id="floatpanel" Orientation="Horizontal"
@@ -239,7 +239,7 @@
                                                                     <Button
                                                                         Width="32" 
                                                                         Command="{Binding PlayCommand}"
-                                                                        CommandParameter="{Binding Id}"
+                                                                        CommandParameter="{Binding Track.Index}"
                                                                         Height="32"
                                                                         Margin="-4,-8,-12,-8"
                                                                         Padding="0"
@@ -265,7 +265,7 @@
                                                                         Width="32"
                                                                         Height="32"
                                                                         Command="{Binding PlayCommand}"
-                                                                        CommandParameter="{Binding Id}"
+                                                                        CommandParameter="{Binding Track.Index}"
                                                                         Margin="-4,-8,-12,-8"
                                                                         Padding="0"
                                                                         HorizontalAlignment="Left"

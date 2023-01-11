@@ -45,7 +45,7 @@ namespace Eum.UI.Services.Library
         }
     }
 
-    public readonly record struct CollectionUpdateNotification(ItemIdHolder Id, bool Added);
+    public record CollectionUpdateNotification(ItemIdHolder Id, bool Added);
     public readonly struct ItemIdHolder : IEquatable<ItemIdHolder>
     {
         public ItemId Id { get; init; }
@@ -126,15 +126,11 @@ namespace Eum.UI.Services.Library
                             }
                         }
                         CollectionUpdated?.Invoke(this, (kvp.Key, assArr
-                            .Select(a=> new CollectionUpdateNotification
+                            .Select(a=> new CollectionUpdateNotification(new ItemIdHolder
                             {
-                                Id = new ItemIdHolder
-                                {
-                                    Id = new ItemId(a.Id.Uri), 
-                                    AddedAt = a.AddedAt ?? DateTimeOffset.UtcNow
-                                },
-                                Added = !a.Removed
-                            }).ToArray()));
+                                Id = new ItemId(a.Id.Uri),
+                                AddedAt = a.AddedAt ?? DateTimeOffset.UtcNow
+                            }, !a.Removed)).ToArray()));
                     }
                 });
         }
@@ -163,15 +159,11 @@ namespace Eum.UI.Services.Library
                         EntityType.Track,
                         EntityType.Show,
                     }.Select(a => (a, _collection.Where(j => j.Id.Type == a)
-                        .Select(k => new CollectionUpdateNotification
+                        .Select(k => new CollectionUpdateNotification(new ItemIdHolder
                         {
-                            Added = true,
-                            Id = new ItemIdHolder
-                            {
-                                AddedAt = k.AddedAt,
-                                Id = k.Id
-                            }
-                        }).ToArray()));
+                            AddedAt = k.AddedAt,
+                            Id = k.Id
+                        }, true)).ToArray()));
                     foreach (var valueTuple in res)
                     {
                         CollectionUpdated?.Invoke(this, valueTuple);

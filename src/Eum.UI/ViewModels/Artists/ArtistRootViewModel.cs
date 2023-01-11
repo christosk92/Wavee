@@ -90,12 +90,12 @@ namespace Eum.UI.ViewModels.Artists
             user.LibraryProvider.CollectionUpdated += LibraryProviderOnCollectionUpdated;
             var provider = Ioc.Default.GetRequiredService<IArtistProvider>();
             var artist = await Task.Run(async () => await provider.GetArtist(Id, "en_us"));
-            var playCommand = new AsyncRelayCommand<ItemId>(async id =>
+            var playCommand = new AsyncRelayCommand<int>(async index =>
             {
                 try
                 {
                     await Ioc.Default.GetRequiredService<IPlaybackService>()
-                        .PlayOnDevice(Id, id);
+                        .PlayOnDevice(new PlainContextPlayCommand(Id, index, new Dictionary<string, string>()));
                 }
                 catch (Exception notImplementedException)
                 {
@@ -218,12 +218,16 @@ namespace Eum.UI.ViewModels.Artists
                 {
                     foreach (var discographyItem in discographyGroup.Items)
                     {
-                        foreach (var discographyTrackViewModel in discographyItem.Tracks)
+                        if (discographyItem._tracks != null)
                         {
-                            var updatedOrNahh = e.Ids.FirstOrDefault(a => a.Id.Id.Uri == discographyTrackViewModel.Id.Uri);
-                            if (updatedOrNahh != null)
+                            foreach (var discographyTrackViewModel in discographyItem._tracks)
                             {
-                                discographyTrackViewModel.IsSaved = updatedOrNahh.Added;
+                                var updatedOrNahh =
+                                    e.Ids.FirstOrDefault(a => a.Id.Id.Uri == discographyTrackViewModel.Id.Uri);
+                                if (updatedOrNahh != null)
+                                {
+                                    discographyTrackViewModel.IsSaved = updatedOrNahh.Added;
+                                }
                             }
                         }
                     }
@@ -237,7 +241,7 @@ namespace Eum.UI.ViewModels.Artists
         {
             if ((sender is PlaybackViewModel p))
             {
-                if (p.Item.Context.Equals(Id))
+                if (p.Item?.Context != null && p.Item.Context.Equals(Id))
                 {
                     if (_isPlaying != true)
                     {
@@ -572,7 +576,7 @@ namespace Eum.UI.ViewModels.Artists
             //}
         }
 
-        private DiscographyTrackViewModel[] _tracks;
+        internal DiscographyTrackViewModel[] _tracks;
 
         public void Cancel()
         {

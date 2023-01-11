@@ -26,6 +26,7 @@ namespace Eum.UI.Services.Artists
 
             LatestRelease = mercuryUrl.LatestRelease != null ?
                 new LatestReleaseWrapper(mercuryUrl.LatestRelease) : null;
+            MonthlyListeners = mercuryUrl.MonthlyListeners;
         }
 
         public string Name { get; }
@@ -34,6 +35,7 @@ namespace Eum.UI.Services.Artists
         public IDictionary<DiscographyType, IList<DiscographyRelease>> DiscographyReleases { get; set; }
         public IEnumerable<ArtistTopTrack> TopTrack { get; set; }
         public LatestReleaseWrapper? LatestRelease { get; }
+        public long MonthlyListeners { get; }
     }
 
     public class LatestReleaseWrapper
