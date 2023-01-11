@@ -18,11 +18,6 @@
                   IsItemClickEnabled="False" SelectionChanged="Lyrics_OnSelectionChanged"
                   ScrollViewer.VerticalScrollBarVisibility="Hidden" SelectedItem="{x:Bind ViewModel.ActiveLyricsLine, Mode=OneWay}"
                   Visibility="{x:Bind ViewModel.HasLyrics, Mode=OneWay, Converter={StaticResource TrueToVisibleConverter}}">
-            <ListView.ItemsPanel>
-                <ItemsPanelTemplate>
-                    <StackPanel />
-                </ItemsPanelTemplate>
-            </ListView.ItemsPanel>
             <ListView.ItemTemplate>
                 <DataTemplate x:DataType="viewModels:LyricsLineViewModel">
                     <TextBlock FontSize="{x:Bind ToFontSize(IsActive, 24, 16), Mode=OneWay}" TextWrapping="Wrap" Margin="0,12"

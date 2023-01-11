@@ -31,7 +31,11 @@ namespace Eum.UI.ViewModels.Library
         private async void LibOnCollectionUpdated(object? sender, (EntityType Type, IReadOnlyList<CollectionUpdateNotification> Ids) e)
         {
             if(e.Type != _libarEntityType) return;
-            LibraryCount = (await (sender as ILibraryProvider).LibraryCount(_libarEntityType));
+            Ioc.Default.GetRequiredService<IDispatcherHelper>()
+                .TryEnqueue(QueuePriority.Normal, async () =>
+                {
+                    LibraryCount = (await (sender as ILibraryProvider).LibraryCount(_libarEntityType));
+                });
         }
 
         public void UnregisterEvents()

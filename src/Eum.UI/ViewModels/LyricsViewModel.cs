@@ -14,7 +14,7 @@ namespace Eum.UI.ViewModels
         [ObservableProperty] private bool _isActive;
         public string Words { get; init; }
         public double StartsAt { get; init; }
-
+        public int Index { get; init; }
         public double ToFontSize(bool o, double s, double s1)
         {
             if (o) return s;
@@ -143,12 +143,17 @@ namespace Eum.UI.ViewModels
             ActiveLyricsLine = l;
         }
 
+        private ItemId _previousLyricsId;
         private async void PlaybackViewModelOnPlayingItemChanged(object sender, ItemId e)
         {
-            await TryFetchLyrics(e);
-            _timer.Stop();
-            _ms = (sender as PlaybackViewModel).Timestamp;
-            _timer.Start();
+            if (e != _previousLyricsId)
+            {
+                _previousLyricsId = e;
+                await TryFetchLyrics(e);
+                _timer.Stop();
+                _ms = (sender as PlaybackViewModel).Timestamp;
+                _timer.Start();
+            }
         }
 
         public async Task TryFetchLyrics(ItemId actualId, CancellationToken ct = default)
@@ -164,6 +169,7 @@ namespace Eum.UI.ViewModels
                     Lyrics = lines.Select((a, i) => new LyricsLineViewModel
                     {
                         Words = a.Words,
+                        Index = i,
                         IsActive = i == 0,
                         StartsAt = a.StartTimeMs,
                     }).ToList();

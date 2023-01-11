@@ -3,26 +3,10 @@
 
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Controls.Primitives;
-using Microsoft.UI.Xaml.Data;
-using Microsoft.UI.Xaml.Input;
-using Microsoft.UI.Xaml.Media;
-using Microsoft.UI.Xaml.Navigation;
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using System.Threading;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
-using CommunityToolkit.Mvvm.DependencyInjection;
 using CommunityToolkit.WinUI.UI;
-using Eum.UI.Items;
-using Eum.UI.Services;
+using Eum.Logging;
 using Eum.UI.ViewModels;
-using Eum.UI.ViewModels.Playback;
-using Nito.AsyncEx;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -42,7 +26,7 @@ namespace Eum.UI.WinUI.Controls
 
         public LyricsViewModel? ViewModel
         {
-            get => (LyricsViewModel?) GetValue(ViewModelProperty);
+            get => (LyricsViewModel?)GetValue(ViewModelProperty);
             set => SetValue(ViewModelProperty, value);
         }
 
@@ -53,18 +37,24 @@ namespace Eum.UI.WinUI.Controls
 
         private async void Lyrics_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-
-            if (Lyrics.SelectedItem != null)
+            if (Lyrics.SelectedIndex != -1)
             {
                 try
                 {
-                    await Lyrics.SmoothScrollIntoViewWithItemAsync(Lyrics.SelectedItem, ScrollItemPlacement.Top, false, true, 0, 0);
+                    S_Log.Instance.LogInfo($"Navigating to {Lyrics.SelectedIndex}");
+                    await Lyrics.SmoothScrollIntoViewWithIndexAsync(Lyrics.SelectedIndex, ScrollItemPlacement.Top, false,
+                        true, 0, 0);
                 }
                 catch (Exception x)
                 {
 
                 }
             }
+        }
+
+        private void LyricsControl_OnUnloaded(object sender, RoutedEventArgs e)
+        {
+            throw new NotImplementedException();
         }
     }
 }
