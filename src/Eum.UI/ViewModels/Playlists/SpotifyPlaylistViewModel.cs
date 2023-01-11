@@ -13,6 +13,8 @@ using AsyncLock = Nito.AsyncEx.AsyncLock;
 using Exception = System.Exception;
 using Eum.Spotify.metadata;
 using Eum.UI.ViewModels.Artists;
+using CommunityToolkit.Mvvm.Input;
+using Eum.UI.Services;
 
 namespace Eum.UI.ViewModels.Playlists;
 
@@ -23,6 +25,7 @@ public class SpotifyPlaylistViewModel : PlaylistViewModel
 
     }
 
+    private bool _isSorting = false;
     private AsyncLock _syncLock = new AsyncLock();
     public override async Task Sync(bool addTracks = false)
     {
@@ -50,7 +53,36 @@ public class SpotifyPlaylistViewModel : PlaylistViewModel
                 if (addTracks)
                 {
                     var main = Ioc.Default.GetRequiredService<MainViewModel>();
-                    _tracksSourceList.AddRange(tracks.Select((a, i) => new PlaylistTrackViewModel(a, i)
+                    var playCommand = new AsyncRelayCommand<int>(async index =>
+                    {
+                        try
+                        {
+                            if (_isSorting)
+                            {
+                                var allPages = _tracksSourceList.Items.Select(a => new PagedTrack(a.Id, new Dictionary<string, string>
+                                {
+                                    {"original_index", _playlist.Tracks.IndexOf(a.Id).ToString()}
+                                }));
+                                await Ioc.Default.GetRequiredService<IPlaybackService>()
+                                    .PlayOnDevice(new PagedContextPlayCommand(Id,
+                                        allPages.ToArray(),
+                                        index, Playlist.Metadata.ToDictionary(a => a.Key, a => a.Value)));
+                            }
+                            else
+                            {
+                                await Ioc.Default.GetRequiredService<IPlaybackService>()
+                                    .PlayOnDevice(new PlainContextPlayCommand(Id,
+                                        index, Playlist.Metadata.ToDictionary(a => a.Key, a => a.Value)));
+                            }
+                        }
+                        catch (Exception notImplementedException)
+                        {
+                            await Ioc.Default.GetRequiredService<IErrorMessageShower>()
+                                .ShowErrorAsync(notImplementedException, "Unexpected error", "Something went wrong while trying to play the track.");
+                        }
+                    });
+
+                    _tracksSourceList.AddRange(tracks.Select((a, i) => new PlaylistTrackViewModel(a, i, playCommand)
                     {
                         IsSaved = main.CurrentUser.User.LibraryProvider.IsSaved(a.Id),
                     }));

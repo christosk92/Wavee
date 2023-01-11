@@ -128,7 +128,21 @@ namespace Eum.UI.WinUI.Behaviors
         }
         private void IsPlayingOnIsPlayingChanged(object sender, bool e)
         {
-            AssociatedObjectOnPointerExited(null, null);
+            if (e)
+            {
+                try
+                {
+                    VisualStateManager.GoToState(AssociatedObject, "Playing", true);
+                }
+                catch (Exception x)
+                {
+
+                }
+            }
+            else
+            {
+                VisualStateManager.GoToState(AssociatedObject, "Normal", true);
+            }
         }
     }
 }

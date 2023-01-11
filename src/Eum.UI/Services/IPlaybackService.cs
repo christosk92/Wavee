@@ -20,7 +20,6 @@ namespace Eum.UI.Services
         AlbumName,
         Added
     }
-
     public record PagedTrack(ItemId Id, Dictionary<string, string> Metadata);
     public abstract record ContextPlayObject(ItemId ContextId, int Index, Dictionary<string, string>? ContextMetadata = null);
 
@@ -107,7 +106,10 @@ namespace Eum.UI.Services
                                 throw new ArgumentException("Context Metadata cannot be zero."), deviceIdPlay);
                             break;
                         case PagedContextPlayCommand pagedContext:
-                            throw new NotImplementedException();
+                            await _spotifyPlaybackClient.PlayPagedOnDevice(
+                                new SpotifyId(pagedContext.ContextId.Uri), pagedContext.TrackIndex,
+                                pagedContext.Tracks.Select(a=> new PagedSpotifyTrack(new SpotifyId(a.Id.Uri).Uri, a.Metadata)),
+                                pagedContext.ContextMetadata, deviceIdPlay);
                             break;
                         case PlainContextPlayCommand plainContext:
                             await _spotifyPlaybackClient.PlayOnDevice(
