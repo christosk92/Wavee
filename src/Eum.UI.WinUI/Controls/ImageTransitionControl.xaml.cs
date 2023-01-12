@@ -312,7 +312,7 @@ public class ImageOpacityBrush : XamlCompositionBrushBase, IDisposable
 
         //Source = null;
 
-        GC.Collect();
+        //GC.Collect();
     }
 
     //// Helper to allow XAML developer to use XAML stretch property rather than another enum.

@@ -30,7 +30,7 @@ using UserControl = Microsoft.UI.Xaml.Controls.UserControl;
 
 namespace Eum.UI.WinUI.Views.Artists
 {
-    public sealed partial class  ArtistRootView : UserControl
+    public sealed partial class ArtistRootView : UserControl
     {
         private TransitionHelper transitionHelper = new TransitionHelper
         {
@@ -57,16 +57,17 @@ namespace Eum.UI.WinUI.Views.Artists
         public ArtistRootView(ArtistRootViewModel viewModel)
         {
             ViewModel = viewModel;
+            ViewModel.ArtistFetched += ViewModelOnArtistFetched;
             this.InitializeComponent();
             this.DataContext = viewModel;
         }
 
-        ~ArtistRootView()
+        private void ViewModelOnArtistFetched(object sender, EventArgs e)
         {
-            Bindings.StopTracking();
+            this.Bindings.Update();
         }
-        public ArtistRootViewModel ViewModel { get; set; }
 
+        public ArtistRootViewModel ViewModel { get; set; }
         private void GridView_SizeCHanged(object sender, SizeChangedEventArgs e)
         {
             var s = (sender as ListView);
@@ -83,20 +84,6 @@ namespace Eum.UI.WinUI.Views.Artists
             ((ItemsWrapGrid)s.ItemsPanelRoot).ItemWidth = e.NewSize.Width / columns;
         }
 
-        private void ArtistRootView_OnUnloaded(object sender, RoutedEventArgs e)
-        {
-            Scroller.ViewChanged -= Scroller_OnViewChanged;
-            Scroller.ViewChanged -= ScrollerOnViewChanged;
-            GridView.SizeChanged -= GridView_SizeCHanged;
-            var lvs = this.FindDescendants()
-                .Where(a => a is ListView {Name: "Lv"});
-            foreach (var dependencyObject in lvs)
-            {
-                (dependencyObject as ListView).SelectionChanged -= Selector_OnSelectionChanged;
-            }
-            ViewModel.OnNavigatedFrom();
-            Bindings.StopTracking();
-        }
 
         // private void ScrollViewer_OnAnchorRequested(ScrollViewer sender, AnchorRequestedEventArgs args)
         // {
@@ -126,7 +113,8 @@ namespace Eum.UI.WinUI.Views.Artists
 
         private async void Scroller_OnViewChanged(object sender, ScrollViewerViewChangedEventArgs e)
         {
-            if (Scroller.VerticalOffset > Header.ActualHeight / 1.4f)
+            var scr = (sender as ScrollViewer);
+            if (scr.VerticalOffset > Header.ActualHeight / 1.4f)
             {
                 _surpassedHeader = true;
 
@@ -137,7 +125,7 @@ namespace Eum.UI.WinUI.Views.Artists
                 transitionHelper.Target = secondone;
                 await transitionHelper.StartAsync();
             }
-            else if (Scroller.VerticalOffset <= Header.ActualHeight && _surpassedHeader)
+            else if (scr.VerticalOffset <= Header.ActualHeight && _surpassedHeader)
             {
                 //go back
                 _surpassedHeader = false;
@@ -172,6 +160,11 @@ namespace Eum.UI.WinUI.Views.Artists
         {
             //4,606,650 monthly listeners
             return val.ToString("N0", System.Globalization.CultureInfo.InvariantCulture) + " monthly listeners";
+        }
+
+        private void ArtistRootView_OnUnloaded(object sender, RoutedEventArgs e)
+        {
+            ViewModel.ArtistFetched -= ViewModelOnArtistFetched;
         }
     }
 }

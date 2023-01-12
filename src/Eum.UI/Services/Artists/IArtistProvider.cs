@@ -25,7 +25,7 @@ namespace Eum.UI.Services.Artists
                 .Select((a,i) => new ArtistTopTrack(a, i));
 
             LatestRelease = mercuryUrl.LatestRelease != null ?
-                new LatestReleaseWrapper(mercuryUrl.LatestRelease) : null;
+                new LatestReleaseWrapper(mercuryUrl.LatestRelease.Value) : null;
             MonthlyListeners = mercuryUrl.MonthlyListeners;
         }
 

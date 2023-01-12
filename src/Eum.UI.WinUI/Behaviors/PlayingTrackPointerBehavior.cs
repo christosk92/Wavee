@@ -13,59 +13,28 @@ namespace Eum.UI.WinUI.Behaviors
 {
     public class PlayingTrackPointerBehavior : BehaviorBase<Control>
     {
-        private bool _didSet = false;
-        private bool _didSubscribe = false;
-        protected override void OnAssociatedObjectLoaded()
-        {
-            base.OnAssociatedObjectLoaded();
-            if (!_didSet)
-            {
-                _didSet = true;
-                AssociatedObject.PointerEntered += AssociatedObjectOnPointerEntered;
-                AssociatedObject.PointerExited += AssociatedObjectOnPointerExited;
-                AssociatedObjectOnPointerExited(null, null);
-            }
-
-            if (!_didSubscribe)
-            {
-                if (AssociatedObject?.DataContext is IIsPlaying isPlaying)
-                {
-                    isPlaying.IsPlayingChanged += IsPlayingOnIsPlayingChanged;
-                }
-            }
-            AssociatedObjectOnPointerExited(null, null);
-        }
+        private bool _subscribed;
+        private IIsPlaying _isPlaying;
 
         protected override void OnAttached()
         {
             base.OnAttached();
-            if (AssociatedObject != null)
-            {
-                _didSet = true;
-                AssociatedObject.PointerEntered += AssociatedObjectOnPointerEntered;
-                AssociatedObject.PointerExited += AssociatedObjectOnPointerExited;
-                AssociatedObjectOnPointerExited(null, null);
-                if (AssociatedObject.DataContext is IIsPlaying isPlaying)
-                {
-                    isPlaying.IsPlayingChanged += IsPlayingOnIsPlayingChanged;
-                    _didSubscribe = true;
-                }
-            }
+            AssociatedObject.DataContextChanged += AssociatedObjectOnDataContextChanged;
+            AssociatedObject.PointerEntered += AssociatedObjectOnPointerEntered;
+            AssociatedObject.PointerExited += AssociatedObjectOnPointerExited;
+
+            AssociatedObjectOnDataContextChanged(AssociatedObject, null);
+            AssociatedObjectOnPointerExited(null, null);
         }
 
-        protected override void OnAssociatedObjectUnloaded()
+        private void AssociatedObjectOnDataContextChanged(FrameworkElement sender, DataContextChangedEventArgs args)
         {
-            if (AssociatedObject != null)
+            if (sender.DataContext is IIsPlaying i && !_subscribed)
             {
-                AssociatedObject.PointerEntered -= AssociatedObjectOnPointerEntered;
-                AssociatedObject.PointerExited -= AssociatedObjectOnPointerExited;
-
-                if (AssociatedObject.DataContext is IIsPlaying isPlaying)
-                {
-                    isPlaying.IsPlayingChanged -= IsPlayingOnIsPlayingChanged;
-                }
+                _subscribed = true;
+                _isPlaying = i;
+                _isPlaying.IsPlayingChanged += IsPlayingOnIsPlayingChanged;
             }
-            base.OnAssociatedObjectUnloaded();
         }
 
         protected override void OnDetaching()
@@ -74,11 +43,12 @@ namespace Eum.UI.WinUI.Behaviors
             {
                 AssociatedObject.PointerEntered -= AssociatedObjectOnPointerEntered;
                 AssociatedObject.PointerExited -= AssociatedObjectOnPointerExited;
+                AssociatedObject.DataContextChanged -= AssociatedObjectOnDataContextChanged;
+            }
 
-                if (AssociatedObject.DataContext is IIsPlaying isPlaying)
-                {
-                    isPlaying.IsPlayingChanged -= IsPlayingOnIsPlayingChanged;
-                }
+            if (_isPlaying !=null)
+            {
+                _isPlaying.IsPlayingChanged -= IsPlayingOnIsPlayingChanged;
             }
             base.OnDetaching();
         }

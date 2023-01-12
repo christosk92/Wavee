@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "Artist_Page_test (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "Artist_Page_test (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}

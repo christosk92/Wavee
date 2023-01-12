@@ -2,7 +2,7 @@
 	<PropertyGroup>
 		<OutputType>WinExe</OutputType>
 		<TargetFramework>net7.0-windows10.0.19041.0</TargetFramework>
-		<TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+		<TargetPlatformMinVersion>10.0.19041.0</TargetPlatformMinVersion>
 		<RootNamespace>Eum.UI.WinUI</RootNamespace>
 		<ApplicationManifest>app.manifest</ApplicationManifest>
 		<Platforms>x86;x64;ARM64</Platforms>
@@ -11,6 +11,8 @@
 		<UseWinUI>true</UseWinUI>
 		<EnableMsixTooling>true</EnableMsixTooling>
 		<SupportedOSPlatformVersion>10.0.19041.0</SupportedOSPlatformVersion>
+		<PackageCertificateThumbprint>D8CFC2CC2E27E37144E27BB9C8648BF51C03A022</PackageCertificateThumbprint>
+		<AppxPackageSigningEnabled>True</AppxPackageSigningEnabled>
 	</PropertyGroup>
 	<ItemGroup>
 		<None Remove="Assets\amb.png" />
@@ -62,7 +64,7 @@
 		<PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.22621.755" />
 		<PackageReference Include="Microsoft.Xaml.Behaviors.WinUI.Managed" Version="2.0.9" />
 		<PackageReference Include="ReactiveUI.WinUI" Version="18.4.1" />
-		<PackageReference Include="VideoLAN.LibVLC.Windows" Version="3.0.18" />
+		<PackageReference Include="VideoLAN.LibVLC.Windows" Version="4.0.0-alpha-20230111" />
 		<PackageReference Include="WinUIEx" Version="2.1.0" />
 		<Manifest Include="$(ApplicationManifest)" />
 	</ItemGroup>
@@ -80,7 +82,6 @@
 		<ProjectReference Include="..\..\Eum\src\Spotify\Players\Eum.Connections.Spotify.VLC\Eum.Connections.Spotify.VLC.csproj" />
 		<ProjectReference Include="..\Eum.UI.Spotify\Eum.UI.Spotify.csproj" />
 		<ProjectReference Include="..\Eum.UI\Eum.UI.csproj" />
-		<ProjectReference Include="..\WinRTLibrary\WinRTLibrary.csproj" />
 	</ItemGroup>
 	<ItemGroup>
 		<Content Update="Assets\spotify.png">

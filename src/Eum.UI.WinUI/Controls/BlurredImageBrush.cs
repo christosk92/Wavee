@@ -151,7 +151,7 @@ namespace Eum.UI.WinUI.Controls
 
             //Source = null;
 
-            GC.Collect();
+            //GC.Collect();
         }
         //// Helper to allow XAML developer to use XAML stretch property rather than another enum.
         private static CompositionStretch CompositionStretchFromStretch(Stretch value)

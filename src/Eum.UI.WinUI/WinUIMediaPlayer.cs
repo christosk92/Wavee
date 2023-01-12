@@ -17,7 +17,6 @@ using Eum.Connections.Spotify.Playback.Player;
 using Eum.Logging;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml.Controls;
-using WinRTLibrary;
 
 namespace Eum.UI.WinUI
 {

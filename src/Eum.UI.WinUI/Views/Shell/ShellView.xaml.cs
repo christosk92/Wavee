@@ -96,5 +96,10 @@ namespace Eum.UI.WinUI.Views.Shell
         {
             ViewModel.SidePanelView = args.InvokedItemContainer.Tag?.ToString();
         }
+
+        private void UIElement_OnTapped(object sender, TappedRoutedEventArgs e)
+        {
+            GC.Collect();
+        }
     }
 }

@@ -48,9 +48,9 @@ namespace Eum.UI.ViewModels.Artists
         [ObservableProperty] private string? _header;
         [ObservableProperty] private EumArtist? _artist;
 
-        [ObservableProperty] public ObservableCollection<DiscographyGroup>? _discography;
+        public ObservableCollection<DiscographyGroup> Discography { get; private set; } = new();
 
-        [ObservableProperty] private IList<TopTrackViewModel> _topTracks;
+        [ObservableProperty] private List<TopTrackViewModel> _topTracks;
 
         [ObservableProperty] private LatestReleaseWrapper? _latestRelease;
 
@@ -76,6 +76,7 @@ namespace Eum.UI.ViewModels.Artists
             }
         }
 
+        public event EventHandler ArtistFetched;
         public async void OnNavigatedTo(object parameter)
         {
             var main = Ioc.Default.GetRequiredService<MainViewModel>();
@@ -105,61 +106,64 @@ namespace Eum.UI.ViewModels.Artists
             });
             Artist = artist;
             Header = artist.Header;
-            Discography = new ObservableCollection<DiscographyGroup>(artist.DiscographyReleases
-                .Select(a => new DiscographyGroup
-                {
-                    Key = a.Key switch
-                    {
-                        DiscographyType.Album => "Albums",
-                        DiscographyType.Single => "Singles",
-                        DiscographyType.Compilation => "Compilations",
-                        DiscographyType.AppearsOn => "Found On"
-                    },
-                    Type = a.Key,
-                    SwitchTemplateCommand = _switchTemplatesCommand,
-                    Items = a.Value.Select(k => new DiscographyViewModel
-                    {
-                        Title = k.Name,
-                        Description = k.Year.ToString(),
-                        Image = k.Cover.Uri,
-                        Id = new ItemId(k.Uri.Uri),
-                        Tracks = (k.Discs != null
-                            ? k.Discs.SelectMany(j => j.Select((z, i) => new DiscographyTrackViewModel
-                            {
-                                IsLoading = false,
-                                Id = new ItemId(z.Uri.Uri),
-                                Duration = z.Duration,
-                                Index = i,
-                                Title = z.Name,
-                                IsSaved = user.LibraryProvider.IsSaved(new ItemId(z.Uri.Uri)),
-                                Playcount = (long)z.PlayCount
-                            }))
-                            : Enumerable.Range(0, (int)k.TrackCount)
-                                .Select(_ => new DiscographyTrackViewModel
-                                {
-                                    IsLoading = true,
-                                })).ToArray()
-                    }).ToArray(),
-                    TemplateType = a.Key switch
-                    {
-                        DiscographyType.Album => TemplateTypeOrientation.Grid,
-                        DiscographyType.Single => TemplateTypeOrientation.Grid,
-                        DiscographyType.Compilation => TemplateTypeOrientation.Grid,
-                        DiscographyType.AppearsOn => TemplateTypeOrientation.HorizontalStack,
-                        _ => throw new ArgumentOutOfRangeException()
-                    }
-                })
-                .Where(a => a.Items.Any()));
+            foreach (var discographyGroup in artist.DiscographyReleases
+                         .Select(a => new DiscographyGroup
+                         {
+                             Key = a.Key switch
+                             {
+                                 DiscographyType.Album => "Albums",
+                                 DiscographyType.Single => "Singles",
+                                 DiscographyType.Compilation => "Compilations",
+                                 DiscographyType.AppearsOn => "Found On"
+                             },
+                             Type = a.Key,
+                             SwitchTemplateCommand = _switchTemplatesCommand,
+                             Items = a.Value.Select(k => new DiscographyViewModel
+                             {
+                                 Title = k.Name,
+                                 Description = k.Year.ToString(),
+                                 Image = k.Cover.Uri,
+                                 Id = new ItemId(k.Uri.Uri),
+                                 Tracks = (k.Discs != null
+                                     ? k.Discs.SelectMany(j => j.Select((z, i) => new DiscographyTrackViewModel
+                                     {
+                                         IsLoading = false,
+                                         Id = new ItemId(z.Uri.Uri),
+                                         Duration = z.Duration,
+                                         Index = i,
+                                         Title = z.Name,
+                                         IsSaved = user.LibraryProvider.IsSaved(new ItemId(z.Uri.Uri)),
+                                         Playcount = (long)z.PlayCount
+                                     }))
+                                     : Enumerable.Range(0, (int)k.TrackCount)
+                                         .Select(_ => new DiscographyTrackViewModel
+                                         {
+                                             IsLoading = true,
+                                         })).ToArray()
+                             }).ToArray(),
+                             TemplateType = a.Key switch
+                             {
+                                 DiscographyType.Album => TemplateTypeOrientation.Grid,
+                                 DiscographyType.Single => TemplateTypeOrientation.Grid,
+                                 DiscographyType.Compilation => TemplateTypeOrientation.Grid,
+                                 DiscographyType.AppearsOn => TemplateTypeOrientation.HorizontalStack,
+                                 _ => throw new ArgumentOutOfRangeException()
+                             }
+                         })
+                         .Where(a => a.Items.Any()))
+            {
+                Discography.Add(discographyGroup);
+            }
 
             TopTracks = artist.TopTrack
                 .Select(a => new TopTrackViewModel(a, playCommand)
                 {
                     IsSaved = user.LibraryProvider.IsSaved(a.Track.Id)
                 })
-                .ToArray();
+                .ToList();
             LatestRelease = artist.LatestRelease;
             _waitForArtist.Set();
-
+            ArtistFetched?.Invoke(this, EventArgs.Empty);
             var appleMusicArtist = await Task.Run(async () => await FetchAppleMusicArtist(artist.Name));
             if (appleMusicArtist != null)
             {
@@ -337,7 +341,7 @@ namespace Eum.UI.ViewModels.Artists
                             {
                                 Name = attr.GetProperty("name")
                                     .GetString()!,
-                                Id = _discography.SelectMany(a => a.Items)
+                                Id = Discography.SelectMany(a => a.Items)
                                     .FirstOrDefault(a => string.Equals(title, a.Title, StringComparison.InvariantCultureIgnoreCase))?
                                     .Id ?? new ItemId($"apple:album:{id}"),
                                 Images = new[]
@@ -398,22 +402,25 @@ namespace Eum.UI.ViewModels.Artists
                     }
 
                     discographyGroup.Items = null;
+                    discographyGroup.SwitchTemplateCommand = null;
                 }
 
+            Discography?.Clear();
             Discography = null;
             foreach (var topTrackViewModel in TopTracks)
             {
                 foreach (var cachedImage in topTrackViewModel.Track.Track.Images)
                 {
                     var image = await cachedImage.ImageStream;
-                    image.Dispose();
+                    await image.DisposeAsync();
                 }
             }
-
-            TopTracks = new List<TopTrackViewModel>();
+            TopTracks.Clear();
+            TopTracks = null;
+            GC.Collect();
         }
 
-        public int MaxDepth => 1;
+        public int MaxDepth => 0;
 
         public bool ShouldSetPageGlaze => Ioc.Default.GetRequiredService<MainViewModel>().CurrentUser.User.ThemeService
             .Glaze == "Page Dependent";
@@ -503,15 +510,45 @@ namespace Eum.UI.ViewModels.Artists
 
     public interface IIsSaved
     {
-        
+
         bool IsSaved { get; set; }
         ItemId Id { get; }
     }
 
+    public class TemplateTypeOrientationWrapper
+    {
+        public TemplateTypeOrientation Orientation { get; init; }
+
+        public string Glyph => Orientation switch
+        {
+            TemplateTypeOrientation.Grid => "\uF0E2",
+            TemplateTypeOrientation.VerticalStack => "\uE14C"
+        };
+    }
     [INotifyPropertyChanged]
     public partial class DiscographyGroup
     {
         [ObservableProperty] private TemplateTypeOrientation _templateType;
+
+        private TemplateTypeOrientationWrapper? _selectedItem;
+
+        public TemplateTypeOrientationWrapper[] PossibleViews => new TemplateTypeOrientationWrapper[]
+        {
+            new() {Orientation = TemplateTypeOrientation.Grid},
+            new() {Orientation = TemplateTypeOrientation.VerticalStack}
+        };
+        public TemplateTypeOrientationWrapper SelectedItem
+        {
+            get => _selectedItem;
+            set
+            {
+                if (SetProperty(ref _selectedItem, value) && value != null)
+                {
+                    TemplateType = value.Orientation;
+                }
+            }
+        }
+
 
         public bool? CanSwitchTemplatesOverride { get; init; }
         public string Title => Type.ToString();
@@ -530,12 +567,11 @@ namespace Eum.UI.ViewModels.Artists
         public string Description { get; set; }
         public string Image { get; set; }
         public ItemId Id { get; init; }
-
         public DiscographyTrackViewModel[] Tracks
         {
             get
             {
-                _ = FetchIfNeccesary();
+                _ = Task.Run(FetchIfNeccesary);
                 return _tracks;
             }
             set
@@ -556,9 +592,8 @@ namespace Eum.UI.ViewModels.Artists
             Debug.WriteLine($"{Title} is missing tracks. Fetching...");
             var album = await Ioc.Default.GetRequiredService<IAlbumProvider>()
                 .GetAlbum(Id, "en", _cts.Token);
-            IDisposable r = default;
             var user = Ioc.Default.GetRequiredService<MainViewModel>().CurrentUser.User;
-            r = RxApp.MainThreadScheduler.Schedule(() =>
+            Ioc.Default.GetRequiredService<IDispatcherHelper>().TryEnqueue(QueuePriority.Low, () =>
             {
                 Tracks = album.Discs.SelectMany(a => a)
                     .Select((z, i) => new DiscographyTrackViewModel
@@ -571,8 +606,9 @@ namespace Eum.UI.ViewModels.Artists
                         Playcount = (long)z.PlayCount,
                         IsSaved = user.LibraryProvider.IsSaved(new ItemId(z.Uri.Uri))
                     }).ToArray();
-                r?.Dispose();
             });
+            //
+
             //}
         }
 
@@ -582,26 +618,26 @@ namespace Eum.UI.ViewModels.Artists
         {
             try
             {
-                _cts.Dispose();
-                _cts = null;
+
+                _cts?.Dispose();
             }
             catch (Exception)
             {
             }
+            _cts = null;
         }
     }
 
-    [ObservableObject]
+    [INotifyPropertyChanged]
     public partial class DiscographyTrackViewModel : IIsPlaying, IIsSaved
     {
         [ObservableProperty] private bool _isSaved;
         [ObservableProperty] private bool _isLoading;
-        [ObservableProperty] private string _title;
-        [ObservableProperty] private long _playcount;
-        [ObservableProperty] private int _duration;
-        public int Index { get; init; }
+        public string Title { get; init; }
+        public long Playcount { get; init; }
+        public int Duration { get; init; }
         public ItemId Id { get; init; }
-
+        public int Index { get; init; }
         public bool IsPlaying()
         {
             return Ioc.Default.GetRequiredService<MainViewModel>()

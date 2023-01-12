@@ -4,16 +4,15 @@
   xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
   xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
   xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
-  xmlns:uap3="http://schemas.microsoft.com/appx/manifest/uap/windows10/3"
-  IgnorableNamespaces="uap rescap uap3">
+  IgnorableNamespaces="uap rescap">
 
   <Identity
-    Name="08b28833-010a-4e4b-accc-06f1589a1ad4"
+    Name="cbdabcf7-8e72-4a4d-bf7f-f4d62e996cdc"
     Publisher="CN=ckara"
     Version="1.0.0.0" />
 
   <Properties>
-    <DisplayName>Eum.UI.WinUI</DisplayName>
+    <DisplayName>Artist_Page_test</DisplayName>
     <PublisherDisplayName>ckara</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
   </Properties>
@@ -32,44 +31,18 @@
       Executable="$targetnametoken$.exe"
       EntryPoint="$targetentrypoint$">
       <uap:VisualElements
-        DisplayName="Eum.UI.WinUI"
-        Description="Eum.UI.WinUI"
+        DisplayName="Artist_Page_test"
+        Description="Artist_Page_test"
         BackgroundColor="transparent"
         Square150x150Logo="Assets\Square150x150Logo.png"
         Square44x44Logo="Assets\Square44x44Logo.png">
         <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png" />
         <uap:SplashScreen Image="Assets\SplashScreen.png" />
       </uap:VisualElements>
-      <Extensions>
-        <uap:Extension Category="windows.mediaPlayback">
-          <uap:MediaPlayback>
-            <uap:Codec Name="ogg"/>
-          </uap:MediaPlayback>
-        </uap:Extension>
-      </Extensions>
     </Application>
   </Applications>
 
   <Capabilities>
     <rescap:Capability Name="runFullTrust" />
-    <uap3:Capability Name="backgroundMediaPlayback"/>
-    <Capability Name="internetClient"/>
-    <uap:Capability Name="musicLibrary"/>
   </Capabilities>
-  <Extensions>
-	  <Extension Category="windows.activatableClass.inProcessServer">
-		  <InProcessServer>
-			  <Path>WinRT.Host.dll</Path>
-			  <ActivatableClass ActivatableClassId="WinRTLibrary.GainAudioEffect" ThreadingModel="both" />
-		  </InProcessServer>
-	  </Extension>
-  </Extensions>
-	<!-- <Extensions> -->
-	 <!--  <Extension Category="windows.activatableClass.inProcessServer"> -->
-		<!--   <InProcessServer> -->
-		<!-- 	  <Path>WinRT.Host.dll</Path> -->
-		<!-- 	  <ActivatableClass ActivatableClassId="Eum.Connections.Spotify.WinUIEffects.GainAudioEffect" ThreadingModel="both" /> -->
-		<!--   </InProcessServer> -->
-	 <!--  </Extension> -->
-  <!-- </Extensions> -->
 </Package>

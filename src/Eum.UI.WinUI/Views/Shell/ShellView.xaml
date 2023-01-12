@@ -141,5 +141,6 @@
                 </SplitView>
             </Grid>
         </controls:SidebarControl>
+        <Button Content="GC" VerticalAlignment="Top" Margin="24" Tapped="UIElement_OnTapped" HorizontalAlignment="Right"/>
     </Grid>
 </UserControl>

@@ -12,10 +12,10 @@
     xmlns:core="using:Microsoft.Xaml.Interactions.Core"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:interactivity="using:Microsoft.Xaml.Interactivity"
-    xmlns:local="using:Eum.UI.WinUI.Views.Artists"
+    xmlns:local="using:Eum.UI.WinUI.Views.Artists" Unloaded="ArtistRootView_OnUnloaded"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:media="using:CommunityToolkit.WinUI.UI.Media"
-    xmlns:ui="using:CommunityToolkit.WinUI.UI" Unloaded="ArtistRootView_OnUnloaded"
+    xmlns:ui="using:CommunityToolkit.WinUI.UI"
     xmlns:xamlConverters="using:Eum.UI.WinUI.XamlConverters"
     xmlns:transitions="using:Eum.UI.WinUI.Transitions"
     xmlns:animations="using:CommunityToolkit.WinUI.UI.Animations"
@@ -27,6 +27,174 @@
         </TransitionCollection>
     </UserControl.Transitions>
     <UserControl.Resources>
+        <DataTemplate 
+            x:Key="DiscographyTrackTemplate"
+            x:DataType="artists:DiscographyTrackViewModel">
+            <UserControl Background="Transparent">
+                <interactivity:Interaction.Behaviors>
+                    <behaviors:PlayingTrackPointerBehavior />
+                </interactivity:Interaction.Behaviors>
+                <Grid>
+                    <VisualStateManager.VisualStateGroups>
+                        <VisualStateGroup>
+                            <VisualState x:Name="Normal" />
+                            <VisualState x:Name="Playing">
+                                <VisualState.Setters>
+                                    <Setter
+                                                                                        Target="IndexOrPlayButtonControl.Content">
+                                        <Setter.Value>
+                                            <Image
+                                                                                                x:Name="Equaliser"
+                                                                                                Width="16"
+                                                                                                Height="16"
+                                                                                                Source="ms-appx:///Assets/equaliser.gif" />
+                                        </Setter.Value>
+                                    </Setter>
+                                    <Setter
+                                                                                        Target="TitleBlock.FontWeight"
+                                                                                        Value="Normal" />
+                                    <Setter
+                                                                                        Target="TitleBlock.Foreground"
+                                                                                        Value="{StaticResource SpotifyGreen}" />
+                                    <Setter
+                                                                                        Target="DurationBlock.Foreground"
+                                                                                        Value="{StaticResource SpotifyGreen}" />
+                                    <Setter
+                                                                                        Target="PlaycountBlock.Foreground"
+                                                                                        Value="{StaticResource SpotifyGreen}" />
+                                </VisualState.Setters>
+                            </VisualState>
+                            <VisualState x:Name="HoverPlaying">
+                                <VisualState.Setters>
+                                    <Setter
+                                                                                        Target="IndexOrPlayButtonControl.Content">
+                                        <Setter.Value>
+                                            <Button
+                                                                                                Width="32"
+                                                                                                Height="32"
+                                                                                                Margin="-4,-8,-12,-8"
+                                                                                                Padding="0"
+                                                                                                HorizontalAlignment="Center"
+                                                                                                VerticalAlignment="Center"
+                                                                                                Background="Transparent">
+                                                <FontIcon
+                                                                                                    FontFamily="Segoe Fluent Icons"
+                                                                                                    FontSize="16"
+                                                                                                    Foreground="{ThemeResource SystemAccentColorLight3}"
+                                                                                                    Glyph="&#xE102;" />
+                                            </Button>
+                                        </Setter.Value>
+                                    </Setter>
+
+                                    <Setter
+                                                                                        Target="TitleBlock.Foreground"
+                                                                                        Value="{StaticResource SpotifyGreen}" />
+                                    <Setter
+                                                                                        Target="PlaycountBlock.Foreground"
+                                                                                        Value="{StaticResource SpotifyGreen}" />
+                                    <Setter
+                                                                                        Target="DurationBlock.Foreground"
+                                                                                        Value="{StaticResource SpotifyGreen}" />
+                                </VisualState.Setters>
+                            </VisualState>
+                            <VisualState x:Name="Hover">
+                                <VisualState.Setters>
+                                    <Setter
+                                                                                        Target="IndexOrPlayButtonControl.Content">
+                                        <Setter.Value>
+                                            <Button
+                                                                                                Width="32"
+                                                                                                Height="32"
+                                                                                                Margin="-8,-8,-12,-8"
+                                                                                                Padding="0"
+                                                                                                HorizontalAlignment="Left"
+                                                                                                VerticalAlignment="Center"
+                                                                                                Background="Transparent">
+                                                <FontIcon
+                                                                                                    FontFamily="Segoe Fluent Icons"
+                                                                                                    FontSize="16"
+                                                                                                    Foreground="{ThemeResource SystemAccentColorLight3}"
+                                                                                                    Glyph="&#xE102;" />
+                                            </Button>
+                                        </Setter.Value>
+                                    </Setter>
+                                </VisualState.Setters>
+                            </VisualState>
+                        </VisualStateGroup>
+                    </VisualStateManager.VisualStateGroups>
+                    <Border
+                                                                        Padding="12,0,12,0"
+                                                                        HorizontalAlignment="Stretch"
+                                                                        VerticalAlignment="Stretch"
+                                                                        Background="{ThemeResource LayerFillColorDefaultBrush}"
+                                                                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                                                        BorderThickness="1"
+                                                                        CornerRadius="8">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="60" />
+                                <ColumnDefinition Width="1*" />
+                                <ColumnDefinition />
+                                <ColumnDefinition />
+                            </Grid.ColumnDefinitions>
+
+
+                            <Grid VerticalAlignment="Stretch">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="24" />
+                                    <ColumnDefinition Width="36" />
+                                </Grid.ColumnDefinitions>
+                                <ContentPresenter x:Name="IndexOrPlayButtonControl">
+                                    <ContentPresenter.Content>
+                                        <TextBlock
+                                                                                            x:Name="Index"
+                                                                                            VerticalAlignment="Center"
+                                                                                            FontWeight="Bold"
+                                                                                            Opacity=".7"
+                                                                                            Text="{x:Bind Index, Converter={StaticResource IndexToStringConverter}}" />
+                                    </ContentPresenter.Content>
+                                </ContentPresenter>
+                                <controls:StarButton  IsChecked="{x:Bind IsSaved, Mode=OneWay}"
+                                                                                    Grid.Column="1" FontSize="18"
+                                                                                    Margin="0,0,6,0"
+                                                                                    Padding="0"
+                                                                                    HorizontalAlignment="Center">
+                                    <interactivity:Interaction.Behaviors>
+                                        <behaviors:LikeTrackBehavior/>
+                                    </interactivity:Interaction.Behaviors>
+                                </controls:StarButton>
+                            </Grid>
+                            <TextBlock
+                                                                                Grid.Column="1"
+                                                                                x:Name="TitleBlock"
+                                                                                Margin="0,0,8,0"
+                                                                                VerticalAlignment="Center"
+                                                                                Text="{x:Bind Title}"
+                                                                                TextTrimming="CharacterEllipsis" />
+
+
+                            <!--  <ContentPresenter  -->
+                            <!--  Grid.Column="2"  -->
+                            <!--  VerticalAlignment="Center"  -->
+                            <!--  Content="{x:Bind Track.Track.Group}"  -->
+                            <!--  ContentTemplate="{StaticResource IdWithTitleItemTemplate}" />  -->
+                            <TextBlock
+                                                                                Grid.Column="3" Margin="8,0"
+                                                                                HorizontalAlignment="Right"
+                                                                                x:Name="DurationBlock"
+                                                                                VerticalAlignment="Center"
+                                                                                Text="{x:Bind Duration, Converter={StaticResource MsToTimestampConverter}}" />
+                            <TextBlock
+                                                                                Grid.Column="2"
+                                                                                x:Name="PlaycountBlock"
+                                                                                HorizontalAlignment="Right"
+                                                                                VerticalAlignment="Center"
+                                                                                Text="{x:Bind Playcount, Converter={StaticResource PlaycountToStringConverter}}" />
+                        </Grid>
+                    </Border>
+                </Grid>
+            </UserControl>
+        </DataTemplate>
         <Style x:Key="GridViewImage" TargetType="Image">
             <Setter Property="Stretch" Value="UniformToFill" />
             <Setter Property="HorizontalAlignment" Value="Center" />
@@ -40,8 +208,8 @@
     </UserControl.Resources>
     <Grid>
         <ScrollViewer
-
-            x:Name="Scroller" ViewChanged="Scroller_OnViewChanged" IsVerticalScrollChainingEnabled="True">
+            x:Name="Scroller" ViewChanged="Scroller_OnViewChanged" 
+            IsVerticalScrollChainingEnabled="True">
             <StackPanel Padding="56,44,0,16">
                 <Grid x:Name="HeaderWrapper" Height="450">
                     <Grid x:Name="Header">
@@ -64,7 +232,7 @@
                                 FontSize="56"
                                 transitions:TransitionHelper.Id="title"
                                 FontWeight="Bold"
-                                Text="{x:Bind ViewModel.Artist.Name, Mode=OneWay}" />
+                                Text="{x:Bind ViewModel.Artist.Name}" />
                             <TextBlock
                                 x:Name="DescriptionBig"
                                 Margin="0,0,0,8"
@@ -73,7 +241,7 @@
                                 MaxLines="2"
                                 Opacity="0.8"
                                 Style="{StaticResource BodyTextBlockStyle}"
-                                Text="{x:Bind ToMonthlyListenersString(ViewModel.Artist.MonthlyListeners), Mode=OneWay}"
+                                Text="{x:Bind ToMonthlyListenersString(ViewModel.Artist.MonthlyListeners)}"
                                 TextTrimming="CharacterEllipsis" />
 
                             <StackPanel transitions:TransitionHelper.Id="floatpanel" Orientation="Horizontal"
@@ -136,7 +304,7 @@
                         x:Name="LatestRelease"
                         MaxWidth="260"
                         Margin="0,0,24,0"
-                        x:Load="{x:Bind ViewModel.LatestRelease, Mode=OneWay, Converter={StaticResource IsNullToBoolConverter}, ConverterParameter='false'}">
+                        x:Load="{x:Bind ViewModel.LatestRelease,  Converter={StaticResource IsNullToBoolConverter}, ConverterParameter='false'}">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
@@ -153,14 +321,14 @@
                             FontSize="11"
                             FontWeight="SemiBold"
                             Opacity=".7"
-                            Text="{x:Bind ViewModel.LatestRelease.ReleaseDateString, Mode=OneWay}" />
+                            Text="{x:Bind ViewModel.LatestRelease.ReleaseDateString}" />
                         <Grid
                             Grid.Row="2"
                             HorizontalAlignment="Left"
                             VerticalAlignment="Top">
                             <Border ui:Effects.Shadow="{StaticResource CommonShadow}">
                                 <Border CornerRadius="4">
-                                    <Image Source="{Binding LatestRelease.ImageUrl}" />
+                                    <Image Source="{Binding LatestRelease.ImageUrl, Mode=OneTime}" />
                                 </Border>
                             </Border>
 
@@ -174,14 +342,14 @@
                                 FontSize="18"
                                 FontWeight="Bold"
                                 MaxLines="2"
-                                Text="{x:Bind ViewModel.LatestRelease.Title, Mode=OneWay}"
+                                Text="{x:Bind ViewModel.LatestRelease.Title}"
                                 TextTrimming="CharacterEllipsis"
                                 TextWrapping="Wrap" />
                             <TextBlock
                                 FontSize="12"
                                 FontWeight="Normal"
                                 Opacity=".7"
-                                Text="{x:Bind ViewModel.LatestRelease.TrackCountString, Mode=OneWay}" />
+                                Text="{x:Bind ViewModel.LatestRelease.TrackCountString}" />
                         </StackPanel>
                     </Grid>
 
@@ -197,7 +365,7 @@
                         <ListView
                             Grid.Row="1"
                             ItemContainerStyle="{StaticResource SongGridViewItemStyle}"
-                            ItemsSource="{x:Bind ViewModel.TopTracks, Mode=OneWay}"
+                            ItemsSource="{x:Bind ViewModel.TopTracks}"
                             SelectionMode="Extended"
                             x:Name="GridView"
                             SizeChanged="GridView_SizeCHanged">
@@ -291,7 +459,7 @@
                                                 BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                                                 BorderThickness="1"
                                                 CornerRadius="8">
-                                                <Grid x:DefaultBindMode="OneWay">
+                                                <Grid >
                                                     <Grid.ColumnDefinitions>
                                                         <ColumnDefinition Width="110" />
                                                         <ColumnDefinition Width="1.5*" />
@@ -313,7 +481,8 @@
                                                                     VerticalAlignment="Center"
                                                                     FontWeight="Bold"
                                                                     Opacity=".7"
-                                                                    Text="{x:Bind Track.Index, Converter={StaticResource IndexToStringConverter}}" />
+                                                                    Text="{x:Bind Track.Index,
+ Converter={StaticResource IndexToStringConverter}}" />
                                                             </ContentPresenter.Content>
                                                         </ContentPresenter>
 
@@ -359,7 +528,8 @@
                                                         x:Name="PlaycountBlock"
                                                         HorizontalAlignment="Right"
                                                         VerticalAlignment="Center"
-                                                        Text="{x:Bind Track.Playcount, Converter={StaticResource PlaycountToStringConverter}}" />
+                                                        Text="{x:Bind Track.Playcount, 
+                                                        Converter={StaticResource PlaycountToStringConverter}}" />
                                                 </Grid>
                                             </Border>
                                         </Grid>
@@ -379,7 +549,7 @@
                 </Grid>
 
 
-                <ItemsRepeater Margin="0,48,56,86" ItemsSource="{x:Bind ViewModel.Discography, Mode=OneWay}">
+                <ItemsRepeater Margin="0,48,56,86" ItemsSource="{x:Bind ViewModel.Discography, Mode=OneTime}">
                     <ItemsRepeater.ItemTemplate>
                         <DataTemplate x:DataType="artists:DiscographyGroup">
                             <controls1:DockPanel Margin="0,0,0,48" LastChildFill="True">
@@ -401,9 +571,11 @@
                                         HorizontalContentAlignment="Right"
                                         Background="Transparent" CanBeScrollAnchor="True"
                                         BorderBrush="Transparent"
-                                        BorderThickness="0"
-                                        x:Name="Lv" Tag="{x:Bind }"
+                                        BorderThickness="0" 
                                         SelectionChanged="Selector_OnSelectionChanged"
+                                        x:Name="Lv" 
+                                        SelectedItem="{x:Bind SelectedItem, Mode=TwoWay}" 
+                                        ItemsSource="{x:Bind PossibleViews}"
                                         Visibility="{x:Bind CanSwitchTemplates, Converter={StaticResource TrueToVisibleConverter}}">
                                         <ListView.ItemsPanel>
                                             <ItemsPanelTemplate>
@@ -478,10 +650,15 @@
                                                 </Setter>
                                             </Style>
                                         </ListView.ItemContainerStyle>
-                                        <ListView.Items>
-                                            <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xF0E2;" />
-                                            <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE14C;" />
-                                        </ListView.Items>
+                                        <ListView.ItemTemplate>
+                                            <DataTemplate x:DataType="artists:TemplateTypeOrientationWrapper">
+                                                <FontIcon FontFamily="Segoe Fluent Icons" Glyph="{x:Bind  Glyph}" />
+                                            </DataTemplate>
+                                        </ListView.ItemTemplate>
+                                        <!-- <ListView.Items> -->
+                                        <!--     <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xF0E2;" /> -->
+                                        <!--     <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE14C;" /> -->
+                                        <!-- </ListView.Items> -->
                                     </ListView>
                                 </Grid>
 
@@ -491,8 +668,7 @@
                                                x:Load="{x:Bind TemplateType, Mode=OneWay, Converter={StaticResource IsGridOrVerticalToLoadedConverter}, ConverterParameter='Grid'}"
                                                HorizontalCacheLength="0"
 
-                                               ItemsSource="{x:Bind Items}"
-                                               Tag="{x:Bind}">
+                                               ItemsSource="{x:Bind Items}">
                                     <ItemsRepeater.ItemTemplate>
                                         <DataTemplate x:DataType="artists:DiscographyViewModel">
                                             <UserControl Background="Transparent">
@@ -506,9 +682,7 @@
                                                     </Grid.RowDefinitions>
                                                     <Image
                                                             x:Name="MainImage"
-                                                            ui:VisualExtensions.NormalizedCenterPoint="0.5"
-                                                            Tag="{x:Bind Image}"
-                                                            x:Phase="3">
+                                                            ui:VisualExtensions.NormalizedCenterPoint="0.5">
                                                         <Image.Source>
                                                             <BitmapImage
                                                                     DecodePixelHeight="200"
@@ -546,8 +720,7 @@
                                             MinColumnSpacing="24"
                                             MinRowSpacing="24"
                                             ItemsStretch="Fill"
-                                            MinItemWidth="200"
-                                            VirtualizingStackPanel.VirtualizationMode="Recycling" />
+                                            MinItemWidth="200" />
                                     </ItemsRepeater.Layout>
                                 </ItemsRepeater>
                                 <ItemsRepeater CanBeScrollAnchor="False"
@@ -555,224 +728,62 @@
                                                VerticalAlignment="Top"
                                                x:Load="{x:Bind TemplateType, Mode=OneWay, Converter={StaticResource IsGridOrVerticalToLoadedConverter}, ConverterParameter='VerticalStack'}"
                                                HorizontalCacheLength="0"
-                                               ItemsSource="{x:Bind Items}"
-                                               Tag="{x:Bind}">
+                                               ItemsSource="{x:Bind Items}">
                                     <ItemsRepeater.ItemTemplate>
                                         <DataTemplate x:DataType="artists:DiscographyViewModel">
-                                            <controls1:DockPanel>
-                                                <NavigationViewItemSeparator Margin="0,12,0,24"
-                                                                             controls1:DockPanel.Dock="Bottom" />
-                                                <StackPanel Width="150" controls1:DockPanel.Dock="Left"
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition/>
+                                                </Grid.ColumnDefinitions>
+
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition/>
+                                                    <RowDefinition Height="Auto"/>
+                                                </Grid.RowDefinitions>
+                                                <StackPanel Width="150"
+                                                            controls1:DockPanel.Dock="Left"
                                                             Margin="0,0,24,0">
                                                     <Border CornerRadius="6">
-                                                        <Image Height="150"
-                                                               Tag="{x:Bind Image}"
-                                                               x:Phase="2">
+                                                        <Image Height="150" Tag="{x:Bind Image}" x:Phase="2">
                                                             <Image.Source>
                                                                 <BitmapImage
-                                                                    DecodePixelHeight="200"
-                                                                    DecodePixelWidth="200"
-                                                                    UriSource="{x:Bind Image}" />
+                                                                                DecodePixelHeight="200"
+                                                                                DecodePixelWidth="200"
+                                                                                UriSource="{x:Bind Image}" />
                                                             </Image.Source>
                                                         </Image>
                                                     </Border>
 
                                                     <TextBlock TextWrapping="Wrap" MaxLines="2"
-                                                               TextTrimming="CharacterEllipsis"
-                                                               Margin="0,4,0,0"
-                                                               x:Phase="1"
-                                                               FontWeight="SemiBold" Text="{x:Bind Title}" />
+                                                                           TextTrimming="CharacterEllipsis"
+                                                                           Margin="0,4,0,0"
+                                                                           x:Phase="1"
+                                                                           FontWeight="SemiBold" Text="{x:Bind Title}" />
                                                     <TextBlock Opacity=".7" FontSize="13" Text="{x:Bind Description}" />
                                                 </StackPanel>
-                                                <ListView controls1:DockPanel.Dock="Left"
-                                                          x:Phase="3"
+                                                <ListView x:Phase="3"
+                                                          Grid.Column="1"
+                                                          Grid.Row="0"
+                                                          ItemTemplate="{StaticResource DiscographyTrackTemplate}"
                                                           ItemContainerStyle="{StaticResource SongGridViewItemStyle}"
                                                           ItemsSource="{x:Bind Tracks, Mode=OneWay}"
                                                           SelectionMode="Extended">
-                                                    <ListView.ItemsPanel>
-                                                        <ItemsPanelTemplate>
-                                                            <StackPanel Orientation="Vertical" />
-                                                        </ItemsPanelTemplate>
-                                                    </ListView.ItemsPanel>
                                                     <interactivity:Interaction.Behaviors>
                                                         <behaviors:IsPlayingListBehavior />
                                                     </interactivity:Interaction.Behaviors>
-                                                    <ListView.ItemTemplate>
-                                                        <DataTemplate x:DataType="artists:DiscographyTrackViewModel">
-                                                            <UserControl Background="Transparent">
-                                                                <interactivity:Interaction.Behaviors>
-                                                                    <behaviors:PlayingTrackPointerBehavior />
-                                                                </interactivity:Interaction.Behaviors>
-                                                                <Grid>
-                                                                    <VisualStateManager.VisualStateGroups>
-                                                                        <VisualStateGroup>
-                                                                            <VisualState x:Name="Normal" />
-                                                                            <VisualState x:Name="Playing">
-                                                                                <VisualState.Setters>
-                                                                                    <Setter
-                                                                                        Target="IndexOrPlayButtonControl.Content">
-                                                                                        <Setter.Value>
-                                                                                            <Image
-                                                                                                x:Name="Equaliser"
-                                                                                                Width="16"
-                                                                                                Height="16"
-                                                                                                Source="ms-appx:///Assets/equaliser.gif" />
-                                                                                        </Setter.Value>
-                                                                                    </Setter>
-                                                                                    <Setter
-                                                                                        Target="TitleBlock.FontWeight"
-                                                                                        Value="Normal" />
-                                                                                    <Setter
-                                                                                        Target="TitleBlock.Foreground"
-                                                                                        Value="{StaticResource SpotifyGreen}" />
-                                                                                    <Setter
-                                                                                        Target="DurationBlock.Foreground"
-                                                                                        Value="{StaticResource SpotifyGreen}" />
-                                                                                    <Setter
-                                                                                        Target="PlaycountBlock.Foreground"
-                                                                                        Value="{StaticResource SpotifyGreen}" />
-                                                                                </VisualState.Setters>
-                                                                            </VisualState>
-                                                                            <VisualState x:Name="HoverPlaying">
-                                                                                <VisualState.Setters>
-                                                                                    <Setter
-                                                                                        Target="IndexOrPlayButtonControl.Content">
-                                                                                        <Setter.Value>
-                                                                                            <Button
-                                                                                                Width="32"
-                                                                                                Height="32"
-                                                                                                Margin="-4,-8,-12,-8"
-                                                                                                Padding="0"
-                                                                                                HorizontalAlignment="Center"
-                                                                                                VerticalAlignment="Center"
-                                                                                                Background="Transparent">
-                                                                                                <FontIcon
-                                                                                                    FontFamily="Segoe Fluent Icons"
-                                                                                                    FontSize="16"
-                                                                                                    Foreground="{ThemeResource SystemAccentColorLight3}"
-                                                                                                    Glyph="&#xE102;" />
-                                                                                            </Button>
-                                                                                        </Setter.Value>
-                                                                                    </Setter>
-
-                                                                                    <Setter
-                                                                                        Target="TitleBlock.Foreground"
-                                                                                        Value="{StaticResource SpotifyGreen}" />
-                                                                                    <Setter
-                                                                                        Target="PlaycountBlock.Foreground"
-                                                                                        Value="{StaticResource SpotifyGreen}" />
-                                                                                    <Setter
-                                                                                        Target="DurationBlock.Foreground"
-                                                                                        Value="{StaticResource SpotifyGreen}" />
-                                                                                </VisualState.Setters>
-                                                                            </VisualState>
-                                                                            <VisualState x:Name="Hover">
-                                                                                <VisualState.Setters>
-                                                                                    <Setter
-                                                                                        Target="IndexOrPlayButtonControl.Content">
-                                                                                        <Setter.Value>
-                                                                                            <Button
-                                                                                                Width="32"
-                                                                                                Height="32"
-                                                                                                Margin="-8,-8,-12,-8"
-                                                                                                Padding="0"
-                                                                                                HorizontalAlignment="Left"
-                                                                                                VerticalAlignment="Center"
-                                                                                                Background="Transparent">
-                                                                                                <FontIcon
-                                                                                                    FontFamily="Segoe Fluent Icons"
-                                                                                                    FontSize="16"
-                                                                                                    Foreground="{ThemeResource SystemAccentColorLight3}"
-                                                                                                    Glyph="&#xE102;" />
-                                                                                            </Button>
-                                                                                        </Setter.Value>
-                                                                                    </Setter>
-                                                                                </VisualState.Setters>
-                                                                            </VisualState>
-                                                                        </VisualStateGroup>
-                                                                    </VisualStateManager.VisualStateGroups>
-                                                                    <Border
-                                                                        Padding="12,0,12,0"
-                                                                        HorizontalAlignment="Stretch"
-                                                                        VerticalAlignment="Stretch"
-                                                                        Background="{ThemeResource LayerFillColorDefaultBrush}"
-                                                                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
-                                                                        BorderThickness="1"
-                                                                        CornerRadius="8">
-                                                                        <Grid x:DefaultBindMode="OneWay">
-                                                                            <Grid.ColumnDefinitions>
-                                                                                <ColumnDefinition Width="60" />
-                                                                                <ColumnDefinition Width="1*" />
-                                                                                <ColumnDefinition />
-                                                                                <ColumnDefinition />
-                                                                            </Grid.ColumnDefinitions>
-
-
-                                                                            <Grid VerticalAlignment="Stretch">
-                                                                                <Grid.ColumnDefinitions>
-                                                                                    <ColumnDefinition Width="24" />
-                                                                                    <ColumnDefinition Width="36" />
-                                                                                </Grid.ColumnDefinitions>
-                                                                                <ContentPresenter x:Name="IndexOrPlayButtonControl">
-                                                                                    <ContentPresenter.Content>
-                                                                                        <TextBlock
-                                                                                            x:Name="Index"
-                                                                                            VerticalAlignment="Center"
-                                                                                            FontWeight="Bold"
-                                                                                            Opacity=".7"
-                                                                                            Text="{x:Bind Index, Converter={StaticResource IndexToStringConverter}}" />
-                                                                                    </ContentPresenter.Content>
-                                                                                </ContentPresenter>
-                                                                                <controls:StarButton  IsChecked="{x:Bind IsSaved, Mode=OneWay}"
-                                                                                    Grid.Column="1" FontSize="18"
-                                                                                    Margin="0,0,6,0"
-                                                                                    DataContext="{Binding }"
-                                                                                    Padding="0"
-                                                                                    HorizontalAlignment="Center">
-                                                                                    <interactivity:Interaction.Behaviors>
-                                                                                        <behaviors:LikeTrackBehavior/>
-                                                                                    </interactivity:Interaction.Behaviors>
-                                                                                </controls:StarButton>
-                                                                            </Grid>
-                                                                            <TextBlock
-                                                                                Grid.Column="1"
-                                                                                x:Name="TitleBlock"
-                                                                                Margin="0,0,8,0"
-                                                                                VerticalAlignment="Center"
-                                                                                Text="{x:Bind Title, Mode=OneTime}"
-                                                                                TextTrimming="CharacterEllipsis" />
-
-
-                                                                            <!--  <ContentPresenter  -->
-                                                                            <!--  Grid.Column="2"  -->
-                                                                            <!--  VerticalAlignment="Center"  -->
-                                                                            <!--  Content="{x:Bind Track.Track.Group}"  -->
-                                                                            <!--  ContentTemplate="{StaticResource IdWithTitleItemTemplate}" />  -->
-                                                                            <TextBlock
-                                                                                Grid.Column="3" Margin="8,0"
-                                                                                HorizontalAlignment="Right"
-                                                                                x:Name="DurationBlock"
-                                                                                VerticalAlignment="Center"
-                                                                                Text="{x:Bind Duration, Converter={StaticResource MsToTimestampConverter}, Mode=OneTime}" />
-                                                                            <TextBlock
-                                                                                Grid.Column="2"
-                                                                                x:Name="PlaycountBlock"
-                                                                                HorizontalAlignment="Right"
-                                                                                VerticalAlignment="Center"
-                                                                                Text="{x:Bind Playcount, Converter={StaticResource PlaycountToStringConverter}, Mode=OneTime}" />
-                                                                        </Grid>
-                                                                    </Border>
-                                                                </Grid>
-                                                            </UserControl>
-                                                        </DataTemplate>
-                                                    </ListView.ItemTemplate>
                                                 </ListView>
-                                            </controls1:DockPanel>
+
+
+                                                <NavigationViewItemSeparator Margin="0,12,0,24"
+                                                                             Grid.Row="1"
+                                                                             Grid.ColumnSpan="2"
+                                                                             controls1:DockPanel.Dock="Bottom" />
+                                            </Grid>
                                         </DataTemplate>
                                     </ItemsRepeater.ItemTemplate>
                                     <ItemsRepeater.Layout>
-                                        <StackLayout Orientation="Vertical"
-                                                     VirtualizingStackPanel.VirtualizationMode="Recycling" />
+                                        <StackLayout Orientation="Vertical" />
                                     </ItemsRepeater.Layout>
                                 </ItemsRepeater>
                                 <ItemsRepeater CanBeScrollAnchor="False"
@@ -850,8 +861,8 @@
                 </Grid.ColumnDefinitions>
                 <PersonPicture
                     Width="78" Height="78" Margin="8,0"
-                    ProfilePicture="{x:Bind ViewModel.Artist.Avatar, Mode=OneWay}" />
-                <TextBlock Text="{x:Bind ViewModel.Artist.Name, Mode=OneWay}"
+                    ProfilePicture="{x:Bind ViewModel.Artist.Avatar}" />
+                <TextBlock Text="{x:Bind ViewModel.Artist.Name}"
                            FontSize="28"
                            Grid.Column="1" VerticalAlignment="Center" FontWeight="Bold"
                            transitions:TransitionHelper.Id="title" />
@@ -865,7 +876,6 @@
                         <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE768;" />
                     </Button>
                     <controls:StarButton  FontSize="34"
-                                          DataContext="{Binding }"
                         IsChecked="{x:Bind ViewModel.IsSaved, Mode=OneWay}"
                         CornerRadius="88" Width="48" Height="48">
                         <interactivity:Interaction.Behaviors>
