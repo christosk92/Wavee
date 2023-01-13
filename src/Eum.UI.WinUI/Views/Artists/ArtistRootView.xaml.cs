@@ -20,6 +20,7 @@ using Windows.Foundation;
 using Windows.Foundation.Collections;
 using CommunityToolkit.WinUI.UI;
 using Eum.UI.ViewModels.Artists;
+using Eum.UI.WinUI.Helpers;
 using Eum.UI.WinUI.Transitions;
 using GridView = Microsoft.UI.Xaml.Controls.GridView;
 using ListView = Microsoft.UI.Xaml.Controls.ListView;
@@ -177,6 +178,7 @@ namespace Eum.UI.WinUI.Views.Artists
             this.Bindings.StopTracking();
             ViewModel = null;
             this.DataContext = null;
+            Task.Run(() => ClearMemory.Clear());
         }
 
         private HashSet<ListView> _lvs = new HashSet<ListView>();

@@ -70,6 +70,8 @@ namespace Eum.UI.WinUI
     /// </summary>
     public partial class App : Application
     {
+        [DllImport("kernel32.dll", EntryPoint = "SetProcessWorkingSetSize")]
+        public static extern int SetProcessWorkingSetSize(IntPtr process, int minSize, int maxSize);
         /// <summary>
         /// Initializes the singleton application object.  This is the first line of authored code
         /// executed, and as such is the logical equivalent of main() or WinMain().
@@ -78,7 +80,6 @@ namespace Eum.UI.WinUI
         {
             var dataDir = ApplicationData.Current.LocalFolder.Path;
             IServiceCollection serviceCollection = new ServiceCollection();
-
             serviceCollection.AddSingleton<MainViewModel>();
 
             //  serviceCollection.AddSingleton<IIdentityService, EumIdentityService>();
