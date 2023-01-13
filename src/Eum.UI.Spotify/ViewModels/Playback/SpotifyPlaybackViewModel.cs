@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO.Compression;
 using System.Linq;
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -21,6 +22,7 @@ using Eum.Spotify.metadata;
 using Eum.UI.Helpers;
 using Eum.UI.Items;
 using Eum.UI.Playlists;
+using Eum.UI.Services;
 using Eum.UI.Services.Directories;
 using Eum.UI.Services.Playlists;
 using Eum.UI.Services.Tracks;
@@ -38,20 +40,22 @@ using Color = System.Drawing.Color;
 using Eum.UI.Services.Library;
 using Eum.UI.Users;
 using Eum.UI.ViewModels.Artists;
+using System.Reactive.Joins;
+using Google.Protobuf.WellKnownTypes;
 
 namespace Eum.UI.Spotify.ViewModels.Playback;
 public class SpotifyPlaybackViewModel : PlaybackViewModel
 {
     private readonly ISpotifyClient _spotifyClient;
     private readonly ISpotifyPlaybackClient _spotifyPlaybackClient;
-    private readonly IDisposable _disposable;
+    private readonly CompositeDisposable _compositeDisposable;
     public SpotifyPlaybackViewModel(ISpotifyPlaybackClient spotifyPlaybackClient, ISpotifyClient spotifyClient,
         ITrackAggregator trackAggregator)
     {
         _spotifyPlaybackClient = spotifyPlaybackClient;
         _spotifyClient = spotifyClient;
-
-        _disposable = Observable
+        _compositeDisposable = new CompositeDisposable();
+        Observable
             .FromEventPattern<ClusterUpdate>(_spotifyPlaybackClient, nameof(ISpotifyPlaybackClient.ClusterChanged))
             .SelectMany(async x =>
             {
@@ -72,7 +76,17 @@ public class SpotifyPlaybackViewModel : PlaybackViewModel
             })
             .ObserveOn(RxApp.MainThreadScheduler)
             .Select(clusterChanged)
-            .Subscribe();
+            .Subscribe()
+            .DisposeWith(_compositeDisposable);
+
+        Observable
+            .FromEventPattern<double>(_spotifyPlaybackClient, nameof(ISpotifyPlaybackClient.VolumeChangedChanged))
+            .Select(a => a.EventArgs)
+            .ObserveOn(RxApp.MainThreadScheduler)
+            .Subscribe(pattern =>
+            {
+                Volume = pattern;
+            }).DisposeWith(_compositeDisposable);
     }
     private static string MakeValidFileName(string name)
     {
@@ -139,20 +153,38 @@ public class SpotifyPlaybackViewModel : PlaybackViewModel
             }
             int diff = (int)(_spotifyClient.TimeProvider.CurrentTimeMillis() - e.Cluster.PlayerState.Timestamp);
             var initial = Math.Max(0, (int)(e.Cluster.PlayerState.PositionAsOfTimestamp + diff));
-            StartTimer(initial);
             OnSeeked(initial);
             if (changed)
             {
                 IsSaved = await Task.Run(() => Ioc.Default.GetRequiredService<MainViewModel>()
                     .CurrentUser.User.LibraryProvider.IsSaved(Item.Id));
+            } IsPaused = obj.EventArgs.Cluster.PlayerState.IsPaused;
+            if (!IsPaused)
+            {
+                StartTimer(initial);
             }
-
+            else
+            {
+                StopTimer();
+            }
+            IsShuffling = obj.EventArgs.Cluster.PlayerState.Options.ShufflingContext;
+            if (obj.EventArgs.Cluster.PlayerState.Options.RepeatingContext)
+            {
+                RepeatMode = RepeatMode.Context;
+            }
+            else if (obj.EventArgs.Cluster.PlayerState.Options.RepeatingTrack)
+            {
+                RepeatMode = RepeatMode.Track;
+            }
+            else
+            {
+                RepeatMode = RepeatMode.None;
+            }
             PlayingOnExternalDevice = !string.IsNullOrEmpty(e.Cluster.ActiveDeviceId) && e.Cluster.ActiveDeviceId != _spotifyClient
                 .Config.DeviceId;
             if (PlayingOnExternalDevice)
             {
                 RemoteDevices.Clear();
-
                 var currentDevice = e.Cluster.Device[_spotifyClient.Config.DeviceId];
                 RemoteDevices.Add(new RemoteDevice(new ItemId($"spotify:device:{currentDevice.DeviceId}"), currentDevice.Name, currentDevice.DeviceType));
                 foreach (var deviceInfo in e.Cluster.Device)
@@ -164,9 +196,15 @@ public class SpotifyPlaybackViewModel : PlaybackViewModel
 
                 ExternalDevice = RemoteDevices.First(a => a.DeviceId.Id == e.Cluster.ActiveDeviceId);
                 ActiveDeviceId = ExternalDevice.DeviceId;
+
+                var ext_device = e.Cluster.Device[e.Cluster.ActiveDeviceId];
+                Volume = ((double)ext_device.Volume / SpotifyPlaybackClient.VOLUME_MAX) * 100;
+                CanChangeVolume = !ext_device.Capabilities.DisableVolume;
             }
             else
             {
+                Volume = _spotifyPlaybackClient.VolumeNorm;
+                CanChangeVolume = true;
                 ExternalDevice = null;
                 ActiveDeviceId = new ItemId($"spotify:device:{_spotifyClient.Config.DeviceId}");
             }
@@ -249,7 +287,7 @@ public class SpotifyPlaybackViewModel : PlaybackViewModel
 
     public override void Deconstruct(EumUser user)
     {
-        _disposable.Dispose();
+        _compositeDisposable.Dispose();
     }
 
     public override async Task SwitchRemoteDevice(ItemId? deviceId)

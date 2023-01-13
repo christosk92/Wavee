@@ -7,6 +7,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="using:CommunityToolkit.WinUI.UI.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    DataContext="{x:Bind ViewModel}"
     xmlns:local="using:Eum.UI.WinUI.Controls"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:behaviors="using:Eum.UI.WinUI.Behaviors"
@@ -142,8 +143,8 @@
                         <Setter Target="IndexOrPlayButtonControl.Content">
                             <Setter.Value>
                                 <Button
-                                                Width="32" Command="{Binding PlayCommand}"
-                                                CommandParameter="{Binding Index}"
+                                                Width="32" Command="{x:Bind ViewModel.PlayCommand}"
+                                                CommandParameter="{x:Bind ViewModel.Index}"
                                                 Height="32"
                                                 Margin="-4,-8,-12,-8"
                                                 Padding="0"
@@ -187,8 +188,8 @@
                         <Setter Target="IndexOrPlayButtonControl.Content">
                             <Setter.Value>
                                 <Button
-                                                Command="{Binding PlayCommand}"
-                                                CommandParameter="{Binding Index}"
+                                                Command="{x:Bind ViewModel.PlayCommand}"
+                                                CommandParameter="{x:Bind ViewModel.Index}"
                                                 Width="32"
                                                 Height="32"
                                                 Margin="-8,-8,-12,-8"

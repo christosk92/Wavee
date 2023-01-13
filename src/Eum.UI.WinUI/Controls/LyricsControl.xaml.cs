@@ -7,6 +7,8 @@ using System;
 using CommunityToolkit.WinUI.UI;
 using Eum.Logging;
 using Eum.UI.ViewModels;
+using CommunityToolkit.Mvvm.DependencyInjection;
+using Eum.UI.Services;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -55,6 +57,14 @@ namespace Eum.UI.WinUI.Controls
         private void LyricsControl_OnUnloaded(object sender, RoutedEventArgs e)
         {
             throw new NotImplementedException();
+        }
+
+        private async void Lyrics_OnItemClick(object sender, ItemClickEventArgs e)
+        {
+            if (e.ClickedItem is LyricsLineViewModel lv)
+            {
+                await Ioc.Default.GetRequiredService<IPlaybackService>().SetPosition(lv.StartsAt);
+            } 
         }
     }
 }

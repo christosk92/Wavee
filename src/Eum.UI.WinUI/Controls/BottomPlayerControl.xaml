@@ -16,6 +16,8 @@
     xmlns:xamlConverters="using:Eum.UI.WinUI.XamlConverters"
     xmlns:interactivity="using:Microsoft.Xaml.Interactivity"
     xmlns:behaviors="using:Eum.UI.WinUI.Behaviors"
+    xmlns:templateSelectors="using:Eum.UI.WinUI.TemplateSelectors"
+    xmlns:services="using:Eum.UI.Services"
     DataContext="{x:Bind ViewModel, Mode=OneWay}"
     mc:Ignorable="d">
     <UserControl.Resources>
@@ -31,6 +33,8 @@
             <Setter Property="CornerRadius" Value="6" />
         </Style>
         <xamlConverters:DeviceToIconConverter x:Key="DeviceToIconConverter" />
+
+
     </UserControl.Resources>
     <Border ui:Effects.Shadow="{StaticResource CommonShadow}">
         <Grid>
@@ -121,40 +125,51 @@
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <StackPanel
-                            Grid.ColumnSpan="3"
+                            Grid.ColumnSpan="3" Spacing="6"
                             HorizontalAlignment="Center"
                             Orientation="Horizontal">
-                            <Button Style="{StaticResource F}">
+                            <ToggleButton Background="Transparent" 
+                                          Tapped="ShuffleBtn_Tapped"
+                                          IsChecked="{x:Bind ViewModel.IsShuffling, Mode=OneWay}"
+                                          BorderThickness="0">
                                 <FontIcon
                                     FontFamily="Segoe Fluent Icons"
                                     FontSize="20"
                                     Glyph="&#xE14B;" />
-                            </Button>
-                            <Button Style="{StaticResource F}">
+                            </ToggleButton>
+                            <Button Tapped="Prev_Btn_Tapped" Style="{StaticResource F}">
                                 <FontIcon
                                     FontFamily="Segoe Fluent Icons"
                                     FontSize="20"
                                     Glyph="&#xE100;" />
                             </Button>
-                            <Button Style="{StaticResource F}">
+                            <Button CornerRadius="12" Width="52" Height="52"
+                            
+                                Tapped="Pause_Play_Btn_Tapped">
                                 <FontIcon
                                     x:Name="PausePlayIcon"
                                     FontFamily="Segoe Fluent Icons"
-                                    FontSize="28"
-                                    Glyph="&#xE102;" />
+                                    FontSize="24"
+                                    Glyph="{x:Bind GetGlyphForPause(ViewModel.IsPaused), Mode=OneWay}" />
                             </Button>
-                            <Button Style="{StaticResource F}">
+                            <Button 
+                                Tapped="Next_Btn_Tapped"
+                                Style="{StaticResource F}">
                                 <FontIcon
                                     FontFamily="Segoe Fluent Icons"
                                     FontSize="20"
                                     Glyph="&#xE101;" />
                             </Button>
-                            <Button Style="{StaticResource F}">
+                            <ToggleButton 
+                                IsChecked="{x:Bind ViewModel.IsRepeatingAny, Mode=OneWay}"
+                                Tapped="RepeatBtn_Tapped"
+                                Background="Transparent"
+                                BorderThickness="0">
                                 <FontIcon
                                     FontFamily="Segoe Fluent Icons"
                                     FontSize="20"
-                                    Glyph="&#xE1CD;" />
-                            </Button>
+                                    Glyph="{x:Bind GetGlyphForRepeat(ViewModel.RepeatMode), Mode=OneWay}" />
+                            </ToggleButton>
                         </StackPanel>
 
                         <TextBlock
@@ -176,7 +191,8 @@
                                 ManipulationCompleted="PositionSlider_OnManipulationCompleted"
                                 ManipulationMode="All" Loaded="TimestampSlider_OnLoaded"
                                 ManipulationStarted="PositionSlider_OnManipulationStarted"
-                                ManipulationStarting="PositionSlider_OnManipulationStarting" Unloaded="TimestampSlider_OnUnloaded"
+                                ManipulationStarting="PositionSlider_OnManipulationStarting"
+                                    Unloaded="TimestampSlider_OnUnloaded"
                                 PointerCaptureLost="PositionSlider_OnPointerCaptureLost"
                                 Tapped="PositionSlider_OnTapped"
                                 ValueChanged="PositionSlider_OnValueChanged"
@@ -212,7 +228,7 @@
                         </Grid.ColumnDefinitions>
                         <ContentControl Grid.ColumnSpan="2"
                                         Content="{x:Bind CommandBar, Mode=OneWay}"/>
-                   
+
                         <Button
                             x:Name="VolumeButton"
                             Grid.Row="1"
@@ -223,10 +239,14 @@
 
                         <Slider
                             x:Name="VolumeSlider"
-                            Grid.Row="1"
+                            Grid.Row="1" 
                             Grid.Column="1"
-                            Maximum="100"
-                            Value="50" />
+                            Maximum="100" 
+                            ManipulationCompleted="VolumeSlider_OnManipulationCompleted"
+                            ManipulationMode="All" 
+                            PointerCaptureLost="VolumeSlider_OnPointerCaptureLost"
+                            IsEnabled="{x:Bind ViewModel.CanChangeVolume, Mode=OneWay}"
+                            Value="{x:Bind ViewModel.Volume, Mode=OneWay}" />
                     </Grid>
                 </Grid>
             </Border>

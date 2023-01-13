@@ -47,17 +47,17 @@ namespace Eum.UI.WinUI.Controls
 
         public PlaybackViewModel ViewModel
         {
-            get => (PlaybackViewModel) GetValue(ViewModelProperty);
+            get => (PlaybackViewModel)GetValue(ViewModelProperty);
             set => SetValue(ViewModelProperty, value);
         }
 
         public CommandBar CommandBar
         {
-            get => (CommandBar) GetValue(CommandBarProperty);
+            get => (CommandBar)GetValue(CommandBarProperty);
             set => SetValue(CommandBarProperty, value);
         }
 
- 
+
         private async void ListViewBase_OnItemClick(object sender, ItemClickEventArgs e)
         {
             var clickedDevice = e.ClickedItem as RemoteDevice;
@@ -116,7 +116,7 @@ namespace Eum.UI.WinUI.Controls
                 {
                     if (Math.Abs(_previousVal - val) > 0.1)
                     {
-                        await Ioc.Default.GetRequiredService<IPlaybackService>().SetPosition((long) val);
+                        await Ioc.Default.GetRequiredService<IPlaybackService>().SetPosition((long)val);
                         _previousVal = val;
                     }
 
@@ -144,6 +144,102 @@ namespace Eum.UI.WinUI.Controls
         private void TimestampSlider_OnUnloaded(object sender, RoutedEventArgs e)
         {
             ViewModel.PropertyChanged -= ViewModelOnPropertyChanged;
+        }
+
+        private async void ShuffleBtn_Tapped(object sender, TappedRoutedEventArgs e)
+        {
+            await Ioc.Default.GetRequiredService<IPlaybackService>()
+                .ToggleShuffle((sender as ToggleButton).IsChecked ?? false);
+        }
+
+        private async void RepeatBtn_Tapped(object sender, TappedRoutedEventArgs e)
+        {
+            /*
+             *   None = 0,
+               Context = 1,
+               Track = 2
+             */
+            var nextRepeat = (RepeatMode)((int)(ViewModel.RepeatMode + 1) % 3);
+
+            await Ioc.Default.GetRequiredService<IPlaybackService>()
+                .SetRepeatMode(nextRepeat);
+        }
+        private async void Pause_Play_Btn_Tapped(object sender, TappedRoutedEventArgs e)
+        {
+            var paused = ViewModel.IsPaused;
+            if (paused)
+            {
+                await Ioc.Default.GetRequiredService<IPlaybackService>()
+                    .Resume();
+            }
+            else
+            {
+                await Ioc.Default.GetRequiredService<IPlaybackService>()
+                    .Pause();
+            }
+        }
+        private async void Prev_Btn_Tapped(object sender, TappedRoutedEventArgs e)
+        {
+            await Ioc.Default.GetRequiredService<IPlaybackService>()
+                .SkipPrevious();
+        }
+
+        private async void Next_Btn_Tapped(object sender, TappedRoutedEventArgs e)
+        {
+            await Ioc.Default.GetRequiredService<IPlaybackService>()
+                .SkipNext();
+        }
+        public string GetGlyphForRepeat(RepeatMode repeatMode)
+        {
+            switch (repeatMode)
+            {
+                case RepeatMode.None:
+                case RepeatMode.Context:
+                    return "\uE1CD";
+                case RepeatMode.Track:
+                    return "\uE1CC";
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(repeatMode), repeatMode, null);
+            }
+        }
+
+        public string GetGlyphForPause(bool b)
+        {
+            return b ? "\uE102" : "\uE103";
+        }
+
+        private async void VolumeSlider_OnValueChanged(object sender, RangeBaseValueChangedEventArgs e)
+        {
+            if (Math.Abs(e.NewValue - ViewModel.Volume) > 0.01)
+            {
+                await Ioc.Default.GetRequiredService<IPlaybackService>()
+                    .Volume(e.NewValue / 100);
+            }
+        }
+        private double _previousVolumeVal = -1;
+
+        private async void VolumeSlider_OnManipulationCompleted(object sender, ManipulationCompletedRoutedEventArgs e)
+        {
+            var val = VolumeSlider.Value;
+
+            if (Math.Abs(_previousVolumeVal - val) > 0.1)
+            {
+                await Ioc.Default.GetRequiredService<IPlaybackService>()
+                    .Volume(val / 100);
+                _previousVolumeVal = val;
+            }
+        }
+
+        private async void VolumeSlider_OnPointerCaptureLost(object sender, PointerRoutedEventArgs e)
+        {
+            var val = VolumeSlider.Value;
+
+            if (Math.Abs(_previousVolumeVal - val) > 0.1)
+            {
+                await Ioc.Default.GetRequiredService<IPlaybackService>()
+                    .Volume(val / 100);
+                _previousVolumeVal = val;
+            }
         }
     }
 

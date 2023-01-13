@@ -16,6 +16,7 @@ using Eum.Connections.Spotify.Playback.Player;
 using Eum.Enums;
 using Eum.Spotify.connectstate;
 using Eum.UI.Items;
+using Eum.UI.Services;
 using Eum.UI.Services.Library;
 using Eum.UI.Users;
 using Eum.UI.ViewModels.Artists;
@@ -24,7 +25,7 @@ using ReactiveUI;
 namespace Eum.UI.ViewModels.Playback
 {
     [INotifyPropertyChanged]
-    public abstract partial class PlaybackViewModel :IIsSaved
+    public abstract partial class PlaybackViewModel : IIsSaved
     {
         [ObservableProperty]
         private CurrentlyPlayingHolder _item;
@@ -40,11 +41,18 @@ namespace Eum.UI.ViewModels.Playback
         [ObservableProperty] private bool _isPaused;
 
         [ObservableProperty] private double _timestamp;
-
+        [ObservableProperty] private bool _isShuffling;
+        [ObservableProperty] private double _volume;
+        [ObservableProperty] private bool _canChangeVolume;
+        [NotifyPropertyChangedFor(nameof(IsRepeatingAny))]
+        [ObservableProperty]
+        private RepeatMode _repeatMode;
         private IDisposable _disposable;
         private IDisposable _secondDisposable;
 
         private ItemId _activeDeviceId;
+
+        public bool IsRepeatingAny => _repeatMode != RepeatMode.None;
 
         // protected PlaybackViewModel()
         // {
@@ -70,7 +78,7 @@ namespace Eum.UI.ViewModels.Playback
 
         public virtual void Construct(EumUser user)
         {
-           user.LibraryProvider.CollectionUpdated += LibraryProviderOnCollectionUpdated;
+            user.LibraryProvider.CollectionUpdated += LibraryProviderOnCollectionUpdated;
         }
         public virtual void Deconstruct(EumUser user)
         {
@@ -155,7 +163,7 @@ namespace Eum.UI.ViewModels.Playback
         public IdWithTitle[] Artists { get; init; }
         public double Duration { get; init; }
         public ItemId Id { get; init; }
- 
+
         public void Dispose()
         {
             BigImage.Dispose();

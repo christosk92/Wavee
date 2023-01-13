@@ -213,22 +213,4 @@ public partial class AlbumTrackViewModel : IIsPlaying, IIsSaved
 
     public ItemId Id => new ItemId(Track.Uri.Uri);
 
-    public bool IsPlaying()
-    {
-        return Ioc.Default.GetRequiredService<MainViewModel>()
-            .PlaybackViewModel?.Item?.Id == Id;
-    }
-
-    public bool WasPlaying => _wasPlaying;
-
-    private bool _wasPlaying;
-
-    public event EventHandler<bool>? IsPlayingChanged;
-    public void ChangeIsPlaying(bool isPlaying)
-    {
-        if (_wasPlaying == isPlaying) return;
-
-        _wasPlaying = isPlaying;
-        IsPlayingChanged?.Invoke(this, isPlaying);
-    }
 }

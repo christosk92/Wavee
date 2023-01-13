@@ -14,8 +14,8 @@
 
     <Grid>
         <ListView ItemsSource="{x:Bind ViewModel.Lyrics, Mode=OneWay}" x:Name="Lyrics"  
-                  SelectionMode="Single" IsHitTestVisible="False"
-                  IsItemClickEnabled="False" SelectionChanged="Lyrics_OnSelectionChanged"
+                  SelectionMode="Single"  ItemClick="Lyrics_OnItemClick"
+                  IsItemClickEnabled="True" SelectionChanged="Lyrics_OnSelectionChanged"
                   ScrollViewer.VerticalScrollBarVisibility="Hidden" SelectedItem="{x:Bind ViewModel.ActiveLyricsLine, Mode=OneWay}"
                   Visibility="{x:Bind ViewModel.HasLyrics, Mode=OneWay, Converter={StaticResource TrueToVisibleConverter}}">
             <ListView.ItemTemplate>

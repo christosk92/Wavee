@@ -529,6 +529,12 @@ namespace Eum.UI.ViewModels.Artists
             new() {Orientation = TemplateTypeOrientation.Grid},
             new() {Orientation = TemplateTypeOrientation.VerticalStack}
         };
+
+        public DiscographyGroup()
+        {
+            SelectedItem = PossibleViews.First();
+        }
+
         public TemplateTypeOrientationWrapper SelectedItem
         {
             get => _selectedItem;

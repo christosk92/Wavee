@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.DependencyInjection;
+using Eum.Connections.Spotify;
 using Eum.Connections.Spotify.Models.Users;
 using Eum.Connections.Spotify.Playback;
 using Eum.Logging;
@@ -23,10 +24,16 @@ namespace Eum.UI.Services
     public record PagedTrack(ItemId Id, Dictionary<string, string> Metadata);
     public abstract record ContextPlayObject(ItemId ContextId, int Index, Dictionary<string, string>? ContextMetadata = null);
 
-    public record PlainContextPlayCommand(ItemId ContextId, 
+    public record PlainContextPlayCommand(ItemId ContextId,
         int TrackIndex, Dictionary<string, string>? ContextMetadata) : ContextPlayObject(ContextId, TrackIndex, ContextMetadata);
     public record SortedContextPlayCommand(ItemId ContextId, int TrackIndex, SortField SortField, bool Ascending, Dictionary<string, string>? ContextMetadata = null) : ContextPlayObject(ContextId, TrackIndex, ContextMetadata);
     public record PagedContextPlayCommand(ItemId ContextId, PagedTrack[] Tracks, int TrackIndex, Dictionary<string, string>? ContextMetadata = null) : ContextPlayObject(ContextId, TrackIndex, ContextMetadata);
+    public enum RepeatMode
+    {
+        None = 0,
+        Context = 1,
+        Track = 2
+    }
     public interface IPlaybackService
     {
         /// <summary>
@@ -37,15 +44,21 @@ namespace Eum.UI.Services
         /// <param name="trackId"></param>
         /// <param name="deviceId">Override the playing device id. If this is null, the currently active device is used. If no external device is found, playback will resume on this device.</param>
         /// <returns></returns>
-        Task PlayOnDevice(ContextPlayObject contextId,  ItemId? deviceId = null);
+        Task PlayOnDevice(ContextPlayObject contextId, ItemId? deviceId = null);
         Task SetPosition(double val);
+        Task SetRepeatMode(RepeatMode nextRepeat);
+        Task ToggleShuffle(bool isShuffle);
+        Task Pause();
+        Task Resume();
+        Task SkipPrevious();
+        Task SkipNext();
+        Task Volume(double volume);
     }
 
     public class PlaybackService : IPlaybackService
     {
         private readonly PlaybackViewModel _playbackViewModel;
         private readonly ISpotifyPlaybackClient _spotifyPlaybackClient;
-
         public PlaybackService(ISpotifyPlaybackClient spotifyPlaybackClient)
         {
             _spotifyPlaybackClient = spotifyPlaybackClient;
@@ -108,7 +121,7 @@ namespace Eum.UI.Services
                         case PagedContextPlayCommand pagedContext:
                             await _spotifyPlaybackClient.PlayPagedOnDevice(
                                 new SpotifyId(pagedContext.ContextId.Uri), pagedContext.TrackIndex,
-                                pagedContext.Tracks.Select(a=> new PagedSpotifyTrack(new SpotifyId(a.Id.Uri).Uri, a.Metadata)),
+                                pagedContext.Tracks.Select(a => new PagedSpotifyTrack(new SpotifyId(a.Id.Uri).Uri, a.Metadata)),
                                 pagedContext.ContextMetadata, deviceIdPlay);
                             break;
                         case PlainContextPlayCommand plainContext:
@@ -154,6 +167,122 @@ namespace Eum.UI.Services
             catch (Exception ex)
             {
                 S_Log.Instance.LogError($"An error occured while trying to seek to {val}..", ex);
+            }
+        }
+
+        public async Task SetRepeatMode(RepeatMode nextRepeat)
+        {
+            switch (_playbackViewModel.ActiveDeviceId.Service)
+            {
+                case ServiceType.Local:
+                    break;
+                case ServiceType.Spotify:
+                    await _spotifyPlaybackClient.SetOptions(_playbackViewModel.PlayingOnExternalDevice, nextRepeat == RepeatMode.Context, nextRepeat == RepeatMode.Track);
+                    break;
+                case ServiceType.Apple:
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
+
+        public async Task ToggleShuffle(bool isShuffle)
+        {
+            switch (_playbackViewModel.ActiveDeviceId.Service)
+            {
+                case ServiceType.Local:
+                    break;
+                case ServiceType.Spotify:
+                    await _spotifyPlaybackClient.SetShuffle(_playbackViewModel.PlayingOnExternalDevice, isShuffle);
+                    break;
+                case ServiceType.Apple:
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
+
+        public async Task Pause()
+        {
+            switch (_playbackViewModel.ActiveDeviceId.Service)
+            {
+                case ServiceType.Local:
+                    break;
+                case ServiceType.Spotify:
+                    await _spotifyPlaybackClient.Pause(_playbackViewModel.PlayingOnExternalDevice);
+                    break;
+                case ServiceType.Apple:
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
+
+        public async Task Resume()
+        {
+            switch (_playbackViewModel.ActiveDeviceId.Service)
+            {
+                case ServiceType.Local:
+                    break;
+                case ServiceType.Spotify:
+                    await _spotifyPlaybackClient.Resume(_playbackViewModel.PlayingOnExternalDevice);
+                    break;
+                case ServiceType.Apple:
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
+
+        public async Task SkipPrevious()
+        {
+            switch (_playbackViewModel.ActiveDeviceId.Service)
+            {
+                case ServiceType.Local:
+                    break;
+                case ServiceType.Spotify:
+                    await _spotifyPlaybackClient.SkipPrevious(_playbackViewModel.PlayingOnExternalDevice);
+                    break;
+                case ServiceType.Apple:
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
+
+        public async Task SkipNext()
+        {
+            switch (_playbackViewModel.ActiveDeviceId.Service)
+            {
+                case ServiceType.Local:
+                    break;
+                case ServiceType.Spotify:
+                    await _spotifyPlaybackClient.SkipNext(_playbackViewModel.PlayingOnExternalDevice);
+                    break;
+                case ServiceType.Apple:
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
+
+        public async Task Volume(double volume)
+        {
+            switch (_playbackViewModel.ActiveDeviceId.Service)
+            {
+                case ServiceType.Local:
+                    break;
+                case ServiceType.Spotify:
+                    //input is 0 <--> 1
+                    //but in spotify we use VOLUME_MAX
+                    var vol_max = SpotifyPlaybackClient.VOLUME_MAX;
+                    var perc = vol_max * volume;
+                    await _spotifyPlaybackClient.Volume(_playbackViewModel.PlayingOnExternalDevice,perc);
+                    break;
+                case ServiceType.Apple:
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
         }
     }
