@@ -49,6 +49,7 @@ namespace Eum.UI.WinUI.Behaviors
             if (_isPlaying !=null)
             {
                 _isPlaying.IsPlayingChanged -= IsPlayingOnIsPlayingChanged;
+                _isPlaying = null;
             }
             base.OnDetaching();
         }

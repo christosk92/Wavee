@@ -549,7 +549,7 @@
                 </Grid>
 
 
-                <ItemsRepeater Margin="0,48,56,86" ItemsSource="{x:Bind ViewModel.Discography, Mode=OneTime}">
+                <ItemsRepeater  Margin="0,48,56,86" ItemsSource="{x:Bind ViewModel.Discography, Mode=OneTime}">
                     <ItemsRepeater.ItemTemplate>
                         <DataTemplate x:DataType="artists:DiscographyGroup">
                             <controls1:DockPanel Margin="0,0,0,48" LastChildFill="True">
@@ -571,7 +571,7 @@
                                         HorizontalContentAlignment="Right"
                                         Background="Transparent" CanBeScrollAnchor="True"
                                         BorderBrush="Transparent"
-                                        BorderThickness="0" 
+                                        BorderThickness="0"  Loaded="Lv_OnLoaded"
                                         SelectionChanged="Selector_OnSelectionChanged"
                                         x:Name="Lv" 
                                         SelectedItem="{x:Bind SelectedItem, Mode=TwoWay}" 
@@ -666,8 +666,8 @@
                                                x:Name="Grid"
                                                VerticalAlignment="Top"
                                                x:Load="{x:Bind TemplateType, Mode=OneWay, Converter={StaticResource IsGridOrVerticalToLoadedConverter}, ConverterParameter='Grid'}"
-                                               HorizontalCacheLength="0"
-
+                                               VerticalCacheLength="5" 
+                                               HorizontalCacheLength="5"
                                                ItemsSource="{x:Bind Items}">
                                     <ItemsRepeater.ItemTemplate>
                                         <DataTemplate x:DataType="artists:DiscographyViewModel">
@@ -724,7 +724,7 @@
                                     </ItemsRepeater.Layout>
                                 </ItemsRepeater>
                                 <ItemsRepeater CanBeScrollAnchor="False"
-                                               x:Name="Vertical" VerticalCacheLength="0"
+                                               x:Name="Vertical" VerticalCacheLength="5"
                                                VerticalAlignment="Top"
                                                x:Load="{x:Bind TemplateType, Mode=OneWay, Converter={StaticResource IsGridOrVerticalToLoadedConverter}, ConverterParameter='VerticalStack'}"
                                                HorizontalCacheLength="0"
@@ -790,7 +790,7 @@
                                                x:Name="Horizontal"
                                                VerticalAlignment="Top"
                                                x:Load="{x:Bind TemplateType, Mode=OneWay, Converter={StaticResource IsGridOrVerticalToLoadedConverter}, ConverterParameter='HorizontalStack'}"
-                                               HorizontalCacheLength="0"
+                                               HorizontalCacheLength="0"  
                                                ItemsSource="{x:Bind Items}">
                                     <ItemsRepeater.ItemTemplate>
                                         <DataTemplate x:DataType="artists:DiscographyViewModel">

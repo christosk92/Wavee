@@ -164,7 +164,26 @@ namespace Eum.UI.WinUI.Views.Artists
 
         private void ArtistRootView_OnUnloaded(object sender, RoutedEventArgs e)
         {
+            Scroller.ViewChanged -= ScrollerOnViewChanged;
+            Scroller.ViewChanged -= Scroller_OnViewChanged;
             ViewModel.ArtistFetched -= ViewModelOnArtistFetched;
+            GridView.SizeChanged -= GridView_SizeCHanged;
+            foreach (var listView in _lvs)
+            {
+                listView.SelectionChanged -= Selector_OnSelectionChanged;
+            }
+
+            _lvs.Clear();
+            this.Bindings.StopTracking();
+            ViewModel = null;
+            this.DataContext = null;
+        }
+
+        private HashSet<ListView> _lvs = new HashSet<ListView>();
+
+        private void Lv_OnLoaded(object sender, RoutedEventArgs e)
+        {
+            _lvs.Add((sender as ListView));
         }
     }
 }

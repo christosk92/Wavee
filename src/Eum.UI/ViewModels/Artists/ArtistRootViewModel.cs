@@ -194,6 +194,11 @@ namespace Eum.UI.ViewModels.Artists
                 }
             }
 
+            // ReSharper disable once RedundantAssignment
+            provider = null;
+            user = null;
+            // ReSharper disable once RedundantAssignment
+            playback = null;
             // if (artist.Header == null)
             // {
             //     //fetch from own api
@@ -392,12 +397,17 @@ namespace Eum.UI.ViewModels.Artists
             var user = main.CurrentUser.User;
             user.LibraryProvider.CollectionUpdated -= LibraryProviderOnCollectionUpdated;
 
+
             if (Discography != null)
                 foreach (var discographyGroup in Discography)
                 {
                     foreach (var discographyGroupItem in discographyGroup.Items)
                     {
                         discographyGroupItem.Cancel();
+                        // foreach (var tr in discographyGroupItem.Tracks)   
+                        // {
+                        //   
+                        // }
                         discographyGroupItem.Tracks = null;
                     }
 
@@ -409,6 +419,7 @@ namespace Eum.UI.ViewModels.Artists
             Discography = null;
             foreach (var topTrackViewModel in TopTracks)
             {
+                topTrackViewModel.PlayCommand = null;
                 foreach (var cachedImage in topTrackViewModel.Track.Track.Images)
                 {
                     var image = await cachedImage.ImageStream;
@@ -417,6 +428,8 @@ namespace Eum.UI.ViewModels.Artists
             }
             TopTracks.Clear();
             TopTracks = null;
+            Artist = null;
+            Header = null;
             GC.Collect();
         }
 
@@ -481,7 +494,7 @@ namespace Eum.UI.ViewModels.Artists
             Track = track;
             PlayCommand = playCommand;
         }
-        public ICommand PlayCommand { get; }
+        public ICommand PlayCommand { get; set; }
         public ArtistTopTrack Track { get; }
 
         public ItemId Id => Track.Track.Id;
