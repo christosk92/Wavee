@@ -24,7 +24,13 @@ namespace Eum.UI.WinUI.Controls
 {
     public sealed partial class PlaylistTrackView : UserControl
     {
-        public static readonly DependencyProperty ViewModelProperty = DependencyProperty.Register(nameof(ViewModel), typeof(PlaylistTrackViewModel), typeof(PlaylistTrackView), new PropertyMetadata(default(PlaylistTrackViewModel)));
+        public static readonly DependencyProperty ViewModelProperty = DependencyProperty.Register(nameof(ViewModel), typeof(PlaylistTrackViewModel), typeof(PlaylistTrackView), new PropertyMetadata(default(PlaylistTrackViewModel), PropertyChangedCallback));
+        public static readonly DependencyProperty AlternateStyleProperty = DependencyProperty.Register(nameof(AlternateStyle), typeof(Style), typeof(PlaylistTrackView), new PropertyMetadata(default(Style)));
+
+        private static void PropertyChangedCallback(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            (d as PlaylistTrackView).Bindings.Update();
+        }
         // public static readonly DependencyProperty ViewModelProperty = DependencyProperty.Register(nameof(ViewModel), typeof(PlaylistTrackViewModel), typeof(PlaylistTrackView), new PropertyMetadata(default(PlaylistTrackViewModel)));
 
         public PlaylistTrackView()
@@ -41,6 +47,12 @@ namespace Eum.UI.WinUI.Controls
         {
             get => (PlaylistTrackViewModel) GetValue(ViewModelProperty);
             set => SetValue(ViewModelProperty, value);
+        }
+
+        public Style AlternateStyle
+        {
+            get => (Style) GetValue(AlternateStyleProperty);
+            set => SetValue(AlternateStyleProperty, value);
         }
     }
 }

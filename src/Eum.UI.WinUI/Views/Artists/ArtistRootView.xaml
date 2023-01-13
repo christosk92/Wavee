@@ -370,7 +370,7 @@
                             x:Name="GridView"
                             SizeChanged="GridView_SizeCHanged">
                             <interactivity:Interaction.Behaviors>
-                                <behaviors:IsPlayingListBehavior />
+                                <behaviors:IsPlayingListBehavior  />
                             </interactivity:Interaction.Behaviors>
                             <ListView.ItemTemplate>
                                 <DataTemplate x:DataType="artists:TopTrackViewModel">
@@ -769,6 +769,11 @@
                                                           ItemContainerStyle="{StaticResource SongGridViewItemStyle}"
                                                           ItemsSource="{x:Bind Tracks, Mode=OneWay}"
                                                           SelectionMode="Extended">
+                                                    <ListView.ItemsPanel>
+                                                        <ItemsPanelTemplate>
+                                                            <StackPanel Orientation="Vertical"  />
+                                                        </ItemsPanelTemplate>
+                                                    </ListView.ItemsPanel>
                                                     <interactivity:Interaction.Behaviors>
                                                         <behaviors:IsPlayingListBehavior />
                                                     </interactivity:Interaction.Behaviors>

@@ -106,28 +106,47 @@ public class SpotifyPlaybackViewModel : PlaybackViewModel
             var contextId = new ItemId(e.Cluster.PlayerState.ContextUri);
             var duration = e.Cluster.PlayerState.Duration;
             Item?.Dispose();
-            Item = new CurrentlyPlayingHolder
+            bool changed = false;
+            if (Item?.Id != obj.item.Id)
+                changed = true;
+
+            if (changed)
             {
-                Title = new IdWithTitle
+                Item = new CurrentlyPlayingHolder
                 {
-                    Id = obj.item.Group.Id,
-                    Title = obj.item.Name
-                },
-                Artists = obj.item.Artists,
-                Id = obj.item.Id,
-                BigImage = (await obj.item.Images.OrderByDescending(a => a.Height ?? 0).First().ImageStream),
-                SmallImage = (await obj.item.Images.OrderBy(a => a.Height ?? 0).First().ImageStream),
-                BigImageUrl = new Uri($"https://i.scdn.co/image/{obj.item.Images.OrderByDescending(a => a.Height ?? 0).First().Id.ToLower()}"),
-                Duration = obj.item.Duration,
-                Context = contextId
-            };
-            OnPlayingItemChanged(Item.Id);
+                    Title = new IdWithTitle
+                    {
+                        Id = obj.item.Group.Id,
+                        Title = obj.item.Name
+                    },
+                    Artists = obj.item.Artists,
+                    Id = obj.item.Id,
+                    PlaybackId = obj.EventArgs.Cluster.PlayerState.PlaybackId,
+                    BigImage = (await obj.item.Images.OrderByDescending(a => a.Height ?? 0).First().ImageStream),
+                    SmallImage = (await obj.item.Images.OrderBy(a => a.Height ?? 0).First().ImageStream),
+                    BigImageUrl =
+                        new Uri(
+                            $"https://i.scdn.co/image/{obj.item.Images.OrderByDescending(a => a.Height ?? 0).First().Id.ToLower()}"),
+                    Duration = obj.item.Duration,
+                    Context = contextId
+                };
+                OnPlayingItemChanged(Item.Id);
+            }
+
+            else
+            {
+                Item.PlaybackId = obj.EventArgs.Cluster.PlayerState.PlaybackId;
+            }
             int diff = (int)(_spotifyClient.TimeProvider.CurrentTimeMillis() - e.Cluster.PlayerState.Timestamp);
             var initial = Math.Max(0, (int)(e.Cluster.PlayerState.PositionAsOfTimestamp + diff));
             StartTimer(initial);
             OnSeeked(initial);
-            IsSaved = await Task.Run(() => Ioc.Default.GetRequiredService<MainViewModel>()
-                .CurrentUser.User.LibraryProvider.IsSaved(Item.Id));
+            if (changed)
+            {
+                IsSaved = await Task.Run(() => Ioc.Default.GetRequiredService<MainViewModel>()
+                    .CurrentUser.User.LibraryProvider.IsSaved(Item.Id));
+            }
+
             PlayingOnExternalDevice = !string.IsNullOrEmpty(e.Cluster.ActiveDeviceId) && e.Cluster.ActiveDeviceId != _spotifyClient
                 .Config.DeviceId;
             if (PlayingOnExternalDevice)
@@ -152,7 +171,7 @@ public class SpotifyPlaybackViewModel : PlaybackViewModel
                 ActiveDeviceId = new ItemId($"spotify:device:{_spotifyClient.Config.DeviceId}");
             }
 
-            if (Ioc.Default.GetRequiredService<MainViewModel>().CurrentUser.User.ThemeService
+            if (changed && Ioc.Default.GetRequiredService<MainViewModel>().CurrentUser.User.ThemeService
                     .Glaze == "Playback Dependent")
             {
                 Ioc.Default.GetRequiredService<MainViewModel>()

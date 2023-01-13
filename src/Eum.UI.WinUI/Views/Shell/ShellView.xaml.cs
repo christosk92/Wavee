@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
+using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.UI.Composition;
@@ -25,6 +26,7 @@ using Eum.UI.Users;
 using WinRT;
 using ColorCode.Compilation.Languages;
 using Eum.Connections.Spotify.Models.Views;
+using Eum.UI.Helpers;
 using Microsoft.UI.Xaml.Shapes;
 
 // To learn more about WinUI, the WinUI project structure,
@@ -99,7 +101,7 @@ namespace Eum.UI.WinUI.Views.Shell
 
         private void UIElement_OnTapped(object sender, TappedRoutedEventArgs e)
         {
-            GC.Collect();
+            Task.Run(() => ClearMemory.Clear());
         }
     }
 }

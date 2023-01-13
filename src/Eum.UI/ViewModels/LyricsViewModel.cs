@@ -1,5 +1,7 @@
 ﻿using System.Timers;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.DependencyInjection;
+using Eum.Connections.Spotify.Playback.Player;
 using Eum.Logging;
 using Eum.UI.Items;
 using Eum.UI.Services;
@@ -90,9 +92,18 @@ namespace Eum.UI.ViewModels
             }
         }
 
-        private void TimerOnElapsed(object sender, ElapsedEventArgs e)
+        private async void TimerOnElapsed(object sender, ElapsedEventArgs e)
         {
-            _ms += 20;
+            if (_playbackViewModel.PlayingOnExternalDevice)
+            {
+                _ms += 20;
+            }
+            else
+            {
+                _ms = await Ioc.Default.GetRequiredService<IAudioPlayer>()
+                    .Time(_playbackViewModel.Item.PlaybackId);
+            }
+
             if (ShouldChangeLyricsLine(_ms))
             {
                 var closestLyrics = FindClosestLyricsLine(_ms);

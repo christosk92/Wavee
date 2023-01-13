@@ -430,7 +430,6 @@ namespace Eum.UI.ViewModels.Artists
             TopTracks = null;
             Artist = null;
             Header = null;
-            GC.Collect();
         }
 
         public int MaxDepth => 0;
@@ -498,26 +497,6 @@ namespace Eum.UI.ViewModels.Artists
         public ArtistTopTrack Track { get; }
 
         public ItemId Id => Track.Track.Id;
-
-        public bool IsPlaying()
-        {
-            return Ioc.Default.GetRequiredService<MainViewModel>()
-                .PlaybackViewModel?.Item?.Id == Id;
-        }
-
-        public bool WasPlaying => _wasPlaying;
-
-        private bool _wasPlaying;
-
-        public event EventHandler<bool>? IsPlayingChanged;
-
-        public void ChangeIsPlaying(bool isPlaying)
-        {
-            if (_wasPlaying == isPlaying) return;
-
-            _wasPlaying = isPlaying;
-            IsPlayingChanged?.Invoke(this, isPlaying);
-        }
 
     }
 

@@ -12,6 +12,7 @@ using CommunityToolkit.Mvvm.Input;
 using Eum.Artwork;
 using Eum.Connections.Spotify;
 using Eum.Connections.Spotify.Connection;
+using Eum.Connections.Spotify.Playback.Player;
 using Eum.Enums;
 using Eum.Spotify.connectstate;
 using Eum.UI.Items;
@@ -89,9 +90,17 @@ namespace Eum.UI.ViewModels.Playback
 
             _disposable =  Observable.Interval(TimeSpan.FromMilliseconds(200), RxApp.TaskpoolScheduler)
                 .ObserveOn(RxApp.MainThreadScheduler)
-                .Subscribe(l =>
+                .Subscribe(async l =>
                 {
-                    Timestamp += 200;
+                    if (PlayingOnExternalDevice)
+                    {
+                        Timestamp += 200;
+                    }
+                    else
+                    {
+                        Timestamp = await Ioc.Default.GetRequiredService<IAudioPlayer>()
+                            .Time(_item.PlaybackId);
+                    }
                 });
         }
 
@@ -133,8 +142,10 @@ namespace Eum.UI.ViewModels.Playback
     public record RemoteDevice(ItemId DeviceId, string DeviceName, DeviceType Devicetype);
 
 
-    public record CurrentlyPlayingHolder : IDisposable
+    [INotifyPropertyChanged]
+    public partial class CurrentlyPlayingHolder : IDisposable
     {
+        [ObservableProperty] private string? _playbackId;
         public Stream BigImage { get; init; }
         public Stream SmallImage { get; init; }
 
@@ -144,6 +155,7 @@ namespace Eum.UI.ViewModels.Playback
         public IdWithTitle[] Artists { get; init; }
         public double Duration { get; init; }
         public ItemId Id { get; init; }
+ 
         public void Dispose()
         {
             BigImage.Dispose();

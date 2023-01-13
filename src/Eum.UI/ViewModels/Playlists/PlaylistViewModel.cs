@@ -37,6 +37,12 @@ namespace Eum.UI.ViewModels.Playlists
 {
     public abstract partial class PlaylistViewModel : SidebarItemViewModel, IComparable<PlaylistViewModel>, INavigatable, IGlazeablePage, IIsSaved
     {
+        public bool NoTracksAndIsNotLoadingComposite => !HasTracks && !IsLoading;
+
+
+        [NotifyPropertyChangedFor(nameof(NoTracksAndIsNotLoadingComposite))]
+        [ObservableProperty] 
+        private bool _isLoading;
         [ObservableProperty] private bool _isPlaying;
         [ObservableProperty] private bool _isSaved;
         private EumUser? _eumUser;
@@ -44,6 +50,9 @@ namespace Eum.UI.ViewModels.Playlists
         private IDisposable _tracksListDisposable;
         protected readonly SourceList<PlaylistTrackViewModel> _tracksSourceList = new();
         private readonly ObservableCollectionExtended<PlaylistTrackViewModel> _tracks = new();
+
+        [NotifyPropertyChangedFor(nameof(NoTracksAndIsNotLoadingComposite))]
+        [ObservableProperty]
         private bool _hasTracks;
         private TimeSpan _totalTrackDuration;
 
@@ -64,10 +73,12 @@ namespace Eum.UI.ViewModels.Playlists
                 .Bind(_tracks)
                 .Subscribe(set =>
                 {
+                    IsLoading = false;
                     HasTracks = _tracksSourceList.Count > 0;
                     TotalTrackDuration = TimeSpan.FromMilliseconds(_tracksSourceList.Items.Sum(a => a.Track.Duration));
                 });
 
+            IsLoading = true;
             Task.Run(async () =>
             {
                 try
@@ -144,11 +155,7 @@ namespace Eum.UI.ViewModels.Playlists
 
         public EumUser EumUser => _eumUser ??= Ioc.Default.GetRequiredService<IEumUserManager>()
             .GetUser(_playlist.User);
-        public bool HasTracks
-        {
-            get => _hasTracks;
-            set => this.SetProperty(ref _hasTracks, value);
-        }
+
         public override string Title
         {
             get => Playlist.Name;

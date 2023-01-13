@@ -144,9 +144,23 @@ namespace Eum.UI.WinUI
         protected override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
         {
             MWindow = new MainWindow();
+            MWindow.Closed += MWindowOnClosed;
+            MWindow.Activated += MWindowOnActivated;
             MWindow.Activate();
         }
 
+        private void MWindowOnActivated(object sender, WindowActivatedEventArgs args)
+        {
+            if (args.WindowActivationState == WindowActivationState.Deactivated)
+            {
+                ClearMemory.Clear();
+            }
+        }
+
+        private void MWindowOnClosed(object sender, WindowEventArgs args)
+        {
+            ClearMemory.Stop();
+        }
 
         public static Window MWindow { get; private set; }
     }

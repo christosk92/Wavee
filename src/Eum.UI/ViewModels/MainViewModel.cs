@@ -82,6 +82,7 @@ namespace Eum.UI.ViewModels
                     };
                     CurrentUser.User.ThemeService.GlazeChanged += ThemeServiceOnGlazeChanged;
 
+                    Task.Run(() => ClearMemory.SetMax(-1, -1));
                 });
         }
         public SearchBarViewModel SearchBar { get; }
@@ -171,7 +172,7 @@ namespace Eum.UI.ViewModels
 
             searchBar
                 .WhenAnyValue(a => a.SearchText)
-                .Throttle(TimeSpan.FromMilliseconds(100))
+                .Throttle(TimeSpan.FromMilliseconds(300))
                 .WhereNotNull()
                 .Subscribe(filterChanged);
 

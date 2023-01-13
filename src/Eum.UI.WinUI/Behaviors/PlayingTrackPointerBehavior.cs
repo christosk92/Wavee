@@ -3,37 +3,43 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using CommunityToolkit.Mvvm.DependencyInjection;
+using CommunityToolkit.WinUI.UI;
 using CommunityToolkit.WinUI.UI.Behaviors;
+using Eum.UI.ViewModels;
 using Eum.UI.ViewModels.Playlists;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
+using Microsoft.Xaml.Interactivity;
 
 namespace Eum.UI.WinUI.Behaviors
 {
     public class PlayingTrackPointerBehavior : BehaviorBase<Control>
     {
         private bool _subscribed;
-        private IIsPlaying _isPlaying;
 
         protected override void OnAttached()
         {
             base.OnAttached();
-            AssociatedObject.DataContextChanged += AssociatedObjectOnDataContextChanged;
             AssociatedObject.PointerEntered += AssociatedObjectOnPointerEntered;
             AssociatedObject.PointerExited += AssociatedObjectOnPointerExited;
 
-            AssociatedObjectOnDataContextChanged(AssociatedObject, null);
             AssociatedObjectOnPointerExited(null, null);
         }
 
-        private void AssociatedObjectOnDataContextChanged(FrameworkElement sender, DataContextChangedEventArgs args)
+        protected override void OnAssociatedObjectLoaded()
         {
-            if (sender.DataContext is IIsPlaying i && !_subscribed)
+            base.OnAssociatedObjectLoaded();
+            AssociatedObjectOnPointerExited(null, null);
+
+            if (IsPlaying())
             {
-                _subscribed = true;
-                _isPlaying = i;
-                _isPlaying.IsPlayingChanged += IsPlayingOnIsPlayingChanged;
+                var findAscendant = AssociatedObject.FindAscendant<ListView>();
+                var listBehavior =
+                    Interaction.GetBehaviors(findAscendant)
+                        .First(a => a is IsPlayingListBehavior) as IsPlayingListBehavior;
+                listBehavior.PreviousPlayingContainers.Add(AssociatedObject);
             }
         }
 
@@ -43,14 +49,8 @@ namespace Eum.UI.WinUI.Behaviors
             {
                 AssociatedObject.PointerEntered -= AssociatedObjectOnPointerEntered;
                 AssociatedObject.PointerExited -= AssociatedObjectOnPointerExited;
-                AssociatedObject.DataContextChanged -= AssociatedObjectOnDataContextChanged;
             }
 
-            if (_isPlaying !=null)
-            {
-                _isPlaying.IsPlayingChanged -= IsPlayingOnIsPlayingChanged;
-                _isPlaying = null;
-            }
             base.OnDetaching();
         }
 
@@ -94,7 +94,8 @@ namespace Eum.UI.WinUI.Behaviors
         public bool IsPlaying()
         {
             if (AssociatedObject?.DataContext is IIsPlaying isPlaying)
-                return isPlaying.IsPlaying();
+                return Ioc.Default.GetRequiredService<MainViewModel>()
+                    .PlaybackViewModel!.Id == isPlaying.Id;
             return false;
         }
         private void IsPlayingOnIsPlayingChanged(object sender, bool e)

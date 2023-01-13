@@ -100,11 +100,11 @@ public class SpotifyPlaylistViewModel : PlaylistViewModel
                     // }
                 }
 
-                RxApp.MainThreadScheduler.Schedule(() =>
-                {
-                    Playlist.Tracks = uris;
-                });
-
+                Ioc.Default.GetRequiredService<IDispatcherHelper>()
+                    .TryEnqueue(QueuePriority.High, () =>
+                    {
+                        Playlist.Tracks = uris;
+                    });
             }
         }
         catch (Exception x)

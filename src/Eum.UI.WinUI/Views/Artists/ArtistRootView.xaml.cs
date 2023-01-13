@@ -13,6 +13,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -20,7 +21,6 @@ using Windows.Foundation;
 using Windows.Foundation.Collections;
 using CommunityToolkit.WinUI.UI;
 using Eum.UI.ViewModels.Artists;
-using Eum.UI.WinUI.Helpers;
 using Eum.UI.WinUI.Transitions;
 using GridView = Microsoft.UI.Xaml.Controls.GridView;
 using ListView = Microsoft.UI.Xaml.Controls.ListView;
@@ -163,6 +163,7 @@ namespace Eum.UI.WinUI.Views.Artists
             return val.ToString("N0", System.Globalization.CultureInfo.InvariantCulture) + " monthly listeners";
         }
 
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         private void ArtistRootView_OnUnloaded(object sender, RoutedEventArgs e)
         {
             Scroller.ViewChanged -= ScrollerOnViewChanged;
@@ -178,7 +179,6 @@ namespace Eum.UI.WinUI.Views.Artists
             this.Bindings.StopTracking();
             ViewModel = null;
             this.DataContext = null;
-            Task.Run(() => ClearMemory.Clear());
         }
 
         private HashSet<ListView> _lvs = new HashSet<ListView>();

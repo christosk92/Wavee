@@ -34,7 +34,7 @@ public class SpotifySearchSource : ReactiveObject, ISearchSource, IDisposable
 
         var results = queries
             .Select(query =>
-                query.Length >= MinQueryLength ? Search(query) : Task.FromResult(Enumerable.Empty<ISearchItem>()))
+                query.Length >= MinQueryLength ? Task.Run(() => Search(query)) : Task.FromResult(Enumerable.Empty<ISearchItem>()))
             .ObserveOn(RxApp.MainThreadScheduler);
 
         sourceCache
