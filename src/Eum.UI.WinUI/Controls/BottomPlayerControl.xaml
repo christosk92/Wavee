@@ -231,17 +231,19 @@
 
                         <Button
                             x:Name="VolumeButton"
-                            Grid.Row="1"
+                            Grid.Row="1" Tapped="VolumeButton_OnTapped"
                             HorizontalAlignment="Right"
                             Style="{StaticResource F}">
-                            <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE15D;" />
+                            <FontIcon FontFamily="Segoe Fluent Icons" 
+                                      Glyph="{x:Bind GetGlyphForVolume(ViewModel.Volume),
+                                Mode=OneWay}" />
                         </Button>
 
                         <Slider
                             x:Name="VolumeSlider"
                             Grid.Row="1" 
                             Grid.Column="1"
-                            Maximum="100" 
+                            Maximum="100"  ManipulationDelta="VolumeSlider_OnManipulationDelta"
                             ManipulationCompleted="VolumeSlider_OnManipulationCompleted"
                             ManipulationMode="All" 
                             PointerCaptureLost="VolumeSlider_OnPointerCaptureLost"

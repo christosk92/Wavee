@@ -153,7 +153,7 @@ namespace Eum.UI.WinUI
         {
             if (args.WindowActivationState == WindowActivationState.Deactivated)
             {
-                ClearMemory.Clear();
+                //ClearMemory.Clear();
             }
         }
 

@@ -1274,26 +1274,21 @@
                                                 <!--  FooterItems  -->
                                             </Grid.RowDefinitions>
                                             <!--  MenuItems  -->
-                                            <ItemsRepeaterScrollHost HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-                                                <ScrollViewer
-                                                    x:Name="MenuItemsScrollViewer"
-                                                    TabNavigation="Local"
-                                                    VerticalScrollBarVisibility="Auto">
-                                                    <!--  Left nav ItemsRepeater  -->
-                                                    <ItemsRepeater
-                                                        x:Name="MenuItemsHost"
-                                                        AutomationProperties.AccessibilityView="Content"
-                                                        AutomationProperties.Name="{TemplateBinding AutomationProperties.Name}">
-                                                        <ItemsRepeater.Layout>
-                                                            <StackLayout />
-                                                        </ItemsRepeater.Layout>
-                                                    </ItemsRepeater>
-                                                </ScrollViewer>
-                                            </ItemsRepeaterScrollHost>
+
+
+                                            <!--  Left nav ItemsRepeater  -->
+                                            <ItemsRepeater VerticalAlignment="Stretch" HorizontalAlignment="Stretch"
+                                                               x:Name="MenuItemsHost"
+                                                               AutomationProperties.AccessibilityView="Content"
+                                                               AutomationProperties.Name="{TemplateBinding AutomationProperties.Name}">
+                                                <ItemsRepeater.Layout>
+                                                    <StackLayout />
+                                                </ItemsRepeater.Layout>
+                                            </ItemsRepeater>
                                             <NavigationViewItemSeparator
                                                 x:Name="VisualItemsSeparator"
                                                 Grid.Row="1"
-                                                Margin="0,-42,0,0"
+                                                Height="0"
                                                 HorizontalAlignment="Stretch"
                                                 VerticalAlignment="Top"
                                                 Visibility="Visible" />

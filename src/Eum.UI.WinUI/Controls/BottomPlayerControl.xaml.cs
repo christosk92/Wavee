@@ -241,6 +241,43 @@ namespace Eum.UI.WinUI.Controls
                 _previousVolumeVal = val;
             }
         }
+
+        public string GetGlyphForVolume(double d)
+        {
+            var times100 = d;
+            return times100 switch
+            {
+                <= 10 => "\uE992",
+                <= 50 => "\uE993",
+                <= 75 => "\uE994",
+                <= 100 => "\uE995",
+                _ => throw new NotSupportedException()
+            };
+        }
+
+        private double _previousVolume;
+        private async void VolumeButton_OnTapped(object sender, TappedRoutedEventArgs e)
+        {
+            //mute or unmute
+            if (Math.Abs(ViewModel.Volume - 0) < 0.01)
+            {
+                //unmute
+                await Ioc.Default.GetRequiredService<IPlaybackService>()
+                    .Volume(_previousVolume);
+            }
+            else
+            {
+                //mute
+                _previousVolume = ViewModel.Volume;
+                await Ioc.Default.GetRequiredService<IPlaybackService>()
+                    .Volume(0);
+            }
+        }
+
+        private void VolumeSlider_OnManipulationDelta(object sender, ManipulationDeltaRoutedEventArgs e)
+        {
+            ViewModel.Volume = VolumeSlider.Value;
+        }
     }
 
 }

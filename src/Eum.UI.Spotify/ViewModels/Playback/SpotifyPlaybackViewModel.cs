@@ -41,6 +41,7 @@ using Eum.UI.Services.Library;
 using Eum.UI.Users;
 using Eum.UI.ViewModels.Artists;
 using System.Reactive.Joins;
+using Eum.Connections.Spotify.Playback.Player;
 using Google.Protobuf.WellKnownTypes;
 
 namespace Eum.UI.Spotify.ViewModels.Playback;
@@ -151,8 +152,15 @@ public class SpotifyPlaybackViewModel : PlaybackViewModel
             {
                 Item.PlaybackId = obj.EventArgs.Cluster.PlayerState.PlaybackId;
             }
+            PlayingOnExternalDevice = !string.IsNullOrEmpty(e.Cluster.ActiveDeviceId) && e.Cluster.ActiveDeviceId != _spotifyClient
+                .Config.DeviceId;
+
             int diff = (int)(_spotifyClient.TimeProvider.CurrentTimeMillis() - e.Cluster.PlayerState.Timestamp);
-            var initial = Math.Max(0, (int)(e.Cluster.PlayerState.PositionAsOfTimestamp + diff));
+            var initial =
+                PlayingOnExternalDevice ? 
+                    Math.Max(0, (int)(e.Cluster.PlayerState.PositionAsOfTimestamp + diff))
+                    : await Ioc.Default.GetRequiredService<IAudioPlayer>()
+                        .Time(Item.PlaybackId);
             OnSeeked(initial);
             if (changed)
             {
@@ -180,8 +188,6 @@ public class SpotifyPlaybackViewModel : PlaybackViewModel
             {
                 RepeatMode = RepeatMode.None;
             }
-            PlayingOnExternalDevice = !string.IsNullOrEmpty(e.Cluster.ActiveDeviceId) && e.Cluster.ActiveDeviceId != _spotifyClient
-                .Config.DeviceId;
             if (PlayingOnExternalDevice)
             {
                 RemoteDevices.Clear();
