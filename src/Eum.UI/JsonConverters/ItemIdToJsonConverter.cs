@@ -18,8 +18,12 @@ public class ItemIdToJsonConverter : System.Text.Json.Serialization.JsonConverte
     {
         writer.WriteStringValue(value.Uri);
     }
-}
 
+    public override bool CanConvert(Type typeToConvert)
+    {
+        return typeToConvert == typeof(ItemId);
+    }
+}
 public class ItemIdToJsonConverterNewtonsoft : Newtonsoft.Json.JsonConverter<ItemId>
 {
     public override void WriteJson(JsonWriter writer, ItemId value, JsonSerializer serializer)

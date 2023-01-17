@@ -13,7 +13,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:models="using:Eum.Core.Contracts.Models"
     xmlns:playlists="using:Eum.UI.ViewModels.Playlists"
-    xmlns:search="using:Eum.UI.ViewModels.Search"
+    xmlns:search="using:Eum.UI.ViewModels.Search" DataContext="{x:Bind SearchBar}"
     xmlns:searchItems="using:Eum.UI.ViewModels.Search.SearchItems"
     xmlns:winUi="using:Eum.UI.WinUI"
     xmlns:interactivity="using:Microsoft.Xaml.Interactivity"
@@ -25,8 +25,7 @@
         <DataTemplate x:Key="Recommendations" x:DataType="search:RecommendationsResultGroup">
             <Grid
                 Height="280"
-                HorizontalAlignment="Stretch"
-                DataContext="{x:Bind}">
+                HorizontalAlignment="Stretch">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition />
@@ -80,8 +79,7 @@
             <Grid
                 Height="280"
                 MaxWidth="350"
-                HorizontalAlignment="Stretch"
-                DataContext="{x:Bind}">
+                HorizontalAlignment="Stretch">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition />
@@ -100,8 +98,7 @@
         <DataTemplate x:Key="Songs" x:DataType="search:SongsResultGroup">
             <Grid
                 Height="280"
-                HorizontalAlignment="Stretch"
-                DataContext="{x:Bind}">
+                HorizontalAlignment="Stretch">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition />
@@ -338,8 +335,7 @@
         <DataTemplate x:Key="SquareHorizontal" x:DataType="search:SquareImageResultGroup">
             <Grid
                 Height="280"
-                HorizontalAlignment="Stretch"
-                DataContext="{x:Bind}">
+                HorizontalAlignment="Stretch">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="30" />
                     <RowDefinition />
@@ -408,8 +404,7 @@
         <DataTemplate x:Key="Artists" x:DataType="search:ArtistResultGroup">
             <Grid
                 Height="280"
-                HorizontalAlignment="Stretch"
-                DataContext="{x:Bind}">
+                HorizontalAlignment="Stretch">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition />
@@ -472,20 +467,54 @@
             Songs="{StaticResource Songs}"
             SquareImage="{StaticResource SquareHorizontal}"
             TopResult="{StaticResource TopResult}" />
-
-        <local:SearchFeedLayout
-            x:Key="FeedLayout"
-            ColumnSpacing="24"
-            RowSpacing="24" />
+        <!-- -->
+        <!-- <local:SearchFeedLayout -->
+        <!--     x:Key="FeedLayout" -->
+        <!--     ColumnSpacing="24" -->
+        <!--     RowSpacing="24" /> -->
+        <StackLayout x:Key="StackLayout" Orientation="Vertical" Spacing="24"/>
     </UserControl.Resources>
     <Grid>
+        <!-- <ScrollViewer> -->
+        <!--     <ItemsRepeater -->
+        <!--         Margin="36,24" -->
+        <!--         VerticalAlignment="Top" -->
+        <!--         ItemTemplate="{StaticResource T}" -->
+        <!--         ItemsSource="{x:Bind SearchBar.Groups}" -->
+        <!--         Layout="{StaticResource FeedLayout}" /> -->
+        <!-- </ScrollViewer> -->
+
         <ScrollViewer>
-            <ItemsRepeater
-                Margin="36,24"
-                VerticalAlignment="Top"
-                ItemTemplate="{StaticResource T}"
-                ItemsSource="{x:Bind SearchBar.Groups}"
-                Layout="{StaticResource FeedLayout}" />
+            <StackPanel  Margin="36,24">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="350"/>
+                        <ColumnDefinition Width="{x:Bind GetColumnWidthForSecondColumn(SearchBar.Groups), Mode=OneWay}"/>
+                    </Grid.ColumnDefinitions>
+
+                    <ContentPresenter Margin="0,0,24,0" 
+                        ContentTemplate="{StaticResource TopResult}"
+                        x:Name="TopHit"
+                        x:Load="{x:Bind HasZerothItem(SearchBar.Groups), Mode=OneWay}"
+                        Content="{Binding Groups[0], Mode=OneWay}"/>
+
+                    <ContentPresenter  Grid.Column="1"
+                                       x:Name="SecondItemRecs"
+                        x:Load="{x:Bind SecondItemIsRec(SearchBar.Groups), Mode=OneWay}"
+                        ContentTemplate="{StaticResource Recommendations}"
+                                      Content="{x:Bind SearchBar.Groups[1], Mode=OneWay}"/>
+                    <ContentPresenter  Grid.Column="1"
+                                       x:Name="SecondItemSongs"
+                                       x:Load="{x:Bind SecondItemIsTrac(SearchBar.Groups), Mode=OneWay}"
+                                       ContentTemplate="{StaticResource Songs}"
+                                       Content="{x:Bind SearchBar.Groups[1], Mode=OneWay}"/>
+                </Grid>
+                <ItemsRepeater Margin="0,24,0,0"
+                    VerticalAlignment="Top"
+                    ItemTemplate="{StaticResource T}"
+                    ItemsSource="{x:Bind Skip(SearchBar.Groups), Mode=OneWay}"
+                    Layout="{StaticResource StackLayout}" />
+            </StackPanel>
         </ScrollViewer>
     </Grid>
 </UserControl>

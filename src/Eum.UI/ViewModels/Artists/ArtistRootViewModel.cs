@@ -85,7 +85,7 @@ namespace Eum.UI.ViewModels.Artists
             var playback = main.PlaybackViewModel;
 
             playback.PlayingItemChanged += PlaybackOnPlayingItemChanged;
-            PlaybackOnPlayingItemChanged(playback, playback.Item.Id);
+            PlaybackOnPlayingItemChanged(playback, playback.Item?.Id ?? default);
 
             RecheckIsSaved();
             user.LibraryProvider.CollectionUpdated += LibraryProviderOnCollectionUpdated;

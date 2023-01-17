@@ -3,6 +3,7 @@ using Org.BouncyCastle.Asn1.X509;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.Drawing;
 using System.Linq;
 using System.Reactive.Concurrency;
@@ -41,15 +42,12 @@ namespace Eum.UI.ViewModels.Playlists
 
 
         [NotifyPropertyChangedFor(nameof(NoTracksAndIsNotLoadingComposite))]
-        [ObservableProperty] 
+        [ObservableProperty]
         private bool _isLoading;
         [ObservableProperty] private bool _isPlaying;
         [ObservableProperty] private bool _isSaved;
         private EumUser? _eumUser;
         [ObservableProperty] protected EumPlaylist _playlist;
-        private IDisposable _tracksListDisposable;
-        protected readonly SourceList<PlaylistTrackViewModel> _tracksSourceList = new();
-        private readonly ObservableCollectionExtended<PlaylistTrackViewModel> _tracks = new();
 
         [NotifyPropertyChangedFor(nameof(NoTracksAndIsNotLoadingComposite))]
         [ObservableProperty]
@@ -63,21 +61,33 @@ namespace Eum.UI.ViewModels.Playlists
                 ? playlist.Metadata["header_image_url_desktop"]
                 : null;
         }
+
+        private void TracksOnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+        {
+            Ioc.Default.GetRequiredService<IDispatcherHelper>()
+                .TryEnqueue(QueuePriority.High, () =>
+                {
+                    IsLoading = false;
+                    HasTracks = Tracks.Count > 0;
+                    TotalTrackDuration = TimeSpan.FromMilliseconds(Tracks.Sum(a => a.Track.Duration));
+                });
+        }
+
         public string? BigHeader { get; }
         public void Connect()
         {
-            _tracksListDisposable = _tracksSourceList.Connect()
-                .Sort(SortExpressionComparer<PlaylistTrackViewModel>
-                    .Ascending(i => i.Index))
-                .ObserveOn(RxApp.MainThreadScheduler)
-                .Bind(_tracks)
-                .Subscribe(set =>
-                {
-                    IsLoading = false;
-                    HasTracks = _tracksSourceList.Count > 0;
-                    TotalTrackDuration = TimeSpan.FromMilliseconds(_tracksSourceList.Items.Sum(a => a.Track.Duration));
-                });
-
+            // _tracksListDisposable = _tracksSourceList.Connect()
+            //     .Sort(SortExpressionComparer<PlaylistTrackViewModel>
+            //         .Ascending(i => i.Index))
+            //     .ObserveOn(RxApp.MainThreadScheduler)
+            //     .Bind(_tracks)
+            //     .Subscribe(set =>
+            //     {
+            //         IsLoading = false;
+            //         HasTracks = _tracksSourceList.Count > 0;
+            //         TotalTrackDuration = TimeSpan.FromMilliseconds(_tracksSourceList.Items.Sum(a => a.Track.Duration));
+            //     });
+            Tracks.CollectionChanged += TracksOnCollectionChanged;
             IsLoading = true;
             Task.Run(async () =>
             {
@@ -93,9 +103,11 @@ namespace Eum.UI.ViewModels.Playlists
 
             var main = Ioc.Default.GetRequiredService<MainViewModel>();
             main.PlaybackViewModel.PlayingItemChanged += PlaybackOnPlayingItemChanged;
-            PlaybackOnPlayingItemChanged(main.PlaybackViewModel, main.PlaybackViewModel.Item.Id);
+            PlaybackOnPlayingItemChanged(main.PlaybackViewModel, main.PlaybackViewModel.Item?.Id ?? default);
             main.CurrentUser.User.LibraryProvider.CollectionUpdated += LibraryProviderOnCollectionUpdated;
         }
+        public RangeObservableCollection<PlaylistTrackViewModel> Tracks { get; } = new();
+
         private void LibraryProviderOnCollectionUpdated(object? sender, (EntityType Type, IReadOnlyList<CollectionUpdateNotification> Ids) e)
         {
             if (e.Type is EntityType.Playlist or EntityType.Track)
@@ -114,7 +126,7 @@ namespace Eum.UI.ViewModels.Playlists
         {
             if ((sender is PlaybackViewModel p))
             {
-                if (p.Item.Context != null && p.Item.Context.Equals(Id))
+                if (p.Item?.Context != null && p.Item.Context.Equals(Id))
                 {
                     if (_isPlaying != true)
                     {
@@ -134,24 +146,21 @@ namespace Eum.UI.ViewModels.Playlists
             }
         }
 
- 
+
 
         public void Disconnect()
         {
+            Tracks.CollectionChanged -= TracksOnCollectionChanged;
             var main = Ioc.Default.GetRequiredService<MainViewModel>();
             main.PlaybackViewModel.PlayingItemChanged -= PlaybackOnPlayingItemChanged;
             main.CurrentUser.User.LibraryProvider.CollectionUpdated -= LibraryProviderOnCollectionUpdated;
-            _tracksListDisposable?.Dispose();
-            _tracksSourceList.Clear();
-            _tracks.Clear();
+            Tracks.Clear();
         }
         public TimeSpan TotalTrackDuration
         {
             get => _totalTrackDuration;
             set => this.SetProperty(ref _totalTrackDuration, value);
         }
-
-        public ObservableCollectionExtended<PlaylistTrackViewModel> Tracks => _tracks;
 
         public EumUser EumUser => _eumUser ??= Ioc.Default.GetRequiredService<IEumUserManager>()
             .GetUser(_playlist.User);

@@ -6,6 +6,7 @@ using System.Text.Json.Serialization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Newtonsoft.Json;
 using Eum.UI.Bases;
+using Eum.UI.JsonConverters;
 using Eum.UI.Users;
 
 namespace Eum.UI.Playlists;

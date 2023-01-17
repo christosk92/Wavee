@@ -237,6 +237,16 @@ namespace Eum.UI.WinUI
             }
         }
 
+        public double Volume(string playbackId)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool Paused(string itemPlaybackId)
+        {
+            throw new NotImplementedException();
+        }
+
         private bool _adjustingGain;
     }
 }

@@ -184,10 +184,7 @@ namespace Eum.UI.Services.Library
             if (_lock.ContainsKey(id.Type))
                 _lock[id.Type].Wait();
             else return false;
-            return _collection.Contains(new ItemIdHolder
-            {
-                Id = id
-            });
+            return _collection.Any(a=> a.Id == id);
         }
 
         public async ValueTask<int> LibraryCount(EntityType type)

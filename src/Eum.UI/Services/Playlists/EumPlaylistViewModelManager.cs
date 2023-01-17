@@ -98,7 +98,10 @@ namespace Eum.UI.Services.Playlists
             {
                 SetupNewListeners(CurrentUser);
             }
-            AsyncContext.Run(async () => await EnumeratePlaylists());
+            AsyncContext.Run(async () =>
+            {
+                await EnumeratePlaylists();
+            });
         }
 
         private void DisconnectListeners()

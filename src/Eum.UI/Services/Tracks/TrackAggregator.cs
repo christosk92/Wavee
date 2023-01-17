@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.DependencyInjection;
@@ -40,53 +43,44 @@ namespace Eum.UI.Services.Tracks
                 //.OrderBy(x => Array.FindIndex(uris, a => a == x.Id))
                 //.Select(x => new EumTrack(x))
                 //  .Limit(10)
-                .ToArray();
+                .ToEnumerable()
+                .ToDictionary(a => a.Id, a => a);
 
-            
-            var didNotFoundItems = uris.ExceptBy(results.Select(a => a.Id),
+            var didNotFoundItems = uris.ExceptBy(results.Select(a => a.Key),
                 a => a)
                 .Select(a => new ItemId(a));
             var newTracks = await FetchNewItems(didNotFoundItems, ct);
 
             var cachedPlayItems = (newTracks as CachedPlayItem[] ?? newTracks.ToArray())
-                .Where(a => a != null);
+                .Where(a => a != null).ToArray();
             _tracks.Upsert(cachedPlayItems);
-            static int[] FindAllIndexof<T>(T[] values, Func<T, bool> val)
-            {
-                return values.Select((b, i) => val(b) ? i : -1).Where(i => i != -1).ToArray();
-            }
-            var matches = new Dictionary<string, int>();
-            var data = cachedPlayItems.Concat(results)
-                .OrderBy(a =>
-                {
 
-                    int selectIndex = -1;
-                    var find = FindAllIndexof(ids, id => id.Uri == a.Id);
-                    if (find.Length > 1)
+
+            var data = new EumTrack[uris.Length];
+            for (var index = 0; index < uris.Length; index++)
+            {
+                var uri = uris[index];
+                if (results.TryGetValue(uri, out var item))
+                {
+                    var id = new ItemId(item.Id);
+                    data[index] = new EumTrack(item, id);
+                }
+                else
+                {
+                    item = cachedPlayItems.SingleOrDefault(a => a.Id == uri);
+                    if (item != null)
                     {
-                        if (matches.ContainsKey(a.Id))
-                        {
-                            selectIndex = find[matches[a.Id]];
-                            matches[a.Id] += 1;
-                        }
-                        else
-                        {
-                            matches[a.Id] = 1;
-                            selectIndex = find[0];
-                        }
+                        data[index] = new EumTrack(item, new ItemId(item.Id));
                     }
                     else
                     {
-                        selectIndex = find[0];
+                        data[index] = null;
                     }
-
-                    return selectIndex;
-                })
-                .Select(a => new EumTrack(a));
+                }
+            }
 
             return data;
         }
-
         public async ValueTask<EumTrack> GetTrack(ItemId itemId, CancellationToken ct = default)
         {
             var tryGetItem = _tracks.Query()
@@ -94,7 +88,7 @@ namespace Eum.UI.Services.Tracks
                 .FirstOrDefault();
             if (tryGetItem != null)
             {
-                return Project(tryGetItem);
+                return Project(tryGetItem, itemId);
             }
 
             var item = await FetchSingleItem(itemId, ct);
@@ -102,7 +96,7 @@ namespace Eum.UI.Services.Tracks
             if (item != null)
             {
                 _tracks.Upsert(item);
-                return Project(item);
+                return Project(item, itemId);
             }
 
             throw new NotSupportedException();
@@ -117,105 +111,118 @@ namespace Eum.UI.Services.Tracks
             var items = new List<CachedPlayItem>();
             foreach (var group in grouped)
             {
-                //depending on the server, fetch the tracks and transform into CachedPlayItem.
-                switch (group.Key)
+                var chunks = group.Chunk(2000);
+                var tasks = chunks.Select(async chunk =>
                 {
-                    case ServiceType.Local:
-                        break;
-                    case ServiceType.Spotify:
-                        {
-                            var spotifyClient = Ioc.Default.GetRequiredService<ISpotifyClient>();
-                            var request = new BatchedEntityRequest();
-                            request.EntityRequest.AddRange(uris.Select(a => new EntityRequest
+                    //depending on the server, fetch the tracks and transform into CachedPlayItem.
+                    switch (group.Key)
+                    {
+                        case ServiceType.Local:
+                            break;
+                        case ServiceType.Spotify:
                             {
-                                EntityUri = a.Uri,
-                                Query =
-                            {
-                                new ExtensionQuery
+                                var spotifyClient = Ioc.Default.GetRequiredService<ISpotifyClient>();
+                                var request = new BatchedEntityRequest();
+                                request.EntityRequest.AddRange(chunk.Select(a => new EntityRequest
                                 {
-                                    ExtensionKind = a.Type switch
+                                    EntityUri = a.Uri,
+                                    Query =
+                                {
+                                    new ExtensionQuery
                                     {
-                                        EntityType.Track=> ExtensionKind.TrackV4,
-                                        EntityType.Episode => ExtensionKind.EpisodeV4,
-                                        _ => ExtensionKind.UnknownExtension
+                                        ExtensionKind = a.Type switch
+                                        {
+                                            EntityType.Track => ExtensionKind.TrackV4,
+                                            EntityType.Episode => ExtensionKind.EpisodeV4,
+                                            _ => ExtensionKind.UnknownExtension
+                                        }
                                     }
                                 }
-                            }
-                            }));
-                            request.Header = new BatchedEntityRequestHeader
-                            {
-                                Catalogue = "premium", 
-                                Country = spotifyClient.AuthenticatedUser.CountryCode
-                            };
-                            using var metadataResponse = await "https://gae2-spclient.spotify.com"
-                                .AppendPathSegments("extended-metadata", "v0", "extended-metadata")
-                                .WithOAuthBearerToken((await spotifyClient.BearerClient.GetBearerTokenAsync(ct)))
-                                .SetQueryParam("market", "from_token")
-                                .SetQueryParam("country", spotifyClient.AuthenticatedUser.CountryCode)
-                                .PostAsync(new ByteArrayContent(request.ToByteArray()), cancellationToken: ct);
-                            var responseData =
-                                BatchedExtensionResponse.Parser.ParseFrom(await metadataResponse.GetStreamAsync());
+                                }));
+                                request.Header = new BatchedEntityRequestHeader
+                                {
+                                    Catalogue = "premium",
+                                    Country = spotifyClient.AuthenticatedUser.CountryCode
+                                };
+                                using var metadataResponse = await "https://gae2-spclient.spotify.com"
+                                    .AppendPathSegments("extended-metadata", "v0", "extended-metadata")
+                                    .WithOAuthBearerToken((await spotifyClient.BearerClient.GetBearerTokenAsync(ct)))
+                                    .SetQueryParam("market", "from_token")
+                                    .SetQueryParam("country", spotifyClient.AuthenticatedUser.CountryCode)
+                                    .PostAsync(new ByteArrayContent(request.ToByteArray()), cancellationToken: ct);
+                                var responseData =
+                                    BatchedExtensionResponse.Parser.ParseFrom(await metadataResponse.GetStreamAsync());
 
-                            var data = responseData
-                                .ExtendedMetadata
-                                .SelectMany(a => a.ExtensionData
-                                    .Select(k =>
-                                    {
-                                        var id = new ItemId(k.EntityUri);
-                                        switch (id.Type)
+                                var data = responseData
+                                    .ExtendedMetadata
+                                    .SelectMany(a => a.ExtensionData
+                                        .Select(k =>
                                         {
-                                            case EntityType.Episode:
-                                                return null;
-                                                break;
-                                            case EntityType.Track:
-                                                var original = Track.Parser.ParseFrom(k.ExtensionData.Value);
-                                                var images = original.Album.CoverGroup?
-                                                    .Image.Select(a => new CachedImage
+                                            var id = new ItemId(k.EntityUri);
+                                            switch (id.Type)
+                                            {
+                                                case EntityType.Episode:
+                                                    return null;
+                                                    break;
+                                                case EntityType.Track:
+                                                    var original = Track.Parser.ParseFrom(k.ExtensionData.Value);
+                                                    if (!chunk.Any(j => j.Uri == k.EntityUri))
                                                     {
-                                                        Height = (int?)(a.HasHeight ? a.Height : null),
-                                                        Width = (int?)(a.HasWidth ? a.Width : null),
-                                                        Id = HexId(a.FileId)
-                                                    })?
-                                                    .ToArray() ?? Array.Empty<CachedImage>();
-                                                return new CachedPlayItem
-                                                {
-                                                    Name = original.Name,
-                                                    Album = new CachedAlbum
+                                                        id = chunk.FirstOrDefault(a => original
+                                                            .Alternative.Any(k =>
+                                                                new SpotifyId(k.Gid, EntityType.Track).Uri == a.Uri));
+                                                    }
+                                                    var images = original.Album.CoverGroup?
+                                                        .Image.Select(a => new CachedImage
+                                                        {
+                                                            Height = (int?)(a.HasHeight ? a.Height : null),
+                                                            Width = (int?)(a.HasWidth ? a.Width : null),
+                                                            Id = HexId(a.FileId)
+                                                        })?
+                                                        .ToArray() ?? Array.Empty<CachedImage>();
+                                                    return new CachedPlayItem
                                                     {
-                                                        Id = new SpotifyId(original.Album.Gid, EntityType.Album).Uri,
-                                                        Images = images,
-                                                        Name = original.Album.Name
-                                                    },
-                                                    Artists = original.Artist.Select(a => new CachedShortArtist
-                                                    {
-                                                        Id = new SpotifyId(a.Gid, EntityType.Artist).Uri,
-                                                        Name = a.Name
-                                                    })
-                                                        .ToArray(),
-                                                    Duration = original.Duration,
-                                                    ExtraMetadata = new Dictionary<string, string>
-                                                    {
+                                                        Name = original.Name,
+                                                        Album = new CachedAlbum
+                                                        {
+                                                            Id = new SpotifyId(original.Album.Gid, EntityType.Album).Uri,
+                                                            Images = images,
+                                                            Name = original.Album.Name
+                                                        },
+                                                        Artists = original.Artist.Select(a => new CachedShortArtist
+                                                        {
+                                                            Id = new SpotifyId(a.Gid, EntityType.Artist).Uri,
+                                                            Name = a.Name
+                                                        })
+                                                            .ToArray(),
+                                                        Duration = original.Duration,
+                                                        ExtraMetadata = new Dictionary<string, string>
+                                                        {
                                                         {"file", original.File.ToString()},
                                                         {"alternative", original.Alternative.ToString()},
                                                         {"availability", original.Availability.ToString()},
                                                         {"explicit", original.Explicit.ToString()},
                                                         {"restriction", original.Restriction.ToString()}
-                                                    },
-                                                    Id = id.Uri
-                                                };
-                                                break;
-                                        }
+                                                        },
+                                                        Id = id.Uri
+                                                    };
+                                                    break;
+                                            }
 
-                                        return null;
-                                    }));
+                                            return null;
+                                        }));
+                                return data;
+                                //items.AddRange(responseData.ExtendedMetadata.Select(a=> a.));
+                                break;
+                            }
+                        default:
+                            throw new ArgumentOutOfRangeException();
+                    }
 
-                            items.AddRange(data);
-                            //items.AddRange(responseData.ExtendedMetadata.Select(a=> a.));
-                            break;
-                        }
-                    default:
-                        throw new ArgumentOutOfRangeException();
-                }
+                    return null;
+                });
+                var tracks = await Task.WhenAll(tasks);
+                items.AddRange(tracks.Where(a => a != null).SelectMany(a => a));
             }
 
             return items;
@@ -263,7 +270,7 @@ namespace Eum.UI.Services.Tracks
                             var uri = new SpotifyId(id.Uri);
                             var spotifyClient = Ioc.Default.GetRequiredService<ISpotifyClient>();
                             var original =
-                                await spotifyClient.Tracks.MercuryTracks.GetTrack(uri.HexId(),  spotifyClient.PrivateUser.Country, ct);
+                                await spotifyClient.Tracks.MercuryTracks.GetTrack(uri.HexId(), spotifyClient.PrivateUser.Country, ct);
                             var images = await UploadImages(_database, original.Album.CoverGroup, ct);
                             return new CachedPlayItem
                             {
@@ -308,8 +315,8 @@ namespace Eum.UI.Services.Tracks
             var items = images
                 .Image.Select(a => new
                 {
-                    Height = (int?) (a.HasHeight ? a.Height : null),
-                    Width = (int?) (a.HasWidth ? a.Width : null),
+                    Height = (int?)(a.HasHeight ? a.Height : null),
+                    Width = (int?)(a.HasWidth ? a.Width : null),
                     Url = $"https://i.scdn.co/image/{HexId(a.FileId)}",
                     Id = HexId(a.FileId)
                 });
@@ -348,7 +355,7 @@ namespace Eum.UI.Services.Tracks
             var uploadedImages =
                 await Task.WhenAll(streams);
             return uploadedImages
-                .Where(a=> a != null)
+                .Where(a => a != null)
                 .Select(a => new CachedImage
                 {
                     Height = a.Metadata["height"].IsNull ? null : a.Metadata["height"].AsInt32,
@@ -358,9 +365,9 @@ namespace Eum.UI.Services.Tracks
 
         }
 
-        private static EumTrack Project(CachedPlayItem item)
+        private static EumTrack Project(CachedPlayItem item, ItemId id)
         {
-            return new EumTrack(item);
+            return new EumTrack(item, id);
         }
         private static string HexId(ByteString id)
         {

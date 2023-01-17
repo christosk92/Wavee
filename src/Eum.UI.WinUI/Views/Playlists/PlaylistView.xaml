@@ -18,8 +18,20 @@
     xmlns:playlists1="using:Eum.UI.Playlists"
     xmlns:ui="using:CommunityToolkit.WinUI.UI"
     xmlns:xamlConverters="using:Eum.UI.WinUI.XamlConverters"
+    xmlns:winUi="using:Eum.UI.WinUI"
     mc:Ignorable="d">
     <UserControl.Resources>
+        <Style TargetType="Border" x:Key="OddRow">
+            <Setter Property="Padding" Value="12,0,0,0"/>
+            <Setter Property="Background" Value="{ThemeResource LayerFillColorDefaultBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="BorderBrush" Value="{ThemeResource CardStrokeColorDefaultBrush}"/>
+        </Style>
+        <Style TargetType="Border" x:Key="EvenRow">
+            <Setter Property="Padding" Value="12,0,0,0"/>
+            <Setter Property="Background" Value="Transparent"/>
+        </Style>
         <Style x:Key="TransparentTextBox" TargetType="TextBox">
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="BorderBrush" Value="Transparent" />
@@ -206,28 +218,214 @@
             Offset="0,4,0" />
         <xamlConverters:TimeSpanToStringConverter x:Key="TimeSpanToStringConverter" />
 
+        <winUi:GetRowStyleConverter
+            Odd="{StaticResource OddRow}"
+            Even="{StaticResource EvenRow}"
+            x:Key="GetRowStyle" />
         <DataTemplate x:Key="PlaylistTrackTemplate" x:DataType="playlists:PlaylistTrackViewModel">
-            <controls:PlaylistTrackView ViewModel="{x:Bind }">
-                <controls:PlaylistTrackView.AlternateStyle>
-                    <Style TargetType="Border">
-                        <Setter Property="Padding" Value="12,0,0,0"/>
-                        <Setter Property="Background" Value="{ThemeResource LayerFillColorDefaultBrush}"/>
-                        <Setter Property="BorderThickness" Value="1"/>
-                        <Setter Property="CornerRadius" Value="8"/>
-                        <Setter Property="BorderBrush" Value="{ThemeResource CardStrokeColorDefaultBrush}"/>
-                    </Style>
-                </controls:PlaylistTrackView.AlternateStyle>
-            </controls:PlaylistTrackView>
-        </DataTemplate>
-        <DataTemplate x:Key="PlaylistTrackTemplateAlternate" x:DataType="playlists:PlaylistTrackViewModel">
-            <controls:PlaylistTrackView  ViewModel="{x:Bind }">
-                <controls:PlaylistTrackView.AlternateStyle>
-                    <Style TargetType="Border">
-                        <Setter Property="Padding" Value="12,0,0,0"/>
-                        <Setter Property="Background" Value="Transparent"/>
-                    </Style>
-                </controls:PlaylistTrackView.AlternateStyle>
-            </controls:PlaylistTrackView>
+            <UserControl>
+                <Grid>
+                    <Border
+                        Style="{x:Bind Index, Mode=OneWay, Converter={StaticResource GetRowStyle}}"
+                        x:Name="BorderRoot">
+                        <Grid Background="Transparent">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition MinWidth="80" Width="Auto" />
+                                <ColumnDefinition Width="1.5*" />
+                                <ColumnDefinition />
+                                <ColumnDefinition />
+                                <ColumnDefinition Width="150" />
+                                <ColumnDefinition Width="50" />
+                            </Grid.ColumnDefinitions>
+
+                            <Grid VerticalAlignment="Stretch">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width=".5*" />
+                                    <ColumnDefinition Width="2*" />
+                                </Grid.ColumnDefinitions>
+                                <ContentPresenter x:Name="IndexOrPlayButtonControl">
+                                    <ContentPresenter.Content>
+                                        <TextBlock
+                                            x:Name="Index"
+                                            VerticalAlignment="Center"
+                                            FontWeight="Bold"
+                                            Opacity=".7"
+                                            x:Phase="1"
+                                            Text="{x:Bind Index, Converter={StaticResource IndexToStringConverter}}" />
+                                    </ContentPresenter.Content>
+                                </ContentPresenter>
+
+                                <controls:StarButton
+                                    x:Phase="2"
+                                    Grid.Column="1" FontSize="18"
+                                    Padding="0" IsChecked="{x:Bind IsSaved, Mode=OneWay}"
+                                    HorizontalAlignment="Center">
+                                    <interactivity:Interaction.Behaviors>
+                                        <behaviors:LikeTrackBehavior/>
+                                    </interactivity:Interaction.Behaviors>
+                                </controls:StarButton>
+                            </Grid>
+                            <TextBlock
+                                x:Name="TitleBlock"
+                                Grid.Column="1"
+                                x:Phase="3"
+                                Margin="0,0,8,0"
+                                VerticalAlignment="Center"
+                                Text="{x:Bind Track.Name}"
+                                TextTrimming="CharacterEllipsis" />
+
+                            <controls1:MetadataControl
+                                x:Name="Artists"
+                                x:Phase="4"
+                                Grid.Column="2"
+                                Margin="0,0,8,0"
+                                VerticalAlignment="Center"
+                                Items="{x:Bind Track.Artists, Converter={StaticResource IdWithTitleToMetadataConverter}}">
+                                <controls1:MetadataControl.Style>
+                                    <Style TargetType="controls1:MetadataControl">
+                                        <Setter Property="Template">
+                                            <Setter.Value>
+                                                <ControlTemplate TargetType="controls1:MetadataControl">
+                                                    <TextBlock
+                                                        x:Name="TextContainer"
+                                                        AutomationProperties.AccessibilityView="{TemplateBinding AutomationProperties.AccessibilityView}"
+                                                        Style="{TemplateBinding TextBlockStyle}"
+                                                        TextTrimming="CharacterEllipsis" />
+                                                </ControlTemplate>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </Style>
+                                </controls1:MetadataControl.Style>
+                            </controls1:MetadataControl>
+
+                            <ContentPresenter
+                                x:Name="AlbumBlock"
+                                x:Phase="5"
+                                Grid.Column="3" 
+                                VerticalAlignment="Center"
+                                Content="{x:Bind Track.Group}"
+                                ContentTemplate="{StaticResource IdWithTitleItemTemplate}" />
+
+                            <TextBlock
+                                x:Phase="2"
+                                x:Name="DurationBlock"
+                                Grid.Column="5"
+                                VerticalAlignment="Center"
+                                Text="{x:Bind Track.Duration, Converter={StaticResource MsToTimestampConverter}}" />
+                        </Grid>
+                    </Border>
+                    <VisualStateManager.VisualStateGroups>
+                        <VisualStateGroup>
+                            <VisualState x:Name="Normal" />
+                            <VisualState x:Name="Playing">
+                                <VisualState.Setters>
+                                    <Setter Target="IndexOrPlayButtonControl.Content">
+                                        <Setter.Value>
+                                            <Image
+                                                x:Name="Equaliser"
+                                                Width="16"
+                                                Height="16"
+                                                Source="ms-appx:///Assets/equaliser.gif" />
+                                        </Setter.Value>
+                                    </Setter>
+                                    <Setter Target="TitleBlock.FontWeight" Value="Normal" />
+                                    <Setter Target="TitleBlock.Foreground" Value="{StaticResource SpotifyGreen}" />
+                                    <Setter Target="DurationBlock.Foreground" Value="{StaticResource SpotifyGreen}" />
+                                    <Setter Target="Artists.Foreground" Value="{StaticResource SpotifyGreen}" />
+                                    <Setter Target="Artists.Style">
+                                        <Setter.Value>
+                                            <Style TargetType="controls1:MetadataControl">
+                                                <Setter Property="Template">
+                                                    <Setter.Value>
+                                                        <ControlTemplate TargetType="controls1:MetadataControl">
+                                                            <TextBlock
+                                                                x:Name="TextContainer"
+                                                                AutomationProperties.AccessibilityView="{TemplateBinding AutomationProperties.AccessibilityView}"
+                                                                Foreground="{StaticResource SpotifyGreen}"
+                                                                Style="{TemplateBinding TextBlockStyle}"
+                                                                TextTrimming="CharacterEllipsis" />
+                                                        </ControlTemplate>
+                                                    </Setter.Value>
+                                                </Setter>
+                                            </Style>
+                                        </Setter.Value>
+                                    </Setter>
+                                </VisualState.Setters>
+                            </VisualState>
+                            <VisualState x:Name="HoverPlaying">
+                                <VisualState.Setters>
+                                    <Setter Target="IndexOrPlayButtonControl.Content">
+                                        <Setter.Value>
+                                            <Button
+                                                Width="32" 
+                                                Command="{Binding PlayCommand, Mode=OneTime}"
+                                                CommandParameter="{Binding Index, Mode=OneTime}"
+                                                Height="32"
+                                                Margin="-4,-8,-12,-8"
+                                                Padding="0"
+                                                HorizontalAlignment="Center"
+                                                VerticalAlignment="Center"
+                                                Background="Transparent">
+                                                <FontIcon
+                                                    FontFamily="Segoe Fluent Icons"
+                                                    FontSize="16"
+                                                    Foreground="{ThemeResource SystemAccentColorLight3}"
+                                                    Glyph="&#xE102;" />
+                                            </Button>
+                                        </Setter.Value>
+                                    </Setter>
+
+                                    <Setter Target="TitleBlock.Foreground" Value="{StaticResource SpotifyGreen}" />
+                                    <Setter Target="DurationBlock.Foreground" Value="{StaticResource SpotifyGreen}" />
+                                    <Setter Target="Artists.Foreground" Value="{StaticResource SpotifyGreen}" />
+                                    <Setter Target="Artists.Style">
+                                        <Setter.Value>
+                                            <Style TargetType="controls1:MetadataControl">
+                                                <Setter Property="Template">
+                                                    <Setter.Value>
+                                                        <ControlTemplate TargetType="controls1:MetadataControl">
+                                                            <TextBlock
+                                                                x:Name="TextContainer"
+                                                                AutomationProperties.AccessibilityView="{TemplateBinding AutomationProperties.AccessibilityView}"
+                                                                Foreground="{StaticResource SpotifyGreen}"
+                                                                Style="{TemplateBinding TextBlockStyle}"
+                                                                TextTrimming="CharacterEllipsis" />
+                                                        </ControlTemplate>
+                                                    </Setter.Value>
+                                                </Setter>
+                                            </Style>
+                                        </Setter.Value>
+                                    </Setter>
+                                </VisualState.Setters>
+                            </VisualState>
+                            <VisualState x:Name="Hover">
+                                <VisualState.Setters>
+                                    <Setter Target="IndexOrPlayButtonControl.Content">
+                                        <Setter.Value>
+                                            <Button
+                                                Command="{Binding PlayCommand, Mode=OneTime}"
+                                                CommandParameter="{Binding Index, Mode=OneTime}"
+                                                Width="32"
+                                                Height="32"
+                                                Margin="-8,-8,-12,-8"
+                                                Padding="0"
+                                                HorizontalAlignment="Center"
+                                                VerticalAlignment="Center"
+                                                Background="Transparent">
+                                                <FontIcon
+                                                    FontFamily="Segoe Fluent Icons"
+                                                    FontSize="16"
+                                                    Foreground="{ThemeResource SystemAccentColorLight3}"
+                                                    Glyph="&#xE102;" />
+                                            </Button>
+                                        </Setter.Value>
+                                    </Setter>
+                                </VisualState.Setters>
+                            </VisualState>
+                        </VisualStateGroup>
+                    </VisualStateManager.VisualStateGroups>
+                </Grid>
+            </UserControl>
         </DataTemplate>
     </UserControl.Resources>
     <Grid>
@@ -238,7 +436,6 @@
             DragOver="TrackList_DragOver"
             Drop="TrackList_OnDrop"
             ItemContainerStyle="{StaticResource SongGridViewItemStyle}"
-            ui:ListViewExtensions.AlternateItemTemplate="{StaticResource PlaylistTrackTemplateAlternate}"
             ItemTemplate="{StaticResource PlaylistTrackTemplate}"
             ItemsSource="{x:Bind ViewModel.Tracks}"
             SelectionMode="Extended">
@@ -247,7 +444,7 @@
             </interactivity:Interaction.Behaviors>
             <ListView.ItemsPanel>
                 <ItemsPanelTemplate>
-                    <ItemsStackPanel CacheLength="2" ItemsUpdatingScrollMode="KeepScrollOffset" />
+                    <ItemsStackPanel CacheLength="4"    ItemsUpdatingScrollMode="KeepScrollOffset" />
                 </ItemsPanelTemplate>
             </ListView.ItemsPanel>
             <ListView.Header>

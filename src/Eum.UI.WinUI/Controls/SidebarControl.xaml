@@ -165,10 +165,20 @@
                 </NavigationViewItem>
             </DataTemplate>
             <DataTemplate x:Key="Playlist" x:DataType="playlists:PlaylistViewModel">
-                <NavigationViewItem
-                    Content="{x:Bind Playlist.Name, Mode=OneWay}"
-                    DataContext="{x:Bind}"
+                <NavigationViewItem 
+                    DataContext="{x:Bind}"  
                     IsSelected="{x:Bind IsSelected, Mode=OneWay}">
+                    <ToolTipService.ToolTip>
+                        <Image Height="100" Width="100">
+                            <Image.Source>
+                                <BitmapImage UriSource="{Binding Playlist.ImagePath, Mode=OneWay}"
+                                             DecodePixelHeight="100" DecodePixelWidth="100"/>
+                            </Image.Source>
+                        </Image>
+                    </ToolTipService.ToolTip> 
+                    <NavigationViewItem.Content>
+                        <TextBlock Text="{x:Bind Playlist.Name, Mode=OneWay}" TextTrimming="CharacterEllipsis"/>
+                    </NavigationViewItem.Content>
                     <NavigationViewItem.Icon>
                         <FontIcon FontFamily="{x:Bind GlyphFontFamily}" Glyph="{x:Bind Glyph}" />
                     </NavigationViewItem.Icon>

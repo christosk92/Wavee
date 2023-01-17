@@ -63,7 +63,6 @@ namespace Eum.UI.Services.Users
 
                     CurrentUser = userViewModel;
 
-                    Task.Run(async () => await userViewModel.Sync());
                     if (user.IsDefault)
                     {
                         foreach (var eumUser in await _userManager.GetUsers(false))
@@ -74,7 +73,7 @@ namespace Eum.UI.Services.Users
                             }
                         }
                     }
-
+                    _ = Task.Run(async () => await userViewModel.Sync());
                     CurrentUserChanged?.Invoke(this, userViewModel);
                 })
                 .Subscribe();

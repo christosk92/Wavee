@@ -8,9 +8,9 @@ namespace Eum.UI.Services.Tracks
 {
     public class EumTrack
     {
-        public EumTrack(CachedPlayItem cachedPlayItem)
+        public EumTrack(CachedPlayItem cachedPlayItem, ItemId id)
         {
-            Id = new ItemId(cachedPlayItem.Id);
+            Id = id;
             Name = cachedPlayItem.Name;
             Artists = cachedPlayItem.Artists
                 .Select(a => new IdWithTitle

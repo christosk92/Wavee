@@ -166,7 +166,12 @@ public class SpotifyPlaybackViewModel : PlaybackViewModel
             {
                 IsSaved = await Task.Run(() => Ioc.Default.GetRequiredService<MainViewModel>()
                     .CurrentUser.User.LibraryProvider.IsSaved(Item.Id));
-            } IsPaused = obj.EventArgs.Cluster.PlayerState.IsPaused;
+            }
+
+            IsPaused =
+                PlayingOnExternalDevice
+                    ? obj.EventArgs.Cluster.PlayerState.IsPaused && obj.EventArgs.Cluster.PlayerState.IsPlaying
+                    : Ioc.Default.GetRequiredService<IAudioPlayer>().Paused(Item.PlaybackId);
             if (!IsPaused)
             {
                 StartTimer(initial);

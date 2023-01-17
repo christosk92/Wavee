@@ -48,7 +48,7 @@ public sealed partial class AlbumViewModel : INavigatable, IGlazeablePage, IIsSa
         RecheckIsSaved();
 
         main.PlaybackViewModel.PlayingItemChanged += PlaybackOnPlayingItemChanged;
-        PlaybackOnPlayingItemChanged(main.PlaybackViewModel, main.PlaybackViewModel.Item.Id);
+        PlaybackOnPlayingItemChanged(main.PlaybackViewModel, main.PlaybackViewModel.Item?.Id ?? default);
 
         user.LibraryProvider.CollectionUpdated += LibraryProviderOnCollectionUpdated;
 

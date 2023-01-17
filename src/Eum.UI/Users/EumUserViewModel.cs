@@ -142,7 +142,7 @@ namespace Eum.UI.Users
                     spotifyPlaylist.Id,
                     image,
                     mainService, User.Id, linkWith);
-            var vm = await Task.Run(async() => await Ioc.Default.GetRequiredService<IEumUserPlaylistViewModelManager>()
+            var vm = await Task.Run(async () => await Ioc.Default.GetRequiredService<IEumUserPlaylistViewModelManager>()
                 .WaitForVm(playlist));
             return vm;
         }
@@ -152,6 +152,8 @@ namespace Eum.UI.Users
             //fetch playlists
             try
             {
+                var playlistmanager = Ioc.Default.GetRequiredService<IEumPlaylistManager>();
+
                 var spotifyClient = Ioc.Default.GetRequiredService<ISpotifyClient>();
 
                 using var rootList = await spotifyClient.SpClientPlaylists
@@ -159,33 +161,53 @@ namespace Eum.UI.Users
 
                 var data = SelectedListContent.Parser.ParseFrom(await rootList.Content.ReadAsStreamAsync());
 
-                var playlistmanager = Ioc.Default.GetRequiredService<IEumPlaylistManager>();
+
+                var existingPlaylists = new Dictionary<string, EumPlaylist>();
+                foreach (var playlists in await playlistmanager.GetPlaylists(User.Id, false))
+                {
+                    if (playlists.Id.Service != ServiceType.Spotify) continue;
+                    existingPlaylists[playlists.Id.Uri] = playlists;
+                    //update
+                }
+
 
                 for (var index = 0; index < data.Contents.Items.Count; index++)
                 {
                     var playlist = data.Contents.Items[index];
                     var metaData = data.Contents.MetaItems[index];
 
-                    var neweumplaylist = new EumPlaylist
+                    if (!existingPlaylists.TryGetValue(playlist.Uri, out var eumPlaylist))
                     {
-                        Id = new ItemId(playlist.Uri),
-                        LinkedTo = new Dictionary<ServiceType, ItemId>(),
-                        Name = metaData.Attributes.Name,
-                        Description = metaData.Attributes.Description,
-                        Metadata = metaData.Attributes.FormatAttributes
-                            .ToDictionary(a => a.Key, a => a.Value),
-                        Tracks = new ItemId[metaData.Length],
-                        User = new ItemId($"spotify:user:{metaData.OwnerUsername}"),
-                        AlsoUnder = metaData.OwnerUsername == User.Id.Id ?
-                            Array.Empty<ItemId>()
-                            : new ItemId[]
-                            {
-                                User.Id
-                            },
-                        //reverse index
+                        eumPlaylist = new EumPlaylist
+                        {
+                            Id = new ItemId(playlist.Uri),
+                            LinkedTo = new Dictionary<ServiceType, ItemId>(),
+                            Name = metaData.Attributes.Name,
+                            Description = metaData.Attributes.Description,
+                            Metadata = metaData.Attributes.FormatAttributes
+                                .ToDictionary(a => a.Key, a => a.Value),
+                            Tracks = new ItemId[metaData.Length],
+                            User = new ItemId($"spotify:user:{metaData.OwnerUsername}"),
+                            AlsoUnder = metaData.OwnerUsername == User.Id.Id
+                                ? Array.Empty<ItemId>()
+                                : new ItemId[]
+                                {
+                                    User.Id
+                                },
+                            //reverse index
 
-                        Order = data.Contents.Items.Count - index - 1
-                    };
+                            Order = data.Contents.Items.Count - index - 1
+                        };
+                    }
+                    else
+                    {
+                        eumPlaylist.Name = metaData.Attributes.Name;
+                        eumPlaylist.Description  = metaData.Attributes.Description;
+                        eumPlaylist.Metadata = metaData.Attributes.FormatAttributes
+                            .ToDictionary(a => a.Key, a => a.Value);
+                        eumPlaylist.Order = data.Contents.Items.Count - index - 1;
+                    }
+
                     string url = default;
                     if (metaData.Attributes.HasPicture)
                     {
@@ -199,19 +221,21 @@ namespace Eum.UI.Users
                             (metaData.Attributes.PictureSize.FirstOrDefault(a => a.TargetName == "large")
                              ?? metaData.Attributes.PictureSize.First()).Url;
                     }
-
-                    neweumplaylist.ImagePath = url;
-                    playlistmanager.AddPlaylist(neweumplaylist);
-                }
-
-                foreach (var playlists in await playlistmanager.GetPlaylists(User.Id, false))
-                {
-                    if (playlists.Id.Service != ServiceType.Spotify) continue;
-                    if (!data.Contents.Items.Any(a => a.Uri == playlists.Id.Uri))
+                    else
                     {
-                        playlistmanager.RemovePlaylist(playlists);
+                        //try fetch from spotify api
+                        //https://api.spotify.com/v1/playlists/{playlist_id}/images
+                        var images = await 
+                            spotifyClient.OpenApiPlaylists.GetImages(eumPlaylist.Id.Id, CancellationToken.None);
+                        if (images.Length > 0)
+                        {
+                            url = images.MaxBy(a => a.Height ?? 0).Url;
+                        }
                     }
+                    eumPlaylist.ImagePath = url;
+                    playlistmanager.AddPlaylist(eumPlaylist);
                 }
+
             }
             catch (Exception x)
             {
