@@ -48,6 +48,9 @@ namespace Eum.UI.ViewModels.Playlists
         [ObservableProperty] private bool _isSaved;
         private EumUser? _eumUser;
         [ObservableProperty] protected EumPlaylist _playlist;
+        [NotifyPropertyChangedFor(nameof(PermissionLevelButtons))]
+        [ObservableProperty]
+        private PlaylistPermissionLevel _permissionLevel;
 
         [NotifyPropertyChangedFor(nameof(NoTracksAndIsNotLoadingComposite))]
         [ObservableProperty]
@@ -69,12 +72,13 @@ namespace Eum.UI.ViewModels.Playlists
                 {
                     IsLoading = false;
                     HasTracks = Tracks.Count > 0;
-                    TotalTrackDuration = TimeSpan.FromMilliseconds(Tracks.Sum(a => a.Track.Duration));
+                    var duration = Tracks.Sum(a => (long)a.Track.Duration);
+                    TotalTrackDuration = TimeSpan.FromMilliseconds(duration);
                 });
         }
 
         public string? BigHeader { get; }
-        public void Connect()
+        public virtual void Connect()
         {
             // _tracksListDisposable = _tracksSourceList.Connect()
             //     .Sort(SortExpressionComparer<PlaylistTrackViewModel>
@@ -106,8 +110,10 @@ namespace Eum.UI.ViewModels.Playlists
             PlaybackOnPlayingItemChanged(main.PlaybackViewModel, main.PlaybackViewModel.Item?.Id ?? default);
             main.CurrentUser.User.LibraryProvider.CollectionUpdated += LibraryProviderOnCollectionUpdated;
         }
-        public RangeObservableCollection<PlaylistTrackViewModel> Tracks { get; } = new();
 
+        [ObservableProperty]
+        private RangeObservableCollection<PlaylistTrackViewModel> _tracks =
+            new RangeObservableCollection<PlaylistTrackViewModel>();
         private void LibraryProviderOnCollectionUpdated(object? sender, (EntityType Type, IReadOnlyList<CollectionUpdateNotification> Ids) e)
         {
             if (e.Type is EntityType.Playlist or EntityType.Track)
@@ -148,7 +154,7 @@ namespace Eum.UI.ViewModels.Playlists
 
 
 
-        public void Disconnect()
+        public virtual void Disconnect()
         {
             Tracks.CollectionChanged -= TracksOnCollectionChanged;
             var main = Ioc.Default.GetRequiredService<MainViewModel>();
@@ -181,7 +187,7 @@ namespace Eum.UI.ViewModels.Playlists
         public bool IsActive { get; set; }
         public ICommand SortCommand { get; }
 
-        public static PlaylistViewModel Create(EumPlaylist user)
+        public static PlaylistViewModel Create(EumPlaylist user, PlaylistPermissionLevel permissionLevel)
         {
             switch (user.Id.Service)
             {
@@ -248,5 +254,53 @@ namespace Eum.UI.ViewModels.Playlists
         }
 
         public ItemId Id => _playlist.Id;
+        public abstract bool CanCollab { get; }
+
+        public PermissionLevelButton? PermissionLevelButtons
+        {
+            get
+            {
+                return PermissionLevel switch
+                {
+                    PlaylistPermissionLevel.Viewer => new ViewerButtons(),
+                    PlaylistPermissionLevel.Owner => new OwnerButtons
+                    {
+                        CanCollab = CanCollab,
+                        Collab = _playlist.Collab
+                    },
+                    PlaylistPermissionLevel.Collab => new CollabButtons(),
+                    _ => throw new ArgumentOutOfRangeException()
+                };
+            }
+        }
+    }
+
+    public abstract class PermissionLevelButton
+    {
+    }
+
+    public class ViewerButtons : PermissionLevelButton
+    {
+
+    }
+
+    [INotifyPropertyChanged]
+    public partial class OwnerButtons : PermissionLevelButton
+    {
+        [ObservableProperty] private bool _collab;
+        [ObservableProperty] private bool _isPrivate;
+
+        public bool CanCollab { get; init; }
+     
+    }
+    public class CollabButtons : PermissionLevelButton
+    {
+
+    }
+    public enum PlaylistPermissionLevel
+    {
+        Viewer,
+        Owner,
+        Collab
     }
 }

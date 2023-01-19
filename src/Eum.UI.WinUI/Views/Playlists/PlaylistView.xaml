@@ -16,9 +16,10 @@
     xmlns:media="using:CommunityToolkit.WinUI.UI.Media"
     xmlns:playlists="using:Eum.UI.ViewModels.Playlists"
     xmlns:playlists1="using:Eum.UI.Playlists"
-    xmlns:ui="using:CommunityToolkit.WinUI.UI"
+    xmlns:ui="using:CommunityToolkit.WinUI.UI" 
     xmlns:xamlConverters="using:Eum.UI.WinUI.XamlConverters"
     xmlns:winUi="using:Eum.UI.WinUI"
+    xmlns:converters="using:CommunityToolkit.WinUI.UI.Converters"
     mc:Ignorable="d">
     <UserControl.Resources>
         <Style TargetType="Border" x:Key="OddRow">
@@ -223,7 +224,10 @@
             Even="{StaticResource EvenRow}"
             x:Key="GetRowStyle" />
         <DataTemplate x:Key="PlaylistTrackTemplate" x:DataType="playlists:PlaylistTrackViewModel">
-            <UserControl>
+            <UserControl DataContext="{x:Bind }">
+                <interactivity:Interaction.Behaviors>
+                    <behaviors:PlayingTrackPointerBehavior />
+                </interactivity:Interaction.Behaviors>
                 <Grid>
                     <Border
                         Style="{x:Bind Index, Mode=OneWay, Converter={StaticResource GetRowStyle}}"
@@ -251,7 +255,7 @@
                                             FontWeight="Bold"
                                             Opacity=".7"
                                             x:Phase="1"
-                                            Text="{x:Bind Index, Converter={StaticResource IndexToStringConverter}}" />
+                                            Text="{x:Bind Index, Converter={StaticResource IndexToStringConverter}, Mode=OneWay}" />
                                     </ContentPresenter.Content>
                                 </ContentPresenter>
 
@@ -427,6 +431,154 @@
                 </Grid>
             </UserControl>
         </DataTemplate>
+
+        <DataTemplate x:Key="public" x:DataType="playlists:ViewerButtons">
+            <TextBlock Text="public"/>
+        </DataTemplate>
+        <DataTemplate x:Key="collab" x:DataType="playlists:CollabButtons">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <TextBlock Text="collab"/>
+            </StackPanel>
+        </DataTemplate>
+        <converters:BoolToObjectConverter
+            TrueValue="&#xF69B;"
+            FalseValue="&#xEBDA;"
+            x:Key="CollabToGlyphhConverter" />
+        <converters:BoolToObjectConverter
+            TrueValue="Make public"
+            FalseValue="Make private"
+            x:Key="IsPrivateToStringConverter" />
+        <DataTemplate x:Key="owner" x:DataType="playlists:OwnerButtons">
+            <CommandBar Background="Transparent" IsOpen="False" DefaultLabelPosition="Right" HorizontalAlignment="Left">
+                <AppBarButton Background="{ThemeResource SystemAccentColorLight2}" 
+                              BorderThickness="1"
+                              BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                              Label="Play">
+                    <AppBarButton.Icon>
+                        <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE102;" />
+                    </AppBarButton.Icon>
+                </AppBarButton>
+                <AppBarButton Icon="Edit" Label="Edit"
+                              Background="{ThemeResource LayerFillColorDefaultBrush}"
+                              BorderThickness="1"
+                              BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"/>
+                <AppBarButton Icon="Delete" Label="Delete"
+                              BorderThickness="1"
+                              BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                              Background="{ThemeResource DeleteButtonBackground}">
+                    <Button.Resources>
+                        <ResourceDictionary>
+                            <ResourceDictionary.ThemeDictionaries>
+                                <ResourceDictionary x:Key="Dark">
+                                    <SolidColorBrush x:Key="AppBarButtonBackgroundPointerOver"
+                                                     Color="#de2626"/>
+                                </ResourceDictionary>
+                                <ResourceDictionary x:Key="Light">
+                                    <SolidColorBrush x:Key="AppBarButtonBackgroundPointerOver"
+                                                     Color="#d66767"/>
+                                </ResourceDictionary>
+                            </ResourceDictionary.ThemeDictionaries>
+                        </ResourceDictionary>
+                    </Button.Resources>
+                </AppBarButton>
+                <AppBarButton Label="Collab"
+                              x:Name="CollabButton"
+                              x:Load="{x:Bind CanCollab, Mode=OneTime}">
+                    <AppBarButton.Icon>
+                        <FontIcon FontFamily="Segoe Fluent Icons" Glyph="{x:Bind Collab,
+                            Converter={StaticResource CollabToGlyphhConverter}, Mode=OneWay}" />
+                    </AppBarButton.Icon>
+                </AppBarButton>
+                <CommandBar.SecondaryCommands>
+                    <AppBarButton  
+                        Background="{ThemeResource SystemAccentColorLight1}" 
+                        BorderThickness="1"
+                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                        Label="Play next">
+                        <AppBarButton.Icon>
+                            <FontIcon FontFamily="/Assets/MediaPlayerIcons.ttf#Media Player Fluent Icons" Glyph="&#xF5EB;" />
+                        </AppBarButton.Icon>
+                        <AppBarButton.KeyboardAccelerators>
+                            <KeyboardAccelerator Modifiers="Control" Key="N" />
+                        </AppBarButton.KeyboardAccelerators>
+                    </AppBarButton>
+
+                    <AppBarButton  Label="Start radio">
+                        <AppBarButton.Icon>
+                            <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE93E;" />
+                        </AppBarButton.Icon>
+                        <AppBarButton.KeyboardAccelerators>
+                            <KeyboardAccelerator Modifiers="Control" Key="R" />
+                        </AppBarButton.KeyboardAccelerators>
+                    </AppBarButton>
+                    <AppBarSeparator/>
+                    <AppBarButton  Label="Copy playlist">
+                        <AppBarButton.Icon>
+                            <FontIcon Glyph="&#xE16F;" />
+                        </AppBarButton.Icon>
+                    </AppBarButton>
+
+                    <AppBarButton  Label="{x:Bind IsPrivate, Mode=OneWay, Converter={StaticResource IsPrivateToStringConverter}}">
+                        <AppBarButton.Icon>
+                            <FontIcon Glyph="&#xE18B;" />
+                        </AppBarButton.Icon>
+                    </AppBarButton>
+                    <AppBarButton
+                        Label="Add to" x:Name="ButtonWithFlyout" Visibility="Visible">
+                        <AppBarButton.Icon>
+                            <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE109;" />
+                        </AppBarButton.Icon>
+                        <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE011;"/>
+                        <AppBarButton.Flyout>
+                            <MenuFlyout>
+                                <MenuFlyoutItem Text="b1">
+                                    <FlyoutBase.AttachedFlyout>
+                                        <MenuFlyout x:Name="ItemsMenu" Placement="Left">
+                                            <MenuFlyoutItem Text="test1"/>
+                                            <MenuFlyoutItem Text="test2"/>
+                                        </MenuFlyout>
+                                    </FlyoutBase.AttachedFlyout>
+                                </MenuFlyoutItem>
+                                <MenuFlyoutItem Text="b2" />
+                                <MenuFlyoutItem Text="b3" />
+                                <MenuFlyoutItem Text="b4" />
+                                <MenuFlyoutItem Text="b5" />
+                            </MenuFlyout>
+                        </AppBarButton.Flyout>
+                    </AppBarButton>
+                    <AppBarSeparator/>
+                    <AppBarButton
+                        Label="Share" Visibility="Visible">
+                        <AppBarButton.Icon>
+                            <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE109;" />
+                        </AppBarButton.Icon>
+                        <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE72D;"/>
+                        <AppBarButton.Flyout>
+                            <MenuFlyout>
+                                <MenuFlyoutItem Text="b1">
+                                    <FlyoutBase.AttachedFlyout>
+                                        <MenuFlyout Placement="Left">
+                                            <MenuFlyoutItem Text="test1"/>
+                                            <MenuFlyoutItem Text="test2"/>
+                                        </MenuFlyout>
+                                    </FlyoutBase.AttachedFlyout>
+                                </MenuFlyoutItem>
+                                <MenuFlyoutItem Text="b2" />
+                                <MenuFlyoutItem Text="b3" />
+                                <MenuFlyoutItem Text="b4" />
+                                <MenuFlyoutItem Text="b5" />
+                            </MenuFlyout>
+                        </AppBarButton.Flyout>
+                    </AppBarButton>
+                </CommandBar.SecondaryCommands>
+            </CommandBar>
+        </DataTemplate>
+
+        <winUi:PermissionLevelToButtonsSelector
+            Owner="{StaticResource owner}"
+            Collab="{StaticResource collab}"
+            Public="{StaticResource public}"
+            x:Key="PermissionLevelToButtonsSelector" />
     </UserControl.Resources>
     <Grid>
         <ListView
@@ -437,7 +589,7 @@
             Drop="TrackList_OnDrop"
             ItemContainerStyle="{StaticResource SongGridViewItemStyle}"
             ItemTemplate="{StaticResource PlaylistTrackTemplate}"
-            ItemsSource="{x:Bind ViewModel.Tracks}"
+            ItemsSource="{x:Bind ViewModel.Tracks, Mode=OneWay}"
             SelectionMode="Extended">
             <interactivity:Interaction.Behaviors>
                 <behaviors:IsPlayingListBehavior />
@@ -566,7 +718,7 @@
                                     Grid.ColumnSpan="2"
                                     Margin="-24,0"
                                     Fill="{ThemeResource ApplicationPageBackgroundThemeBrush}"
-                                    Opacity=".4" />
+                                    Opacity=".2" />
 
                                 <Border
                                     Width="192"
@@ -653,21 +805,11 @@
                                     </TextBlock>
 
 
-
-                                    <StackPanel Orientation="Horizontal" Spacing="8">
-                                        <Button Style="{ThemeResource AccentButtonStyle}">
-                                            <StackPanel Orientation="Horizontal" Spacing="8">
-                                                <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE102;" />
-                                                <TextBlock Text="Play" />
-                                            </StackPanel>
-                                        </Button>
-                                        <Button>
-                                            <StackPanel Orientation="Horizontal" Spacing="8">
-                                                <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE104;" />
-                                                <TextBlock Text="Edit" />
-                                            </StackPanel>
-                                        </Button>
-                                    </StackPanel>
+                                    <ContentControl Content="{x:Bind ViewModel.PermissionLevelButtons, Mode=OneWay}"
+                                                      x:Name="PermissionLevelButtons"
+                                                      VerticalContentAlignment="Stretch"
+                                                      HorizontalContentAlignment="Stretch"
+                                                      ContentTemplateSelector="{StaticResource PermissionLevelToButtonsSelector}"/>
                                 </StackPanel>
                             </Grid>
                         </Grid>

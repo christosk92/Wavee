@@ -46,7 +46,18 @@ namespace Eum.UI.Services.Playlists
                 .Subscribe(user =>
                 {
                     if (_ignoreSet.Contains(user.Id)) return;
-                    var vm = PlaylistViewModel.Create(user);
+                    var level = PlaylistPermissionLevel.Viewer;
+                    if (user.User == CurrentUser.User.Id)
+                    {
+                        level = PlaylistPermissionLevel.Owner;
+                    }
+                    else if (user.Collab)
+                    {
+                        level = PlaylistPermissionLevel.Collab;
+                    }
+
+
+                    var vm = PlaylistViewModel.Create(user, level);
                     _playlistsSourceList.Add(vm);
                 });
 
@@ -141,7 +152,17 @@ namespace Eum.UI.Services.Playlists
         {
             foreach (var user in await _playlistManager.GetPlaylists(CurrentUser.User.Id, true))
             {
-                var playlist = PlaylistViewModel.Create(user);
+                var level = PlaylistPermissionLevel.Viewer;
+                if (user.User == CurrentUser.User.Id)
+                {
+                    level = PlaylistPermissionLevel.Owner;
+                }
+                else if (user.Collab)
+                {
+                    level = PlaylistPermissionLevel.Collab;
+                }
+
+                var playlist = PlaylistViewModel.Create(user, level);
                 _playlistsSourceList.Add(playlist);
             }
         }

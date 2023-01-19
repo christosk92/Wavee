@@ -10,6 +10,7 @@ using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Navigation;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
@@ -32,6 +33,8 @@ namespace Eum.UI.WinUI.Views.Playlists
             this.InitializeComponent();
             this.DataContext = ViewModel;
         }
+
+
         public PlaylistViewModel ViewModel { get; }
 
         private void TrackList_DragOver(object sender, DragEventArgs e)
@@ -105,7 +108,8 @@ namespace Eum.UI.WinUI.Views.Playlists
                     if (storageFile.ContentType.StartsWith("image/"))
                     {
                         //var bitmapImage = new BitmapImage();
-                        var copyToApplicationData = await storageFile.CopyAsync(ApplicationData.Current.LocalFolder, Guid.NewGuid().ToString());
+                        var copyToApplicationData = await storageFile.CopyAsync(ApplicationData.Current.LocalFolder,
+                            Guid.NewGuid().ToString());
                         // bitmapImage.DecodePixelHeight = 192;
                         // bitmapImage.DecodePixelWidth = 192;
                         // bitmapImage.DecodePixelType = DecodePixelType.Logical;
@@ -116,11 +120,13 @@ namespace Eum.UI.WinUI.Views.Playlists
                         //     ImageSource = bitmapImage,
                         //     Stretch = Stretch.UniformToFill
                         // };
-                        ViewModel.Playlist.ImagePath= copyToApplicationData.Path;
+                        ViewModel.Playlist.ImagePath = copyToApplicationData.Path;
                     }
                 }
             }
         }
+
+      
     }
 
 }

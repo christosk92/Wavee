@@ -507,7 +507,7 @@ namespace Eum.UI.ViewModels.Artists
         ItemId Id { get; }
     }
 
-    public class TemplateTypeOrientationWrapper
+    public class TemplateTypeOrientationWrapper : IEquatable<TemplateTypeOrientationWrapper>
     {
         public TemplateTypeOrientation Orientation { get; init; }
 
@@ -516,6 +516,36 @@ namespace Eum.UI.ViewModels.Artists
             TemplateTypeOrientation.Grid => "\uF0E2",
             TemplateTypeOrientation.VerticalStack => "\uE14C"
         };
+
+        public bool Equals(TemplateTypeOrientationWrapper? other)
+        {
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return Orientation == other.Orientation;
+        }
+
+        public override bool Equals(object? obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((TemplateTypeOrientationWrapper) obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return (int) Orientation;
+        }
+
+        public static bool operator ==(TemplateTypeOrientationWrapper? left, TemplateTypeOrientationWrapper? right)
+        {
+            return Equals(left, right);
+        }
+
+        public static bool operator !=(TemplateTypeOrientationWrapper? left, TemplateTypeOrientationWrapper? right)
+        {
+            return !Equals(left, right);
+        }
     }
     [INotifyPropertyChanged]
     public partial class DiscographyGroup
@@ -540,7 +570,7 @@ namespace Eum.UI.ViewModels.Artists
             get => _selectedItem;
             set
             {
-                if (SetProperty(ref _selectedItem, value) && value != null)
+                if (value != null && SetProperty(ref _selectedItem, value))
                 {
                     TemplateType = value.Orientation;
                 }

@@ -27,6 +27,12 @@
                 <ResourceDictionary>
                     <ResourceDictionary.ThemeDictionaries>
                         <ResourceDictionary x:Key="Light">
+                            <SolidColorBrush x:Key="DeleteButtonBackground" Color="#e89b9b"/>
+                            <SolidColorBrush x:Key="DeleteButtonForegroundPointerOver"
+                                             Color="#e89b9b"/>
+                            <SolidColorBrush x:Key="DeleteButtonBackgroundPointerOver" 
+                                             Color="#e89b9b"/>
+
                             <ui:Color x:Key="SolidBackgroundAcrylic">#FFFFFF</ui:Color>
                             <CornerRadius x:Key="NavToolbarCornerRadius">0</CornerRadius>
                             <SolidColorBrush x:Key="TabViewItemHeaderBackground" Color="{StaticResource SubtleFillColorTransparent}" />
@@ -45,6 +51,8 @@
                             <SolidColorBrush x:Key="NavigationViewContentBackground" Color="Transparent" />
                         </ResourceDictionary>
                         <ResourceDictionary x:Key="Dark">
+                            <SolidColorBrush x:Key="DeleteButtonBackground" Color="#c74646"/>
+
                             <ui:Color x:Key="SolidBackgroundAcrylic">#2C2C2C</ui:Color>
                             <CornerRadius x:Key="NavToolbarCornerRadius">0</CornerRadius>
                             <SolidColorBrush x:Key="TabViewItemHeaderBackground" Color="{StaticResource SubtleFillColorTransparent}" />

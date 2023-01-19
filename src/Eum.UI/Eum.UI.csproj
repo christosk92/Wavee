@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.1.0-preview3" />
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.1.0" />
     <PackageReference Include="DynamicData" Version="7.12.11" />
     <PackageReference Include="Humanizer.Core" Version="2.14.1" />
     <PackageReference Include="ksemenenko.ColorThief" Version="1.1.1.4" />

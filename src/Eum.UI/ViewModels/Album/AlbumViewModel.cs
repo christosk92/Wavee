@@ -5,6 +5,7 @@ using System.Windows.Input;
 using ColorThiefDotNet;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.DependencyInjection;
+using Eum.Connections.Spotify;
 using Eum.Connections.Spotify.Clients;
 using Eum.Connections.Spotify.Clients.Contracts;
 using Eum.Connections.Spotify.Connection;
@@ -23,6 +24,7 @@ using Eum.UI.ViewModels.Playlists;
 using Eum.UI.ViewModels.Settings;
 using Nito.AsyncEx;
 using ReactiveUI;
+using SpotifyTcp.Models;
 
 namespace Eum.UI.ViewModels.Album;
 
@@ -42,6 +44,7 @@ public sealed partial class AlbumViewModel : INavigatable, IGlazeablePage, IIsSa
 
     public async void OnNavigatedTo(object parameter)
     {
+
         var provider = Ioc.Default.GetRequiredService<IAlbumProvider>();
         var main = Ioc.Default.GetRequiredService<MainViewModel>();
         var user = main.CurrentUser.User;
@@ -51,7 +54,6 @@ public sealed partial class AlbumViewModel : INavigatable, IGlazeablePage, IIsSa
         PlaybackOnPlayingItemChanged(main.PlaybackViewModel, main.PlaybackViewModel.Item?.Id ?? default);
 
         user.LibraryProvider.CollectionUpdated += LibraryProviderOnCollectionUpdated;
-
         Album =
             await Task.Run(async () => await provider.GetAlbum(Id, "en_us"));
         _albumImageOriginal = Album.Images.FirstOrDefault().Id;

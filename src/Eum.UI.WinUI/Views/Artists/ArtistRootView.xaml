@@ -147,6 +147,7 @@
                                 <ContentPresenter x:Name="IndexOrPlayButtonControl">
                                     <ContentPresenter.Content>
                                         <TextBlock
+                                            x:Phase="1"
                                                                                             x:Name="Index"
                                                                                             VerticalAlignment="Center"
                                                                                             FontWeight="Bold"
@@ -155,6 +156,7 @@
                                     </ContentPresenter.Content>
                                 </ContentPresenter>
                                 <controls:StarButton  IsChecked="{x:Bind IsSaved, Mode=OneWay}"
+                                                      x:Phase="4"
                                                                                     Grid.Column="1" FontSize="18"
                                                                                     Margin="0,0,6,0"
                                                                                     Padding="0"
@@ -167,6 +169,7 @@
                             <TextBlock
                                                                                 Grid.Column="1"
                                                                                 x:Name="TitleBlock"
+                                                                                x:Phase="2"
                                                                                 Margin="0,0,8,0"
                                                                                 VerticalAlignment="Center"
                                                                                 Text="{x:Bind Title}"
@@ -182,10 +185,12 @@
                                                                                 Grid.Column="3" Margin="8,0"
                                                                                 HorizontalAlignment="Right"
                                                                                 x:Name="DurationBlock"
+                                                                                x:Phase="2"
                                                                                 VerticalAlignment="Center"
                                                                                 Text="{x:Bind Duration, Converter={StaticResource MsToTimestampConverter}}" />
                             <TextBlock
                                                                                 Grid.Column="2"
+                                                                                x:Phase="3"
                                                                                 x:Name="PlaycountBlock"
                                                                                 HorizontalAlignment="Right"
                                                                                 VerticalAlignment="Center"
@@ -680,19 +685,26 @@
                                                         <RowDefinition Height="*" />
                                                         <RowDefinition Height="Auto" />
                                                     </Grid.RowDefinitions>
-                                                    <Image
-                                                            x:Name="MainImage"
-                                                            ui:VisualExtensions.NormalizedCenterPoint="0.5">
-                                                        <Image.Source>
-                                                            <BitmapImage
-                                                                    DecodePixelHeight="200"
-                                                                    DecodePixelWidth="200"
-                                                                    UriSource="{x:Bind Image}" />
-                                                        </Image.Source>
+                                                    <Border
+                                                        x:Name="MainImage"
+                                                        ui:VisualExtensions.NormalizedCenterPoint="0.5">
                                                         <ui:Effects.Shadow>
                                                             <media:AttachedCardShadow Opacity="0" Offset="4" />
                                                         </ui:Effects.Shadow>
-                                                    </Image>
+                                                        <Border CornerRadius="8"
+                                                                BorderThickness="1"
+                                                                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
+                                                            <Image>
+                                                                <Image.Source>
+                                                                    <BitmapImage
+                                                                    DecodePixelHeight="200"
+                                                                    DecodePixelWidth="200"
+                                                                    UriSource="{x:Bind Image}" />
+                                                                </Image.Source>
+                                                            </Image>
+                                                        </Border>
+
+                                                    </Border>
                                                     <StackPanel Height="70"  Grid.Row="1" Margin="0,4,0,0">
                                                         <TextBlock
                                                                 x:Phase="1"
@@ -769,11 +781,6 @@
                                                           ItemContainerStyle="{StaticResource SongGridViewItemStyle}"
                                                           ItemsSource="{x:Bind Tracks, Mode=OneWay}"
                                                           SelectionMode="Extended">
-                                                    <ListView.ItemsPanel>
-                                                        <ItemsPanelTemplate>
-                                                            <StackPanel Orientation="Vertical"  />
-                                                        </ItemsPanelTemplate>
-                                                    </ListView.ItemsPanel>
                                                     <interactivity:Interaction.Behaviors>
                                                         <behaviors:IsPlayingListBehavior />
                                                     </interactivity:Interaction.Behaviors>

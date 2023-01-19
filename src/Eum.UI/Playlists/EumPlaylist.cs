@@ -23,12 +23,13 @@ public partial class EumPlaylist : ConfigBase, IEquatable<EumPlaylist>
     {
         this.WhenAnyValue(
                 x => x.Name,
+                x=> x.Collab,
                 x => x.ImagePath,
                 x => x.LinkedTo,
                 x => x.Tracks,
                 x=> x.Metadata,
                 x=> x.Description,
-                (_, _, _, _, _, _) => Unit.Default)
+                (_, _, _, _, _, _, _) => Unit.Default)
             .Throttle(TimeSpan.FromMilliseconds(100))
             //.Skip(1) // Won't save on UiConfig creation.
             .ObserveOn(RxApp.MainThreadScheduler)
@@ -44,6 +45,8 @@ public partial class EumPlaylist : ConfigBase, IEquatable<EumPlaylist>
     public ItemId User { get; set; }
     [JsonPropertyName("Metadata")]
     public IReadOnlyDictionary<string, string>? Metadata { get; set; }
+    [JsonPropertyName("Collab")]
+    public bool Collab { get; set; }
 
     [JsonPropertyName("Name")]
     public string Name

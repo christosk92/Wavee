@@ -348,7 +348,7 @@ namespace System.Collections.ObjectModel
             if (Count == 0)
                 OnCollectionReset();
             else
-                OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, removedItems, index));
+                OnCollectionReset();
         }
 
         /// <summary> 

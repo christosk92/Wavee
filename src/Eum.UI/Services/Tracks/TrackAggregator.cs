@@ -36,7 +36,8 @@ namespace Eum.UI.Services.Tracks
         }
         public async Task<IEnumerable<EumTrack>> GetTracks(ItemId[] ids, CancellationToken ct = default)
         {
-            var uris = ids.Select(a => a.Uri).Distinct().ToArray();
+            var uris_all = ids.Select(a => a.Uri).ToArray();
+            var uris = uris_all.Distinct().ToArray();
 
             var results = _tracks.Query()
                 .Where(x => uris.Contains(x.Id))
@@ -56,10 +57,10 @@ namespace Eum.UI.Services.Tracks
             _tracks.Upsert(cachedPlayItems);
 
 
-            var data = new EumTrack[uris.Length];
-            for (var index = 0; index < uris.Length; index++)
+            var data = new EumTrack[uris_all.Length];
+            for (var index = 0; index < uris_all.Length; index++)
             {
-                var uri = uris[index];
+                var uri = uris_all[index];
                 if (results.TryGetValue(uri, out var item))
                 {
                     var id = new ItemId(item.Id);

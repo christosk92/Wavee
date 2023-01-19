@@ -180,6 +180,7 @@ namespace Eum.UI.Users
                     {
                         eumPlaylist = new EumPlaylist
                         {
+                            Collab = metaData.Attributes.HasCollaborative && metaData.Attributes.Collaborative,
                             Id = new ItemId(playlist.Uri),
                             LinkedTo = new Dictionary<ServiceType, ItemId>(),
                             Name = metaData.Attributes.Name,
@@ -201,6 +202,7 @@ namespace Eum.UI.Users
                     }
                     else
                     {
+                        eumPlaylist.Collab = metaData.Attributes.HasCollaborative && metaData.Attributes.Collaborative;
                         eumPlaylist.Name = metaData.Attributes.Name;
                         eumPlaylist.Description  = metaData.Attributes.Description;
                         eumPlaylist.Metadata = metaData.Attributes.FormatAttributes

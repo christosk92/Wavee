@@ -16,12 +16,14 @@ using Eum.Users;
 namespace Eum.UI.ViewModels.Playlists
 {
     [INotifyPropertyChanged]
-    public partial  class PlaylistTrackViewModel : IIsPlaying, IIsSaved
+    public partial  class PlaylistTrackViewModel : IIsPlaying, IIsSaved, IEquatable<PlaylistTrackViewModel>, IEqualityComparer<PlaylistTrackViewModel>
     {
+        private int _originalIndex;
         [ObservableProperty] private int _index;
         [ObservableProperty] private bool _isSaved;
         public PlaylistTrackViewModel(EumTrack eumTrack, int index, ICommand playCommand)
         {
+            _originalIndex = index;
             Index = index;
             Track = eumTrack;
             PlayCommand = playCommand;
@@ -29,8 +31,8 @@ namespace Eum.UI.ViewModels.Playlists
 
         public PlaylistTrackViewModel(SpotifyTrackSearchItem searchTrackItem, int index)
         {
+            _originalIndex = index;
             Index = index;
-
             Track = new EumTrack(searchTrackItem);
 
         }
@@ -39,7 +41,30 @@ namespace Eum.UI.ViewModels.Playlists
 
         public EumTrack Track { get; }
         public ItemId Id => Track.Id;
+        public int OriginalIndex => _originalIndex;
+        public bool Equals(PlaylistTrackViewModel? other)
+        {
+            return Id == other?.Id && 
+                   _originalIndex == 
+                other?._originalIndex && Id == other.Id;
+        }
 
+
+        public bool Equals(PlaylistTrackViewModel x, PlaylistTrackViewModel y)
+        {
+            if (ReferenceEquals(x, y)) return true;
+            if (ReferenceEquals(x, null)) return false;
+            if (ReferenceEquals(y, null)) return false;
+            if (x.GetType() != y.GetType()) return false;
+            return 
+                x.Id == y.Id &&
+                x._originalIndex == y._originalIndex;
+        }
+
+        public int GetHashCode(PlaylistTrackViewModel obj)
+        {
+            return HashCode.Combine(obj._originalIndex, Id.GetHashCode());
+        }
     }
 
     public interface IIsPlaying
