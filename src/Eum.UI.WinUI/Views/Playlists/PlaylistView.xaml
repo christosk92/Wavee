@@ -22,6 +22,26 @@
     xmlns:converters="using:CommunityToolkit.WinUI.UI.Converters"
     mc:Ignorable="d">
     <UserControl.Resources>
+        <xamlConverters:SortDirectionToPathDataConverter x:Key="SortDirectionToPathDataConverter" />
+        <Style x:Key="SortingButtonStyle" TargetType="controls:SortingButton" BasedOn="{StaticResource TextBlockButtonStyle}">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="controls:SortingButton">
+                        <StackPanel Orientation="Horizontal">
+                            <ContentPresenter Content="{TemplateBinding Content}"/>
+                            <Path x:Name="Chevron" 
+                                  Data="{Binding SortDirection, 
+                                RelativeSource={RelativeSource Mode=TemplatedParent},
+                                Converter={StaticResource SortDirectionToPathDataConverter}}" 
+                                  Visibility="{Binding IsSorted, 
+RelativeSource={RelativeSource Mode=TemplatedParent},
+                                Converter={StaticResource BooleanToVisibilityConverter}}" 
+                            />
+                        </StackPanel>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
         <Style TargetType="Border" x:Key="OddRow">
             <Setter Property="Padding" Value="12,0,0,0"/>
             <Setter Property="Background" Value="{ThemeResource LayerFillColorDefaultBrush}"/>
@@ -834,19 +854,20 @@
                                 <ColumnDefinition Width="150" />
                                 <ColumnDefinition Width="50" />
                             </Grid.ColumnDefinitions>
-                            <Button
-                                Padding="4,8"
-                                HorizontalAlignment="Stretch"
-                                HorizontalContentAlignment="Stretch"
-                                Command="{x:Bind ViewModel.SortCommand}"
-                                Style="{ThemeResource TextBlockButtonStyle}">
+                            <controls:SortingButton Style="{StaticResource SortingButtonStyle}" 
+                                           SortDirection="Ascending"
+                                           IsSorting="True"
+                                           Padding="4,8"
+                                           HorizontalAlignment="Stretch"
+                                           HorizontalContentAlignment="Stretch"
+                                           Command="{x:Bind ViewModel.SortCommand}">
                                 <Button.CommandParameter>
                                     <playlists1:PlaylistSortFieldType>Index</playlists1:PlaylistSortFieldType>
                                 </Button.CommandParameter>
                                 <StackPanel>
                                     <TextBlock Text="#" />
                                 </StackPanel>
-                            </Button>
+                            </controls:SortingButton>
                             <Button
                                 Grid.Column="1"
                                 Padding="4,8"

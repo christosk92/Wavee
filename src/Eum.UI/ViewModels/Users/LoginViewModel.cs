@@ -2,6 +2,8 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.DependencyInjection;
 using CommunityToolkit.Mvvm.Input;
+using Eum.Connections.Spotify.Exceptions;
+using Eum.Logging;
 using Eum.UI.Items;
 using Eum.UI.Services;
 using Eum.UI.Services.Login;
@@ -48,9 +50,13 @@ namespace Eum.UI.ViewModels.Users
 
                 IdentityService.Instance.LoginUser(user.User);
             }
+            catch (SpotifyAuthenticationException authentication)
+            {
+                S_Log.Instance.LogError(authentication.LoginFailed.ToString());
+            }
             catch (Exception x)
             {
-
+                S_Log.Instance.LogError(x);
             }
             finally
             {

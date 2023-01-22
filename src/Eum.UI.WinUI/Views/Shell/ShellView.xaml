@@ -54,33 +54,36 @@
                                VerticalAlignment="Bottom"
                                ViewModel="{x:Bind ViewModel.PlaybackViewModel, Mode=OneWay}" >
                                 <controls:BottomPlayerControl.CommandBar>
-                                    <CommandBar Background="Transparent">
-                                        <AppBarToggleButton Width="38"
+                                    <CommandBar
+                                        DefaultLabelPosition="Right"
+                                        OverflowButtonVisibility="Auto"  Background="Transparent">
+                            
+                                            <AppBarToggleButton
                                                              IsChecked="{x:Bind IsSidePanelView(ViewModel.SidePanelView, 'lyrics'), Mode=OneWay}"
                                                             Command="{x:Bind ViewModel.ShowSidePanelCommand}"
                                                             CommandParameter="lyrics">
-                                            <AppBarToggleButton.Icon>
-                                                <FontIcon Glyph="&#xE1D6;" />
-                                            </AppBarToggleButton.Icon>
-                                        </AppBarToggleButton>
-                                        <AppBarToggleButton Width="38"
+                                                <AppBarToggleButton.Icon>
+                                                    <FontIcon Glyph="&#xE1D6;" />
+                                                </AppBarToggleButton.Icon>
+                                            </AppBarToggleButton>
+                                            <AppBarToggleButton 
                                                             IsChecked="{x:Bind IsSidePanelView(ViewModel.SidePanelView, 'queue'), Mode=OneWay}"
                                                             Command="{x:Bind ViewModel.ShowSidePanelCommand}"
                                                             CommandParameter="queue">
-                                            <AppBarToggleButton.Icon>
-                                                <FontIcon FontFamily="/Assets/MediaPlayerIcons.ttf#Media Player Fluent Icons" Glyph="&#xE93F;" />
-                                            </AppBarToggleButton.Icon>
-                                        </AppBarToggleButton>
-                                        <AppBarButton x:Name="DevicesBt" Width="38">
-                                            <AppBarButton.Icon>
-                                                <FontIcon FontFamily="/Assets/MediaPlayerIcons.ttf#Media Player Fluent Icons" Glyph="&#xEC15;" />
-                                            </AppBarButton.Icon>
-                                        </AppBarButton>
-                                        <AppBarButton Width="38">
-                                            <AppBarButton.Icon>
-                                                <FontIcon FontFamily="/Assets/MediaPlayerIcons.ttf#Media Player Fluent Icons" Glyph="&#xE740;" />
-                                            </AppBarButton.Icon>
-                                        </AppBarButton>
+                                                <AppBarToggleButton.Icon>
+                                                    <FontIcon FontFamily="/Assets/MediaPlayerIcons.ttf#Media Player Fluent Icons" Glyph="&#xE93F;" />
+                                                </AppBarToggleButton.Icon>
+                                            </AppBarToggleButton>
+                                            <AppBarButton x:Name="DevicesBt">
+                                                <AppBarButton.Icon>
+                                                    <FontIcon FontFamily="/Assets/MediaPlayerIcons.ttf#Media Player Fluent Icons" Glyph="&#xEC15;" />
+                                                </AppBarButton.Icon>
+                                            </AppBarButton>
+                                            <AppBarButton >
+                                                <AppBarButton.Icon>
+                                                    <FontIcon FontFamily="/Assets/MediaPlayerIcons.ttf#Media Player Fluent Icons" Glyph="&#xE740;" />
+                                                </AppBarButton.Icon>
+                                            </AppBarButton>
                                     </CommandBar>
 
                                 </controls:BottomPlayerControl.CommandBar>
@@ -128,7 +131,7 @@
                                     </NavigationView.MenuItems>
                                 </NavigationView>
                                 <TextBlock
-                                    Margin="12,0,0,0"
+                                    Margin="12,12,0,0"
                                     Grid.Row="1"  Text="{x:Bind GetTitle(ViewModel.SidePanelView), Mode=OneWay}" FontSize="24" FontWeight="SemiBold"/>
 
 

@@ -144,7 +144,7 @@
                                     Glyph="&#xE100;" />
                             </Button>
                             <Button CornerRadius="12" Width="52" Height="52"
-                            
+                                    Style="{StaticResource F}"
                                 Tapped="Pause_Play_Btn_Tapped">
                                 <FontIcon
                                     x:Name="PausePlayIcon"

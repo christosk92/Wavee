@@ -213,7 +213,7 @@ namespace Eum.UI.ViewModels.Playlists
             Disconnect();
         }
 
-        public int MaxDepth => 2;
+        public int MaxDepth => 0;
 
         public bool ShouldSetPageGlaze => Ioc.Default.GetRequiredService<MainViewModel>().CurrentUser.User.ThemeService
             .Glaze == "Page Dependent";
