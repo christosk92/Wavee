@@ -1,3 +1,12 @@
+# Announcement
+
+I'm currenlty on an unexpected business trip/holiday for a total of 4 weeks (Started 24th of January until 21st of February)
+
+Development will pause/cease until I'm back.
+
+Sorry!
+
+
 # Eum.Windows
 
 
