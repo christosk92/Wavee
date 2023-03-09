@@ -5,7 +5,6 @@ using CommunityToolkit.Mvvm.DependencyInjection;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
-using Wavee.Player.NAudio;
 using Wavee.UI.Identity.Users.Contracts;
 using Wavee.UI.ViewModels.ForYou;
 using Wavee.UI.ViewModels.Shell;

@@ -15,8 +15,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Wavee2\src\Wavee\Spotify\Wavee.Spotify\Wavee.Spotify.csproj" />
-    <ProjectReference Include="..\..\Wavee2\src\Wavee\Wavee.Player.NAudio\Wavee.Player.NAudio.csproj" />
+    <ProjectReference Include="..\Wavee\src\Wavee\Spotify\Wavee.Spotify\Wavee.Spotify.csproj" />
+    <ProjectReference Include="..\Wavee\src\Wavee\Wavee.Player.NAudio\Wavee.Player.NAudio.csproj" />
   </ItemGroup>
 
   <ItemGroup>

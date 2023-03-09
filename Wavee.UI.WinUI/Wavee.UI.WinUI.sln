@@ -5,21 +5,21 @@ VisualStudioVersion = 17.6.33417.168
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Wavee.UI.WinUI", "Wavee.UI.WinUI.csproj", "{EE923EC0-CEC6-4B4D-A015-5F181057EF3C}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Wavee.Player.NAudio", "..\..\Wavee2\src\Wavee\Wavee.Player.NAudio\Wavee.Player.NAudio.csproj", "{C845F313-C320-4FE8-9037-CB585A73B848}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Wavee.Player.NAudio", "..\Wavee\src\Wavee\Wavee.Player.NAudio\Wavee.Player.NAudio.csproj", "{C845F313-C320-4FE8-9037-CB585A73B848}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Wavee", "..\..\Wavee2\src\Wavee\Wavee\Wavee.csproj", "{CA9B0C62-B2AB-484F-A4B6-44BA25EE262E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Wavee", "..\Wavee\src\Wavee\Wavee\Wavee.csproj", "{CA9B0C62-B2AB-484F-A4B6-44BA25EE262E}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Wavee.Spotify", "..\..\Wavee2\src\Wavee\Spotify\Wavee.Spotify\Wavee.Spotify.csproj", "{FCD6D08D-300A-4CA4-A5AC-90D76068DDD0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Wavee.Spotify", "..\Wavee\src\Wavee\Spotify\Wavee.Spotify\Wavee.Spotify.csproj", "{FCD6D08D-300A-4CA4-A5AC-90D76068DDD0}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Wavee.Spotify.ConnectState", "..\..\Wavee2\src\Wavee\Spotify\Wavee.Spotify.ConnectState\Wavee.Spotify.ConnectState.csproj", "{259B68B3-A4E2-4D35-881D-F0D4A3CA0338}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Wavee.Spotify.ConnectState", "..\Wavee\src\Wavee\Spotify\Wavee.Spotify.ConnectState\Wavee.Spotify.ConnectState.csproj", "{259B68B3-A4E2-4D35-881D-F0D4A3CA0338}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Wavee.Spotify.Player", "..\..\Wavee2\src\Wavee\Spotify\Wavee.Spotify.Player\Wavee.Spotify.Player.csproj", "{63ABADD1-D3DF-4FA6-9216-3F8083BDD52C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Wavee.Spotify.Player", "..\Wavee\src\Wavee\Spotify\Wavee.Spotify.Player\Wavee.Spotify.Player.csproj", "{63ABADD1-D3DF-4FA6-9216-3F8083BDD52C}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Wavee.Spotify.Player.Playback", "..\..\Wavee2\src\Wavee\Spotify\Wavee.Spotify.Player.Playback\Wavee.Spotify.Player.Playback.csproj", "{0788AA64-4648-4AB5-ABB2-D12FB9AF9120}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Wavee.Spotify.Player.Playback", "..\Wavee\src\Wavee\Spotify\Wavee.Spotify.Player.Playback\Wavee.Spotify.Player.Playback.csproj", "{0788AA64-4648-4AB5-ABB2-D12FB9AF9120}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Wavee.Spotify.Proto", "..\..\Wavee2\src\Wavee\Spotify\Wavee.Spotify.Proto\Wavee.Spotify.Proto.csproj", "{13A9ECB5-A087-4860-9197-464AF49A7E93}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Wavee.Spotify.Proto", "..\Wavee\src\Wavee\Spotify\Wavee.Spotify.Proto\Wavee.Spotify.Proto.csproj", "{13A9ECB5-A087-4860-9197-464AF49A7E93}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NVorbis", "..\..\Wavee2\src\Wavee\NVorbis\NVorbis.csproj", "{17BA01FA-159C-431E-9D15-564C7FF06DA9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NVorbis", "..\Wavee\src\Wavee\NVorbis\NVorbis.csproj", "{17BA01FA-159C-431E-9D15-564C7FF06DA9}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Core", "Core", "{997055F4-BCBE-4E91-8379-F75DAE0E5D3D}"
 EndProject

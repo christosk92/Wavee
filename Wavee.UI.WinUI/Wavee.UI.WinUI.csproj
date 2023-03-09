@@ -64,9 +64,11 @@
     <ProjectCapability Include="Msix" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Wavee2\src\Wavee\Spotify\Wavee.Spotify.ConnectState\Wavee.Spotify.ConnectState.csproj" />
-    <ProjectReference Include="..\..\Wavee2\src\Wavee\Wavee.Player.NAudio\Wavee.Player.NAudio.csproj" />
-    <ProjectReference Include="..\Wavee.UI\Wavee.UI.csproj" />
+	  <ProjectReference Include="..\Wavee.UI\Wavee.UI.csproj" />
+    <ProjectReference Include="..\Wavee\src\Wavee\Spotify\Wavee.Spotify.ConnectState\Wavee.Spotify.ConnectState.csproj" />
+    <ProjectReference Include="..\Wavee\src\Wavee\Spotify\Wavee.Spotify.Player\Wavee.Spotify.Player.csproj" />
+    <ProjectReference Include="..\Wavee\src\Wavee\Spotify\Wavee.Spotify\Wavee.Spotify.csproj" />
+    <ProjectReference Include="..\Wavee\src\Wavee\Wavee.Player.NAudio\Wavee.Player.NAudio.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Page Update="Views\ShellView.xaml">
