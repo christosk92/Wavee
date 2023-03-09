@@ -1,0 +1,3 @@
+[submodule "Wavee"]
+    path = Wavee
+    url = git@github.com:christosk92/Eum.Windows.git
