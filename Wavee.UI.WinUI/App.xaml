@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Application
+    x:Class="Wavee.UI.WinUI.App"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:Wavee.UI.WinUI"
+    xmlns:xamlConverters="using:Wavee.UI.WinUI.XamlConverters"
+    xmlns:converters="using:CommunityToolkit.WinUI.UI.Converters">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
+                <!-- Other merged dictionaries here -->
+                <ResourceDictionary Source="/Themes/NavViewStyles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+            <xamlConverters:NullToVisibilityConverter
+                Null="Collapsed"
+                NonNull="Visible"
+                x:Key="NullToCollapsedConverter" />
+            <converters:BoolToVisibilityConverter TrueValue="Collapsed" FalseValue="Visible" x:Key="TrueToCollapsedConverter" />
+            <converters:BoolToVisibilityConverter TrueValue="Visible" FalseValue="Collapsed" x:Key="TrueToVisibleConverter" />
+            <!-- Other app resources here -->
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

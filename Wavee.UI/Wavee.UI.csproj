@@ -1,0 +1,26 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.1.0" />
+    <PackageReference Include="DynamicData" Version="7.13.1" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.0-preview.1.23110.8" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="ReactiveUI" Version="18.4.25" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Wavee2\src\Wavee\Spotify\Wavee.Spotify\Wavee.Spotify.csproj" />
+    <ProjectReference Include="..\..\Wavee2\src\Wavee\Wavee.Player.NAudio\Wavee.Player.NAudio.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="TemplateSelectors\" />
+  </ItemGroup>
+
+</Project>

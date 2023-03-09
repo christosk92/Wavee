@@ -1,0 +1,33 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="Current" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup />
+  <ItemGroup>
+    <None Update="App.xaml">
+      <SubType>Designer</SubType>
+    </None>
+    <Page Update="Controls\BottomPlayerControl.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <None Update="MainWindow.xaml">
+      <SubType>Designer</SubType>
+    </None>
+    <Page Update="Views\Identity\UserProfileCard.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Themes\NavViewStyles.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Views\Identity\SignInView.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Views\Identity\SpotifyCredentialsView.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="MainWindowContentWrapper.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <None Update="Package.appxmanifest">
+      <SubType>Designer</SubType>
+    </None>
+  </ItemGroup>
+</Project>
