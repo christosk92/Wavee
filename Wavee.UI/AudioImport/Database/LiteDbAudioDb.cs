@@ -49,11 +49,11 @@ namespace Wavee.UI.AudioImport.Database
                 .ToList();
         }
 
-        public string GetLinkedPathName(string path)
-        {
-            var hash = GetHash(path);
-            return Path.Combine(_audioLinks, hash);
-        }
+        // public string GetLinkedPathName(string path)
+        // {
+        //     var hash = GetHash(path);
+        //     return Path.Combine(_audioLinks, hash);
+        // }
 
         public IEnumerable<GroupedAlbum> GetLatestAlbums<TK>(Expression<Func<LocalAudioFile, TK>> order,
             bool ascending,
@@ -85,16 +85,41 @@ namespace Wavee.UI.AudioImport.Database
                 .ToList();
         }
 
+        public IReadOnlyCollection<(string Path, DateTime LastUpdatedAt)> GetAll()
+        {
+            return AudioFiles
+                .Find(_ => true)
+                .Select(a => (a.Path, a.LastUpdatedAt))
+                .ToList();
+        }
+
+        public bool Remove(string path)
+        {
+            return AudioFiles.Delete(path);
+        }
+
+        public void CleanupDuplicates()
+        {
+            //only keep item with latest LastUpdatedAt
+            var duplicates = AudioFiles
+                .FindAll()
+                .GroupBy(a => a.Path)
+                .Where(g => g.Count() > 1)
+                .Select(g => g.OrderByDescending(a => a.LastUpdatedAt).Skip(1))
+                .SelectMany(x => x)
+                .ToList();
+            foreach (var duplicate in duplicates)
+            {
+                AudioFiles.Delete(duplicate.Path);
+            }
+        }
+
         public async Task<LocalAudioFile> ImportAudioFile(ImportAudioRequest request)
         {
-            // using (_lock.Lock())
-            // {
-            //     foreach (var request in requests)
-            //     {
-
             //create a hardlink 
-            var fileLinkPath = GetLinkedPathName(request.Path);
-            CreateHardLink(fileLinkPath, request.Path, IntPtr.Zero);
+            // var fileLinkPath = GetLinkedPathName(request.Path);
+            // if (!File.Exists(fileLinkPath))
+            //     CreateHardLink(fileLinkPath, request.Path, IntPtr.Zero);
 
             using var file = TagLib.File.Create(request.Path);
             var images = file.Tag.Pictures;
@@ -104,7 +129,7 @@ namespace Wavee.UI.AudioImport.Database
                 var image = images.First();
                 var imageData = image.Data.Data;
                 //check to see if we have the image saved already
-                var base64 = request.Tag.Album ?? Path.GetFileName(fileLinkPath);
+                var base64 = request.Tag.Album ?? Path.GetFileName(request.Path);
                 imagePath = Path.Combine(_workDir, "images", base64);
                 var exists = File.Exists(imagePath);
                 if (!exists)
@@ -122,7 +147,7 @@ namespace Wavee.UI.AudioImport.Database
             {
                 // Image = imageGuid,
                 ImagePath = imagePath,
-                Path = fileLinkPath,
+                Path = request.Path,
                 Title = file.Tag.Title ?? Path.GetFileNameWithoutExtension(request.Path),
                 Album = file.Tag.Album ?? "Unknown Album",
                 AlbumSort = file.Tag.AlbumSort,
@@ -150,13 +175,20 @@ namespace Wavee.UI.AudioImport.Database
                 Publisher = file.Tag.Publisher,
                 Subtitle = file.Tag.Subtitle,
                 PerformersRole = file.Tag.PerformersRole,
-                LastUpdatedAt = DateTime.UtcNow,
+                LastUpdatedAt = File.GetLastWriteTime(request.Path),
                 ISRC = file.Tag.ISRC,
                 Duration = file.Properties.Duration.TotalMilliseconds,
                 CreatedAt = DateTime.UtcNow,
             };
+            if (AudioFiles.Exists(a => a.Path == audioFile.Path))
+            {
+                AudioFiles.Update(audioFile.Path, audioFile);
+            }
+            else
+            {
+                AudioFiles.Insert(audioFile);
+            }
 
-            AudioFiles.Insert(audioFile);
             return audioFile;
             //     }
             // }
@@ -178,7 +210,7 @@ namespace Wavee.UI.AudioImport.Database
         {
             using (_lock.Lock())
             {
-                return paths.Select(path => AudioFiles.Exists(a => a.Path == GetLinkedPathName(path))).ToArray();
+                return paths.Select(path => AudioFiles.Exists(a => a.Path == path)).ToArray();
             }
         }
 

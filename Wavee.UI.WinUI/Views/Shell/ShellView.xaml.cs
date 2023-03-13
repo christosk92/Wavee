@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Numerics;
 using Windows.Storage.Pickers;
 using CommunityToolkit.Mvvm.DependencyInjection;
 using Microsoft.UI.Xaml;
@@ -14,8 +15,10 @@ using Wavee.UI.ViewModels.ForYou.Recommended;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Storage;
 using CommunityToolkit.Mvvm.Messaging;
+using CommunityToolkit.WinUI.UI;
 using Wavee.UI.AudioImport;
 using Wavee.UI.AudioImport.Messages;
+using Wavee.UI.WinUI.Views.Identity;
 
 namespace Wavee.UI.WinUI.Views.Shell;
 
@@ -27,7 +30,10 @@ public sealed partial class ShellView : UserControl
         this.InitializeComponent();
     }
 
-    public ShellViewModel ViewModel { get; }
+    public ShellViewModel ViewModel
+    {
+        get;
+    }
     public NavigationService NavigationService { get; } = NavigationService.Instance;
 
     public bool ShouldShowHeader(SidebarItemViewModel o)
@@ -119,5 +125,27 @@ public sealed partial class ShellView : UserControl
             var message = new ImportTracksMessage(audioFiles);
             WeakReferenceMessenger.Default.Send(message);
         }
+    }
+
+    public Vector3 GetVectorFromHeight(double d)
+    {
+        return new Vector3(0, (float)-d, 0);
+    }
+
+    private bool _wasExpandedImage;
+    private void ViewPanel_OnPaneClosing(NavigationView sender, NavigationViewPaneClosingEventArgs args)
+    {
+        this.FindDescendant<UserProfileCard>()!.Visibility = Visibility.Collapsed;
+        _wasExpandedImage = ViewModel.PlayerViewModel.CoverImageExpanded;
+        if (_wasExpandedImage)
+        {
+            ViewModel.PlayerViewModel.CoverImageExpanded = false;
+        }
+    }
+
+    private void ViewPanel_OnPaneOpening(NavigationView sender, object args)
+    {
+        this.FindDescendant<UserProfileCard>()!.Visibility = Visibility.Visible;
+        ViewModel.PlayerViewModel.CoverImageExpanded = _wasExpandedImage;
     }
 }

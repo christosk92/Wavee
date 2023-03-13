@@ -9,6 +9,9 @@
              xmlns:media="using:CommunityToolkit.WinUI.UI.Media"
              xmlns:ui="using:CommunityToolkit.WinUI.UI"
              xmlns:converters="using:CommunityToolkit.WinUI.UI.Converters"
+             xmlns:animations="using:CommunityToolkit.WinUI.UI.Animations"
+             xmlns:interactivity="using:Microsoft.Xaml.Interactivity"
+             xmlns:core="using:Microsoft.Xaml.Interactions.Core"
              DataContext="{x:Bind ViewModel, Mode=OneWay}"
              mc:Ignorable="d">
     <UserControl.Resources>
@@ -27,6 +30,7 @@
     </UserControl.Resources>
     <Border Background="{ThemeResource LayerFillColorDefaultBrush}"
             VerticalAlignment="Stretch"
+            Margin="-1"
             HorizontalAlignment="Stretch"
             CornerRadius="0,0,8,8"
             BorderThickness="1"
@@ -43,20 +47,93 @@
 
                 <!-- Metadata -->
                 <controls:DockPanel LastChildFill="False">
-                    <Border Margin="8,0,0,0"
-                            Width="75"
-                            Height="75"
-                            controls:DockPanel.Dock="Left">
-                        <ui:Effects.Shadow>
-                            <media:AttachedCardShadow CornerRadius="6"
-                                                      Opacity=".5"
-                                                      Offset="2" />
-                        </ui:Effects.Shadow>
-                        <Border CornerRadius="4">
-                            <Image VerticalAlignment="Center"
-                                   Source="{Binding PlayingItem.Image}" />
+
+                    <Grid Margin="8,0,0,0"
+                          x:Name="MyGrid"
+                          Background="Transparent"
+                          Width="75"
+                          Visibility="{x:Bind ViewModel.CoverImageExpanded, Mode=OneWay, Converter={StaticResource TrueToCollapsedConverter}}"
+                          Height="75"
+                          controls:DockPanel.Dock="Left">
+                        <animations:Implicit.ShowAnimations>
+                            <animations:TranslationAnimation Duration="0:0:0.3"
+                                                             EasingMode="EaseOut"
+                                                             EasingType="Sine"
+                                                             From="-75, 0, 0"
+                                                             To="0" />
+                            <animations:OpacityAnimation Duration="0:0:0.3"
+                                                         From="0"
+                                                         To="1.0" />
+                        </animations:Implicit.ShowAnimations>
+
+                        <animations:Implicit.HideAnimations>
+                            <animations:OpacityAnimation Duration="0:0:0.6"
+                                                         EasingMode="EaseInOut"
+                                                         EasingType="Sine"
+                                                         To="0.0" />
+                            <animations:TranslationAnimation Duration="0:0:0.4"
+                                                             From="0,0,0"
+                                                             To="75, 0,0 " />
+                        </animations:Implicit.HideAnimations>
+                        <interactivity:Interaction.Behaviors>
+                            <core:EventTriggerBehavior  EventName="PointerEntered">
+                                <core:ChangePropertyAction PropertyName="Visibility"
+                                                           TargetObject="{Binding ElementName=ChevronButton}"
+                                                           Value="Visible" />
+                            </core:EventTriggerBehavior>
+                            <core:EventTriggerBehavior  EventName="PointerExited">
+                                <core:ChangePropertyAction PropertyName="Visibility"
+                                                           TargetObject="{Binding ElementName=ChevronButton}"
+                                                           Value="Collapsed" />
+                            </core:EventTriggerBehavior>
+                        </interactivity:Interaction.Behaviors>
+                        <Border Width="75"
+                                Height="75">
+                            <ui:Effects.Shadow>
+                                <media:AttachedCardShadow CornerRadius="6"
+                                                          Opacity=".5"
+                                                          Offset="2" />
+                            </ui:Effects.Shadow>
+                            <Border CornerRadius="4">
+                                <Image VerticalAlignment="Center"
+                                       Source="{Binding PlayingItem.Image}" />
+                            </Border>
                         </Border>
-                    </Border>
+
+                        <Button HorizontalAlignment="Stretch"
+                                Margin="0"
+                                Height="12"
+                                x:Name="ChevronButton"
+                                Visibility="Collapsed"
+                                Command="{x:Bind ViewModel.ExpandCoverImageCommand}"
+                                Style="{ThemeResource AccentButtonStyle}"
+                                VerticalAlignment="Top"
+                                Padding="0">
+                            <Button.CommandParameter>
+                                <x:Boolean>True</x:Boolean>
+                            </Button.CommandParameter>
+                            <animations:Implicit.ShowAnimations>
+                                <animations:TranslationAnimation Duration="0:0:0.1"
+                                                                 From="0, -25, 0"
+                                                                 To="0" />
+                                <animations:OpacityAnimation Duration="0:0:0.1"
+                                                             From="0"
+                                                             To="1.0" />
+                            </animations:Implicit.ShowAnimations>
+
+                            <animations:Implicit.HideAnimations>
+                                <animations:OpacityAnimation Duration="0:0:0.1"
+                                                             To="0.0" />
+                                <animations:TranslationAnimation Duration="0:0:0.2"
+                                                                 From="0, 0, 0"
+                                                                 To="0, -25,0 " />
+                            </animations:Implicit.HideAnimations>
+                            <FontIcon Foreground="White"
+                                      FontSize="13"
+                                      FontFamily="Segoe Fluent Icons"
+                                      Glyph="&#xE010;" />
+                        </Button>
+                    </Grid>
                     <StackPanel Margin="8,0,18,0"
                                 VerticalAlignment="Center"
                                 controls:DockPanel.Dock="Left"
@@ -106,6 +183,7 @@
                                 Foreground="White"
                                 CornerRadius="100"
                                 Width="56"
+                                Command="{x:Bind ViewModel.PauseResumeCommand}"
                                 Content="{x:Bind ViewModel.Paused, Mode=OneWay, Converter={StaticResource PausedToButtonContentConverter}}"
                                 Height="56" />
                         <Button Background="Transparent"

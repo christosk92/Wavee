@@ -14,5 +14,8 @@ internal class SpotifyPlayerHandler : PlayerViewHandlerInternal
     }
 
     public override Task LoadTrackList(IPlayContext context) => throw new NotImplementedException();
-    public override void Seek(double position) => throw new NotImplementedException();
+    public override ValueTask Seek(double position) => throw new NotImplementedException();
+    public override ValueTask Resume() => throw new NotImplementedException();
+
+    public override ValueTask Pause() => throw new NotImplementedException();
 }

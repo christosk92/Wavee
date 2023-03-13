@@ -18,6 +18,7 @@ using Wavee.UI.Utils.Extensions;
 using Wavee.UI.ViewModels.Identity;
 using Wavee.UI.ViewModels.Identity.User;
 using Wavee.UI.ViewModels.Shell;
+using Wavee.UI.WinUI.Player;
 using Wavee.UI.WinUI.Utils;
 using WinUIEx;
 using Path = System.IO.Path;
@@ -45,6 +46,7 @@ namespace Wavee.UI.WinUI
             //get UVM (to register events)
             _ = services.GetRequiredService<UserManagerViewModel>();
             _ = services.GetRequiredService<LocalAudioManagerViewModel>();
+
         }
 
         /// <summary>
@@ -63,7 +65,10 @@ namespace Wavee.UI.WinUI
         /// <summary>
         /// Gets the <see cref="IServiceProvider"/> instance to resolve application services.
         /// </summary>
-        public IServiceProvider Services { get; }
+        public IServiceProvider Services
+        {
+            get;
+        }
 
         /// <summary>
         /// Configures the services for the application.
@@ -72,7 +77,7 @@ namespace Wavee.UI.WinUI
         {
             string workDir = string.Empty;
             try
-            { 
+            {
                 workDir = ApplicationData.Current.LocalFolder.Path;
             }
             catch (Exception x)
@@ -110,9 +115,10 @@ namespace Wavee.UI.WinUI
             services.AddTransient<WaveeUserManagerFactory>();
 
             services.AddSpotify(workDir)
-                .AddLocal(workDir);
+                .AddLocal(workDir)
+                .AddSingleton<ILocalFilePlayer, WinUIMediaPlayer>();
 
-            
+
             services.AddSingleton<IAudioSink, NAudioSink>();
 
             services.AddSingleton<IUiDispatcher>(new WinUIDispatcher());

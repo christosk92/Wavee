@@ -36,10 +36,10 @@ namespace Wavee.UI.ViewModels.Shell
             get;
         }
 
-        public ShellViewModel(UserManagerViewModel vm, IUiDispatcher uiDispatcher, ILoggerFactory? loggerFactory)
+        public ShellViewModel(UserManagerViewModel vm, ILoggerFactory? loggerFactory)
         {
             UserViewModel = vm.CurrentUserVal!;
-            PlayerViewModel = new PlayerViewModel(vm.CurrentUserVal.User.ServiceType, uiDispatcher, loggerFactory?.CreateLogger<PlayerViewModel>());
+            PlayerViewModel = new PlayerViewModel(vm.CurrentUserVal.User.ServiceType, loggerFactory?.CreateLogger<PlayerViewModel>());
             SidebarItems = new ObservableCollection<SidebarItemViewModel>
             {
                 new SidebarHeader("Feed"),

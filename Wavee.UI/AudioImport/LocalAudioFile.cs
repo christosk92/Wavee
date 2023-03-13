@@ -8,10 +8,20 @@ namespace Wavee.UI.AudioImport
 {
     public record LocalAudioFile : ITrack
     {
-        [BsonId] public string Path { get; init; }
+        [BsonId]
+        public string Path
+        {
+            get; init;
+        }
 
-        public DateTime CreatedAt { get; init; }
-        public DateTime LastUpdatedAt { get; init; }
+        public DateTime CreatedAt
+        {
+            get; init;
+        }
+        public DateTime LastUpdatedAt
+        {
+            get; init;
+        }
 
         /// <summary>
         ///    Gets and sets the title for the media described by the
@@ -28,7 +38,10 @@ namespace Wavee.UI.AudioImport
         ///    episode of Star Trek), or "Harold and Kumar Go To White
         ///    Castle" (a movie).
         /// </remarks>
-        public string Title { get; init; } 
+        public string Title
+        {
+            get; init;
+        }
 
         /// <summary>
         ///    Gets and sets the sort name for the title of the media
@@ -41,7 +54,10 @@ namespace Wavee.UI.AudioImport
         /// <remarks>
         ///    Possibly used to sort compilations, or episodic content.
         /// </remarks>
-        public string TitleSort { get; init; }
+        public string TitleSort
+        {
+            get; init;
+        }
 
 
         /// <summary>
@@ -61,7 +77,10 @@ namespace Wavee.UI.AudioImport
         ///    "It's About Time".
         ///    </para>
         /// </remarks>
-        public string Subtitle { get; init; }
+        public string Subtitle
+        {
+            get; init;
+        }
 
         /// <summary>
         ///    Gets and sets a short description of the media.
@@ -84,7 +103,10 @@ namespace Wavee.UI.AudioImport
         ///    interfering with his first trip".
         ///    </para>
         /// </remarks>
-        public string Description { get; init; }
+        public string Description
+        {
+            get; init;
+        }
 
         /// <summary>
         ///    Gets and sets the performers or artists who performed in
@@ -110,7 +132,10 @@ namespace Wavee.UI.AudioImport
         ///    applications should not try to limit the user in what
         ///    choice they may make.</para>
         /// </remarks>
-        public string[] Performers { get; init; }
+        public string[] Performers
+        {
+            get; init;
+        }
 
         /// <summary>
         ///    Gets and sets the sort names of the performers or artists
@@ -129,7 +154,10 @@ namespace Wavee.UI.AudioImport
         ///    sorted as "Beatles, The".
         ///    </para>
         /// </remarks>
-        public string[] PerformersSort { get; init; }
+        public string[] PerformersSort
+        {
+            get; init;
+        }
 
 
         /// <summary>
@@ -150,7 +178,10 @@ namespace Wavee.UI.AudioImport
         ///    Performers[i] and PerformersRole[i].
         ///    </para>
         /// </remarks>
-        public string[] PerformersRole { get; init; }
+        public string[] PerformersRole
+        {
+            get; init;
+        }
 
         /// <summary>
         ///    Gets and sets the band or artist who is credited in the
@@ -176,7 +207,10 @@ namespace Wavee.UI.AudioImport
         ///    muliple artist it is best to stick with a single band
         ///    name. For example, "The Beatles".</para>
         /// </remarks>
-        public string[] AlbumArtists { get; init; }
+        public string[] AlbumArtists
+        {
+            get; init;
+        }
 
         /// <summary>
         ///    Gets and sets the sort names for the band or artist who
@@ -204,7 +238,10 @@ namespace Wavee.UI.AudioImport
         ///    muliple artist it is best to stick with a single band
         ///    name. For example, "Beatles, The".</para>
         /// </remarks>
-        public string[] AlbumArtistsSort { get; init; }
+        public string[] AlbumArtistsSort
+        {
+            get; init;
+        }
 
         /// <summary>
         ///    Gets and sets the composers of the media represented by
@@ -220,7 +257,10 @@ namespace Wavee.UI.AudioImport
         ///    script writers, or persons who claim authorship of the
         ///    media.</para>
         /// </remarks>
-        public string[] Composers { get; init; }
+        public string[] Composers
+        {
+            get; init;
+        }
 
         /// <summary>
         ///    Gets and sets the sort names for the composers of the
@@ -240,7 +280,10 @@ namespace Wavee.UI.AudioImport
         ///    muliple artist it is best to stick with a single composer.
         ///    For example, "McCartney, Paul".</para>
         /// </remarks>
-        public string[] ComposersSort { get; init; }
+        public string[] ComposersSort
+        {
+            get; init;
+        }
 
         public string Name => Title ?? System.IO.Path.GetFileNameWithoutExtension(Path);
 
@@ -265,7 +308,10 @@ namespace Wavee.UI.AudioImport
         ///    serie of movies/sequels), or "Game of Thrones" (a serie
         ///    with several seasons).</para>
         /// </remarks>
-        public string Album { get; init; }
+        public string Album
+        {
+            get; init;
+        }
 
         public string[] Artists => Performers.Length != 0 ? Performers : LiteDbAudioDb.UNKNOWN_ARTISTS;
 
@@ -283,7 +329,10 @@ namespace Wavee.UI.AudioImport
         ///    sorting of compilations or albums with Similar Titles.
         ///    </para>
         /// </remarks>
-        public string AlbumSort { get; init; }
+        public string AlbumSort
+        {
+            get; init;
+        }
 
         /// <summary>
         ///    Gets and sets a user comment on the media represented by
@@ -304,7 +353,10 @@ namespace Wavee.UI.AudioImport
         ///    accessible, perhaps even including it in the main
         ///    interface.</para>
         /// </remarks>
-        public string Comment { get; init; }
+        public string Comment
+        {
+            get; init;
+        }
 
         /// <summary>
         ///    Gets and sets the genres of the media represented by the
@@ -324,7 +376,10 @@ namespace Wavee.UI.AudioImport
         ///    Additionally, <see cref="P:TagLib.Genres.Video" /> contains video
         ///    genres as used by DivX.</para>
         /// </remarks>
-        public string[] Genres { get; init; }
+        public string[] Genres
+        {
+            get; init;
+        }
 
         /// <summary>
         ///    Gets and sets the year that the media represented by the
@@ -344,7 +399,10 @@ namespace Wavee.UI.AudioImport
         ///    specific implementations are necessary access the higher
         ///    precision values.</para>
         /// </remarks>
-        public uint Year { get; init; }
+        public uint Year
+        {
+            get; init;
+        }
 
 
         /// <summary>
@@ -367,7 +425,10 @@ namespace Wavee.UI.AudioImport
         ///    in a season of the serie.
         ///    </para>
         /// </remarks>
-        public uint Track { get; init; }
+        public uint Track
+        {
+            get; init;
+        }
 
         /// <summary>
         ///    Gets and sets the number of tracks in the album, or the
@@ -385,7 +446,10 @@ namespace Wavee.UI.AudioImport
         ///    <see cref="P:TagLib.Tag.Track" />. If <see cref="P:TagLib.Tag.Track" /> is zero,
         ///    this value should also be zero.</para>
         /// </remarks>
-        public uint TrackCount { get; init; }
+        public uint TrackCount
+        {
+            get; init;
+        }
 
         /// <summary>
         ///    Gets and sets the number of the disc containing the media
@@ -403,7 +467,10 @@ namespace Wavee.UI.AudioImport
         ///    first of three, the value should be <c>1</c>. It should
         ///    be no more than <see cref="P:TagLib.Tag.DiscCount" /> if <see cref="P:TagLib.Tag.DiscCount" /> is non-zero.</para>
         /// </remarks>
-        public uint Disc { get; init; }
+        public uint Disc
+        {
+            get; init;
+        }
 
         /// <summary>
         ///    Gets and sets the number of discs or seasons in the
@@ -421,7 +488,10 @@ namespace Wavee.UI.AudioImport
         ///    <see cref="P:TagLib.Tag.Disc" />. If <see cref="P:TagLib.Tag.Disc" /> is zero,
         ///    this value should also be zero.</para>
         /// </remarks>
-        public uint DiscCount { get; init; }
+        public uint DiscCount
+        {
+            get; init;
+        }
 
         /// <summary>
         ///    Gets and sets the lyrics or script of the media
@@ -440,7 +510,10 @@ namespace Wavee.UI.AudioImport
         ///    synchronized lyrics, but those must be accessed using
         ///    format specific implementations.</para>
         /// </remarks>
-        public string Lyrics { get; init; }
+        public string Lyrics
+        {
+            get; init;
+        }
 
 
         /// <summary>
@@ -458,7 +531,10 @@ namespace Wavee.UI.AudioImport
         ///    be a movement. It could also be parts of a series like
         ///    "Introduction", "Closing Remarks", etc.</para>
         /// </remarks>
-        public string Grouping { get; init; }
+        public string Grouping
+        {
+            get; init;
+        }
 
         /// <summary>
         ///    Gets and sets the number of beats per minute in the audio
@@ -474,7 +550,10 @@ namespace Wavee.UI.AudioImport
         ///    match songs. It should be calculated from the audio or
         ///    pulled from a database.</para>
         /// </remarks>
-        public uint BeatsPerMinute { get; init; }
+        public uint BeatsPerMinute
+        {
+            get; init;
+        }
 
         /// <summary>
         ///    Gets and sets the conductor or director of the media
@@ -489,7 +568,10 @@ namespace Wavee.UI.AudioImport
         ///    <para>This field is most useful for organizing classical
         ///    music and movies.</para>
         /// </remarks>
-        public string Conductor { get; init; }
+        public string Conductor
+        {
+            get; init;
+        }
 
         /// <summary>
         ///    Gets and sets the copyright information for the media
@@ -509,7 +591,10 @@ namespace Wavee.UI.AudioImport
         ///    media creation tools should definitely allow
         ///    modification.</para>
         /// </remarks>
-        public string Copyright { get; init; }
+        public string Copyright
+        {
+            get; init;
+        }
 
         /// <summary>
         ///    Gets and sets the date at which the tag has been written.
@@ -518,7 +603,10 @@ namespace Wavee.UI.AudioImport
         ///    A nullable <see cref="T:System.DateTime" /> object containing the
         ///    date at which the tag has been written, or <see langword="null" /> if no value present.
         /// </value>
-        public virtual DateTime? DateTagged { get; init; }
+        public virtual DateTime? DateTagged
+        {
+            get; init;
+        }
 
 
 
@@ -527,7 +615,10 @@ namespace Wavee.UI.AudioImport
         ///    A <see cref="T:System.String" /> value for the publisher
         ///    of the song.
         /// </value>
-        public string Publisher { get; init; }
+        public string Publisher
+        {
+            get; init;
+        }
 
         /// <summary>
         ///    Gets and sets the ISRC (International Standard Recording Code) of the song.
@@ -535,7 +626,10 @@ namespace Wavee.UI.AudioImport
         /// <value>
         ///    A <see cref="T:System.String" /> value containing the ISRC of the song.
         /// </value>
-        public string ISRC { get; init; }
+        public string ISRC
+        {
+            get; init;
+        }
 
 
         //public Guid? Image { get; init; }
@@ -559,9 +653,15 @@ namespace Wavee.UI.AudioImport
         //     }
         // }
 
-        public string? ImagePath { get; init; }
+        public string? ImagePath
+        {
+            get; init;
+        }
 
-        public double Duration { get; init; }
+        public double Duration
+        {
+            get; init;
+        }
         // [BsonIgnore]
         // public ByteVector? GetImage
         // {

@@ -1,11 +1,14 @@
 ﻿using System.Collections.Concurrent;
 using System.Linq.Expressions;
+using System.Runtime.InteropServices;
+using System.Text;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using Microsoft.Extensions.Logging;
 using Nito.AsyncEx;
 using Wavee.UI.AudioImport.Database;
 using Wavee.UI.AudioImport.Messages;
+using Wavee.UI.Utils;
 
 namespace Wavee.UI.AudioImport;
 
@@ -49,6 +52,36 @@ public partial class LocalAudioManagerViewModel : ObservableRecipient, IRecipien
         _loggerFactory = loggerFactory;
         _db = db;
         this.IsActive = true;
+        Task.Run(Refresh);
+    }
+
+    private void Refresh()
+    {
+        //try and fetch new metadata
+        var all =
+            _db.GetAll();
+        var updatePaths = new List<string>();
+        foreach (var (path, lastUpdatedAt) in all)
+        {
+            if (!string.IsNullOrEmpty(path) && File.Exists(path))
+            {
+                //try and update
+                var lastWriteTime = File.GetLastWriteTime(path);
+                if (Math.Abs(lastWriteTime.Ticks - lastUpdatedAt.Ticks) > TimeSpan.TicksPerMillisecond)
+                {
+                    //update metadata
+                    updatePaths.Add(path);
+                }
+            }
+            else
+            {
+                //File deleted... remove from db
+                _db.Remove(path);
+            }
+        }
+
+        Receive(new ImportTracksMessage(updatePaths
+            .Select(a => (a, false))));
     }
 
     public IReadOnlyCollection<LocalAudioFile>
@@ -123,6 +156,8 @@ public partial class LocalAudioManagerViewModel : ObservableRecipient, IRecipien
 
                 _logger?.LogDebug("Finished: {processed}/{total} error: {error}",
                         processedCount, controller.Total, controller.Errors.Count);
+                //remove duplicates
+                _db.CleanupDuplicates();
             }
         });
     }
@@ -139,4 +174,6 @@ public partial class LocalAudioManagerViewModel : ObservableRecipient, IRecipien
     {
         return _db.GetLatestAlbums(order, ascending, offset, limit);
     }
+
+
 }

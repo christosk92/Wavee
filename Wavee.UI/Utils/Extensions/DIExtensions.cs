@@ -48,7 +48,6 @@ namespace Wavee.UI.Utils.Extensions
                         workDir, new UserDirectories(ServiceType.Local, workDir),
                         loggerfactory?.CreateLogger<WaveeUserManager>());
                 });
-            serviceCollection.AddSingleton<LocalFilePlayer>();
             serviceCollection.AddTransient<LocalHomeViewModel>()
                 .AddTransient<LocalRecommendedViewModel>()
                 .AddTransient<SeeAllImportedTracksViewModel>();

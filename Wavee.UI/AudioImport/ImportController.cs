@@ -19,9 +19,15 @@ public class ImportController : ObservableObject
 
     // internal ChannelReader<ImportingProgressEventArgs> EventsReader { get; }
 
-    public int Total { get; private set; }
+    public int Total
+    {
+        get; private set;
+    }
 
-    public Guid Id { get; }
+    public Guid Id
+    {
+        get;
+    }
 
     internal ImportController(IAudioDb db,
         IList<string> paths,
@@ -53,7 +59,7 @@ public class ImportController : ObservableObject
             {
                 if (filesExist[i])
                 {
-                    imported = _db.GetAudioFile(path);
+                    imported = await _db.ImportAudioFile(new ImportAudioRequest(tag, path));
                     existing = true;
                 }
                 else

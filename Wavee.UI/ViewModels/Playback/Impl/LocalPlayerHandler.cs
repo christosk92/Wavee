@@ -25,14 +25,14 @@ internal class LocalPlayerHandler : PlayerViewHandlerInternal
 {
     private ILocalContext? _context;
 
-    private readonly ILogger<LocalFilePlayer> _logger;
+    private readonly ILogger<LocalPlayerHandler> _logger;
     private readonly LinkedList<LocalAudioFile?> _trackQueue;
-    private readonly LocalFilePlayer _localFilePlayer;
+    private readonly ILocalFilePlayer _localFilePlayer;
 
     private LocalAudioFile? _currentQueueFile;
     private int _currentTrackIndex;
     private bool _isPlayingQueue;
-    public LocalPlayerHandler(LocalFilePlayer localFilePlayer, ILogger<LocalFilePlayer> logger) : base()
+    public LocalPlayerHandler(ILocalFilePlayer localFilePlayer, ILogger<LocalPlayerHandler> logger) : base()
     {
         _trackQueue = new LinkedList<LocalAudioFile?>();
         _localFilePlayer = localFilePlayer;
@@ -56,9 +56,22 @@ internal class LocalPlayerHandler : PlayerViewHandlerInternal
         return Task.CompletedTask;
     }
 
-    public override void Seek(double position)
+    public override ValueTask Seek(double position)
     {
         _localFilePlayer.Seek(TimeSpan.FromMilliseconds(position));
+        return ValueTask.CompletedTask;
+    }
+
+    public override ValueTask Resume()
+    {
+        _localFilePlayer.Resume();
+        return ValueTask.CompletedTask;
+    }
+
+    public override ValueTask Pause()
+    {
+        _localFilePlayer.Pause();
+        return ValueTask.CompletedTask;
     }
 
     private void LocalFilePlayerOnTrackStarted(object? sender, string e)

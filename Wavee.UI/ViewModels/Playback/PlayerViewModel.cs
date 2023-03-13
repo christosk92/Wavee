@@ -1,6 +1,5 @@
 ﻿using System.Collections.Concurrent;
 using System.Reactive.Concurrency;
-using System.Security.Cryptography;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.DependencyInjection;
 using CommunityToolkit.Mvvm.Input;
@@ -9,7 +8,6 @@ using Nito.AsyncEx;
 using ReactiveUI;
 using Wavee.UI.Identity.Users.Contracts;
 using Wavee.UI.Utils;
-using Wavee.UI.ViewModels.AudioItems;
 using Wavee.UI.ViewModels.Playback.Impl;
 using Wavee.UI.ViewModels.Playback.PlayerEvents;
 
@@ -19,28 +17,29 @@ public partial class PlayerViewModel : ObservableRecipient, IDisposable
 {
     private const ushort INCREMENT_BY_MS = 50;
 
-    [ObservableProperty]
-    private PlayingTrackView? _playingItem;
+    private readonly CancellationTokenSource _cts;
+    private readonly PlayerViewHandlerInternal _handlerInternal;
+    private readonly ILogger<PlayerViewModel>? _logger;
+
+    private readonly ConcurrentDictionary<ulong, (ulong prev, Dictionary<Guid, Action<ulong>>)> _positionCallbacks =
+        new();
+
+    private readonly object _positionLock = new();
+    private readonly Timer _positionTimespan;
+
+    private readonly AsyncAutoResetEvent _waitForSeekResponse = new();
 
     [ObservableProperty] private bool _paused = true;
 
-    private readonly CancellationTokenSource _cts;
-    private readonly PlayerViewHandlerInternal _handlerInternal;
-    private readonly Timer _positionTimespan;
-    private readonly ILogger<PlayerViewModel>? _logger;
+    [ObservableProperty] private PlayingTrackView? _playingItem;
 
-    private readonly ConcurrentDictionary<ulong, (ulong prev, Dictionary<Guid, Action<ulong>>)> _positionCallbacks = new();
-
+    [ObservableProperty] private bool _coverImageExpanded;
 
     // [ObservableProperty]
     private ulong _positionMs;
-    private readonly object _positionLock = new object();
 
-    private readonly IUiDispatcher _uiDispatcher;
-
-    public PlayerViewModel(ServiceType userServiceType, IUiDispatcher uiDispatcher, ILogger<PlayerViewModel>? logger)
+    public PlayerViewModel(ServiceType userServiceType, ILogger<PlayerViewModel>? logger)
     {
-        _uiDispatcher = uiDispatcher;
         _logger = logger;
         _handlerInternal = userServiceType switch
         {
@@ -61,21 +60,26 @@ public partial class PlayerViewModel : ObservableRecipient, IDisposable
         get;
         private set;
     }
+
     public static AsyncRelayCommand<IPlayContext>? PlayNextCommand
     {
         get;
         private set;
     }
 
+    public void Dispose() => _handlerInternal.Dispose();
+
     private Task PlayTask(IPlayContext? arg)
     {
-        if (arg == null) return Task.CompletedTask;
+        if (arg == null)
+        {
+            return Task.CompletedTask;
+        }
+
         return _handlerInternal.LoadTrackList(arg);
     }
-    private Task PlayQueueTask(IPlayContext? arg)
-    {
-        throw new NotImplementedException();
-    }
+
+    private Task PlayQueueTask(IPlayContext? arg) => throw new NotImplementedException();
 
     public Guid RegisterPositionCallback(ulong minDiff, Action<ulong> callback)
     {
@@ -109,6 +113,7 @@ public partial class PlayerViewModel : ObservableRecipient, IDisposable
 
         return found;
     }
+
     private async Task EventsReaderLoop()
     {
         try
@@ -147,49 +152,39 @@ public partial class PlayerViewModel : ObservableRecipient, IDisposable
         }
     }
 
-    private void HandleSeeked(SeekedEvent seekedEvent)
-    {
+    private void HandleSeeked(SeekedEvent seekedEvent) =>
         RxApp.MainThreadScheduler.Schedule(() =>
         {
             SeekTo(seekedEvent.SeekedToMs);
             _waitForSeekResponse.Set();
         });
-    }
 
-    private void HandleResumed(ResumedEvent resumedEvent)
-    {
+    private void HandleResumed(ResumedEvent resumedEvent) =>
         RxApp.MainThreadScheduler.Schedule(() =>
         {
             _positionTimespan.Change(0, INCREMENT_BY_MS);
             SeekTo((ulong)_handlerInternal.Position.TotalMilliseconds);
             Paused = false;
         });
-    }
 
-    private void HandlePaused(PausedEvent pausedEvent)
-    {
+    private void HandlePaused(PausedEvent pausedEvent) =>
         RxApp.MainThreadScheduler.Schedule(() =>
         {
             _positionTimespan.Change(Timeout.Infinite, Timeout.Infinite);
             SeekTo((ulong)_handlerInternal.Position.TotalMilliseconds);
             Paused = true;
         });
-    }
 
-    private void HandleTrackChanged(TrackChangedEvent trackChangedEvent)
-    {
+    private void HandleTrackChanged(TrackChangedEvent trackChangedEvent) =>
         RxApp.MainThreadScheduler.Schedule(() =>
         {
             PlayingItem = trackChangedEvent.Track;
             SeekTo((ulong)_handlerInternal.Position.TotalMilliseconds);
         });
-    }
 
-    private void IncrementPosition(object? state)
-    {
+    private void IncrementPosition(object? state) =>
         //check to see if we reached a threshold
         SeekTo(_positionMs + INCREMENT_BY_MS);
-    }
 
     private void SeekTo(ulong pos)
     {
@@ -206,17 +201,14 @@ public partial class PlayerViewModel : ObservableRecipient, IDisposable
                 {
                     foreach (var (_, callback) in callbacks.Item2)
                     {
-                        _uiDispatcher.Dispatch(DispatcherQueuePriority.High,
-                            () => callback(_positionMs));
+                        RxApp.MainThreadScheduler.Schedule(() =>
+                        {
+                            callback(_positionMs);
+                        });
                     }
                 }
             }
         }
-    }
-
-    public void Dispose()
-    {
-        _handlerInternal.Dispose();
     }
 
     public Task Seek(double position)
@@ -225,5 +217,22 @@ public partial class PlayerViewModel : ObservableRecipient, IDisposable
         return _waitForSeekResponse.WaitAsync();
     }
 
-    private readonly AsyncAutoResetEvent _waitForSeekResponse = new AsyncAutoResetEvent();
+    [RelayCommand]
+    private void ExpandCoverImage(bool expand)
+    {
+        CoverImageExpanded = expand;
+    }
+
+    [RelayCommand]
+    public async Task PauseResume()
+    {
+        if (Paused)
+        {
+            await _handlerInternal.Resume();
+        }
+        else
+        {
+            await _handlerInternal.Pause();
+        }
+    }
 }

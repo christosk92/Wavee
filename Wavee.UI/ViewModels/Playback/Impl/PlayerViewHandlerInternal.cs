@@ -33,5 +33,8 @@ internal abstract class PlayerViewHandlerInternal : IDisposable
 
     public abstract Task LoadTrackList(IPlayContext context);
 
-    public abstract void Seek(double position);
+    public abstract ValueTask Seek(double position);
+
+    public abstract ValueTask Resume();
+    public abstract ValueTask Pause();
 }
