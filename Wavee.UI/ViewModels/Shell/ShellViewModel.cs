@@ -1,18 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
+using Microsoft.Extensions.Logging;
 using Wavee.Spotify.Id;
 using Wavee.UI.Identity.Messaging;
-using Wavee.UI.Identity.Users;
 using Wavee.UI.Navigation;
 using Wavee.UI.Utils;
-using Wavee.UI.ViewModels.ForYou;
+using Wavee.UI.ViewModels.ForYou.Home;
+using Wavee.UI.ViewModels.ForYou.Recommended;
 using Wavee.UI.ViewModels.Identity.User;
 using Wavee.UI.ViewModels.Library;
 using Wavee.UI.ViewModels.Playback;
@@ -30,21 +26,31 @@ namespace Wavee.UI.ViewModels.Shell
         private SidebarItemViewModel? _selectedSidebarItem;
         private double _openPaneLength = 200;
 
-        public WaveeUserViewModel UserViewModel { get; }
+        public WaveeUserViewModel UserViewModel
+        {
+            get;
+        }
 
-        public PlayerViewModel PlayerViewModel { get; }
+        public PlayerViewModel PlayerViewModel
+        {
+            get;
+        }
 
-        public ShellViewModel(UserManagerViewModel vm, IUiDispatcher uiDispatcher)
+        public ShellViewModel(UserManagerViewModel vm, IUiDispatcher uiDispatcher, ILoggerFactory? loggerFactory)
         {
             UserViewModel = vm.CurrentUserVal!;
-            PlayerViewModel = new PlayerViewModel(vm.CurrentUserVal.User.ServiceType, uiDispatcher);
+            PlayerViewModel = new PlayerViewModel(vm.CurrentUserVal.User.ServiceType, uiDispatcher, loggerFactory?.CreateLogger<PlayerViewModel>());
             SidebarItems = new ObservableCollection<SidebarItemViewModel>
             {
                 new SidebarHeader("Feed"),
-                new HomeViewModelFactory(),
+                new HomeViewModelFactory
+                {
+                    ForService = UserViewModel.User.ServiceType
+                },
                 new RecommendedViewModelFactory
                 {
                     ForService = UserViewModel.User.ServiceType,
+                    IsEnabled = true
                 },
                 new SidebarHeader("Yours"),
                 new LibraryViewModelFactory { Type = AudioItemType.Track },
@@ -54,9 +60,13 @@ namespace Wavee.UI.ViewModels.Shell
                 new SidebarHeader("Playlists")
             };
             SelectedSidebarItem = SidebarItems[1];
+            this.IsActive = true;
         }
 
-        public ObservableCollection<SidebarItemViewModel> SidebarItems { get; }
+        public ObservableCollection<SidebarItemViewModel> SidebarItems
+        {
+            get;
+        }
 
 
         public double OpenPaneLength
@@ -82,11 +92,15 @@ namespace Wavee.UI.ViewModels.Shell
             WeakReferenceMessenger.Default.Unregister<LoggedInUserChangedMessage>(this);
         }
 
-        public int MaxDepth { get; }
+        public int MaxDepth
+        {
+            get;
+        }
 
         public void Receive(LoggedOutUserChangedMessage message)
         {
             throw new NotImplementedException();
         }
+
     }
 }

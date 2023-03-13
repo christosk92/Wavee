@@ -3,36 +3,7 @@ using Wavee.UI.Navigation;
 using Wavee.UI.ViewModels.Identity.User;
 using Wavee.UI.ViewModels.Shell;
 
-namespace Wavee.UI.ViewModels.ForYou;
-
-public class SpotifyRecommendedViewModel : INavigatable
-{
-    public void OnNavigatedTo(object parameter)
-    {
-
-    }
-
-    public void OnNavigatedFrom()
-    {
-
-    }
-
-    public int MaxDepth { get; }
-}
-public class LocalRecommendedViewModel : INavigatable
-{
-    public void OnNavigatedTo(object parameter)
-    {
-
-    }
-
-    public void OnNavigatedFrom()
-    {
-
-    }
-
-    public int MaxDepth { get; }
-}
+namespace Wavee.UI.ViewModels.ForYou.Recommended;
 
 public class RecommendedViewModelFactory : SidebarItemViewModel
 {

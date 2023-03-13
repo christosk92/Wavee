@@ -16,9 +16,9 @@ public partial class NavigationService : ObservableObject
     // public event UnhandledNavigationEventHandler? UnhandledNavigation;
 
 
-    public bool CanGoBack => Current != null && _navigationBackStack.Count > 0;
+    // public bool CanGoBack => Current != null && _navigationBackStack.Count > 0;
 
-    public bool CanGoForward => Current != null & _navigationForwardStack.Count > 0;
+    // public bool CanGoForward => Current != null & _navigationForwardStack.Count > 0;
 
     public static NavigationService Instance => _instance ??= new NavigationService();
 
@@ -144,8 +144,8 @@ public partial class NavigationService : ObservableObject
         // return false;
     }
 
-    private readonly List<(Type PageType, INavigatable? Page, object Parameter)> _navigationBackStack = new();
-    private readonly List<(Type PageType, INavigatable? Page, object? Parameter)> _navigationForwardStack = new();
+    //private readonly List<(Type PageType, INavigatable? Page, object Parameter)> _navigationBackStack = new();
+    // private readonly List<(Type PageType, INavigatable? Page, object? Parameter)> _navigationForwardStack = new();
 
     private CancellationTokenSource? _navigationToken;
     private static NavigationService _instance;
@@ -179,7 +179,7 @@ public partial class NavigationService : ObservableObject
             if (_current != null)
             {
                 //Add this page to the backstack for backward navigation! the as cast will default to null 
-                _navigationBackStack.Add((_current.GetType(), _current, _lastParameterUsed));
+                //   _navigationBackStack.Add((_current.GetType(), _current, _lastParameterUsed));
             }
 
             try
@@ -228,7 +228,7 @@ public partial class NavigationService : ObservableObject
 
             navigateTo.OnNavigatedTo(parameter);
 
-            CheckHistory();
+            //  CheckHistory();
             //GC.Collect();
             return true;
         }
@@ -236,71 +236,71 @@ public partial class NavigationService : ObservableObject
         return false;
     }
 
-    private void CheckHistory()
-    {
-        for (int i = 0; i < _navigationBackStack.Count; i++)
-        {
-            var item = _navigationBackStack.ElementAt(i);
-            if (item.Page is not null)
-            {
-                //if we are 1 pages deep, then our index = 0
-                //if we are 2 pages deep, our index = 1...
-                //so if our max depth = 1 (meaning the page can be at MAX index : length - 2 = length - depth - 1)
-
-                //if we have 6 pages in the backstack, we add another page, meaning we now have 7 pages. We check page 6, its max depth = 2,
-                //meaning its ok! because page 6 = 5, and 5 + 2 = 7 == length of array
-                //however, now we go another page, the backstack is now 8 pages long, 
-                //page 6 = 5, and 5 +2 = 7 < length.
-                //so we should check if index_page + max_depth < length
-
-                //similarly: if we are at page 6, page 6 has a depth of 1, we go back to page 4, meaning 6 should be cleared of cache...
-                //because: index + 2 = 3 +2 = 5, the length = still 6!
-                if (item.Page.MaxDepth + i < _navigationBackStack.Count)
-                {
-                    _navigationBackStack[i] = (item.PageType, null, item.Parameter);
-                }
-            }
-        }
-
-        for (int i = 0; i < _navigationForwardStack.Count; i++)
-        {
-            var item = _navigationForwardStack.ElementAt(i);
-            if (item.Page is not null)
-            {
-                //if we are 1 pages deep, then our index = 0
-                //if we are 2 pages deep, our index = 1...
-                //so if our max depth = 1 (meaning the page can be at MAX index : length - 2 = length - depth - 1)
-
-                //if we have 6 pages in the backstack, we add another page, meaning we now have 7 pages. We check page 6, its max depth = 2,
-                //meaning its ok! because page 6 = 5, and 5 + 2 = 7 == length of array
-                //however, now we go another page, the backstack is now 8 pages long, 
-                //page 6 = 5, and 5 +2 = 7 < length.
-                //so we should check if index_page + max_depth < length
-
-                //similarly: if we are at page 6, page 6 has a depth of 1, we go back to page 4, meaning 6 should be cleared of cache...
-                //because: index + 2 = 3 +2 = 5, the length = still 6!
-                if (item.Page.MaxDepth + i < _navigationForwardStack.Count)
-                {
-                    _navigationForwardStack[i] = (item.PageType, null, item.Parameter);
-                }
-            }
-        }
-
-        if (_navigationForwardStack.Count > max_depth)
-        {
-            while (_navigationForwardStack.Count > max_depth)
-            {
-                _navigationForwardStack.RemoveAt(0);
-            }
-        }
-        if (_navigationBackStack.Count > max_depth)
-        {
-            while (_navigationBackStack.Count > max_depth)
-            {
-                _navigationBackStack.RemoveAt(0);
-            }
-        }
-    }
+    // private void CheckHistory()
+    // {
+    //     for (int i = 0; i < _navigationBackStack.Count; i++)
+    //     {
+    //         var item = _navigationBackStack.ElementAt(i);
+    //         if (item.Page is not null)
+    //         {
+    //             //if we are 1 pages deep, then our index = 0
+    //             //if we are 2 pages deep, our index = 1...
+    //             //so if our max depth = 1 (meaning the page can be at MAX index : length - 2 = length - depth - 1)
+    //
+    //             //if we have 6 pages in the backstack, we add another page, meaning we now have 7 pages. We check page 6, its max depth = 2,
+    //             //meaning its ok! because page 6 = 5, and 5 + 2 = 7 == length of array
+    //             //however, now we go another page, the backstack is now 8 pages long, 
+    //             //page 6 = 5, and 5 +2 = 7 < length.
+    //             //so we should check if index_page + max_depth < length
+    //
+    //             //similarly: if we are at page 6, page 6 has a depth of 1, we go back to page 4, meaning 6 should be cleared of cache...
+    //             //because: index + 2 = 3 +2 = 5, the length = still 6!
+    //             if (item.Page.MaxDepth + i < _navigationBackStack.Count)
+    //             {
+    //                 _navigationBackStack[i] = (item.PageType, null, item.Parameter);
+    //             }
+    //         }
+    //     }
+    //
+    //     for (int i = 0; i < _navigationForwardStack.Count; i++)
+    //     {
+    //         var item = _navigationForwardStack.ElementAt(i);
+    //         if (item.Page is not null)
+    //         {
+    //             //if we are 1 pages deep, then our index = 0
+    //             //if we are 2 pages deep, our index = 1...
+    //             //so if our max depth = 1 (meaning the page can be at MAX index : length - 2 = length - depth - 1)
+    //
+    //             //if we have 6 pages in the backstack, we add another page, meaning we now have 7 pages. We check page 6, its max depth = 2,
+    //             //meaning its ok! because page 6 = 5, and 5 + 2 = 7 == length of array
+    //             //however, now we go another page, the backstack is now 8 pages long, 
+    //             //page 6 = 5, and 5 +2 = 7 < length.
+    //             //so we should check if index_page + max_depth < length
+    //
+    //             //similarly: if we are at page 6, page 6 has a depth of 1, we go back to page 4, meaning 6 should be cleared of cache...
+    //             //because: index + 2 = 3 +2 = 5, the length = still 6!
+    //             if (item.Page.MaxDepth + i < _navigationForwardStack.Count)
+    //             {
+    //                 _navigationForwardStack[i] = (item.PageType, null, item.Parameter);
+    //             }
+    //         }
+    //     }
+    //
+    //     if (_navigationForwardStack.Count > max_depth)
+    //     {
+    //         while (_navigationForwardStack.Count > max_depth)
+    //         {
+    //             _navigationForwardStack.RemoveAt(0);
+    //         }
+    //     }
+    //     if (_navigationBackStack.Count > max_depth)
+    //     {
+    //         while (_navigationBackStack.Count > max_depth)
+    //         {
+    //             _navigationBackStack.RemoveAt(0);
+    //         }
+    //     }
+    // }
 
     private const int max_depth = 10;
 

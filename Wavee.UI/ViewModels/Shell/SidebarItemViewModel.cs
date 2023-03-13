@@ -5,7 +5,7 @@ public abstract class SidebarItemViewModel
     public abstract string Title { get; }
     public abstract string Icon { get; }
     public abstract string GlyphFontFamily { get; }
-
+    public bool IsEnabled { get; init; } = true;
     public abstract string Id { get; }
 
     public abstract void NavigateTo();

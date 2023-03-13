@@ -11,12 +11,14 @@ using Wavee.Spotify;
 using Wavee.Spotify.ConnectState;
 using Wavee.Spotify.Player;
 using Wavee.Spotify.Session;
+using Wavee.UI.AudioImport;
 using Wavee.UI.Identity.Users;
 using Wavee.UI.Utils;
 using Wavee.UI.Utils.Extensions;
 using Wavee.UI.ViewModels.Identity;
 using Wavee.UI.ViewModels.Identity.User;
 using Wavee.UI.ViewModels.Shell;
+using Wavee.UI.WinUI.Utils;
 using WinUIEx;
 using Path = System.IO.Path;
 
@@ -42,6 +44,7 @@ namespace Wavee.UI.WinUI
 
             //get UVM (to register events)
             _ = services.GetRequiredService<UserManagerViewModel>();
+            _ = services.GetRequiredService<LocalAudioManagerViewModel>();
         }
 
         /// <summary>
@@ -67,7 +70,15 @@ namespace Wavee.UI.WinUI
         /// </summary>
         private static IServiceProvider ConfigureServices()
         {
-            var workDir = ApplicationData.Current.LocalFolder.Path;
+            string workDir = string.Empty;
+            try
+            { 
+                workDir = ApplicationData.Current.LocalFolder.Path;
+            }
+            catch (Exception x)
+            {
+                workDir = EnvironmentHelpers.GetDataDir("Wavee");
+            }
 
             var services = new ServiceCollection();
             var serilog = new LoggerConfiguration()
@@ -98,10 +109,10 @@ namespace Wavee.UI.WinUI
 
             services.AddTransient<WaveeUserManagerFactory>();
 
-
             services.AddSpotify(workDir)
                 .AddLocal(workDir);
 
+            
             services.AddSingleton<IAudioSink, NAudioSink>();
 
             services.AddSingleton<IUiDispatcher>(new WinUIDispatcher());

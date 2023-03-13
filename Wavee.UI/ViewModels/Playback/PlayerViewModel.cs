@@ -1,7 +1,15 @@
 ﻿using System.Collections.Concurrent;
+using System.Reactive.Concurrency;
+using System.Security.Cryptography;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.DependencyInjection;
+using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.Logging;
+using Nito.AsyncEx;
+using ReactiveUI;
 using Wavee.UI.Identity.Users.Contracts;
 using Wavee.UI.Utils;
+using Wavee.UI.ViewModels.AudioItems;
 using Wavee.UI.ViewModels.Playback.Impl;
 using Wavee.UI.ViewModels.Playback.PlayerEvents;
 
@@ -11,11 +19,18 @@ public partial class PlayerViewModel : ObservableRecipient, IDisposable
 {
     private const ushort INCREMENT_BY_MS = 50;
 
+    [ObservableProperty]
+    private PlayingTrackView? _playingItem;
+
+    [ObservableProperty] private bool _paused = true;
+
     private readonly CancellationTokenSource _cts;
     private readonly PlayerViewHandlerInternal _handlerInternal;
     private readonly Timer _positionTimespan;
+    private readonly ILogger<PlayerViewModel>? _logger;
 
-    private ConcurrentDictionary<ulong, Dictionary<Guid, Action<ulong>>> _positionCallbacks = new();
+    private readonly ConcurrentDictionary<ulong, (ulong prev, Dictionary<Guid, Action<ulong>>)> _positionCallbacks = new();
+
 
     // [ObservableProperty]
     private ulong _positionMs;
@@ -23,18 +38,43 @@ public partial class PlayerViewModel : ObservableRecipient, IDisposable
 
     private readonly IUiDispatcher _uiDispatcher;
 
-    public PlayerViewModel(ServiceType userServiceType, IUiDispatcher uiDispatcher)
+    public PlayerViewModel(ServiceType userServiceType, IUiDispatcher uiDispatcher, ILogger<PlayerViewModel>? logger)
     {
         _uiDispatcher = uiDispatcher;
+        _logger = logger;
         _handlerInternal = userServiceType switch
         {
-            ServiceType.Local => new LocalPlayerHandler(),
+            ServiceType.Local => Ioc.Default.GetRequiredService<LocalPlayerHandler>(),
             ServiceType.Spotify => new SpotifyPlayerHandler(),
             _ => throw new ArgumentOutOfRangeException(nameof(userServiceType), userServiceType, null)
         };
         _positionTimespan = new Timer(IncrementPosition, null, Timeout.Infinite, Timeout.Infinite);
         _cts = new CancellationTokenSource();
         Task.Factory.StartNew(EventsReaderLoop, TaskCreationOptions.LongRunning);
+
+        PlayCommand = new AsyncRelayCommand<IPlayContext>(PlayTask);
+        PlayNextCommand = new AsyncRelayCommand<IPlayContext>(PlayQueueTask);
+    }
+
+    public static AsyncRelayCommand<IPlayContext>? PlayCommand
+    {
+        get;
+        private set;
+    }
+    public static AsyncRelayCommand<IPlayContext>? PlayNextCommand
+    {
+        get;
+        private set;
+    }
+
+    private Task PlayTask(IPlayContext? arg)
+    {
+        if (arg == null) return Task.CompletedTask;
+        return _handlerInternal.LoadTrackList(arg);
+    }
+    private Task PlayQueueTask(IPlayContext? arg)
+    {
+        throw new NotImplementedException();
     }
 
     public Guid RegisterPositionCallback(ulong minDiff, Action<ulong> callback)
@@ -42,14 +82,15 @@ public partial class PlayerViewModel : ObservableRecipient, IDisposable
         var newguid = Guid.NewGuid();
         if (_positionCallbacks.TryGetValue(minDiff, out var t))
         {
-            t[newguid] = callback;
+            t.Item2[newguid] = callback;
         }
         else
         {
-            _positionCallbacks[minDiff] = new Dictionary<Guid, Action<ulong>>
+            var newDictionary = new Dictionary<Guid, Action<ulong>>
             {
                 { newguid, callback }
             };
+            _positionCallbacks[minDiff] = (0, newDictionary);
         }
 
         return newguid;
@@ -60,7 +101,7 @@ public partial class PlayerViewModel : ObservableRecipient, IDisposable
         var found = false;
         foreach (var (_, callbacks) in _positionCallbacks)
         {
-            if (callbacks.Remove(callbackId))
+            if (callbacks.Item2.Remove(callbackId))
             {
                 found = true;
             }
@@ -76,20 +117,27 @@ public partial class PlayerViewModel : ObservableRecipient, IDisposable
             {
                 var eventRead = await _handlerInternal.Events.ReadAsync(_cts.Token);
 
-                switch (eventRead)
+                try
                 {
-                    case TrackChangedEvent trackChangedEvent:
-                        HandleTrackChanged(trackChangedEvent);
-                        break;
-                    case PausedEvent pausedEvent:
-                        HandlePaused(pausedEvent);
-                        break;
-                    case ResumedEvent resumedEvent:
-                        HandleResumed(resumedEvent);
-                        break;
-                    case SeekedEvent seekedEvent:
-                        HandleSeeked(seekedEvent);
-                        break;
+                    switch (eventRead)
+                    {
+                        case TrackChangedEvent trackChangedEvent:
+                            HandleTrackChanged(trackChangedEvent);
+                            break;
+                        case PausedEvent pausedEvent:
+                            HandlePaused(pausedEvent);
+                            break;
+                        case ResumedEvent resumedEvent:
+                            HandleResumed(resumedEvent);
+                            break;
+                        case SeekedEvent seekedEvent:
+                            HandleSeeked(seekedEvent);
+                            break;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger?.LogWarning(ex, "An error occured while processing events.");
                 }
             }
         }
@@ -101,43 +149,62 @@ public partial class PlayerViewModel : ObservableRecipient, IDisposable
 
     private void HandleSeeked(SeekedEvent seekedEvent)
     {
-        lock (_positionLock)
+        RxApp.MainThreadScheduler.Schedule(() =>
         {
-            _positionMs = seekedEvent.SeekedToMs;
-        }
+            SeekTo(seekedEvent.SeekedToMs);
+            _waitForSeekResponse.Set();
+        });
     }
 
     private void HandleResumed(ResumedEvent resumedEvent)
     {
-        _positionTimespan.Change(0, INCREMENT_BY_MS);
-        //TODO: Resync position
+        RxApp.MainThreadScheduler.Schedule(() =>
+        {
+            _positionTimespan.Change(0, INCREMENT_BY_MS);
+            SeekTo((ulong)_handlerInternal.Position.TotalMilliseconds);
+            Paused = false;
+        });
     }
 
     private void HandlePaused(PausedEvent pausedEvent)
     {
-        _positionTimespan.Change(Timeout.Infinite, Timeout.Infinite);
-        //TODO: Resync position
+        RxApp.MainThreadScheduler.Schedule(() =>
+        {
+            _positionTimespan.Change(Timeout.Infinite, Timeout.Infinite);
+            SeekTo((ulong)_handlerInternal.Position.TotalMilliseconds);
+            Paused = true;
+        });
     }
 
     private void HandleTrackChanged(TrackChangedEvent trackChangedEvent)
     {
+        RxApp.MainThreadScheduler.Schedule(() =>
+        {
+            PlayingItem = trackChangedEvent.Track;
+            SeekTo((ulong)_handlerInternal.Position.TotalMilliseconds);
+        });
     }
 
     private void IncrementPosition(object? state)
     {
         //check to see if we reached a threshold
+        SeekTo(_positionMs + INCREMENT_BY_MS);
+    }
+
+    private void SeekTo(ulong pos)
+    {
         lock (_positionLock)
         {
             //compare old value to new value
-            var old = _positionMs;
-            _positionMs += INCREMENT_BY_MS;
-            var diff = _positionMs - old;
+            _positionMs = pos;
             //try to get the callbacks for this diff (it is a >=)
             foreach (var (mindiff, callbacks) in _positionCallbacks)
             {
+                var prev = callbacks.prev;
+                var diff = _positionMs - prev;
                 if (diff >= mindiff)
                 {
-                    foreach (var (_, callback) in callbacks)
+                    foreach (var (_, callback) in callbacks.Item2)
                     {
                         _uiDispatcher.Dispatch(DispatcherQueuePriority.High,
                             () => callback(_positionMs));
@@ -151,4 +218,12 @@ public partial class PlayerViewModel : ObservableRecipient, IDisposable
     {
         _handlerInternal.Dispose();
     }
+
+    public Task Seek(double position)
+    {
+        _handlerInternal.Seek(position);
+        return _waitForSeekResponse.WaitAsync();
+    }
+
+    private readonly AsyncAutoResetEvent _waitForSeekResponse = new AsyncAutoResetEvent();
 }

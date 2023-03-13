@@ -13,6 +13,9 @@
     xmlns:animations="using:CommunityToolkit.WinUI.UI.Animations"
     xmlns:identity="using:Wavee.UI.WinUI.Views.Identity"
     xmlns:controls1="using:Wavee.UI.WinUI.Controls"
+    DragOver="ShellView_OnDragOver"
+    Drop="ShellView_OnDrop"
+    AllowDrop="{x:Bind IsLocal(ViewModel.UserViewModel.User.ServiceType), Mode=OneTime}"
     xmlns:xamlConverters="using:Wavee.UI.WinUI.XamlConverters"
 
     mc:Ignorable="d">
@@ -23,6 +26,7 @@
         </DataTemplate>
         <DataTemplate x:Key="Playlist" x:DataType="shell:SidebarItemViewModel">
             <NavigationViewItem 
+                IsEnabled="{x:Bind IsEnabled}"
                 Tag="{x:Bind Id}"
                 Content="{x:Bind Title}">
                 <NavigationViewItem.Icon>
@@ -32,6 +36,7 @@
         </DataTemplate>
         <DataTemplate x:Key="Library" x:DataType="library:LibraryViewModelFactory">
             <NavigationViewItem 
+                IsEnabled="{x:Bind IsEnabled}"
                 Tag="{x:Bind Id}"
                 Content="{x:Bind Title}">
                 <NavigationViewItem.InfoBadge>
@@ -111,7 +116,7 @@
                                         Minimum="52"
                                         Visibility="{x:Bind ViewModel.IsPaneOpen, Mode=OneWay}" />
 
-                <Grid Grid.Column="1">
+                <Grid Grid.Column="1" Padding="0,0,0,1">
                     <ContentControl VerticalContentAlignment="Stretch" HorizontalContentAlignment="Stretch"
                                     Content="{x:Bind NavigationService.Current, Mode=OneWay, Converter={StaticResource 
                                     ViewLocator}}"
