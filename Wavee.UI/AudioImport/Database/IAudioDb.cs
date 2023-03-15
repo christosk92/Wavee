@@ -18,10 +18,6 @@ namespace Wavee.UI.AudioImport.Database
         LocalAudioFile? GetAudioFile(string path);
         int Count();
         // string GetLinkedPathName(string path);
-        IEnumerable<GroupedAlbum> GetLatestAlbums<TK>(Expression<Func<LocalAudioFile, TK>> order,
-            bool ascending,
-            int offset,
-            int limit);
 
         IReadOnlyCollection<LocalAudioFile> GetTracksForAlbum(string albumName);
         IReadOnlyCollection<(string Path, DateTime LastUpdatedAt)> GetAll();

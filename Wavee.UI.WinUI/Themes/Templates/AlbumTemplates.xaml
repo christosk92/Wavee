@@ -1,0 +1,140 @@
+﻿<ResourceDictionary x:Class="Wavee.UI.WinUI.Themes.Templates.AlbumTemplates"
+                    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:local="using:Wavee.UI.WinUI.Themes.Templates"
+                    xmlns:album="using:Wavee.UI.ViewModels.Album"
+                    xmlns:interactivity="using:Microsoft.Xaml.Interactivity"
+                    xmlns:core="using:Microsoft.Xaml.Interactions.Core"
+                    xmlns:behaviors="using:CommunityToolkit.WinUI.UI.Behaviors"
+                    xmlns:ui="using:CommunityToolkit.WinUI.UI"
+                    xmlns:media="using:CommunityToolkit.WinUI.UI.Media"
+                    xmlns:animations="using:CommunityToolkit.WinUI.UI.Animations">
+    <DataTemplate x:DataType="album:AlbumViewModel"
+                  x:Key="AlbumTemplate">
+        <Grid Background="Transparent">
+            <interactivity:Interaction.Behaviors>
+                <core:EventTriggerBehavior  EventName="PointerEntered">
+                    <core:ChangePropertyAction PropertyName="Visibility"
+                                               TargetObject="{Binding ElementName=PlayContextMenu}"
+                                               Value="Visible" />
+                    <core:ChangePropertyAction TargetObject="{Binding ElementName=AlbumsGv}"
+                                               PropertyName="IsItemClickEnabled"
+                                               Value="False" />
+                    <behaviors:StartAnimationAction Animation="{Binding ElementName=BlurAnimation}" />
+                </core:EventTriggerBehavior>
+                <core:EventTriggerBehavior  EventName="PointerExited">
+                    <core:ChangePropertyAction PropertyName="Visibility"
+                                               TargetObject="{Binding ElementName=PlayContextMenu}"
+                                               Value="Collapsed" />
+                    <core:ChangePropertyAction TargetObject="{Binding ElementName=AlbumsGv}"
+                                               PropertyName="IsItemClickEnabled"
+                                               Value="True" />
+                    <behaviors:StartAnimationAction Animation="{Binding ElementName=UnblurAnimation}" />
+                </core:EventTriggerBehavior>
+            </interactivity:Interaction.Behaviors>
+
+            <StackPanel>
+                <Grid ui:VisualExtensions.NormalizedCenterPoint="0.5, 0.5">
+                    <media:UIElementExtensions.VisualFactory>
+                        <media:PipelineVisualFactory>
+                            <media:BlurEffect x:Name="ImageBlurEffect"
+                                              IsAnimatable="True" />
+                        </media:PipelineVisualFactory>
+                    </media:UIElementExtensions.VisualFactory>
+                    <animations:Explicit.Animations>
+                        <animations:AnimationSet x:Name="BlurAnimation">
+                            <animations:BlurEffectAnimation From="0"
+                                                            To="18"
+                                                            Duration="0:0:0.3"
+                                                            EasingType="Sine"
+                                                            EasingMode="EaseInOut"
+                                                            Target="{Binding ElementName=ImageBlurEffect}" />
+                            <animations:ScaleAnimation EasingType="Sine"
+                                                       EasingMode="EaseInOut"
+                                                       From="1"
+                                                       To="1.02"
+                                                       Duration="0:0:0.3" />
+                        </animations:AnimationSet>
+                        <animations:AnimationSet x:Name="UnblurAnimation">
+                            <animations:BlurEffectAnimation From="18"
+                                                            To="0"
+                                                            Duration="0:0:0.2"
+                                                            EasingType="Sine"
+                                                            EasingMode="EaseIn"
+                                                            Target="{Binding ElementName=ImageBlurEffect}" />
+                            <animations:ScaleAnimation From="1.02"
+                                                       To="1"
+                                                       EasingType="Sine"
+                                                       EasingMode="EaseIn"
+                                                       Duration="0:0:0.2" />
+                        </animations:AnimationSet>
+                    </animations:Explicit.Animations>
+                    <Grid x:Name="AlternativeImage"
+                          x:Load="{x:Bind IsNull(Album.Image, x:False)}">
+                        <Image Source="ms-appx:///Assets/AlbumPlaceholder.png"
+                               Opacity="0" />
+                        <Border Background="{ThemeResource LayerFillColorDefaultBrush}"
+                                VerticalAlignment="Stretch"
+                                HorizontalAlignment="Stretch"
+                                CornerRadius="8"
+                                BorderThickness="1"
+                                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
+                            <FontIcon FontFamily="Segoe Fluent Icons"
+                                      FontSize="64"
+                                      Glyph="&#xE93C;" />
+                        </Border>
+                    </Grid>
+                    <Image Margin="0.5"
+                           Stretch="Uniform">
+                        <Image.Source>
+                            <BitmapImage UriSource="{x:Bind Album.Image}"
+                                         DecodePixelWidth="300"
+                                         DecodePixelHeight="300" />
+                        </Image.Source>
+                    </Image>
+                </Grid>
+                <TextBlock FontWeight="SemiBold"
+                           Margin="0,6,0,0"
+                           TextTrimming="CharacterEllipsis"
+                           Text="{x:Bind Album.Name}" />
+                <Button Style="{ThemeResource TextBlockButtonStyle}"
+                        Content="{x:Bind Album.Artists[0]}"
+                        Padding="0,2,0,2"
+                        Opacity=".7"
+                        FontSize="13" />
+                <TextBlock FontWeight="SemiBold"
+                           Opacity=".5"
+                           FontSize="12"
+                           xml:space="preserve"><Run Text="{x:Bind Album.Tracks}" /> track(s)</TextBlock>
+            </StackPanel>
+
+            <StackPanel x:Name="PlayContextMenu"
+                        Visibility="Collapsed"
+                        Spacing="4"
+                        HorizontalAlignment="Center"
+                        Margin="0,0,0,74"
+                        Orientation="Horizontal">
+                <StackPanel.Resources>
+                    <SolidColorBrush x:Key="ButtonBackgroundPointerOver"
+                                     Color="{ThemeResource  SystemAccentColorLight2}" />
+                </StackPanel.Resources>
+                <Button Background="{ThemeResource AcrylicInAppFillColorDefaultBrush}"
+                        CornerRadius="100"
+                        Command="{x:Bind PlayCommand}"
+                        CommandParameter="{x:Bind PlayContext}"
+                        Padding="16">
+                    <FontIcon FontFamily="Segoe Fluent Icons"
+                              FontSize="34"
+                              Glyph="&#xE102;" />
+                </Button>
+                <Button Background="{ThemeResource AcrylicInAppFillColorDefaultBrush}"
+                        CornerRadius="100"
+                        Padding="16">
+                    <FontIcon FontFamily="Segoe Fluent Icons"
+                              FontSize="34"
+                              Glyph="&#xE109;" />
+                </Button>
+            </StackPanel>
+        </Grid>
+    </DataTemplate>
+</ResourceDictionary>

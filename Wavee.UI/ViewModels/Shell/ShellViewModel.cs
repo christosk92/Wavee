@@ -24,7 +24,6 @@ namespace Wavee.UI.ViewModels.Shell
 
         [ObservableProperty]
         private SidebarItemViewModel? _selectedSidebarItem;
-        private double _openPaneLength = 200;
 
         public WaveeUserViewModel UserViewModel
         {
@@ -39,7 +38,7 @@ namespace Wavee.UI.ViewModels.Shell
         public ShellViewModel(UserManagerViewModel vm, ILoggerFactory? loggerFactory)
         {
             UserViewModel = vm.CurrentUserVal!;
-            PlayerViewModel = new PlayerViewModel(vm.CurrentUserVal.User.ServiceType, loggerFactory?.CreateLogger<PlayerViewModel>());
+            PlayerViewModel = new PlayerViewModel(vm.CurrentUserVal.User.ServiceType, vm.CurrentUserVal, loggerFactory?.CreateLogger<PlayerViewModel>());
             SidebarItems = new ObservableCollection<SidebarItemViewModel>
             {
                 new SidebarHeader("Feed"),
@@ -69,11 +68,11 @@ namespace Wavee.UI.ViewModels.Shell
         }
 
 
-        public double OpenPaneLength
-        {
-            get => _openPaneLength;
-            set => SetProperty(ref _openPaneLength, value);
-        }
+        // public double OpenPaneLength
+        // {
+        //     get => _openPaneLength;
+        //     set => SetProperty(ref _openPaneLength, value);
+        // }
 
 
         protected override void OnPropertyChanged(PropertyChangedEventArgs e)

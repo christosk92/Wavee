@@ -1,8 +1,11 @@
 ﻿using CommunityToolkit.Mvvm.DependencyInjection;
 using LiteDB;
+using Newtonsoft.Json;
 using TagLib;
 using Wavee.UI.AudioImport.Database;
 using Wavee.UI.Models;
+using Wavee.UI.Models.AudioItems;
+using Wavee.UI.ViewModels.Artist;
 
 namespace Wavee.UI.AudioImport
 {
@@ -314,6 +317,13 @@ namespace Wavee.UI.AudioImport
         }
 
         public string[] Artists => Performers.Length != 0 ? Performers : LiteDbAudioDb.UNKNOWN_ARTISTS;
+
+        [BsonIgnore]
+        [System.Text.Json.Serialization.JsonIgnore]
+        [JsonIgnore]
+        IDescriptionaryItem[] ITrack.Artists => Artists.Select(a => new ArtistDescriptionaryItem(a, a))
+            .Cast<IDescriptionaryItem>()
+            .ToArray();
 
         /// <summary>
         ///    Gets and sets the sort names for the Album Title of the

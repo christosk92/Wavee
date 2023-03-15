@@ -9,14 +9,12 @@ using Wavee.UI.ViewModels.Playback.Impl;
 namespace Wavee.UI.ViewModels.Playback.Contexts.Local;
 public class LocalLibraryContext : ILocalContext
 {
-    private readonly IAudioDb _db;
     private readonly int _offset;
     private readonly PlayOrderType _order;
     private readonly bool _descending;
     private readonly LibraryViewType _libraryViewType;
-    private LocalLibraryContext(IAudioDb db, PlayOrderType order, int offset, LibraryViewType libraryViewType, bool descending)
+    private LocalLibraryContext(PlayOrderType order, int offset, LibraryViewType libraryViewType, bool descending)
     {
-        _db = db;
         _offset = offset;
         _libraryViewType = libraryViewType;
         _descending = descending;
@@ -28,16 +26,17 @@ public class LocalLibraryContext : ILocalContext
 
     private IEnumerable<LocalAudioFile?> BuildQuery()
     {
+        var db = Ioc.Default.GetRequiredService<IAudioDb>();
         var orderedQuery =
             _descending
-                ? _db.AudioFiles.Query()
+                ? db.AudioFiles.Query()
                     .OrderByDescending<object>(_order switch
                     {
                         PlayOrderType.Name => a => a.Name,
                         PlayOrderType.Imported => a => a.CreatedAt,
                         _ => throw new ArgumentOutOfRangeException()
                     })
-                : _db.AudioFiles.Query()
+                : db.AudioFiles.Query()
                     .OrderBy<object>(_order switch
                     {
                         PlayOrderType.Name => a => a.Name,
@@ -49,15 +48,15 @@ public class LocalLibraryContext : ILocalContext
         {
             LibraryViewType.Songs =>
                 orderedQuery
-                .Offset(_offset)
-                .ToEnumerable(),
+                    .Offset(_offset)
+                    .ToEnumerable(),
             LibraryViewType.Albums =>
                 orderedQuery
-                .ToEnumerable()
-                .GroupBy(a => a.Album)
-                .Skip(_offset)
-                .SelectMany(a => a
-                    .OrderBy(j => j.Track)),
+                    .ToEnumerable()
+                    .GroupBy(a => a.Album)
+                    .Skip(_offset)
+                    .SelectMany(a => a
+                        .OrderBy(j => j.Track)),
             LibraryViewType.Artists => throw new NotImplementedException(),
             _ => throw new ArgumentOutOfRangeException()
         };
@@ -71,7 +70,7 @@ public class LocalLibraryContext : ILocalContext
         int offset,
         LibraryViewType viewType)
     {
-        return new LocalLibraryContext(Ioc.Default.GetRequiredService<IAudioDb>(),
+        return new LocalLibraryContext(
             order,
             offset,
             viewType,

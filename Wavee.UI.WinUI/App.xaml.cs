@@ -15,6 +15,7 @@ using Wavee.UI.AudioImport;
 using Wavee.UI.Identity.Users;
 using Wavee.UI.Utils;
 using Wavee.UI.Utils.Extensions;
+using Wavee.UI.ViewModels.Artist;
 using Wavee.UI.ViewModels.Identity;
 using Wavee.UI.ViewModels.Identity.User;
 using Wavee.UI.ViewModels.Shell;
@@ -118,6 +119,7 @@ namespace Wavee.UI.WinUI
                 .AddLocal(workDir)
                 .AddSingleton<ILocalFilePlayer, WinUIMediaPlayer>();
 
+            services.AddTransient<ArtistRootViewModel>();
 
             services.AddSingleton<IAudioSink, NAudioSink>();
 

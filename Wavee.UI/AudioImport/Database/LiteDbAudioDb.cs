@@ -32,6 +32,9 @@ namespace Wavee.UI.AudioImport.Database
             _audioLinks = Path.Combine(workDir, "audio_links");
             AudioFiles = _db.GetCollection<LocalAudioFile>();
             AudioFiles.EnsureIndex(a => a.CreatedAt);
+            AudioFiles.EnsureIndex(a => a.Artists.Select(k => k));
+            AudioFiles.EnsureIndex(a => a.Album);
+            AudioFiles.EnsureIndex(a => a.Path, true);
 
             Directory.CreateDirectory(_audioLinks);
             Directory.CreateDirectory(Path.Combine(_workDir, "images"));
@@ -55,7 +58,8 @@ namespace Wavee.UI.AudioImport.Database
         //     return Path.Combine(_audioLinks, hash);
         // }
 
-        public IEnumerable<GroupedAlbum> GetLatestAlbums<TK>(Expression<Func<LocalAudioFile, TK>> order,
+
+        public IEnumerable<LocalAlbum> GetLatestAlbumsDb<TK>(Expression<Func<LocalAudioFile, TK>> order,
             bool ascending,
             int offset,
             int limit)
@@ -65,13 +69,14 @@ namespace Wavee.UI.AudioImport.Database
                 .OrderBy(order, ascending ? 1 : -1)
                 .ToEnumerable()
                 .GroupBy(x => x.Album)
-                .Select(x => new GroupedAlbum
+                .Select(x => new LocalAlbum
                 {
                     Album = x.Key,
                     ServiceType = ServiceType.Local,
                     Image = x.FirstOrDefault(a => !string.IsNullOrEmpty(a.ImagePath))?.ImagePath,
                     Artists = x.SelectMany(a => a.Artists).ToArray(),
-                    Tracks = x.Count()
+                    Tracks = x.Count(),
+                    ReleaseYear = (ushort)x.First().Year
                 })
                 .Skip(offset)
                 .Take(limit);
@@ -129,7 +134,11 @@ namespace Wavee.UI.AudioImport.Database
                 var image = images.First();
                 var imageData = image.Data.Data;
                 //check to see if we have the image saved already
-                var base64 = request.Tag.Album ?? Path.GetFileName(request.Path);
+                string base64 = Path.GetFileName(request.Path);
+                if (!string.IsNullOrEmpty(request.Tag.Album))
+                {
+                    base64 = string.Join("_", request.Tag.Album.Split(Path.GetInvalidFileNameChars()));
+                }
                 imagePath = Path.Combine(_workDir, "images", base64);
                 var exists = File.Exists(imagePath);
                 if (!exists)

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.DependencyInjection;
 using CommunityToolkit.Mvvm.Messaging;
 using Wavee.UI.Identity.Messaging;
@@ -10,7 +11,7 @@ using Wavee.UI.Identity.Users;
 
 namespace Wavee.UI.ViewModels.Identity.User
 {
-    public class WaveeUserViewModel
+    public class WaveeUserViewModel : ObservableObject
     {
         public static WaveeUserViewModel Create(WaveeUser messageValue)
         {
@@ -21,8 +22,14 @@ namespace Wavee.UI.ViewModels.Identity.User
             };
         }
 
-        public WaveeUser User { get; init; }
-        public bool IsLoggedIn { get; set; }
+        public WaveeUser User
+        {
+            get; init;
+        }
+        public bool IsLoggedIn
+        {
+            get; set;
+        }
         public string DisplayName => User.UserData.DisplayName ?? User.UserData.Username;
 
         public void SignIn()

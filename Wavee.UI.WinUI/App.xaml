@@ -5,16 +5,26 @@
              xmlns:local="using:Wavee.UI.WinUI"
              xmlns:xamlConverters="using:Wavee.UI.WinUI.XamlConverters"
              xmlns:converters="using:CommunityToolkit.WinUI.UI.Converters"
-             xmlns:controls="using:Wavee.UI.WinUI.Controls">
+             xmlns:controls="using:Wavee.UI.WinUI.Controls"
+             xmlns:templates="using:Wavee.UI.WinUI.Themes.Templates"
+             xmlns:themes="using:Wavee.UI.WinUI.Themes">
     <Application.Resources>
         <ResourceDictionary>
-            <ResourceDictionary.MergedDictionaries>
-                <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
-                <!-- Other merged dictionaries here -->
-                <ResourceDictionary Source="/Themes/NavViewStyles.xaml" />
-                <ResourceDictionary Source="/Themes/ListViewItemStyles.xaml" />
-                <controls:LocalTrackStyles />
-            </ResourceDictionary.MergedDictionaries>
+            <LinearGradientBrush x:Key="ControlElevationBorderBrush"
+                                 MappingMode="Absolute"
+                                 StartPoint="0,0"
+                                 EndPoint="0,3">
+                <LinearGradientBrush.RelativeTransform>
+                    <ScaleTransform CenterY="0.5"
+                                    ScaleY="-1" />
+                </LinearGradientBrush.RelativeTransform>
+                <LinearGradientBrush.GradientStops>
+                    <GradientStop Offset="0"
+                                  Color="{ThemeResource ControlStrokeColorSecondary}" />
+                    <GradientStop Offset="1.0"
+                                  Color="{ThemeResource ControlStrokeColorDefault}" />
+                </LinearGradientBrush.GradientStops>
+            </LinearGradientBrush>
             <xamlConverters:NullToVisibilityConverter Null="Collapsed"
                                                       NonNull="Visible"
                                                       x:Key="NullToCollapsedConverter" />
@@ -51,11 +61,84 @@
             <xamlConverters:GetRowStyleConverter Odd="{StaticResource OddRow}"
                                                  Even="{StaticResource EvenRow}"
                                                  x:Key="GetRowStyle" />
+            <xamlConverters:GetRowStyleConverter Odd="{StaticResource EvenRow}"
+                                                 Even="{StaticResource OddRow}"
+                                                 x:Key="GetRowStyleReverse" />
             <xamlConverters:IndexToStringConverter x:Key="IndexToStringConverter" />
             <converters:BoolToVisibilityConverter TrueValue="Visible"
                                                   FalseValue="Collapsed"
                                                   x:Key="BooleanToVisibilityConverter" />
-            <!-- Other app resources here -->
+            <ResourceDictionary.MergedDictionaries>
+                <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
+                <!-- Other merged dictionaries here -->
+                <ResourceDictionary Source="/Themes/ListViewItemStyles.xaml" />
+                <ResourceDictionary Source="Themes/GridStyles.xaml" />
+                <themes:NavViewStyles />
+                <templates:AlbumTemplates />
+                <controls:LocalTrackStyles />
+
+                <ResourceDictionary>
+                    <ResourceDictionary.ThemeDictionaries>
+                        <ResourceDictionary x:Key="Light">
+                            <SolidColorBrush x:Key="App.Theme.BackgroundBrush"
+                                             Color="Transparent" />
+                            <SolidColorBrush x:Key="App.Theme.AddressBar.BackgroundBrush"
+                                             Color="{StaticResource LayerOnMicaBaseAltFillColorDefault}" />
+                            <SolidColorBrush x:Key="App.Theme.Sidebar.BackgroundBrush"
+                                             Color="{StaticResource CardBackgroundFillColorDefault}" />
+                            <SolidColorBrush x:Key="App.Theme.FileArea.BackgroundBrush"
+                                             Color="{StaticResource CardBackgroundFillColorDefault}" />
+
+                            <SolidColorBrush x:Key="TabViewItemHeaderBackground"
+                                             Color="{StaticResource SubtleFillColorTransparent}" />
+                            <SolidColorBrush x:Key="TabViewItemHeaderBackgroundSelected"
+                                             Color="{StaticResource LayerOnMicaBaseAltFillColorDefault}" />
+                            <SolidColorBrush x:Key="TabViewItemHeaderBackgroundPressed"
+                                             Color="{StaticResource SubtleFillColorTertiary}" />
+                            <SolidColorBrush x:Key="TabViewItemHeaderBackgroundPointerOver"
+                                             Color="{StaticResource SubtleFillColorSecondary}" />
+                        </ResourceDictionary>
+                        <ResourceDictionary x:Key="Dark">
+                            <SolidColorBrush x:Key="App.Theme.BackgroundBrush"
+                                             Color="Transparent" />
+                            <SolidColorBrush x:Key="App.Theme.AddressBar.BackgroundBrush"
+                                             Color="{StaticResource LayerOnMicaBaseAltFillColorDefault}" />
+                            <SolidColorBrush x:Key="App.Theme.Sidebar.BackgroundBrush"
+                                             Color="#993A3A3A" />
+                            <SolidColorBrush x:Key="App.Theme.FileArea.BackgroundBrush"
+                                             Color="#993A3A3A" />
+
+                            <SolidColorBrush x:Key="TabViewItemHeaderBackground"
+                                             Color="{StaticResource SubtleFillColorTransparent}" />
+                            <SolidColorBrush x:Key="TabViewItemHeaderBackgroundSelected"
+                                             Color="{StaticResource LayerOnMicaBaseAltFillColorDefault}" />
+                            <SolidColorBrush x:Key="TabViewItemHeaderBackgroundPressed"
+                                             Color="{StaticResource SubtleFillColorTertiary}" />
+                            <SolidColorBrush x:Key="TabViewItemHeaderBackgroundPointerOver"
+                                             Color="{StaticResource SubtleFillColorSecondary}" />
+                        </ResourceDictionary>
+                        <ResourceDictionary x:Key="HighContrast">
+                            <SolidColorBrush x:Key="App.Theme.BackgroundBrush"
+                                             Color="Transparent" />
+                            <SolidColorBrush x:Key="App.Theme.AddressBar.BackgroundBrush"
+                                             Color="Transparent" />
+                            <SolidColorBrush x:Key="App.Theme.Sidebar.BackgroundBrush"
+                                             Color="{StaticResource CardBackgroundFillColorDefault}" />
+                            <SolidColorBrush x:Key="App.Theme.FileArea.BackgroundBrush"
+                                             Color="{StaticResource CardBackgroundFillColorDefault}" />
+
+                            <SolidColorBrush x:Key="TabViewItemHeaderBackground"
+                                             Color="{StaticResource SystemColorWindowColor}" />
+                            <SolidColorBrush x:Key="TabViewItemHeaderBackgroundSelected"
+                                             Color="{StaticResource LayerFillColorDefault}" />
+                            <SolidColorBrush x:Key="TabViewItemHeaderBackgroundPressed"
+                                             Color="{StaticResource SystemColorHighlightColor}" />
+                            <SolidColorBrush x:Key="TabViewItemHeaderBackgroundPointerOver"
+                                             Color="{StaticResource SystemColorHighlightColor}" />
+                        </ResourceDictionary>
+                    </ResourceDictionary.ThemeDictionaries>
+                </ResourceDictionary>
+            </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

@@ -1,8 +1,9 @@
-﻿using Wavee.UI.Identity.Users.Contracts;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+using Wavee.UI.Identity.Users.Contracts;
 
 namespace Wavee.UI.Identity.Users
 {
-    public class WaveeUser : IWaveeUser, IEquatable<WaveeUser>
+    public class WaveeUser : ObservableObject, IWaveeUser, IEquatable<WaveeUser>
     {
         public WaveeUser(ServiceType serviceType, string userFullpath) : this(serviceType, UserData.FromFile(userFullpath)) { }
 
@@ -16,8 +17,14 @@ namespace Wavee.UI.Identity.Users
 
 
         public string Id => UserData.Username;
-        public ServiceType ServiceType { get; }
-        public UserData UserData { get; private set; }
+        public ServiceType ServiceType
+        {
+            get;
+        }
+        public UserData UserData
+        {
+            get; private set;
+        }
 
         public void UpdateUserData(UserData newUserData)
         {

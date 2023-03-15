@@ -36,6 +36,7 @@ namespace Wavee.UI.ViewModels.ForYou.Home
         public void OnNavigatedFrom()
         {
             this.IsActive = false;
+            WeakReferenceMessenger.Default.Unregister<TrackImportCompleteMessage>(this);
         }
 
         public int MaxDepth

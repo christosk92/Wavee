@@ -1,5 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
-using Wavee.UI.Models;
+using Wavee.UI.Models.AudioItems;
 
 namespace Wavee.UI.ViewModels.AudioItems
 {

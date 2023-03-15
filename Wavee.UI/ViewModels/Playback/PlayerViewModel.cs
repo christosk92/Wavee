@@ -1,13 +1,18 @@
 ﻿using System.Collections.Concurrent;
 using System.Reactive.Concurrency;
+using System.Windows.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.DependencyInjection;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
 using Nito.AsyncEx;
 using ReactiveUI;
+using Wavee.UI.Identity.Users;
 using Wavee.UI.Identity.Users.Contracts;
+using Wavee.UI.Models;
+using Wavee.UI.Navigation;
 using Wavee.UI.Utils;
+using Wavee.UI.ViewModels.Identity.User;
 using Wavee.UI.ViewModels.Playback.Impl;
 using Wavee.UI.ViewModels.Playback.PlayerEvents;
 
@@ -33,14 +38,20 @@ public partial class PlayerViewModel : ObservableRecipient, IDisposable
 
     [ObservableProperty] private PlayingTrackView? _playingItem;
 
-    [ObservableProperty] private bool _coverImageExpanded;
+    //  [ObservableProperty] private bool _coverImageExpanded;
 
     // [ObservableProperty]
     private ulong _positionMs;
 
-    public PlayerViewModel(ServiceType userServiceType, ILogger<PlayerViewModel>? logger)
+    public WaveeUserViewModel CurrentUser
+    {
+        get;
+    }
+
+    public PlayerViewModel(ServiceType userServiceType, WaveeUserViewModel currentUser, ILogger<PlayerViewModel>? logger)
     {
         _logger = logger;
+        CurrentUser = currentUser;
         _handlerInternal = userServiceType switch
         {
             ServiceType.Local => Ioc.Default.GetRequiredService<LocalPlayerHandler>(),
@@ -50,26 +61,20 @@ public partial class PlayerViewModel : ObservableRecipient, IDisposable
         _positionTimespan = new Timer(IncrementPosition, null, Timeout.Infinite, Timeout.Infinite);
         _cts = new CancellationTokenSource();
         Task.Factory.StartNew(EventsReaderLoop, TaskCreationOptions.LongRunning);
-
-        PlayCommand = new AsyncRelayCommand<IPlayContext>(PlayTask);
-        PlayNextCommand = new AsyncRelayCommand<IPlayContext>(PlayQueueTask);
+        Instance = this;
+        NavigateTo = new RelayCommand<IDescriptionaryItem>(item =>
+        {
+            NavigationService.Instance.To(item.NavigateTo, item.Value);
+        });
     }
 
-    public static AsyncRelayCommand<IPlayContext>? PlayCommand
-    {
-        get;
-        private set;
-    }
 
-    public static AsyncRelayCommand<IPlayContext>? PlayNextCommand
-    {
-        get;
-        private set;
-    }
+    //public ICommand NavigateTo => Commands.NavigateToCommand;
 
     public void Dispose() => _handlerInternal.Dispose();
 
-    private Task PlayTask(IPlayContext? arg)
+    [RelayCommand]
+    public Task PlayTask(IPlayContext? arg)
     {
         if (arg == null)
         {
@@ -79,7 +84,7 @@ public partial class PlayerViewModel : ObservableRecipient, IDisposable
         return _handlerInternal.LoadTrackList(arg);
     }
 
-    private Task PlayQueueTask(IPlayContext? arg) => throw new NotImplementedException();
+    public Task PlayQueueTask(IPlayContext? arg) => throw new NotImplementedException();
 
     public Guid RegisterPositionCallback(ulong minDiff, Action<ulong> callback)
     {
@@ -220,7 +225,7 @@ public partial class PlayerViewModel : ObservableRecipient, IDisposable
     [RelayCommand]
     private void ExpandCoverImage(bool expand)
     {
-        CoverImageExpanded = expand;
+        CurrentUser.User.UserData.SidebarExpanded = expand;
     }
 
     [RelayCommand]
@@ -235,4 +240,15 @@ public partial class PlayerViewModel : ObservableRecipient, IDisposable
             await _handlerInternal.Pause();
         }
     }
+    public static PlayerViewModel Instance
+    {
+        get;
+        private set;
+    }
+
+    public RelayCommand<IDescriptionaryItem> NavigateTo
+    {
+        get;
+    }
+
 }

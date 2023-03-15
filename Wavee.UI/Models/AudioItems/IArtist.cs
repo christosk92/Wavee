@@ -1,7 +1,7 @@
 ﻿using Wavee.UI.Identity.Users.Contracts;
 
-namespace Wavee.UI.Models;
-public interface IAlbum
+namespace Wavee.UI.Models.AudioItems;
+public interface IArtist
 {
     ServiceType ServiceType
     {
@@ -13,16 +13,6 @@ public interface IAlbum
     }
 
     string? Image
-    {
-        get;
-    }
-
-    public string[] Artists
-    {
-        get;
-    }
-
-    public int Tracks
     {
         get;
     }

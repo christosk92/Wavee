@@ -2,7 +2,6 @@
 <UserControl x:Class="Wavee.UI.WinUI.Controls.BottomPlayerControl"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="using:Wavee.UI.WinUI.Controls"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:controls="using:CommunityToolkit.WinUI.UI.Controls"
@@ -24,6 +23,7 @@
             </converters:BoolToObjectConverter.TrueValue>
             <converters:BoolToObjectConverter.FalseValue>
                 <FontIcon FontFamily="/Assets/Fonts/MediaPlayerIcons.ttf#Media Player Fluent Icons"
+                          FontSize="28"
                           Glyph="&#xE769;" />
             </converters:BoolToObjectConverter.FalseValue>
         </converters:BoolToObjectConverter>
@@ -52,7 +52,7 @@
                           x:Name="MyGrid"
                           Background="Transparent"
                           Width="75"
-                          Visibility="{x:Bind ViewModel.CoverImageExpanded, Mode=OneWay, Converter={StaticResource TrueToCollapsedConverter}}"
+                          Visibility="{x:Bind ViewModel.CurrentUser.User.UserData.SidebarExpanded, Mode=OneWay, Converter={StaticResource TrueToCollapsedConverter}}"
                           Height="75"
                           controls:DockPanel.Dock="Left">
                         <animations:Implicit.ShowAnimations>
@@ -144,8 +144,10 @@
                         <Button FontSize="13"
                                 Style="{ThemeResource TextBlockButtonStyle}"
                                 Padding="0,2"
+                                Command="{x:Bind ViewModel.NavigateTo}"
+                                CommandParameter="{Binding PlayingItem.Artists[0]}"
                                 Opacity=".8"
-                                Content="{x:Bind ViewModel.PlayingItem.Artists[0], Mode=OneWay}" />
+                                Content="{x:Bind ViewModel.PlayingItem.Artists[0].Title, Mode=OneWay}" />
                     </StackPanel>
                     <Button Background="Transparent"
                             BorderThickness="0"
@@ -179,8 +181,7 @@
                             <FontIcon FontFamily="Segoe Fluent Icons"
                                       Glyph="&#xE100;" />
                         </Button>
-                        <Button Background="{ThemeResource SystemAccentColor}"
-                                Foreground="White"
+                        <Button Background="{ThemeResource SystemAccentColorLight1}"
                                 CornerRadius="100"
                                 Width="56"
                                 Command="{x:Bind ViewModel.PauseResumeCommand}"

@@ -1,5 +1,6 @@
 ﻿using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Wavee.UI.ViewModels.Album;
 using Wavee.UI.ViewModels.AudioItems;
 
 namespace Wavee.UI.WinUI.TemplateSelectors

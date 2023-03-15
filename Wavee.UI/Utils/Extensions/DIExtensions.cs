@@ -65,7 +65,7 @@ namespace Wavee.UI.Utils.Extensions
                     workDir
                 );
             });
-
+            serviceCollection.AddTransient<IPlaycountService, PlaycountService>();
             serviceCollection.AddTransient<LocalPlayerHandler>();
 
             return serviceCollection;

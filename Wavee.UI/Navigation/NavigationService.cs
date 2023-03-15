@@ -162,6 +162,17 @@ public partial class NavigationService : ObservableObject
         var navigate = Ioc.Default.GetService<T>();
         return navigate != null && To(navigate, parameter);
     }
+    public bool To(Type t, object? parameter = null)
+    {
+        //try fetch from DI container
+        var navigate = Ioc.Default.GetService(t);
+        if (navigate is INavigatable nav)
+        {
+            return To(nav, parameter);
+        }
+
+        throw new NotSupportedException();
+    }
     public bool To(INavigatable navigateTo, object? parameter = null, bool clearNavigation = false)
     {
         if (_current != navigateTo || (parameter != null && !parameter.Equals(_lastParameterUsed)))

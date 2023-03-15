@@ -8,6 +8,7 @@
              xmlns:controls="using:Wavee.UI.WinUI.Controls"
              xmlns:behaviors="using:CommunityToolkit.WinUI.UI.Behaviors"
              xmlns:interactivity="using:Microsoft.Xaml.Interactivity"
+             xmlns:audioItems="using:Wavee.UI.ViewModels.AudioItems"
              SizeChanged="LocalHomeView_OnSizeChanged"
              mc:Ignorable="d">
     <UserControl.Resources>
@@ -60,7 +61,7 @@
         </StackPanel>
         <Grid x:Name="DataGrid"
               Grid.Row="1"
-              Margin="0,0,0,120">
+              Margin="24,0,0,100">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="2*"
@@ -70,7 +71,7 @@
                 <RowDefinition Height="*" />
                 <RowDefinition Height="0" />
             </Grid.RowDefinitions>
-            <Grid>
+            <Grid Margin="0,0,0,12">
                 <Border CornerRadius="3">
                     <Grid>
                         <Rectangle  HorizontalAlignment="Stretch"
@@ -128,11 +129,20 @@
                               Margin="0,12,0,0"
                               SelectionMode="Extended"
                               ItemsSource="{x:Bind ViewModel.LatestFiles}"
-                              ItemTemplate="{StaticResource LocalTrackVm}"
                               ItemContainerStyle="{StaticResource SongGridViewItemStyle}">
                     <interactivity:Interaction.Behaviors>
                         <behaviors:StickyHeaderBehavior />
                     </interactivity:Interaction.Behaviors>
+                    <ListView.ItemTemplate>
+                        <DataTemplate x:DataType="audioItems:TrackViewModel">
+                            <Border Style="{x:Bind Index,
+                                 Mode=OneWay, Converter={StaticResource GetRowStyle}}">
+                                <ContentPresenter HorizontalContentAlignment="Stretch"
+                                                  VerticalContentAlignment="Stretch"
+                                                  Content="{x:Bind}" ContentTemplate="{StaticResource LocalTrackVm}"/>
+                            </Border>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
                 </ListView>
                 <TextBlock Grid.ColumnSpan="2"
                            Grid.Column="0"

@@ -2,23 +2,16 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Numerics;
-using Windows.Storage.Pickers;
-using CommunityToolkit.Mvvm.DependencyInjection;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Input;
 using Wavee.UI.Identity.Users.Contracts;
 using Wavee.UI.ViewModels.Shell;
-using WinUIEx;
 using Wavee.UI.Navigation;
-using Wavee.UI.ViewModels.ForYou.Recommended;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Storage;
 using CommunityToolkit.Mvvm.Messaging;
-using CommunityToolkit.WinUI.UI;
 using Wavee.UI.AudioImport;
 using Wavee.UI.AudioImport.Messages;
-using Wavee.UI.WinUI.Views.Identity;
 
 namespace Wavee.UI.WinUI.Views.Shell;
 
@@ -29,51 +22,12 @@ public sealed partial class ShellView : UserControl
         ViewModel = viewmodel;
         this.InitializeComponent();
     }
-
     public ShellViewModel ViewModel
     {
         get;
     }
     public NavigationService NavigationService { get; } = NavigationService.Instance;
 
-    public bool ShouldShowHeader(SidebarItemViewModel o)
-    {
-        return
-            o is RecommendedViewModelFactory
-            {
-                ForService: not ServiceType.Local
-            };
-    }
-
-    public Visibility ShouldShowHeaderVisibility(SidebarItemViewModel o)
-    {
-        return ShouldShowHeader(o) ? Visibility.Visible : Visibility.Collapsed;
-    }
-
-    private void ViewPanel_OnItemInvoked(NavigationView sender, NavigationViewItemInvokedEventArgs args)
-    {
-        //var getIndex
-        if (args.InvokedItemContainer.Tag is string tagId)
-        {
-            ViewModel.SelectedSidebarItem = ViewModel.SidebarItems.Single(a => a.Id == tagId);
-            ViewModel.SelectedSidebarItem.NavigateTo();
-        }
-    }
-
-    // private async void UIElement_OnTapped(object sender, TappedRoutedEventArgs e)
-    // {
-    //     var picker = new FileOpenPicker();
-    //     WinRT.Interop.InitializeWithWindow.Initialize(picker, App.MWindow.GetWindowHandle());
-    //     picker.FileTypeFilter.Add(".mp3");
-    //     picker.FileTypeFilter.Add(".ogg");
-    //     var openfile = await picker.PickSingleFileAsync();
-    //     if (openfile != null)
-    //     {
-    //         var path = openfile.Path;
-    //         var player = Ioc.Default.GetRequiredService<LocalFilePlayer>();
-    //         player.PlayFile(path);
-    //     }
-    // }
     public bool IsLocal(ServiceType serviceType)
     {
         return serviceType == ServiceType.Local;
@@ -132,20 +86,4 @@ public sealed partial class ShellView : UserControl
         return new Vector3(0, (float)-d, 0);
     }
 
-    private bool _wasExpandedImage;
-    private void ViewPanel_OnPaneClosing(NavigationView sender, NavigationViewPaneClosingEventArgs args)
-    {
-        this.FindDescendant<UserProfileCard>()!.Visibility = Visibility.Collapsed;
-        _wasExpandedImage = ViewModel.PlayerViewModel.CoverImageExpanded;
-        if (_wasExpandedImage)
-        {
-            ViewModel.PlayerViewModel.CoverImageExpanded = false;
-        }
-    }
-
-    private void ViewPanel_OnPaneOpening(NavigationView sender, object args)
-    {
-        this.FindDescendant<UserProfileCard>()!.Visibility = Visibility.Visible;
-        ViewModel.PlayerViewModel.CoverImageExpanded = _wasExpandedImage;
-    }
 }

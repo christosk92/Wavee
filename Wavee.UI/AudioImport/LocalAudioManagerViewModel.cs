@@ -167,13 +167,5 @@ public partial class LocalAudioManagerViewModel : ObservableRecipient, IRecipien
         return _db.Count();
     }
 
-    public IEnumerable<GroupedAlbum> GetLatestAlbums<TK>(Expression<Func<LocalAudioFile, TK>> order,
-        bool ascending,
-        int offset = 0,
-        int limit = 20)
-    {
-        return _db.GetLatestAlbums(order, ascending, offset, limit);
-    }
-
 
 }

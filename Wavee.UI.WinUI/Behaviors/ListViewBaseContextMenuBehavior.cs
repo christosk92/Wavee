@@ -10,9 +10,10 @@ using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Data;
 using Microsoft.UI.Xaml.Input;
+using Microsoft.UI.Xaml.Media;
 using Spotify.Metadata;
 using Wavee.UI.Identity.Users.Contracts;
-using Wavee.UI.ViewModels.AudioItems;
+using Wavee.UI.ViewModels.Album;
 using Wavee.UI.ViewModels.Playback;
 using Wavee.UI.ViewModels.Playback.Contexts.Local;
 using Wavee.UI.ViewModels.Playback.Impl;
@@ -46,7 +47,7 @@ namespace Wavee.UI.WinUI.Behaviors
                 flyout.ShowAt(tappedItem, e.GetPosition(tappedItem));
             }
 
-            void ShowMultiple(IList<object> datacontexts)
+            void ShowMultiple(IList<(object Item, int RealIndex)> datacontexts)
             {
                 var flyout = CreateMultipleItemsContextMenu(datacontexts);
                 var tappedItem = (UIElement)e.OriginalSource;
@@ -81,7 +82,9 @@ namespace Wavee.UI.WinUI.Behaviors
                     ShowSingle(firstItem, indexOf);
                     break;
                 default:
-                    ShowMultiple(AssociatedObject.SelectedItems);
+                    ShowMultiple(AssociatedObject.SelectedItems
+                        .Select(a => (a, AssociatedObject.Items.IndexOf(a)))
+                        .ToList());
                     break;
             }
         }
@@ -104,7 +107,7 @@ namespace Wavee.UI.WinUI.Behaviors
                 var playItem = new MenuFlyoutItem
                 {
                     Text = "Play",
-                    Command = PlayerViewModel.PlayCommand,
+                    Command = PlayerViewModel.Instance.PlayTaskCommand,
                     CommandParameter = playcontext,
                     // CommandParameter = new[]
                     // {
@@ -121,7 +124,7 @@ namespace Wavee.UI.WinUI.Behaviors
                 var playNextItem = new MenuFlyoutItem
                 {
                     Text = "Play next",
-                    Command = PlayerViewModel.PlayNextCommand,
+                    //Command = PlayerViewModel.PlayNextCommand,
                     // CommandParameter = new[]
                     // {
                     //     playableItem
@@ -190,41 +193,68 @@ namespace Wavee.UI.WinUI.Behaviors
             return contextMenu;
         }
 
-        private static MenuFlyout CreateMultipleItemsContextMenu(IList<object> datacontexts, IPlayContext? playcontext = null)
+        private static MenuFlyout CreateMultipleItemsContextMenu(IList<(object Item, int RealIndex)> datacontexts)
         {
             var contextMenu = new MenuFlyout();
-            contextMenu.Items.Add(new MenuFlyoutItem
+            if (datacontexts.All(a => a.Item is IPlayableItemWrapper))
             {
-                Text = $"{datacontexts.Count} item{(datacontexts.Count == 1 ? string.Empty : "s")}",
-                IsEnabled = false,
-                HorizontalContentAlignment = HorizontalAlignment.Center,
-                HorizontalAlignment = HorizontalAlignment.Center
-            });
-            if (playcontext is not null)
-            {
-                var playItem = new MenuFlyoutItem
+                //BTF means sort on ascending index
+                var playBTF = new MenuFlyoutItem
                 {
-                    Text = "Play",
-                    Command = PlayerViewModel.PlayCommand,
-                    CommandParameter = playcontext,
+                    Text = "Play back to front",
+                    Command = PlayerViewModel.Instance.PlayTaskCommand,
+                    CommandParameter = new CustomContext(datacontexts
+                        .OrderBy(a => a.RealIndex)
+                        .Select(a => (a.Item as IPlayableItemWrapper)!.PlayableItem)!),
+                    // CommandParameter = playcontext,
                     Icon = new FontIcon
                     {
                         FontFamily = new Microsoft.UI.Xaml.Media.FontFamily("Segoe Fluent Icons"),
-                        Glyph = "\uE102"
+                        Glyph = "\uE176"
                     },
                 };
-                var playNextItem = new MenuFlyoutItem
+
+                //FTB means on descending index
+                var playFTB = new MenuFlyoutItem
                 {
-                    Text = "Play next",
-                    Command = PlayerViewModel.PlayNextCommand,
-                    // CommandParameter = datacontexts,
-                    Icon = new FontIcon { FontFamily = new Microsoft.UI.Xaml.Media.FontFamily("/Assets/Fonts/MediaPlayerIcons.ttf#Media Player Fluent Icons"), Glyph = "\uF5EB" }
+                    Text = "Play front to back",
+                    Command = PlayerViewModel.Instance.PlayTaskCommand,
+                    CommandParameter = new CustomContext(datacontexts
+                        .OrderByDescending(a => a.RealIndex)
+                        .Select(a => (a.Item as IPlayableItemWrapper)!.PlayableItem)!),
+                    Icon = new FontIcon
+                    {
+                        FontFamily = new Microsoft.UI.Xaml.Media.FontFamily("Segoe Fluent Icons"),
+                        Glyph = "\uE177"
+                    },
                 };
-                contextMenu.Items.Add(playItem);
-                contextMenu.Items.Add(playNextItem);
+                var playOrderSelected = new MenuFlyoutItem
+                {
+                    Text = "Play order selected",
+                    Command = PlayerViewModel.Instance.PlayTaskCommand,
+                    CommandParameter = new CustomContext(datacontexts
+                        .Select(a => (a.Item as IPlayableItemWrapper)!.PlayableItem)!),
+                    Icon = new FontIcon
+                    {
+                        FontFamily = new Microsoft.UI.Xaml.Media.FontFamily("Segoe Fluent Icons"),
+                        Glyph = "\uE133"
+                    },
+                };
+                contextMenu.Items.Add(new MenuFlyoutItem
+                {
+                    Text = $"{datacontexts.Count} item{(datacontexts.Count == 1 ? string.Empty : "s")}",
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    HorizontalContentAlignment = HorizontalAlignment.Center,
+                    IsEnabled = false,
+                    Icon = new FontIcon { FontFamily = new FontFamily("Segoe Fluent Icons"), Glyph = "\uE102" }
+                });
+                contextMenu.Items.Add(playFTB);
+                contextMenu.Items.Add(playBTF);
+                contextMenu.Items.Add(playOrderSelected);
+
                 contextMenu.Items.Add(new MenuFlyoutSeparator());
             }
-            if (datacontexts.All(a => a is IAddableItem))
+            if (datacontexts.All(a => a.Item is IAddableItem))
             {
                 var addToItem = new MenuFlyoutSubItem()
                 {

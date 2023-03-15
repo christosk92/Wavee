@@ -10,6 +10,21 @@
     <None Update="App.xaml">
       <SubType>Designer</SubType>
     </None>
+    <None Update="Controls\ImageTransitionControl.xaml">
+      <SubType>Designer</SubType>
+    </None>
+    <Page Update="Controls\SidebarControl.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Themes\Templates\AlbumTemplates.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Themes\GridStyles.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Views\Artist\ArtistRootView.xaml">
+      <SubType>Designer</SubType>
+    </Page>
     <Page Update="Controls\LocalTrackStyles.xaml">
       <SubType>Designer</SubType>
     </Page>
