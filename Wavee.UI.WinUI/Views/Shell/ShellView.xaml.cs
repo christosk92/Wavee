@@ -1,89 +1,49 @@
 using System;
-using System.IO;
-using System.Linq;
-using System.Numerics;
-using Microsoft.UI.Xaml;
+using System.Diagnostics;
 using Microsoft.UI.Xaml.Controls;
-using Wavee.UI.Identity.Users.Contracts;
+using System.Numerics;
+using CommunityToolkit.Mvvm.DependencyInjection;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Input;
+using Wavee.UI.Interfaces.Services;
+using Wavee.UI.Models.Profiles;
 using Wavee.UI.ViewModels.Shell;
-using Wavee.UI.Navigation;
-using Windows.ApplicationModel.DataTransfer;
-using Windows.Storage;
-using CommunityToolkit.Mvvm.Messaging;
-using Wavee.UI.AudioImport;
-using Wavee.UI.AudioImport.Messages;
+using Wavee.UI.ViewModels.User;
+using Wavee.UI.WinUI.Interfaces.Services;
 
-namespace Wavee.UI.WinUI.Views.Shell;
+// To learn more about WinUI, the WinUI project structure,
+// and more about our project templates, see: http://aka.ms/winui-project-info.
 
-public sealed partial class ShellView : UserControl
+namespace Wavee.UI.WinUI.Views.Shell
 {
-    public ShellView(ShellViewModel viewmodel)
+    public sealed partial class ShellView : UserControl
     {
-        ViewModel = viewmodel;
-        this.InitializeComponent();
-    }
-    public ShellViewModel ViewModel
-    {
-        get;
-    }
-    public NavigationService NavigationService { get; } = NavigationService.Instance;
-
-    public bool IsLocal(ServiceType serviceType)
-    {
-        return serviceType == ServiceType.Local;
-    }
-
-    private void ShellView_OnDragOver(object sender, DragEventArgs e)
-    {
-        e.AcceptedOperation = DataPackageOperation.Link;
-        e.DragUIOverride.Caption = "Drop tracks"; // Sets custom UI text
-        e.DragUIOverride.IsCaptionVisible = true; // Sets if the caption is visible
-        e.DragUIOverride.IsContentVisible = true; // Sets if the dragged content is visible
-        e.DragUIOverride.IsGlyphVisible = true; // Sets if the glyph is visibile
-    }
-
-    private async void ShellView_OnDrop(object sender, DragEventArgs e)
-    {
-        //check if we are on a playlist page
-
-        //TODO: playlist view check
-        if (NavigationService.Current is not { })
+        public ShellView(Profile profile)
         {
-            //should return false
+            ViewModel = new ShellViewModel(new UserViewModel(profile), Ioc.Default.GetRequiredService<IStringLocalizer>());
+            NavigationViewService = Ioc.Default.GetRequiredService<INavigationViewService>();
+            this.InitializeComponent();
+            NavigationViewService.Initialize(navigationView: SidebarNavView);
+            Ioc.Default.GetRequiredService<INavigationService>().SetFrame(NavigationFrame);
         }
-        else
+
+        public INavigationViewService NavigationViewService { get; }
+        public ShellViewModel ViewModel { get; }
+        public bool IsDebug => Debugger.IsAttached;
+
+        public Vector3 GetVectorFromHeight(double d)
         {
-            if (!e.DataView.Contains(StandardDataFormats.StorageItems))
-                return;
+            return new Vector3(0, (float)-d, 0);
+        }
 
-            var items = await e.DataView.GetStorageItemsAsync();
-            if (items.Count == 0) return;
+        private void FrameworkElement_OnLoaded(object sender, RoutedEventArgs e)
+        {
+            GC.Collect();
+        }
 
-            //only accept audio files and folders 
-
-            static bool IsAudioFile(IStorageItem item)
-            {
-                var isFile = item.IsOfType(StorageItemTypes.File);
-                var contains = LocalAudioManagerViewModel.AcceptedAudioFormats.Contains(Path.GetExtension(item.Path));
-                return isFile && contains;
-            }
-
-            static bool IsFolder(IStorageItem item)
-            {
-                return item.IsOfType(StorageItemTypes.Folder);
-            }
-
-            var audioFiles = items.Where(a => IsAudioFile(a) || IsFolder(a))
-                .Select(a => (a.Path, IsFolder(a)));
-
-            var message = new ImportTracksMessage(audioFiles);
-            WeakReferenceMessenger.Default.Send(message);
+        private void GCTApped(object sender, TappedRoutedEventArgs e)
+        {
+            GC.Collect();
         }
     }
-
-    public Vector3 GetVectorFromHeight(double d)
-    {
-        return new Vector3(0, (float)-d, 0);
-    }
-
 }

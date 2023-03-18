@@ -1,31 +1,21 @@
-﻿using Microsoft.UI.Xaml;
-using System;
-using Windows.Storage;
-using CommunityToolkit.Mvvm.DependencyInjection;
+﻿using CommunityToolkit.Mvvm.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
-using Serilog;
-using Serilog.Events;
-using Serilog.Sinks.SystemConsole.Themes;
-using Wavee.Player.NAudio;
-using Wavee.Spotify;
-using Wavee.Spotify.ConnectState;
-using Wavee.Spotify.Player;
-using Wavee.Spotify.Session;
-using Wavee.UI.AudioImport;
-using Wavee.UI.Identity.Users;
-using Wavee.UI.Utils;
-using Wavee.UI.Utils.Extensions;
-using Wavee.UI.ViewModels.Artist;
-using Wavee.UI.ViewModels.Identity;
-using Wavee.UI.ViewModels.Identity.User;
-using Wavee.UI.ViewModels.Shell;
-using Wavee.UI.WinUI.Player;
-using Wavee.UI.WinUI.Utils;
-using WinUIEx;
-using Path = System.IO.Path;
-
-// To learn more about WinUI, the WinUI project structure,
-// and more about our project templates, see: http://aka.ms/winui-project-info.
+using Microsoft.UI.Xaml;
+using Microsoft.Windows.ApplicationModel.Resources;
+using ReactiveUI;
+using Splat;
+using Wavee.UI.Helpers.Extensions;
+using Wavee.UI.Interfaces.Services;
+using Wavee.UI.Playback.Player;
+using Wavee.UI.Services.Db;
+using Wavee.UI.Services.Import;
+using Wavee.UI.Services.Profiles;
+using Wavee.UI.ViewModels.Home;
+using Wavee.UI.ViewModels.Libray;
+using Wavee.UI.ViewModels.Login;
+using Wavee.UI.WinUI.Interfaces.Services;
+using Wavee.UI.WinUI.Playback;
+using Wavee.UI.WinUI.Services;
 
 namespace Wavee.UI.WinUI
 {
@@ -41,13 +31,7 @@ namespace Wavee.UI.WinUI
         public App()
         {
             this.InitializeComponent();
-            var services = ConfigureServices();
-            Ioc.Default.ConfigureServices(services);
-
-            //get UVM (to register events)
-            _ = services.GetRequiredService<UserManagerViewModel>();
-            _ = services.GetRequiredService<LocalAudioManagerViewModel>();
-
+            Locator.CurrentMutable.InitializeReactiveUI();
         }
 
         /// <summary>
@@ -56,90 +40,50 @@ namespace Wavee.UI.WinUI
         /// <param name="args">Details about the launch request and process.</param>
         protected override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
         {
-            MWindow = new MainWindow();
-            MWindow.Activate();
+            var rm = new Microsoft.Windows.ApplicationModel.Resources.ResourceManager();
+            var rc = rm.MainResourceMap;
+            var container = CreateServices();
+            Ioc.Default.ConfigureServices(container
+                .AddSingleton<IStringLocalizer>(new WinUIResourcesStringLocalizer(rc))
+                .BuildServiceProvider());
+
+            m_window = new MainWindow();
+            MainWindow = m_window as MainWindow;
+            m_window.Activate();
         }
 
-        public static WindowEx MWindow;
-
-
-        /// <summary>
-        /// Gets the <see cref="IServiceProvider"/> instance to resolve application services.
-        /// </summary>
-        public IServiceProvider Services
+        private static IServiceCollection CreateServices()
         {
-            get;
-        }
-
-        /// <summary>
-        /// Configures the services for the application.
-        /// </summary>
-        private static IServiceProvider ConfigureServices()
-        {
-            string workDir = string.Empty;
-            try
-            {
-                workDir = ApplicationData.Current.LocalFolder.Path;
-            }
-            catch (Exception x)
-            {
-                workDir = EnvironmentHelpers.GetDataDir("Wavee");
-            }
-
             var services = new ServiceCollection();
-            var serilog = new LoggerConfiguration()
-                .MinimumLevel.Debug()
-                .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
-                .Enrich.FromLogContext()
-                .WriteTo.File(Path.Combine(workDir, "waveeui.log"), rollingInterval: RollingInterval.Day)
-                .WriteTo.Console(theme: AnsiConsoleTheme.Code)
-                .CreateLogger();
-            services.AddLogging(builder =>
-            {
-                builder.AddSerilog(serilog);
-            });
+            services.AddTransient<LoginViewModel>();
 
+            services.AddTransient<INavigationViewService, NavigationViewService>();
+            services.AddSingleton<IPageService, PageService>();
+            services.AddSingleton<INavigationService, NavigationService>();
 
-            services.AddSingleton<ISpotifySession, SpotifySession>();
-            services.AddSingleton<ISpotifyConnectState, SpotifyConnectState>();
-            services.AddSingleton<ISpotifyPlayer, SpotifyPlayer>();
+            services.AddTransient<IFileService, FileService>();
+            services.AddTransient<IAppDataProvider, AppDataProvider>();
 
-            services.AddSingleton(sp =>
-            {
-                var umv = new UserManagerViewModel(sp.GetRequiredService<WaveeUserManagerFactory>());
-                return umv;
-            });
+            services.AddSingleton<IStringLocalizer, WinUIResourcesStringLocalizer>();
 
-            services.AddScoped<ShellViewModel>();
-            services.AddTransient<SignInViewModel>();
+            services.AddSingleton<IProfileManager, ProfileManager>();
 
-            services.AddTransient<WaveeUserManagerFactory>();
+            services.AddLocal();
 
-            services.AddSpotify(workDir)
-                .AddLocal(workDir)
-                .AddSingleton<ILocalFilePlayer, WinUIMediaPlayer>();
+            services.AddSingleton<ILocalFilePlayer, WinUIMediaPlayer>();
 
-            services.AddTransient<ArtistRootViewModel>();
+            services.AddTransient<LibraryRootViewModel>();
+            services.AddScoped<LibrarySongsViewModel>();
+            services.AddScoped<LibraryAlbumsViewModel>();
+            services.AddScoped<LibraryArtistsViewModel>();
 
-            services.AddSingleton<IAudioSink, NAudioSink>();
+            services.AddScoped<IPlaycountService, PlaycountService>();
 
-            services.AddSingleton<IUiDispatcher>(new WinUIDispatcher());
-            return services.BuildServiceProvider();
+            return services;
         }
 
-    }
+        private Window m_window;
 
-    internal class WinUIDispatcher : IUiDispatcher
-    {
-        public bool Dispatch(DispatcherQueuePriority priority, Action callback)
-        {
-            return App.MWindow.DispatcherQueue.TryEnqueue(priority switch
-            {
-                DispatcherQueuePriority.Low => Microsoft.UI.Dispatching.DispatcherQueuePriority.Low,
-                DispatcherQueuePriority.Normal => Microsoft.UI.Dispatching.DispatcherQueuePriority.Normal,
-                DispatcherQueuePriority.High => Microsoft.UI.Dispatching.DispatcherQueuePriority.High,
-                _ => throw new ArgumentOutOfRangeException(nameof(priority), priority, null)
-            }, () => callback());
-        }
+        public static MainWindow MainWindow { get; private set; }
     }
 }

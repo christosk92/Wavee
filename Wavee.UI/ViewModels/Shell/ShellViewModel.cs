@@ -1,105 +1,187 @@
 ﻿using System.Collections.ObjectModel;
-using System.ComponentModel;
-using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Messaging;
-using Microsoft.Extensions.Logging;
-using Wavee.Spotify.Id;
-using Wavee.UI.Identity.Messaging;
-using Wavee.UI.Navigation;
-using Wavee.UI.Utils;
-using Wavee.UI.ViewModels.ForYou.Home;
-using Wavee.UI.ViewModels.ForYou.Recommended;
-using Wavee.UI.ViewModels.Identity.User;
-using Wavee.UI.ViewModels.Library;
+using System.Reactive.Concurrency;
+using CommunityToolkit.Mvvm.DependencyInjection;
+using CommunityToolkit.Mvvm.Input;
+using ReactiveUI;
+using Wavee.Enums;
+using Wavee.UI.Interfaces.Services;
+using Wavee.UI.Models.Navigation;
+using Wavee.UI.Services.Import;
+using Wavee.UI.ViewModels.Home;
+using Wavee.UI.ViewModels.Libray;
 using Wavee.UI.ViewModels.Playback;
+using Wavee.UI.ViewModels.Shell.Sidebar;
+using Wavee.UI.ViewModels.User;
 
 namespace Wavee.UI.ViewModels.Shell
 {
-    public partial class ShellViewModel : ObservableRecipient,
-        INavigatable,
-        IRecipient<LoggedOutUserChangedMessage>
+    public class ShellViewModel
     {
-        [ObservableProperty]
-        private bool _isPaneOpen = true;
-
-        [ObservableProperty]
-        private SidebarItemViewModel? _selectedSidebarItem;
-
-        public WaveeUserViewModel UserViewModel
+        public UserViewModel User { get; }
+        public PlaybackViewModel PlaybackViewModel { get; }
+        public ObservableCollection<ISidebarItem> SidebarItems { get; }
+        public static ShellViewModel Instance { get; private set; }
+        public ShellViewModel(UserViewModel user,
+            IStringLocalizer stringLocalizer)
         {
-            get;
-        }
-
-        public PlayerViewModel PlayerViewModel
-        {
-            get;
-        }
-
-        public ShellViewModel(UserManagerViewModel vm, ILoggerFactory? loggerFactory)
-        {
-            UserViewModel = vm.CurrentUserVal!;
-            PlayerViewModel = new PlayerViewModel(vm.CurrentUserVal.User.ServiceType, vm.CurrentUserVal, loggerFactory?.CreateLogger<PlayerViewModel>());
-            SidebarItems = new ObservableCollection<SidebarItemViewModel>
+            Instance = this;
+            PlaybackViewModel = new PlaybackViewModel(user.ForProfile.ServiceType)
             {
-                new SidebarHeader("Feed"),
-                new HomeViewModelFactory
+                ExpandCoverImageCommand = new RelayCommand(() =>
                 {
-                    ForService = UserViewModel.User.ServiceType
-                },
-                new RecommendedViewModelFactory
-                {
-                    ForService = UserViewModel.User.ServiceType,
-                    IsEnabled = true
-                },
-                new SidebarHeader("Yours"),
-                new LibraryViewModelFactory { Type = AudioItemType.Track },
-                new LibraryViewModelFactory { Type = AudioItemType.Album },
-                new LibraryViewModelFactory { Type = AudioItemType.Artist },
-                new LibraryViewModelFactory { Type = AudioItemType.Show },
-                new SidebarHeader("Playlists")
+                    if (user.LargeImage)
+                    {
+                        user.LargeImage = false;
+                    }
+                    else
+                    {
+                        user.LargeImage = true;
+                        user.SidebarExpanded = true;
+                    }
+                })
             };
-            SelectedSidebarItem = SidebarItems[1];
-            this.IsActive = true;
+            User = user;
+            var baseSidebarItems = new ObservableCollection<ISidebarItem>
+            {
+                new SidebarItemHeader(stringLocalizer.GetValue("/Shell/ForYou/Header")),
+                new GenericSidebarItem(
+                    Id: "home",
+                    Content: stringLocalizer.GetValue("/Shell/ForYou/Home"),
+                    Icon: "\uE10F",
+                    NavigateTo: user.ForProfile.ServiceType is ServiceType.Local ? typeof(LocalHomeViewModel) : null),
+                new GenericSidebarItem(
+                    Id: "recommended",
+                    Content: stringLocalizer.GetValue("/Shell/ForYou/Recommended"),
+                    Icon:"\uE794",
+                    NavigateTo: null),
+
+                new SidebarItemHeader(stringLocalizer.GetValue("/Shell/Library/Header")),
+
+                new CountedSidebarItem(Id: "library.songs",
+                    Content: stringLocalizer.GetValue("/Shell/Library/Songs"),
+                    Icon:"\uEB52",
+                    Count: 0,
+                    NavigateTo: typeof(LibraryRootViewModel),
+                    NavigateToParameter: new LibraryNavigationParameters(
+                        NavigateTo: nameof(LibrarySongsViewModel),
+                        Hearted:true,
+                        ForService: user.ForProfile.ServiceType)
+                    ),
+                new CountedSidebarItem(
+                    Id:"library.albums",
+                    Content : stringLocalizer.GetValue("/Shell/Library/Albums"),
+                    Icon:"\uE93C",
+                    Count: 0,
+                    NavigateTo: typeof(LibraryRootViewModel),
+                    NavigateToParameter: new LibraryNavigationParameters(
+                        NavigateTo: nameof(LibraryAlbumsViewModel),
+                        Hearted:true,
+                        ForService: user.ForProfile.ServiceType)
+                ),
+                new CountedSidebarItem(Id:
+                    "library.artists",
+                    Content: stringLocalizer.GetValue("/Shell/Library/Artists"),
+                    Icon:"\uEBDA",
+                    Count:0,
+                    NavigateTo: typeof(LibraryRootViewModel),
+                    NavigateToParameter: new LibraryNavigationParameters(
+                        NavigateTo: nameof(LibraryArtistsViewModel),
+                        Hearted:true,
+                        ForService: user.ForProfile.ServiceType)
+                ),
+            };
+
+            if (user.ForProfile.ServiceType is ServiceType.Spotify)
+            {
+                baseSidebarItems.Add(new CountedSidebarItem(
+                    Id: "library.podcasts",
+                    Content: stringLocalizer.GetValue("/Shell/Library/Podcasts"),
+                    Icon: "\uEB44",
+                    Count: 0,
+                    NavigateTo: typeof(LibraryRootViewModel),
+                    NavigateToParameter: new LibraryNavigationParameters(
+                        NavigateTo: nameof(LibrarySongsViewModel),
+                        Hearted: true,
+                        ForService: user.ForProfile.ServiceType)
+                    )
+                );
+            }
+            else if (user.ForProfile.ServiceType is ServiceType.Local)
+            {
+                //register handlers for import
+                var importService = Ioc.Default.GetRequiredService<ImportService>();
+                importService.ImportCompleted += ImportServiceOnImportCompleted;
+            }
+
+            baseSidebarItems.Add(new CreatePlaylistButtonSidebarItem(
+                Content: stringLocalizer.GetValue("/Shell/Playlists/Header"),
+                NavigateTo: null));
+            SidebarItems = baseSidebarItems;
+            _ = UpdateCounts();
         }
 
-        public ObservableCollection<SidebarItemViewModel> SidebarItems
+        private async void ImportServiceOnImportCompleted(object? sender, EventArgs e)
         {
-            get;
+            //TODO: Unregister from this
+            RxApp.MainThreadScheduler.Schedule(async () =>
+            {
+                await UpdateCounts();
+            });
         }
 
-
-        // public double OpenPaneLength
-        // {
-        //     get => _openPaneLength;
-        //     set => SetProperty(ref _openPaneLength, value);
-        // }
-
-
-        protected override void OnPropertyChanged(PropertyChangedEventArgs e)
+        private async Task UpdateCounts()
         {
-            base.OnPropertyChanged(e);
-            //TODO: save updated properties to disk/user file.
+            foreach (var sidebarItem in SidebarItems)
+            {
+                if (sidebarItem is CountedSidebarItem s)
+                {
+                    switch (s.Id)
+                    {
+                        case "library.songs":
+                            switch (User.ForProfile.ServiceType)
+                            {
+                                case ServiceType.Local:
+                                    s.Count = await Ioc.Default.GetRequiredService<ILocalAudioDb>()
+                                        .Count();
+                                    break;
+                                case ServiceType.Spotify:
+                                    break;
+                                default:
+                                    throw new ArgumentOutOfRangeException();
+                            }
+                            break;
+                        case "library.albums":
+                            switch (User.ForProfile.ServiceType)
+                            {
+                                case ServiceType.Local:
+                                    const string query = "SELECT COUNT(DISTINCT Album) FROM MediaItems";
+                                    s.Count = Ioc.Default.GetRequiredService<ILocalAudioDb>()
+                                        .Count(query);
+                                    break;
+                                case ServiceType.Spotify:
+                                    break;
+                                default:
+                                    throw new ArgumentOutOfRangeException();
+                            }
+                            break;
+                        case "library.artists":
+                            switch (User.ForProfile.ServiceType)
+                            {
+                                case ServiceType.Local:
+                                    //artists are stored as a string of json arrays, so we need to use a custom query
+                                    const string query = "SELECT COUNT(DISTINCT Performers) FROM MediaItems";
+                                    s.Count = Ioc.Default.GetRequiredService<ILocalAudioDb>()
+                                        .Count(query);
+                                    break;
+                                case ServiceType.Spotify:
+                                    break;
+                                default:
+                                    throw new ArgumentOutOfRangeException();
+                            }
+                            break;
+                    }
+                }
+            }
         }
-
-        public void OnNavigatedTo(object parameter)
-        {
-
-        }
-
-        public void OnNavigatedFrom()
-        {
-            WeakReferenceMessenger.Default.Unregister<LoggedInUserChangedMessage>(this);
-        }
-
-        public int MaxDepth
-        {
-            get;
-        }
-
-        public void Receive(LoggedOutUserChangedMessage message)
-        {
-            throw new NotImplementedException();
-        }
-
     }
 }

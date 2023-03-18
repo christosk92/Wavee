@@ -1,0 +1,284 @@
+﻿<ResourceDictionary x:Class="Wavee.UI.WinUI.Controls.TrackViewModelStyles"
+                    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:local="using:Wavee.UI.WinUI.Controls"
+                    xmlns:track="using:Wavee.UI.ViewModels.Track"
+                    xmlns:collections="using:CommunityToolkit.Mvvm.Collections">
+    <DataTemplate x:DataType="track:TrackViewModel"
+                  x:Key="ImportedTrackViewModel">
+        <local:TrackControlContainer VerticalContentAlignment="Stretch"
+                                     Height="48"
+                                     IndexStyle="{x:Bind Index, Mode=OneWay, Converter={StaticResource GetRowStyle}}"
+                                     HorizontalContentAlignment="Stretch">
+            <UserControl>
+                <Grid Padding="16,0,12,0"
+                      Background="Transparent">
+                    <VisualStateManager.VisualStateGroups>
+                        <VisualStateGroup>
+                            <VisualState x:Name="Nothing" />
+                            <VisualState x:Name="Hover">
+                                <VisualState.Setters>
+                                    <Setter Target="IndexOrSomethingElse.Content">
+                                        <Setter.Value>
+                                            <local:ThreeDButton Width="43"
+                                                                CommandParameter="{Binding Context, Mode=OneTime}"
+                                                                Command="{Binding PlayCommand, Mode=OneTime}"
+                                                                Height="32">
+                                                <FontIcon FontFamily="Segoe Fluent Icons"
+                                                          Glyph="&#xE102;" />
+                                            </local:ThreeDButton>
+                                        </Setter.Value>
+                                    </Setter>
+                                </VisualState.Setters>
+                            </VisualState>
+                            <VisualState x:Name="Playing">
+                                <VisualState.Setters>
+                                    <Setter Target="TitleBlock.Foreground"
+                                            Value="{ThemeResource FocusTextThemeBrush}" />
+                                    <Setter Target="ArtistBlock.Foreground"
+                                            Value="{ThemeResource FocusTextThemeBrush}" />
+                                    <Setter Target="AlbumBlock.Foreground"
+                                            Value="{ThemeResource FocusTextThemeBrush}" />
+                                    <Setter Target="DurationBlock.Foreground"
+                                            Value="{ThemeResource FocusTextThemeBrush}" />
+                                    <Setter Target="IndexOrSomethingElse.Content">
+                                        <Setter.Value>
+                                            <Image Width="18"
+                                                   Height="18"
+                                                   Source="/Assets/equal.gif" />
+                                        </Setter.Value>
+                                    </Setter>
+                                </VisualState.Setters>
+                            </VisualState>
+                            <VisualState x:Name="HoverPlaying">
+                                <VisualState.Setters>
+                                    <Setter Target="IndexOrSomethingElse.Content">
+                                        <Setter.Value>
+                                            <local:ThreeDButton Width="43"
+                                                                CommandParameter="{Binding Context, Mode=OneTime}"
+                                                                Command="{Binding PlayCommand, Mode=OneTime}"
+                                                                Height="32">
+                                                <FontIcon FontFamily="Segoe Fluent Icons"
+                                                          Glyph="&#xE103;" />
+                                            </local:ThreeDButton>
+                                        </Setter.Value>
+                                    </Setter>
+                                </VisualState.Setters>
+                            </VisualState>
+                            <VisualState x:Name="Paused">
+                                <VisualState.Setters>
+
+                                </VisualState.Setters>
+                            </VisualState>
+                            <VisualState x:Name="HoverPaused">
+                                <VisualState.Setters>
+
+                                </VisualState.Setters>
+                            </VisualState>
+                        </VisualStateGroup>
+                    </VisualStateManager.VisualStateGroups>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition MinWidth="43"
+                                          Width="Auto" />
+                        <ColumnDefinition Width="8" />
+                        <ColumnDefinition Width="34" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="12" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="12" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="12" />
+                        <ColumnDefinition Width="50" />
+                    </Grid.ColumnDefinitions>
+                    <ContentPresenter x:Name="IndexOrSomethingElse"
+                                      VerticalContentAlignment="Stretch"
+                                      HorizontalContentAlignment="Stretch">
+                        <ContentPresenter.Content>
+                            <TextBlock VerticalAlignment="Center"
+                                       FontWeight="Bold"
+                                       Opacity=".8"
+                                       HorizontalAlignment="Center"
+                                       Text="{x:Bind Index, Mode=OneWay, Converter={StaticResource  IndexToStringConverter}}" />
+                        </ContentPresenter.Content>
+                    </ContentPresenter>
+
+                    <ToggleButton HorizontalAlignment="Left"
+                                  Background="Transparent"
+                                  BorderThickness="0"
+                                  Padding="0"
+                                  Grid.Column="2">
+                        <FontIcon FontFamily="Segoe Fluent Icons"
+                                  FontSize="18"
+                                  Glyph="&#xE006;" />
+                    </ToggleButton>
+
+                    <TextBlock Text="{x:Bind Track.Title}"
+                               Grid.Column="3"
+                               x:Name="TitleBlock"
+                               TextTrimming="CharacterEllipsis"
+                               VerticalAlignment="Center" />
+
+                    <TextBlock Grid.Column="5"
+                               x:Name="ArtistBlock"
+                               VerticalAlignment="Center"
+                               Text="{x:Bind Track.Artists[0].Title}" />
+
+                    <TextBlock Grid.Column="7"
+                               x:Name="AlbumBlock"
+                               VerticalAlignment="Center"
+                               Text="{x:Bind Track.Album.Title}" />
+
+                    <TextBlock Grid.Column="9"
+                               x:Name="DurationBlock"
+                               VerticalAlignment="Center"
+                               Text="{x:Bind Track.Duration, Converter={StaticResource MsToTimeStampConverter}}" />
+
+                </Grid>
+            </UserControl>
+        </local:TrackControlContainer>
+    </DataTemplate>
+
+    <DataTemplate x:DataType="track:LibraryTrackViewModel"
+                  x:Key="LibraryTrack">
+        <local:TrackControlContainer VerticalContentAlignment="Stretch"
+                                     Height="48"
+                                     IndexStyle="{x:Bind Index, Mode=OneWay, Converter={StaticResource GetRowStyle}}"
+                                     HorizontalContentAlignment="Stretch">
+            <UserControl>
+                <Grid Padding="16,0,12,0">
+                    <VisualStateManager.VisualStateGroups>
+                        <VisualStateGroup>
+                            <VisualState x:Name="Nothing" />
+                            <VisualState x:Name="Hover">
+                                <VisualState.Setters>
+                                    <Setter Target="IndexOrSomethingElse.Content">
+                                        <Setter.Value>
+                                            <local:ThreeDButton Width="43"
+                                                                CommandParameter="{Binding Context, Mode=OneTime}"
+                                                                Command="{Binding PlayCommand, Mode=OneTime}"
+                                                                Height="32">
+                                                <FontIcon FontFamily="Segoe Fluent Icons"
+                                                          Glyph="&#xE102;" />
+                                            </local:ThreeDButton>
+                                        </Setter.Value>
+                                    </Setter>
+                                </VisualState.Setters>
+                            </VisualState>
+                            <VisualState x:Name="Playing">
+                                <VisualState.Setters>
+                                    <Setter Target="TitleBlock.Foreground"
+                                            Value="{ThemeResource FocusTextThemeBrush}" />
+                                    <Setter Target="ArtistBlock.Foreground"
+                                            Value="{ThemeResource FocusTextThemeBrush}" />
+                                    <Setter Target="AlbumBlock.Foreground"
+                                            Value="{ThemeResource FocusTextThemeBrush}" />
+                                    <Setter Target="DurationBlock.Foreground"
+                                            Value="{ThemeResource FocusTextThemeBrush}" />
+                                    <Setter Target="AddedAtBlock.Foreground"
+                                            Value="{ThemeResource FocusTextThemeBrush}" />
+                                    <Setter Target="IndexOrSomethingElse.Content">
+                                        <Setter.Value>
+                                            <Image Width="18"
+                                                   Height="18"
+                                                   Source="/Assets/equal.gif" />
+                                        </Setter.Value>
+                                    </Setter>
+                                </VisualState.Setters>
+                            </VisualState>
+                            <VisualState x:Name="HoverPlaying">
+                                <VisualState.Setters>
+                                    <Setter Target="IndexOrSomethingElse.Content">
+                                        <Setter.Value>
+                                            <local:ThreeDButton Width="43"
+                                                                CommandParameter="{Binding Context, Mode=OneTime}"
+                                                                Command="{Binding PlayCommand, Mode=OneTime}"
+                                                                Height="32">
+                                                <FontIcon FontFamily="Segoe Fluent Icons"
+                                                          Glyph="&#xE103;" />
+                                            </local:ThreeDButton>
+                                        </Setter.Value>
+                                    </Setter>
+                                </VisualState.Setters>
+                            </VisualState>
+                            <VisualState x:Name="Paused">
+                                <VisualState.Setters>
+
+                                </VisualState.Setters>
+                            </VisualState>
+                            <VisualState x:Name="HoverPaused">
+                                <VisualState.Setters>
+
+                                </VisualState.Setters>
+                            </VisualState>
+                        </VisualStateGroup>
+                    </VisualStateManager.VisualStateGroups>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition MinWidth="43"
+                                          Width="Auto" />
+                        <ColumnDefinition Width="8" />
+                        <ColumnDefinition Width="34" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="12" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="12" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="12" />
+                        <ColumnDefinition Width=".7*" />
+                        <ColumnDefinition Width="12" />
+                        <ColumnDefinition Width="50" />
+                    </Grid.ColumnDefinitions>
+                    <ContentPresenter x:Name="IndexOrSomethingElse"
+                                      VerticalContentAlignment="Stretch"
+                                      HorizontalContentAlignment="Stretch">
+                        <ContentPresenter.Content>
+                            <TextBlock VerticalAlignment="Center"
+                                       FontWeight="Bold"
+                                       Opacity=".8"
+                                       HorizontalAlignment="Center"
+                                       Text="{x:Bind Index, Mode=OneWay, Converter={StaticResource  IndexToStringConverter}}" />
+                        </ContentPresenter.Content>
+                    </ContentPresenter>
+
+                    <ToggleButton HorizontalAlignment="Left"
+                                  Background="Transparent"
+                                  BorderThickness="0"
+                                  Padding="0"
+                                  Grid.Column="2">
+                        <FontIcon FontFamily="Segoe Fluent Icons"
+                                  FontSize="18"
+                                  Glyph="&#xE006;" />
+                    </ToggleButton>
+
+                    <TextBlock Text="{x:Bind Track.Title}"
+                               Grid.Column="3"
+                               x:Name="TitleBlock"
+                               TextTrimming="CharacterEllipsis"
+                               VerticalAlignment="Center" />
+
+                    <TextBlock Grid.Column="5"
+                               x:Name="ArtistBlock"
+                               VerticalAlignment="Center"
+                               Text="{x:Bind Track.Artists[0].Title}" />
+
+                    <TextBlock Grid.Column="7"
+                               x:Name="AlbumBlock"
+                               VerticalAlignment="Center"
+                               Text="{x:Bind Track.Album.Title}" />
+
+                    <TextBlock Grid.Column="9"
+                               x:Name="AddedAtBlock"
+                               VerticalAlignment="Center"
+                               Text="{x:Bind ExtraGroup}" />
+
+
+                    <TextBlock Grid.Column="11"
+                               x:Name="DurationBlock"
+                               VerticalAlignment="Center"
+                               Text="{x:Bind Track.Duration, Converter={StaticResource MsToTimeStampConverter}}" />
+
+                </Grid>
+            </UserControl>
+        </local:TrackControlContainer>
+    </DataTemplate>
+
+</ResourceDictionary>

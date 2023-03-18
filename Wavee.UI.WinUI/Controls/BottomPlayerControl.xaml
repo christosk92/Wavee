@@ -11,6 +11,7 @@
              xmlns:animations="using:CommunityToolkit.WinUI.UI.Animations"
              xmlns:interactivity="using:Microsoft.Xaml.Interactivity"
              xmlns:core="using:Microsoft.Xaml.Interactions.Core"
+             xmlns:controls1="using:Wavee.UI.WinUI.Controls"
              DataContext="{x:Bind ViewModel, Mode=OneWay}"
              mc:Ignorable="d">
     <UserControl.Resources>
@@ -18,12 +19,12 @@
             <converters:BoolToObjectConverter.TrueValue>
                 <FontIcon FontFamily="Segoe Fluent Icons"
                           FontWeight="ExtraBold"
-                          FontSize="28"
+                          FontSize="26"
                           Glyph="&#xE102;" />
             </converters:BoolToObjectConverter.TrueValue>
             <converters:BoolToObjectConverter.FalseValue>
                 <FontIcon FontFamily="/Assets/Fonts/MediaPlayerIcons.ttf#Media Player Fluent Icons"
-                          FontSize="28"
+                          FontSize="26"
                           Glyph="&#xE769;" />
             </converters:BoolToObjectConverter.FalseValue>
         </converters:BoolToObjectConverter>
@@ -52,7 +53,7 @@
                           x:Name="MyGrid"
                           Background="Transparent"
                           Width="75"
-                          Visibility="{x:Bind ViewModel.CurrentUser.User.UserData.SidebarExpanded, Mode=OneWay, Converter={StaticResource TrueToCollapsedConverter}}"
+                          Visibility="{x:Bind User.SidebarExpandedAndLargeImageComposite, Mode=OneWay, Converter={StaticResource FalseToVisibleConverter}}"
                           Height="75"
                           controls:DockPanel.Dock="Left">
                         <animations:Implicit.ShowAnimations>
@@ -87,6 +88,11 @@
                                                            Value="Collapsed" />
                             </core:EventTriggerBehavior>
                         </interactivity:Interaction.Behaviors>
+
+                        <FontIcon FontFamily="Segoe Fluent Icons"
+                                  FontSize="34"
+                                  Glyph="&#xE93C;" />
+
                         <Border Width="75"
                                 Height="75">
                             <ui:Effects.Shadow>
@@ -99,6 +105,8 @@
                                        Source="{Binding PlayingItem.Image}" />
                             </Border>
                         </Border>
+
+
 
                         <Button HorizontalAlignment="Stretch"
                                 Margin="0"
@@ -140,14 +148,14 @@
                                 Orientation="Vertical">
                         <TextBlock FontSize="16"
                                    FontWeight="SemiBold"
-                                   Text="{x:Bind ViewModel.PlayingItem.Name, Mode=OneWay}" />
+                                   Text="{x:Bind ViewModel.PlayingItem.Title, Mode=OneWay}" />
                         <Button FontSize="13"
                                 Style="{ThemeResource TextBlockButtonStyle}"
                                 Padding="0,2"
-                                Command="{x:Bind ViewModel.NavigateTo}"
-                                CommandParameter="{Binding PlayingItem.Artists[0]}"
+                                Command="{x:Bind ViewModel.NavigateToCommand}"
+                                CommandParameter="{Binding PlayingItem.Descriptions[0]}"
                                 Opacity=".8"
-                                Content="{x:Bind ViewModel.PlayingItem.Artists[0].Title, Mode=OneWay}" />
+                                Content="{x:Bind ViewModel.PlayingItem.Descriptions[0].Title, Mode=OneWay}" />
                     </StackPanel>
                     <Button Background="Transparent"
                             BorderThickness="0"
@@ -171,32 +179,50 @@
                                 Spacing="8"
                                 VerticalAlignment="Bottom"
                                 Orientation="Horizontal">
-                        <Button Background="Transparent"
-                                BorderThickness="0">
+                        <controls1:ThreeDButton BorderThickness="0"
+                                                Background="Transparent">
                             <FontIcon FontFamily="Segoe Fluent Icons"
                                       Glyph="&#xE14B;" />
-                        </Button>
-                        <Button BorderThickness="0"
-                                Background="Transparent">
+                        </controls1:ThreeDButton>
+                        <controls1:ThreeDButton BorderThickness="0"
+                                                Background="Transparent">
                             <FontIcon FontFamily="Segoe Fluent Icons"
                                       Glyph="&#xE100;" />
-                        </Button>
-                        <Button Background="{ThemeResource SystemAccentColorLight1}"
-                                CornerRadius="100"
-                                Width="56"
-                                Command="{x:Bind ViewModel.PauseResumeCommand}"
-                                Content="{x:Bind ViewModel.Paused, Mode=OneWay, Converter={StaticResource PausedToButtonContentConverter}}"
-                                Height="56" />
-                        <Button Background="Transparent"
-                                BorderThickness="0">
+                        </controls1:ThreeDButton>
+                        <Border>
+                            <ui:Effects.Shadow>
+                                <media:AttachedCardShadow CornerRadius="30"
+                                                          Opacity=".5"
+                                                          Color="{ThemeResource SystemAccentColorLight1}"
+                                                          x:Name="ShadowC"
+                                                          Offset="2" />
+                            </ui:Effects.Shadow>
+                            <controls1:ThreeDButton Background="{ThemeResource SolidBackgroundFillColorTertiaryBrush}"
+                                                    CornerRadius="30"
+                                                    BorderBrush="{ThemeResource SystemAccentColor}"
+                                                    Width="56"
+                                                    IsHoldingEnabled="True"
+                                                    BorderThickness="3"
+                                                    Loaded="PauseButtonLoaded"
+                                                    Command="{x:Bind ViewModel.PauseResumeCommand}"
+                                                    Content="{x:Bind ViewModel.Paused, Mode=OneWay, Converter={StaticResource PausedToButtonContentConverter}}"
+                                                    Height="56">
+                                <controls1:ThreeDButton.Resources>
+                                    <SolidColorBrush x:Key="ButtonBackgroundPointerOver"
+                                                     Color="Transparent" />
+                                </controls1:ThreeDButton.Resources>
+                            </controls1:ThreeDButton>
+                        </Border>
+                        <controls1:ThreeDButton BorderThickness="0"
+                                                Background="Transparent">
                             <FontIcon FontFamily="Segoe Fluent Icons"
                                       Glyph="&#xE101;" />
-                        </Button>
-                        <Button Background="Transparent"
-                                BorderThickness="0">
+                        </controls1:ThreeDButton>
+                        <controls1:ThreeDButton BorderThickness="0"
+                                                Background="Transparent">
                             <FontIcon FontFamily="Segoe Fluent Icons"
                                       Glyph="&#xE1CD;" />
-                        </Button>
+                        </controls1:ThreeDButton>
                     </StackPanel>
 
                     <Grid Grid.Row="2"

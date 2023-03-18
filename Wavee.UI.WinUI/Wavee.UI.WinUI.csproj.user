@@ -10,56 +10,77 @@
     <None Update="App.xaml">
       <SubType>Designer</SubType>
     </None>
-    <None Update="Controls\ImageTransitionControl.xaml">
+    <None Update="Controls\BottomPlayerControl.xaml">
       <SubType>Designer</SubType>
     </None>
-    <Page Update="Controls\SidebarControl.xaml">
+    <Page Update="Controls\SortButton.xaml">
       <SubType>Designer</SubType>
     </Page>
-    <Page Update="Themes\Templates\AlbumTemplates.xaml">
+    <Page Update="Views\Library\LibraryAlbumsView.xaml">
       <SubType>Designer</SubType>
     </Page>
-    <Page Update="Themes\GridStyles.xaml">
+    <Page Update="Views\Library\LibrarySongsView.xaml">
       <SubType>Designer</SubType>
     </Page>
-    <Page Update="Views\Artist\ArtistRootView.xaml">
+    <Page Update="Views\Library\LibraryRootView.xaml">
       <SubType>Designer</SubType>
     </Page>
-    <Page Update="Controls\LocalTrackStyles.xaml">
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Update="Views\ForYou\Home\SeeAllImportedTracksView.xaml">
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Update="Themes\ListViewItemStyles.xaml">
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Update="Views\ForYou\Recommended\LocalRecommendedView.xaml">
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Update="Controls\BottomPlayerControl.xaml">
+    <Page Update="Controls\TrackViewModelStyles.xaml">
       <SubType>Designer</SubType>
     </Page>
     <None Update="MainWindow.xaml">
       <SubType>Designer</SubType>
     </None>
-    <Page Update="Views\Identity\UserProfileCard.xaml">
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Update="Themes\NavViewStyles.xaml">
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Update="Views\Identity\SignInView.xaml">
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Update="Views\Identity\SpotifyCredentialsView.xaml">
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Update="MainWindowContentWrapper.xaml">
-      <SubType>Designer</SubType>
-    </Page>
     <None Update="Package.appxmanifest">
       <SubType>Designer</SubType>
     </None>
+    <Page Update="Styles\BorderStyles.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Styles\ListViewStyles.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Views\Home\SpotifyHomeView.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Views\Home\LocalHomeView.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Views\NoView.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Views\Shell\UserProfileCard.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Styles\NavViewStyles.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Views\Shell\SidebarControl.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Views\Shell\ShellView.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Styles\GridViewStyles.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Themes\Generic.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Views\Login\SelectProfileView.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Views\Login\SpotifyLoginView.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Views\Login\CreateLocalProfileView.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Views\Login\LoginView.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Views\Login\LoginView.xaml">
+      <SubType>Designer</SubType>
+    </Page>
   </ItemGroup>
 </Project>
