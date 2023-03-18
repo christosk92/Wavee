@@ -9,6 +9,10 @@ Sorry!
 
 # Eum.Windows
 
+(update 3/19) Local playback:
+
+![image](https://user-images.githubusercontent.com/13438702/226125785-336afde6-0e39-45d5-9f82-10cbcb44bf29.png)
+
 
 
 https://user-images.githubusercontent.com/13438702/211739287-ea3e6cbd-02e5-4607-b901-7179f358b7e6.mp4
