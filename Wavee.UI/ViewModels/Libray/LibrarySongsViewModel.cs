@@ -1,36 +1,54 @@
-﻿using CommunityToolkit.Mvvm.Collections;
+﻿using System.Reactive.Concurrency;
+using CommunityToolkit.Common.Collections;
+using CommunityToolkit.Mvvm.Collections;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using Microsoft.VisualBasic;
+using ReactiveUI;
 using Wavee.Enums;
+using Wavee.Interfaces.Models;
+using Wavee.UI.Interfaces.Playback;
 using Wavee.UI.Interfaces.Services;
 using Wavee.UI.Interfaces.ViewModels;
 using Wavee.UI.Models.Local;
+using Wavee.UI.Models.TrackSources;
+using Wavee.UI.Playback.Contexts;
+using Wavee.UI.ViewModels.Playback;
 using Wavee.UI.ViewModels.Shell;
 using Wavee.UI.ViewModels.Track;
 
 namespace Wavee.UI.ViewModels.Libray
 {
-    public sealed partial class LibrarySongsViewModel : AbsLibraryViewModel, ISortContext
+    public sealed partial class LibrarySongsViewModel : AbsLibraryViewModel<TrackViewModel>, ISortContext
     {
         private bool _initialized;
         private bool _sortAscending = true;
-        private string? _sortBy;
+        private SortOption _sortBy;
 
-        [ObservableProperty] private string? _extraGroupString;
+        public SortOption? ExtraGroupString => SortBy switch
+        {
+            SortOption.Year => SortOption.Year,
+            SortOption.Genre => SortOption.Genre,
+            SortOption.Playcount => SortOption.Playcount,
+            SortOption.LastPlayed => SortOption.LastPlayed,
+            SortOption.DateAdded => SortOption.DateAdded,
+            SortOption.BPM => SortOption.BPM,
+            _ => null
+        };
 
-        [ObservableProperty] private IEnumerable<LibraryTrackViewModel>? _tracks;
-
-        public string? SortBy
+        public SortOption SortBy
         {
             get => _sortBy;
             set
             {
-                if (value != null)
+                if (SetProperty(ref _sortBy, value))
                 {
-                    if (SetProperty(ref _sortBy, value))
+                    ShellViewModel.Instance.User.SavePreference("library.songs.sort", value);
+                    OnPropertyChanged(nameof(ExtraGroupString));
+                    SortChanged?.Invoke(this, (SortBy, SortAscending));
+                    if (Tracks != null)
                     {
-                        ShellViewModel.Instance.User.SavePreference("library.songs.sort", value);
-                        SortChanged?.Invoke(this, (SortBy, SortAscending));
-                        Initialize(true);
+                        Tracks.SortBy = value;
                     }
                 }
             }
@@ -45,38 +63,68 @@ namespace Wavee.UI.ViewModels.Libray
                 {
                     ShellViewModel.Instance.User.SavePreference("library.songs.ascending", value);
                     SortChanged?.Invoke(this, (SortBy, SortAscending));
-                    Initialize(true);
+                    if (Tracks != null)
+                    {
+                        Tracks.Ascending = value;
+                    }
                 }
             }
         }
 
-        public event EventHandler<(string SortBy, bool SortAscending)>? SortChanged;
+        [ObservableProperty] private SortOption[]? _extendedSortOptions;
+
+        public event EventHandler<(SortOption SortBy, bool SortAscending)>? SortChanged;
 
         public void DefaultSort()
         {
-            SortBy = "Date Imported";
+            SortBy = SortOption.DateAdded;
             SortAscending = false;
         }
 
-        [ObservableProperty] private string[]? _extendedSortOptions;
-
         private readonly ILocalAudioDb _db;
-        private readonly IPlaycountService _playcountService;
 
-        public LibrarySongsViewModel(ILocalAudioDb db, IPlaycountService playcountService)
+        public LibrarySongsViewModel(ILocalAudioDb db)
         {
             _db = db;
-            _playcountService = playcountService;
-            SortBy = ShellViewModel.Instance.User.ReadPreference<string>("library.songs.sort");
+            SortBy = ShellViewModel.Instance.User.ReadPreference<SortOption>("library.songs.sort");
             SortAscending = ShellViewModel.Instance.User.ReadPreference<bool>("library.songs.ascending");
+
+            PlayCommand = new AsyncRelayCommand<TrackViewModel>(model =>
+            {
+                //Setup context
+                IPlayContext? context = null;
+                switch (Service)
+                {
+                    case ServiceType.Local:
+                        //for local tracks, we just need to build a sql query:
+                        //get the order of the tracks, the index of the track, and if we are filtering: the filters
+                        //the filters could be: hearted, or (a search (TODO!))
+                        var savedTracks = ShellViewModel.Instance.User.ForProfile.SavedTracks;
+                        var filterQuery = (HeartedFilter
+                            ? $"{nameof(LocalTrack.Id)} IN ({string.Join(",", savedTracks)})"
+                            : "1=1");
+                        context = new LocalFilesContext(SortBy, SortAscending, model.Index, filterQuery);
+                        break;
+                    case ServiceType.Spotify:
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
+
+                if (context != null)
+                {
+                    return PlaybackViewModel.Instance!.Play(context);
+                }
+
+                return Task.CompletedTask;
+            });
         }
 
 
-        public override Task Initialize(bool ignoreAlreadyInitialized = false)
+        public override Task Initialize()
         {
-            if (!ignoreAlreadyInitialized && _initialized)
+            if (_initialized)
             {
-                //fetch data from local service
                 return Task.CompletedTask;
             }
 
@@ -84,17 +132,28 @@ namespace Wavee.UI.ViewModels.Libray
             {
                 case ServiceType.Local:
                     HasHeartedFilter = true;
-                    //fetch data from local service
+                    //Artist, album, title, date added, duration are all part of the default sort
 
-                    //Default sort =  Date Added Descending
-                    if (!ignoreAlreadyInitialized && string.IsNullOrEmpty(SortBy))
+                    //we can also sort by
+                    //year, genre, date modified, rating, play count, last played, bpm, 
+                    ExtendedSortOptions = new[]
                     {
-                        _sortBy = "Date Imported";
-                        _sortAscending = false;
-                        _initialized = true;
-                    }
-
-                    return HandleLocalServiceTracks();
+                        SortOption.Duration,
+                        SortOption.Year,
+                        SortOption.Genre,
+                        SortOption.DateAdded,
+                        SortOption.Playcount,
+                        SortOption.LastPlayed,
+                        SortOption.BPM
+                    };
+                    //fetch data from local service
+                    Tracks = new SqlTracksSource(_db)
+                    {
+                        HeartedFilter = false,
+                        Ascending = SortAscending,
+                        SortBy = SortBy
+                    };
+                    break;
                 case ServiceType.Spotify:
                     break;
                 case null:
@@ -106,105 +165,10 @@ namespace Wavee.UI.ViewModels.Libray
             return Task.CompletedTask;
         }
 
-        private async Task HandleLocalServiceTracks(CancellationToken ct = default)
+        public override AsyncRelayCommand<TrackViewModel> PlayCommand
         {
-            try
-            {
-                //Artist, album, title, date added, duration are all part of the default sort
-
-                //we can also sort by
-                //year, genre, date modified, rating, play count, last played, bpm, 
-                ExtendedSortOptions = new[]
-                {
-                    "Duration",
-                    "Year",
-                    "Genre",
-                    "Date Modified",
-                    "Playcount",
-                    "Last Played",
-                    "BPM"
-                };
-
-
-                var query = BuildSqlQuery(SortBy, SortAscending, HeartedFilter);
-                var tracks = (await _db.ReadTracks(query, true, ct)).ToArray();
-
-                ExtraGroupString = SortBy switch
-                {
-                    "Year" => "Year",
-                    "Genre" => "Genres",
-                    "Date Modified" => "Date Modified",
-                    "Playcount" => "Playcount",
-                    "Last Played" => "Last Played",
-                    "BPM" => "BPM",
-                    _ => "Date Imported"
-                };
-
-                Tracks = tracks.Select((t, i) =>
-                {
-                    //get the extra string data depending on the sort option
-                    var extraStringData = SortBy switch
-                    {
-                        "Year" => t.Year.ToString(),
-                        "Genre" => string.Join(",", t.Genres),
-                        "Date Modified" => t.LastChanged.ToString("o"),
-                        "Playcount" => t.Playcount.ToString(),
-                        "Last Played" => t.LastPlayed.ToString("o"),
-                        "BPM" => t.BeatsPerMinute.ToString(),
-                        _ => t.DateImported.ToString("o")
-                    };
-
-                    return new LibraryTrackViewModel(t, i, extraStringData, null);
-                });
-            }
-            catch (Exception x)
-            {
-            }
+            get;
         }
 
-        private static string BuildSqlQuery(string sortBy, bool ascending, bool onlyHearted)
-        {
-            //the db handles the SELECT FROM statement
-            //we just need to build the ORDER BY statement
-            //if onlyHearted = true, then we need to add a WHERE statement based on the users hearted tracks
-
-            //if we are sorting by playcount or last played, we need to get the playcount and last played data from the playcount service
-            // so we need to lookup the playcount table based on the track id
-            //we can then use the playcount and last played data in the ORDER BY statement
-
-            var savedTracks = ShellViewModel.Instance.User.ForProfile.SavedTracks;
-            const string where = "WHERE ";
-            var filterQuery = where +
-                              (onlyHearted ? $"{nameof(LocalTrack.Id)} IN ({string.Join(",", savedTracks)})" : "1=1");
-
-            var orderQueryAppend = ascending ? "ASC" : "DESC";
-
-
-
-            const string min = "0001-01-01";
-
-            const string baseQuery =
-                $@"SELECT mi.*, COALESCE(pc.Playcount, 0) AS Playcount, COALESCE(pc.LastPlayed, '{min}') AS LastPlayed FROM MediaItems mi LEFT JOIN (SELECT TrackId, COUNT(*) AS Playcount, MAX(DatePlayed) AS LastPlayed FROM Playcount GROUP BY TrackId) pc ON mi.Id = pc.TrackId";
-
-
-            const string sql = "ORDER BY ";
-            var orderQuery = sql + sortBy switch
-            {
-                "Year" => nameof(LocalTrack.Year),
-                "Genre" => nameof(LocalTrack.Genres),
-                "Date Modified" => nameof(LocalTrack.LastChanged),
-                "Playcount" => "COALESCE(pc.Playcount, 0)",
-                "Last Played" => $"COALESCE(pc.LastPlayed, {min})",
-                "BPM" => nameof(LocalTrack.BeatsPerMinute),
-                "Title" => nameof(LocalTrack.Title),
-                "Artist" => nameof(LocalTrack.Performers),
-                "Album" => nameof(LocalTrack.Album),
-                "Duration" => nameof(LocalTrack.Duration),
-                _ => nameof(LocalTrack.DateImported)
-            };
-
-            var total = $"{baseQuery} {filterQuery} {orderQuery} {orderQueryAppend}";
-            return total;
-        }
     }
 }

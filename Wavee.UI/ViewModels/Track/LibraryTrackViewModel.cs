@@ -8,12 +8,14 @@ namespace Wavee.UI.ViewModels.Track
     {
         public LibraryTrackViewModel(ITrack track,
             int index,
-            string extraGroupString,
-            IAsyncRelayCommand<IPlayContext?> playCommand) : base(track, index, playCommand)
+            string extraGroupString) : base(track, index)
         {
             ExtraGroup = extraGroupString;
         }
 
-        public string ExtraGroup { get; }
+        public string ExtraGroup
+        {
+            get;
+        }
     }
 }

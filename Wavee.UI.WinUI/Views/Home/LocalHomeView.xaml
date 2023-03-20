@@ -134,12 +134,14 @@
                 <ListView Grid.ColumnSpan="2"
                           Grid.Column="0"
                           Grid.Row="1"
+                          x:Name="TrackListView"
                           Margin="0,0,0,0"
+                          DataContext="{x:Bind ViewModel}"
                           SelectionMode="Extended"
                           ItemTemplate="{StaticResource ImportedTrackViewModel}"
                           ItemsSource="{x:Bind Source.View}">
                     <interactivity:Interaction.Behaviors>
-                        <behaviors:IsPlayingListViewBehavior />
+                        <behaviors:PlaybackListBehavior />
                     </interactivity:Interaction.Behaviors>
                     <ListView.ItemContainerStyle>
                         <Style TargetType="ListViewItem"

@@ -238,13 +238,14 @@ namespace Wavee.UI.Services.Db
             await using var connection = new SqliteConnection(_connectionString);
             await connection.OpenAsync();
 
-            const string query = "SELECT Id, LastChanged  FROM MediaItems";
+            const string query = "SELECT Id, DateImported FROM MediaItems";
 
             var items = await connection.QueryAsync(query);
             return items.Select(a => new ShortLocalTrack
             {
                 Id = a.Id,
-                LastChanged = DateTime.Parse(a.LastChanged)
+                DateImported = DateTime.Parse(a.DateImported),
+                LastChanged = DateTime.Parse(a.LastChanged),
             });
         }
 
@@ -263,9 +264,7 @@ namespace Wavee.UI.Services.Db
             using var connection = new SqliteConnection(_connectionString);
             connection.Open();
 
-            //The query =  "SELECT Id, LastChanged  FROM MediaItems " and then the query is added to it;
-            var query = "SELECT * FROM MediaItems " + sql;
-            var item = connection.QueryFirstOrDefault(query);
+            var item = connection.QueryFirstOrDefault(sql);
             if (item is null) return null;
             return AdaptToLocalTrack(item, false);
         }

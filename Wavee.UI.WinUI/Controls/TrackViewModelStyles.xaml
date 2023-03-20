@@ -8,6 +8,7 @@
                   x:Key="ImportedTrackViewModel">
         <local:TrackControlContainer VerticalContentAlignment="Stretch"
                                      Height="48"
+                                     Track="{Binding Mode=OneTime}"
                                      IndexStyle="{x:Bind Index, Mode=OneWay, Converter={StaticResource GetRowStyle}}"
                                      HorizontalContentAlignment="Stretch">
             <UserControl>
@@ -21,8 +22,8 @@
                                     <Setter Target="IndexOrSomethingElse.Content">
                                         <Setter.Value>
                                             <local:ThreeDButton Width="43"
-                                                                CommandParameter="{Binding Context, Mode=OneTime}"
-                                                                Command="{Binding PlayCommand, Mode=OneTime}"
+                                                                CommandParameter="{Binding Mode=OneTime}"
+                                                                Command="{Binding ElementName=TrackListView, Mode=OneTime, Path=DataContext.PlayCommand}"
                                                                 Height="32">
                                                 <FontIcon FontFamily="Segoe Fluent Icons"
                                                           Glyph="&#xE102;" />
@@ -55,8 +56,8 @@
                                     <Setter Target="IndexOrSomethingElse.Content">
                                         <Setter.Value>
                                             <local:ThreeDButton Width="43"
-                                                                CommandParameter="{Binding Context, Mode=OneTime}"
-                                                                Command="{Binding PlayCommand, Mode=OneTime}"
+                                                                CommandParameter="{Binding Mode=OneTime}"
+                                                                Command="{Binding ElementName=TrackListView, Mode=OneTime, Path=DataContext.PlayCommand}"
                                                                 Height="32">
                                                 <FontIcon FontFamily="Segoe Fluent Icons"
                                                           Glyph="&#xE103;" />
@@ -142,6 +143,7 @@
                   x:Key="LibraryTrack">
         <local:TrackControlContainer VerticalContentAlignment="Stretch"
                                      Height="48"
+                                     Track="{Binding Mode=OneTime}"
                                      IndexStyle="{x:Bind Index, Mode=OneWay, Converter={StaticResource GetRowStyle}}"
                                      HorizontalContentAlignment="Stretch">
             <UserControl>
@@ -154,8 +156,8 @@
                                     <Setter Target="IndexOrSomethingElse.Content">
                                         <Setter.Value>
                                             <local:ThreeDButton Width="43"
-                                                                CommandParameter="{Binding Context, Mode=OneTime}"
-                                                                Command="{Binding PlayCommand, Mode=OneTime}"
+                                                                CommandParameter="{Binding Mode=OneTime}"
+                                                                Command="{Binding ElementName=TrackListView, Mode=OneTime, Path=DataContext.PlayCommand}"
                                                                 Height="32">
                                                 <FontIcon FontFamily="Segoe Fluent Icons"
                                                           Glyph="&#xE102;" />
@@ -190,8 +192,8 @@
                                     <Setter Target="IndexOrSomethingElse.Content">
                                         <Setter.Value>
                                             <local:ThreeDButton Width="43"
-                                                                CommandParameter="{Binding Context, Mode=OneTime}"
-                                                                Command="{Binding PlayCommand, Mode=OneTime}"
+                                                                CommandParameter="{Binding Mode=OneTime}"
+                                                                Command="{Binding ElementName=TrackListView, Mode=OneTime, Path=DataContext.PlayCommand}"
                                                                 Height="32">
                                                 <FontIcon FontFamily="Segoe Fluent Icons"
                                                           Glyph="&#xE103;" />

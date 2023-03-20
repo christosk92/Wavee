@@ -29,7 +29,10 @@ namespace Wavee.UI.WinUI.Views.Home
             this.InitializeComponent();
         }
 
-        public LocalHomeViewModel ViewModel { get; }
+        public LocalHomeViewModel ViewModel
+        {
+            get;
+        }
 
         public Visibility HasItems(int i)
         {
@@ -98,8 +101,7 @@ namespace Wavee.UI.WinUI.Views.Home
 
                 ViewModel.LatestFiles.InsertItem(groupKey,
                     new TrackViewModel(track,
-                        0,
-                        PlaybackViewModel.Instance.PlayTaskCommand));
+                        0));
             }
         }
     }

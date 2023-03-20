@@ -6,13 +6,14 @@ using Wavee.UI.Helpers.Extensions;
 using Wavee.UI.Interfaces.Services;
 using Wavee.UI.Interfaces.ViewModels;
 using Wavee.UI.Models.Navigation;
+using Wavee.UI.Playback.Contexts;
 using Wavee.UI.ViewModels.Libray;
 using Wavee.UI.ViewModels.Playback;
 using Wavee.UI.ViewModels.Track;
 
 namespace Wavee.UI.ViewModels.Home
 {
-    public partial class LocalHomeViewModel : ObservableObject, INavigationAware
+    public partial class LocalHomeViewModel : ObservableObject, INavigationAware, IPlayableViewModel
     {
         private readonly ILocalAudioDb _db;
         private readonly IStringLocalizer _stringLocalizer;
@@ -22,6 +23,14 @@ namespace Wavee.UI.ViewModels.Home
             _db = db;
             _stringLocalizer = stringLocalizer;
             _navigationService = navigationService;
+
+            PlayCommand = new AsyncRelayCommand<TrackViewModel>(model =>
+            {
+                //setup local context
+                var context = new LocalFilesContext(SortOption.DateAdded, false, model.Index, null);
+
+                return PlaybackViewModel.Instance!.Play(context);
+            });
         }
 
         public ObservableGroupedCollection<string, TrackViewModel> LatestFiles { get; } = new();
@@ -44,8 +53,7 @@ namespace Wavee.UI.ViewModels.Home
             foreach (var latestImport in latestImports)
             {
                 var tracksProjected = latestImport.Select((track, index) => new TrackViewModel(track,
-                    index + depth,
-                    PlaybackViewModel.Instance.PlayTaskCommand))
+                    index + depth))
                     .ToArray();
 
                 depth += tracksProjected.Length;
@@ -59,5 +67,9 @@ namespace Wavee.UI.ViewModels.Home
         {
         }
 
+        public AsyncRelayCommand<TrackViewModel> PlayCommand
+        {
+            get;
+        }
     }
 }

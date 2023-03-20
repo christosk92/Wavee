@@ -1,11 +1,13 @@
-﻿namespace Wavee.UI.Interfaces.ViewModels
+﻿using Wavee.UI.ViewModels.Libray;
+
+namespace Wavee.UI.Interfaces.ViewModels
 {
     public interface ISortContext
     {
-        string? SortBy { get; set; }
+        SortOption SortBy { get; set; }
         bool SortAscending { get; set; }
 
-        event EventHandler<(string SortBy, bool SortAscending)> SortChanged;
+        event EventHandler<(SortOption SortBy, bool SortAscending)>? SortChanged;
         void DefaultSort();
     }
 }

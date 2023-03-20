@@ -52,7 +52,15 @@
                 </Grid.ColumnDefinitions>
                 <ContentPresenter HorizontalAlignment="Left"
                                   VerticalAlignment="Center"
+                                  Visibility="{x:Bind IsNullDontShow(MainContent), Mode=OneWay}"
                                   Content="{x:Bind MainContent, Mode=OneWay, FallbackValue='{}{ content }'}" />
+                <TextBlock Text="{x:Bind SortBy, Mode=OneWay, Converter={StaticResource SortTranslatorConverter}}"
+                           FontWeight="SemiBold"
+                           FontSize="16"
+                           Visibility="{x:Bind IsNullShow(MainContent), Mode=OneWay}"
+                           Opacity=".8"
+                           HorizontalAlignment="Left" />
+
                 <Viewbox Grid.Column="1"
                          VerticalAlignment="Center"
                          Margin="4,0"

@@ -33,6 +33,8 @@
                                                   x:Key="FalseToVisibleConverter" />
             <xamlConverters:MsToTimeStampConverter x:Key="MsToTimeStampConverter" />
             <xamlConverters:IndexToStringConverter x:Key="IndexToStringConverter" />
+            <xamlConverters:SortTranslatorconverter x:Key="SortTranslatorConverter" />
+
             <ResourceDictionary.MergedDictionaries>
                 <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
                 <ResourceDictionary Source="Styles/GridViewStyles.xaml" />

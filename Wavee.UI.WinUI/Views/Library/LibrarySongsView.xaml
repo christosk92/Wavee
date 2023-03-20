@@ -6,6 +6,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:controls="using:Wavee.UI.WinUI.Controls"
+             Unloaded="LibrarySongsView_OnUnloaded"
              xmlns:interactivity="using:Microsoft.Xaml.Interactivity"
              xmlns:behaviors="using:Wavee.UI.WinUI.Behaviors"
              xmlns:ui="using:CommunityToolkit.WinUI.UI"
@@ -35,7 +36,7 @@
                     <TextBlock FontSize="14"
                                xml:space="preserve"><Run Text="Sort by: " /><Run FontWeight="SemiBold"
                                                                                  Foreground="{ThemeResource FocusTextThemeBrush}"
-                                                                                 Text="{x:Bind ViewModel.SortBy, Mode=OneWay}" /></TextBlock>
+                                                                                 Text="{x:Bind ViewModel.SortBy, Mode=OneWay, Converter={StaticResource SortTranslatorConverter}}" /></TextBlock>
                     <DropDownButton.Flyout>
                         <Flyout>
                             <ListView Padding="-2"
@@ -43,7 +44,13 @@
                                       x:Name="ExtendSortLv"
                                       SelectionChanged="ExtendSortLv_OnSelectionChanged"
                                       ItemsSource="{x:Bind ViewModel.ExtendedSortOptions}"
-                                      SelectedItem="{x:Bind ViewModel.SortBy, Mode=OneWay}" />
+                                      SelectedItem="{x:Bind ViewModel.SortBy, Mode=OneWay}">
+                                <ListView.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Mode=OneTime, Converter={StaticResource SortTranslatorConverter}}" />
+                                    </DataTemplate>
+                                </ListView.ItemTemplate>
+                            </ListView>
                         </Flyout>
                     </DropDownButton.Flyout>
                 </DropDownButton>
@@ -111,41 +118,21 @@
                                          Margin="0,0"
                                          Grid.Column="3"
                                          HorizontalAlignment="Stretch"
-                                         HorizontalContentAlignment="Stretch">
-                        <TextBlock Text="Title"
-                                   FontWeight="SemiBold"
-                                   FontSize="16"
-                                   Opacity=".8"
-                                   HorizontalAlignment="Left" />
-                    </controls:SortButton>
+                                         HorizontalContentAlignment="Stretch" />
 
                     <controls:SortButton SortBy="Artist"
                                          SortContext="{x:Bind ViewModel}"
                                          Margin="0,0"
                                          Grid.Column="5"
                                          HorizontalAlignment="Stretch"
-                                         HorizontalContentAlignment="Stretch">
-                        <TextBlock Text="Artists"
-                                   Margin="0,0"
-                                   FontWeight="SemiBold"
-                                   FontSize="16"
-                                   Opacity=".8"
-                                   HorizontalAlignment="Left" />
-                    </controls:SortButton>
+                                         HorizontalContentAlignment="Stretch" />
 
                     <controls:SortButton SortBy="Album"
                                          SortContext="{x:Bind ViewModel}"
                                          Margin="0,0"
                                          Grid.Column="7"
                                          HorizontalAlignment="Stretch"
-                                         HorizontalContentAlignment="Stretch">
-                        <TextBlock Text="Album"
-                                   Margin="0,0"
-                                   FontWeight="SemiBold"
-                                   FontSize="16"
-                                   Opacity=".8"
-                                   HorizontalAlignment="Left" />
-                    </controls:SortButton>
+                                         HorizontalContentAlignment="Stretch" />
 
                     <controls:SortButton SortBy="{x:Bind ViewModel.ExtraGroupString, Mode=OneWay}"
                                          SortContext="{x:Bind ViewModel}"
@@ -153,14 +140,8 @@
                                          Grid.Column="9"
                                          IsSpecialSort="True"
                                          HorizontalAlignment="Stretch"
-                                         HorizontalContentAlignment="Stretch">
-                        <TextBlock Text="{x:Bind ViewModel.ExtraGroupString, Mode=OneWay}"
-                                   Margin="0,0"
-                                   FontWeight="SemiBold"
-                                   FontSize="16"
-                                   Opacity=".8"
-                                   HorizontalAlignment="Left" />
-                    </controls:SortButton>
+                                         HorizontalContentAlignment="Stretch" />
+
 
                     <controls:SortButton SortBy="Duration"
                                          SortContext="{x:Bind ViewModel}"
@@ -181,10 +162,12 @@
         <ListView Grid.Row="1"
                   ui:ScrollViewerExtensions.VerticalScrollBarMargin="0,0,0,100"
                   Grid.RowSpan="2"
+                  DataContext="{x:Bind ViewModel}"
+                  x:Name="TrackListView" 
                   ItemTemplate="{StaticResource LibraryTrack}"
-                  ItemsSource="{x:Bind ViewModel.Tracks, Mode=OneWay}">
+                  ItemsSource="{x:Bind Tracks, Mode=OneWay}">
             <interactivity:Interaction.Behaviors>
-                <behaviors:IsPlayingListViewBehavior />
+                <behaviors:PlaybackListBehavior />
             </interactivity:Interaction.Behaviors>
             <ListView.ItemContainerStyle>
                 <Style TargetType="ListViewItem"

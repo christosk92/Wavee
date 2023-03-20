@@ -2,6 +2,7 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using System;
 using Microsoft.UI.Xaml.Input;
+using Wavee.UI.ViewModels.Track;
 
 namespace Wavee.UI.WinUI.Controls
 {
@@ -54,6 +55,12 @@ namespace Wavee.UI.WinUI.Controls
             set => SetValue(IndexStyleProperty, value);
         }
 
+        public TrackViewModel Track
+        {
+            get => (TrackViewModel)GetValue(TrackProperty);
+            set => SetValue(TrackProperty, value);
+        }
+
         public TrackControlContainer()
         {
             this.DefaultStyleKey = typeof(TrackControlContainer);
@@ -86,6 +93,7 @@ namespace Wavee.UI.WinUI.Controls
         }
 
         private TrackState? _prevState;
+        public static readonly DependencyProperty TrackProperty = DependencyProperty.Register(nameof(Track), typeof(TrackViewModel), typeof(TrackControlContainer), new PropertyMetadata(default(TrackViewModel)));
 
         protected override void OnPointerEntered(PointerRoutedEventArgs e)
         {

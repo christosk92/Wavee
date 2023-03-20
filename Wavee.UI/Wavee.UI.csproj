@@ -7,6 +7,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<PackageReference Include="CommunityToolkit.Common" Version="7.1.2" />
 		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.0-preview1" />
 		<PackageReference Include="Dapper" Version="2.0.123" />
 		<PackageReference Include="Magick.NET-Q8-AnyCPU" Version="13.0.0" />

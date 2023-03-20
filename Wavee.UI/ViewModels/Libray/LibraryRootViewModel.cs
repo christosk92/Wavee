@@ -11,7 +11,7 @@ namespace Wavee.UI.ViewModels.Libray
     {
         [ObservableProperty]
         [NotifyPropertyChangedFor(nameof(SelectedViewIndex))]
-        private AbsLibraryViewModel? _currentView;
+        private ILibraryViewModel? _currentView;
 
         private readonly IServiceScope _scope;
         private readonly INavigationService _navigationService;
@@ -73,7 +73,7 @@ namespace Wavee.UI.ViewModels.Libray
         {
             if (parameter is LibraryNavigationParameters navParameters)
             {
-                AbsLibraryViewModel? library = navParameters.NavigateTo switch
+                ILibraryViewModel? library = navParameters.NavigateTo switch
                 {
                     nameof(LibrarySongsViewModel) => _scope.ServiceProvider.GetRequiredService<LibrarySongsViewModel>(),
                     nameof(LibraryAlbumsViewModel) =>

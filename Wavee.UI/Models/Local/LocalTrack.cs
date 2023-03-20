@@ -9,8 +9,20 @@ namespace Wavee.UI.Models.Local;
 
 public readonly record struct ShortLocalTrack
 {
-    public string Id { get; init; }
-    public DateTime LastChanged { get; init; }
+    public string Id
+    {
+        get; init;
+    }
+    public DateTime DateImported
+    {
+        get; init;
+    }
+
+    public DateTime LastChanged
+    {
+        get;
+        init;
+    }
 }
 
 /// <summary>
@@ -20,7 +32,10 @@ public readonly record struct LocalTrack : ITrack
 {
     public ServiceType Service => ServiceType.Local;
 
-    public string Id { get; init; }
+    public string Id
+    {
+        get; init;
+    }
 
     IAlbum ITrack.Album => new LocalAlbum(
         Image: Image,
@@ -48,7 +63,10 @@ public readonly record struct LocalTrack : ITrack
         NavigateTo: typeof(AlbumViewModel),
         Parameter: Album);
 
-    public string Image { get; init; }
+    public string Image
+    {
+        get; init;
+    }
 
     /// <summary>
     ///    Gets and sets the title for the media described by the
@@ -65,7 +83,10 @@ public readonly record struct LocalTrack : ITrack
     ///    episode of Star Trek), or "Harold and Kumar Go To White
     ///    Castle" (a movie).
     /// </remarks>
-    public string Title { get; init; }
+    public string Title
+    {
+        get; init;
+    }
 
     #region Tag Properties
 
@@ -80,7 +101,10 @@ public readonly record struct LocalTrack : ITrack
     /// <remarks>
     ///    Possibly used to sort compilations, or episodic content.
     /// </remarks>
-    public string TitleSort { get; init; }
+    public string TitleSort
+    {
+        get; init;
+    }
 
     /// <summary>
     ///    Gets and sets a short description, one-liner.
@@ -99,7 +123,10 @@ public readonly record struct LocalTrack : ITrack
     ///    "It's About Time".
     ///    </para>
     /// </remarks>
-    public string Subtitle { get; init; }
+    public string Subtitle
+    {
+        get; init;
+    }
 
     /// <summary>
     ///    Gets and sets a short description of the media.
@@ -122,7 +149,10 @@ public readonly record struct LocalTrack : ITrack
     ///    interfering with his first trip".
     ///    </para>
     /// </remarks>
-    public string Description { get; init; }
+    public string Description
+    {
+        get; init;
+    }
 
     /// <summary>
     ///    Gets and sets the performers or artists who performed in
@@ -148,7 +178,10 @@ public readonly record struct LocalTrack : ITrack
     ///    applications should not try to limit the user in what
     ///    choice they may make.</para>
     /// </remarks>
-    public string[] Performers { get; init; }
+    public string[] Performers
+    {
+        get; init;
+    }
 
     /// <summary>
     ///    Gets and sets the sort names of the performers or artists
@@ -167,7 +200,10 @@ public readonly record struct LocalTrack : ITrack
     ///    sorted as "Beatles, The".
     ///    </para>
     /// </remarks>
-    public string[] PerformersSort { get; init; }
+    public string[] PerformersSort
+    {
+        get; init;
+    }
 
 
     /// <summary>
@@ -188,7 +224,10 @@ public readonly record struct LocalTrack : ITrack
     ///    Performers[i] and PerformersRole[i].
     ///    </para>
     /// </remarks>
-    public string[] PerformersRole { get; init; }
+    public string[] PerformersRole
+    {
+        get; init;
+    }
 
     /// <summary>
     ///    Gets and sets the band or artist who is credited in the
@@ -214,7 +253,10 @@ public readonly record struct LocalTrack : ITrack
     ///    muliple artist it is best to stick with a single band
     ///    name. For example, "The Beatles".</para>
     /// </remarks>
-    public string[] AlbumArtists { get; init; }
+    public string[] AlbumArtists
+    {
+        get; init;
+    }
 
     /// <summary>
     ///    Gets and sets the sort names for the band or artist who
@@ -242,7 +284,10 @@ public readonly record struct LocalTrack : ITrack
     ///    muliple artist it is best to stick with a single band
     ///    name. For example, "Beatles, The".</para>
     /// </remarks>
-    public string[] AlbumArtistsSort { get; init; }
+    public string[] AlbumArtistsSort
+    {
+        get; init;
+    }
 
     /// <summary>
     ///    Gets and sets the composers of the media represented by
@@ -258,7 +303,10 @@ public readonly record struct LocalTrack : ITrack
     ///    script writers, or persons who claim authorship of the
     ///    media.</para>
     /// </remarks>
-    public string[] Composers { get; init; }
+    public string[] Composers
+    {
+        get; init;
+    }
 
     /// <summary>
     ///    Gets and sets the sort names for the composers of the
@@ -278,7 +326,10 @@ public readonly record struct LocalTrack : ITrack
     ///    muliple artist it is best to stick with a single composer.
     ///    For example, "McCartney, Paul".</para>
     /// </remarks>
-    public string[] ComposersSort { get; init; }
+    public string[] ComposersSort
+    {
+        get; init;
+    }
 
     /// <summary>
     ///    Gets and sets the album of the media represented by the
@@ -301,7 +352,10 @@ public readonly record struct LocalTrack : ITrack
     ///    serie of movies/sequels), or "Game of Thrones" (a serie
     ///    with several seasons).</para>
     /// </remarks>
-    public string Album { get; init; }
+    public string Album
+    {
+        get; init;
+    }
 
     /// <summary>
     ///    Gets and sets the sort names for the Album Title of the
@@ -317,7 +371,10 @@ public readonly record struct LocalTrack : ITrack
     ///    sorting of compilations or albums with Similar Titles.
     ///    </para>
     /// </remarks>
-    public string AlbumSort { get; init; }
+    public string AlbumSort
+    {
+        get; init;
+    }
 
     /// <summary>
     ///    Gets and sets a user comment on the media represented by
@@ -338,7 +395,10 @@ public readonly record struct LocalTrack : ITrack
     ///    accessible, perhaps even including it in the main
     ///    interface.</para>
     /// </remarks>
-    public string Comment { get; init; }
+    public string Comment
+    {
+        get; init;
+    }
 
     /// <summary>
     ///    Gets and sets the genres of the media represented by the
@@ -358,7 +418,10 @@ public readonly record struct LocalTrack : ITrack
     ///    Additionally, <see cref="P:TagLib.Genres.Video" /> contains video
     ///    genres as used by DivX.</para>
     /// </remarks>
-    public string[] Genres { get; init; }
+    public string[] Genres
+    {
+        get; init;
+    }
 
     /// <summary>
     ///    Gets and sets the year that the media represented by the
@@ -378,7 +441,10 @@ public readonly record struct LocalTrack : ITrack
     ///    specific implementations are necessary access the higher
     ///    precision values.</para>
     /// </remarks>
-    public uint Year { get; init; }
+    public uint Year
+    {
+        get; init;
+    }
 
 
     /// <summary>
@@ -401,7 +467,10 @@ public readonly record struct LocalTrack : ITrack
     ///    in a season of the serie.
     ///    </para>
     /// </remarks>
-    public uint Track { get; init; }
+    public uint Track
+    {
+        get; init;
+    }
 
     /// <summary>
     ///    Gets and sets the number of tracks in the album, or the
@@ -419,7 +488,10 @@ public readonly record struct LocalTrack : ITrack
     ///    <see cref="P:TagLib.Tag.Track" />. If <see cref="P:TagLib.Tag.Track" /> is zero,
     ///    this value should also be zero.</para>
     /// </remarks>
-    public uint TrackCount { get; init; }
+    public uint TrackCount
+    {
+        get; init;
+    }
 
     /// <summary>
     ///    Gets and sets the number of the disc containing the media
@@ -437,7 +509,10 @@ public readonly record struct LocalTrack : ITrack
     ///    first of three, the value should be <c>1</c>. It should
     ///    be no more than <see cref="P:TagLib.Tag.DiscCount" /> if <see cref="P:TagLib.Tag.DiscCount" /> is non-zero.</para>
     /// </remarks>
-    public uint Disc { get; init; }
+    public uint Disc
+    {
+        get; init;
+    }
 
     /// <summary>
     ///    Gets and sets the number of discs or seasons in the
@@ -455,7 +530,10 @@ public readonly record struct LocalTrack : ITrack
     ///    <see cref="P:TagLib.Tag.Disc" />. If <see cref="P:TagLib.Tag.Disc" /> is zero,
     ///    this value should also be zero.</para>
     /// </remarks>
-    public uint DiscCount { get; init; }
+    public uint DiscCount
+    {
+        get; init;
+    }
 
     /// <summary>
     ///    Gets and sets the lyrics or script of the media
@@ -474,7 +552,10 @@ public readonly record struct LocalTrack : ITrack
     ///    synchronized lyrics, but those must be accessed using
     ///    format specific implementations.</para>
     /// </remarks>
-    public string Lyrics { get; init; }
+    public string Lyrics
+    {
+        get; init;
+    }
 
 
     /// <summary>
@@ -492,7 +573,10 @@ public readonly record struct LocalTrack : ITrack
     ///    be a movement. It could also be parts of a series like
     ///    "Introduction", "Closing Remarks", etc.</para>
     /// </remarks>
-    public string Grouping { get; init; }
+    public string Grouping
+    {
+        get; init;
+    }
 
     /// <summary>
     ///    Gets and sets the number of beats per minute in the audio
@@ -508,7 +592,10 @@ public readonly record struct LocalTrack : ITrack
     ///    match songs. It should be calculated from the audio or
     ///    pulled from a database.</para>
     /// </remarks>
-    public uint BeatsPerMinute { get; init; }
+    public uint BeatsPerMinute
+    {
+        get; init;
+    }
 
     /// <summary>
     ///    Gets and sets the conductor or director of the media
@@ -523,7 +610,10 @@ public readonly record struct LocalTrack : ITrack
     ///    <para>This field is most useful for organizing classical
     ///    music and movies.</para>
     /// </remarks>
-    public string Conductor { get; init; }
+    public string Conductor
+    {
+        get; init;
+    }
 
     /// <summary>
     ///    Gets and sets the copyright information for the media
@@ -543,7 +633,10 @@ public readonly record struct LocalTrack : ITrack
     ///    media creation tools should definitely allow
     ///    modification.</para>
     /// </remarks>
-    public string Copyright { get; init; }
+    public string Copyright
+    {
+        get; init;
+    }
 
     /// <summary>
     ///    Gets and sets the date at which the tag has been written.
@@ -552,18 +645,30 @@ public readonly record struct LocalTrack : ITrack
     ///    A nullable <see cref="T:System.DateTime" /> object containing the
     ///    date at which the tag has been written, or <see langword="null" /> if no value present.
     /// </value>
-    public DateTime? DateTagged { get; init; }
+    public DateTime? DateTagged
+    {
+        get; init;
+    }
 
-    public DateTime DateImported { get; init; }
+    public DateTime DateImported
+    {
+        get; init;
+    }
 
-    public DateTime LastChanged { get; init; }
+    public DateTime LastChanged
+    {
+        get; init;
+    }
 
     /// <summary>Gets and sets the publisher of the song.</summary>
     /// <value>
     ///    A <see cref="T:System.String" /> value for the publisher
     ///    of the song.
     /// </value>
-    public string Publisher { get; init; }
+    public string Publisher
+    {
+        get; init;
+    }
 
     /// <summary>
     ///    Gets and sets the ISRC (International Standard Recording Code) of the song.
@@ -571,12 +676,24 @@ public readonly record struct LocalTrack : ITrack
     /// <value>
     ///    A <see cref="T:System.String" /> value containing the ISRC of the song.
     /// </value>
-    public string ISRC { get; init; }
+    public string ISRC
+    {
+        get; init;
+    }
 
-    public double Duration { get; init; }
+    public double Duration
+    {
+        get; init;
+    }
 
-    public DateTime LastPlayed { get; init; }
-    public long Playcount { get; init; }
+    public DateTime LastPlayed
+    {
+        get; init;
+    }
+    public long Playcount
+    {
+        get; init;
+    }
 
     #endregion
 

@@ -30,7 +30,10 @@ namespace Wavee.UI.ViewModels.Playback
         private ulong _positionMs;
         private readonly AsyncAutoResetEvent _waitForSeekResponse = new();
 
-        public ICommand ExpandCoverImageCommand { get; init; }
+        public ICommand ExpandCoverImageCommand
+        {
+            get; init;
+        }
         public PlaybackViewModel(ServiceType forService)
         {
             _handlerInternal = forService switch
@@ -52,8 +55,7 @@ namespace Wavee.UI.ViewModels.Playback
         private bool _paused;
 
 
-        [RelayCommand]
-        public Task PlayTask(IPlayContext? arg)
+        public Task Play(IPlayContext? arg)
         {
             if (arg == null)
             {
@@ -214,6 +216,9 @@ namespace Wavee.UI.ViewModels.Playback
 
             return found;
         }
-        public static PlaybackViewModel? Instance { get; private set; }
+        public static PlaybackViewModel? Instance
+        {
+            get; private set;
+        }
     }
 }

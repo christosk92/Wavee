@@ -53,12 +53,15 @@ namespace Wavee.UI.WinUI.Controls
         {
             if (dragStarted)
                 return;
-            DurationSlider.DispatcherQueue.TryEnqueue(DispatcherQueuePriority.High, () =>
+            if (DurationSlider?.DispatcherQueue != null)
             {
-                DurationSlider.Value = obj;
-                var timeSpan = TimeSpan.FromMilliseconds(obj);
-                DurationBlock.Text = $"{timeSpan.Minutes:D2}:{timeSpan.Seconds:D2}";
-            });
+                DurationSlider.DispatcherQueue.TryEnqueue(DispatcherQueuePriority.High, () =>
+                {
+                    DurationSlider.Value = obj;
+                    var timeSpan = TimeSpan.FromMilliseconds(obj);
+                    DurationBlock.Text = $"{timeSpan.Minutes:D2}:{timeSpan.Seconds:D2}";
+                });
+            }
         }
         private Guid RegisterPositionCallback(ulong minDiff)
         {
