@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
+using Microsoft.UI.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Data;
@@ -47,7 +48,10 @@ namespace Wavee.UI.WinUI.Controls
         protected override void OnPointerEntered(PointerRoutedEventArgs e)
         {
             base.OnPointerEntered(e);
-            VisualStateManager.GoToState(this, "PointerOver", true);
+            if (!e.IsGenerated && e.Pointer.PointerDeviceType == PointerDeviceType.Mouse && !e.Handled)
+            {
+                VisualStateManager.GoToState(this, "PointerOver", true);
+            }
         }
 
         protected override void OnPointerExited(PointerRoutedEventArgs e)

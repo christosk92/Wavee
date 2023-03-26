@@ -1,5 +1,7 @@
-﻿using Wavee.Enums;
+﻿using System.Collections.Immutable;
+using Wavee.Enums;
 using Wavee.Interfaces.Models;
+using Wavee.Models;
 
 namespace Wavee.UI.Models.Local;
 
@@ -15,9 +17,18 @@ namespace Wavee.UI.Models.Local;
 public readonly record struct LocalAlbum(
     string? Image,
     string Title,
+    ImmutableArray<DescriptionItem> Artists,
+    uint Year,
+    uint NumberOfTracks,
+    ulong SumDuration,
+    DateTime MaxDateAdded,
+    int SumPlayCount,
+    DateTime? MaxLastPlayed,
     ServiceType Service) : IAlbum
 {
+
     public string Id => Title;
+
     public bool Equals(IAudioItem? other)
     {
         return Id == other?.Id && Service == other.Service;

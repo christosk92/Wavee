@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using Wavee.UI.Models.Local;
+using Wavee.UI.ViewModels.Libray;
 
 namespace Wavee.UI.Interfaces.Services
 {
@@ -12,10 +13,16 @@ namespace Wavee.UI.Interfaces.Services
         Task<IEnumerable<ShortLocalTrack>> GetAllForUpdateCheck();
         Task Remove(string id);
         LocalTrack? ReadTrack(string sql);
+
         Task<IEnumerable<LocalTrack>> ReadTracks(string sql,
             bool withJoinOnPlaycount,
             CancellationToken ct = default);
+
         int Count(string sql);
         Task<int> Count();
+
+        Task<IEnumerable<LocalAlbum>> GetAlbums(SortOption sortBy, bool sortAscending,
+            HashSet<string>? savedAlbums = null,
+            CancellationToken ct = default);
     }
 }

@@ -4,7 +4,7 @@ using Wavee.Interfaces.Models;
 
 namespace Wavee.UI.Models.Local;
 
-internal readonly record struct UnknownArtist() : IAlbum
+internal readonly record struct UnknownArtist() : IArtist
 {
     internal static readonly string __real_unknown_artist;
 

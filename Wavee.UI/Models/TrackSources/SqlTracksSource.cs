@@ -32,7 +32,7 @@ public sealed class SqlTracksSource : AbsTrackSource<TrackViewModel>
 
             var query = BuildSqlQuery(SortBy, Ascending, HeartedFilter, offset, limit);
             var tracks = (await _db.ReadTracks(query, true, ct)).ToArray();
-
+            await Task.Delay(10, ct);
             //any other sort option will use the default sort option as the group string
 
             return tracks.Select((t, i) =>
@@ -43,9 +43,9 @@ public sealed class SqlTracksSource : AbsTrackSource<TrackViewModel>
                     SortOption.Year => t.Year.ToString(),
                     SortOption.Genre => string.Join(",", t.Genres),
                     SortOption.Playcount => t.Playcount.ToString(),
-                    SortOption.LastPlayed => t.LastPlayed.ToString("o"),
+                    SortOption.LastPlayed => t.LastPlayed.ToString("g"),
                     SortOption.BPM => t.BeatsPerMinute.ToString(),
-                    _ => t.DateImported.ToString("o")
+                    _ => t.DateImported.ToString("g")
                 };
 
                 return new LibraryTrackViewModel(t, i + offset, extraStringData);

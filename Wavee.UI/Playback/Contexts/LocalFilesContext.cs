@@ -9,21 +9,30 @@ namespace Wavee.UI.Playback.Contexts
 {
     public class LocalFilesContext : IPlayContext
     {
-        private readonly string? _filter;
-        private readonly SortOption _orderBy;
-        private readonly bool _ascendingSort;
-        private readonly int _offset;
+        public string? Filter
+        {
+            get;
+            init;
+        }
+        public SortOption OrderBy
+        {
+            get;
+            init;
+        }
+        public bool AscendingSort
+        {
+            get;
+            init;
+        }
 
         public LocalFilesContext(
             SortOption sortOption,
             bool ascendingSort,
-            int offset,
             string? filter)
         {
-            _filter = filter;
-            _offset = offset;
-            _orderBy = sortOption;
-            _ascendingSort = ascendingSort;
+            Filter = filter;
+            OrderBy = sortOption;
+            AscendingSort = ascendingSort;
         }
 
         public IPlayableItem? GetTrack(int index)
@@ -31,7 +40,7 @@ namespace Wavee.UI.Playback.Contexts
             var filterQuery = BuildFilterQuery();
             const string fromClause = "FROM MediaItems mi LEFT JOIN Playcount pc ON mi.Id = pc.TrackId ";
             var orderQuery = BuildOrderQuery();
-            var limitOffsetQuery = $"LIMIT 1 OFFSET {index + _offset}";
+            var limitOffsetQuery = $"LIMIT 1 OFFSET {index}";
 
             const string selectClause = "SELECT mi.*, COUNT(pc.TrackId) AS Playcount, MAX(pc.DatePlayed) AS LastPlayed ";
 
@@ -49,7 +58,7 @@ namespace Wavee.UI.Playback.Contexts
                 var filterQuery = BuildFilterQuery();
                 const string fromClause = "FROM MediaItems mi LEFT JOIN Playcount pc ON mi.Id = pc.TrackId ";
 
-                var countQuery = $"SELECT COUNT(*) {fromClause}{filterQuery}";
+                var countQuery = $"SELECT COUNT(*) OVER () {fromClause}{filterQuery} GROUP BY mi.Id LIMIT 1";
                 return Ioc.Default.GetRequiredService<ILocalAudioDb>()
                     .Count(countQuery);
             }
@@ -57,12 +66,12 @@ namespace Wavee.UI.Playback.Contexts
 
         private string BuildFilterQuery()
         {
-            return string.IsNullOrEmpty(_filter) ? string.Empty : $"WHERE {_filter}";
+            return string.IsNullOrEmpty(Filter) ? string.Empty : $"WHERE {Filter}";
         }
 
         private string BuildOrderQuery()
         {
-            var orderMapping = _orderBy switch
+            var orderMapping = OrderBy switch
             {
                 SortOption.Year => "mi." + nameof(LocalTrack.Year),
                 SortOption.Genre => "mi." + nameof(LocalTrack.Genres),
@@ -77,8 +86,36 @@ namespace Wavee.UI.Playback.Contexts
                 _ => "mi." + nameof(LocalTrack.DateImported)
             };
 
-            var orderQueryAppend = _ascendingSort ? "ASC" : "DESC";
+            var orderQueryAppend = AscendingSort ? "ASC" : "DESC";
             return $"ORDER BY {orderMapping} {orderQueryAppend}, mi.Id {orderQueryAppend}";
         }
+
+        protected bool Equals(LocalFilesContext other) => Filter == other.Filter && OrderBy == other.OrderBy && AscendingSort == other.AscendingSort;
+
+        public bool Equals(IPlayContext? obj)
+        {
+            if (ReferenceEquals(null, obj))
+            {
+                return false;
+            }
+
+            if (ReferenceEquals(this, obj))
+            {
+                return true;
+            }
+
+            if (obj.GetType() != this.GetType())
+            {
+                return false;
+            }
+
+            return Equals((LocalFilesContext)obj);
+        }
+
+        public override int GetHashCode() => HashCode.Combine(Filter, (int)OrderBy, AscendingSort);
+
+        public static bool operator ==(LocalFilesContext? left, LocalFilesContext? right) => Equals(left, right);
+
+        public static bool operator !=(LocalFilesContext? left, LocalFilesContext? right) => !Equals(left, right);
     }
 }

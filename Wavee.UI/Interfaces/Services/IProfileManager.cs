@@ -17,5 +17,5 @@ public interface IProfileManager
     bool HasAnyProfile();
     Profile? GetDefaultProfile();
     IEnumerable<Profile> GetProfiles(ServiceType serviceType);
-    ValueTask SaveProfile(Profile forProfile);
+    Task SaveProfile(Profile forProfile);
 }

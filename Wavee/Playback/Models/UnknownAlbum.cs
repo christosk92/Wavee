@@ -1,6 +1,8 @@
-﻿using System.Security.Cryptography;
+﻿using System.Collections.Immutable;
+using System.Security.Cryptography;
 using Wavee.Enums;
 using Wavee.Interfaces.Models;
+using Wavee.Models;
 
 namespace Wavee.UI.Models.Local;
 
@@ -20,5 +22,16 @@ internal readonly record struct UnknownAlbum() : IAlbum
     static UnknownAlbum()
     {
         __real_unknown_album = RandomNumberGenerator.GetHexString(24, true);
+    }
+
+    public ImmutableArray<DescriptionItem> Artists => ImmutableArray<DescriptionItem>.Empty;
+    public uint Year
+    {
+        get;
+    }
+
+    public uint NumberOfTracks
+    {
+        get;
     }
 }

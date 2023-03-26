@@ -1,6 +1,9 @@
 ﻿using System.ComponentModel;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.DependencyInjection;
+using Newtonsoft.Json;
 using Wavee.UI.Interfaces.Services;
 using Wavee.UI.Models.Profiles;
 
@@ -8,10 +11,12 @@ namespace Wavee.UI.ViewModels.User
 {
     public partial class UserViewModel : ObservableObject
     {
-        [ObservableProperty] [NotifyPropertyChangedFor(nameof(SidebarExpandedAndLargeImageComposite))]
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(SidebarExpandedAndLargeImageComposite))]
         private bool _sidebarExpanded;
 
-        [ObservableProperty] [NotifyPropertyChangedFor(nameof(SidebarExpandedAndLargeImageComposite))]
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(SidebarExpandedAndLargeImageComposite))]
         private bool _largeImage;
 
         [ObservableProperty] private double _sidebarWidth;
@@ -23,7 +28,7 @@ namespace Wavee.UI.ViewModels.User
 
             SidebarExpanded = profile.SidebarExpanded;
             LargeImage = profile.LargeImage;
-            SidebarWidth = profile.SidebarWidth;
+            SidebarWidth = Math.Max(100, profile.SidebarWidth);
         }
 
         public bool SidebarExpandedAndLargeImageComposite => LargeImage && SidebarExpanded;
@@ -34,13 +39,13 @@ namespace Wavee.UI.ViewModels.User
             private set => SetProperty(ref _forProfile, value);
         }
 
-        public void SaveTrack(string id)
+        public Task SaveTrack(string id)
         {
             ForProfile.SavedTracks.Add(id);
-            SaveData();
+            return SaveData();
         }
 
-        private void OnPropertyChanged(object? sender, PropertyChangedEventArgs e)
+        private async void OnPropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
             if (_allowedProps.Contains(e.PropertyName))
             {
@@ -50,15 +55,15 @@ namespace Wavee.UI.ViewModels.User
                     LargeImage = LargeImage,
                     SidebarWidth = SidebarWidth,
                 };
-                SaveData();
+                await SaveData();
             }
         }
 
-        private void SaveData()
+        private async Task SaveData()
         {
             var profileMangager = Ioc.Default.GetRequiredService<IProfileManager>();
 
-            profileMangager.SaveProfile(ForProfile);
+            await profileMangager.SaveProfile(ForProfile);
         }
 
         private static string[] _allowedProps = new[]
@@ -73,15 +78,47 @@ namespace Wavee.UI.ViewModels.User
         public void SavePreference<T>(string key, T value)
         {
             ForProfile.Properties[key] = value.ToString();
-            SaveData();
+            _ = SaveData();
         }
 
-        public T ReadPreference<T>(string key)
+        public T ReadPreference<T>(string key, T defaultval = default)
         {
             if (ForProfile.Properties.TryGetValue(key, out var value))
             {
                 //bool, int, string etc
                 return (T)TypeDescriptor.GetConverter(typeof(T)).ConvertFromInvariantString(value);
+            }
+
+            return defaultval;
+        }
+
+        public async Task SaveJsonPreference<T>(string key, T value)
+        {
+            try
+            {
+                ForProfile.Properties[key] = JsonConvert.SerializeObject(value, Formatting.Indented,
+                    new JsonSerializerSettings
+                    {
+                        TypeNameHandling = TypeNameHandling.All
+                    });
+                await SaveData();
+            }
+            catch (Exception x)
+            {
+
+            }
+        }
+
+        public T ReadJsonPreference<T>(string key)
+        {
+            if (ForProfile.Properties.TryGetValue(key, out var value))
+            {
+                //bool, int, string etc
+                return JsonConvert.DeserializeObject<T>(value,
+                    new JsonSerializerSettings
+                    {
+                        TypeNameHandling = TypeNameHandling.All
+                    });
             }
 
             return default;

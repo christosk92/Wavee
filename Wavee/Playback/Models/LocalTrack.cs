@@ -2,8 +2,6 @@
 using Wavee.Enums;
 using Wavee.Interfaces.Models;
 using Wavee.Models;
-using Wavee.UI.ViewModels.Album;
-using Wavee.UI.ViewModels.Artist;
 
 namespace Wavee.UI.Models.Local;
 
@@ -40,28 +38,36 @@ public readonly record struct LocalTrack : ITrack
     IAlbum ITrack.Album => new LocalAlbum(
         Image: Image,
         Title: Album,
-        Service: ServiceType.Local);
+        Service: ServiceType.Local,
+        Artists: Performers.Select(a => new DescriptionItem(a, null, null)).ToImmutableArray(),
+        Year: Year,
+        NumberOfTracks: 0,
+        SumDuration: 0,
+        MaxDateAdded: DateTime.MinValue,
+        SumPlayCount: 0,
+        MaxLastPlayed: null);
 
-    ImmutableArray<IArtist> ITrack.Artists => Performers
+    ImmutableArray<IArtist> ITrack.Artists => Performers?
         .Select(j => new LocalArtist(
             Image: null,
             Title: j,
             Service: ServiceType.Local
-        ))
-        .Cast<IArtist>()
-        .ToImmutableArray();
+        ))?
+        .Cast<IArtist>()?
+        .ToImmutableArray() ?? ImmutableArray<IArtist>.Empty;
 
-    public ImmutableArray<DescriptionItem> Descriptions => Performers
-        .Select(artist => new DescriptionItem(
-            Title: artist,
-            NavigateTo: typeof(ArtistViewModel),
-            Parameter: artist
-        )).ToImmutableArray();
+    
+    // public ImmutableArray<DescriptionItem> Descriptions => Performers?
+    //     .Select(artist => new DescriptionItem(
+    //         Title: artist,
+    //         NavigateTo: typeof(ArtistViewModel),
+    //         Parameter: artist
+    //     ))?.ToImmutableArray() ?? ImmutableArray<DescriptionItem>.Empty;
 
-    public DescriptionItem Group => new DescriptionItem(
-        Title: Album,
-        NavigateTo: typeof(AlbumViewModel),
-        Parameter: Album);
+    // public DescriptionItem Group => new DescriptionItem(
+    //     Title: Album,
+    //     NavigateTo: typeof(AlbumViewModel),
+    //     Parameter: Album);
 
     public string Image
     {
@@ -680,6 +686,10 @@ public readonly record struct LocalTrack : ITrack
     {
         get; init;
     }
+
+    public ImmutableArray<string> Descriptions => Performers.ToImmutableArray();
+
+    public string Group => Album;
 
     public double Duration
     {

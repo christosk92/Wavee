@@ -1,4 +1,5 @@
 ﻿using System.Text.Json;
+using Nito.AsyncEx;
 using Wavee.Enums;
 using Wavee.UI.Interfaces.Services;
 using Wavee.UI.Models.Profiles;
@@ -36,7 +37,8 @@ namespace Wavee.UI.Services.Profiles
                 SidebarWidth: 200,
                 SidebarExpanded: true,
                 LargeImage: false,
-                SavedTracks: new HashSet<string>());
+                SavedTracks: new HashSet<string>(),
+                SavedAlbums: new HashSet<string>());
 
             await _fileService.Write(profile,
                 Path.Combine(nameof(ServiceType.Local), "profiles", $"{profile.Id}.json"));
@@ -54,12 +56,23 @@ namespace Wavee.UI.Services.Profiles
         public IEnumerable<Profile> GetProfiles(ServiceType serviceType) => _profiles
             .Where(a => a.ServiceType == serviceType);
 
-        public ValueTask SaveProfile(Profile forProfile)
+        private readonly AsyncLock _fLock = new AsyncLock();
+        public async Task SaveProfile(Profile forProfile)
         {
-            _profiles.RemoveWhere(a => a.Id == forProfile.Id);
-            _profiles.Add(forProfile);
-            return _fileService.Write(forProfile,
-                Path.Combine(nameof(ServiceType.Local), "profiles", $"{forProfile.Id}.json"));
+            using (await _fLock.LockAsync())
+            {
+                try
+                {
+                    _profiles.RemoveWhere(a => a.Id == forProfile.Id);
+                    _profiles.Add(forProfile);
+                    await _fileService.Write(forProfile,
+                        Path.Combine(nameof(ServiceType.Local), "profiles", $"{forProfile.Id}.json"));
+                }
+                catch (Exception x)
+                {
+                    throw x;
+                }
+            }
         }
     }
 }

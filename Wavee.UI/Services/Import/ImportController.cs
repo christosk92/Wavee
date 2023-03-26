@@ -18,9 +18,15 @@ public class ImportController : ObservableObject
 
     private readonly ILocalAudioDb _db;
 
-    public int Total { get; private set; }
+    public int Total
+    {
+        get; private set;
+    }
 
-    public Guid Id { get; }
+    public Guid Id
+    {
+        get;
+    }
 
     private readonly IAppDataProvider _appDataProvider;
 

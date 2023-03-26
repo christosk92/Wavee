@@ -46,7 +46,7 @@ namespace Wavee.UI.WinUI
             Ioc.Default.ConfigureServices(container
                 .AddSingleton<IStringLocalizer>(new WinUIResourcesStringLocalizer(rc))
                 .BuildServiceProvider());
-
+            Ioc.Default.GetRequiredService<IPlaycountService>();
             m_window = new MainWindow();
             MainWindow = m_window as MainWindow;
             m_window.Activate();
@@ -70,7 +70,7 @@ namespace Wavee.UI.WinUI
 
             services.AddLocal();
 
-            services.AddSingleton<ILocalFilePlayer, WinUIMediaPlayer>();
+            services.AddSingleton<IMusicPlayer, WinUIMediaPlayer>();
 
             services.AddTransient<LibraryRootViewModel>();
             services.AddScoped<LibrarySongsViewModel>();
@@ -84,6 +84,9 @@ namespace Wavee.UI.WinUI
 
         private Window m_window;
 
-        public static MainWindow MainWindow { get; private set; }
+        public static MainWindow MainWindow
+        {
+            get; private set;
+        }
     }
 }

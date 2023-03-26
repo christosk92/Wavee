@@ -33,7 +33,7 @@ namespace Wavee.UI.ViewModels.Libray
             SortOption.LastPlayed => SortOption.LastPlayed,
             SortOption.DateAdded => SortOption.DateAdded,
             SortOption.BPM => SortOption.BPM,
-            _ => null
+            _ => SortOption.DateAdded
         };
 
         public SortOption SortBy
@@ -103,7 +103,7 @@ namespace Wavee.UI.ViewModels.Libray
                         var filterQuery = (HeartedFilter
                             ? $"{nameof(LocalTrack.Id)} IN ({string.Join(",", savedTracks)})"
                             : "1=1");
-                        context = new LocalFilesContext(SortBy, SortAscending, model.Index, filterQuery);
+                        context = new LocalFilesContext(SortBy, SortAscending, filterQuery);
                         break;
                     case ServiceType.Spotify:
                         break;
@@ -111,9 +111,15 @@ namespace Wavee.UI.ViewModels.Libray
                         throw new ArgumentOutOfRangeException();
                 }
 
+                if (PlaybackViewModel.Instance.PlayingItem?.Equals(model.Track) is true)
+                {
+                    //pause or play?
+                    return PlaybackViewModel.Instance.PauseResume();
+                }
+
                 if (context != null)
                 {
-                    return PlaybackViewModel.Instance!.Play(context);
+                    return PlaybackViewModel.Instance!.Play(context, model.Index);
                 }
 
                 return Task.CompletedTask;

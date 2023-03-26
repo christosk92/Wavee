@@ -162,8 +162,9 @@
         <ListView Grid.Row="1"
                   ui:ScrollViewerExtensions.VerticalScrollBarMargin="0,0,0,100"
                   Grid.RowSpan="2"
+                  SelectionMode="Extended"
                   DataContext="{x:Bind ViewModel}"
-                  x:Name="TrackListView" 
+                  x:Name="TrackListView"
                   ItemTemplate="{StaticResource LibraryTrack}"
                   ItemsSource="{x:Bind Tracks, Mode=OneWay}">
             <interactivity:Interaction.Behaviors>

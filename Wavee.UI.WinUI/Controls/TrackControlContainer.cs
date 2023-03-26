@@ -20,7 +20,7 @@ namespace Wavee.UI.WinUI.Controls
             DependencyProperty.Register(nameof(IsPaused),
                 typeof(bool),
                 typeof(TrackControlContainer),
-                new PropertyMetadata(false, OnIsPlayingPropertyChanged));
+                new PropertyMetadata(true, OnIsPlayingPropertyChanged));
 
 
         // public static readonly DependencyProperty VisualStateProperty =

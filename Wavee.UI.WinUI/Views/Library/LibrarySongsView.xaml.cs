@@ -83,7 +83,8 @@ namespace Wavee.UI.WinUI.Views.Library
             if (e.PropertyName is nameof(ViewModel.Tracks))
             {
                 Tracks = new IncrementalLoadingCollection<AbsTrackSource<TrackViewModel>, TrackViewModel>(
-                    source: ViewModel.Tracks
+                    source: ViewModel.Tracks,
+                    itemsPerPage: 20
                 );
             }
             if (e.PropertyName is nameof(ViewModel.SortAscending) or nameof(ViewModel.SortBy) or nameof(ViewModel.HeartedFilter))

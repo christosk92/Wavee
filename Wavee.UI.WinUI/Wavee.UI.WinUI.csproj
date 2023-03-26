@@ -10,7 +10,7 @@
 		<PublishProfile>win10-$(Platform).pubxml</PublishProfile>
 		<UseWinUI>true</UseWinUI>
 		<EnableMsixTooling>true</EnableMsixTooling>
-		<!-- <WindowsPackageType>None</WindowsPackageType> -->
+		<!-- <WindowsPackageType>None</WindowsPackageType>  -->
 	</PropertyGroup>
 	<ItemGroup>
 		<Content Remove="Assets\AlbumPlaceholder.png" />
@@ -20,6 +20,7 @@
 	<ItemGroup>
 		<None Remove="Controls\SortButton.xaml" />
 		<None Remove="Controls\TrackViewModelStyles.xaml" />
+		<None Remove="Controls\UsableSlider.xaml" />
 		<None Remove="Styles\BorderStyles.xaml" />
 		<None Remove="Styles\GridViewStyles.xaml" />
 		<None Remove="Styles\ListViewStyles.xaml" />
@@ -87,11 +88,14 @@
 		<None Update="Controls\BottomPlayerControl.xaml">
 			<Generator>MSBuild:Compile</Generator>
 		</None>
+		<Page Update="Controls\UsableSlider.xaml">
+			<Generator>MSBuild:Compile</Generator>
+		</Page>
 		<Page Update="Controls\SortButton.xaml">
-		  <Generator>MSBuild:Compile</Generator>
+			<Generator>MSBuild:Compile</Generator>
 		</Page>
 		<Page Update="Views\Library\LibraryAlbumsView.xaml">
-		  <Generator>MSBuild:Compile</Generator>
+			<Generator>MSBuild:Compile</Generator>
 		</Page>
 		<Page Update="Views\Library\LibraryRootView.xaml">
 			<Generator>MSBuild:Compile</Generator>

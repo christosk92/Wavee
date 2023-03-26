@@ -1,4 +1,5 @@
 ﻿using System.Collections.Immutable;
+using Wavee.Models;
 
 namespace Wavee.Interfaces.Models;
 
@@ -12,12 +13,18 @@ public interface ITrack : IPlayableItem
     /// <summary>
     /// Gets the <see cref="IAlbum"/> instance representing the album the track belongs to.
     /// </summary>
-    IAlbum Album { get; }
+    IAlbum Album
+    {
+        get;
+    }
 
     /// <summary>
     /// Gets an array of <see cref="IArtist"/> instances representing the artists contributing to the track.
     /// </summary>
-    ImmutableArray<IArtist> Artists { get; }
+    ImmutableArray<IArtist> Artists
+    {
+        get;
+    }
 }
 
 /// <summary>
@@ -35,4 +42,17 @@ public interface IArtist : IAudioItem
 /// </summary>
 public interface IAlbum : IAudioItem
 {
+    ImmutableArray<DescriptionItem> Artists
+    {
+        get;
+    }
+
+    uint Year
+    {
+        get;
+    }
+    uint NumberOfTracks
+    {
+        get;
+    }
 }

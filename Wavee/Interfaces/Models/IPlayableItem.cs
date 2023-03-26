@@ -13,11 +13,11 @@ public interface IPlayableItem : IAudioItem
     /// Gets a collection of description items associated with the playable item.
     /// For a track this will be the artists.
     /// </summary>
-    ImmutableArray<DescriptionItem> Descriptions { get; }
+    ImmutableArray<string> Descriptions { get; }
     /// <summary>
     /// Gets the group information for the playable item, such as the album or podcast series it belongs to.
     /// </summary>
-    DescriptionItem Group { get; }
+    string Group { get; }
     /// <summary>
     /// Gets the duration of the playable item in milliseconds.
     /// </summary>

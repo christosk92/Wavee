@@ -27,7 +27,7 @@ namespace Wavee.UI.WinUI.Controls
             }
             if (e.NewValue is PlaybackViewModel v)
             {
-                bpc._callback = bpc.RegisterPositionCallback(100);
+                bpc._callback = bpc.RegisterPositionCallback(200);
             }
         }
 
@@ -51,13 +51,14 @@ namespace Wavee.UI.WinUI.Controls
 
         private void Callback(ulong obj)
         {
-            if (dragStarted)
+            if (DurationSlider.DragStarted)
                 return;
+
             if (DurationSlider?.DispatcherQueue != null)
             {
                 DurationSlider.DispatcherQueue.TryEnqueue(DispatcherQueuePriority.High, () =>
                 {
-                    DurationSlider.Value = obj;
+                    DurationSlider.RealValue = obj;
                     var timeSpan = TimeSpan.FromMilliseconds(obj);
                     DurationBlock.Text = $"{timeSpan.Minutes:D2}:{timeSpan.Seconds:D2}";
                 });
@@ -68,62 +69,7 @@ namespace Wavee.UI.WinUI.Controls
             return ViewModel.RegisterPositionCallback(minDiff, Callback);
         }
 
-        private bool dragStarted;
         public static readonly DependencyProperty UserProperty = DependencyProperty.Register(nameof(User), typeof(UserViewModel), typeof(BottomPlayerControl), new PropertyMetadata(default(UserViewModel)));
-
-        private async void Slider_ManipulationCompleted(object sender, ManipulationCompletedRoutedEventArgs e)
-        {
-            var val = DurationSlider.Value;
-            await ViewModel.Seek(val);
-            dragStarted = false;
-        }
-
-        private void TimelineSlider_ManipulationStarting(object sender, ManipulationStartingRoutedEventArgs e)
-        {
-            dragStarted = true;
-        }
-
-        private async void DurationSlider_OnPointerCaptureLost(object sender, PointerRoutedEventArgs e)
-        {
-
-        }
-
-        private async void DurationSlider_OnTapped(object sender, TappedRoutedEventArgs e)
-        {
-            await ViewModel.Seek(DurationSlider.Value);
-            dragStarted = false;
-        }
-
-        private void DurationSlider_OnPointerPressed(object sender, PointerRoutedEventArgs e)
-        {
-            dragStarted = true;
-        }
-
-        private async void DurationSlider_OnPointerReleased(object sender, PointerRoutedEventArgs e)
-        {
-            if (dragStarted)
-            {
-                await ViewModel.Seek(DurationSlider.Value);
-                dragStarted = false;
-            }
-        }
-
-        private void DurationSlider_OnPointerMoved(object sender, PointerRoutedEventArgs e)
-        {
-
-        }
-
-        private void DurationSlider_OnManipulationStarted(object sender, ManipulationStartedRoutedEventArgs e)
-        {
-            dragStarted = true;
-        }
-
-        private void DurationSlider_OnManipulationDelta(object sender, ManipulationDeltaRoutedEventArgs e)
-        {
-            dragStarted = true;
-        }
-
-
 
         private void PauseButtonLoaded(object sender, RoutedEventArgs e)
         {
@@ -176,6 +122,16 @@ namespace Wavee.UI.WinUI.Controls
                     }
                 }
             }
+        }
+
+        private async void DurationSlider_OnOnRealValueChanged(object sender, double e)
+        {
+            await ViewModel.Seek(e);
+        }
+
+        private async void VolumeSlider_OnRealValueChanged(object sender, double e)
+        {
+            await ViewModel.SetVolume(e);
         }
     }
 }

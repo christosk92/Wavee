@@ -13,4 +13,5 @@ public readonly record struct Profile(
     double SidebarWidth,
     bool SidebarExpanded,
     bool LargeImage,
-    HashSet<string> SavedTracks);
+    HashSet<string> SavedTracks,
+    HashSet<string> SavedAlbums);

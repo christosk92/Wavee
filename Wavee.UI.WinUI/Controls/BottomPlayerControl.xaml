@@ -12,6 +12,7 @@
              xmlns:interactivity="using:Microsoft.Xaml.Interactivity"
              xmlns:core="using:Microsoft.Xaml.Interactions.Core"
              xmlns:controls1="using:Wavee.UI.WinUI.Controls"
+             xmlns:templateSelectors="using:Wavee.UI.WinUI.TemplateSelectors"
              DataContext="{x:Bind ViewModel, Mode=OneWay}"
              mc:Ignorable="d">
     <UserControl.Resources>
@@ -19,13 +20,46 @@
             <converters:BoolToObjectConverter.TrueValue>
                 <FontIcon FontFamily="Segoe Fluent Icons"
                           FontWeight="ExtraBold"
-                          FontSize="26"
+                          FontSize="20"
                           Glyph="&#xE102;" />
             </converters:BoolToObjectConverter.TrueValue>
             <converters:BoolToObjectConverter.FalseValue>
                 <FontIcon FontFamily="/Assets/Fonts/MediaPlayerIcons.ttf#Media Player Fluent Icons"
-                          FontSize="26"
+                          FontSize="20"
                           Glyph="&#xE769;" />
+            </converters:BoolToObjectConverter.FalseValue>
+        </converters:BoolToObjectConverter>
+        <templateSelectors:RepeatStateButtonContentSelector x:Key="RepeatStateButtonContentSelector">
+            <templateSelectors:RepeatStateButtonContentSelector.None>
+                <DataTemplate>
+                    <FontIcon FontFamily="Segoe Fluent Icons"
+                              Glyph="&#xE1CD;" />
+                </DataTemplate>
+            </templateSelectors:RepeatStateButtonContentSelector.None>
+            <templateSelectors:RepeatStateButtonContentSelector.Context>
+                <DataTemplate>
+                    <FontIcon FontFamily="Segoe Fluent Icons"
+                              Foreground="{ThemeResource FocusTextThemeBrush}"
+                              Glyph="&#xE1CD;" />
+                </DataTemplate>
+            </templateSelectors:RepeatStateButtonContentSelector.Context>
+            <templateSelectors:RepeatStateButtonContentSelector.Track>
+                <DataTemplate>
+                    <FontIcon FontFamily="Segoe Fluent Icons"
+                              Foreground="{ThemeResource FocusTextThemeBrush}"
+                              Glyph="&#xE1CC;" />
+                </DataTemplate>
+            </templateSelectors:RepeatStateButtonContentSelector.Track>
+        </templateSelectors:RepeatStateButtonContentSelector>
+        <converters:BoolToObjectConverter x:Key="ShuffleToColorConverter">
+            <converters:BoolToObjectConverter.TrueValue>
+                <FontIcon FontFamily="Segoe Fluent Icons"
+                          Foreground="{ThemeResource FocusTextThemeBrush}"
+                          Glyph="&#xE14B;" />
+            </converters:BoolToObjectConverter.TrueValue>
+            <converters:BoolToObjectConverter.FalseValue>
+                <FontIcon FontFamily="Segoe Fluent Icons"
+                          Glyph="&#xE14B;" />
             </converters:BoolToObjectConverter.FalseValue>
         </converters:BoolToObjectConverter>
     </UserControl.Resources>
@@ -180,11 +214,11 @@
                                 VerticalAlignment="Bottom"
                                 Orientation="Horizontal">
                         <controls1:ThreeDButton BorderThickness="0"
-                                                Background="Transparent">
-                            <FontIcon FontFamily="Segoe Fluent Icons"
-                                      Glyph="&#xE14B;" />
-                        </controls1:ThreeDButton>
+                                                Content="{x:Bind ViewModel.Shuffle, Mode=OneWay, Converter={StaticResource ShuffleToColorConverter}}"
+                                                Command="{x:Bind ViewModel.ToggleShuffleCommand}"
+                                                Background="Transparent" />
                         <controls1:ThreeDButton BorderThickness="0"
+                                                Command="{x:Bind ViewModel.SkipPrevCommand}"
                                                 Background="Transparent">
                             <FontIcon FontFamily="Segoe Fluent Icons"
                                       Glyph="&#xE100;" />
@@ -200,13 +234,13 @@
                             <controls1:ThreeDButton Background="{ThemeResource SolidBackgroundFillColorTertiaryBrush}"
                                                     CornerRadius="30"
                                                     BorderBrush="{ThemeResource SystemAccentColor}"
-                                                    Width="56"
+                                                    Width="48"
                                                     IsHoldingEnabled="True"
                                                     BorderThickness="3"
                                                     Loaded="PauseButtonLoaded"
                                                     Command="{x:Bind ViewModel.PauseResumeCommand}"
                                                     Content="{x:Bind ViewModel.Paused, Mode=OneWay, Converter={StaticResource PausedToButtonContentConverter}}"
-                                                    Height="56">
+                                                    Height="48">
                                 <controls1:ThreeDButton.Resources>
                                     <SolidColorBrush x:Key="ButtonBackgroundPointerOver"
                                                      Color="Transparent" />
@@ -214,15 +248,16 @@
                             </controls1:ThreeDButton>
                         </Border>
                         <controls1:ThreeDButton BorderThickness="0"
+                                                Command="{x:Bind ViewModel.SkipNextCommand}"
                                                 Background="Transparent">
                             <FontIcon FontFamily="Segoe Fluent Icons"
                                       Glyph="&#xE101;" />
                         </controls1:ThreeDButton>
                         <controls1:ThreeDButton BorderThickness="0"
-                                                Background="Transparent">
-                            <FontIcon FontFamily="Segoe Fluent Icons"
-                                      Glyph="&#xE1CD;" />
-                        </controls1:ThreeDButton>
+                                                Content="{x:Bind ViewModel.RepeatState, Mode=OneWay}"
+                                                ContentTemplateSelector="{StaticResource RepeatStateButtonContentSelector}"
+                                                Command="{x:Bind ViewModel.ToggleRepeatCommand}"
+                                                Background="Transparent" />
                     </StackPanel>
 
                     <Grid Grid.Row="2"
@@ -236,20 +271,11 @@
                                    VerticalAlignment="Center"
                                    Margin="0,0,0,4"
                                    x:Name="DurationBlock" />
-                        <Slider Grid.Column="1"
-                                PointerPressed="DurationSlider_OnPointerPressed"
-                                PointerMoved="DurationSlider_OnPointerMoved"
-                                PointerReleased="DurationSlider_OnPointerReleased"
-                                ManipulationStarted="DurationSlider_OnManipulationStarted"
-                                ManipulationDelta="DurationSlider_OnManipulationDelta"
-                                ManipulationStarting="TimelineSlider_ManipulationStarting"
-                                ManipulationCompleted="Slider_ManipulationCompleted"
-                                PointerCaptureLost="DurationSlider_OnPointerCaptureLost"
-                                Tapped="DurationSlider_OnTapped"
-                                ManipulationMode="All"
-                                x:Name="DurationSlider"
-                                Maximum="{x:Bind ViewModel.PlayingItem.Duration,Mode=OneWay}"
-                                VerticalAlignment="Bottom" />
+                        <controls1:UsableSlider Grid.Column="1"
+                                                OnRealValueChanged="DurationSlider_OnOnRealValueChanged"
+                                                x:Name="DurationSlider"
+                                                Maximum="{x:Bind ViewModel.PlayingItem.Duration,Mode=OneWay}"
+                                                VerticalAlignment="Bottom" />
                         <TextBlock HorizontalAlignment="Right"
                                    VerticalAlignment="Center"
                                    Margin="0,0,0,4"
@@ -370,8 +396,10 @@
                             <FontIcon FontFamily="/Assets/Fonts/MediaPlayerIcons.ttf#Media Player Fluent Icons"
                                       Glyph="&#xE767;" />
                         </Button>
-                        <Slider VerticalAlignment="Center"
-                                Grid.Column="1" />
+                        <controls1:UsableSlider VerticalAlignment="Center"
+                                                RealValue="{x:Bind ViewModel.Volume, Mode=OneWay}"
+                                                OnRealValueChanged="VolumeSlider_OnRealValueChanged"
+                                                Grid.Column="1" />
                     </Grid>
                 </Grid>
             </Grid>

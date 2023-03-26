@@ -135,9 +135,8 @@
                           Grid.Column="0"
                           Grid.Row="1"
                           x:Name="TrackListView"
-                          Margin="0,0,0,0"
-                          DataContext="{x:Bind ViewModel}"
                           SelectionMode="Extended"
+                          DataContext="{x:Bind ViewModel}"
                           ItemTemplate="{StaticResource ImportedTrackViewModel}"
                           ItemsSource="{x:Bind Source.View}">
                     <interactivity:Interaction.Behaviors>
@@ -147,16 +146,21 @@
                         <Style TargetType="ListViewItem"
                                BasedOn="{StaticResource DefaultListViewItemStyle}">
                             <Setter Property="Padding"
-                                    Value="0,2,14,2" />
+                                    Value="0,0,14,0" />
+                            <Setter Property="Margin"
+                                    Value="0,2" />
                         </Style>
                     </ListView.ItemContainerStyle>
+                    <ListView.Footer>
+                        <Border Height="100" />
+                    </ListView.Footer>
                     <ListView.GroupStyle>
                         <GroupStyle HidesIfEmpty="True"
                                     HeaderContainerStyle="{StaticResource SeperatorLessLVHeaderStyle}">
                             <GroupStyle.HeaderTemplate>
                                 <DataTemplate x:DataType="collections:IReadOnlyObservableGroup">
                                     <TextBlock FontSize="14"
-                                               Margin="0,0,0,6"
+                                               Margin="4,12,0,0"
                                                Foreground="{ThemeResource FocusTextThemeBrush}"
                                                Text="{x:Bind Key, Mode=OneWay}" />
                                 </DataTemplate>

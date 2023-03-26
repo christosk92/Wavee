@@ -46,8 +46,11 @@
                 <ResourceDictionary>
                     <ResourceDictionary.ThemeDictionaries>
                         <ResourceDictionary x:Key="Light">
+                            <StaticResource x:Key="FocusTextThemeColor"
+                                            ResourceKey="{ThemeResource SystemAccentColorLight1}" />
                             <SolidColorBrush x:Key="FocusTextThemeBrush"
-                                             Color="{StaticResource SystemAccentColorLight1}" />
+                                             Color="{ThemeResource SystemAccentColorLight1}" />
+
                             <SolidColorBrush x:Key="App.Theme.BackgroundBrush"
                                              Color="Transparent" />
                             <SolidColorBrush x:Key="App.Theme.AddressBar.BackgroundBrush"
@@ -67,6 +70,8 @@
                                              Color="{StaticResource SubtleFillColorSecondary}" />
                         </ResourceDictionary>
                         <ResourceDictionary x:Key="Dark">
+                            <StaticResource x:Key="FocusTextThemeColor"
+                                            ResourceKey="{ThemeResource SystemAccentColorLight2}" />
                             <SolidColorBrush x:Key="FocusTextThemeBrush"
                                              Color="{StaticResource SystemAccentColorLight2}" />
                             <SolidColorBrush x:Key="App.Theme.BackgroundBrush"
@@ -88,6 +93,8 @@
                                              Color="{StaticResource SubtleFillColorSecondary}" />
                         </ResourceDictionary>
                         <ResourceDictionary x:Key="HighContrast">
+                            <StaticResource x:Key="FocusTextThemeColor"
+                                            ResourceKey="{ThemeResource SystemAccentColorLight2}" />
                             <SolidColorBrush x:Key="App.Theme.BackgroundBrush"
                                              Color="Transparent" />
                             <SolidColorBrush x:Key="App.Theme.AddressBar.BackgroundBrush"

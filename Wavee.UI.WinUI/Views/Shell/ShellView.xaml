@@ -26,7 +26,7 @@
                       Background="Transparent"
                       Visibility="{x:Bind ViewModel.User.SidebarExpandedAndLargeImageComposite, 
                             Mode=OneWay, Converter={StaticResource TrueToVisibleConverter}}"
-                      Margin="0,0,0,0">
+                      Margin="0,0,0,-10">
                     <animations:Implicit.ShowAnimations>
                         <animations:TranslationAnimation Duration="0:0:0.3"
                                                          EasingMode="EaseOut"
@@ -60,9 +60,9 @@
                         </core:EventTriggerBehavior>
                     </interactivity:Interaction.Behaviors>
                     <Image Source="ms-appx:///Assets/AlbumPlaceholder.png"
-                           Margin="0,0,0,90"
+                           Margin="0,0,0,80"
                            Opacity="0" />
-                    <Border Margin="0,0,0,90"
+                    <Border Margin="0,0,0,80"
                             Background="{ThemeResource LayerFillColorDefaultBrush}"
                             CornerRadius="0"
                             BorderThickness="1"
@@ -80,7 +80,7 @@
                     </Image>
 
                     <Image VerticalAlignment="Bottom"
-                           Height="90"
+                           Height="80"
                            Stretch="Fill"
                            HorizontalAlignment="Stretch">
                         <Image.Source>
@@ -91,7 +91,7 @@
                     </Image>
 
                     <Button HorizontalAlignment="Stretch"
-                            Margin="0,0,0,92"
+                            Margin="0,0,0,0"
                             CornerRadius="0"
                             Height="24"
                             x:Name="ChevronButton"
@@ -131,7 +131,7 @@
         </local:SidebarControl>
 
 
-        <controls:BottomPlayerControl Height="100"
+        <controls:BottomPlayerControl Height="90"
                                       VerticalAlignment="Bottom"
                                       User="{x:Bind ViewModel.User}"
                                       ViewModel="{x:Bind ViewModel.PlaybackViewModel}" />

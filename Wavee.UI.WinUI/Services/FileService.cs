@@ -44,6 +44,7 @@ namespace Wavee.UI.WinUI.Services
             {
                 return Enumerable.Empty<FileInfo>();
             }
+
             return usersDirInfo.EnumerateFiles(searchPattern, searchOption);
         }
 
@@ -51,13 +52,15 @@ namespace Wavee.UI.WinUI.Services
         {
             var appdata = _appDataProvider.GetAppDataRoot();
             var path = Path.Combine(appdata, relativePath);
-            
+
             //create directory 
             var directory = Path.GetDirectoryName(path);
             Directory.CreateDirectory(directory);
 
-            await using var fs = File.Create(path);
-            await JsonSerializer.SerializeAsync(fs, value);
+            await using var fs = File.Open(path, FileMode.Create, FileAccess.ReadWrite, FileShare.Read);
+            //   await JsonSerializer.SerializeAsync(fs, value);
+            var jsonString = JsonSerializer.Serialize(value);
+            await fs.WriteAsync(System.Text.Encoding.UTF8.GetBytes(jsonString));
         }
     }
 }

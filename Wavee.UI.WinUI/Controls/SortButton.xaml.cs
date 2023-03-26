@@ -176,5 +176,10 @@ namespace Wavee.UI.WinUI.Controls
         {
             return o is null ? Visibility.Visible : Visibility.Collapsed;
         }
+
+        private void SortButton_OnUnloaded(object sender, RoutedEventArgs e)
+        {
+            UnregisterEvents(SortContext);
+        }
     }
 }

@@ -2,6 +2,7 @@
 using System.Reactive.Concurrency;
 using CommunityToolkit.Mvvm.DependencyInjection;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using Wavee.Enums;
 using Wavee.UI.Interfaces.Services;
@@ -17,15 +18,28 @@ namespace Wavee.UI.ViewModels.Shell
 {
     public class ShellViewModel
     {
-        public UserViewModel User { get; }
-        public PlaybackViewModel PlaybackViewModel { get; }
-        public ObservableCollection<ISidebarItem> SidebarItems { get; }
-        public static ShellViewModel Instance { get; private set; }
+        public UserViewModel User
+        {
+            get;
+        }
+        public PlaybackViewModel PlaybackViewModel
+        {
+            get;
+        }
+        public ObservableCollection<ISidebarItem> SidebarItems
+        {
+            get;
+        }
+        public static ShellViewModel Instance
+        {
+            get; private set;
+        }
         public ShellViewModel(UserViewModel user,
-            IStringLocalizer stringLocalizer)
+            IStringLocalizer stringLocalizer,
+            ILoggerFactory? loggerFactory = null)
         {
             Instance = this;
-            PlaybackViewModel = new PlaybackViewModel(user.ForProfile.ServiceType)
+            PlaybackViewModel = new PlaybackViewModel(user, loggerFactory?.CreateLogger<PlaybackViewModel>())
             {
                 ExpandCoverImageCommand = new RelayCommand(() =>
                 {

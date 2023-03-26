@@ -13,5 +13,10 @@ namespace Wavee.UI.WinUI.Controls
         {
             this.InitializeComponent();
         }
+
+        public bool IsNull(object? obj)
+        {
+            return obj is null;
+        }
     }
 }

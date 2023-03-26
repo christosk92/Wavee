@@ -28,8 +28,8 @@ namespace Wavee.UI.Helpers.Extensions
                     var totalDays = (int)diff.TotalDays;
                     return totalDays switch
                     {
-                        > 2 => Localize("DateTimes/xdaysago", (int)diff.TotalDays, localizer),
-                        > 1 => Localize("DateTimes/yesterday", -1, localizer),
+                        >= 2 => Localize("DateTimes/xdaysago", (int)diff.TotalDays, localizer),
+                        >= 1 => Localize("DateTimes/yesterday", -1, localizer),
                         _ => Localize("DateTimes/today", -1, localizer)
                     };
                 case < 31 when diff.TotalSeconds > minimumSecondsDifference:

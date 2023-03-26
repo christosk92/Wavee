@@ -1,9 +1,13 @@
-﻿using System.Text.Json;
+﻿using System.Collections.Immutable;
+using System.Text.Json;
 using Dapper;
 using Microsoft.Data.Sqlite;
+using Wavee.Enums;
 using Wavee.Interfaces.Models;
+using Wavee.Models;
 using Wavee.UI.Interfaces.Services;
 using Wavee.UI.Models.Local;
+using Wavee.UI.ViewModels.Libray;
 
 namespace Wavee.UI.Services.Db
 {
@@ -16,6 +20,137 @@ namespace Wavee.UI.Services.Db
             var path = Path.Combine(appDataProvider.GetAppDataRoot(), "localdata.db");
             _connectionString = $"Data Source={path}";
             InitializeDatabase();
+        }
+
+        public async Task<IEnumerable<LocalAlbum>> GetAlbums(SortOption sortBy, bool sortAscending,
+            HashSet<string>? savedAlbums = null, CancellationToken ct = default)
+        {
+            var savedAlbumsSql = savedAlbums == null
+                ? ""
+                : savedAlbums.Count == 0
+                    ? "AND SavedAlbums.Id IS NOT NULL"
+                    : "AND SavedAlbums.Id IS NOT NULL AND SavedAlbums.Id IN @savedAlbums";
+
+            string orderBy;
+            switch (sortBy)
+            {
+                case SortOption.None:
+                    orderBy = "MaxDateAdded";
+                    break;
+                case SortOption.Title:
+                    orderBy = "Album";
+                    break;
+                case SortOption.Artist:
+                    orderBy = "Performers";
+                    break;
+                case SortOption.Album:
+                    throw new NotSupportedException();
+                case SortOption.Duration:
+                    orderBy = "SumDuration";
+                    break;
+                case SortOption.Year:
+                    orderBy = "Year";
+                    break;
+                case SortOption.Genre:
+                    orderBy = "Genres";
+                    break;
+                case SortOption.DateAdded:
+                    orderBy = "MaxDateAdded";
+                    break;
+                case SortOption.Playcount:
+                    orderBy = "SumPlayCount";
+                    break;
+                case SortOption.BPM:
+                    orderBy = "AvgBPM";
+                    break;
+                case SortOption.LastPlayed:
+                    orderBy = "MaxLastPlayed";
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(sortBy), sortBy, null);
+            }
+            string savedAlbumsPlaceholders = "";
+            if (savedAlbums != null && savedAlbums.Count > 0)
+            {
+                savedAlbumsPlaceholders = string.Join(",", savedAlbums.Select((_, index) => $"@savedAlbum{index}"));
+            }
+
+            var sortDirection = sortAscending ? "ASC" : "DESC";
+            string query = $@"
+        SELECT 
+            sub.Album,
+            sub.Year,
+            sub.Image,
+            sub.Performers,
+            sub.NumberOfTracks,
+            sub.SumDuration,
+            sub.MaxDateAdded,
+            COUNT(Playcount.Id) AS SumPlayCount,
+            MAX(Playcount.DatePlayed) AS MaxLastPlayed
+        FROM
+            (
+                SELECT 
+                    Id,
+                    Album,
+                    Year,
+                    Image,
+                    Performers,              
+                    COUNT(Id) AS NumberOfTracks,
+                    SUM(Duration) AS SumDuration,
+                    MAX(DateImported) AS MaxDateAdded
+                FROM
+                    MediaItems
+                WHERE
+                    (@savedAlbumsCount = 0 OR Album IN ({savedAlbumsPlaceholders}))
+                GROUP BY
+                    Album,
+                    Year
+            ) AS sub
+        LEFT JOIN
+            Playcount ON sub.Id = Playcount.TrackId
+        GROUP BY
+            sub.Album,
+            sub.Year
+        ORDER BY
+            {orderBy} {sortDirection};";
+
+
+            await using var connection = new SqliteConnection(_connectionString);
+
+            var parameters = new DynamicParameters();
+            parameters.Add("@savedAlbumsCount", savedAlbums?.Count ?? 0);
+
+            if (savedAlbums != null && savedAlbums.Count > 0)
+            {
+                for (int i = 0; i < savedAlbums.Count; i++)
+                {
+                    parameters.Add($"@savedAlbum{i}", savedAlbums.ElementAt(i));
+                }
+            }
+            var result =
+                await connection.QueryAsync(query, parameters);
+            return result.Select(x =>
+            {
+                return new LocalAlbum(
+                    Image: (string)x.Image.ToString(),
+                    Title: (string)x.Album.ToString(),
+                    Artists: x.Performers is not null
+                        ? ((string[])JsonSerializer.Deserialize<string[]>(x.Performers))
+                        .Select(x => new DescriptionItem(x, null, null)).ToImmutableArray()
+                        : ImmutableArray<DescriptionItem>.Empty,
+                    Year: (uint)x.Year,
+                    NumberOfTracks: (uint)x.NumberOfTracks,
+                    SumDuration: (ulong)x.SumDuration,
+                    MaxDateAdded: (DateTime)(x.MaxDateAdded is not null
+                        ? DateTime.Parse(x.MaxDateAdded)
+                        : DateTime.MinValue),
+                    SumPlayCount: (int)x.SumPlayCount,
+                    MaxLastPlayed: (DateTime)(x.MaxLastPlayed is not null
+                        ? DateTime.Parse(x.MaxDateAdded)
+                        : DateTime.MinValue),
+                    Service: ServiceType.Local
+                );
+            });
         }
 
         public async Task<IEnumerable<LocalTrack>> GetLatestImportsAsync(int count, CancellationToken ct = default)
@@ -289,6 +424,7 @@ namespace Wavee.UI.Services.Db
             var count = connection.ExecuteScalar<int>(sql);
             return count;
         }
+
         public Task<int> Count()
         {
             //count the number of tracks in the database based on the query
@@ -297,7 +433,6 @@ namespace Wavee.UI.Services.Db
             const string query = "SELECT COUNT(*) FROM MediaItems";
             return connection.ExecuteScalarAsync<int>(query);
         }
-
 
 
         private void InitializeDatabase()
@@ -386,23 +521,25 @@ namespace Wavee.UI.Services.Db
                 AlbumSort = item.AlbumSort,
                 Comment = item.Comment,
                 Year = (uint)item.Year,
-                Track = (uint)item.Track,
-                TrackCount = (uint)item.TrackCount,
-                Disc = (uint)item.Disc,
-                DiscCount = (uint)item.DiscCount,
+                Track = item.Track is not null ? (uint)item.Track : 0,
+                TrackCount = item.TrackCount is not null ? (uint)item.TrackCount : 0,
+                Disc = item.Disc is not null ? (uint)item.Disc : 0,
+                DiscCount = item.DiscCount is not null ? (uint)item.DiscCount : 0,
                 Lyrics = item.Lyrics,
                 Grouping = item.Grouping,
-                BeatsPerMinute = (uint)item.BeatsPerMinute,
+                BeatsPerMinute = item.BeatsPerMinute is not null ? (uint)item.BeatsPerMinute : 0,
                 Conductor = item.Conductor,
                 Copyright = item.Copyright,
                 DateTagged = item.DateTagged,
                 Publisher = item.Publisher,
                 ISRC = item.ISRC,
-                Duration = (double)item.Duration,
-                DateImported = DateTime.Parse(item.DateImported),
-                LastChanged = DateTime.Parse(item.LastChanged),
-                Playcount = withJoinOnPlaycount ? item.Playcount : 0,
-                LastPlayed = withJoinOnPlaycount ? DateTime.Parse(item.LastPlayed) : DateTime.MinValue
+                Duration = item.Duration is not null ? (double)item.Duration : 0,
+                DateImported = item.DateImported is not null ? DateTime.Parse(item.DateImported) : DateTime.MinValue,
+                LastChanged = item.LastChanged is not null ? DateTime.Parse(item.LastChanged) : DateTime.MinValue,
+                Playcount = item.Playcount is not null ? (withJoinOnPlaycount ? item.Playcount : 0) : 0,
+                LastPlayed = item.LastPlayed is not null
+                    ? (withJoinOnPlaycount ? DateTime.Parse(item.LastPlayed) : DateTime.MinValue)
+                    : DateTime.MinValue
             };
         }
     }

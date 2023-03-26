@@ -16,19 +16,21 @@ public class PlaycountService : IPlaycountService
     }
 
 
-    public async Task IncrementPlayCount(string id, CancellationToken ct = default)
+    public async Task IncrementPlayCount(string id, DateTime startedAt, TimeSpan duration,
+        CancellationToken ct = default)
     {
         await using var connection = new SqliteConnection(_connectionString);
         await connection.OpenAsync(ct);
 
         const string insert = @"
-            INSERT INTO Playcount (TrackId, DatePlayed)
-            VALUES (@TrackId, @DatePlayed);";
+            INSERT INTO Playcount (TrackId, DatePlayed, Duration)
+            VALUES (@TrackId, @DatePlayed, @Duration);";
 
         var parameters = new
         {
             TrackId = id,
-            DatePlayed = DateTime.UtcNow.ToString("o")
+            DatePlayed = startedAt.ToString("o"),
+            Duration = duration.ToString()
         };
 
         await connection.ExecuteAsync(insert, parameters);
@@ -88,7 +90,8 @@ public class PlaycountService : IPlaycountService
             CREATE TABLE IF NOT EXISTS Playcount (
                 Id INTEGER PRIMARY KEY AUTOINCREMENT,
                 TrackId TEXT NOT NULL,
-                DatePlayed TEXT NOT NULL
+                DatePlayed TEXT NOT NULL,
+                Duration TEXT NOT NULL
             );";
         using var connection = new SqliteConnection(_connectionString);
         connection.Open();

@@ -27,9 +27,14 @@ namespace Wavee.UI.ViewModels.Home
             PlayCommand = new AsyncRelayCommand<TrackViewModel>(model =>
             {
                 //setup local context
-                var context = new LocalFilesContext(SortOption.DateAdded, false, model.Index, null);
+                var context = new LocalFilesContext(SortOption.DateAdded, false, null);
+                if (PlaybackViewModel.Instance.PlayingItem?.Equals(model.Track) is true)
+                {
+                    //pause or play?
+                    return PlaybackViewModel.Instance.PauseResume();
+                }
 
-                return PlaybackViewModel.Instance!.Play(context);
+                return PlaybackViewModel.Instance!.Play(context, model.Index);
             });
         }
 
