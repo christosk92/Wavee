@@ -9,6 +9,7 @@ using Wavee.Playback.Packets;
 using Wavee.Playback.Volume;
 using Wavee.Sinks.NAudio;
 using Wavee.Vorbis;
+using Wavee.Vorbis.Decoder;
 using Wavee.Vorbis.IO;
 
 var logger = new LoggerConfiguration()
@@ -29,14 +30,15 @@ var player = new WaveePlayer(config,
     ((channels, sampleRate) => new NAudioSink(AudioFormat.F64, channels, sampleRate))
     , converter, volume, loggerFactory.CreateLogger<WaveePlayer>());
 
-var path = "C:\\Users\\ckara\\Downloads\\correct.ogg";
+var path = "C:\\Users\\ckara\\Downloads\\test.ogg";
 
 var fss = new FSSource(path);
 var mss = new MediaSourceStream(fss, new MediaSourceStreamOptions(4096));
-var test = new OggReader(mss, FormatOptions.Default, loggerFactory);
+var format = new OggReader(mss, FormatOptions.Default, loggerFactory);
+var track = format.DefaultTrack;
+var vorbisDecoder = new VorbisDecoder(track.StreamCodecParams);
 
-
-player.PlayTrack(path, true, 0);
+//player.PlayTrack(path, true, 0);
 var mn = new ManualResetEvent(false);
 mn.WaitOne();
 
