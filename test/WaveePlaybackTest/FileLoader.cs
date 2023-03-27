@@ -24,6 +24,8 @@ public class FileLoader : ITrackLoader
         var audioItem = new LocalTrack
         {
             Title = file.Tag.Title ?? file.Name,
+            Id = trackId,
+            Duration = file.Properties.Duration.TotalMilliseconds
         };
 
 

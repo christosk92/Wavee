@@ -3,6 +3,7 @@
 using Microsoft.Extensions.Logging;
 using Serilog;
 using Serilog.Events;
+using Wavee.Interfaces.Models;
 using Wavee.Playback;
 using Wavee.Playback.Converters;
 using Wavee.Playback.Volume;
@@ -50,12 +51,14 @@ bool canExit = false;
 while (!canExit)
 {
     //read input
-    //-play <path>
+    //-play <path> (file or directory)
     //-stop
     //-pause
     //-resume
     //-seek <time> 
     //-volume <volume>
+    //-next
+    //-previous
     //-exit
     var input = Console.ReadLine();
     var parts = input.Split(' ', 2);
@@ -66,9 +69,21 @@ while (!canExit)
             //trim quotes
             var path = parts[1].Trim('"');
             path = @"" + parts[1];
-            var file = new FileInfo(path);
+            //check if path is a directory
+            if (Directory.Exists(path))
+            {
+                //play directory
+                var files = Directory.GetFiles(path, "*.*", SearchOption.AllDirectories)
+                    .Where(s => s.EndsWith(".mp3") || s.EndsWith(".ogg") || s.EndsWith(".wav"))
+                    .ToList();
+                player.PlayTracks(files, true, 0);
+            }
+            else
+            {
+                //play file
+                player.PlayTrack(path, true, 0);
+            }
 
-            player.PlayTrack(path, true, 0);
             break;
         case "-stop":
             //player.Stop();
@@ -86,6 +101,19 @@ while (!canExit)
         case "-volume":
             var volume = double.Parse(parts[1]);
             //player.SetVolume(volume);
+            break;
+        case "-next":
+            await player.Next();
+            break;
+        case "-previous":
+            await player.Previous();
+            break;
+        case "-info":
+            //print info about current track and position
+            var track = player.GetCurrentTrack();
+            var position = player.GetPosition();
+            Console.WriteLine("Track: {0}", track);
+            Console.WriteLine("Position: {0}", position);
             break;
         //help
         case "-help":
