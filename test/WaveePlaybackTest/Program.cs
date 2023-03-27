@@ -108,22 +108,36 @@ while (!canExit)
         case "-previous":
             await player.Previous();
             break;
+        case "-shuffle":
+            player.Shuffle();
+            break;
+        case "-repeat":
+            player.NextRepeatState();
+            break;
         case "-info":
             //print info about current track and position
             var track = player.GetCurrentTrack();
             var position = player.GetPosition();
             Console.WriteLine("Track: {0}", track);
             Console.WriteLine("Position: {0}", position);
+            Console.WriteLine("Shuffle: {0}", player.IsShuffling);
+            Console.WriteLine("Repeat: {0}", player.RepeatState);
             break;
         //help
         case "-help":
             Console.WriteLine("Commands:");
-            Console.WriteLine("-play <path>");
+            Console.WriteLine("-play <path> (file or directory)");
             Console.WriteLine("-stop");
             Console.WriteLine("-pause");
             Console.WriteLine("-resume");
             Console.WriteLine("-seek <time>");
             Console.WriteLine("-volume <volume>");
+            Console.WriteLine("-next");
+            Console.WriteLine("-previous");
+            Console.WriteLine("-shuffle");
+            Console.WriteLine("-repeat");
+            Console.WriteLine("-info");
+            Console.WriteLine("-help");
             Console.WriteLine("-exit");
             break;
         case "-exit":
