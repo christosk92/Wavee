@@ -37,9 +37,11 @@ Task.Run(async () =>
 });
 
 //var path = "C:\\Users\\ckara\\Downloads\\correct.ogg";
-var path = "C:\\Users\\ckara\\Music\\NewJeans - Attention [320 kbps] (1).mp3";
+//var path = "C:\\Users\\ckara\\Music\\NewJeans - Attention [320 kbps] (1).mp3";
 
-player.PlayTrack(path, true, TimeSpan.FromMinutes(1).TotalMilliseconds);
+var path = "C:\\Users\\ckara\\Music\\Jukjae - 너 없이도 (Without You).mp3";
+
+player.PlayTrack(path, true, TimeSpan.FromMinutes(0).TotalMilliseconds);
 //player.PlayTrack(path, true, 0);
 var mn = new ManualResetEvent(false);
 mn.WaitOne();
