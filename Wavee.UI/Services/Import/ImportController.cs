@@ -4,8 +4,8 @@ using ImageMagick;
 using Microsoft.Extensions.Logging;
 using Nito.AsyncEx;
 using TagLib;
+using Wavee.Playback.Models;
 using Wavee.UI.Interfaces.Services;
-using Wavee.UI.Models.Local;
 using File = TagLib.File;
 
 namespace Wavee.UI.Services.Import;

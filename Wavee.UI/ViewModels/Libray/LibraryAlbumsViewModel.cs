@@ -8,7 +8,6 @@ using Wavee.Enums;
 using Wavee.Models;
 using Wavee.UI.Interfaces.Services;
 using Wavee.UI.Models;
-using Wavee.UI.Models.Local;
 using Wavee.UI.Models.TrackSources;
 using Wavee.UI.ViewModels.Album;
 using Wavee.UI.ViewModels.Shell;

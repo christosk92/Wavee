@@ -1,6 +1,6 @@
 ﻿using CommunityToolkit.Common.Collections;
+using Wavee.Playback.Models;
 using Wavee.UI.Interfaces.Services;
-using Wavee.UI.Models.Local;
 using Wavee.UI.ViewModels.Libray;
 using Wavee.UI.ViewModels.Shell;
 using Wavee.UI.ViewModels.Track;

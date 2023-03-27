@@ -2,8 +2,8 @@
 using Wavee.Playback;
 using Wavee.Playback.Factories;
 using Wavee.Playback.Item;
+using Wavee.Playback.Models;
 using Wavee.Playback.Normalisation;
-using Wavee.UI.Models.Local;
 
 public class FileLoader : ITrackLoader
 {
@@ -26,10 +26,6 @@ public class FileLoader : ITrackLoader
             Title = file.Tag.Title ?? file.Name,
         };
 
-        var playbackitem = new PlaybackItem
-        {
-            Item = audioItem
-        };
 
         file.Dispose();
         var bytesPerSecond = bitrate / 8;
@@ -62,12 +58,6 @@ public class FileLoader : ITrackLoader
             throw new InvalidOperationException("Failed to seek to the starting position");
         }
 
-        // Ensure streaming mode now that we are ready to play from the requested position.
-        var streamLoaderController
-            = new StreamLoaderController();
-
-        streamLoaderController.SetStreamMode();
-
         var isExplicit = false;
 
         Debug.WriteLine("Loaded track: " + trackId);
@@ -76,8 +66,7 @@ public class FileLoader : ITrackLoader
         {
             Format = decoder,
             NormalisationData = normalisationData,
-            StreamLoaderController = streamLoaderController,
-            AudioItem = playbackitem,
+            AudioItem = audioItem,
             BytesPerSecond = bytesPerSecond,
             DurationMs = duration.TotalMilliseconds,
             IsExplicit = isExplicit,

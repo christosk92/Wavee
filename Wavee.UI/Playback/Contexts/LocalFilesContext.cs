@@ -1,8 +1,8 @@
 ﻿using CommunityToolkit.Mvvm.DependencyInjection;
 using Wavee.Interfaces.Models;
+using Wavee.Playback.Models;
 using Wavee.UI.Interfaces.Playback;
 using Wavee.UI.Interfaces.Services;
-using Wavee.UI.Models.Local;
 using Wavee.UI.ViewModels.Libray;
 
 namespace Wavee.UI.Playback.Contexts

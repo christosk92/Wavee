@@ -5,8 +5,8 @@ using Microsoft.Data.Sqlite;
 using Wavee.Enums;
 using Wavee.Interfaces.Models;
 using Wavee.Models;
+using Wavee.Playback.Models;
 using Wavee.UI.Interfaces.Services;
-using Wavee.UI.Models.Local;
 using Wavee.UI.ViewModels.Libray;
 
 namespace Wavee.UI.Services.Db

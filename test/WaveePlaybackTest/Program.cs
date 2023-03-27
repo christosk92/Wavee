@@ -27,6 +27,15 @@ var player = new WaveePlayer(
     sink: new NAudioSink(),
     logger: loggerFactory.CreateLogger<WaveePlayer>());
 
+var events = player.ReadEventsAsync();
+Task.Run(async () =>
+{
+    await foreach (var @event in events)
+    {
+        logger.Debug("Event: {@Event}", @event);
+    }
+});
+
 //var path = "C:\\Users\\ckara\\Downloads\\correct.ogg";
 var path = "C:\\Users\\ckara\\Music\\NewJeans - Attention [320 kbps] (1).mp3";
 

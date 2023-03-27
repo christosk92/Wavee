@@ -1,9 +1,9 @@
 ﻿using CommunityToolkit.Mvvm.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Wavee.Enums;
+using Wavee.Playback.Models;
 using Wavee.UI.Interfaces.Playback;
 using Wavee.UI.Interfaces.Services;
-using Wavee.UI.Models.Local;
 using Wavee.UI.Playback.Player;
 
 namespace Wavee.UI.Playback.PlayerHandlers;
