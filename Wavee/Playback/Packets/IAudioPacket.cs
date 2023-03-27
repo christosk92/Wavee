@@ -2,8 +2,15 @@
 
 public interface IAudioPacket
 {
-    int SampleRate { get; }
-    int Channels { get; }
+    int SampleRate
+    {
+        get;
+    }
+
+    int Channels
+    {
+        get;
+    }
 }
 
 public readonly record struct SamplesPacket(double[] Samples) : IAudioPacket

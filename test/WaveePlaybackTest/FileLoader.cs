@@ -1,14 +1,19 @@
 ﻿using System.Diagnostics;
-using NAudio.Vorbis;
-using NAudio.Wave;
 using Wavee.Playback;
+using Wavee.Playback.Factories;
 using Wavee.Playback.Item;
 using Wavee.Playback.Normalisation;
-using Wavee.Sinks.NAudio;
 using Wavee.UI.Models.Local;
 
 public class FileLoader : ITrackLoader
 {
+    private readonly IAudioFormatLoader _audioFormatLoader;
+
+    public FileLoader(IAudioFormatLoader audioFormatLoader)
+    {
+        _audioFormatLoader = audioFormatLoader;
+    }
+
     public Task<PlayerLoadedTrackData?> LoadTrackAsync(string trackId, double positionMs)
     {
         //check the format
@@ -51,7 +56,7 @@ public class FileLoader : ITrackLoader
         // the cursor may have been moved by parsing normalisation data. This may not
         // matter for playback (but won't hurt either), but may be useful for the
         // passthrough decoder.
-        decoder.CurrentTime = position;
+        decoder.Seek(position);
         if (decoder.CurrentTime != position)
         {
             throw new InvalidOperationException("Failed to seek to the starting position");
@@ -69,7 +74,7 @@ public class FileLoader : ITrackLoader
 
         return Task.FromResult(new PlayerLoadedTrackData
         {
-            Decoder = new NAudioDecoder(decoder),
+            Format = decoder,
             NormalisationData = normalisationData,
             StreamLoaderController = streamLoaderController,
             AudioItem = playbackitem,
@@ -80,30 +85,9 @@ public class FileLoader : ITrackLoader
         })!;
     }
 
-    private static WaveStream GetWaveStreamForAudioFile(string filePath)
+    private IAudioFormat GetWaveStreamForAudioFile(string filePath)
     {
-        string extension = Path.GetExtension(filePath).ToLower();
-
-        if (extension == ".mp3")
-        {
-            return new Mp3FileReader(filePath);
-        }
-        else if (extension == ".wav")
-        {
-            return new WaveFileReader(filePath);
-        }
-        else if (extension == ".ogg")
-        {
-            return new VorbisWaveReader(filePath);
-        }
-        else if (extension == ".flac")
-        {
-            throw new NotSupportedException("Flac is not supported yet");
-            //return new FlacReader(filePath);
-        }
-        else
-        {
-            throw new NotSupportedException("Unsupported audio file format");
-        }
+        //string extension = Path.GetExtension(filePath).ToLower();
+        return _audioFormatLoader.Load(File.OpenRead(filePath));
     }
 }

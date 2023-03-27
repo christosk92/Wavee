@@ -4,7 +4,9 @@ using System.Threading.Channels;
 using Microsoft.Extensions.Logging;
 using Nito.AsyncEx;
 using Wavee.Helper;
+using Wavee.Playback.Converters;
 using Wavee.Playback.Decoder;
+using Wavee.Playback.Factories;
 using Wavee.Playback.Item;
 using Wavee.Playback.Normalisation;
 using Wavee.Playback.Packets;
@@ -14,21 +16,19 @@ namespace Wavee.Playback;
 
 public sealed class WaveePlayer
 {
-    private readonly ConcurrentDictionary<(int, int), (IAudioSink Sink, SinkStatus Status)> _sinks
-        = new();
-
     private bool _autoNormaliseAsAlbum;
     private readonly Channel<IWaveePlayerCommand> _commands;
     private readonly CancellationTokenSource _cancellationTokenSource;
-    private readonly ILogger<WaveePlayer> _logger;
+    private readonly ILogger<WaveePlayer>? _logger;
 
 
     private SinkStatus _sinkStatus = SinkStatus.Closed;
     private readonly WaveePlayerConfig _config;
-    private readonly Func<int, int, IAudioSink> _sinkFactory;
-    private readonly AudioConverter _converter;
+    private readonly IAudioSink _sink;
+    private readonly IAudioConverter _converter;
     private readonly IVolumeGetter _volumeGetter;
     private readonly ITrackLoader _trackLoader;
+    private SinkEventDelegate _sinkEventCallback;
 
     private ConcurrentDictionary<int, Task> LoadHandles
     {
@@ -38,15 +38,14 @@ public sealed class WaveePlayer
     public WaveePlayer(
         WaveePlayerConfig config,
         ITrackLoader trackLoader,
-        Func<int, int, IAudioSink> sinkFactory,
-        AudioConverter converter,
-        IVolumeGetter volumeGetter,
-        ILogger<WaveePlayer> logger)
+        IAudioSink sink,
+        IVolumeGetter? volumeGetter = null,
+        ILogger<WaveePlayer>? logger = null)
     {
         _config = config;
-        _sinkFactory = sinkFactory;
-        _converter = converter;
-        _volumeGetter = volumeGetter;
+        _sink = sink;
+        _converter = new StdAudioConverter();
+        _volumeGetter = volumeGetter ?? new SoftVolume(1.0);
         _logger = logger;
         _trackLoader = trackLoader;
 
@@ -88,7 +87,7 @@ public sealed class WaveePlayer
                     HandleCommand(cmd);
                     waitForPlayback.Set();
                 }
-                catch (Exception e)
+                catch (Exception? e)
                 {
                     _logger.LogError(e, "Error handling command: {cmd}", cmd);
                 }
@@ -119,7 +118,7 @@ public sealed class WaveePlayer
                             Environment.Exit(1);
                         }
                     }
-                    catch (Exception e)
+                    catch (Exception? e)
                     {
                         _logger.LogError(e, "Skipping to next track, unable to load track: {trackId}",
                             loadingState.TrackId);
@@ -130,12 +129,12 @@ public sealed class WaveePlayer
             }
 
             //TODO: Handle preload requests
-            
+
             if (State.IsPlaying())
             {
                 if (State is WaveePlayingState p)
                 {
-                    EnsureSinkRunning(p.Decoder.Channels, p.Decoder.SampleRate);
+                    EnsureSinkRunning(p.Format.Channels, p.Format.SampleRate);
                     try
                     {
                         var nextPacket = p.Decoder.NextPacket();
@@ -208,7 +207,7 @@ public sealed class WaveePlayer
 
                         HandlePacket(nextPacket, p.NormalisationFactor);
                     }
-                    catch (Exception x)
+                    catch (Exception? x)
                     {
                         _logger.LogError(x, "Skipping to next track, unable to decode track: {trackId}", p.TrackId);
                         SendEvent(new EndOfTrackEvent { TrackId = p.TrackId, PlayRequestId = p.PlayRequestId });
@@ -253,7 +252,7 @@ public sealed class WaveePlayer
 
         if (startPlayback)
         {
-            EnsureSinkRunning(loadedTrack.Decoder.Channels, loadedTrack.Decoder.SampleRate);
+            EnsureSinkRunning(loadedTrack.Format.Channels, loadedTrack.Format.SampleRate);
             SendEvent(new PlayingPlayerEvent(
                 TrackId: trackId,
                 PlayRequestId: playRequestId,
@@ -263,7 +262,8 @@ public sealed class WaveePlayer
             State = new WaveePlayingState(
                 TrackId: trackId,
                 PlayRequestId: playRequestId,
-                Decoder: loadedTrack.Decoder,
+                Decoder: new AudioDecoder(loadedTrack.Format),
+                Format: loadedTrack.Format,
                 AudioItem: audioItem,
                 NormalisationData: loadedTrack.NormalisationData,
                 NormalisationFactor: normalisationFactor,
@@ -283,7 +283,7 @@ public sealed class WaveePlayer
             State = new WaveePausedState(
                 TrackId: trackId,
                 PlayRequestId: playRequestId,
-                Decoder: loadedTrack.Decoder,
+                Decoder: new AudioDecoder(loadedTrack.Format),
                 NormalisationData: loadedTrack.NormalisationData,
                 NormalisationFactor: normalisationFactor,
                 StreamLoaderController: loadedTrack.StreamLoaderController,
@@ -304,7 +304,6 @@ public sealed class WaveePlayer
 
     private void HandlePause()
     {
-        throw new NotImplementedException();
     }
 
     private void HandlePacket((AudioPacketPosition Position, IAudioPacket Packet)? result, double normalisationFactor)
@@ -329,7 +328,7 @@ public sealed class WaveePlayer
                             for (var index = 0; index < samples.Samples.Length; index++)
                             {
                                 var sample = samples.Samples[index];
-                                sample *= volume;
+                                sample = (byte)(sample * volume);
                                 samples.Samples[index] = sample;
                             }
                         }
@@ -339,7 +338,7 @@ public sealed class WaveePlayer
                             for (var index = 0; index < samples.Samples.Length; index++)
                             {
                                 var sample = samples.Samples[index];
-                                sample *= normalisationFactor * volume;
+                                sample = (byte)(sample * normalisationFactor * volume);
                                 samples.Samples[index] = sample;
                             }
                         }
@@ -353,7 +352,7 @@ public sealed class WaveePlayer
                             for (var index = 0; index < samples.Samples.Length; index++)
                             {
                                 var sample = samples.Samples[index];
-                                sample *= normalisationFactor;
+                                sample = (byte)(sample * normalisationFactor);
                                 samples.Samples[index] = sample;
                             }
                         }
@@ -362,12 +361,9 @@ public sealed class WaveePlayer
 
                 try
                 {
-                    if (_sinks.TryGetValue((packet.Channels, packet.SampleRate), out var sink))
-                    {
-                        sink.Sink.Write(packet, _converter);
-                    }
+                    _sink.Write(packet, _converter);
                 }
-                catch (Exception x)
+                catch (Exception? x)
                 {
                     _logger.LogError(x, "Unable to write packet to sink");
                     HandlePause();
@@ -458,50 +454,54 @@ public sealed class WaveePlayer
 
     private void EnsureSinkRunning(int channels, int sampleRate)
     {
-        /*
-         *     if self.sink_status != SinkStatus::Running {
-            trace!("== Starting sink ==");
-            if let Some(callback) = &mut self.sink_event_callback {
-                callback(SinkStatus::Running);
-            }
-            match self.sink.start() {
-                Ok(()) => self.sink_status = SinkStatus::Running,
-                Err(e) => {
-                    error!("{}", e);
-                    self.handle_pause();
-                }
-            }
-        }
-         */
-
-        if (!_sinks.TryGetValue((channels, sampleRate), out var sink))
+        if (_sinkStatus != SinkStatus.Running)
         {
-            var newSink = _sinkFactory(channels, sampleRate);
-            newSink.Start();
-            _sinks[(channels, sampleRate)] = (newSink, SinkStatus.Running);
-            return;
-        }
-
-        if (sink.Status != SinkStatus.Running)
-        {
-            sink.Sink.Start();
-            sink.Status = SinkStatus.Running;
+            _logger.LogDebug("== Starting sink ==");
+            _sinkEventCallback?.Invoke(SinkStatus.Running);
+            try
+            {
+                _sink.Start(channels, sampleRate);
+                _sinkStatus = SinkStatus.Running;
+            }
+            catch (Exception? x)
+            {
+                _logger.LogError(x, "Unable to start sink");
+                HandlePause();
+            }
         }
     }
 
     private void EnsureSinkStopped(bool temporarily)
     {
-        if (!_sinks.Any())
-            return;
-
-        foreach (var ((channels, sampleRate), (sink, status)) in _sinks)
+        switch (_sinkStatus)
         {
-            var newStatus = temporarily ? SinkStatus.TemporaryStopped : SinkStatus.Closed;
-            if (status != newStatus)
-            {
-                sink.Stop();
-                _sinks[(channels, sampleRate)] = (sink, newStatus);
-            }
+            case SinkStatus.Running:
+                try
+                {
+                    _sink.Stop();
+                    _sinkStatus = temporarily ? SinkStatus.TemporaryStopped : SinkStatus.Closed;
+                    _sinkEventCallback?.Invoke(_sinkStatus);
+                }
+                catch (Exception? x)
+                {
+                    _logger.LogError(x, "Unable to stop sink");
+                    HandlePause();
+                }
+
+                break;
+            case SinkStatus.Closed:
+                // Nothing to do
+                break;
+            case SinkStatus.TemporaryStopped:
+                if (!temporarily)
+                {
+                    _sinkStatus = SinkStatus.Closed;
+                    _sinkEventCallback?.Invoke(SinkStatus.Closed);
+                }
+
+                break;
+            default:
+                throw new ArgumentOutOfRangeException();
         }
     }
 
@@ -515,7 +515,7 @@ public sealed class WaveePlayer
                 PlayRequestId = playingState.PlayRequestId,
                 LoadedTrack = new PlayerLoadedTrackData
                 {
-                    Decoder = playingState.Decoder,
+                    Format = playingState.Format,
                     NormalisationData = playingState.NormalisationData,
                     StreamLoaderController = playingState.StreamLoaderController,
                     AudioItem = playingState.AudioItem,
@@ -562,7 +562,7 @@ public sealed class WaveePlayer
             var result = await loadHandle;
             return result;
         }
-        catch (Exception ex)
+        catch (Exception? ex)
         {
             // Log the exception if needed
             _logger.LogError(ex, "Error while loading track {trackId}", trackId);
@@ -584,7 +584,9 @@ public sealed class WaveePlayer
     }
 }
 
-internal enum SinkStatus
+public delegate void SinkEventDelegate(SinkStatus Status);
+
+public enum SinkStatus
 {
     Running,
     Closed,
@@ -659,6 +661,7 @@ public record WaveePlayingState(
     string TrackId,
     string PlayRequestId,
     IAudioDecoder? Decoder,
+    IAudioFormat? Format,
     PlaybackItem AudioItem,
     NormalisationData? NormalisationData,
     double NormalisationFactor,

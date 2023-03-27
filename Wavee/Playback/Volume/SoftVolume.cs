@@ -2,7 +2,7 @@
 
 namespace Wavee.Playback.Volume;
 
-public class SoftVolume : IVolumeGetter
+internal class SoftVolume : IVolumeGetter
 {
     private AtomicDouble volume;
 

@@ -1,4 +1,5 @@
 ﻿using Wavee.Playback.Decoder;
+using Wavee.Playback.Factories;
 using Wavee.Playback.Normalisation;
 
 namespace Wavee.Playback.Item;
@@ -11,7 +12,7 @@ public class PlayerLoadedTrackData
         init;
     }
 
-    public IAudioDecoder? Decoder
+    public IAudioFormat? Format
     {
         get;
         init;

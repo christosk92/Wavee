@@ -4,24 +4,22 @@ namespace Wavee.Playback;
 
 public interface IAudioSink
 {
-    void Write(IAudioPacket packet, AudioConverter converter);
-    void Start();
+    void Write(IAudioPacket packet, IAudioConverter converter);
+    void Start(int channels, int sampleRate);
     void Stop();
 }
 
-public abstract class AudioConverter
+public interface IAudioConverter
 {
-    public short[] F64ToS16(double[] samples)
-    {
-        const double scale = 32767.0;
+    ReadOnlySpan<float> F64ToF32(ReadOnlySpan<double> samples);
+    ReadOnlySpan<int> F64ToS32(ReadOnlySpan<double> samples);
+    ReadOnlySpan<short> F64ToS16(ReadOnlySpan<double> samples);
+}
 
-        return samples
-            .Select(sample => (short)Math.Round(sample * scale))
-            .ToArray();
-    }
-
-    public float[] F64ToF32(double[] samples)
-    {
-        throw new NotImplementedException();
-    }
+public enum MagicAudioFormat
+{
+    Unknown,
+    Wav,
+    Mp3,
+    Ogg
 }
