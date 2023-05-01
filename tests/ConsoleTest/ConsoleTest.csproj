@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net8.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\..\src\lib\Wavee.Spotify.Playback\Wavee.Spotify.Playback.csproj" />
+      <ProjectReference Include="..\..\src\lib\Wavee.Spotify.Proto\Wavee.Spotify.Proto.csproj" />
+      <ProjectReference Include="..\..\src\lib\Wavee.Spotify.Remote\Wavee.Spotify.Remote.csproj" />
+      <ProjectReference Include="..\..\src\lib\Wavee.Spotify\Wavee.Spotify.csproj" />
+      <ProjectReference Include="..\..\Wavee.Spotify.Remote\Wavee.Spotify.Remote.csproj" />
+      <ProjectReference Include="..\Wavee.Spotify\Wavee.Spotify.csproj" />
+    </ItemGroup>
+
+</Project>
