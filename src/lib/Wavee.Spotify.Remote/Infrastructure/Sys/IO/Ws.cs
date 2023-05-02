@@ -34,7 +34,7 @@ internal static class Ws<RT>
     /// <param name="handleMessage">A function to handle incoming messages.</param>
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Aff<RT, Unit> Listen(
-        Func<ReadOnlyMemory<byte>, Eff<RT, Unit>> handleMessage,
+        Func<ReadOnlyMemory<byte>, Aff<RT, Unit>> handleMessage,
         Func<Error, Aff<RT, Unit>> onError,
         CancellationToken cancelToken) =>
         Aff<RT, Unit>(async env =>
@@ -49,9 +49,19 @@ internal static class Ws<RT>
                     await default(RT).WsEff.MapAsync(e => e.Receive(ct)).Run(env);
 
                 // Match the result and execute handleMessage or onError
-                await message.Match(
-                    Succ: msg => handleMessage(msg).ToAff().Run(env),
+                var result = await message.Match(
+                    Succ: msg => handleMessage(msg).Run(env),
                     Fail: ex => onError(ex).Run(env)
+                );
+                _ = result.Match(
+                    Succ: _ =>
+                    {
+                        
+                    },
+                    Fail: ex =>
+                    {
+                        Debug.WriteLine(ex);
+                    }
                 );
             }
 

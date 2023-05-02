@@ -7,6 +7,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <PackageReference Include="Base62-Net" Version="1.2.157201" />
       <PackageReference Include="LanguageExt.Core" Version="4.4.3" />
       <PackageReference Include="LanguageExt.Rx" Version="4.4.3" />
       <PackageReference Include="LanguageExt.Sys" Version="4.4.3" />
@@ -14,6 +15,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\Wavee.Spotify.Proto\Wavee.Spotify.Proto.csproj" />
+      <ProjectReference Include="..\Wavee\Wavee.csproj" />
     </ItemGroup>
     
 

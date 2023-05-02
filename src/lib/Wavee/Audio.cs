@@ -14,7 +14,7 @@ internal sealed record PlaybackHandle(Guid Id,
 public static class Audio
 {
     private static ConcurrentDictionary<Guid, PlaybackHandle> _playbackHandles = new();
-    private static readonly Runtime Runtime;
+    internal static readonly Runtime Runtime;
 
     static Audio()
     {
@@ -53,6 +53,38 @@ public static class Audio
 
         return id;
     }
+
+    public static bool Clear(Guid id)
+    {
+        if (_playbackHandles.TryRemove(id, out var handle))
+        {
+            atomic(() =>
+            {
+                handle.Close.Value = true;
+                handle.Stream.Dispose();
+            });
+            return true;
+        }
+
+        return false;
+    }
+
+    public static bool Pause()
+    {
+        var result = AudioOutput<Runtime>.Stop().Run(Runtime);
+        return result.Match(
+            Succ: _ => true,
+            Fail: _ => false);
+    }
+
+    public static bool Resume()
+    {
+        var result = AudioOutput<Runtime>.Start().Run(Runtime);
+        return result.Match(
+            Succ: _ => true,
+            Fail: _ => false);
+    }
+
 
     public static async ValueTask<Unit> Write(ReadOnlyMemory<double> data)
     {

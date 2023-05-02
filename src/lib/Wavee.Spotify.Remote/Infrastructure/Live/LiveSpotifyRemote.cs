@@ -7,6 +7,7 @@ using System.Threading.Channels;
 using Eum.Spotify.connectstate;
 using Google.Protobuf;
 using LanguageExt.Common;
+using LanguageExt.UnsafeValueAccess;
 using Wavee.Spotify.Infrastructure.Sys.IO;
 using Wavee.Spotify.Infrastructure.Traits;
 using Wavee.Spotify.Remote.Helpers.Extensions;
@@ -14,6 +15,8 @@ using Wavee.Spotify.Remote.Infrastructure.Sys;
 using Wavee.Spotify.Remote.Infrastructure.Sys.IO;
 using Wavee.Spotify.Remote.Models;
 using Wavee.Spotify.Remote.State;
+using Wavee.States;
+using TransferState = Eum.Spotify.transfer.TransferState;
 
 namespace Wavee.Spotify.Remote.Infrastructure.Live;
 
@@ -32,8 +35,11 @@ public sealed class LiveSpotifyRemote : ISpotifyRemote
 
     private readonly Runtime _rt;
 
+    private readonly IWaveePlayer _waveePlayer;
+
     public LiveSpotifyRemote(
         ISpotifyClient client,
+        IWaveePlayer waveePlayer,
         SpotifyPlaybackConfig config)
     {
         var sendQueue = Channel.CreateUnbounded<JsonDocument>();
@@ -43,6 +49,7 @@ public sealed class LiveSpotifyRemote : ISpotifyRemote
         _remoteState = Ref(new SpotifyRemoteState<Runtime>(config, client.Config.DeviceId, _rt));
         _ct = new CancellationTokenSource();
         _config = config;
+        _waveePlayer = waveePlayer;
         _client = client;
         _session = new SpotifyRemoteSession<Runtime>(_rt);
 
@@ -61,6 +68,50 @@ public sealed class LiveSpotifyRemote : ISpotifyRemote
 
                 var result = await aff.Run(_rt);
             }
+        });
+
+
+        _waveePlayer.StateChanged.Subscribe(async state =>
+        {
+            SpotifyRemoteState<Runtime> changeState = _remoteState.Value;
+            switch (state)
+            {
+                case WaveePlayingState _:
+                    changeState = atomic(() =>
+                    {
+                        return _remoteState.Swap(x =>
+                        {
+                            var wasPaused = x.IsPaused;
+                            var newPos = wasPaused
+                                ? x.PositionAsOfTimestamp.Map(x => (long)x)
+                                : x.Position;
+                            return x with
+                            {
+                                IsPlaying = true,
+                                IsPaused = false,
+                                Position = newPos
+                            };
+                        });
+                    });
+                    break;
+            }
+
+            var token = await _client.Token.GetToken();
+            var run = await PutState(
+                    changeState.BuildPutStateRequest(PutStateReason.PlayerStateChanged,
+                        _waveePlayer.Position.Map(x => (ulong)x.TotalMilliseconds)),
+                    token,
+                    _connectionId.Value.ValueUnsafe())
+                .Run(_rt);
+            run.Match(
+                Succ: async message =>
+                {
+                    var bytesResponse = await message.Content.ReadAsByteArrayAsync();
+                    var cluster = Cluster.Parser.ParseFrom(bytesResponse);
+                    atomic(() => _cluster.Swap(x => cluster));
+                },
+                Fail: ex => Debug.WriteLine(ex.Message)
+            );
         });
     }
 
@@ -90,7 +141,11 @@ public sealed class LiveSpotifyRemote : ISpotifyRemote
 
         const string dealer = "wss://gae2-dealer.spotify.com:443/?access_token={0}";
 
-        Func<Error, Aff<Runtime, Unit>> onError = error => Eff<Runtime, Unit>((_) => { return unit; });
+        Func<Error, Aff<Runtime, Unit>> onError = error => Eff<Runtime, Unit>((_) =>
+        {
+            Debug.WriteLine(error);
+            return unit;
+        });
 
         var aff =
             from token in _client.Token.GetToken().ToAff()
@@ -102,9 +157,14 @@ public sealed class LiveSpotifyRemote : ISpotifyRemote
         // Start the Listen method asynchronously
         _ = Task.Run(() => Ws<Runtime>
             .Listen(
-                memory => HandleMessage(
-                    memory, _cluster, _remoteState, document => _sendQueue.TryWrite(document),
-                    _connectionId), onError, _ct.Token)
+                msgData => HandleMessage(
+                    message: msgData,
+                    cluster: _cluster,
+                    remoteState: _remoteState,
+                    onMsgSend: document => _sendQueue.TryWrite(document),
+                    swapConId: _connectionId,
+                    player: _waveePlayer),
+                onError, _ct.Token)
             .Run(_session.Runtime));
     }
 
@@ -145,43 +205,61 @@ public sealed class LiveSpotifyRemote : ISpotifyRemote
         );
     }
 
-    private static readonly Func<ReadOnlyMemory<byte>, Ref<Option<Cluster>>,
-            Ref<SpotifyRemoteState<Runtime>>,
-            Action<JsonDocument>,
-            Ref<Option<string>>,
-            Eff<Runtime, Unit>>
-        HandleMessage =
-            (message, cluster, remoteState, onMsgSend, swapConId) =>
+    private static Aff<Runtime, Unit> HandleMessage(
+        ReadOnlyMemory<byte> message,
+        Ref<Option<Cluster>> cluster,
+        Ref<SpotifyRemoteState<Runtime>> remoteState,
+        Action<JsonDocument> onMsgSend,
+        Ref<Option<string>> swapConId,
+        IWaveePlayer player)
+    {
+        using var jsonDocument = JsonDocument.Parse(message);
+        var rootOriginal = jsonDocument.RootElement;
+        var root = rootOriginal.Clone();
+
+        var type = root.TryGetProperty("type", out var t) ? Some(t.GetString()!) : None;
+        var headers = root.TryGetProperty("headers", out var h) ? Some(h) : None;
+        var uri = root.TryGetProperty("uri", out var u) ? Some(u.GetString()!) : None;
+        var payloads = root.TryGetProperty("payloads", out var p) ? Some(p) : None;
+
+
+        return type.Match(
+            None: () => FailEff<Unit>(Error.New("Expected type to be present but instead got None")),
+            Some: typeValue =>
             {
-                using var jsonDocument = JsonDocument.Parse(message);
-                var rootOriginal = jsonDocument.RootElement;
-                var root = rootOriginal.Clone();
+                switch (typeValue)
+                {
+                    case "request":
+                        return HandleRequest(root, remoteState, onMsgSend, player);
+                    default:
+                        var uriResult = uri.ToEff(Error.New("Expected uri to be present but instead got None"));
 
-                var type = root.TryGetProperty("type", out var t) ? Some(t.GetString()!) : None;
-                var headers = root.TryGetProperty("headers", out var h) ? Some(h) : None;
-                var uri = root.TryGetProperty("uri", out var u) ? Some(u.GetString()!) : None;
-                var payloads = root.TryGetProperty("payloads", out var p) ? Some(p) : None;
+                        return uriResult.Bind(uriReceived =>
+                        {
+                            if (uriReceived.StartsWith("hm://pusher/v1/connections/"))
+                            {
+                                return HandlePusherConnection(headers, swapConId);
+                            }
 
-                return type.Match(
-                    None: () => FailEff<Unit>(Error.New("Expected type to be present but instead got None")),
-                    Some: typeValue => typeValue switch
-                    {
-                        "request" => HandleRequest(root, remoteState, onMsgSend),
-                        _ => from uriReceived in uri.ToEff(Error.New("Expected uri to be present but instead got None"))
-                            from result in uriReceived.StartsWith("hm://pusher/v1/connections/")
-                                ? HandlePusherConnection(headers, swapConId)
-                                : uriReceived.StartsWith("hm://connect-state/v1/cluster")
-                                    ? HandleClusterUpdate(headers, payloads, cluster)
-                                    : FailEff<Runtime, Unit>(Error.New($"Unexpected uri received: {uriReceived}"))
-                            select result
-                    }
-                );
-            };
+                            if (uriReceived.StartsWith("hm://connect-state/v1/cluster"))
+                            {
+                                return HandleClusterUpdate(headers, payloads, cluster);
+                            }
+                            else
+                            {
+                                return FailEff<Runtime, Unit>(Error.New($"Unexpected uri received: {uriReceived}"));
+                            }
+                        });
+                }
+            }
+        );
+    }
 
-    private static Eff<Runtime, Unit> HandleRequest(
+    private static Aff<Runtime, Unit> HandleRequest(
         JsonElement root,
         Ref<SpotifyRemoteState<Runtime>> remoteState,
-        Action<JsonDocument> onMessageSend)
+        Action<JsonDocument> onMessageSend,
+        IWaveePlayer player)
     {
         return
             from headers in root.GetRequiredProperty("headers")
@@ -194,9 +272,7 @@ public sealed class LiveSpotifyRemote : ISpotifyRemote
                     _ => FailEff<ReadOnlyMemory<byte>>(Error.New($"Unexpected transfer-encoding: {x}"))
                 })
             from decodedData in transferEncodingEff.Map(ParsePayload)
-            //handle data
-            from res in HandleData(decodedData, remoteState)
-            //enqueue callback message
+            from res in HandleData(decodedData, remoteState, player)
             from _ in Eff(() =>
             {
                 const bool success = true;
@@ -210,16 +286,40 @@ public sealed class LiveSpotifyRemote : ISpotifyRemote
             select unit;
     }
 
-    private static Eff<Runtime, Unit> HandleData(
+    private static Aff<Runtime, Unit> HandleData(
         SpotifyRequestMessage decodedData,
-        Ref<SpotifyRemoteState<Runtime>> remoteState)
+        Ref<SpotifyRemoteState<Runtime>> remoteState,
+        IWaveePlayer player)
     {
         atomic(() => remoteState.Swap(x => x with
         {
             LastCommandId = decodedData.MessageId,
             LastCommandSentByDeviceId = decodedData.SentByDeviceId
         }));
+        var endpoint = decodedData.Endpoint;
+        if (endpoint.IsNone)
+        {
+            return FailEff<Runtime, Unit>(Error.New("Expected endpoint to be present but instead got None"));
+        }
 
+        switch (endpoint.ValueUnsafe())
+        {
+            case "transfer":
+                //transfer state is enclosed in command.data
+                //we also have options inside command.options
+                ReadOnlySpan<byte> transferStateElem =
+                    decodedData.Command.ValueUnsafe().GetProperty("data").GetBytesFromBase64();
+                var options = decodedData.Command.ValueUnsafe().GetProperty("options");
+                var transferState = TransferState.Parser.ParseFrom(transferStateElem);
+                return
+                    from swappedState in atomic(transferState.OnTransfer(remoteState, options))
+                    from ctx in swappedState.BuildContext()
+                    from _ in player.Play(ctx.ValueUnsafe(),
+                        Option<int>.None,
+                        TimeSpan.FromMilliseconds(swappedState.GetPosition()),
+                        !swappedState.IsPaused).ToAff()
+                    select unit;
+        }
 
         return SuccessEff(unit);
     }

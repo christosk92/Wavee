@@ -12,11 +12,6 @@ using Wavee.Spotify.Remote;
 using Wavee.Spotify.Remote.Infrastructure.Live;
 
 
-//playback test:
-var fs = File.OpenRead("C:\\Users\\chris-pc\\Music\\Busker Busker - 처음엔 사랑이란게 (Love At First).mp3");
-var id = Audio.Play(fs);
-
-
 var credentials = new LoginCredentials
 {
     Username = Environment.GetEnvironmentVariable("SPOTIFY_USERNAME"),
@@ -40,8 +35,10 @@ spotifyClient.ProductInfoChanged.Subscribe(j =>
 });
 
 await spotifyClient.Connect(credentials);
-var remote = new LiveSpotifyRemote(spotifyClient,
-    new SpotifyPlaybackConfig("Wavee", DeviceType.Computer, PreferredQualityType.High, ushort.MaxValue / 2));
+var player = new WaveePlayer();
+var remote = new LiveSpotifyRemote(spotifyClient, player,
+    new SpotifyPlaybackConfig("Wavee",
+        DeviceType.Computer, PreferredQualityType.High, ushort.MaxValue / 2));
 await remote.Connect();
 while (true)
 {
