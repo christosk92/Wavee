@@ -1,4 +1,5 @@
 ﻿using System.Net.WebSockets;
+using System.Text;
 
 namespace Wavee.Spotify.Remote.Infrastructure.Live;
 
@@ -31,5 +32,12 @@ internal readonly struct WsIO : Traits.WsIO
         
         ms.Seek(0, SeekOrigin.Begin);
         return ms.ToArray();
+    }
+
+    public async ValueTask<Unit> SendText(string json, CancellationToken ct = default)
+    {
+        var buffer = new ArraySegment<byte>(Encoding.UTF8.GetBytes(json));
+        await _ws.SendAsync(buffer, WebSocketMessageType.Text, true, ct).ToUnit();
+        return unit;
     }
 }

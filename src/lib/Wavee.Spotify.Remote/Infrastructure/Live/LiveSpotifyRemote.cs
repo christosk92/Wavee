@@ -1,16 +1,18 @@
 ﻿using System.Buffers;
 using System.Diagnostics;
 using System.IO.Compression;
-using System.Net;
 using System.Net.Http.Headers;
 using System.Text.Json;
+using System.Threading.Channels;
 using Eum.Spotify.connectstate;
 using Google.Protobuf;
 using LanguageExt.Common;
 using Wavee.Spotify.Infrastructure.Sys.IO;
 using Wavee.Spotify.Infrastructure.Traits;
+using Wavee.Spotify.Remote.Helpers.Extensions;
 using Wavee.Spotify.Remote.Infrastructure.Sys;
 using Wavee.Spotify.Remote.Infrastructure.Sys.IO;
+using Wavee.Spotify.Remote.Models;
 using Wavee.Spotify.Remote.State;
 
 namespace Wavee.Spotify.Remote.Infrastructure.Live;
@@ -22,9 +24,11 @@ public sealed class LiveSpotifyRemote : ISpotifyRemote
     private readonly SpotifyRemoteSession<Runtime> _session;
     private readonly ISpotifyClient _client;
 
+    private readonly ManualResetEvent _connectionEstablished = new(false);
     private readonly Ref<Option<Cluster>> _cluster = Ref(Option<Cluster>.None);
     private readonly Ref<Option<string>> _connectionId = Ref(Option<string>.None);
     private readonly Ref<SpotifyRemoteState<Runtime>> _remoteState;
+    private readonly ChannelWriter<JsonDocument> _sendQueue; //TODO: Replace this with a functional queue
 
     private readonly Runtime _rt;
 
@@ -32,6 +36,9 @@ public sealed class LiveSpotifyRemote : ISpotifyRemote
         ISpotifyClient client,
         SpotifyPlaybackConfig config)
     {
+        var sendQueue = Channel.CreateUnbounded<JsonDocument>();
+        _sendQueue = sendQueue.Writer;
+
         _rt = Runtime.New();
         _remoteState = Ref(new SpotifyRemoteState<Runtime>(config, client.Config.DeviceId, _rt));
         _ct = new CancellationTokenSource();
@@ -41,6 +48,20 @@ public sealed class LiveSpotifyRemote : ISpotifyRemote
 
         _connectionId.OnChange()
             .Subscribe(ConnectionIdChanged);
+
+        Task.Factory.StartNew(async () =>
+        {
+            await foreach (var packet in sendQueue.Reader.ReadAllAsync(_ct.Token))
+            {
+                //we have a connection, so we need to read from it
+                var aff =
+                    from _ in Ws<Runtime>
+                        .SendText(packet.RootElement.GetRawText())
+                    select unit;
+
+                var result = await aff.Run(_rt);
+            }
+        });
     }
 
     public Option<string> ConnectionId => _connectionId;
@@ -69,8 +90,7 @@ public sealed class LiveSpotifyRemote : ISpotifyRemote
 
         const string dealer = "wss://gae2-dealer.spotify.com:443/?access_token={0}";
 
-        Action<Error> onError =
-            (err) => { _ct.Cancel(); };
+        Func<Error, Aff<Runtime, Unit>> onError = error => Eff<Runtime, Unit>((_) => { return unit; });
 
         var aff =
             from token in _client.Token.GetToken().ToAff()
@@ -81,7 +101,10 @@ public sealed class LiveSpotifyRemote : ISpotifyRemote
 
         // Start the Listen method asynchronously
         _ = Task.Run(() => Ws<Runtime>
-            .Listen(memory => HandleMessage(memory, _cluster, _connectionId), onError, _ct.Token)
+            .Listen(
+                memory => HandleMessage(
+                    memory, _cluster, _remoteState, document => _sendQueue.TryWrite(document),
+                    _connectionId), onError, _ct.Token)
             .Run(_session.Runtime));
     }
 
@@ -94,6 +117,7 @@ public sealed class LiveSpotifyRemote : ISpotifyRemote
             None: () =>
             {
                 //reset states
+                _connectionEstablished.Reset();
                 return unit;
             },
             Some: async s1 =>
@@ -115,32 +139,108 @@ public sealed class LiveSpotifyRemote : ISpotifyRemote
                     Debug.WriteLine(error.Message);
                 }
 
+                _connectionEstablished.Set();
                 return unit;
             }
         );
     }
 
-    private static readonly Func<ReadOnlyMemory<byte>, Ref<Option<Cluster>>, Ref<Option<string>>, Eff<Runtime, Unit>>
+    private static readonly Func<ReadOnlyMemory<byte>, Ref<Option<Cluster>>,
+            Ref<SpotifyRemoteState<Runtime>>,
+            Action<JsonDocument>,
+            Ref<Option<string>>,
+            Eff<Runtime, Unit>>
         HandleMessage =
-            (message, cluster, swapConId) =>
+            (message, cluster, remoteState, onMsgSend, swapConId) =>
             {
                 using var jsonDocument = JsonDocument.Parse(message);
                 var rootOriginal = jsonDocument.RootElement;
                 var root = rootOriginal.Clone();
-                
+
                 var type = root.TryGetProperty("type", out var t) ? Some(t.GetString()!) : None;
                 var headers = root.TryGetProperty("headers", out var h) ? Some(h) : None;
                 var uri = root.TryGetProperty("uri", out var u) ? Some(u.GetString()!) : None;
                 var payloads = root.TryGetProperty("payloads", out var p) ? Some(p) : None;
 
-                return from uriReceived in uri.ToEff(Error.New("Expected uri to be present but instead got None"))
-                    from result in uriReceived.StartsWith("hm://pusher/v1/connections/")
-                        ? HandlePusherConnection(headers, swapConId)
-                        : uriReceived.StartsWith("hm://connect-state/v1/cluster")
-                            ? HandleClusterUpdate(headers, payloads, cluster)
-                            : FailEff<Runtime, Unit>(Error.New($"Unexpected uri received: {uriReceived}"))
-                    select result;
+                return type.Match(
+                    None: () => FailEff<Unit>(Error.New("Expected type to be present but instead got None")),
+                    Some: typeValue => typeValue switch
+                    {
+                        "request" => HandleRequest(root, remoteState, onMsgSend),
+                        _ => from uriReceived in uri.ToEff(Error.New("Expected uri to be present but instead got None"))
+                            from result in uriReceived.StartsWith("hm://pusher/v1/connections/")
+                                ? HandlePusherConnection(headers, swapConId)
+                                : uriReceived.StartsWith("hm://connect-state/v1/cluster")
+                                    ? HandleClusterUpdate(headers, payloads, cluster)
+                                    : FailEff<Runtime, Unit>(Error.New($"Unexpected uri received: {uriReceived}"))
+                            select result
+                    }
+                );
             };
+
+    private static Eff<Runtime, Unit> HandleRequest(
+        JsonElement root,
+        Ref<SpotifyRemoteState<Runtime>> remoteState,
+        Action<JsonDocument> onMessageSend)
+    {
+        return
+            from headers in root.GetRequiredProperty("headers")
+            from payload in root.GetRequiredProperty("payload")
+            from key in root.GetRequiredProperty("key").Map(k => k.GetString()!)
+            from transferEncodingEff in headers.GetRequiredProperty("Transfer-Encoding").Map(e => e.ToString())
+                .Map(x => x switch
+                {
+                    "gzip" => DecodeGzipPayload(payload),
+                    _ => FailEff<ReadOnlyMemory<byte>>(Error.New($"Unexpected transfer-encoding: {x}"))
+                })
+            from decodedData in transferEncodingEff.Map(ParsePayload)
+            //handle data
+            from res in HandleData(decodedData, remoteState)
+            //enqueue callback message
+            from _ in Eff(() =>
+            {
+                const bool success = true;
+                var keyStr = key;
+                var reply =
+                    $"{{\"type\":\"reply\", \"key\": \"{keyStr.ToLower()}\", \"payload\": {{\"success\": {success.ToString().ToLowerInvariant()}}}}}";
+                var replyJson = JsonDocument.Parse(reply);
+                onMessageSend(replyJson);
+                return unit;
+            })
+            select unit;
+    }
+
+    private static Eff<Runtime, Unit> HandleData(
+        SpotifyRequestMessage decodedData,
+        Ref<SpotifyRemoteState<Runtime>> remoteState)
+    {
+        atomic(() => remoteState.Swap(x => x with
+        {
+            LastCommandId = decodedData.MessageId,
+            LastCommandSentByDeviceId = decodedData.SentByDeviceId
+        }));
+
+
+        return SuccessEff(unit);
+    }
+
+    private static SpotifyRequestMessage ParsePayload(ReadOnlyMemory<byte> decodedData)
+    {
+        using var jsonDocument = JsonDocument.Parse(decodedData);
+        var root = jsonDocument.RootElement;
+        var messageId = root.TryGetProperty("message_id", out var m) ? Some(m.GetUInt32()!) : None;
+        var sentByDeviceId = root.TryGetProperty("sent_by_device_id", out var s)
+            ? Some(s.GetString()!)
+            : None;
+        var command = root.TryGetProperty("command", out var c) ? Some(c.Clone()) : None;
+        var endpoint = command.Match(
+            None: () => None,
+            Some: cValue => cValue.TryGetProperty("endpoint", out var e) ? Some(e.GetString()!) : None
+        );
+
+
+        return new SpotifyRequestMessage(messageId, sentByDeviceId, command, endpoint);
+    }
 
     private static Eff<Runtime, Unit>
         HandlePusherConnection(Option<JsonElement> headers, Ref<Option<string>> swapConId) =>
@@ -178,8 +278,21 @@ public sealed class LiveSpotifyRemote : ISpotifyRemote
     {
         return Eff<Runtime, ReadOnlyMemory<byte>>((_) =>
         {
-            using var enumerateArray = p.EnumerateArray();
-            Span<byte> base64 = enumerateArray.First().GetBytesFromBase64()!;
+            ReadOnlySpan<byte> base64 = ReadOnlySpan<byte>.Empty;
+
+            if (p.ValueKind == JsonValueKind.Array)
+            {
+                using var enumerateArray = p.EnumerateArray();
+                base64 = enumerateArray.First().GetBytesFromBase64();
+            }
+            else if (p.ValueKind == JsonValueKind.Object)
+            {
+                base64 = p.GetProperty("compressed").GetBytesFromBase64();
+            }
+            else
+            {
+                throw new ArgumentException("Invalid JSON element type");
+            }
 
             // Use a buffer pool to reduce memory allocations
             var bufferPool = ArrayPool<byte>.Shared;

@@ -35,7 +35,7 @@ internal static class Ws<RT>
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Aff<RT, Unit> Listen(
         Func<ReadOnlyMemory<byte>, Eff<RT, Unit>> handleMessage,
-        Action<Error> onError,
+        Func<Error, Aff<RT, Unit>> onError,
         CancellationToken cancelToken) =>
         Aff<RT, Unit>(async env =>
         {
@@ -48,29 +48,23 @@ internal static class Ws<RT>
                 var message =
                     await default(RT).WsEff.MapAsync(e => e.Receive(ct)).Run(env);
 
-                message.Match(
-                    Succ: msg =>
-                    {
-                        var msgHandled = handleMessage(msg).Run(env);
-                        _ = msgHandled.Match(
-                            Succ: _ => unit,
-                            Fail: ex =>
-                            {
-                                Debug.WriteLine(ex);
-                                return unit;
-                            }
-                        );
-                        return unit;
-                    },
-                    Fail: ex =>
-                    {
-                        // If the message failed to receive, send the error to the onError handler
-                        onError(ex);
-                        return unit;
-                    }
+                // Match the result and execute handleMessage or onError
+                await message.Match(
+                    Succ: msg => handleMessage(msg).ToAff().Run(env),
+                    Fail: ex => onError(ex).Run(env)
                 );
             }
 
             return unit;
         });
+
+    /// <summary>
+    /// Continuously listen for incoming messages and apply the provided function to handle them.
+    /// </summary>
+    /// <param name="handleMessage">A function to handle incoming messages.</param>
+    [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Aff<RT, Unit> SendText(string json) =>
+        from ct in cancelToken<RT>()
+        from _ in default(RT).WsEff.MapAsync(e => e.SendText(json, ct))
+        select unit;
 }

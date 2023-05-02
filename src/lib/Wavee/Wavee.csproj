@@ -7,11 +7,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Wavee.Spotify\Wavee.Spotify\Wavee.Spotify.csproj" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <Folder Include="Infrastructure\" />
+      <PackageReference Include="LanguageExt.Core" Version="4.4.3" />
+      <PackageReference Include="NAudio" Version="2.1.0" />
     </ItemGroup>
 
 </Project>

@@ -5,6 +5,7 @@ internal interface WsIO
     ValueTask<Unit> Connect(string url, CancellationToken ct = default);
     
     ValueTask<ReadOnlyMemory<byte>> Receive(CancellationToken ct = default);
+    ValueTask<Unit> SendText(string json, CancellationToken ct = default);
 }
 
 /// <summary>
