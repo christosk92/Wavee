@@ -1,6 +1,6 @@
 ﻿namespace Wavee.Infrastructure.Traits;
 
-public interface AudioIO
+internal interface AudioOutputIO
 {
     ValueTask<Unit> Write(ReadOnlyMemory<byte> data);
     ValueTask<Unit> Write(ReadOnlyMemory<double> data);
@@ -13,12 +13,12 @@ public interface AudioIO
 /// </summary>
 /// <typeparam name="RT">Runtime</typeparam>
 [Typeclass("*")]
-public interface HasAudio<RT> : HasCancel<RT>
+internal interface HasAudioOutput<RT> : HasCancel<RT>
     where RT : struct, HasCancel<RT>
 {
     /// <summary>
     /// Access the audio synchronous effect environment
     /// </summary>
     /// <returns>Audio synchronous effect environment</returns>
-    Eff<RT, AudioIO> AudioEff { get; }
+    Eff<RT, AudioOutputIO> AudioOutputEff { get; }
 }

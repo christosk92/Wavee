@@ -12,6 +12,7 @@
       <ProjectReference Include="..\..\src\lib\Wavee.Spotify.Proto\Wavee.Spotify.Proto.csproj" />
       <ProjectReference Include="..\..\src\lib\Wavee.Spotify.Remote\Wavee.Spotify.Remote.csproj" />
       <ProjectReference Include="..\..\src\lib\Wavee.Spotify\Wavee.Spotify.csproj" />
+      <ProjectReference Include="..\..\src\lib\Wavee\Wavee.csproj" />
       <ProjectReference Include="..\..\Wavee.Spotify.Remote\Wavee.Spotify.Remote.csproj" />
       <ProjectReference Include="..\Wavee.Spotify\Wavee.Spotify.csproj" />
     </ItemGroup>

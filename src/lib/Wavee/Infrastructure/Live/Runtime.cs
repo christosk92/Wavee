@@ -3,7 +3,7 @@
 namespace Wavee.Infrastructure.Live;
 
 internal readonly struct Runtime
-    : HasAudio<Runtime>
+    : HasAudioOutput<Runtime>, HasAudioInput<Runtime>
 {
     readonly RuntimeEnv env;
 
@@ -47,8 +47,10 @@ internal readonly struct Runtime
     public CancellationTokenSource CancellationTokenSource =>
         Env.Source;
 
-    public Eff<Runtime, Traits.AudioIO> AudioEff
-        => Eff<Runtime, Traits.AudioIO>(static rt => new AudioIO(rt.Env.NAudioHolder));
+    public Eff<Runtime, Traits.AudioOutputIO> AudioOutputEff
+        => Eff<Runtime, Traits.AudioOutputIO>(static rt => new AudioOutputIO(rt.Env.NAudioHolder));
+
+    public Eff<Runtime, Traits.AudioInputIO> AudioInputEff => SuccessEff(AudioInputIO.Default);
 }
 
 internal sealed class RuntimeEnv

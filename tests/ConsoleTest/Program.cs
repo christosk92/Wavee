@@ -4,11 +4,18 @@ using Eum.Spotify;
 using Eum.Spotify.connectstate;
 using Google.Protobuf;
 using LanguageExt.UnsafeValueAccess;
+using Wavee;
 using Wavee.Spotify;
 using Wavee.Spotify.Helpers.Extensions;
 using Wavee.Spotify.Models.Response.Artist;
 using Wavee.Spotify.Remote;
 using Wavee.Spotify.Remote.Infrastructure.Live;
+
+
+//playback test:
+var fs = File.OpenRead("C:\\Users\\chris-pc\\Music\\Busker Busker - 처음엔 사랑이란게 (Love At First).mp3");
+var id = Audio.Play(fs);
+
 
 var credentials = new LoginCredentials
 {

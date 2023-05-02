@@ -12,13 +12,9 @@ internal sealed class NAudioHolder
 
     public NAudioHolder()
     {
-        _bufferedWaveProvider = new BufferedWaveProvider(new WaveFormat(SampleRate, NumChannels));
-        _waveOutEvent = new WaveOutEvent
-        {
-            DeviceNumber = -1, // Default playback device
-            DesiredLatency = 100,
-            NumberOfBuffers = 2
-        };
+        var waveFormat = WaveFormat.CreateIeeeFloatWaveFormat(SampleRate, NumChannels);
+        _bufferedWaveProvider = new BufferedWaveProvider(waveFormat);
+        _waveOutEvent = new WaveOutEvent();
         _waveOutEvent.Init(_bufferedWaveProvider);
     }
 
@@ -40,17 +36,15 @@ internal sealed class NAudioHolder
             Left: s =>
             {
                 //cast to byte
-                var casted = MemoryMarshal.Cast<float, byte>(converter.F64ToF32(s.Span)).ToArray();
+                var casted = MemoryMarshal.Cast<float, byte>(AudioSamplesConverter.F64ToF32(s.Span)).ToArray();
                 return casted;
             },
             Right: r => r.ToArray());
 
         _bufferedWaveProvider.AddSamples(samples, 0, samples.Length);
 
-        while (_bufferedWaveProvider.BufferedBytes > 26 * 1628)
+        while (_bufferedWaveProvider.BufferedDuration.TotalSeconds > 0.5)
         {
-            // Sleep and wait for NAudio to drain a bit
-            //Thread.Sleep(10);
             await Task.Delay(10);
         }
     }
@@ -58,8 +52,7 @@ internal sealed class NAudioHolder
 
 internal struct AudioSamplesConverter
 {
-    public ReadOnlySpan<float> F64ToF32(ReadOnlySpan<double> samples)
-    {
-        throw new NotImplementedException();
-    }
+    //In terms of F64 -> F32, since F64 has a higher precision than F32, we can just cast the bits
+    public static ReadOnlySpan<float> F64ToF32(ReadOnlySpan<double> samples) =>
+        MemoryMarshal.Cast<double, float>(samples);
 }

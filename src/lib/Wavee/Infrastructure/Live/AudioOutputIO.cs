@@ -2,12 +2,12 @@
 
 namespace Wavee.Infrastructure.Live;
 
-internal readonly struct AudioIO : Traits.AudioIO
+internal readonly struct AudioOutputIO : Traits.AudioOutputIO
 {
     private readonly NAudioHolder _nAudioHolder;
     private readonly AudioSamplesConverter _audioSamplesConverter;
 
-    public AudioIO(NAudioHolder nAudioHolder)
+    public AudioOutputIO(NAudioHolder nAudioHolder)
     {
         _nAudioHolder = nAudioHolder;
         _audioSamplesConverter = new AudioSamplesConverter();
