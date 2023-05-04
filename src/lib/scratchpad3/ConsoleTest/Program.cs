@@ -1,8 +1,10 @@
-﻿using Eum.Spotify;
+﻿using System.Diagnostics;
+using Eum.Spotify;
 using Google.Protobuf;
 using LanguageExt;
 using LanguageExt.Common;
 using Wavee.Spotify;
+using static LanguageExt.Prelude;
 
 var loginCredentials = new LoginCredentials
 {
@@ -13,9 +15,16 @@ var loginCredentials = new LoginCredentials
 
 var result = await SpotifyRuntime.Authenticate(loginCredentials, Option<ISpotifyListener>.Some(new SpotifyListener()));
 var k = "";
+Console.ReadLine();
 
 public class SpotifyListener : ISpotifyListener
 {
+    public Unit OnConnected(Guid connectionId)
+    {
+        Debug.WriteLine($"Connected: {connectionId}");
+        return unit;
+    }
+
     public Unit OnDisconnected(Option<Error> error)
     {
         throw new NotImplementedException();

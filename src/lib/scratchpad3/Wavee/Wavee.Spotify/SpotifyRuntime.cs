@@ -1,5 +1,7 @@
 ﻿using System.Diagnostics;
+using System.Net.NetworkInformation;
 using System.Net.Sockets;
+using System.Runtime.Intrinsics.Arm;
 using System.Text;
 using System.Threading.Channels;
 using Eum.Spotify;
@@ -15,6 +17,24 @@ namespace Wavee.Spotify;
 
 public static class SpotifyRuntime
 {
+    /// <summary>
+    /// Used internally to store the tcp connections (raw encrypted packets)
+    /// </summary>
+    internal static readonly Ref<HashMap<Guid, ChannelWriter<SpotifyPacket>>> Connections =
+        Ref(HashMap<Guid, ChannelWriter<SpotifyPacket>>());
+
+    /// <summary>
+    /// Should be used to consume packets. These will be decrypted and decompressed.
+    /// </summary>
+    internal static readonly Ref<HashMap<Guid, Seq<ChannelReader<SpotifyPacket>>>> PacketReaders =
+        Ref(HashMap<Guid, Seq<ChannelReader<SpotifyPacket>>>());
+
+    /// <summary>
+    /// Used internally to dispatch packets to the correct <see cref="PacketReaders"/>
+    /// </summary>
+    private static readonly Ref<HashMap<Guid, Seq<ChannelWriter<SpotifyPacket>>>> PacketDispatchers =
+        Ref(HashMap<Guid, Seq<ChannelWriter<SpotifyPacket>>>());
+
     public static async ValueTask<APWelcome> Authenticate(
         LoginCredentials credentials,
         Option<ISpotifyListener> listener)
@@ -22,20 +42,47 @@ public static class SpotifyRuntime
         const string apResolve = "https://apresolve.spotify.com/?type=accesspoint&type=dealer&type=spclient";
 
         var result = await Authenticate<WaveeRuntime>(apResolve,
-            credentials, listener).Run(WaveeCore.Runtime);
+            credentials, listener, Connections, PacketDispatchers).Run(WaveeCore.Runtime);
 
         return result.Match(
             Succ: t => t,
             Fail: e => throw e);
     }
 
+    internal static Eff<RT, ChannelReader<SpotifyPacket>> SetupListener<RT>(Guid connectionId) where RT : struct
+    {
+        var listener = Channel.CreateUnbounded<SpotifyPacket>();
+        return Eff<RT, ChannelReader<SpotifyPacket>>((_) =>
+        {
+            atomic(() =>
+            {
+                PacketReaders.Swap(x => x.AddOrUpdate(connectionId,
+                    Some: r => r.Add(listener.Reader),
+                    None: () => Seq(new[] { listener.Reader })));
+            });
+
+            atomic(() =>
+            {
+                PacketDispatchers.Swap(x => x.AddOrUpdate(connectionId,
+                    Some: r => r.Add(listener.Writer),
+                    None: () => Seq(new[] { listener.Writer })));
+            });
+            return listener.Reader;
+        });
+    }
+
     private static Aff<RT, APWelcome> Authenticate<RT>(string apResolve,
-        LoginCredentials credentials, Option<ISpotifyListener> listener)
+        LoginCredentials credentials, Option<ISpotifyListener> listener,
+        Ref<HashMap<Guid, ChannelWriter<SpotifyPacket>>> connections,
+        Ref<HashMap<Guid, Seq<ChannelWriter<SpotifyPacket>>>> packetDispatchers)
         where RT : struct, HasHttp<RT>, HasTCP<RT>
     {
+        var connectionId = Guid.NewGuid();
         var deviceId = Guid.NewGuid().ToString();
         var channel = Channel.CreateUnbounded<SpotifyPacket>();
-        return AuthenticateWithTcp<RT>(apResolve, credentials, listener, channel, deviceId);
+        atomic(() => connections.Swap(x => x.Add(connectionId, channel.Writer)));
+        return AuthenticateWithTcp<RT>(apResolve, credentials, listener, channel, deviceId, connectionId,
+            packetDispatchers);
     }
 
     private static Aff<RT, Unit> SendMessage<RT>(ChannelWriter<byte[]> writer, byte[] message)
@@ -46,12 +93,12 @@ public static class SpotifyRuntime
             return unit;
         });
 
-    private static Aff<RT, APWelcome> AuthenticateWithTcp<RT>(
-        string apResolve,
+    private static Aff<RT, APWelcome> AuthenticateWithTcp<RT>(string apResolve,
         LoginCredentials credentials,
         Option<ISpotifyListener> listener,
         Channel<SpotifyPacket> channel,
-        string deviceId)
+        string deviceId, Guid connectionId,
+        Ref<HashMap<Guid, Seq<ChannelWriter<SpotifyPacket>>>> packetDispatchers)
         where RT : struct, HasHttp<RT>, HasTCP<RT>
     {
         return
@@ -63,16 +110,27 @@ public static class SpotifyRuntime
                 deviceId)
             from _ in Eff<RT, Unit>((r) =>
             {
+                _ = listener.Map(x => x.OnConnected(connectionId));
+
                 Task.Run(() =>
-                    ProcessMessages<RT>(channel, stream, Ref(nonceAfterAuthAndApWelcome.EncryptionRecord), listener)
+                    ProcessMessages<RT>(
+                            connectionId,
+                            channel, stream,
+                            Ref(nonceAfterAuthAndApWelcome.EncryptionRecord),
+                            listener,
+                            packetDispatchers)
                         .Run(r));
                 return unit;
             })
             select nonceAfterAuthAndApWelcome.ApWelcome;
     }
 
-    internal static Aff<RT, Unit> ProcessMessages<RT>(Channel<SpotifyPacket> channel, NetworkStream stream,
-        Ref<SpotifyEncryptionRecord> encryptionRecord, Option<ISpotifyListener> spotifyListener)
+    internal static Aff<RT, Unit> ProcessMessages<RT>(
+        Guid connectionId,
+        Channel<SpotifyPacket> channel, NetworkStream stream,
+        Ref<SpotifyEncryptionRecord> encryptionRecord,
+        Option<ISpotifyListener> spotifyListener,
+        Ref<HashMap<Guid, Seq<ChannelWriter<SpotifyPacket>>>> packetDispatchers)
         where RT : struct, HasCancel<RT>, HasTCP<RT>
     {
         return Aff<RT, Unit>(async env =>
@@ -98,15 +156,21 @@ public static class SpotifyRuntime
             });
 
             // Continuously listen for messages and decrypt them
-            var listeningTask = ReadAndProcessMessage<RT>(stream, encryptionRecord).Run(env).AsTask();
+            var listeningTask = ReadAndProcessMessage<RT>(connectionId, stream, encryptionRecord, spotifyListener,
+                    packetDispatchers)
+                .Run(env).AsTask();
 
             await Task.WhenAll(sendingTask, listeningTask);
             return unit;
         });
     }
 
-    private static Aff<RT, Unit> ReadAndProcessMessage<RT>(NetworkStream stream,
-        SpotifyEncryptionRecord encryptionRecord)
+    private static Aff<RT, Unit> ReadAndProcessMessage<RT>(
+        Guid connectionId,
+        NetworkStream stream,
+        SpotifyEncryptionRecord encryptionRecord,
+        Option<ISpotifyListener> listener,
+        Ref<HashMap<Guid, Seq<ChannelWriter<SpotifyPacket>>>> packetDispatchers)
         where RT : struct, HasCancel<RT>, HasTCP<RT>
     {
         return Aff<RT, Unit>(async env =>
@@ -121,6 +185,49 @@ public static class SpotifyRuntime
                     var err = messageResult.Match(Succ: _ => throw new Exception("Impossible"), Fail: identity);
                     return unit;
                 }
+                else
+                {
+                    var msg = messageResult.Match(Succ: identity, Fail: _ => throw new Exception("Impossible"));
+
+                    switch (msg.Packet.Command)
+                    {
+                        case SpotifyPacketType.PongAck:
+                            Debug.WriteLine("PongAck");
+                            break;
+                        case SpotifyPacketType.Ping:
+                            //handle ourselves
+                            Connections.Value
+                                .Find(x => x.Key == connectionId)
+                                .IfSome(connections =>
+                                {
+                                    var pong = new SpotifyPacket(SpotifyPacketType.Pong, new byte[4]);
+                                    connections.Value.TryWrite(pong);
+                                });
+                            break;
+                        case SpotifyPacketType.CountryCode:
+                            //handle ourselves
+                            break;
+                        case SpotifyPacketType.ProductInfo:
+                            //handle ourselves
+
+                            break;
+                        case SpotifyPacketType.MercuryEvent or SpotifyPacketType.MercuryReq
+                            or SpotifyPacketType.MercurySub or SpotifyPacketType.MercuryUnsub
+                            or SpotifyPacketType.AesKey or SpotifyPacketType.AesKeyError:
+                            packetDispatchers.Value
+                                .Find(x => x.Key == connectionId)
+                                .IfSome(dispatchers =>
+                                {
+                                    dispatchers.Value.Iter(dispatcher => { dispatcher.TryWrite(msg.Packet); });
+                                });
+                            break;
+                        default:
+                            Debug.WriteLine($"Unhandled packet type: {msg.Packet.Command}");
+                            break;
+                    }
+
+                    encryptionRecord = msg.NewEncryptionRecord;
+                }
             }
         });
     }
@@ -128,6 +235,7 @@ public static class SpotifyRuntime
 
 public interface ISpotifyListener
 {
+    Unit OnConnected(Guid connectionId);
     Unit OnDisconnected(Option<Error> error);
     Unit CountryCodeReceived(string countryCode);
 }

@@ -15,15 +15,16 @@ public readonly record struct SpotifyEncryptionRecord(
         return this with { EncryptionNonce = IncrementNonce(EncryptionNonce) };
     }
 
-    public SpotifyEncryptionRecord Decrypt(Memory<byte> data)
+    public SpotifyEncryptionRecord Decrypt(Memory<byte> data, int length)
     {
         var shannon = new Shannon(DecryptionKey.Span);
         shannon.Nonce(DecryptionNonce);
-        shannon.Decrypt(data.Span);
+        shannon.Decrypt(data.Span.Slice(0, length));
         return this with { DecryptionNonce = IncrementNonce(DecryptionNonce) };
     }
 
-    internal (ReadOnlyMemory<byte> EnrcyptedMessage, SpotifyEncryptionRecord NewRecord) EncryptPacket(SpotifyPacket packet)
+    internal (ReadOnlyMemory<byte> EnrcyptedMessage, SpotifyEncryptionRecord NewRecord) EncryptPacket(
+        SpotifyPacket packet)
     {
         var key = new Shannon(EncryptionKey.Span);
         Memory<byte> encoded = new byte[3 + packet.Data.Length + MAC_SIZE];
@@ -44,6 +45,7 @@ public readonly record struct SpotifyEncryptionRecord(
 
         return (encoded, this with { EncryptionNonce = IncrementNonce(EncryptionNonce) });
     }
+
     internal const int MAC_SIZE = 4;
     internal static uint IncrementNonce(uint encryptionNonce) => encryptionNonce + 1;
 }

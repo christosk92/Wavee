@@ -101,12 +101,12 @@ public class TcpCommunicationTests
         var stream = tcpClient.GetStream();
 
         var processMessagesTask =
-            Task.Run(() =>
-            {
-                return SpotifyRuntime.ProcessMessages<WaveeRuntime>(channel, stream, encryptionRecordAfterAuth,
-                        Option<ISpotifyListener>.None)
-                    .Run(WaveeCore.Runtime);
-            });
+            Task.Run(() => SpotifyRuntime.ProcessMessages<WaveeRuntime>(
+                    Guid.NewGuid(),
+                    channel, stream, encryptionRecordAfterAuth,
+                    Option<ISpotifyListener>.None,
+                    Ref(new HashMap<Guid, Seq<ChannelWriter<SpotifyPacket>>>()))
+                .Run(WaveeCore.Runtime));
 
         // Test sending and receiving messages
         var testMessage = Encoding.UTF8.GetBytes("This is a test message.");
@@ -128,7 +128,7 @@ public class TcpCommunicationTests
 
 
         atomic(() => encryptionRecordAfterAuth.Swap(x =>
-            x.Decrypt(decryptedResponse)));
+            x.Decrypt(decryptedResponse, decryptedResponse.Length - SpotifyEncryptionRecord.MAC_SIZE)));
 
         var command = (SpotifyPacketType)decryptedResponse[0];
         var data = decryptedResponse[3..^SpotifyEncryptionRecord.MAC_SIZE];
