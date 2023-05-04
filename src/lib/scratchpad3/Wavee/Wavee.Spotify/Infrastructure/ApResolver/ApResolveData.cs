@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace Wavee.Spotify.ApResolver;
+namespace Wavee.Spotify.Infrastructure.ApResolver;
 
 internal readonly record struct ApResolveData(
     [property: JsonPropertyName("accesspoint")]

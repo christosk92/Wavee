@@ -1,4 +1,4 @@
-﻿namespace Wavee.Spotify.Connection;
+﻿namespace Wavee.Spotify.Infrastructure.Connection;
 
 [Flags]
 public enum SpotifyPacketType

@@ -1,7 +1,7 @@
 ﻿using System.Runtime.CompilerServices;
 
 [assembly: InternalsVisibleTo("Wavee.Spotify.Tests")]
-namespace Wavee.Spotify.Crypto;
+namespace Wavee.Spotify.Infrastructure.Crypto;
 
 internal class Shannon
 {

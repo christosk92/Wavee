@@ -2,9 +2,9 @@
 using Eum.Spotify;
 using Google.Protobuf;
 using LanguageExt.UnsafeValueAccess;
-using Wavee.Spotify.Connection;
+using Wavee.Spotify.Infrastructure.Connection;
 
-namespace Wavee.Spotify.Mercury;
+namespace Wavee.Spotify.Clients.Mercury;
 
 internal static class MercuryPacketBuilder
 {

@@ -1,4 +1,4 @@
-﻿namespace Wavee.Spotify.Mercury;
+﻿namespace Wavee.Spotify.Clients.Mercury;
 
 public enum MercuryMethod
 {

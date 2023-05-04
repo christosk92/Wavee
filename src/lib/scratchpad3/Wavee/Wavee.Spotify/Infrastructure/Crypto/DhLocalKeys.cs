@@ -1,7 +1,7 @@
 ﻿using System.Numerics;
 using System.Security.Cryptography;
 
-namespace Wavee.Spotify.Crypto;
+namespace Wavee.Spotify.Infrastructure.Crypto;
 
 internal readonly record struct DhLocalKeys(BigInteger PrivateKey, BigInteger PublicKey)
 {

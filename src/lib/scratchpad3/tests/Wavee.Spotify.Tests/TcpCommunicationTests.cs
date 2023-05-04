@@ -3,10 +3,12 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading.Channels;
 using LanguageExt;
+using LanguageExt.Common;
 using Wavee.Infrastructure.Live;
 using Wavee.Infrastructure.Sys.IO;
-using Wavee.Spotify.Connection;
-using Wavee.Spotify.Crypto;
+using Wavee.Spotify.Infrastructure.Connection;
+using Wavee.Spotify.Infrastructure.Crypto;
+using Wavee.Spotify.Infrastructure.Sys;
 using static LanguageExt.Prelude;
 
 namespace Wavee.Spotify.Tests;
@@ -104,9 +106,7 @@ public class TcpCommunicationTests
         var processMessagesTask =
             Task.Run(() => SpotifyRuntime.ProcessMessages<WaveeRuntime>(
                     Guid.NewGuid(),
-                    channel, stream, encryptionRecordAfterAuth,
-                    Option<ISpotifyListener>.None,
-                    Ref(new HashMap<Guid, Seq<(Guid ListenerId, ChannelWriter<SpotifyPacket> Listener)>>()))
+                    channel, stream, encryptionRecordAfterAuth)
                 .Run(WaveeCore.Runtime));
 
         // Test sending and receiving messages

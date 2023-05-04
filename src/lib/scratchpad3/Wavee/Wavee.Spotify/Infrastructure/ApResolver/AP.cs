@@ -3,7 +3,7 @@ using System.Net.Http.Json;
 using Wavee.Infrastructure.Sys.IO;
 using Wavee.Infrastructure.Traits;
 
-namespace Wavee.Spotify.ApResolver;
+namespace Wavee.Spotify.Infrastructure.ApResolver;
 
 internal static class AP<RT> where RT : struct, HasHttp<RT>
 {

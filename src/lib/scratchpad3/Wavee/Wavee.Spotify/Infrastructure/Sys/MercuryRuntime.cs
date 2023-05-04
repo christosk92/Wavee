@@ -1,50 +1,35 @@
 ﻿using System.Buffers.Binary;
+using System.Threading.Channels;
 using Eum.Spotify;
 using LanguageExt.UnsafeValueAccess;
-using Wavee.Infrastructure.Live;
-using Wavee.Spotify.Connection;
-using Wavee.Spotify.Mercury;
+using Wavee.Spotify.Clients.Mercury;
+using Wavee.Spotify.Infrastructure.Connection;
 
-namespace Wavee.Spotify;
+namespace Wavee.Spotify.Infrastructure.Sys;
 
-public static class MercuryRuntime
+internal static class MercuryRuntime
 {
-    private static readonly Ref<HashMap<Guid, ulong>> SequenceIds = Ref(new HashMap<Guid, ulong>());
-
-    public static async ValueTask<MercuryResponse> Send(MercuryMethod method, string uri,
+    internal static async ValueTask<MercuryResponse> Send(
+        MercuryMethod method, string uri,
         Option<string> contentType,
-        Option<Guid> connectionId)
+        Ref<Option<ulong>> sequence,
+        ChannelWriter<SpotifyPacket> sender,
+        ChannelReader<Either<Error, SpotifyPacket>> reader)
     {
-        //if connectionId is none, return default   
-        var connectionMaybe = connectionId.Match(
-            Some: id =>
-            {
-                var k = SpotifyRuntime.Connections.Value.Find(id);
-                return (id, k);
-            },
-            None: () =>
-            {
-                var k = SpotifyRuntime.Connections.Value.Find(_ => true);
-                return k.Match(
-                    Some: z => (z.Key, z.Value),
-                    None: () => throw new Exception("No connection found"));
-            });
-        var connection = connectionMaybe.k.Match(Some: r => r, None: () => throw new Exception("No connection found"));
-
-        var connId = connectionMaybe.id;
-        var listenerMaybe =
-            SpotifyRuntime.SetupListener<WaveeRuntime>(connId)
-                .Run(WaveeCore.Runtime);
-        var listener =
-            listenerMaybe.Match(Succ: r => r, Fail: (e) => throw e);
-
-        var nextSequence = GetNextSequenceId(SequenceIds, connId);
+        var nextSequence = GetNextSequenceId(sequence);
         var resultTask = Task.Run(async () =>
         {
             Seq<ReadOnlyMemory<byte>> partials = Seq<ReadOnlyMemory<byte>>();
 
-            await foreach (var packet in listener.Listener.ReadAllAsync())
+            await foreach (var packetOrError in reader.ReadAllAsync())
             {
+                if (packetOrError.IsLeft)
+                {
+                    throw packetOrError.Match(Left: r => r, Right: _ => throw new Exception("Should not happen"));
+                }
+
+                var packet = packetOrError.Match(Left: _ => throw new Exception("Should not happen"), Right: r => r);
+
                 // we are only interested in mercury packets here that have the same sequence id as the request   
                 if (packet.Command is SpotifyPacketType.MercuryReq)
                 {
@@ -87,17 +72,18 @@ public static class MercuryRuntime
 
         //now that our listeners are setup, we can send the request
         var buildPacket = MercuryPacketBuilder.BuildRequest(method, uri, nextSequence, contentType);
-        var wrote = connection.TryWrite(buildPacket);
+        var wrote = sender.TryWrite(buildPacket);
 
         var response = await resultTask;
-        //finished request, unregister listener
-        SpotifyRuntime.RemoveListener<WaveeRuntime>(connId, listener.ListenerId);
         return response;
     }
 
-    public static ValueTask<MercuryResponse> Get(string url, Option<Guid> connectionId)
+    internal static ValueTask<MercuryResponse> Get(string url,
+        Ref<Option<ulong>> sequence,
+        ChannelWriter<SpotifyPacket> sender,
+        ChannelReader<Either<Error, SpotifyPacket>> reader)
     {
-        return Send(MercuryMethod.Get, url, None, connectionId);
+        return Send(MercuryMethod.Get, url, None, sequence, sender, reader);
     }
 
     private static ReadOnlyMemory<byte> ParsePart(ref ReadOnlyMemory<byte> data)
@@ -141,21 +127,13 @@ public static class MercuryRuntime
         return l;
     }
 
-    private static ulong GetNextSequenceId(Ref<HashMap<Guid, ulong>> sequenceIds, Guid connectionId)
+    private static ulong GetNextSequenceId(Ref<Option<ulong>> sequenceId)
     {
         //if no item exists, add 0 and return 0
         //if item exists, add 1 and return +1 (so if it was 0, return 0 + 1)
-
-        var nextSequence = atomic(() =>
-        {
-            return sequenceIds.Swap(x =>
-            {
-                return x.AddOrUpdate(connectionId,
-                    Some: r => r + 1,
-                    None: () => 0);
-            });
-        });
-        return nextSequence.Find(connectionId).ValueUnsafe();
+        return atomic(() => sequenceId.Swap(x => x.Match(
+            Some: y => y + 1,
+            None: () => (ulong)0))).ValueUnsafe();
     }
 }
 

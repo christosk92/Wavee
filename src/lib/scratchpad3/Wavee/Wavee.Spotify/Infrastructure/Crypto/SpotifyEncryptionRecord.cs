@@ -1,7 +1,7 @@
 ﻿using System.Buffers.Binary;
-using Wavee.Spotify.Connection;
+using Wavee.Spotify.Infrastructure.Connection;
 
-namespace Wavee.Spotify.Crypto;
+namespace Wavee.Spotify.Infrastructure.Crypto;
 
 public readonly record struct SpotifyEncryptionRecord(
     ReadOnlyMemory<byte> EncryptionKey, uint EncryptionNonce,

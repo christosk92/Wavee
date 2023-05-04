@@ -5,7 +5,8 @@ using Google.Protobuf;
 using LanguageExt;
 using LanguageExt.Common;
 using Wavee.Spotify;
-using Wavee.Spotify.Mercury;
+using Wavee.Spotify.Clients.Mercury;
+using Wavee.Spotify.Infrastructure.Sys;
 using static LanguageExt.Prelude;
 
 var loginCredentials = new LoginCredentials
@@ -15,7 +16,7 @@ var loginCredentials = new LoginCredentials
     Typ = AuthenticationType.AuthenticationUserPass
 };
 
-var result = await SpotifyRuntime.Authenticate(loginCredentials, Option<ISpotifyListener>.Some(new SpotifyListener()));
+var client = await SpotifyRuntime.Authenticate(loginCredentials);
 
 while (true)
 {
@@ -30,10 +31,10 @@ while (true)
         _ => MercuryMethod.Get
     };
     var uri = msg[3..].Trim();
-    var test = await MercuryRuntime.Send(
+    var test = await client.Mercury.Send(
         method,
         uri,
-        None, None);
+        None);
     sw.Stop();
     Console.WriteLine($"Elapsed: {sw.ElapsedMilliseconds}ms");
     Console.WriteLine($"{test.Header.StatusCode}");
@@ -42,23 +43,3 @@ while (true)
 }
 
 Console.ReadLine();
-
-public class SpotifyListener : ISpotifyListener
-{
-    public Unit OnConnected(Guid connectionId)
-    {
-        Debug.WriteLine($"Connected: {connectionId}");
-        return unit;
-    }
-
-    public Unit OnDisconnected(Option<Error> error)
-    {
-        throw new NotImplementedException();
-    }
-
-    public Unit CountryCodeReceived(string countryCode)
-    {
-        Debug.WriteLine($"CountryCodeReceived: {countryCode}");
-        return unit;
-    }
-}

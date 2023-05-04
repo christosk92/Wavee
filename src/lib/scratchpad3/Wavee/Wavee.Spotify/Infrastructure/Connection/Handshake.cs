@@ -8,10 +8,10 @@ using Eum.Spotify;
 using Google.Protobuf;
 using Wavee.Infrastructure.Sys.IO;
 using Wavee.Infrastructure.Traits;
-using Wavee.Spotify.Crypto;
 using Wavee.Spotify.Exceptions;
+using Wavee.Spotify.Infrastructure.Crypto;
 
-namespace Wavee.Spotify.Connection;
+namespace Wavee.Spotify.Infrastructure.Connection;
 
 internal static class Handshake<RT>
     where RT : struct, HasTCP<RT>
