@@ -155,7 +155,7 @@ internal readonly record struct SpotifyRemoteState<RT>(
                 Uri = trackId.Uri,
             };
         }
-        
+
         if (TrackUid.IsSome)
         {
             var trackUid = TrackUid.ValueUnsafe();
@@ -170,12 +170,14 @@ internal readonly record struct SpotifyRemoteState<RT>(
     {
         var contextUri = ContextUri;
         var trackId = TrackId.Map(x => x.Uri);
+        var trackUid = TrackUid;
         return Eff<RT, Option<ISpotifyContext>>(rt =>
         {
             return contextUri.Match(
                 Some: uri => new GenericSpotifyContext<RT>(
                     uri,
                     trackId,
+                    trackUid,
                     rt),
                 None: () => Option<ISpotifyContext>.None);
         });

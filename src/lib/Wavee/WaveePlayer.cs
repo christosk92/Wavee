@@ -15,6 +15,7 @@ public sealed class WaveePlayer : IWaveePlayer
 
     public async ValueTask<Unit> Play(IWaveeContext context, Option<int> startAt, TimeSpan startAtTime, bool play)
     {
+        var trackId = await context.GetIdAt(startAt);
         
         return unit;
     }

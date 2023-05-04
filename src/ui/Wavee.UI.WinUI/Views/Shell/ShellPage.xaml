@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl x:Class="Wavee.UI.WinUI.Views.Shell.ShellPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:sidebar="using:Wavee.UI.WinUI.Views.Shell.Sidebar"
+             xmlns:shellVm="using:Wavee.UI.Shell.Sidebar"
+             mc:Ignorable="d">
+    <UserControl.Resources>
+        <DataTemplate x:Key="HeaderSidebarItem"
+                      x:DataType="shellVm:HeaderSidebarItem">
+            <TextBlock Text="{x:Bind Content}"
+                       FontWeight="SemiBold"
+                       Opacity=".7" />
+        </DataTemplate>
+        <DataTemplate x:Key="GeneralSidebarItem"
+                      x:DataType="shellVm:GeneralSidebarItem">
+            <sidebar:GeneralSidebarView Item="{x:Bind}" />
+        </DataTemplate>
+        <DataTemplate x:Key="CountedSidebarItem"
+                      x:DataType="shellVm:CountedSidebarItem">
+            <sidebar:CountedSidebarView Item="{x:Bind }" />
+        </DataTemplate>
+        <sidebar:ShellItemTempalteSelector x:Key="ShellItemTempalteSelector"
+                                           HeaderSidebar="{StaticResource HeaderSidebarItem}"
+                                           GeneralSidebar="{StaticResource GeneralSidebarItem}"
+                                           CountedSidebar="{StaticResource CountedSidebarItem}" />
+    </UserControl.Resources>
+    <Grid>
+        <SplitView IsPaneOpen="True"
+                   PaneBackground="Transparent"
+                   PaneClosing="SplitView_OnPaneClosing"
+                   PaneOpening="SplitView_OnPaneOpening"
+                   OpenPaneLength="260"
+                   DisplayMode="Inline">
+            <SplitView.Pane>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition />
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+                        <Button HorizontalAlignment="Stretch"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                Padding="8,0"
+                                CornerRadius="8,8,0,0"
+                                VerticalAlignment="Stretch"
+                                HorizontalContentAlignment="Left">
+                            <Grid Height="75">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition />
+                                </Grid.ColumnDefinitions>
+                                <PersonPicture Width="55"
+                                               VerticalAlignment="Center"
+                                               Height="55" />
+
+                                <TextBlock Text="Not signed in"
+                                           Margin="8"
+                                           FontWeight="SemiBold"
+                                           VerticalAlignment="Center"
+                                           Grid.Column="1" />
+                            </Grid>
+                        </Button>
+
+                        <AutoSuggestBox QueryIcon="Find"
+                                        PlaceholderText="Find..."
+                                        Margin="8,8,8,12" />
+                    </StackPanel>
+
+                    <ListView ItemsSource="{x:Bind ViewModel.SidebarItems}"
+                              x:Name="SidebarListView"
+                              SelectionChanged="SidebarListView_OnSelectionChanged"
+                              SelectedItem="{x:Bind ViewModel.SelectedItem, Mode=TwoWay}"
+                              Grid.Row="2"
+                              ChoosingItemContainer="SidebarListView_OnChoosingItemContainer"
+                              ContainerContentChanging="SidebarListViewCOntentContainerChanging"
+                              ItemTemplateSelector="{StaticResource ShellItemTempalteSelector}" />
+                </Grid>
+            </SplitView.Pane>
+            <Border Background="{ThemeResource App.Theme.BackgroundBrush}">
+                <ContentControl x:Name="NavigationContentFrame" />
+            </Border>
+        </SplitView>
+    </Grid>
+</UserControl>
