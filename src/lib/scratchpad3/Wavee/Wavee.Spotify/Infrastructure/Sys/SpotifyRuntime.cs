@@ -76,7 +76,7 @@ public static class SpotifyRuntime
         LoginCredentials credentials,
         bool autoReconnect = true)
     {
-        const string apResolve = "https://apresolve.spotify.com/?type=accesspoint&type=dealer&type=spclient";
+        const string apResolve = "https://apresolve.spotify.com/?type=accesspoint";
 
         var connectionId = Guid.NewGuid();
 
@@ -172,7 +172,7 @@ public static class SpotifyRuntime
         });
 
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static async Task Reconnect<RT>(
+    internal static async Task<Unit> Reconnect<RT>(
         ISpotifyClient client,
         ChannelReader<SpotifyPacket> reader,
         string apResolveUrl,
@@ -208,6 +208,8 @@ public static class SpotifyRuntime
                 await Task.Delay(5000, ct);
             }
         }
+
+        return unit;
     }
 
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -35,6 +35,6 @@ internal static class SpotifyConstants
             OSPlatformType.Android or OSPlatformType.iOS => SPOTIFY_MOBILE_VERSION,
             _ => SPOTIFY_DESKTOP_VERSION.ToString()
         };
-
+    
     public const string KEYMASTER_CLIENT_ID = "65b708073fc0480ea92a077233ca87bd";
 }

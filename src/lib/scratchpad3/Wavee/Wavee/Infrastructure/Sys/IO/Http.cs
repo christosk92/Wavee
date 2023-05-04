@@ -12,20 +12,26 @@ public static class Http<RT> where RT : struct, HasHttp<RT>
     /// Perform a GET request to the remote host
     /// </summary>
     /// <param name="url">
-    /// The url to GET
+    ///     The url to GET
     /// </param>
     /// <param name="auth">
-    /// The authentication header to use if any
+    ///     The authentication header to use if any
     /// </param>
     /// <param name="headers">
-    /// The headers to send if any
+    ///     The headers to send if any
     /// </param>
+    /// <param name="cancellationToken"></param>
     /// <typeparam name="RT">Runtime</typeparam>
     /// <returns>The http response message.</returns>
     [Pure, MethodImpl(AffOpt.mops)]
     public static Aff<RT, HttpResponseMessage> Get(string url, Option<AuthenticationHeaderValue> auth,
-        Option<HashMap<string, string>> headers) =>
-        from ct in cancelToken<RT>()
-        from httpResponse in default(RT).HttpEff.MapAsync(e => e.Get(url, auth, headers, ct))
+        Option<HashMap<string, string>> headers, CancellationToken cancellationToken = default) =>
+        from httpResponse in default(RT).HttpEff.MapAsync(e => e.Get(url, auth, headers, cancellationToken))
         select httpResponse;
+
+    [Pure, MethodImpl(AffOpt.mops)]
+    public static Aff<RT, HttpResponseMessage> GetWithContentRange(string url, int start, int length,
+        CancellationToken ct = default)
+        => from httpResponse in default(RT).HttpEff.MapAsync(e => e.GetWithContentRange(url, start, length, ct))
+            select httpResponse;
 }

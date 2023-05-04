@@ -7,6 +7,7 @@ namespace Wavee.Infrastructure.Traits;
 public interface HttpIO
 {
     ValueTask<HttpResponseMessage> Get(string url, Option<AuthenticationHeaderValue> authentication, Option<HashMap<string, string>> headers, CancellationToken ct = default);
+    ValueTask<HttpResponseMessage> GetWithContentRange(string url, int start, int length, CancellationToken ct = default);
 }
 
 /// <summary>

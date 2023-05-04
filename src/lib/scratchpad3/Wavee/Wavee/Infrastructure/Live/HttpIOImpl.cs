@@ -29,4 +29,14 @@ internal sealed class HttpIOImpl : HttpIO
         var response = await _client.SendAsync(request, ct);
         return response;
     }
+
+    public async ValueTask<HttpResponseMessage> GetWithContentRange(string url, int start, int length, CancellationToken ct = default)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, url);
+        var end = start + length - 1;
+        request.Headers.Range = new RangeHeaderValue(start, end);
+        
+        var response = await _client.SendAsync(request, ct);
+        return response;
+    }
 }

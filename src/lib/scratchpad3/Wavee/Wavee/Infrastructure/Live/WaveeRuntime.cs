@@ -27,7 +27,7 @@ public readonly struct WaveeRuntime :
     /// Constructor function
     /// </summary>
     public static WaveeRuntime New() =>
-        new WaveeRuntime(new RuntimeEnv(new CancellationTokenSource()));
+        new WaveeRuntime(new RuntimeEnv(new CancellationTokenSource(), new NAudioHolder()));
 
     /// <summary>
     /// Create a new Runtime with a fresh cancellation token
@@ -35,7 +35,7 @@ public readonly struct WaveeRuntime :
     /// <remarks>Used by localCancel to create new cancellation context for its sub-environment</remarks>
     /// <returns>New runtime</returns>
     public WaveeRuntime LocalCancel =>
-        new WaveeRuntime(new RuntimeEnv(new CancellationTokenSource()));
+        new WaveeRuntime(new RuntimeEnv(new CancellationTokenSource(), new NAudioHolder()));
 
     /// <summary>
     /// Direct access to cancellation token
@@ -56,18 +56,25 @@ public readonly struct WaveeRuntime :
     public Eff<WaveeRuntime, HttpIO> HttpEff =>
         SuccessEff(Live.HttpIOImpl.Default);
 
+    
+    public Eff<WaveeRuntime, Traits.AudioOutputIO> AudioOutputEff
+        => Eff<WaveeRuntime, Traits.AudioOutputIO>(static rt => new AudioOutputIO(rt.Env.NAudioHolder));
+
+    
     internal class RuntimeEnv
     {
         public readonly CancellationTokenSource Source;
         public readonly CancellationToken Token;
+        public readonly NAudioHolder NAudioHolder;
 
-        public RuntimeEnv(CancellationTokenSource source, CancellationToken token)
+        public RuntimeEnv(CancellationTokenSource source, CancellationToken token, NAudioHolder nAudioHolder)
         {
             Source = source;
             Token = token;
+            NAudioHolder = nAudioHolder;
         }
 
-        public RuntimeEnv(CancellationTokenSource source) : this(source, source.Token)
+        public RuntimeEnv(CancellationTokenSource source, NAudioHolder nAudioHolder) : this(source, source.Token, nAudioHolder)
         {
         }
     }
