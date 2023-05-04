@@ -1,9 +1,11 @@
 ﻿using System.Diagnostics;
+using System.Text;
 using Eum.Spotify;
 using Google.Protobuf;
 using LanguageExt;
 using LanguageExt.Common;
 using Wavee.Spotify;
+using Wavee.Spotify.Mercury;
 using static LanguageExt.Prelude;
 
 var loginCredentials = new LoginCredentials
@@ -14,7 +16,31 @@ var loginCredentials = new LoginCredentials
 };
 
 var result = await SpotifyRuntime.Authenticate(loginCredentials, Option<ISpotifyListener>.Some(new SpotifyListener()));
-var k = "";
+
+while (true)
+{
+    var msg = Console.ReadLine();
+    var sw = Stopwatch.StartNew();
+
+    //format is [GET|SEND|] uri
+    var method = msg[..3].Split(" ")[0] switch
+    {
+        "get" => MercuryMethod.Get,
+        "send" => MercuryMethod.Send,
+        _ => MercuryMethod.Get
+    };
+    var uri = msg[3..].Trim();
+    var test = await MercuryRuntime.Send(
+        method,
+        uri,
+        None, None);
+    sw.Stop();
+    Console.WriteLine($"Elapsed: {sw.ElapsedMilliseconds}ms");
+    Console.WriteLine($"{test.Header.StatusCode}");
+    Console.WriteLine(Encoding.UTF8.GetString(test.Body.Span));
+    GC.Collect();
+}
+
 Console.ReadLine();
 
 public class SpotifyListener : ISpotifyListener
@@ -32,6 +58,7 @@ public class SpotifyListener : ISpotifyListener
 
     public Unit CountryCodeReceived(string countryCode)
     {
-        throw new NotImplementedException();
+        Debug.WriteLine($"CountryCodeReceived: {countryCode}");
+        return unit;
     }
 }

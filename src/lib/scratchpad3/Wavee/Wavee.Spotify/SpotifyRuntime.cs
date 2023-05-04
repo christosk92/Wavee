@@ -23,17 +23,19 @@ public static class SpotifyRuntime
     internal static readonly Ref<HashMap<Guid, ChannelWriter<SpotifyPacket>>> Connections =
         Ref(HashMap<Guid, ChannelWriter<SpotifyPacket>>());
 
-    /// <summary>
+    /// <summary> 
     /// Should be used to consume packets. These will be decrypted and decompressed.
     /// </summary>
-    internal static readonly Ref<HashMap<Guid, Seq<ChannelReader<SpotifyPacket>>>> PacketReaders =
-        Ref(HashMap<Guid, Seq<ChannelReader<SpotifyPacket>>>());
+    internal static readonly Ref<HashMap<Guid, Seq<(Guid ListenerId, ChannelReader<SpotifyPacket> Listener)>>>
+        PacketReaders =
+            Ref(HashMap<Guid, Seq<(Guid ListenerId, ChannelReader<SpotifyPacket> Listener)>>());
 
     /// <summary>
     /// Used internally to dispatch packets to the correct <see cref="PacketReaders"/>
     /// </summary>
-    private static readonly Ref<HashMap<Guid, Seq<ChannelWriter<SpotifyPacket>>>> PacketDispatchers =
-        Ref(HashMap<Guid, Seq<ChannelWriter<SpotifyPacket>>>());
+    private static readonly Ref<HashMap<Guid, Seq<(Guid ListenerId, ChannelWriter<SpotifyPacket> Listener)>>>
+        PacketDispatchers =
+            Ref(HashMap<Guid, Seq<(Guid, ChannelWriter<SpotifyPacket>)>>());
 
     public static async ValueTask<APWelcome> Authenticate(
         LoginCredentials credentials,
@@ -49,32 +51,52 @@ public static class SpotifyRuntime
             Fail: e => throw e);
     }
 
-    internal static Eff<RT, ChannelReader<SpotifyPacket>> SetupListener<RT>(Guid connectionId) where RT : struct
+    internal static Eff<RT, (Guid ListenerId, ChannelReader<SpotifyPacket> Listener)>
+        SetupListener<RT>(Guid connectionId) where RT : struct
     {
+        var newListenerId = Guid.NewGuid();
         var listener = Channel.CreateUnbounded<SpotifyPacket>();
-        return Eff<RT, ChannelReader<SpotifyPacket>>((_) =>
+        return Eff<RT, (Guid ListenerId, ChannelReader<SpotifyPacket> Listener)>((_) =>
         {
             atomic(() =>
             {
                 PacketReaders.Swap(x => x.AddOrUpdate(connectionId,
-                    Some: r => r.Add(listener.Reader),
-                    None: () => Seq(new[] { listener.Reader })));
+                    Some: r => r.Add((newListenerId, listener.Reader)),
+                    None: () => Seq(new[] { (newListenerId, listener.Reader) })));
             });
 
             atomic(() =>
             {
                 PacketDispatchers.Swap(x => x.AddOrUpdate(connectionId,
-                    Some: r => r.Add(listener.Writer),
-                    None: () => Seq(new[] { listener.Writer })));
+                    Some: r => r.Add((newListenerId, listener.Writer)),
+                    None: () => Seq(new[] { (newListenerId, listener.Writer) })));
             });
-            return listener.Reader;
+            return (newListenerId, listener.Reader);
         });
     }
+
+    internal static Eff<RT, Unit> RemoveListener<RT>(Guid connId, Guid listenerListenerId) where RT : struct =>
+        Eff<RT, Unit>((_) =>
+        {
+            atomic(() =>
+            {
+                PacketReaders.Swap(x => x.AddOrUpdate(connId,
+                    Some: r => r.Filter(x => x.ListenerId != listenerListenerId),
+                    None: () => Seq<(Guid ListenerId, ChannelReader<SpotifyPacket> Listener)>()));
+
+                PacketDispatchers.Swap(x => x.AddOrUpdate(connId,
+                    Some: r => r.Filter(x => x.ListenerId != listenerListenerId),
+                    None: () => Seq<(Guid ListenerId, ChannelWriter<SpotifyPacket> Listener)>()));
+
+                Connections.Swap(x => x.Remove(connId));
+            });
+            return unit;
+        });
 
     private static Aff<RT, APWelcome> Authenticate<RT>(string apResolve,
         LoginCredentials credentials, Option<ISpotifyListener> listener,
         Ref<HashMap<Guid, ChannelWriter<SpotifyPacket>>> connections,
-        Ref<HashMap<Guid, Seq<ChannelWriter<SpotifyPacket>>>> packetDispatchers)
+        Ref<HashMap<Guid, Seq<(Guid ListenerId, ChannelWriter<SpotifyPacket> Listener)>>> packetDispatchers)
         where RT : struct, HasHttp<RT>, HasTCP<RT>
     {
         var connectionId = Guid.NewGuid();
@@ -98,7 +120,7 @@ public static class SpotifyRuntime
         Option<ISpotifyListener> listener,
         Channel<SpotifyPacket> channel,
         string deviceId, Guid connectionId,
-        Ref<HashMap<Guid, Seq<ChannelWriter<SpotifyPacket>>>> packetDispatchers)
+        Ref<HashMap<Guid, Seq<(Guid ListenerId, ChannelWriter<SpotifyPacket> Listener)>>> packetDispatchers)
         where RT : struct, HasHttp<RT>, HasTCP<RT>
     {
         return
@@ -130,7 +152,7 @@ public static class SpotifyRuntime
         Channel<SpotifyPacket> channel, NetworkStream stream,
         Ref<SpotifyEncryptionRecord> encryptionRecord,
         Option<ISpotifyListener> spotifyListener,
-        Ref<HashMap<Guid, Seq<ChannelWriter<SpotifyPacket>>>> packetDispatchers)
+        Ref<HashMap<Guid, Seq<(Guid ListenerId, ChannelWriter<SpotifyPacket> Listener)>>> packetDispatchers)
         where RT : struct, HasCancel<RT>, HasTCP<RT>
     {
         return Aff<RT, Unit>(async env =>
@@ -170,7 +192,7 @@ public static class SpotifyRuntime
         NetworkStream stream,
         SpotifyEncryptionRecord encryptionRecord,
         Option<ISpotifyListener> listener,
-        Ref<HashMap<Guid, Seq<ChannelWriter<SpotifyPacket>>>> packetDispatchers)
+        Ref<HashMap<Guid, Seq<(Guid ListenerId, ChannelWriter<SpotifyPacket> Listener)>>> packetDispatchers)
         where RT : struct, HasCancel<RT>, HasTCP<RT>
     {
         return Aff<RT, Unit>(async env =>
@@ -185,49 +207,49 @@ public static class SpotifyRuntime
                     var err = messageResult.Match(Succ: _ => throw new Exception("Impossible"), Fail: identity);
                     return unit;
                 }
-                else
+
+                var msg = messageResult.Match(Succ: identity, Fail: _ => throw new Exception("Impossible"));
+
+                switch (msg.Packet.Command)
                 {
-                    var msg = messageResult.Match(Succ: identity, Fail: _ => throw new Exception("Impossible"));
+                    case SpotifyPacketType.PongAck:
+                        Debug.WriteLine("PongAck");
+                        break;
+                    case SpotifyPacketType.Ping:
+                        //handle ourselves
+                        Connections.Value
+                            .Find(x => x.Key == connectionId)
+                            .IfSome(connections =>
+                            {
+                                var pong = new SpotifyPacket(SpotifyPacketType.Pong, new byte[4]);
+                                connections.Value.TryWrite(pong);
+                            });
+                        break;
+                    case SpotifyPacketType.CountryCode:
+                        //handle ourselves
+                        var countryCode = Encoding.UTF8.GetString(msg.Packet.Data.Span);
+                        listener.Map(x => x.CountryCodeReceived(countryCode));
+                        break;
+                    case SpotifyPacketType.ProductInfo:
+                        //handle ourselves
 
-                    switch (msg.Packet.Command)
-                    {
-                        case SpotifyPacketType.PongAck:
-                            Debug.WriteLine("PongAck");
-                            break;
-                        case SpotifyPacketType.Ping:
-                            //handle ourselves
-                            Connections.Value
-                                .Find(x => x.Key == connectionId)
-                                .IfSome(connections =>
-                                {
-                                    var pong = new SpotifyPacket(SpotifyPacketType.Pong, new byte[4]);
-                                    connections.Value.TryWrite(pong);
-                                });
-                            break;
-                        case SpotifyPacketType.CountryCode:
-                            //handle ourselves
-                            break;
-                        case SpotifyPacketType.ProductInfo:
-                            //handle ourselves
-
-                            break;
-                        case SpotifyPacketType.MercuryEvent or SpotifyPacketType.MercuryReq
-                            or SpotifyPacketType.MercurySub or SpotifyPacketType.MercuryUnsub
-                            or SpotifyPacketType.AesKey or SpotifyPacketType.AesKeyError:
-                            packetDispatchers.Value
-                                .Find(x => x.Key == connectionId)
-                                .IfSome(dispatchers =>
-                                {
-                                    dispatchers.Value.Iter(dispatcher => { dispatcher.TryWrite(msg.Packet); });
-                                });
-                            break;
-                        default:
-                            Debug.WriteLine($"Unhandled packet type: {msg.Packet.Command}");
-                            break;
-                    }
-
-                    encryptionRecord = msg.NewEncryptionRecord;
+                        break;
+                    case SpotifyPacketType.MercuryEvent or SpotifyPacketType.MercuryReq
+                        or SpotifyPacketType.MercurySub or SpotifyPacketType.MercuryUnsub
+                        or SpotifyPacketType.AesKey or SpotifyPacketType.AesKeyError:
+                        packetDispatchers.Value
+                            .Find(x => x.Key == connectionId)
+                            .IfSome(dispatchers =>
+                            {
+                                dispatchers.Value.Iter(dispatcher => { dispatcher.Listener.TryWrite(msg.Packet); });
+                            });
+                        break;
+                    default:
+                        Debug.WriteLine($"Unhandled packet type: {msg.Packet.Command}");
+                        break;
                 }
+
+                encryptionRecord = msg.NewEncryptionRecord;
             }
         });
     }

@@ -11,6 +11,7 @@ internal sealed class TcpIOImpl : TcpIO
     public async ValueTask<TcpClient> Connect(string host, ushort port, CancellationToken ct = default)
     {
         var client = new TcpClient();
+        client.ReceiveBufferSize = int.MaxValue;
         await client.ConnectAsync(host, port, ct);
         return client;
     }

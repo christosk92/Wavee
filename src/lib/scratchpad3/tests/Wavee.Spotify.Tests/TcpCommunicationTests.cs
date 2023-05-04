@@ -97,6 +97,7 @@ public class TcpCommunicationTests
 
         var channel = Channel.CreateUnbounded<SpotifyPacket>();
         var tcpClient = new TcpClient();
+        tcpClient.ReceiveBufferSize = int.MaxValue;
         await tcpClient.ConnectAsync(hostPortResponse.Item1, hostPortResponse.Item2);
         var stream = tcpClient.GetStream();
 
@@ -105,7 +106,7 @@ public class TcpCommunicationTests
                     Guid.NewGuid(),
                     channel, stream, encryptionRecordAfterAuth,
                     Option<ISpotifyListener>.None,
-                    Ref(new HashMap<Guid, Seq<ChannelWriter<SpotifyPacket>>>()))
+                    Ref(new HashMap<Guid, Seq<(Guid ListenerId, ChannelWriter<SpotifyPacket> Listener)>>()))
                 .Run(WaveeCore.Runtime));
 
         // Test sending and receiving messages
