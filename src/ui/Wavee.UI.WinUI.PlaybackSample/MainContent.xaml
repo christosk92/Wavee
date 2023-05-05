@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl
+    x:Class="Wavee.UI.WinUI.PlaybackSample.MainContent"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:Wavee.UI.WinUI.PlaybackSample"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Grid>
+        <StackPanel 
+            Spacing="8"
+            VerticalAlignment="Center" HorizontalAlignment="Center"
+                    Width="300"
+                    x:Name="SignInPanel">
+
+            <TextBlock x:Name="ErrorMessageText"/>
+
+            <TextBox PlaceholderText="Username" x:Name="SignInBox"/>
+            <PasswordBox PlaceholderText="Password" x:Name="SignInPasswordBox"/>
+            <Button Style="{ThemeResource AccentButtonStyle}" x:Name="SignInButton" Content="Sign In"/>
+        </StackPanel>
+
+        <Grid x:Name="SignedInPanel"
+              Margin="24">
+            <StackPanel MaxWidth="400" HorizontalAlignment="Left"
+                        Spacing="0">
+                <TextBlock FontSize="24" FontWeight="SemiBold" x:Name="UsernameText"/>
+                <TextBlock FontWeight="Bold" Opacity=".8" x:Name="CountryCodeText"/>
+
+                <AutoSuggestBox Margin="0,8,0,0" 
+                                x:Name="searchTextBox" 
+                                QuerySubmitted="SearchTextBox_OnQuerySubmitted"
+                                UpdateTextOnSelect="False" SuggestionChosen="SearchTextBox_OnSuggestionChosen"
+                                TextChanged="SearchTextBox_OnTextChanged"
+                                PlaceholderText="Search for a track..." 
+                                QueryIcon="Find">
+                    <AutoSuggestBox.ItemTemplate>
+                        <DataTemplate x:DataType="local:TrackViewModel">
+                            <Border
+                                Margin="0,4,0,4"
+                                BorderThickness="1"
+                               Background="{ThemeResource LayerFillColorDefaultBrush}"
+                               BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Border CornerRadius="4">
+                                        <Image
+                                               Width="44" Height="44" Margin="0,0,12,0">
+                                            <Image.Source>
+                                                <BitmapImage UriSource="{x:Bind Image}"
+                                                             DecodePixelHeight="48" 
+                                                             DecodePixelWidth="48"
+                                                             />
+                                            </Image.Source>
+                                        </Image>
+                                    </Border>
+
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <TextBlock Text="{x:Bind Title}" FontWeight="SemiBold"/>
+                                        <TextBlock Text="{x:Bind Artist}"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </AutoSuggestBox.ItemTemplate>
+                </AutoSuggestBox>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</UserControl>
