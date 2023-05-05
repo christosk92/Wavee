@@ -1,4 +1,5 @@
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Media;
 
 namespace Wavee.UI.WinUI.PlaybackSample
 {
@@ -8,16 +9,20 @@ namespace Wavee.UI.WinUI.PlaybackSample
         {
             Instance = this;
             this.InitializeComponent();
+            this.SystemBackdrop = new MicaBackdrop();
+            this.ExtendsContentIntoTitleBar = true;
         }
 
         public void Refresh()
         {
             if (this.Content is MainContent mainContent)
             {
-                mainContent.Cleanup();
+                this.Content = new MainContent(mainContent.ViewModel);
             }
-
-            this.Content = new MainContent();
+            else
+            {
+                this.Content = new MainContent();
+            }
         }
         public static MainWindow Instance { get; private set; }
     }

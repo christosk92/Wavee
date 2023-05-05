@@ -230,7 +230,7 @@ internal sealed class WaveePlayer<RT> : IWaveePlayer
                         }
 
                         initial = false;
-                        const uint bufferSize = 4096 * 2;
+                        const uint bufferSize = 4096;
                         Memory<byte> buffer = new byte[bufferSize];
                         var sample = decoder.Read(buffer.Span);
                         if (sample == 0)

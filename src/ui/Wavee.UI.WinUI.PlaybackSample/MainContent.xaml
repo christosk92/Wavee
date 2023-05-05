@@ -6,9 +6,16 @@
     xmlns:local="using:Wavee.UI.WinUI.PlaybackSample"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:media="using:CommunityToolkit.WinUI.UI.Media"
     mc:Ignorable="d">
 
-    <Grid>
+    <Grid Background="Transparent">
+        <Image x:Name="BackgroundImage"
+               Stretch="Fill"/>
+
+        <Rectangle
+            Opacity="1"
+            Fill="{ThemeResource AcrylicBackgroundFillColorBaseBrush}"/>
         <StackPanel 
             Spacing="8"
             VerticalAlignment="Center" HorizontalAlignment="Center"

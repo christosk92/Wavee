@@ -4,6 +4,7 @@ using Microsoft.UI.Xaml.Controls;
 using ReactiveUI;
 using System.Reactive;
 using System.Reactive.Linq;
+using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Input;
@@ -19,9 +20,9 @@ namespace Wavee.UI.WinUI.PlaybackSample
         public static readonly DependencyProperty ViewModelProperty = DependencyProperty
             .Register(nameof(ViewModel), typeof(MainViewModel), typeof(MainContent), new PropertyMetadata(null));
 
-        public MainContent()
+        public MainContent(Option<MainViewModel> existingVm)
         {
-            ViewModel = new MainViewModel();
+            ViewModel = existingVm.IfNone(new MainViewModel());
             this.InitializeComponent();
 
             // Setup the bindings.
@@ -67,6 +68,12 @@ namespace Wavee.UI.WinUI.PlaybackSample
                         metadata => metadata is not null && metadata.LargeImage.IsSome ? new BitmapImage(new Uri(metadata.LargeImage.ValueUnsafe())) : null)
                     .DisposeWith(disposable);
 
+                //BackgroundImage
+                this.OneWayBind(ViewModel,
+                        x => x.CurrentItem,
+                        x => x.BackgroundImage.Source,
+                        metadata => metadata is not null && metadata.LargeImage.IsSome ? new BitmapImage(new Uri(metadata.LargeImage.ValueUnsafe())) : null)
+                    .DisposeWith(disposable);
 
                 this.OneWayBind(ViewModel,
                         x => x.CurrentItem,
@@ -135,6 +142,9 @@ namespace Wavee.UI.WinUI.PlaybackSample
                 this.BindCommand(ViewModel, x => x.SignInCommand, x => x.SignInButton, withParameter: vm => vm.Password)
                     .DisposeWith(disposable);
             });
+        }
+        public MainContent() : this(Option<MainViewModel>.None)
+        {
         }
 
         private static string TimestampToString(int valueDuration)
