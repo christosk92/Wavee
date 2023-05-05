@@ -18,8 +18,11 @@ var loginCredentials = new LoginCredentials
     AuthData = ByteString.CopyFromUtf8(Environment.GetEnvironmentVariable("SPOTIFY_PASSWORD")),
     Typ = AuthenticationType.AuthenticationUserPass
 };
+//https://open.spotify.com/track/786ymAh5BmHoIpvjyrvjXk?si=3c109608329441ce
+//https://open.spotify.com/track/2CgOd0Lj5MuvOqzqdaAXtS?si=32ac013b22c4435f
+//https://open.spotify.com/track/4ewazQLXFTDC8XvCbhvtXs?si=52de2819ac6d47fd
 //https://open.spotify.com/track/0mf82mK5aeZm4vN9HM2InQ?si=df4d118bb389440f
-var trackId = new SpotifyId("spotify:track:0mf82mK5aeZm4vN9HM2InQ");
+var trackId = new SpotifyId("spotify:track:786ymAh5BmHoIpvjyrvjXk");
 var client = await SpotifyRuntime.Authenticate(loginCredentials);
 
 var playbackConfig = new SpotifyPlaybackConfig(

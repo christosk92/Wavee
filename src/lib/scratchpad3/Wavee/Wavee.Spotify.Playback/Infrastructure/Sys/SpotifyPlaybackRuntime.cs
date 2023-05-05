@@ -83,7 +83,29 @@ public static class SpotifyPlaybackRuntime
             ReadOnlyMemory<byte> memory = await firstChunk.Content.ReadAsByteArrayAsync(ct);
             return memory;
         })
-        select new EncryptedSpotifyStream<RT>(cdnUrl, metadata, firstChunkMemory, numberOfChunks, totalSize);
+        from rt in Eff<RT, RT>((rt) => rt)
+        select new EncryptedSpotifyStream<RT>(cdnUrl, metadata, firstChunkMemory, numberOfChunks, totalSize,
+            i => GetChunk(i, cdnUrl, rt, ct));
+
+    private static async Task<ReadOnlyMemory<byte>> GetChunk<RT>(int index, MaybeExpiringUrl cdnUrl, RT hasHttp,
+        CancellationToken ct) where RT : struct, HasHttp<RT>
+    {
+        var aff =
+            from firstChunk in Http<RT>.GetWithContentRange(cdnUrl.Url, index * ChunkSize, ChunkSize, ct)
+            from firstChunkMemory in Aff(async () =>
+            {
+                ReadOnlyMemory<byte> memory = await firstChunk.Content.ReadAsByteArrayAsync(ct);
+                return memory;
+            })
+            select firstChunkMemory;
+
+        var response = await aff.Run(hasHttp);
+        //todo: error handlging on stream failure
+        return response.Match(
+            Succ: s => s,
+            Fail: e => throw e
+        );
+    }
 
     private static long GetTotalSizeFromContentRange(ContentRangeHeaderValue contentRange)
     {

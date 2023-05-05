@@ -14,11 +14,14 @@ internal sealed class DecryptedSpotifyStream<RT> where RT : struct, HasHttp<RT>
 {
     private readonly EncryptedSpotifyStream<RT> _encryptedSpotifyStream;
     private readonly Option<IAudioDecrypt> _audioDecrypt;
+    private readonly Option<ReadOnlyMemory<byte>>[] _decryptedChunks;
+    private long _position;
 
     public DecryptedSpotifyStream(EncryptedSpotifyStream<RT> encryptedSpotifyStream,
         Either<AesKeyError, ReadOnlyMemory<byte>> key)
     {
         _encryptedSpotifyStream = encryptedSpotifyStream;
+        _decryptedChunks = new Option<ReadOnlyMemory<byte>>[encryptedSpotifyStream.NumberOfChunks];
         _audioDecrypt = key.Match(
             Left: _ => Option<IAudioDecrypt>.None,
             Right: x => Option<IAudioDecrypt>.Some(new AesAudioDecrypt(x))
@@ -27,14 +30,22 @@ internal sealed class DecryptedSpotifyStream<RT> where RT : struct, HasHttp<RT>
 
     public long Position
     {
-        get => _encryptedSpotifyStream.Position;
-        set => _encryptedSpotifyStream.Position = value;
+        get
+        {
+            return _position;
+        }
+        set
+        {
+            _position = value;
+            _encryptedSpotifyStream.Position = value;
+        }
     }
 
     public long Length => _encryptedSpotifyStream.Length;
 
     public long Seek(long to, SeekOrigin begin)
     {
+        Position = to;
         return _encryptedSpotifyStream.Seek(to, begin);
     }
 
@@ -45,26 +56,36 @@ internal sealed class DecryptedSpotifyStream<RT> where RT : struct, HasHttp<RT>
         //check to see which chunk we are in
         const int chunkSize = SpotifyPlaybackRuntime.ChunkSize;
         var prevPos = _encryptedSpotifyStream.Position;
-        var chunkIndex = (int)(_encryptedSpotifyStream.Position / chunkSize);
-        var chunkOffset = (int)(_encryptedSpotifyStream.Position % chunkSize);
-        _encryptedSpotifyStream.Seek(chunkIndex * chunkSize, SeekOrigin.Begin);
-        
-        //read chunk
-        var chunk = new byte[chunkSize];
-        var read = _encryptedSpotifyStream.Read(chunk);
-        //decrypt
-        if (_audioDecrypt.IsSome)
+        var chunkIndex = (int)(Position / chunkSize);
+        var chunkOffset = (int)(Position % chunkSize);
+
+        bool wasNone = false;
+        if (_decryptedChunks[chunkIndex].IsNone)
         {
-            _audioDecrypt.ValueUnsafe().Decrypt(chunk, chunkIndex);
+            wasNone = true;
+            _encryptedSpotifyStream.Seek(chunkIndex * chunkSize, SeekOrigin.Begin);
+
+            //read chunk
+            var chunk = new byte[chunkSize];
+            var read = _encryptedSpotifyStream.Read(chunk);
+            //decrypt
+            if (_audioDecrypt.IsSome)
+            {
+                _audioDecrypt.ValueUnsafe().Decrypt(chunk, chunkIndex);
+            }
+
+            _decryptedChunks[chunkIndex] = (ReadOnlyMemory<byte>)chunk.AsMemory();
+
+            //seek back
+            // _encryptedSpotifyStream.Seek(prevPos + len, SeekOrigin.Begin);
         }
 
+        var chunkFinal = _decryptedChunks[chunkIndex].ValueUnsafe();
         //copy to buffer
-        var len = Math.Min(buf.Length, chunk.Length - chunkOffset);
-        chunk.AsSpan().Slice(chunkOffset, len)
+        var len = Math.Min(buf.Length, chunkFinal.Length - chunkOffset);
+        chunkFinal.Span.Slice(chunkOffset, len)
             .CopyTo(buf);
-        //seek back
-        _encryptedSpotifyStream.Seek(prevPos + len, SeekOrigin.Begin);
-        
+        Position += len;
         return len;
     }
 }

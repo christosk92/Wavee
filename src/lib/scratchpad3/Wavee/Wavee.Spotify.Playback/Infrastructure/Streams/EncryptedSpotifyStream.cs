@@ -1,56 +1,110 @@
-﻿using Wavee.Infrastructure.Traits;
+﻿using LanguageExt.UnsafeValueAccess;
+using Wavee.Infrastructure.Traits;
 using Wavee.Spotify.Playback.Cdn;
 using Wavee.Spotify.Playback.Infrastructure.Sys;
 
 namespace Wavee.Spotify.Playback.Infrastructure.Streams;
 
-internal sealed class EncryptedSpotifyStream<RT> : Stream where RT : struct, HasHttp<RT>
+internal sealed class EncryptedSpotifyStream<RT> where RT : struct, HasHttp<RT>
 {
     private readonly MaybeExpiringUrl _cdnUrl;
     private readonly TrackOrEpisode _metadata;
-    private readonly ReadOnlyMemory<byte> _firstChunk;
     private readonly int _numberOfChunks;
+
+    private readonly Option<TaskCompletionSource<ReadOnlyMemory<byte>>>[] _requested;
+    private readonly Func<int, Task<ReadOnlyMemory<byte>>> _getChunk;
 
     public EncryptedSpotifyStream(
         MaybeExpiringUrl cdnUrl,
         TrackOrEpisode metadata,
-        ReadOnlyMemory<byte> firstChunk, int numberOfChunks, long length)
+        ReadOnlyMemory<byte> firstChunk,
+        int numberOfChunks,
+        long length, Func<int, Task<ReadOnlyMemory<byte>>> getChunk)
     {
         _cdnUrl = cdnUrl;
         _metadata = metadata;
-        _firstChunk = firstChunk;
         _numberOfChunks = numberOfChunks;
+        _requested = new Option<TaskCompletionSource<ReadOnlyMemory<byte>>>[numberOfChunks];
+        var firstTcs = new TaskCompletionSource<ReadOnlyMemory<byte>>();
+        firstTcs.SetResult(firstChunk);
+        _requested[0] = Some(firstTcs);
+
         Length = length;
+        _getChunk = getChunk;
     }
 
-    public override long Position { get; set; }
-    public override bool CanWrite => false;
-    public override long Length { get; }
+    public long Position { get; set; }
+    public long Length { get; }
+    public int NumberOfChunks => _numberOfChunks;
 
-    public override void Flush()
-    {
-        throw new NotImplementedException();
-    }
-
-
-    public override int Read(byte[] buffer, int offset, int count)
+    public int Read(Span<byte> buffer)
     {
         var chunkToRead = (int)(Position / SpotifyPlaybackRuntime.ChunkSize);
         var chunkOffset = (int)(Position % SpotifyPlaybackRuntime.ChunkSize);
 
-        if (chunkToRead == 0)
-        {
-            var firstChunkToRead = _firstChunk.Slice(chunkOffset, Math.Min(count, _firstChunk.Length - chunkOffset));
-            firstChunkToRead.CopyTo(buffer.AsMemory(offset, firstChunkToRead.Length));
-            Position += firstChunkToRead.Length;
-            return firstChunkToRead.Length;
-        }
+        var chunkFinal = FetchChunk(chunkToRead).ConfigureAwait(false).GetAwaiter().GetResult();
 
-        return 0;
+        var firstChunkToRead =
+            chunkFinal.Slice(chunkOffset, Math.Min(buffer.Length, chunkFinal.Length - chunkOffset));
+        firstChunkToRead.Span.CopyTo(buffer);
+        Position += firstChunkToRead.Length;
+        return firstChunkToRead.Length;
     }
 
+    private async ValueTask<ReadOnlyMemory<byte>> FetchChunk(int index, int preloadAhead = 2)
+    {
+        ReadOnlyMemory<byte> chunk;
+        if (_requested[index].IsNone)
+        {
+            var tcs = new TaskCompletionSource<ReadOnlyMemory<byte>>();
+            _requested[index] = Some(tcs);
+            chunk = await _getChunk(index);
+            tcs.SetResult(chunk);
+        }
+        else
+        {
+            chunk = await _requested[index].ValueUnsafe().Task;
+        }
 
-    public override long Seek(long to, SeekOrigin begin)
+        if (index + preloadAhead < _numberOfChunks)
+        {
+            _ = Task.Run(async () =>
+            {
+                for (var i = index + 1; i < index + preloadAhead; i++)
+                {
+                    if (_requested[i].IsNone)
+                    {
+                        var tcs = new TaskCompletionSource<ReadOnlyMemory<byte>>();
+                        _requested[i] = tcs;
+                        var preloaded = await _getChunk(i);
+                        tcs.SetResult(preloaded);
+                    }
+                }
+            });
+        }
+
+        return chunk;
+    }
+
+    // public int Read(byte[] buffer, int offset, int count)
+    // {
+    //     var chunkToRead = (int)(Position / SpotifyPlaybackRuntime.ChunkSize);
+    //     var chunkOffset = (int)(Position % SpotifyPlaybackRuntime.ChunkSize);
+    //
+    //     if (chunkToRead == 0)
+    //     {
+    //         var firstChunkToRead = _firstChunk.Slice(chunkOffset, Math.Min(count, _firstChunk.Length - chunkOffset));
+    //         firstChunkToRead.CopyTo(buffer.AsMemory(offset, firstChunkToRead.Length));
+    //         Position += firstChunkToRead.Length;
+    //         return firstChunkToRead.Length;
+    //     }
+    //     //check if in cache
+    //
+    //     return 0;
+    // }
+
+
+    public long Seek(long to, SeekOrigin begin)
     {
         switch (begin)
         {
@@ -67,18 +121,4 @@ internal sealed class EncryptedSpotifyStream<RT> : Stream where RT : struct, Has
 
         return Position;
     }
-
-    public override void SetLength(long value)
-    {
-        throw new NotImplementedException();
-    }
-
-    public override void Write(byte[] buffer, int offset, int count)
-    {
-        throw new NotImplementedException();
-    }
-
-    public override bool CanRead => true;
-    public override bool CanSeek => true;
-    
 }
