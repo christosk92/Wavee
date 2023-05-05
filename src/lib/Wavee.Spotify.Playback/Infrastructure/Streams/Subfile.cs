@@ -1,12 +1,13 @@
 ﻿using Google.Protobuf;
 using Spotify.Metadata;
 using Wavee.Infrastructure.Traits;
+using Wavee.Player.Playback;
 using Wavee.Spotify.Playback.Infrastructure.Sys;
 using Wavee.Spotify.Playback.Normalisation;
 
 namespace Wavee.Spotify.Playback.Infrastructure.Streams;
 
-public interface ISpotifyStream
+public interface ISpotifyStream : IPlaybackStream
 {
     AudioFile ChosenFile { get; }
     TrackOrEpisode Metadata { get; }
@@ -73,8 +74,32 @@ internal sealed class Subfile<RT> : Stream, ISpotifyStream where RT : struct, Ha
     public TrackOrEpisode Metadata { get; }
     public long FileSize => Length + _offset;
 
+    public IPlaybackItem Item => Metadata.Value.Match(
+        Left: episode => default(IPlaybackItem),
+        Right: track => new SpotifyTrackPlaybackItem(Metadata)
+    );
     public Stream AsStream()
     {
         return this;
     }
+}
+
+internal readonly struct SpotifyTrackPlaybackItem : IPlaybackItem
+{
+    public SpotifyTrackPlaybackItem(TrackOrEpisode track)
+    {
+        Title = track.Name;
+        LargeImage = track.GetImage(Image.Types.Size.Large);
+        Duration = track.Duration;
+        var res = track.Value.Match(
+            Left: _ => throw new NotSupportedException(),
+            Right: trackOriginal => trackOriginal.Artist.Select(c => new DescriptionaryItem(c.Name)).ToSeq()
+        );
+        Descriptions = res;
+    }
+
+    public string Title { get; }
+    public Option<string> LargeImage { get; }
+    public int Duration { get; }
+    public Seq<DescriptionaryItem> Descriptions { get; }
 }

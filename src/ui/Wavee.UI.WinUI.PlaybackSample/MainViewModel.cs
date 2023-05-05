@@ -16,6 +16,9 @@ using ReactiveUI;
 using Splat;
 using Wavee.Infrastructure.Live;
 using Wavee.Infrastructure.Sys.IO;
+using Wavee.Player;
+using Wavee.Player.Context;
+using Wavee.Player.Playback;
 using Wavee.Spotify;
 using Wavee.Spotify.Clients.Mercury;
 using Wavee.Spotify.Common;
@@ -67,6 +70,20 @@ public sealed class MainViewModel : ReactiveObject
                 CountryCode = x.IfNone("");
             });
 
+        WaveeCore.Player.CurrentItemChanged
+            .ObserveOn(RxApp.MainThreadScheduler)
+            .Subscribe(x =>
+            {
+                CurrentItem = x.IsSome ? x.ValueUnsafe().Item : null;
+            });
+
+        WaveeCore.Player.CurrentPositionChangedSpam
+            .ObserveOn(RxApp.MainThreadScheduler)
+            .Subscribe(x =>
+            {
+                PositionMs = x.IsSome ? (int)x.ValueUnsafe().TotalMilliseconds : 0;
+            });
+
         // us to have the latest results that we can expose through the property to the View.
         _searchResults = this
             .WhenAnyValue(x => x.SearchTerm)
@@ -112,7 +129,7 @@ public sealed class MainViewModel : ReactiveObject
         get => _isPaused;
         set => this.RaiseAndSetIfChanged(ref _isPaused, value);
     }
-    public TrackOrEpisode? CurrentItem
+    public IPlaybackItem? CurrentItem
     {
         get => _currentItem;
         set => this.RaiseAndSetIfChanged(ref _currentItem, value);
@@ -209,98 +226,35 @@ public sealed class MainViewModel : ReactiveObject
 
     private async Task StartPlayback(ISpotifyStream spotifyStream)
     {
-
-        try
-        {
-            if (_cancellationTokenSource.IsSome)
-            {
-                await _cancellationTokenSource.ValueUnsafe().CancelAsync();
-            }
-        }
-        catch
-        {
-
-        }
-        //   _ = Try(() => _waveReader.IfSome(x => x.Dispose()))();
-
-        var waveReader = new VorbisWaveReader(spotifyStream.AsStream());
-        _waveReader = Some(waveReader);
-
-        _waveOutEvent.Init(waveReader);
-        _waveOutEvent.Play();
-        CurrentItem = spotifyStream.Metadata;
-
-        var cts = new CancellationTokenSource();
-        _cancellationTokenSource = Some(cts);
-        try
-        {
-            while (_waveOutEvent.PlaybackState != PlaybackState.Stopped && !cts.IsCancellationRequested)
-            {
-                if (_waveOutEvent.PlaybackState is PlaybackState.Paused)
-                {
-                    IsPaused = true;
-                }
-                else
-                {
-                    IsPaused = false;
-                }
-                PositionMs = (int)_waveOutEvent.GetPositionTimeSpan().TotalMilliseconds;
-                await Task.Delay(100, cts.Token);
-            }
-        }
-        catch (Exception x)
-        {
-            //ignore
-            if (x is OperationCanceledException)
-            {
-                cts.Dispose();
-            }
-        }
-        finally
-        {
-            _waveOutEvent.Stop();
-            waveReader.Dispose();
-        }
+        var ctx = new SingularTrackContext(spotifyStream);
+        await WaveeCore.Player.Command(
+            new PlayContextCommand(ctx, Option<int>.None, Option<TimeSpan>.None, Option<bool>.None));
     }
 
-    private Option<CancellationTokenSource> _cancellationTokenSource = None;
-    private readonly WaveOutEvent _waveOutEvent = new();
-    private Option<VorbisWaveReader> _waveReader = None;
-    private TrackOrEpisode? _currentItem;
+    private IPlaybackItem? _currentItem;
 
     public void Cleanup()
     {
+        WaveeCore.Player.Command(new StopCommand());
+    }
 
-        try
+    private class SingularTrackContext : IPlayContext
+    {
+        private readonly ISpotifyStream _stream;
+        public SingularTrackContext(ISpotifyStream stream)
         {
-            if (_cancellationTokenSource.IsSome)
-            {
-                _cancellationTokenSource.ValueUnsafe().Cancel();
-            }
+            _stream = stream;
         }
-        catch
+        public ValueTask<(IPlaybackStream Stream, int AbsoluteIndex)> GetStreamAt(Either<Shuffle, Option<int>> at)
         {
-        }
+            var str = (IPlaybackStream)_stream;
 
-        try
-        {
-            _waveOutEvent.Dispose();
-        }
-        catch
-        {
-
+            return new ValueTask<(IPlaybackStream Stream, int AbsoluteIndex)>((str, 0));
         }
 
-        try
+        public ValueTask<Option<int>> Count()
         {
-            if (_waveReader.IsSome)
-            {
-                _waveReader.ValueUnsafe().Dispose();
-            }
-        }
-        catch
-        {
-
+            return new ValueTask<Option<int>>(1);
         }
     }
 }

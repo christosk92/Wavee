@@ -4,6 +4,7 @@ using Microsoft.UI.Xaml.Controls;
 using ReactiveUI;
 using System.Reactive;
 using System.Reactive.Linq;
+using LanguageExt.UnsafeValueAccess;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media.Imaging;
@@ -63,20 +64,20 @@ namespace Wavee.UI.WinUI.PlaybackSample
                 this.OneWayBind(ViewModel,
                         x => x.CurrentItem,
                         x => x.AlbumCover.Source,
-                        metadata => metadata.HasValue ? new BitmapImage(new Uri(metadata.Value.GetImage(Image.Types.Size.Large))) : null)
+                        metadata => metadata is not null && metadata.LargeImage.IsSome ? new BitmapImage(new Uri(metadata.LargeImage.ValueUnsafe())) : null)
                     .DisposeWith(disposable);
 
 
                 this.OneWayBind(ViewModel,
                         x => x.CurrentItem,
                         x => x.PlayingTitle.Content,
-                        metadata => metadata.HasValue ? metadata.Value.Name : null)
+                        metadata => metadata?.Title)
                     .DisposeWith(disposable);
 
                 this.OneWayBind(ViewModel,
                         x => x.CurrentItem,
                         x => x.PlayingArtist.Content,
-                        metadata => metadata?.Value.Match(Left: episode => string.Empty, Right: track => track.Artist[0].Name))
+                        metadata => metadata?.Descriptions.First().Name)
                     .DisposeWith(disposable);
 
 
@@ -84,7 +85,7 @@ namespace Wavee.UI.WinUI.PlaybackSample
                 this.OneWayBind(ViewModel,
                         x => x.CurrentItem,
                         x => x.DurationBlock.Text,
-                        metadata => metadata.HasValue ? TimestampToString(metadata.Value.Duration) : "00:00")
+                        metadata => metadata is not null ? TimestampToString(metadata.Duration) : "00:00")
                     .DisposeWith(disposable);
 
                 this.OneWayBind(ViewModel,

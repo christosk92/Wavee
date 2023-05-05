@@ -28,3 +28,10 @@ public readonly record struct PlayContextCommand(
     Option<int> IndexInContext,
     Option<TimeSpan> StartFrom,
     Option<bool> StartPlayback) : IWaveePlayerCommand;
+
+public readonly record struct PauseCommand : IWaveePlayerCommand;
+public readonly record struct ResumeCommand : IWaveePlayerCommand;
+public readonly record struct StopCommand : IWaveePlayerCommand;
+public readonly record struct NextCommand : IWaveePlayerCommand;
+public readonly record struct PreviousCommand : IWaveePlayerCommand;
+public readonly record struct SeekCommand(TimeSpan Position) : IWaveePlayerCommand;

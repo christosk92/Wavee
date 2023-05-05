@@ -1,4 +1,5 @@
-﻿using System.Reactive.Linq;
+﻿using System.ComponentModel.Design;
+using System.Reactive.Linq;
 using System.Threading.Channels;
 using LanguageExt.Common;
 using LanguageExt.UnsafeValueAccess;
@@ -21,10 +22,13 @@ internal sealed class WaveePlayer<RT> : IWaveePlayer
     private readonly Ref<bool> _playbackIsHappening = Ref(false);
     private readonly Ref<RepeatState> _repeatState = Ref(RepeatState.None);
     private readonly Ref<bool> _shuffle = Ref(false);
-    private readonly Channel<IInternalPlaybackCommand> _internalCommandChannel;
+
+    private readonly Ref<HashMap<Guid, Channel<IInternalPlaybackCommand>>> _playbackChannels =
+        Ref(LanguageExt.HashMap<Guid, Channel<IInternalPlaybackCommand>>.Empty);
+    //private readonly Channel<IInternalPlaybackCommand> _internalCommandChannel;
     public WaveePlayer(RT runtime)
     {
-        _internalCommandChannel = Channel.CreateUnbounded<IInternalPlaybackCommand>();
+        // _internalCommandChannel = Channel.CreateUnbounded<IInternalPlaybackCommand>();
         _runtime = runtime;
     }
     public async Task<Unit> Command(IWaveePlayerCommand command)
@@ -32,8 +36,19 @@ internal sealed class WaveePlayer<RT> : IWaveePlayer
         switch (command)
         {
             case PlayContextCommand playContextCmd:
+                var playbackId = Guid.NewGuid();
+                var newChannel = Channel.CreateUnbounded<IInternalPlaybackCommand>();
+                atomic(() => _playbackChannels.Swap(r =>
+                {
+                    return r.Fold(r, (acc, kv) =>
+                    {
+                        kv.Value.Writer.TryComplete();
+                        return acc.Remove(kv.Key);
+                    }).Add(playbackId, newChannel);
+                }));
                 var run = await HandlePlayContext(
-                    _internalCommandChannel.Reader,
+                    playbackId,
+                    newChannel.Reader,
                     playContextCmd,
                     _playContext,
                     _currentPosition,
@@ -45,6 +60,31 @@ internal sealed class WaveePlayer<RT> : IWaveePlayer
                     _shuffle.Value,
                     OnPlaybackEnded).Run(_runtime);
                 return Unit.Default;
+            case SeekCommand seekCmd:
+                {
+                    var channel = _playbackChannels.Value.Last().Value;
+                    await channel.Writer.WriteAsync(new InternalSeekToCmd(seekCmd.Position));
+                    break;
+                }
+            case PauseCommand:
+                {
+                    var channel = _playbackChannels.Value.Last().Value;
+                    await channel.Writer.WriteAsync(new InternalPauseCmd());
+                    break;
+                }
+
+            case ResumeCommand:
+                {
+                    var channel = _playbackChannels.Value.Last().Value;
+                    await channel.Writer.WriteAsync(new InternalResumeCmd());
+                    break;
+                }
+            case StopCommand:
+                {
+                    var channel = _playbackChannels.Value.Last().Value;
+                    await channel.Writer.WriteAsync(new InternalStopCmd());
+                    break;
+                }
         }
 
         return unit;
@@ -55,7 +95,7 @@ internal sealed class WaveePlayer<RT> : IWaveePlayer
 
     private void OnPlaybackEnded(TimeSpan aTimeSpan)
     {
-        throw new NotImplementedException();
+
     }
 
     public bool PlaybackIsHappening => _playbackIsHappening.Value;
@@ -71,6 +111,9 @@ internal sealed class WaveePlayer<RT> : IWaveePlayer
         .Where(x => x.Match(Some: f => !f.IsIntermediate, None: () => true))
         .Select(c => c.Map(f => f.Position));
 
+    public IObservable<Option<TimeSpan>> CurrentPositionChangedSpam => _currentPosition.OnChange()
+        .Select(c => c.Map(f => f.Position));
+
     public IObservable<bool> IsPausedChanged => _isPaused.OnChange();
     public IObservable<bool> PlaybackIsHappeningChanged => _playbackIsHappening.OnChange();
     public IObservable<bool> IsShufflingChanged => _shuffle.OnChange();
@@ -78,7 +121,8 @@ internal sealed class WaveePlayer<RT> : IWaveePlayer
 
 
     private static Aff<RT, Unit> HandlePlayContext(
-        ChannelReader<IInternalPlaybackCommand> commander,
+        Guid playbackId,
+        ChannelReader<IInternalPlaybackCommand> commandReader,
         PlayContextCommand playContextCmd,
         Ref<Option<IPlayContext>> playContext,
         Ref<Option<CurrentPositionRecord>> currentPosition,
@@ -91,17 +135,22 @@ internal sealed class WaveePlayer<RT> : IWaveePlayer
         Action<TimeSpan> onPlaybackEnded) =>
         from index in GetIndex(playContextCmd, shuffle)
         from streamAndIndex in playContextCmd.Context.GetStreamAt(index).ToAff()
+            //let ____ = commander.WriteAsync(new InternalStopCmd(Some(newplaybackid)))
         let _ = atomic(() => playContext.Swap(_ => Some(playContextCmd.Context)))
         let __ = atomic(() => currentItem.Swap(_ => Some(new PlayingItem(streamAndIndex.Stream.Item, PlaybackReasonType.Context, streamAndIndex.AbsoluteIndex))))
-        from ___ in StartPlayback(streamAndIndex.Stream, currentPosition, isPaused,
+        from ___ in StartPlayback(
+            playbackId,
+            streamAndIndex.Stream, currentPosition, isPaused,
             playbackIsHappening,
             startAt,
             start,
-            commander,
+            commandReader,
             onPlaybackEnded)
         select unit;
 
-    private static Eff<RT, Unit> StartPlayback(IPlaybackStream metadataStream,
+    private static Eff<RT, Unit> StartPlayback(
+        Guid playbackId,
+        IPlaybackStream metadataStream,
         Ref<Option<CurrentPositionRecord>> currentPosition,
         Ref<bool> isPaused,
         Ref<bool> playbackIsHappening,
@@ -124,8 +173,35 @@ internal sealed class WaveePlayer<RT> : IWaveePlayer
                     {
                         if (commandChannel.TryRead(out var command))
                         {
-                            //pause/seek/resume etc
-                            //TODO:
+                            switch (command)
+                            {
+                                case InternalPauseCmd:
+                                    AudioOutput<RT>.Stop().Run(rt);
+                                    atomic(() => isPaused.Swap(_ => true));
+                                    break;
+                                case InternalResumeCmd:
+                                    AudioOutput<RT>.Start().Run(rt);
+                                    atomic(() => isPaused.Swap(_ => false));
+                                    break;
+                                case InternalSeekToCmd seekTo:
+                                    decoder.CurrentTime = seekTo.Position;
+                                    atomic(() => currentPosition.Swap(_ => Some(new CurrentPositionRecord(seekTo.Position, false))));
+                                    break;
+                                case InternalStopCmd stop:
+                                    if (stop.InExchangeFor != playbackId)
+                                    {
+                                        AudioOutput<RT>.Stop().Run(rt);
+                                        var stoppedAt = decoder.CurrentTime;
+                                        onPlaybackEnded(stoppedAt);
+                                        return;
+                                    }
+
+                                    break;
+                            }
+                        }
+                        else if (commandChannel.Completion.IsCompleted)
+                        {
+                            return;
                         }
 
                         if (startAt.IsSome)
@@ -148,11 +224,12 @@ internal sealed class WaveePlayer<RT> : IWaveePlayer
                                 AudioOutput<RT>.Stop().Run(rt);
                             }
                         }
-                        else if(initial)
+                        else if (initial)
                         {
                             AudioOutput<RT>.Start().Run(rt);
-                            initial = false;
                         }
+
+                        initial = false;
                         const uint bufferSize = 4096 * 2;
                         Memory<byte> buffer = new byte[bufferSize];
                         var sample = decoder.Read(buffer.Span);
@@ -199,9 +276,11 @@ internal sealed class WaveePlayer<RT> : IWaveePlayer
     }
 }
 
-internal interface IInternalPlaybackCommand
-{
-}
+internal interface IInternalPlaybackCommand { }
+internal readonly record struct InternalSeekToCmd(TimeSpan Position) : IInternalPlaybackCommand;
+internal readonly record struct InternalPauseCmd : IInternalPlaybackCommand;
+internal readonly record struct InternalResumeCmd : IInternalPlaybackCommand;
+internal readonly record struct InternalStopCmd(Option<Guid> InExchangeFor) : IInternalPlaybackCommand;
 
 public enum RepeatState
 {

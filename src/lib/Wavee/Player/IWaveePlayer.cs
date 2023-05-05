@@ -7,7 +7,6 @@ public interface IWaveePlayer
 {
     Task<Unit> Command(IWaveePlayerCommand command);
 
-
     Option<IPlayContext> PlayContext { get; }
     bool PlaybackIsHappening { get; }
     bool IsPaused { get; }
@@ -25,6 +24,13 @@ public interface IWaveePlayer
     /// The developer is responsible for keeping track of the current position using a custom timer.
     /// </summary>
     IObservable<Option<TimeSpan>> CurrentPositionChanged { get; }
+
+    /// <summary>
+    /// This is a spammy version of <see cref="CurrentPositionChanged"/>.
+    /// Occurs whenever a sample is read.
+    /// </summary>
+    IObservable<Option<TimeSpan>> CurrentPositionChangedSpam { get; }
+
     IObservable<bool> IsPausedChanged { get; }
     IObservable<bool> PlaybackIsHappeningChanged { get; }
 
