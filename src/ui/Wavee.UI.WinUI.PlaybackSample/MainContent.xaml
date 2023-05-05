@@ -24,8 +24,13 @@
 
         <Grid x:Name="SignedInPanel"
               Margin="24">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
             <StackPanel MaxWidth="400" HorizontalAlignment="Left"
                         Spacing="0">
+                <Button Content="Refresh view" Tapped="RefreshViewTapped"/>
                 <TextBlock FontSize="24" FontWeight="SemiBold" x:Name="UsernameText"/>
                 <TextBlock FontWeight="Bold" Opacity=".8" x:Name="CountryCodeText"/>
 
@@ -70,6 +75,52 @@
                     </AutoSuggestBox.ItemTemplate>
                 </AutoSuggestBox>
             </StackPanel>
+
+            <Grid Grid.Column="1" Margin="24,0">
+                <Grid.RowDefinitions>
+                    <RowDefinition/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Image
+                       HorizontalAlignment="Left"
+                       x:Name="AlbumCover"/>
+
+                <StackPanel Grid.Row="1">
+                    <HyperlinkButton x:Name="PlayingTitle" Padding="8,0"
+                                     FontWeight="SemiBold"
+                                     Foreground="{ThemeResource ApplicationForegroundThemeBrush}"
+                                     FontSize="16"
+                                     Margin="-8,4,0,0"/>
+                    <HyperlinkButton x:Name="PlayingArtist"
+                                 FontSize="14"
+                                 Margin="-8,-4,0,0"
+                                 />
+                    <Grid
+                    Margin="0,4,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="00:00" 
+                               Margin="0,0,12,0"
+                               x:Name="CurrentPositionBlock"
+                               VerticalAlignment="Center"/>
+                        <Slider x:Name="PlaybackSlider" 
+                            Grid.Column="1"/>
+                        <TextBlock Text="00:00" 
+                               x:Name="DurationBlock"
+                               Grid.Column="2"
+                               Margin="12,0,0,0"
+                               HorizontalAlignment="Right"
+                               VerticalAlignment="Center"/>
+
+                    </Grid>
+                    <StackPanel Orientation="Horizontal">
+                        <Button Content="Pause" x:Name="PauseButton"/>
+                    </StackPanel>
+                </StackPanel>
+            </Grid>
         </Grid>
     </Grid>
 </UserControl>

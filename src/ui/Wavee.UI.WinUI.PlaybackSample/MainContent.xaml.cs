@@ -1,9 +1,14 @@
+using System;
 using System.Reactive.Disposables;
 using Microsoft.UI.Xaml.Controls;
 using ReactiveUI;
 using System.Reactive;
 using System.Reactive.Linq;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Input;
+using Microsoft.UI.Xaml.Media.Imaging;
+using Org.BouncyCastle.Asn1.Cms;
+using Image = Spotify.Metadata.Image;
 
 namespace Wavee.UI.WinUI.PlaybackSample
 {
@@ -56,6 +61,51 @@ namespace Wavee.UI.WinUI.PlaybackSample
                     .DisposeWith(disposable);
 
                 this.OneWayBind(ViewModel,
+                        x => x.CurrentItem,
+                        x => x.AlbumCover.Source,
+                        metadata => metadata.HasValue ? new BitmapImage(new Uri(metadata.Value.GetImage(Image.Types.Size.Large))) : null)
+                    .DisposeWith(disposable);
+
+
+                this.OneWayBind(ViewModel,
+                        x => x.CurrentItem,
+                        x => x.PlayingTitle.Content,
+                        metadata => metadata.HasValue ? metadata.Value.Name : null)
+                    .DisposeWith(disposable);
+
+                this.OneWayBind(ViewModel,
+                        x => x.CurrentItem,
+                        x => x.PlayingArtist.Content,
+                        metadata => metadata?.Value.Match(Left: episode => string.Empty, Right: track => track.Artist[0].Name))
+                    .DisposeWith(disposable);
+
+
+
+                this.OneWayBind(ViewModel,
+                        x => x.CurrentItem,
+                        x => x.DurationBlock.Text,
+                        metadata => metadata.HasValue ? TimestampToString(metadata.Value.Duration) : "00:00")
+                    .DisposeWith(disposable);
+
+                this.OneWayBind(ViewModel,
+                        x => x.CurrentItem,
+                        x => x.PlaybackSlider.Maximum,
+                        metadata => metadata?.Duration ?? 0)
+                    .DisposeWith(disposable);
+
+                this.OneWayBind(ViewModel,
+                        x => x.PositionMs,
+                        x => x.CurrentPositionBlock.Text,
+                        TimestampToString)
+                    .DisposeWith(disposable);
+
+                this.OneWayBind(ViewModel,
+                        x => x.PositionMs,
+                        x => x.PlaybackSlider.Value,
+                        pos => pos)
+                    .DisposeWith(disposable);
+
+                this.OneWayBind(ViewModel,
                         x => x.ErrorMessage,
                         x => x.ErrorMessageText.Text)
                     .DisposeWith(disposable);
@@ -86,6 +136,15 @@ namespace Wavee.UI.WinUI.PlaybackSample
             });
         }
 
+        private static string TimestampToString(int valueDuration)
+        {
+            //for example 1000 milliseconds should be 00:01
+            var seconds = valueDuration / 1000;
+            var minutes = seconds / 60;
+            seconds %= 60;
+            return $"{minutes:D2}:{seconds:D2}";
+        }
+
         public MainViewModel ViewModel
         {
             get => (MainViewModel)GetValue(ViewModelProperty);
@@ -108,7 +167,7 @@ namespace Wavee.UI.WinUI.PlaybackSample
 
         private void SearchTextBox_OnSuggestionChosen(AutoSuggestBox sender, AutoSuggestBoxSuggestionChosenEventArgs args)
         {
-            
+
         }
 
         private async void SearchTextBox_OnQuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
@@ -117,6 +176,17 @@ namespace Wavee.UI.WinUI.PlaybackSample
             {
                 await ViewModel.SelectedItem(track);
             }
+        }
+
+        private void RefreshViewTapped(object sender, TappedRoutedEventArgs e)
+        {
+            MainWindow.Instance.Refresh();
+        }
+
+        public void Cleanup()
+        {
+            ViewModel.Cleanup();
+            ViewModel = null;
         }
     }
 }

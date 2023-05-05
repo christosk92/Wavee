@@ -89,7 +89,7 @@ internal readonly struct SpApiClientImpl<RT> : ISpApi where RT : struct, HasHttp
             })
         select response;
 
-    private static string ToBase16(ReadOnlySpan<byte> fileIdSpan)
+    public static string ToBase16(ReadOnlySpan<byte> fileIdSpan)
     {
         Span<byte> buffer = new byte[40];
         var i = 0;

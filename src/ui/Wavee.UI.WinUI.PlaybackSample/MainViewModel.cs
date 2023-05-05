@@ -10,6 +10,7 @@ using Eum.Spotify.connectstate;
 using Google.Protobuf;
 using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
+using NAudio.Utils;
 using NAudio.Wave;
 using ReactiveUI;
 using Splat;
@@ -38,6 +39,10 @@ public sealed class MainViewModel : ReactiveObject
     private string _errorMessage;
     private string _countryCode;
     private string _searchTerm;
+    private int _positionMs;
+    private bool _isPaused;
+
+
     private readonly ObservableAsPropertyHelper<IEnumerable<TrackViewModel>> _searchResults;
     public MainViewModel()
     {
@@ -96,6 +101,22 @@ public sealed class MainViewModel : ReactiveObject
         set => this.RaiseAndSetIfChanged(ref _searchTerm, value);
     }
 
+    public int PositionMs
+    {
+        get => (int)_positionMs;
+        set => this.RaiseAndSetIfChanged(ref _positionMs, (int)value);
+    }
+
+    public bool IsPaused
+    {
+        get => _isPaused;
+        set => this.RaiseAndSetIfChanged(ref _isPaused, value);
+    }
+    public TrackOrEpisode? CurrentItem
+    {
+        get => _currentItem;
+        set => this.RaiseAndSetIfChanged(ref _currentItem, value);
+    }
     public string? CountryCode
     {
         get => _countryCode;
@@ -207,6 +228,7 @@ public sealed class MainViewModel : ReactiveObject
 
         _waveOutEvent.Init(waveReader);
         _waveOutEvent.Play();
+        CurrentItem = spotifyStream.Metadata;
 
         var cts = new CancellationTokenSource();
         _cancellationTokenSource = Some(cts);
@@ -214,6 +236,15 @@ public sealed class MainViewModel : ReactiveObject
         {
             while (_waveOutEvent.PlaybackState != PlaybackState.Stopped && !cts.IsCancellationRequested)
             {
+                if (_waveOutEvent.PlaybackState is PlaybackState.Paused)
+                {
+                    IsPaused = true;
+                }
+                else
+                {
+                    IsPaused = false;
+                }
+                PositionMs = (int)_waveOutEvent.GetPositionTimeSpan().TotalMilliseconds;
                 await Task.Delay(100, cts.Token);
             }
         }
@@ -235,6 +266,43 @@ public sealed class MainViewModel : ReactiveObject
     private Option<CancellationTokenSource> _cancellationTokenSource = None;
     private readonly WaveOutEvent _waveOutEvent = new();
     private Option<VorbisWaveReader> _waveReader = None;
+    private TrackOrEpisode? _currentItem;
+
+    public void Cleanup()
+    {
+
+        try
+        {
+            if (_cancellationTokenSource.IsSome)
+            {
+                _cancellationTokenSource.ValueUnsafe().Cancel();
+            }
+        }
+        catch
+        {
+        }
+
+        try
+        {
+            _waveOutEvent.Dispose();
+        }
+        catch
+        {
+
+        }
+
+        try
+        {
+            if (_waveReader.IsSome)
+            {
+                _waveReader.ValueUnsafe().Dispose();
+            }
+        }
+        catch
+        {
+
+        }
+    }
 }
 
 public sealed class TrackViewModel

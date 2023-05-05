@@ -6,7 +6,19 @@ namespace Wavee.UI.WinUI.PlaybackSample
     {
         public MainWindow()
         {
+            Instance = this;
             this.InitializeComponent();
         }
+
+        public void Refresh()
+        {
+            if (this.Content is MainContent mainContent)
+            {
+                mainContent.Cleanup();
+            }
+
+            this.Content = new MainContent();
+        }
+        public static MainWindow Instance { get; private set; }
     }
 }
