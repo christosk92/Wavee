@@ -1,0 +1,45 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.6.33626.354
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Wavee.UI.WinUI.PlaybackSample", "src\ui\Wavee.UI.WinUI.PlaybackSample\Wavee.UI.WinUI.PlaybackSample.csproj", "{511B27B4-1E1B-4A38-813B-08FC229E059E}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Wavee.Spotify.Playback", "src\lib\Wavee.Spotify.Playback\Wavee.Spotify.Playback.csproj", "{8696DCF4-B12F-4AC7-A65C-13AA7184A9AA}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Wavee.Spotify", "src\lib\Wavee.Spotify\Wavee.Spotify.csproj", "{54D33A4F-3BF6-4787-A04A-39C59560B8FF}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Wavee", "src\lib\Wavee\Wavee.csproj", "{20455D88-26EF-4D50-B306-29AFB229418C}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{511B27B4-1E1B-4A38-813B-08FC229E059E}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{511B27B4-1E1B-4A38-813B-08FC229E059E}.Debug|Any CPU.Build.0 = Debug|x64
+		{511B27B4-1E1B-4A38-813B-08FC229E059E}.Debug|Any CPU.Deploy.0 = Debug|x64
+		{511B27B4-1E1B-4A38-813B-08FC229E059E}.Release|Any CPU.ActiveCfg = Release|x64
+		{511B27B4-1E1B-4A38-813B-08FC229E059E}.Release|Any CPU.Build.0 = Release|x64
+		{511B27B4-1E1B-4A38-813B-08FC229E059E}.Release|Any CPU.Deploy.0 = Release|x64
+		{8696DCF4-B12F-4AC7-A65C-13AA7184A9AA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8696DCF4-B12F-4AC7-A65C-13AA7184A9AA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8696DCF4-B12F-4AC7-A65C-13AA7184A9AA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8696DCF4-B12F-4AC7-A65C-13AA7184A9AA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{54D33A4F-3BF6-4787-A04A-39C59560B8FF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{54D33A4F-3BF6-4787-A04A-39C59560B8FF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{54D33A4F-3BF6-4787-A04A-39C59560B8FF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{54D33A4F-3BF6-4787-A04A-39C59560B8FF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{20455D88-26EF-4D50-B306-29AFB229418C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{20455D88-26EF-4D50-B306-29AFB229418C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{20455D88-26EF-4D50-B306-29AFB229418C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{20455D88-26EF-4D50-B306-29AFB229418C}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {9E38E3AB-2A68-4407-85FB-B3DFEA95D72B}
+	EndGlobalSection
+EndGlobal

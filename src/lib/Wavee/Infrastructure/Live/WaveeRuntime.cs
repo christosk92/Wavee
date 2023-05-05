@@ -6,7 +6,7 @@ namespace Wavee.Infrastructure.Live;
 public readonly struct WaveeRuntime :
     HasCancel<WaveeRuntime>,
     HasTCP<WaveeRuntime>,
-    HasHttp<WaveeRuntime>
+    HasHttp<WaveeRuntime>, HasAudioOutput<WaveeRuntime>
 {
     readonly RuntimeEnv env;
 

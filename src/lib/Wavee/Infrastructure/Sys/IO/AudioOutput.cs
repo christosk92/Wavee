@@ -5,7 +5,7 @@ using Wavee.Infrastructure.Traits;
 
 namespace Wavee.Infrastructure.Sys.IO;
 
-internal static class AudioOutput<RT>
+public static class AudioOutput<RT>
     where RT : struct, HasCancel<RT>, HasAudioOutput<RT>
 {
     /// <summary>

@@ -23,7 +23,7 @@ var loginCredentials = new LoginCredentials
 //https://open.spotify.com/track/4ewazQLXFTDC8XvCbhvtXs?si=52de2819ac6d47fd
 //https://open.spotify.com/track/0mf82mK5aeZm4vN9HM2InQ?si=df4d118bb389440f
 var trackId = new SpotifyId("spotify:track:786ymAh5BmHoIpvjyrvjXk");
-var client = await SpotifyRuntime.Authenticate(loginCredentials);
+var client = await SpotifyRuntime.Authenticate(None, loginCredentials);
 
 var playbackConfig = new SpotifyPlaybackConfig(
     DeviceName: "Wavee",
@@ -31,11 +31,12 @@ var playbackConfig = new SpotifyPlaybackConfig(
     PreferredQualityType.High,
     ushort.MaxValue / 2
 );
-var playbackStream = await client.StreamAudio(trackId, playbackConfig);
-var decoder = new VorbisWaveReader(playbackStream.AsStream());
-var waveOut = new WaveOutEvent();
-waveOut.Init(decoder);
-waveOut.Play();
+// var playbackStream = await client.StreamAudio(trackId, playbackConfig);
+// var decoder = new VorbisWaveReader(playbackStream.AsStream());
+// var waveOut = new WaveOutEvent();
+// waveOut.Init(decoder);
+// waveOut.Play();
+//var searchTest = await client.Mercury.Search("jukjae", "artist");
 
 while (true)
 {

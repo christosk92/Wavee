@@ -16,7 +16,7 @@ public interface AudioOutputIO
 /// </summary>
 /// <typeparam name="RT">Runtime</typeparam>
 [Typeclass("*")]
-internal interface HasAudioOutput<RT> : HasCancel<RT>
+public interface HasAudioOutput<RT> : HasCancel<RT>
     where RT : struct, HasCancel<RT>
 {
     /// <summary>

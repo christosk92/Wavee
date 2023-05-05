@@ -13,6 +13,7 @@
 
     <ItemGroup>
       <PackageReference Include="Base62-Net" Version="1.2.157201" />
+      <PackageReference Include="LanguageExt.Rx" Version="4.4.3" />
     </ItemGroup>
 
 </Project>

@@ -5,6 +5,7 @@ using System.Runtime.CompilerServices;
 using System.Threading.Channels;
 using Eum.Spotify;
 using LanguageExt.Effects.Traits;
+using LanguageExt.UnsafeValueAccess;
 using Wavee.Infrastructure.Live;
 using Wavee.Infrastructure.Sys.IO;
 using Wavee.Infrastructure.Traits;
@@ -37,14 +38,22 @@ public static class SpotifyRuntime
 
     internal static ChannelReader<Either<Error, SpotifyPacket>> GetChannelReader(Guid connectionId)
     {
+        var connections = Connections;
         var newReader = Channel.CreateUnbounded<Either<Error, SpotifyPacket>>();
         atomic(() =>
         {
-            Connections.Swap(oldConns =>
+            connections.Swap(oldConns =>
             {
                 return oldConns.AddOrUpdate(connectionId,
                     Some: controller => controller with { Reader = controller.Reader.Add(newReader) },
-                    None: () => throw new KeyNotFoundException("Connection not found"));
+                    None: () =>
+                    {
+                        var newChannel = Channel.CreateUnbounded<SpotifyPacket>();
+                        return new ConnectionController(newChannel, new Seq<Channel<Either<Error, SpotifyPacket>>>(new[]
+                        {
+                            newReader
+                        }));
+                    });
             });
         });
 
@@ -60,6 +69,13 @@ public static class SpotifyRuntime
         return writer;
     }
 
+    public static ISpotifyClient Create()
+    {
+        var connectionId = Guid.NewGuid();
+        var newClient = new SpotifyClient<WaveeRuntime>(connectionId, WaveeCore.Runtime);
+        return newClient;
+    }
+
     /// <summary>
     /// Create a new connection to Spotify.
     /// </summary>
@@ -73,14 +89,21 @@ public static class SpotifyRuntime
     /// A new <see cref="ISpotifyClient"/> instance.
     /// </returns>
     public static async ValueTask<ISpotifyClient> Authenticate(
+        Option<ISpotifyClient> existingClient,
         LoginCredentials credentials,
         bool autoReconnect = true)
     {
         const string apResolve = "https://apresolve.spotify.com/?type=accesspoint";
 
-        var connectionId = Guid.NewGuid();
 
-        var newClient = new SpotifyClient<WaveeRuntime>(connectionId, WaveeCore.Runtime);
+        var (connectionId, newClient) = existingClient.BiMap(
+            Some: client => (client.ConnectionId, client as ISpotifyClient),
+            None: () =>
+            {
+                var connectionId = Guid.NewGuid();
+                return (connectionId, new SpotifyClient<WaveeRuntime>(connectionId, WaveeCore.Runtime));
+            })
+            .ValueUnsafe();
 
         var result =
             await Authenticate<WaveeRuntime>(newClient, credentials, apResolve, autoReconnect, connectionId,
@@ -88,7 +111,7 @@ public static class SpotifyRuntime
                 .Run(WaveeCore.Runtime);
 
         return result.Match(
-            Succ: welcome => newClient.OnApWelcome(welcome),
+            Succ: welcome => (newClient as SpotifyClient<WaveeRuntime>)!.OnApWelcome(welcome),
             Fail: e => throw e);
     }
 
@@ -100,10 +123,15 @@ public static class SpotifyRuntime
         Ref<HashMap<Guid, ConnectionController>> connections) where RT : struct, HasHttp<RT>, HasTCP<RT> =>
         from ct in cancelToken<RT>()
         let deviceId = Guid.NewGuid().ToString()
-        let channel = Channel.CreateUnbounded<SpotifyPacket>()
-        let connectionController =
-            new ConnectionController(channel.Writer, LanguageExt.Seq<Channel<Either<Error, SpotifyPacket>>>.Empty)
-        let _ = atomic(() => connections.Swap(f => f.Add(connectionId, connectionController)))
+        let connectionController = atomic(() => connections.Swap(k =>
+        {
+            return k.AddOrUpdate(connectionId, Some: controller => controller, None: () =>
+            {
+                var channel = Channel.CreateUnbounded<SpotifyPacket>();
+                return new ConnectionController(channel, LanguageExt.Seq<Channel<Either<Error, SpotifyPacket>>>.Empty);
+            });
+        }))
+        from channel in connectionController.Find(connectionId).ToEff().Map(x => x.Sender)
         from welcomeMessage in AuthenticateWithTcp<RT>(client, channel.Reader, apResolveUrl, credentials, connectionId,
             deviceId,
             autoCorrect, ct)
@@ -290,7 +318,7 @@ public static class SpotifyRuntime
                             .IfSome(connections =>
                             {
                                 var pong = new SpotifyPacket(SpotifyPacketType.Pong, new byte[4]);
-                                connections.Value.Sender.TryWrite(pong);
+                                connections.Value.Sender.Writer.TryWrite(pong);
                             });
                         break;
                     case SpotifyPacketType.ProductInfo or SpotifyPacketType.CountryCode
@@ -327,5 +355,5 @@ public static class SpotifyRuntime
 /// <param name="Reader">
 /// The channel reader used to read packets from Spotify. Use this to read decrypted packets from Spotify.
 /// </param>
-internal readonly record struct ConnectionController(ChannelWriter<SpotifyPacket> Sender,
+internal readonly record struct ConnectionController(Channel<SpotifyPacket> Sender,
     Seq<Channel<Either<Error, SpotifyPacket>>> Reader);
