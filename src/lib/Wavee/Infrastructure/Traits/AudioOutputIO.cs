@@ -1,6 +1,9 @@
-﻿namespace Wavee.Infrastructure.Traits;
+﻿using LanguageExt.Attributes;
+using LanguageExt.Effects.Traits;
 
-internal interface AudioOutputIO
+namespace Wavee.Infrastructure.Traits;
+
+public interface AudioOutputIO
 {
     ValueTask<Unit> Write(ReadOnlyMemory<byte> data);
     ValueTask<Unit> Write(ReadOnlyMemory<double> data);

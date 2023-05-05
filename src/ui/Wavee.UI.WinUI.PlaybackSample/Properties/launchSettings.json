@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "Wavee.UI.WinUI.PlaybackSample (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "Wavee.UI.WinUI.PlaybackSample (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}

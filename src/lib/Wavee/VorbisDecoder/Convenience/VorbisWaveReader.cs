@@ -3,7 +3,7 @@ using Wavee.VorbisDecoder.Contracts;
 
 namespace Wavee.VorbisDecoder.Convenience
 {
-    internal class VorbisWaveReader : WaveStream, ISampleProvider
+    public class VorbisWaveReader : WaveStream, ISampleProvider
     {
         VorbisSampleProvider _sampleProvider;
 

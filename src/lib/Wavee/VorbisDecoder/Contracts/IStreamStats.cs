@@ -3,7 +3,7 @@
     /// <summary>
     /// Describes an interface for reading statistics about the current stream.
     /// </summary>
-    internal interface IStreamStats
+    public interface IStreamStats
     {
         /// <summary>
         /// Resets the counters for bit rate and bits.

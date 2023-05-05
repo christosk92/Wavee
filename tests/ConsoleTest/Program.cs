@@ -3,56 +3,69 @@ using System.Text;
 using Eum.Spotify;
 using Eum.Spotify.connectstate;
 using Google.Protobuf;
-using LanguageExt.UnsafeValueAccess;
-using Wavee;
-using Wavee.Spotify;
-using Wavee.Spotify.Helpers.Extensions;
-using Wavee.Spotify.Models.Response.Artist;
-using Wavee.Spotify.Remote;
-using Wavee.Spotify.Remote.Infrastructure.Live;
+using NAudio.Wave;
+using Wavee.Spotify.Clients.Mercury;
+using Wavee.Spotify.Common;
+using Wavee.Spotify.Infrastructure.Sys;
+using Wavee.Spotify.Playback;
+using Wavee.Spotify.Playback.Infrastructure.Sys;
+using Wavee.VorbisDecoder.Convenience;
+using static LanguageExt.Prelude;
 
-
-var credentials = new LoginCredentials
+var loginCredentials = new LoginCredentials
 {
     Username = Environment.GetEnvironmentVariable("SPOTIFY_USERNAME"),
     AuthData = ByteString.CopyFromUtf8(Environment.GetEnvironmentVariable("SPOTIFY_PASSWORD")),
     Typ = AuthenticationType.AuthenticationUserPass
 };
-var spotifyClient = SpotifyClientBuilder.New().Build();
+//https://open.spotify.com/track/786ymAh5BmHoIpvjyrvjXk?si=3c109608329441ce
+//https://open.spotify.com/track/2CgOd0Lj5MuvOqzqdaAXtS?si=32ac013b22c4435f
+//https://open.spotify.com/track/4ewazQLXFTDC8XvCbhvtXs?si=52de2819ac6d47fd
+//https://open.spotify.com/track/0mf82mK5aeZm4vN9HM2InQ?si=df4d118bb389440f
+var trackId = new SpotifyId("spotify:track:786ymAh5BmHoIpvjyrvjXk");
+var client = await SpotifyRuntime.Authenticate(loginCredentials);
 
-spotifyClient.ConnectionStateChanged.Subscribe(j => { Console.WriteLine($"Connection state changed to {j}"); });
-spotifyClient.CountryCodeChanged.Subscribe(j => { Console.WriteLine($"Country code changed to {j}"); });
-spotifyClient.ProductInfoChanged.Subscribe(j =>
-{
-    if (j.IsSome)
-    {
-        var dict = j.ValueUnsafe();
-        foreach (var (key, value) in dict)
-        {
-            Console.WriteLine($"{key} = {value}");
-        }
-    }
-});
+var playbackConfig = new SpotifyPlaybackConfig(
+    DeviceName: "Wavee",
+    DeviceType.Computer,
+    PreferredQualityType.High,
+    ushort.MaxValue / 2
+);
+var playbackStream = await client.StreamAudio(trackId, playbackConfig);
+var decoder = new VorbisWaveReader(playbackStream.AsStream());
+var waveOut = new WaveOutEvent();
+waveOut.Init(decoder);
+waveOut.Play();
 
-await spotifyClient.Connect(credentials);
-var player = new WaveePlayer();
-var remote = new LiveSpotifyRemote(spotifyClient, player,
-    new SpotifyPlaybackConfig("Wavee",
-        DeviceType.Computer, PreferredQualityType.High, ushort.MaxValue / 2));
-await remote.Connect();
 while (true)
 {
+    var msg = Console.ReadLine();
+    var sw = Stopwatch.StartNew();
+
+    //format is [GET|SEND|] uri
+    MercuryMethod method;
+    if (msg.StartsWith("get "))
+    {
+        method = MercuryMethod.Get;
+        msg = msg.Substring(4);
+    }
+    else if (msg.StartsWith("send "))
+    {
+        method = MercuryMethod.Send;
+        msg = msg.Substring(5);
+    }
+    else
+    {
+        method = MercuryMethod.Get;
+    }
+
+    var test = await client.Mercury.Send(
+        method,
+        msg,
+        None);
+    sw.Stop();
+    Console.WriteLine($"Elapsed: {sw.ElapsedMilliseconds}ms");
+    Console.WriteLine($"{test.Header.StatusCode}");
+    Console.WriteLine(Encoding.UTF8.GetString(test.Body.Span));
     GC.Collect();
-    //hm://artist/v1/2dd5mrQZvg6SmahdgVKDzh/desktop?format=json&catalogue=premium&langauge=kr
-    var uri = Console.ReadLine();
-    var sw2 = Stopwatch.StartNew();
-    var k = await spotifyClient.Mercury.Get(uri);
-    sw2.Stop();
-
-    var artist = k.DeserializeFromJson<MercuryArtist>()
-        .IfNone(() => throw new Exception("Failed to deserialize artist"));
-
-    Console.WriteLine($"Mercury request took {sw2.ElapsedMilliseconds}ms");
 }
-
-Console.ReadLine();

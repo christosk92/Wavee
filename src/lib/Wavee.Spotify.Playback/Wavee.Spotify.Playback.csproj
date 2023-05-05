@@ -7,12 +7,13 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Wavee.Spotify\Wavee.Spotify\Wavee.Spotify.csproj" />
-      <ProjectReference Include="..\Wavee\Wavee.csproj" />
+      <PackageReference Include="BouncyCastle.Cryptography" Version="2.2.1" />
+      <PackageReference Include="LanguageExt.Core" Version="4.4.3" />
+      <PackageReference Include="NAudio" Version="2.1.0" />
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="Infrastructure\" />
+      <ProjectReference Include="..\Wavee.Spotify\Wavee.Spotify.csproj" />
     </ItemGroup>
 
 </Project>

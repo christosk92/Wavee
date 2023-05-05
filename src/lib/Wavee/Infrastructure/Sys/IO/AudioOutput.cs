@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics.Contracts;
 using System.Runtime.CompilerServices;
+using LanguageExt.Effects.Traits;
 using Wavee.Infrastructure.Traits;
 
 namespace Wavee.Infrastructure.Sys.IO;
