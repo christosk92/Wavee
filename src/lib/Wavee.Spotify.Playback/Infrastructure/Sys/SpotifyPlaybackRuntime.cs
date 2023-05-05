@@ -4,6 +4,7 @@ using System.Net.Http.Headers;
 using System.Runtime.CompilerServices;
 using Google.Protobuf;
 using LanguageExt.Effects.Traits;
+using LanguageExt.UnsafeValueAccess;
 using Spotify.Metadata;
 using Wavee.Common;
 using Wavee.Infrastructure.Live;
@@ -55,7 +56,8 @@ public static class SpotifyPlaybackRuntime
             or AudioFile.Types.Format.OggVorbis320
         from encryptedStream in OpenEncryptedStream<RT>(cdnUrl.Urls.First(), metadata)
         from decryptedStream in OpenDecryptionStream<RT>(encryptedStream, audioKey, isVorbis)
-        from subFile in ExtractSubFile<RT>(decryptedStream.Stream, decryptedStream.NormalisationDatas, isVorbis, fileId, metadata)
+        from subFile in ExtractSubFile<RT>(decryptedStream.Stream, decryptedStream.NormalisationDatas, isVorbis, fileId,
+            metadata)
         select (ISpotifyStream)subFile;
 
     private static Error CheckRestrictions(TrackOrEpisode metadata)
@@ -158,9 +160,9 @@ public static class SpotifyPlaybackRuntime
         from mercuryResponse in (itemId.Type switch
         {
             AudioItemType.Track => client.Mercury.GetTrack(itemId.ToHex(), ct).ToAff()
-                .Map(x => new TrackOrEpisode(x, None)),
+                .Map(x => new TrackOrEpisode(Right(x))),
             AudioItemType.Episode => client.Mercury.GetEpisode(itemId.ToHex(), ct).ToAff()
-                .Map(x => new TrackOrEpisode(None, x)),
+                .Map(x => new TrackOrEpisode(Left(x))),
             _ => throw new NotImplementedException()
         })
         select mercuryResponse;
@@ -195,7 +197,7 @@ public static class SpotifyPlaybackRuntime
     }
 }
 
-public readonly record struct TrackOrEpisode(Option<Track> Track, Option<Episode> Episode)
+public readonly record struct TrackOrEpisode(Either<Episode, Track> Value)
 {
     static TrackOrEpisode()
     {
@@ -238,16 +240,43 @@ public readonly record struct TrackOrEpisode(Option<Track> Track, Option<Episode
 
     public Option<AudioFile> FindFile(PreferredQualityType quality)
     {
-        var track = Track;
-        var episode = Episode;
-        return FormatsMap.Find(quality)
-            .Bind(formats => track.Match(
-                Some: t => t.File.Find(f => formats.Contains(f.Format)),
-                None: () => episode.Match(
-                    Some: e => e.Audio.Find(f => formats.Contains(f.Format)),
-                    None: () => None
-                )
-            ));
+        return Value.Match(
+            Left: e =>
+            {
+                return e.Audio
+                    .Find(f =>
+                    {
+                        var r = FormatsMap.Find(quality).Map(x => x.Contains(f.Format));
+                        return r.Match(
+                            Some: t => t,
+                            None: () => false
+                        );
+                    });
+            },
+            Right: t =>
+            {
+                return t.File
+                    .Find(f =>
+                    {
+                        var r = FormatsMap.Find(quality).Map(x => x.Contains(f.Format));
+                        return r.Match(
+                            Some: t => t,
+                            None: () => false
+                        );
+                    });
+            }
+        );
+        // var track = Track;
+        // var episode = Episode;
+        // return FormatsMap
+        //     .Find(quality)
+        //     .Bind(formats => track.Match(
+        //         Some: t => t.File.Find(f => formats.Contains(f.Format)),
+        //         None: () => episode.Match(
+        //             Some: e => e.Audio.Find(f => formats.Contains(f.Format)),
+        //             None: () => None
+        //         )
+        //     ));
     }
 
     public Option<AudioFile> FindAlternativeFile(PreferredQualityType quality)

@@ -10,6 +10,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="LanguageExt.Core" Version="4.4.3" />
         <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.5.0" />
         <PackageReference Include="Moq" Version="4.18.4" />
         <PackageReference Include="xunit" Version="2.4.2" />
@@ -27,8 +28,6 @@
       <ProjectReference Include="..\..\src\lib\Wavee.Spotify.Proto\Wavee.Spotify.Proto.csproj" />
       <ProjectReference Include="..\..\src\lib\Wavee.Spotify\Wavee.Spotify.csproj" />
       <ProjectReference Include="..\..\src\lib\Wavee\Wavee.csproj" />
-      <ProjectReference Include="..\..\Wavee\Wavee.Spotify\Wavee.Spotify.csproj" />
-      <ProjectReference Include="..\..\Wavee\Wavee\Wavee.csproj" />
     </ItemGroup>
 
 </Project>
