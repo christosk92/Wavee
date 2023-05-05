@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\lib\Wavee.Spotify.Playback\Wavee.Spotify.Playback.csproj" />
+    <ProjectReference Include="..\..\lib\Wavee.Spotify\Wavee.Spotify.csproj" />
+    <ProjectReference Include="..\..\lib\Wavee\Wavee.csproj" />
+  </ItemGroup>
+	<ItemGroup>
+		<PublishReadyToRunExclude Include="LanguageExt.Core.dll" />
+	</ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="LanguageExt.Core" Version="4.4.3" />
+		<PackageReference Include="ReactiveUI" Version="18.4.34" />
+	</ItemGroup>
+</Project>
