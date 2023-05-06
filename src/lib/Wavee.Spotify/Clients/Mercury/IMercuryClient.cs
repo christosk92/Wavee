@@ -1,9 +1,11 @@
 ﻿using System.Text;
 using System.Text.Json;
 using System.Web;
+using LanguageExt.Effects.Traits;
 using LanguageExt.UnsafeValueAccess;
 using Spotify.Metadata;
 using Wavee.Common;
+using Wavee.Spotify.Clients.SpApi;
 using Wavee.Spotify.Common;
 using Wavee.Spotify.Infrastructure.Sys;
 
@@ -21,6 +23,8 @@ public interface IMercuryClient
 
     ValueTask<Track> GetTrack(string id, CancellationToken cancellationToken = default);
     ValueTask<Episode> GetEpisode(string id, CancellationToken cancellationToken = default);
+
+    ValueTask<string> FetchBearer(CancellationToken ct = default);
 }
 
 public readonly record struct SearchResponse(Seq<SearchCategory> Categories)
@@ -99,19 +103,24 @@ public readonly record struct TrackSearchHit(SpotifyId Id, string Name, Seq<Name
 
 public readonly record struct NameUriCombo(SpotifyId Id, string Name);
 
-internal readonly struct MercuryClientImpl : IMercuryClient
+internal readonly struct MercuryClientImpl<RT> : IMercuryClient where RT : struct, HasCancel<RT>
 {
     private readonly Guid _connectionId;
     private readonly Ref<Option<ulong>> _nextMercurySequence;
     private readonly Option<string> _countryCodeRef;
+    private static Ref<HashMap<string, BearerToken>> _bearerCache = Ref(LanguageExt.HashMap<string, BearerToken>.Empty);
+    private readonly RT _rt;
+    private readonly Option<string> _userId;
 
     public MercuryClientImpl(Guid connectionId,
         Ref<Option<ulong>> nextMercurySequence,
-        Option<string> countryCodeRef)
+        Option<string> countryCodeRef, Option<string> userId, RT rt)
     {
         _connectionId = connectionId;
         _nextMercurySequence = nextMercurySequence;
         _countryCodeRef = countryCodeRef;
+        _userId = userId;
+        _rt = rt;
     }
 
     public async ValueTask<MercuryResponse> Send(MercuryMethod method, string uri, Option<string> contentType)
@@ -173,4 +182,48 @@ internal readonly struct MercuryClientImpl : IMercuryClient
             _ => throw new InvalidOperationException()
         };
     }
+
+    public async ValueTask<string> FetchBearer(CancellationToken ct = default)
+    {
+        if (_userId.IsNone)
+            throw new InvalidOperationException("No user id set");
+        var bearer = await FetchBearer(this, _userId.ValueUnsafe(), _bearerCache)
+            .Run(_rt);
+        return bearer.Match(
+            Succ: r => r,
+            Fail: ex => throw ex
+        );
+    }
+
+    internal static Aff<RT, string> FetchBearer(IMercuryClient mercuryClient, string userId,
+        Ref<HashMap<string, BearerToken>> cache)
+    {
+        var cacheMaybe = cache.Value.Find(userId).Bind(x => !x.Expired ? Some(x) : None);
+        if (cacheMaybe.IsSome)
+            return SuccessAff(cacheMaybe.ValueUnsafe().AccessToken);
+
+        return
+            from token in FetchBearerToken(mercuryClient)
+            from newCache in Eff<HashMap<string, BearerToken>>(() => atomic(() => cache.Swap(f =>
+            {
+                var k = f.AddOrUpdate(userId, token);
+                return k;
+            })))
+            select newCache.Find(userId).ValueUnsafe().AccessToken;
+    }
+
+    private static Aff<RT, BearerToken> FetchBearerToken(IMercuryClient mercuryClient)
+    {
+        const string keymasterurl = "hm://keymaster/token/authenticated?scope={0}&client_id={1}&device_id=";
+        const string scopes =
+            "app-remote-control,playlist-modify,playlist-modify-private,playlist-modify-public,playlist-read,playlist-read-collaborative,playlist-read-private,streaming,ugc-image-upload,user-follow-modify,user-follow-read,user-library-modify,user-library-read,user-modify,user-modify-playback-state,user-modify-private,user-personalized,user-read-birthdate,user-read-currently-playing,user-read-email,user-read-play-history,user-read-playback-position,user-read-playback-state,user-read-private,user-read-recently-played,user-top-read";
+        const string clientId = SpotifyConstants.KEYMASTER_CLIENT_ID;
+        var url = string.Format(keymasterurl, scopes, clientId);
+
+        return
+            from response in mercuryClient.Send(MercuryMethod.Get, url, None).ToAff()
+            from bearerToken in Eff(() => BearerToken.ParseFrom(response.Body))
+            select bearerToken;
+    }
+
 }

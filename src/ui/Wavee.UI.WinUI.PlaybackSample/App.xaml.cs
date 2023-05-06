@@ -32,8 +32,8 @@ namespace Wavee.UI.WinUI.PlaybackSample
             m_window = new MainWindow();
             m_window.Activate();
 
-            await WaveeCore.Player.Command(new PlayContextCommand(new DummyContext(), Option<int>.None, Option<TimeSpan>.None,
-                Option<bool>.None));
+            // await WaveeCore.Player.Command(new PlayContextCommand(new DummyContext(), Option<int>.None, Option<TimeSpan>.None,
+            //     Option<bool>.None));
         }
 
         private Window m_window;

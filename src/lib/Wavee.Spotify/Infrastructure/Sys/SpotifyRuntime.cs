@@ -93,9 +93,6 @@ public static class SpotifyRuntime
         LoginCredentials credentials,
         bool autoReconnect = true)
     {
-        const string apResolve = "https://apresolve.spotify.com/?type=accesspoint";
-
-
         var (connectionId, newClient) = existingClient.BiMap(
             Some: client => (client.ConnectionId, client as ISpotifyClient),
             None: () =>
@@ -106,7 +103,7 @@ public static class SpotifyRuntime
             .ValueUnsafe();
 
         var result =
-            await Authenticate<WaveeRuntime>(newClient, credentials, apResolve, autoReconnect, connectionId,
+            await Authenticate<WaveeRuntime>(newClient, credentials, autoReconnect, connectionId,
                     Connections)
                 .Run(WaveeCore.Runtime);
 
@@ -117,10 +114,9 @@ public static class SpotifyRuntime
 
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static Aff<RT, APWelcome> Authenticate<RT>(ISpotifyClient client, LoginCredentials credentials,
-        string apResolveUrl,
         bool autoCorrect,
         Guid connectionId,
-        Ref<HashMap<Guid, ConnectionController>> connections) where RT : struct, HasHttp<RT>, HasTCP<RT> =>
+        Ref<HashMap<Guid, ConnectionController>> connections) where RT : struct, HasHttp<RT>, HasTCP<RT>, HasWebsocket<RT> =>
         from ct in cancelToken<RT>()
         let deviceId = Guid.NewGuid().ToString()
         let connectionController = atomic(() => connections.Swap(k =>
@@ -132,7 +128,7 @@ public static class SpotifyRuntime
             });
         }))
         from channel in connectionController.Find(connectionId).ToEff().Map(x => x.Sender)
-        from welcomeMessage in AuthenticateWithTcp<RT>(client, channel.Reader, apResolveUrl, credentials, connectionId,
+        from welcomeMessage in AuthenticateWithTcp<RT>(client, channel.Reader, credentials, connectionId,
             deviceId,
             autoCorrect, ct)
         select welcomeMessage;
@@ -140,22 +136,21 @@ public static class SpotifyRuntime
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static Aff<RT, APWelcome> AuthenticateWithTcp<RT>(
         ISpotifyClient client,
-        ChannelReader<SpotifyPacket> reader, string apResolveUrl, LoginCredentials credentials,
+        ChannelReader<SpotifyPacket> reader, LoginCredentials credentials,
         Guid connectionId,
         string deviceId,
         bool autoCorrect, CancellationToken ct)
-        where RT : struct, HasHttp<RT>, HasTCP<RT> =>
-        ConnectAndAuthenticate<RT>(apResolveUrl, credentials, deviceId)
+        where RT : struct, HasHttp<RT>, HasTCP<RT>, HasWebsocket<RT> =>
+        ConnectAndAuthenticate<RT>( credentials, deviceId)
             .Bind(p =>
-                HandleDisconnection<RT>(client, reader, apResolveUrl, credentials, connectionId, deviceId, autoCorrect,
+                HandleDisconnection<RT>(client, reader, credentials, connectionId, deviceId, autoCorrect,
                         ct, p.Item2, p.Item3)
                     .Map(_ => p.Item1));
 
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static Aff<RT, (APWelcome, NetworkStream, SpotifyEncryptionRecord)> ConnectAndAuthenticate<RT>(
-        string apResolveUrl, LoginCredentials credentials, string deviceId)
+    private static Aff<RT, (APWelcome, NetworkStream, SpotifyEncryptionRecord)> ConnectAndAuthenticate<RT>(LoginCredentials credentials, string deviceId)
         where RT : struct, HasHttp<RT>, HasTCP<RT> =>
-        from hostPortResponse in AP<RT>.FetchHostAndPort(apResolveUrl)
+        from hostPortResponse in AP<RT>.FetchHostAndPort()
         from tcpClient in Tcp<RT>.Connect(hostPortResponse.Host, hostPortResponse.Port)
         let stream = tcpClient.GetStream()
         from clientHelloResult in Handshake<RT>.PerformClientHello(stream)
@@ -167,7 +162,6 @@ public static class SpotifyRuntime
     private static Aff<RT, Unit> HandleDisconnection<RT>(
         ISpotifyClient client,
         ChannelReader<SpotifyPacket> reader,
-        string apResolveUrl,
         LoginCredentials credentials,
         Guid connectionId,
         string deviceId,
@@ -175,7 +169,7 @@ public static class SpotifyRuntime
         CancellationToken ct,
         NetworkStream stream,
         SpotifyEncryptionRecord encryptionRecord)
-        where RT : struct, HasHttp<RT>, HasTCP<RT> =>
+        where RT : struct, HasHttp<RT>, HasTCP<RT>, HasWebsocket<RT> =>
         Eff<RT, Unit>((r) =>
         {
             Task.Run(async () =>
@@ -186,7 +180,7 @@ public static class SpotifyRuntime
                     {
                         if (autoCorrect)
                         {
-                            await Reconnect<RT>(client, reader, apResolveUrl, credentials, connectionId, deviceId, ct,
+                            await Reconnect<RT>(client, reader, credentials, connectionId, deviceId, ct,
                                 r);
                         }
                         else
@@ -203,19 +197,18 @@ public static class SpotifyRuntime
     internal static async Task<Unit> Reconnect<RT>(
         ISpotifyClient client,
         ChannelReader<SpotifyPacket> reader,
-        string apResolveUrl,
         LoginCredentials credentials,
         Guid connectionId,
         string deviceId,
         CancellationToken ct,
         RT runtime)
-        where RT : struct, HasHttp<RT>, HasTCP<RT>
+        where RT : struct, HasHttp<RT>, HasTCP<RT>, HasWebsocket<RT>
     {
         bool connected = false;
         while (!connected)
         {
             var result =
-                await AuthenticateWithTcp<RT>(client, reader, apResolveUrl, credentials, connectionId, deviceId, true,
+                await AuthenticateWithTcp<RT>(client, reader, credentials, connectionId, deviceId, true,
                     ct).Run(runtime);
             if (result.IsSucc)
             {

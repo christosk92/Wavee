@@ -45,7 +45,7 @@ namespace Wavee.UI.WinUI.PlaybackSample
 
                 this.OneWayBind(ViewModel,
                         viewModel => viewModel.SearchResults,
-                        view => view.searchTextBox.ItemsSource)
+                        view => view.SearchResults.ItemsSource)
                     .DisposeWith(disposable);
 
                 // We should avoid this binding, since it will cause the searchTextBox to lose focus
@@ -176,18 +176,18 @@ namespace Wavee.UI.WinUI.PlaybackSample
             }
         }
 
-        private void SearchTextBox_OnSuggestionChosen(AutoSuggestBox sender, AutoSuggestBoxSuggestionChosenEventArgs args)
-        {
-
-        }
-
-        private async void SearchTextBox_OnQuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
-        {
-            if (args.ChosenSuggestion is TrackViewModel track)
-            {
-                await ViewModel.SelectedItem(track);
-            }
-        }
+        // private void SearchTextBox_OnSuggestionChosen(AutoSuggestBox sender, AutoSuggestBoxSuggestionChosenEventArgs args)
+        // {
+        //
+        // }
+        //
+        // private async void SearchTextBox_OnQuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
+        // {
+        //     if (args.ChosenSuggestion is TrackViewModel track)
+        //     {
+        //         await ViewModel.SelectedItem(track);
+        //     }
+        // }
 
         private void RefreshViewTapped(object sender, TappedRoutedEventArgs e)
         {
@@ -198,6 +198,12 @@ namespace Wavee.UI.WinUI.PlaybackSample
         {
             ViewModel.Cleanup();
             ViewModel = null;
+        }
+
+        private void SearchResults_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (e.AddedItems.Count > 0)
+                ViewModel.SelectedItem((TrackViewModel)e.AddedItems[0]);
         }
     }
 }

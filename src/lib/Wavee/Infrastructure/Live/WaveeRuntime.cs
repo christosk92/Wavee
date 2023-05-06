@@ -6,7 +6,9 @@ namespace Wavee.Infrastructure.Live;
 public readonly struct WaveeRuntime :
     HasCancel<WaveeRuntime>,
     HasTCP<WaveeRuntime>,
-    HasHttp<WaveeRuntime>, HasAudioOutput<WaveeRuntime>
+    HasHttp<WaveeRuntime>, 
+    HasAudioOutput<WaveeRuntime>,
+    HasWebsocket<WaveeRuntime>
 {
     readonly RuntimeEnv env;
 
@@ -60,7 +62,9 @@ public readonly struct WaveeRuntime :
     public Eff<WaveeRuntime, Traits.AudioOutputIO> AudioOutputEff
         => Eff<WaveeRuntime, Traits.AudioOutputIO>(static rt => new AudioOutputIO(rt.Env.NAudioHolder));
 
-    
+    public Eff<WaveeRuntime, WebsocketIO> WsEff =>
+        SuccessEff(Live.WebsocketIOImpl.Default);
+
     internal class RuntimeEnv
     {
         public readonly CancellationTokenSource Source;

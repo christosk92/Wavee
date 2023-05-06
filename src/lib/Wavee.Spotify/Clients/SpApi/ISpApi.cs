@@ -21,7 +21,6 @@ public interface ISpApi
 internal readonly struct SpApiClientImpl<RT> : ISpApi where RT : struct, HasHttp<RT>
 {
     private static Option<string> _apUrl = Option<string>.None;
-    private static Ref<HashMap<string, BearerToken>> _bearerCache = Ref(LanguageExt.HashMap<string, BearerToken>.Empty);
 
     private readonly IMercuryClient _mercury;
     private readonly RT _runtime;
@@ -36,40 +35,23 @@ internal readonly struct SpApiClientImpl<RT> : ISpApi where RT : struct, HasHttp
 
     public async ValueTask<StorageResolveResponse> GetAudioStorage(ByteString fileId, CancellationToken ct = default)
     {
-        var affResult = await GetAudioStorageInternal(fileId, _mercury, _userId, _bearerCache, ct).Run(_runtime);
+        var affResult = await GetAudioStorageInternal(fileId, _mercury, _userId, ct).Run(_runtime);
         return affResult.Match(
             Succ: x => x,
             Fail: ex => throw ex
         );
     }
 
-    // public async ValueTask<HttpResponseMessage> GetChunk(string cdnUrlUrl, int chunkNumber, int chunkSize,
-    //     CancellationToken ct = default)
-    // {
-    //     var affResult = await GetChunkInternal(cdnUrlUrl, chunkNumber, chunkSize, ct).Run(_runtime);
-    //     return affResult.Match(
-    //         Succ: x => x,
-    //         Fail: ex => throw ex
-    //     );
-    // }
-    //
-    // private Aff<RT, HttpResponseMessage> GetChunkInternal(string cdnUrlUrl, int chunkNumber, int chunkSize,
-    //     CancellationToken ct) =>
-    //     from bearer in FetchBearer(mercuryClient, userId, bearerCache)
-    //         .Map(x => new AuthenticationHeaderValue("Bearer", x))
-    //
-
     private static Aff<RT, StorageResolveResponse> GetAudioStorageInternal(ByteString fileId,
         IMercuryClient mercuryClient,
         string userId,
-        Ref<HashMap<string, BearerToken>> bearerCache,
         CancellationToken ct = default) =>
         from baseUrl in _apUrl.Match(
             Some: x => SuccessAff(x),
             None: () =>
             {
-                var map1 = GetSpClientUrl(ApResolve)
-                    .Map(x => $"https://{x}")
+                var map1 = AP<RT>.FetchSpClient()
+                    .Map(x => $"https://{x.Host}:{x.Port}")
                     .Map(x =>
                     {
                         _apUrl = x;
@@ -77,7 +59,7 @@ internal readonly struct SpApiClientImpl<RT> : ISpApi where RT : struct, HasHttp
                     });
                 return map1;
             })
-        from bearer in FetchBearer(mercuryClient, userId, bearerCache)
+        from bearer in mercuryClient.FetchBearer(ct).ToAff()
             .Map(x => new AuthenticationHeaderValue("Bearer", x))
         let url = $"{baseUrl}/storage-resolve/files/audio/interactive/{ToBase16(fileId.Span)}"
         from response in Http<RT>.Get(url, bearer, Option<HashMap<string, string>>.None, ct)
@@ -104,49 +86,6 @@ internal readonly struct SpApiClientImpl<RT> : ISpApi where RT : struct, HasHttp
     }
 
     private static readonly byte[] BASE16_DIGITS = "0123456789abcdef".Select(c => (byte)c).ToArray();
-
-    private static Aff<RT, string> FetchBearer(IMercuryClient mercuryClient, string userId,
-        Ref<HashMap<string, BearerToken>> cache)
-    {
-        var cacheMaybe = cache.Value.Find(userId).Bind(x => !x.Expired ? Some(x) : None);
-        if (cacheMaybe.IsSome)
-            return SuccessAff(cacheMaybe.ValueUnsafe().AccessToken);
-
-        return
-            from token in FetchBearerToken(mercuryClient)
-            from newCache in Eff<HashMap<string, BearerToken>>(() => atomic(() => cache.Swap(f =>
-            {
-                var k = f.AddOrUpdate(userId, token);
-                return k;
-            })))
-            select newCache.Find(userId).ValueUnsafe().AccessToken;
-    }
-
-    private static Aff<RT, BearerToken> FetchBearerToken(IMercuryClient mercuryClient)
-    {
-        const string keymasterurl = "hm://keymaster/token/authenticated?scope={0}&client_id={1}&device_id=";
-        const string scopes =
-            "app-remote-control,playlist-modify,playlist-modify-private,playlist-modify-public,playlist-read,playlist-read-collaborative,playlist-read-private,streaming,ugc-image-upload,user-follow-modify,user-follow-read,user-library-modify,user-library-read,user-modify,user-modify-playback-state,user-modify-private,user-personalized,user-read-birthdate,user-read-currently-playing,user-read-email,user-read-play-history,user-read-playback-position,user-read-playback-state,user-read-private,user-read-recently-played,user-top-read";
-        const string clientId = SpotifyConstants.KEYMASTER_CLIENT_ID;
-        var url = string.Format(keymasterurl, scopes, clientId);
-
-        return
-            from response in mercuryClient.Send(MercuryMethod.Get, url, None).ToAff()
-            from bearerToken in Eff(() => BearerToken.ParseFrom(response.Body))
-            select bearerToken;
-    }
-
-    const string ApResolve = "https://apresolve.spotify.com/?type=spclient";
-
-    private static Aff<RT, string> GetSpClientUrl(string url) =>
-        from response in Http<RT>.Get(ApResolve, None, Option<HashMap<string, string>>.None)
-            .MapAsync(async x =>
-            {
-                x.EnsureSuccessStatusCode();
-                var data = await x.Content.ReadFromJsonAsync<ApResolveData>();
-                return data;
-            })
-        select response.SpClient.First();
 }
 
 internal readonly record struct BearerToken(
