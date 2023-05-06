@@ -3,6 +3,7 @@ using System.Threading.Channels;
 using Eum.Spotify;
 using LanguageExt.UnsafeValueAccess;
 using Wavee.Spotify.Clients.Mercury;
+using Wavee.Spotify.Contracts.Mercury;
 using Wavee.Spotify.Infrastructure.Connection;
 
 namespace Wavee.Spotify.Infrastructure.Sys;
@@ -136,5 +137,3 @@ internal static class MercuryRuntime
             None: () => (ulong)0))).ValueUnsafe();
     }
 }
-
-public readonly record struct MercuryResponse(Header Header, ReadOnlyMemory<byte> Body);

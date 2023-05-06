@@ -1,4 +1,5 @@
 using Google.Protobuf;
+using Wavee.Spotify.Contracts;
 
 namespace Wavee.Spotify.Playback.Cdn;
 

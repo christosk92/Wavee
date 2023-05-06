@@ -2,7 +2,8 @@
 using System.Threading.Channels;
 using Google.Protobuf;
 using LanguageExt.UnsafeValueAccess;
-using Wavee.Spotify.Common;
+using Wavee.Spotify.Contracts.AudioKeys;
+using Wavee.Spotify.Contracts.Common;
 using Wavee.Spotify.Infrastructure.Connection;
 
 namespace Wavee.Spotify.Infrastructure.Sys;
@@ -72,5 +73,3 @@ internal static class AudioKeyRuntime
             None: () => (uint)0))).ValueUnsafe();
     }
 }
-
-public readonly record struct AesKeyError(byte ErrorCode, byte ErrorType);

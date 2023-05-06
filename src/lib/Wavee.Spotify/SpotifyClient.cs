@@ -1,17 +1,17 @@
-﻿using System.Net.WebSockets;
-using System.Text;
+﻿using System.Text;
 using Eum.Spotify;
-using Eum.Spotify.connectstate;
-using Wavee.Infrastructure.Sys.IO;
 using Wavee.Infrastructure.Traits;
 using Wavee.Spotify.Clients.AudioKeys;
 using Wavee.Spotify.Clients.Mercury;
 using Wavee.Spotify.Clients.SpApi;
-using Wavee.Spotify.Infrastructure.ApResolver;
+using Wavee.Spotify.Contracts;
+using Wavee.Spotify.Contracts.AudioKeys;
+using Wavee.Spotify.Contracts.Mercury;
+using Wavee.Spotify.Contracts.Remote;
+using Wavee.Spotify.Contracts.SpApi;
 using Wavee.Spotify.Infrastructure.Connection;
 using Wavee.Spotify.Infrastructure.Sys;
 using Wavee.Spotify.Remote;
-using Wavee.Spotify.Remote.Infrastructure.Sys;
 
 namespace Wavee.Spotify;
 

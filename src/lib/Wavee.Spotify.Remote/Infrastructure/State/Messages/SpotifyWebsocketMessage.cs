@@ -1,7 +1,5 @@
 ﻿using System.IO.Compression;
 using System.Text.Json;
-using Eum.Spotify.connectstate;
-using LanguageExt;
 
 namespace Wavee.Spotify.Remote.Infrastructure.State.Messages;
 

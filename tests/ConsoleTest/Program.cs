@@ -3,9 +3,10 @@ using System.Text;
 using Eum.Spotify;
 using Eum.Spotify.connectstate;
 using Google.Protobuf;
+using Wavee;
 using Wavee.Spotify;
 using Wavee.Spotify.Clients.Mercury;
-using Wavee.Spotify.Common;
+using Wavee.Spotify.Contracts.Common;
 using Wavee.Spotify.Infrastructure.Sys;
 using Wavee.Spotify.Playback;
 using static LanguageExt.Prelude;
@@ -24,7 +25,9 @@ var trackId = new SpotifyId("spotify:track:786ymAh5BmHoIpvjyrvjXk");
 
 var spotifyConfig = new SpotifyConfig(DeviceName: "Wavee",
     DeviceType.Computer);
-var client = await SpotifyRuntime.Authenticate(spotifyConfig, None, loginCredentials);
+var client = await SpotifyRuntime.Authenticate(
+    WaveeCore.Player,
+    spotifyConfig, None, loginCredentials);
 
 var playbackConfig = new SpotifyPlaybackConfig(
     PreferredQualityType.High,

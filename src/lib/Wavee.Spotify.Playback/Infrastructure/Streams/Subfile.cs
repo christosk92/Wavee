@@ -1,5 +1,4 @@
-﻿using Google.Protobuf;
-using Spotify.Metadata;
+﻿using Spotify.Metadata;
 using Wavee.Infrastructure.Traits;
 using Wavee.Player.Playback;
 using Wavee.Spotify.Playback.Infrastructure.Sys;

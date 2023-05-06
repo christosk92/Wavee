@@ -1,14 +1,9 @@
 ﻿using Google.Protobuf;
-using Wavee.Spotify.Common;
+using Wavee.Spotify.Contracts.AudioKeys;
+using Wavee.Spotify.Contracts.Common;
 using Wavee.Spotify.Infrastructure.Sys;
 
 namespace Wavee.Spotify.Clients.AudioKeys;
-
-public interface IAudioKeys
-{
-    Task<Either<AesKeyError, ReadOnlyMemory<byte>>> GetAudioKey(SpotifyId itemId, ByteString fileId,
-        CancellationToken ct = default);
-}
 
 internal readonly struct AudioKeysClientImpl : IAudioKeys
 {

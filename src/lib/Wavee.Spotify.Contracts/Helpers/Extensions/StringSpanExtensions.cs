@@ -1,4 +1,4 @@
-﻿namespace Wavee.Spotify.Helpers.Extensions;
+﻿namespace Wavee.Spotify.Contracts.Helpers.Extensions;
 
 internal static class StringSpanExtensions
 {

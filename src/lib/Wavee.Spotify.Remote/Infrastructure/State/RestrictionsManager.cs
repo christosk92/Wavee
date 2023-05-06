@@ -1,5 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using Eum.Spotify.connectstate;
+﻿using Eum.Spotify.connectstate;
 
 namespace Wavee.Spotify.Remote.Infrastructure.State;
 
@@ -93,6 +92,7 @@ internal static class RestrictionsManager
 
     public static void AllowEverything(Restrictions restritions)
     {
+        
         restritions.DisallowTogglingShuffleReasons.Clear();
         restritions.DisallowTogglingRepeatContextReasons.Clear();
         restritions.DisallowTogglingRepeatTrackReasons.Clear();

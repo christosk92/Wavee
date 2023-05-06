@@ -1,4 +1,4 @@
-﻿namespace Wavee.Spotify.Helpers
+﻿namespace Wavee.Spotify.Contracts.Helpers
 {
     internal class Base62Test
     {

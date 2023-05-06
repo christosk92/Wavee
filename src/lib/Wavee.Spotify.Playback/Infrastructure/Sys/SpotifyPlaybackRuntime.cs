@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics.Contracts;
-using System.IO.Compression;
 using System.Net.Http.Headers;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -11,8 +10,9 @@ using Wavee.Common;
 using Wavee.Infrastructure.Live;
 using Wavee.Infrastructure.Sys.IO;
 using Wavee.Infrastructure.Traits;
-using Wavee.Spotify.Common;
-using Wavee.Spotify.Infrastructure.Sys;
+using Wavee.Spotify.Contracts;
+using Wavee.Spotify.Contracts.AudioKeys;
+using Wavee.Spotify.Contracts.Common;
 using Wavee.Spotify.Playback.Cdn;
 using Wavee.Spotify.Playback.Infrastructure.Streams;
 using Wavee.Spotify.Playback.Normalisation;

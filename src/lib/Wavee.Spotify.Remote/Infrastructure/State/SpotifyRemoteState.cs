@@ -1,8 +1,7 @@
 ﻿using Eum.Spotify.connectstate;
-using Eum.Spotify.context;
 using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
-using Wavee.Spotify.Remote.Infrastructure.Sys;
+using Wavee.Spotify.Remote.Infrastructure.State.Messages;
 using ContextPlayerOptions = Eum.Spotify.connectstate.ContextPlayerOptions;
 using PlayOrigin = Eum.Spotify.connectstate.PlayOrigin;
 using Restrictions = Eum.Spotify.connectstate.Restrictions;
@@ -96,13 +95,16 @@ internal readonly record struct RemoteStateTimelineData(
     }
 }
 
+internal readonly record struct LastCommandData(string LastCommandSentByDeviceId, uint LastMessageId);
+
 internal readonly record struct SpotifyRemoteState(
     Option<RemoteStateTimeData> Time,
     Option<RemoteStateContextData> Context,
     Option<RemoteStatePlaybackData> Playback,
-    Option<RemoteStateTimelineData> Timeline)
+    Option<RemoteStateTimelineData> Timeline,
+    Option<LastCommandData> LastCommand)
 {
-    public SpotifyRemoteState() : this(None, None, None, None)
+    public SpotifyRemoteState() : this(None, None, None, None, None)
     {
     }
 
@@ -164,6 +166,17 @@ internal readonly record struct SpotifyRemoteState(
         };
     }
 
+    public SpotifyRemoteState NewCommand(SpotifyRequestMessage spotifyRequestCommand)
+    {
+        return this with
+        {
+            LastCommand = Some(new LastCommandData(
+                LastCommandSentByDeviceId: spotifyRequestCommand.SentByDeviceId,
+                LastMessageId: spotifyRequestCommand.MessageId
+            ))
+        };
+    }
+
     private PlayerState BuildPlayerState()
     {
         var emptyState = new PlayerState
@@ -185,91 +198,68 @@ internal readonly record struct SpotifyRemoteState(
             IsSystemInitiated = true
         };
 
-        var state = Playback.Match(
-            None: () => emptyState,
-            Some: p =>
+        if (Playback.IsSome)
+        {
+            var pb = Playback.ValueUnsafe();
+            emptyState.Position = pb.PositionAsOfTimestamp;
+            emptyState.PositionAsOfTimestamp = pb.PositionAsOfTimestamp;
+            emptyState.PlaybackSpeed = 1.0;
+            emptyState.SessionId = pb.SessionId.IfNone(string.Empty);
+            emptyState.PlaybackId = pb.PlaybackId.IfNone(string.Empty);
+            emptyState.IsPlaying = pb.IsPlaying;
+            emptyState.IsPaused = pb.IsPaused;
+            emptyState.Options = new ContextPlayerOptions
             {
-                return
-                    Some(emptyState)
-                        .Bind(setTime =>
-                        {
-                            setTime.Timestamp = p.Timestamp;
-                            setTime.PositionAsOfTimestamp = p.PositionAsOfTimestamp;
-                            return Some(setTime);
-                        })
-                        .Bind(setIndex =>
-                        {
-                            return p.Index.Map(f =>
-                            {
-                                setIndex.Index = new ContextIndex
-                                {
-                                    Track = f
-                                };
-                                return setIndex;
-                            });
-                        })
-                        .Bind(setTrack =>
-                        {
-                            return p.Track.Map(f =>
-                            {
-                                setTrack.Track = f;
-                                return setTrack;
-                            });
-                        })
-                        .Bind(setRestrictions =>
-                        {
-                            RestrictionsManager.AllowEverything(setRestrictions.Restrictions);
-                            foreach (var restriction in p.Restrictions)
-                            {
-                                foreach (var reason in restriction.Value)
-                                {
-                                    RestrictionsManager.Disallow(setRestrictions.Restrictions, restriction.Key, reason);
-                                }
-                            }
-
-                            return Some(setRestrictions);
-                        })
-                        .Bind(setPlaybackId =>
-                        {
-                            return p.PlaybackId.Map(f =>
-                            {
-                                setPlaybackId.PlaybackId = f;
-                                return setPlaybackId;
-                            });
-                        })
-                        .Bind(setSessionId =>
-                        {
-                            return p.SessionId.Map(f =>
-                            {
-                                setSessionId.SessionId = f;
-                                return setSessionId;
-                            });
-                        })
-                        .Bind(setDuration =>
-                        {
-                            setDuration.Duration = p.Duration;
-                            return Some(setDuration);
-                        })
-                        .Bind(setOptions =>
-                        {
-                            setOptions.IsPaused = p.IsPaused;
-                            setOptions.IsPlaying = p.IsPlaying;
-                            setOptions.Options = new ContextPlayerOptions
-                            {
-                                RepeatingContext = p.RepeatContext,
-                                RepeatingTrack = p.RepeatTrack,
-                                ShufflingContext = p.IsShuffling
-                            };
-                            setOptions.PlayOrigin = p.PlayOrigin;
-                            return Some(setOptions);
-                        });
+                RepeatingContext = pb.RepeatContext,
+                RepeatingTrack = pb.RepeatTrack,
+                ShufflingContext = pb.IsShuffling
+            };
+            emptyState.Duration = pb.Duration;
+            pb.Index.IfSome(index => emptyState.Index = new ContextIndex { Track = index });
+            pb.Track.IfSome(track => emptyState.Track = track);
+            emptyState.PlayOrigin = pb.PlayOrigin;
+            emptyState.Restrictions = new Restrictions();
+            foreach (var (key, value) in pb.Restrictions)
+            {
+                foreach (var reason in value)
+                {
+                    RestrictionsManager.Disallow(emptyState.Restrictions, key, reason);
+                }
             }
-        );
+        }
 
-        return state.Match(
-            Some: s => s,
-            None: () => emptyState
-        );
+        if (Context.IsSome)
+        {
+            var ctx = Context.ValueUnsafe();
+            emptyState.ContextRestrictions = new Restrictions();
+            foreach (var (key, value) in ctx.Restrictions)
+            {
+                foreach (var reason in value)
+                {
+                    RestrictionsManager.Disallow(emptyState.ContextRestrictions, key, reason);
+                }
+            }
+
+            if (!string.IsNullOrEmpty(ctx.Uri))
+            {
+                emptyState.ContextUri = ctx.Uri;
+                emptyState.ContextUrl = $"context://{ctx.Uri}";
+            }
+
+            foreach (var (key, val) in ctx.Metadata)
+            {
+                emptyState.ContextMetadata[key] = val;
+            }
+        }
+
+        if (Timeline.IsSome)
+        {
+            var timeline = Timeline.ValueUnsafe();
+            emptyState.NextTracks.AddRange(timeline.NextTracks);
+            emptyState.PrevTracks.AddRange(timeline.PrevTracks);
+        }
+
+        return emptyState;
     }
 
     public PutStateRequest BuildPutState(
@@ -287,6 +277,13 @@ internal readonly record struct SpotifyRemoteState(
             PutStateReason = reason,
             IsActive = isActive,
         };
+
+        if (LastCommand.IsSome)
+        {
+            var lastCommand = LastCommand.ValueUnsafe();
+            putStateRequest.LastCommandSentByDeviceId = lastCommand.LastCommandSentByDeviceId;
+            putStateRequest.LastCommandMessageId = lastCommand.LastMessageId;
+        }
 
         return putStateRequest;
     }

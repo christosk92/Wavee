@@ -1,6 +1,4 @@
-﻿using Eum.Spotify.connectstate;
-
-namespace Wavee.Spotify.Playback;
+﻿namespace Wavee.Spotify.Playback;
 
 /// <summary>
 /// A type of config to help with playback.

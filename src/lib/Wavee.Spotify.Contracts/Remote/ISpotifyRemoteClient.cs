@@ -1,7 +1,7 @@
 ﻿using Eum.Spotify.connectstate;
 using LanguageExt;
 
-namespace Wavee.Spotify.Remote;
+namespace Wavee.Spotify.Contracts.Remote;
 
 public interface ISpotifyRemoteClient
 {

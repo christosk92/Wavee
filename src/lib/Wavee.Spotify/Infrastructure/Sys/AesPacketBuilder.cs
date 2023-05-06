@@ -1,6 +1,6 @@
 ﻿using System.Buffers.Binary;
 using Google.Protobuf;
-using Wavee.Spotify.Common;
+using Wavee.Spotify.Contracts.Common;
 using Wavee.Spotify.Infrastructure.Connection;
 
 namespace Wavee.Spotify.Infrastructure.Sys;

@@ -1,11 +1,10 @@
-﻿using System.Security.Cryptography;
-using LanguageExt.UnsafeValueAccess;
+﻿using LanguageExt.UnsafeValueAccess;
 using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.Math;
 using Org.BouncyCastle.Security;
 using Wavee.Infrastructure.Traits;
-using Wavee.Spotify.Infrastructure.Sys;
+using Wavee.Spotify.Contracts.AudioKeys;
 using Wavee.Spotify.Playback.Infrastructure.Sys;
 
 namespace Wavee.Spotify.Playback.Infrastructure.Streams;

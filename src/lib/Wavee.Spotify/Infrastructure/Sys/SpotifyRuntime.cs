@@ -9,6 +9,8 @@ using LanguageExt.UnsafeValueAccess;
 using Wavee.Infrastructure.Live;
 using Wavee.Infrastructure.Sys.IO;
 using Wavee.Infrastructure.Traits;
+using Wavee.Player;
+using Wavee.Spotify.Contracts;
 using Wavee.Spotify.Infrastructure.ApResolver;
 using Wavee.Spotify.Infrastructure.Connection;
 using Wavee.Spotify.Infrastructure.Crypto;
@@ -90,6 +92,7 @@ public static class SpotifyRuntime
     /// A new <see cref="ISpotifyClient"/> instance.
     /// </returns>
     public static async ValueTask<ISpotifyClient> Authenticate(
+        IWaveePlayer player,
         SpotifyConfig config,
         Option<ISpotifyClient> existingClient,
         LoginCredentials credentials,
@@ -122,6 +125,8 @@ public static class SpotifyRuntime
                     from spClientUrl in AP<WaveeRuntime>.FetchSpClient()
                         .Map(c => $"https://{c.Host}:{c.Port}")
                     from remoteState in SpotifyRemoteRuntime<WaveeRuntime>.Connect(
+                        lastClient,
+                        player,
                         deviceId,
                         config.DeviceName,
                         config.DeviceType,

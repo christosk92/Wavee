@@ -1,11 +1,11 @@
 ﻿using Eum.Spotify;
-using Wavee.Spotify.Clients.AudioKeys;
-using Wavee.Spotify.Clients.Mercury;
-using Wavee.Spotify.Clients.SpApi;
-using Wavee.Spotify.Remote;
-using Wavee.Spotify.Remote.Infrastructure.Sys;
+using LanguageExt;
+using Wavee.Spotify.Contracts.AudioKeys;
+using Wavee.Spotify.Contracts.Mercury;
+using Wavee.Spotify.Contracts.Remote;
+using Wavee.Spotify.Contracts.SpApi;
 
-namespace Wavee.Spotify;
+namespace Wavee.Spotify.Contracts;
 
 public interface ISpotifyClient
 {

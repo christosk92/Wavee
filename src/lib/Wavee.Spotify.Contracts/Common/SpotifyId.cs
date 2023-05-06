@@ -4,10 +4,10 @@ using System.Text.RegularExpressions;
 using Base62;
 using Google.Protobuf;
 using Wavee.Common;
-using Wavee.Spotify.Helpers;
-using Wavee.Spotify.Helpers.Extensions;
+using Wavee.Spotify.Contracts.Helpers;
+using Wavee.Spotify.Contracts.Helpers.Extensions;
 
-namespace Wavee.Spotify.Common;
+namespace Wavee.Spotify.Contracts.Common;
 
 
 /// <summary>
