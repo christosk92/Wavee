@@ -3,13 +3,11 @@ using System.Text;
 using Eum.Spotify;
 using Eum.Spotify.connectstate;
 using Google.Protobuf;
-using NAudio.Wave;
+using Wavee.Spotify;
 using Wavee.Spotify.Clients.Mercury;
 using Wavee.Spotify.Common;
 using Wavee.Spotify.Infrastructure.Sys;
 using Wavee.Spotify.Playback;
-using Wavee.Spotify.Playback.Infrastructure.Sys;
-using Wavee.VorbisDecoder.Convenience;
 using static LanguageExt.Prelude;
 
 var loginCredentials = new LoginCredentials
@@ -23,11 +21,12 @@ var loginCredentials = new LoginCredentials
 //https://open.spotify.com/track/4ewazQLXFTDC8XvCbhvtXs?si=52de2819ac6d47fd
 //https://open.spotify.com/track/0mf82mK5aeZm4vN9HM2InQ?si=df4d118bb389440f
 var trackId = new SpotifyId("spotify:track:786ymAh5BmHoIpvjyrvjXk");
-var client = await SpotifyRuntime.Authenticate(None, loginCredentials);
+
+var spotifyConfig = new SpotifyConfig(DeviceName: "Wavee",
+    DeviceType.Computer);
+var client = await SpotifyRuntime.Authenticate(spotifyConfig, None, loginCredentials);
 
 var playbackConfig = new SpotifyPlaybackConfig(
-    DeviceName: "Wavee",
-    DeviceType.Computer,
     PreferredQualityType.High,
     ushort.MaxValue / 2
 );

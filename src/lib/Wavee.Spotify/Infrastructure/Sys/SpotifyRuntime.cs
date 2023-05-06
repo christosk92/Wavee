@@ -12,6 +12,7 @@ using Wavee.Infrastructure.Traits;
 using Wavee.Spotify.Infrastructure.ApResolver;
 using Wavee.Spotify.Infrastructure.Connection;
 using Wavee.Spotify.Infrastructure.Crypto;
+using Wavee.Spotify.Remote.Infrastructure.Sys;
 
 namespace Wavee.Spotify.Infrastructure.Sys;
 
@@ -89,36 +90,69 @@ public static class SpotifyRuntime
     /// A new <see cref="ISpotifyClient"/> instance.
     /// </returns>
     public static async ValueTask<ISpotifyClient> Authenticate(
+        SpotifyConfig config,
         Option<ISpotifyClient> existingClient,
         LoginCredentials credentials,
         bool autoReconnect = true)
     {
         var (connectionId, newClient) = existingClient.BiMap(
-            Some: client => (client.ConnectionId, client as ISpotifyClient),
-            None: () =>
-            {
-                var connectionId = Guid.NewGuid();
-                return (connectionId, new SpotifyClient<WaveeRuntime>(connectionId, WaveeCore.Runtime));
-            })
+                Some: client => (client.ConnectionId, client as ISpotifyClient),
+                None: () =>
+                {
+                    var connectionId = Guid.NewGuid();
+                    return (connectionId, new SpotifyClient<WaveeRuntime>(connectionId, WaveeCore.Runtime));
+                })
             .ValueUnsafe();
-
+        var deviceId = Guid.NewGuid().ToString();
         var result =
-            await Authenticate<WaveeRuntime>(newClient, credentials, autoReconnect, connectionId,
-                    Connections)
+            await (
+                    from apWelcome in Authenticate<WaveeRuntime>(
+                        deviceId,
+                        newClient, credentials, autoReconnect,
+                        connectionId,
+                        Connections)
+                    from lastClient in Eff(() =>
+                    {
+                        return newClient switch
+                        {
+                            SpotifyClient<WaveeRuntime> r => r.OnApWelcome(apWelcome),
+                            _ => newClient
+                        };
+                    })
+                    from spClientUrl in AP<WaveeRuntime>.FetchSpClient()
+                        .Map(c => $"https://{c.Host}:{c.Port}")
+                    from remoteState in SpotifyRemoteRuntime<WaveeRuntime>.Connect(
+                        deviceId,
+                        config.DeviceName,
+                        config.DeviceType,
+                        spClientUrl,
+                        newClient.Mercury.FetchBearer().AsTask)
+                    select (lastClient, remoteState)
+                )
                 .Run(WaveeCore.Runtime);
 
         return result.Match(
-            Succ: welcome => (newClient as SpotifyClient<WaveeRuntime>)!.OnApWelcome(welcome),
+            Succ: welcome =>
+            {
+                return welcome.lastClient switch
+                {
+                    SpotifyClient<WaveeRuntime> r => r.OnRemote(welcome.remoteState),
+                    _ => welcome.lastClient
+                };
+            },
             Fail: e => throw e);
     }
 
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static Aff<RT, APWelcome> Authenticate<RT>(ISpotifyClient client, LoginCredentials credentials,
+    private static Aff<RT, APWelcome> Authenticate<RT>(
+        string deviceId,
+        ISpotifyClient client,
+        LoginCredentials credentials,
         bool autoCorrect,
         Guid connectionId,
-        Ref<HashMap<Guid, ConnectionController>> connections) where RT : struct, HasHttp<RT>, HasTCP<RT>, HasWebsocket<RT> =>
+        Ref<HashMap<Guid, ConnectionController>> connections)
+        where RT : struct, HasHttp<RT>, HasTCP<RT>, HasWebsocket<RT> =>
         from ct in cancelToken<RT>()
-        let deviceId = Guid.NewGuid().ToString()
         let connectionController = atomic(() => connections.Swap(k =>
         {
             return k.AddOrUpdate(connectionId, Some: controller => controller, None: () =>
@@ -141,14 +175,15 @@ public static class SpotifyRuntime
         string deviceId,
         bool autoCorrect, CancellationToken ct)
         where RT : struct, HasHttp<RT>, HasTCP<RT>, HasWebsocket<RT> =>
-        ConnectAndAuthenticate<RT>( credentials, deviceId)
+        ConnectAndAuthenticate<RT>(credentials, deviceId)
             .Bind(p =>
                 HandleDisconnection<RT>(client, reader, credentials, connectionId, deviceId, autoCorrect,
                         ct, p.Item2, p.Item3)
                     .Map(_ => p.Item1));
 
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static Aff<RT, (APWelcome, NetworkStream, SpotifyEncryptionRecord)> ConnectAndAuthenticate<RT>(LoginCredentials credentials, string deviceId)
+    private static Aff<RT, (APWelcome, NetworkStream, SpotifyEncryptionRecord)> ConnectAndAuthenticate<RT>(
+        LoginCredentials credentials, string deviceId)
         where RT : struct, HasHttp<RT>, HasTCP<RT> =>
         from hostPortResponse in AP<RT>.FetchHostAndPort()
         from tcpClient in Tcp<RT>.Connect(hostPortResponse.Host, hostPortResponse.Port)

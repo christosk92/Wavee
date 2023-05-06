@@ -36,7 +36,7 @@ public class ReconnectionTests
         var reader = Channel.CreateUnbounded<SpotifyPacket>();
 
         // Act
-        await SpotifyRuntime.Reconnect(client.Object, reader.Reader, apResolveUrl, credentials,
+        await SpotifyRuntime.Reconnect(client.Object, reader.Reader, credentials,
             connectionId,
             deviceId, CancellationToken.None, testRuntime);
 
@@ -72,9 +72,14 @@ internal class TestHttpIO : HttpIO
     {
         throw new NotImplementedException();
     }
+
+    public ValueTask<HttpResponseMessage> Put(string url, Option<AuthenticationHeaderValue> authheader, Option<HashMap<string, string>> headers, HttpContent content, CancellationToken ct = default)
+    {
+        throw new NotImplementedException();
+    }
 }
 
-internal readonly struct TestRuntimeC : HasHttp<TestRuntimeC>, HasTCP<TestRuntimeC>
+internal readonly struct TestRuntimeC : HasHttp<TestRuntimeC>, HasTCP<TestRuntimeC>, HasWebsocket<TestRuntimeC>
 {
     private readonly HttpIO httpIo;
 
@@ -98,4 +103,5 @@ internal readonly struct TestRuntimeC : HasHttp<TestRuntimeC>, HasTCP<TestRuntim
     public CancellationToken CancellationToken => CancellationTokenSource.Token;
     public CancellationTokenSource CancellationTokenSource { get; } = new();
     public Eff<TestRuntimeC, TcpIO> TcpEff { get; }
+    public Eff<TestRuntimeC, WebsocketIO> WsEff { get; }
 }

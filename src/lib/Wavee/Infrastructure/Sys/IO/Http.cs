@@ -2,6 +2,7 @@
 using System.Net.Http.Headers;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
+using LanguageExt.Common;
 using Wavee.Infrastructure.Traits;
 
 namespace Wavee.Infrastructure.Sys.IO;
@@ -34,4 +35,12 @@ public static class Http<RT> where RT : struct, HasHttp<RT>
         CancellationToken ct = default)
         => from httpResponse in default(RT).HttpEff.MapAsync(e => e.GetWithContentRange(url, start, length, ct))
             select httpResponse;
+
+    [Pure, MethodImpl(AffOpt.mops)]
+    public static Aff<RT, HttpResponseMessage> Put(string url,
+        Option<AuthenticationHeaderValue> authheader,
+        Option<HashMap<string, string>> headers,
+        HttpContent content) =>
+        from httpResponse in default(RT).HttpEff.MapAsync(e => e.Put(url, authheader, headers, content))
+        select httpResponse;
 }

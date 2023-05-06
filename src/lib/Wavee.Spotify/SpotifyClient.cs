@@ -10,6 +10,8 @@ using Wavee.Spotify.Clients.SpApi;
 using Wavee.Spotify.Infrastructure.ApResolver;
 using Wavee.Spotify.Infrastructure.Connection;
 using Wavee.Spotify.Infrastructure.Sys;
+using Wavee.Spotify.Remote;
+using Wavee.Spotify.Remote.Infrastructure.Sys;
 
 namespace Wavee.Spotify;
 
@@ -22,6 +24,7 @@ internal sealed class SpotifyClient<RT> : ISpotifyClient where RT : struct, HasH
     private readonly Ref<Option<ulong>> _nextMercurySequence = Ref(Option<ulong>.None);
     private readonly Ref<Option<APWelcome>> _apWelcome = Ref(Option<APWelcome>.None);
     private readonly Ref<Option<string>> _countryCodeRef = Ref(Option<string>.None);
+    private readonly Ref<Option<ISpotifyRemoteClient>> _spotifyRemoteClient = Ref(Option<ISpotifyRemoteClient>.None);
 
     public SpotifyClient(Guid connectionId, RT runtime)
     {
@@ -73,48 +76,23 @@ internal sealed class SpotifyClient<RT> : ISpotifyClient where RT : struct, HasH
         );
 
     public IAudioKeys AudioKeys => new AudioKeysClientImpl(_connectionId, _nextAudioKeySequence);
+    public Option<ISpotifyRemoteClient> RemoteClient => _spotifyRemoteClient.Value;
     public Option<string> CountryCode => _countryCodeRef.Value;
     public Option<APWelcome> WelcomeMessage => _apWelcome.Value;
+    public IObservable<Option<ISpotifyRemoteClient>> RemoteClientChanged => _spotifyRemoteClient.OnChange();
     public IObservable<Option<string>> CountryCodeChanged => _countryCodeRef.OnChange();
     public IObservable<Option<APWelcome>> WelcomeMessageChanged => _apWelcome.OnChange();
     public Guid ConnectionId => _connectionId;
 
-    internal ISpotifyClient OnApWelcome(APWelcome apWelcome)
+    internal SpotifyClient<RT> OnApWelcome(APWelcome apWelcome)
     {
         atomic(() => _apWelcome.Swap(f => apWelcome));
-
-        //connect to websocket
-        Task.Run(() => ConnectToWs(() => this.Mercury, () => _runtime));
         return this;
     }
 
-    private static async Task ConnectToWs(
-        Func<IMercuryClient> mercuryFactory,
-        Func<RT> runtimeFactory)
+    internal SpotifyClient<RT> OnRemote(ISpotifyRemoteClient client)
     {
-        var affResult = await ConnectToWsAndUpdateState<RT>(mercuryFactory).Run(runtimeFactory());
-        affResult.Match(
-            Succ: valueTuple =>
-            {
-
-            },
-            Fail: error =>
-            {
-                throw error;
-            });
+        atomic(() => _spotifyRemoteClient.Swap(f => Some(client)));
+        return this;
     }
-
-    private static Aff<RT, (Cluster, WebSocket, string)> ConnectToWsAndUpdateState<RT>(Func<IMercuryClient> mercuryClient)
-        where RT : struct, HasHttp<RT>, HasWebsocket<RT> =>
-        from token in cancelToken<RT>()
-        from bearer in mercuryClient().FetchBearer(token).ToAff()
-        from wssUrl in AP<RT>.FetchDealer()
-            .Map(f => $"wss://{f.Host}:{f.Port}?access_token={bearer}")
-        from websocketClient in Ws<RT>.Connect(wssUrl)
-        select (new Cluster(), websocketClient, bearer);
-    //         let stream = tcpClient.GetStream()
-    //         from clientHelloResult in Handshake<RT>.PerformClientHello(stream)
-    //         from nonceAfterAuthAndApWelcome in Authentication<RT>.Authenticate(stream, clientHelloResult, credentials,
-    //             deviceId)
-    //         select (nonceAfterAuthAndApWelcome.ApWelcome, stream, nonceAfterAuthAndApWelcome.EncryptionRecord);
 }
