@@ -14,7 +14,6 @@ using Wavee.Spotify.Contracts;
 using Wavee.Spotify.Infrastructure.ApResolver;
 using Wavee.Spotify.Infrastructure.Connection;
 using Wavee.Spotify.Infrastructure.Crypto;
-using Wavee.Spotify.Remote.Infrastructure.Sys;
 
 namespace Wavee.Spotify.Infrastructure.Sys;
 
@@ -91,8 +90,7 @@ public static class SpotifyRuntime
     /// <returns>
     /// A new <see cref="ISpotifyClient"/> instance.
     /// </returns>
-    public static async ValueTask<ISpotifyClient> Authenticate(
-        IWaveePlayer player,
+    public static async ValueTask<Guid> Authenticate(
         SpotifyConfig config,
         Option<ISpotifyClient> existingClient,
         LoginCredentials credentials,
@@ -233,6 +231,20 @@ public static class SpotifyRuntime
             return unit;
         });
 
+    
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="client"></param>
+    /// <param name="reader"></param>
+    /// <param name="credentials"></param>
+    /// <param name="connectionId"></param>
+    /// <param name="deviceId"></param>
+    /// <param name="ct"></param>
+    /// <param name="runtime"></param>
+    /// <typeparam name="RT"></typeparam>
+    /// <returns></returns>
+    /// <exception cref="Error"></exception>
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static async Task<Unit> Reconnect<RT>(
         ISpotifyClient client,
@@ -256,7 +268,6 @@ public static class SpotifyRuntime
                 var welcome = result.Match(
                     Succ: w => w,
                     Fail: e => throw e);
-
                 if (client is SpotifyClient<RT> cl)
                 {
                     cl.OnApWelcome(welcome);

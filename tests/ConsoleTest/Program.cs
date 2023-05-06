@@ -22,7 +22,6 @@ var loginCredentials = new LoginCredentials
 //https://open.spotify.com/track/4ewazQLXFTDC8XvCbhvtXs?si=52de2819ac6d47fd
 //https://open.spotify.com/track/0mf82mK5aeZm4vN9HM2InQ?si=df4d118bb389440f
 var trackId = new SpotifyId("spotify:track:786ymAh5BmHoIpvjyrvjXk");
-
 var spotifyConfig = new SpotifyConfig(DeviceName: "Wavee",
     DeviceType.Computer);
 var client = await SpotifyRuntime.Authenticate(
