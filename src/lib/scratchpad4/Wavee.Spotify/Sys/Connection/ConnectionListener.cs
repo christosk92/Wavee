@@ -8,11 +8,8 @@ namespace Wavee.Spotify.Sys.Connection;
 
 internal static class ConnectionListener<RT> where RT : struct, HasTCP<RT>, HasHttp<RT>
 {
-    private record FutureSpotifyPacket(Option<Func<SpotifyPacket, bool>> Handle,
-        TaskCompletionSource<SpotifyPacket> TaskCompletionSource);
-
-    private static AtomHashMap<Guid, Seq<FutureSpotifyPacket>> PacketFutures =
-        LanguageExt.AtomHashMap<Guid, Seq<FutureSpotifyPacket>>.Empty;
+    private static AtomHashMap<Guid, Seq<ChannelWriter<SpotifyPacket>>> PacketFutures =
+        LanguageExt.AtomHashMap<Guid, Seq<ChannelWriter<SpotifyPacket>>>.Empty;
 
 
     private static AtomHashMap<Guid, Seq<SpotifyPacket>> PacketsWithoutPurpose =
@@ -43,7 +40,7 @@ internal static class ConnectionListener<RT> where RT : struct, HasTCP<RT>, HasH
                 await foreach (var packet in channel.ReadAllAsync())
                 {
                     Debug.WriteLine($"Received packet {packet}");
-
+                    if (packet.Command is SpotifyPacketType.MercuryReq) Debugger.Break();
                     //check if there are any futures that can handle this packet
                     //if so, complete the future
                     //if not, create a new packet without any canhandle
@@ -51,13 +48,9 @@ internal static class ConnectionListener<RT> where RT : struct, HasTCP<RT>, HasH
                     var futures = PacketFutures.Find(connectionId);
                     if (futures.IsSome)
                     {
-                        var (handle, tcs) = futures.ValueUnsafe().Head;
-                        if (handle.IsNone || (handle.IsSome && handle.ValueUnsafe()(packet)))
+                        foreach (var future in futures.ValueUnsafe())
                         {
-                            tcs.SetResult(packet);
-                            PacketFutures.AddOrUpdate(connectionId,
-                                None: () => Empty,
-                                Some: existing => existing);
+                            future.TryWrite(packet);
                         }
                     }
                     else
@@ -65,10 +58,6 @@ internal static class ConnectionListener<RT> where RT : struct, HasTCP<RT>, HasH
                         PacketsWithoutPurpose.AddOrUpdate(connectionId,
                             None: () => Seq1(packet),
                             Some: existing => existing.Add(packet));
-                        //     PacketFutures.AddOrUpdate(connectionId,
-                        //         None: () => Empty,
-                        //         Some: existing =>
-                        //             existing.Add(new FutureSpotifyPacket(None, new TaskCompletionSource<SpotifyPacket>())));
                     }
                 }
             }, TaskCreationOptions.LongRunning);
@@ -82,13 +71,14 @@ internal static class ConnectionListener<RT> where RT : struct, HasTCP<RT>, HasH
         bool removeIfHandled,
         CancellationToken ct = default)
     {
-        //check if there are packets without purpose
-        //if so, check if we can handle any of them
-        //if so, return
-        //if not, wait for a packet to arrive and check if we can handle it
-        //if so, return
+        var newListener = Channel.CreateUnbounded<SpotifyPacket>();
 
-        //check if there are packets without purpose
+        //check if there are any packets without purpose
+        //if so, check if any of them can be handled
+        //if so, return the first one
+        //if not, add the listener to the listeners
+        //if not, add the listener to the listeners
+
         var packetsWithoutPurpose = PacketsWithoutPurpose.Find(connectionId);
         if (packetsWithoutPurpose.IsSome)
         {
@@ -109,13 +99,44 @@ internal static class ConnectionListener<RT> where RT : struct, HasTCP<RT>, HasH
             }
         }
 
-        var tcs = new TaskCompletionSource<SpotifyPacket>();
-        PacketFutures
-            .AddOrUpdate(connectionId,
-                None: () => Seq1(new FutureSpotifyPacket(Some(shouldHandle), tcs)),
-                Some: existing => existing.Add(new FutureSpotifyPacket(Some(shouldHandle), tcs)));
+        PacketFutures.AddOrUpdate(connectionId,
+            None: () => Seq1(newListener.Writer),
+            Some: existing => existing.Add(newListener.Writer));
 
-        //wait for a packet to arrive and check if we can handle it
-        return tcs.Task.WaitAsync(ct).ToAff();
+        return Aff<RT, SpotifyPacket>(async _ =>
+        {
+            try
+            {
+                await foreach (var package in newListener.Reader.ReadAllAsync(ct))
+                {
+                    if (shouldHandle(package))
+                    {
+                        if (removeIfHandled)
+                        {
+                            PacketFutures.AddOrUpdate(connectionId,
+                                None: () => Empty,
+                                Some: existing => existing.Filter(x => x != newListener.Writer));
+                        }
+
+                        return package;
+                    }
+                    else
+                    {
+                        PacketsWithoutPurpose.AddOrUpdate(connectionId,
+                            None: () => Seq1(package),
+                            Some: existing => existing.Add(package));
+                    }
+                }
+            }
+            finally
+            {
+                newListener.Writer.Complete();
+                PacketFutures.AddOrUpdate(connectionId,
+                    None: () => Empty,
+                    Some: existing => existing.Filter(x => x != newListener.Writer));
+            }
+
+            throw new Exception("Connection closed");
+        });
     }
 }

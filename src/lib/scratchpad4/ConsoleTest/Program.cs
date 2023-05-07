@@ -20,9 +20,9 @@ var info = await SpotifyClient.Authenticate(loginCredentials);
 var countryCode = await info.CountryCode();
 var productInfo = await info.ProductInfo();
 var countryCodeAgain = await info.CountryCode();
-// var remoteInfo = await info.Connect(new SpotifyRemoteConfig(
-//     DeviceName: "Wavee",
-//     DeviceType.Automobile
-// ));
+var remoteInfo = await info.Connect(new SpotifyRemoteConfig(
+    DeviceName: "Wavee",
+    DeviceType.Automobile
+));
 
 Console.ReadLine();
