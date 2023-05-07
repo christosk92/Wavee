@@ -58,7 +58,15 @@ internal sealed class HttpIOImpl : HttpIO
         {
             foreach (var (key, value) in headers.ValueUnsafe())
             {
-                request.Headers.Add(key, value);
+                switch (key)
+                {
+                    case "accept":
+                        request.Headers.AcceptEncoding.Add(new StringWithQualityHeaderValue(value));
+                        break;
+                    default:
+                        request.Headers.Add(key, value);
+                        break;
+                }
             }
         }
 

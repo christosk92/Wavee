@@ -49,7 +49,8 @@ internal static class SpotifyConnection<RT> where RT : struct,
         });
         var newInfo = new SpotifyConnectionInfo
         {
-            ConnectionId = connectionId
+            ConnectionId = connectionId,
+            Deviceid = deviceId
         };
 
         return
@@ -73,19 +74,29 @@ internal static class SpotifyConnection<RT> where RT : struct,
             {
                 Task.Run(async () =>
                 {
-                    var pingPongAff =
-                        from pingOrPongAck in ConnectionListener<RT>.ConsumePacket(connectionId,
-                            p => p.Command is SpotifyPacketType.Ping or SpotifyPacketType.PongAck,
-                            static () => true)
-                        from _ in pingOrPongAck.Command switch
-                        {
-                            SpotifyPacketType.Ping => HandlePing(connectionId, pingOrPongAck.Data),
-                            SpotifyPacketType.PongAck => HandlePongAck(connectionId),
-                            _ => throw new Exception("Invalid packet type")
-                        }
-                        select unit;
+                    while (true)
+                    {
+                        var pingPongAff =
+                            from pingOrPongAck in ConnectionListener<RT>.ConsumePacket(connectionId,
+                                static p => p.Command is SpotifyPacketType.Ping or SpotifyPacketType.PongAck,
+                                true)
+                            from _ in pingOrPongAck.Command switch
+                            {
+                                SpotifyPacketType.Ping => HandlePing(connectionId, pingOrPongAck.Data),
+                                SpotifyPacketType.PongAck => HandlePongAck(connectionId),
+                                _ => throw new Exception("Invalid packet type")
+                            }
+                            select unit;
 
-                    var run = await pingPongAff.Repeat().Run(rt);
+                        var run = await pingPongAff.Run(rt);
+                        if (run.IsFail)
+                        {
+                            var err = run.Match(Succ: _ => throw new Exception("Should not happen"),
+                                Fail: e => e);
+                            Debug.WriteLine("Ping listener failed: {0}", err);
+                            return;
+                        }
+                    }
                 });
             });
             return unit;
@@ -334,6 +345,7 @@ public record SpotifyConnectionInfo
 {
     private readonly Ref<Option<APWelcome>> _welcomeMessage = Ref(Option<APWelcome>.None);
     public required Guid ConnectionId { get; init; }
+    public required string Deviceid { get; init; }
     public Option<APWelcome> Welcome => _welcomeMessage.Value;
     public IObservable<Option<APWelcome>> WelcomeChanged => _welcomeMessage.OnChange();
 

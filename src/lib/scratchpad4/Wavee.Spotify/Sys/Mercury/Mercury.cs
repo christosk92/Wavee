@@ -43,7 +43,7 @@ public static class Mercury
 
                         return true;
                     },
-                    static () => true, ct)
+                    true, ct)
                 .Run(WaveeCore.Runtime);
 
             var package = response.Match(

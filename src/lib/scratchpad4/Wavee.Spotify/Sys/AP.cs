@@ -12,12 +12,17 @@ internal static class AP<RT> where RT : struct, HasHttp<RT>
 {
     const string AP_URL = "https://apresolve.spotify.com/?type=accesspoint";
     const string SP_CLIENT_URL = "https://apresolve.spotify.com/?type=spclient";
+    const string DEALER_CLIENT_UR = "https://apresolve.spotify.com/?type=dealer";
 
     private static Ref<Option<(string Host, ushort Port)>>
         FETCHED_AP_URL = Ref(Option<(string Host, ushort Port)>.None);
 
     private static Ref<Option<(string Host, ushort Port)>> FETCHED_SP_CLIENT_URL =
         Ref(Option<(string Host, ushort Port)>.None);
+
+    private static Ref<Option<(string Host, ushort Port)>> FETCHED_DEALER_CLIENT_URL =
+        Ref(Option<(string Host, ushort Port)>.None);
+
 
     public static Aff<RT, (string Host, ushort Port)> FetchAP()
     {
@@ -50,7 +55,7 @@ internal static class AP<RT> where RT : struct, HasHttp<RT>
         {
             return SuccessEff<RT, (string Host, ushort Port)>(FETCHED_SP_CLIENT_URL.Value.ValueUnsafe());
         }
-        
+
 
         return from httpResponse in Http<RT>.Get(SP_CLIENT_URL, Option<AuthenticationHeaderValue>.None,
                 Option<HashMap<string, string>>.None)
@@ -68,6 +73,33 @@ internal static class AP<RT> where RT : struct, HasHttp<RT>
             })
             from __ in atomic(Eff(() =>
                 FETCHED_SP_CLIENT_URL.Swap(_ => Option<(string Host, ushort Port)>.Some(splitted))))
+            select splitted;
+    }
+
+    public static Aff<RT, (string Host, ushort Port)> FetchDealer()
+    {
+        if (!FETCHED_SP_CLIENT_URL.Value.IsNone)
+        {
+            return SuccessEff<RT, (string Host, ushort Port)>(FETCHED_DEALER_CLIENT_URL.Value.ValueUnsafe());
+        }
+
+
+        return from httpResponse in Http<RT>.Get(DEALER_CLIENT_UR, Option<AuthenticationHeaderValue>.None,
+                Option<HashMap<string, string>>.None)
+            from _ in Eff((() =>
+            {
+                httpResponse.EnsureSuccessStatusCode();
+                return unit;
+            }))
+            from jsonContent in httpResponse.Content.ReadFromJsonAsync<ApResolveData>().ToAff()
+                .Map(x => x.Dealer.First())
+            from splitted in Eff(() =>
+            {
+                var split = jsonContent.Split(":", 2);
+                return (split[0], ushort.Parse(split[1]));
+            })
+            from __ in atomic(Eff(() =>
+                FETCHED_DEALER_CLIENT_URL.Swap(_ => Option<(string Host, ushort Port)>.Some(splitted))))
             select splitted;
     }
 

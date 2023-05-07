@@ -1,5 +1,5 @@
-﻿using System.Collections.Concurrent;
-using System.Diagnostics;
+﻿using System.Diagnostics;
+using System.Threading.Channels;
 using LanguageExt.UnsafeValueAccess;
 using Wavee.Infrastructure.Traits;
 using Wavee.Spotify.Sys.Connection.Contracts;
@@ -8,8 +8,22 @@ namespace Wavee.Spotify.Sys.Connection;
 
 internal static class ConnectionListener<RT> where RT : struct, HasTCP<RT>, HasHttp<RT>
 {
-    private static AtomHashMap<Guid, (SemaphoreSlim, Seq<SpotifyPacket>)> Packets =
-        LanguageExt.AtomHashMap<Guid, (SemaphoreSlim, Seq<SpotifyPacket>)>.Empty;
+    private record FutureSpotifyPacket(Option<Func<SpotifyPacket, bool>> Handle,
+        TaskCompletionSource<SpotifyPacket> TaskCompletionSource);
+
+    private static AtomHashMap<Guid, Seq<FutureSpotifyPacket>> PacketFutures =
+        LanguageExt.AtomHashMap<Guid, Seq<FutureSpotifyPacket>>.Empty;
+
+
+    private static AtomHashMap<Guid, Seq<SpotifyPacket>> PacketsWithoutPurpose =
+        LanguageExt.AtomHashMap<Guid, Seq<SpotifyPacket>>.Empty;
+
+
+    // private static AtomHashMap<Guid, Seq<ChannelWriter<SpotifyPacket>>> PacketListeners =
+    //     LanguageExt.AtomHashMap<Guid, Seq<ChannelWriter<SpotifyPacket>>>.Empty;
+    //
+    // private static AtomHashMap<Guid, Seq<SpotifyPacket>> PacketsWithoutPurpose =
+    //     LanguageExt.AtomHashMap<Guid, Seq<SpotifyPacket>>.Empty;
 
     public static Aff<RT, Unit> StartListening(Guid connectionId)
     {
@@ -29,14 +43,33 @@ internal static class ConnectionListener<RT> where RT : struct, HasTCP<RT>, HasH
                 await foreach (var packet in channel.ReadAllAsync())
                 {
                     Debug.WriteLine($"Received packet {packet}");
-                    Packets.AddOrUpdate(connectionId,
-                        None: () =>
+
+                    //check if there are any futures that can handle this packet
+                    //if so, complete the future
+                    //if not, create a new packet without any canhandle
+
+                    var futures = PacketFutures.Find(connectionId);
+                    if (futures.IsSome)
+                    {
+                        var (handle, tcs) = futures.ValueUnsafe().Head;
+                        if (handle.IsNone || (handle.IsSome && handle.ValueUnsafe()(packet)))
                         {
-                            var semp = new SemaphoreSlim(0);
-                            return (semp, Seq1(packet));
-                        },
-                        Some: existing => (existing.Item1, existing.Item2.Add(packet)));
-                    Packets.Find(connectionId).IfSome(existing => { existing.Item1.Release(); });
+                            tcs.SetResult(packet);
+                            PacketFutures.AddOrUpdate(connectionId,
+                                None: () => Empty,
+                                Some: existing => existing);
+                        }
+                    }
+                    else
+                    {
+                        PacketsWithoutPurpose.AddOrUpdate(connectionId,
+                            None: () => Seq1(packet),
+                            Some: existing => existing.Add(packet));
+                        //     PacketFutures.AddOrUpdate(connectionId,
+                        //         None: () => Empty,
+                        //         Some: existing =>
+                        //             existing.Add(new FutureSpotifyPacket(None, new TaskCompletionSource<SpotifyPacket>())));
+                    }
                 }
             }, TaskCreationOptions.LongRunning);
             return unit;
@@ -46,36 +79,43 @@ internal static class ConnectionListener<RT> where RT : struct, HasTCP<RT>, HasH
     public static Aff<RT, SpotifyPacket> ConsumePacket(
         Guid connectionId,
         Func<SpotifyPacket, bool> shouldHandle,
-        Func<bool> removeIfHandled,
+        bool removeIfHandled,
         CancellationToken ct = default)
     {
-        return Aff<RT, SpotifyPacket>(async _ =>
+        //check if there are packets without purpose
+        //if so, check if we can handle any of them
+        //if so, return
+        //if not, wait for a packet to arrive and check if we can handle it
+        //if so, return
+
+        //check if there are packets without purpose
+        var packetsWithoutPurpose = PacketsWithoutPurpose.Find(connectionId);
+        if (packetsWithoutPurpose.IsSome)
         {
-            while (!ct.IsCancellationRequested)
+            var packets = packetsWithoutPurpose.ValueUnsafe();
+            foreach (var packet in packets)
             {
-                var queueData = Packets.Find(connectionId);
-                if (queueData.IsNone) break;
-
-                var (semaphore, packets) = queueData.ValueUnsafe();
-
-                await semaphore.WaitAsync(ct);
-
-                var packetToConsume = packets.Find(shouldHandle);
-                if (packetToConsume.IsSome)
+                if (shouldHandle(packet))
                 {
-                    var result = packetToConsume.ValueUnsafe();
-                    Packets.AddOrUpdate(connectionId,
-                        None: () => (semaphore, packets.Filter(x => x != result)),
-                        Some: existing => (existing.Item1, 
-                            removeIfHandled() ?
-                            existing.Item2.Filter(x => x != result) : existing.Item2));
-                    return result;
+                    if (removeIfHandled)
+                    {
+                        PacketsWithoutPurpose.AddOrUpdate(connectionId,
+                            None: () => Empty,
+                            Some: existing => existing.Filter(x => x != packet));
+                    }
+
+                    return SuccessAff(packet);
                 }
-
-                semaphore.Release();
             }
+        }
 
-            throw new OperationCanceledException("Cancelled");
-        });
+        var tcs = new TaskCompletionSource<SpotifyPacket>();
+        PacketFutures
+            .AddOrUpdate(connectionId,
+                None: () => Seq1(new FutureSpotifyPacket(Some(shouldHandle), tcs)),
+                Some: existing => existing.Add(new FutureSpotifyPacket(Some(shouldHandle), tcs)));
+
+        //wait for a packet to arrive and check if we can handle it
+        return tcs.Task.WaitAsync(ct).ToAff();
     }
 }

@@ -35,7 +35,7 @@ public static class SpotifyClient
     {
         var countryCode = await ConnectionListener<WaveeRuntime>.ConsumePacket(connection.ConnectionId,
                 static p => p.Command is SpotifyPacketType.CountryCode,
-                static () => false)
+                false)
             .Run(WaveeCore.Runtime);
         return countryCode
             .Match(
@@ -49,7 +49,7 @@ public static class SpotifyClient
     {
         var productInfo = await ConnectionListener<WaveeRuntime>.ConsumePacket(connection.ConnectionId,
                 static p => p.Command is SpotifyPacketType.ProductInfo,
-                static () => false)
+                false)
             .Map(c =>
             {
                 var productInfoString = Encoding.Default.GetString(@c.Data.Span);
