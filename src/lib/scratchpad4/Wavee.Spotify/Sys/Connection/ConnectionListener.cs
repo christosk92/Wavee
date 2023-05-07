@@ -45,7 +45,8 @@ internal static class ConnectionListener<RT> where RT : struct, HasTCP<RT>, HasH
 
     public static Aff<RT, SpotifyPacket> ConsumePacket(
         Guid connectionId,
-        Func<SpotifyPacket, bool> consume,
+        Func<SpotifyPacket, bool> shouldHandle,
+        Func<bool> removeIfHandled,
         CancellationToken ct = default)
     {
         return Aff<RT, SpotifyPacket>(async _ =>
@@ -59,13 +60,15 @@ internal static class ConnectionListener<RT> where RT : struct, HasTCP<RT>, HasH
 
                 await semaphore.WaitAsync(ct);
 
-                var packetToConsume = packets.Find(consume);
+                var packetToConsume = packets.Find(shouldHandle);
                 if (packetToConsume.IsSome)
                 {
                     var result = packetToConsume.ValueUnsafe();
                     Packets.AddOrUpdate(connectionId,
                         None: () => (semaphore, packets.Filter(x => x != result)),
-                        Some: existing => (existing.Item1, existing.Item2.Filter(x => x != result)));
+                        Some: existing => (existing.Item1, 
+                            removeIfHandled() ?
+                            existing.Item2.Filter(x => x != result) : existing.Item2));
                     return result;
                 }
 

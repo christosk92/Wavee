@@ -49,10 +49,14 @@ internal static class SpotifyConnection<RT> where RT : struct,
             ConnectionProducer.Swap(connections =>
                 connections.Add(connectionId, coreWriteChannel));
         });
+        var newInfo = new SpotifyConnectionInfo
+        {
+            ConnectionId = connectionId
+        };
 
         return
             from info in AuthenticateWithoutConnectionId(
-                connectionId: connectionId,
+                connectionInfo: newInfo,
                 writer: coreChannel.Writer,
                 reader: coreWriteChannel.Reader,
                 credentials: credentials,
@@ -69,11 +73,12 @@ internal static class SpotifyConnection<RT> where RT : struct,
         {
             await Task.Factory.StartNew(() =>
             {
-                Task.Run(async() =>
+                Task.Run(async () =>
                 {
                     var pingPongAff =
                         from pingOrPongAck in ConnectionListener<RT>.ConsumePacket(connectionId,
-                            p => p.Command is SpotifyPacketType.Ping or SpotifyPacketType.PongAck)
+                            p => p.Command is SpotifyPacketType.Ping or SpotifyPacketType.PongAck,
+                            static () => true)
                         from _ in pingOrPongAck.Command switch
                         {
                             SpotifyPacketType.Ping => HandlePing(connectionId, pingOrPongAck.Data),
@@ -128,17 +133,20 @@ internal static class SpotifyConnection<RT> where RT : struct,
 
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static Aff<RT, SpotifyConnectionInfo> AuthenticateWithoutConnectionId(
-        Guid connectionId,
+        SpotifyConnectionInfo connectionInfo,
         ChannelWriter<SpotifyPacket> writer,
         ChannelReader<SpotifyPacket> reader,
         LoginCredentials credentials,
         string deviceId,
         CancellationToken ct)
     {
+        // bool handledDisconnection = false;
+        // object disconnectionLock = new object();
         return
             from connectionResult in ConnectAndAuthenticate(credentials, deviceId, ct)
+            let newConnectionInfo = connectionInfo.With(connectionResult.Item1)
             from _ in StartMessageReader(
-                connectionId: connectionId,
+                connectionId: newConnectionInfo.ConnectionId,
                 writer: writer,
                 reader: reader,
                 welcomeMessage: connectionResult.Item1,
@@ -146,6 +154,13 @@ internal static class SpotifyConnection<RT> where RT : struct,
                 spotifyEncryptionRecord: connectionResult.Item3,
                 onDisconnection: async (rt, errorMaybe) =>
                 {
+                    // lock (disconnectionLock)
+                    // {
+                    //     if (handledDisconnection)
+                    //         return;
+                    //     handledDisconnection = true;
+                    // }
+
                     if (errorMaybe.IsNone)
                     {
                         //do nothing
@@ -157,12 +172,16 @@ internal static class SpotifyConnection<RT> where RT : struct,
                         None: () => throw new Exception("Impossible")
                     );
                     Debug.WriteLine(msg);
-                    var run = await OnDisconnection(connectionId, writer, reader, credentials, deviceId, ct).Run(rt);
+                    bool connected = false;
+                    while (!connected)
+                    {
+                        var run = await OnDisconnection(newConnectionInfo, writer, reader, credentials, deviceId, ct)
+                            .Run(rt);
+                        connected = run.IsSucc;
+                        await Task.Delay(3000, ct);
+                    }
                 })
-            select new SpotifyConnectionInfo(
-                ConnectionId: connectionId,
-                WelcomeMessage: connectionResult.Item1
-            );
+            select newConnectionInfo.With(connectionResult.Item1);
     }
 
     private static Aff<RT, Unit> StartMessageReader(Guid connectionId,
@@ -304,12 +323,24 @@ internal static class SpotifyConnection<RT> where RT : struct,
 
 
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static Aff<RT, Unit> OnDisconnection(Guid connectionId,
+    private static Aff<RT, Unit> OnDisconnection(SpotifyConnectionInfo connectionInfo,
         ChannelWriter<SpotifyPacket> writer,
         ChannelReader<SpotifyPacket> reader,
         LoginCredentials credentials, string deviceId, CancellationToken ct) =>
-        from _ in AuthenticateWithoutConnectionId(connectionId, writer, reader, credentials, deviceId, ct)
+        from _ in AuthenticateWithoutConnectionId(connectionInfo, writer, reader, credentials, deviceId, ct)
         select unit;
 }
 
-public readonly record struct SpotifyConnectionInfo(Guid ConnectionId, APWelcome WelcomeMessage);
+public record SpotifyConnectionInfo
+{
+    private readonly Ref<Option<APWelcome>> _welcomeMessage = Ref(Option<APWelcome>.None);
+    public required Guid ConnectionId { get; init; }
+    public Option<APWelcome> Welcome => _welcomeMessage.Value;
+    public IObservable<Option<APWelcome>> WelcomeChanged => _welcomeMessage.OnChange();
+
+    internal SpotifyConnectionInfo With(APWelcome w)
+    {
+        atomic(() => _welcomeMessage.Swap(_ => w));
+        return this;
+    }
+}
