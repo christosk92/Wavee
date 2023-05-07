@@ -1,4 +1,5 @@
 ﻿using Eum.Spotify.connectstate;
+using Wavee.Player;
 using PlayOrigin = Eum.Spotify.context.PlayOrigin;
 
 namespace Wavee.Spotify.Sys.Remote;
@@ -28,6 +29,11 @@ internal readonly record struct SpotifyDeviceState(
             newPlayOrigin.FeatureClasses.Add(classe);
 
         return this with { PlayOrigin = newPlayOrigin };
+    }
+    
+    public SpotifyDeviceState WithTrack(PlayingItem item)
+    {
+        throw new NotImplementedException();
     }
 
     public PutStateRequest BuildPutStateRequest(PutStateReason reason, Option<TimeSpan> playerTime)

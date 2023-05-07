@@ -38,12 +38,35 @@ public static class SpotifyRemote
             player,
             config,
             ct).Run(WaveeCore.Runtime);
+        var remoteInfo = cluster.ThrowIfFail();
 
-        player.CurrentItemChanged.Subscribe(c =>
+        player.CurrentItemChanged.Subscribe(async c =>
         {
             if (c.IsSome)
             {
                 var item = c.ValueUnsafe();
+                var state = atomic(() => remoteInfo.DeviceStateRef.Swap(c =>
+                {
+                    return c.Match(
+                        None: () => Option<SpotifyDeviceState>.None,
+                        Some: state => state.WithTrack(item)
+                    );
+                }));
+
+                if (state.IsSome)
+                {
+                    var jwt = await connection.FetchAccessToken();
+                    var putAff = await SpotifyRemoteClient<WaveeRuntime>.Put(
+                        remoteInfo.SpotifyConnectionIdRef.Value.ValueUnsafe(),
+                        connection.Deviceid,
+                        jwt,
+                        state.ValueUnsafe()
+                            .BuildPutStateRequest(PutStateReason.PlayerStateChanged, player.CurrentPosition),
+                        CancellationToken.None
+                    ).Run(WaveeCore.Runtime);
+                    var cl = putAff.ThrowIfFail();
+                    
+                }
             }
         });
         player.PlayContextChanged.Subscribe(c =>
@@ -53,20 +76,10 @@ public static class SpotifyRemote
                 var item = c.ValueUnsafe();
             }
         });
-        player.IsPausedChanged.Subscribe(c =>
-        {
-            
-        });
-        player.CurrentPositionChanged.Subscribe(c =>
-        {
-            
-        });
+        player.IsPausedChanged.Subscribe(c => { });
+        player.CurrentPositionChanged.Subscribe(c => { });
 
-        return cluster
-            .Match(
-                Succ: c => c,
-                Fail: e => throw e
-            );
+        return remoteInfo;
     }
 }
 
@@ -286,7 +299,7 @@ internal static class SpotifyRemoteClient<RT>
         from _ in SuccessEff(remoteInfo.With(newDeviceState))
         select (connectionId, websocket, initialCluster);
 
-    private static Aff<RT, Cluster> Put(
+    internal static Aff<RT, Cluster> Put(
         string connectionId,
         string deviceId,
         string accessToken,
