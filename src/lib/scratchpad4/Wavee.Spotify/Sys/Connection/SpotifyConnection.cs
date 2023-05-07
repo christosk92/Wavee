@@ -1,11 +1,9 @@
 ﻿using System.Diagnostics;
 using System.Diagnostics.Contracts;
-using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 using System.Threading.Channels;
 using Eum.Spotify;
-using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
 using Wavee.Infrastructure.Sys.IO;
 using Wavee.Infrastructure.Traits;
@@ -327,6 +325,7 @@ internal static class SpotifyConnection<RT> where RT : struct,
         ChannelWriter<SpotifyPacket> writer,
         ChannelReader<SpotifyPacket> reader,
         LoginCredentials credentials, string deviceId, CancellationToken ct) =>
+        from __ in SuccessEff(atomic(() => connectionInfo.With(None)))
         from _ in AuthenticateWithoutConnectionId(connectionInfo, writer, reader, credentials, deviceId, ct)
         select unit;
 }
@@ -338,7 +337,7 @@ public record SpotifyConnectionInfo
     public Option<APWelcome> Welcome => _welcomeMessage.Value;
     public IObservable<Option<APWelcome>> WelcomeChanged => _welcomeMessage.OnChange();
 
-    internal SpotifyConnectionInfo With(APWelcome w)
+    internal SpotifyConnectionInfo With(Option<APWelcome> w)
     {
         atomic(() => _welcomeMessage.Swap(_ => w));
         return this;
