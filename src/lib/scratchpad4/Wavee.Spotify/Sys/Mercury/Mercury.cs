@@ -32,8 +32,8 @@ public static class Mercury
                             return false;
 
                         var data = p.Data;
-                        var seqLen = SeqLen(ref data);
-                        var foundSeq = Seq(ref data, seqLen);
+                        var seqLen = SeqLen(data);
+                        var foundSeq = Seq(data[2..], seqLen);
 
                         if (foundSeq != seq)
                         {
@@ -52,8 +52,8 @@ public static class Mercury
             );
 
             var data = package.Data;
-            var seqLen = SeqLen(ref data);
-            var foundSeq = Seq(ref data, seqLen);
+            var seqLen = SeqLenRef(ref data);
+            var foundSeq = SeqRef(ref data, seqLen);
             var flags = Flag(ref data);
             var count = Count(ref data);
 
@@ -89,7 +89,7 @@ public static class Mercury
         return body;
     }
 
-    private static ushort SeqLen(ref ReadOnlyMemory<byte> data)
+    private static ushort SeqLenRef(ref ReadOnlyMemory<byte> data)
     {
         var d = data.Span[..2];
         var l = BinaryPrimitives.ReadUInt16BigEndian(d);
@@ -97,12 +97,27 @@ public static class Mercury
         return l;
     }
 
-    private static ulong Seq(ref ReadOnlyMemory<byte> data, int len)
+    private static ulong SeqRef(ref ReadOnlyMemory<byte> data, int len)
     {
         //  return BinaryPrimitives.ReadUInt64BigEndian(data.Span[2..len]);
         var d = data.Span[..len];
         var l = BinaryPrimitives.ReadUInt64BigEndian(d);
         data = data[len..];
+        return l;
+    }
+    
+    private static ushort SeqLen(ReadOnlyMemory<byte> data)
+    {
+        var d = data.Span[..2];
+        var l = BinaryPrimitives.ReadUInt16BigEndian(d);
+        return l;
+    }
+
+    private static ulong Seq(ReadOnlyMemory<byte> data, int len)
+    {
+        //  return BinaryPrimitives.ReadUInt64BigEndian(data.Span[2..len]);
+        var d = data.Span[..len];
+        var l = BinaryPrimitives.ReadUInt64BigEndian(d);
         return l;
     }
 

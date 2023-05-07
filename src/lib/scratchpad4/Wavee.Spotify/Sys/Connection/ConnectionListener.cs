@@ -40,7 +40,6 @@ internal static class ConnectionListener<RT> where RT : struct, HasTCP<RT>, HasH
                 await foreach (var packet in channel.ReadAllAsync())
                 {
                     Debug.WriteLine($"Received packet {packet}");
-                    if (packet.Command is SpotifyPacketType.MercuryReq) Debugger.Break();
                     //check if there are any futures that can handle this packet
                     //if so, complete the future
                     //if not, create a new packet without any canhandle

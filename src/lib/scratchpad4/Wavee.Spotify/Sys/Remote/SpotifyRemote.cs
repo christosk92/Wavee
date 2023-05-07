@@ -12,12 +12,15 @@ using CommunityToolkit.HighPerformance;
 using Eum.Spotify;
 using Eum.Spotify.connectstate;
 using Google.Protobuf;
+using LanguageExt.UnsafeValueAccess;
 using Wavee.Infrastructure.Live;
 using Wavee.Infrastructure.Sys.IO;
 using Wavee.Infrastructure.Traits;
+using Wavee.Player;
 using Wavee.Spotify.Sys.Connection;
 using Wavee.Spotify.Sys.Connection.Contracts;
 using Wavee.Spotify.Sys.Crypto;
+using Wavee.Spotify.Sys.Playback;
 using Wavee.Spotify.Sys.Tokens;
 
 namespace Wavee.Spotify.Sys.Remote;
@@ -26,13 +29,38 @@ public static class SpotifyRemote
 {
     public static async ValueTask<SpotifyRemoteInfo> Connect(
         this SpotifyConnectionInfo connection,
+        IWaveePlayer player,
         SpotifyRemoteConfig config,
         CancellationToken ct = default)
     {
         var cluster = await SpotifyRemoteClient<WaveeRuntime>.Connect(
             connection,
+            player,
             config,
             ct).Run(WaveeCore.Runtime);
+
+        player.CurrentItemChanged.Subscribe(c =>
+        {
+            if (c.IsSome)
+            {
+                var item = c.ValueUnsafe();
+            }
+        });
+        player.PlayContextChanged.Subscribe(c =>
+        {
+            if (c.IsSome)
+            {
+                var item = c.ValueUnsafe();
+            }
+        });
+        player.IsPausedChanged.Subscribe(c =>
+        {
+            
+        });
+        player.CurrentPositionChanged.Subscribe(c =>
+        {
+            
+        });
 
         return cluster
             .Match(
@@ -43,7 +71,7 @@ public static class SpotifyRemote
 }
 
 internal static class SpotifyRemoteClient<RT>
-    where RT : struct, HasWebsocket<RT>, HasHttp<RT>
+    where RT : struct, HasWebsocket<RT>, HasHttp<RT>, HasTCP<RT>
 {
     public static Atom<HashMap<Guid, ChannelReader<SpotifyWebsocketMessage>>> ConnectionConsumer =
         Atom(LanguageExt.HashMap<Guid, ChannelReader<SpotifyWebsocketMessage>>.Empty);
@@ -55,6 +83,7 @@ internal static class SpotifyRemoteClient<RT>
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Aff<RT, SpotifyRemoteInfo> Connect(
         SpotifyConnectionInfo connection,
+        IWaveePlayer player,
         SpotifyRemoteConfig config, CancellationToken ct = default)
     {
         //these are not related
@@ -89,9 +118,102 @@ internal static class SpotifyRemoteClient<RT>
                 reader: coreWriteChannel.Reader,
                 config: config,
                 ct: ct)
-            from __ in WebsocketConnectionListener<RT>.StartListening(remoteInfo.ConnectionId)
+            from __ in Aff<RT, Unit>(async rt =>
+            {
+                //start consuming messages/requests
+                await Task.Factory.StartNew(async () =>
+                {
+                    var channel = coreChannel.Reader;
+                    await foreach (var packet in channel.ReadAllAsync())
+                    {
+                        //parse message
+                        var parsed = SpotifyRemoteMessage.ParseFrom(packet.Data);
+                        switch (parsed.Type)
+                        {
+                            case SpotifyRemoteMessageType.Message:
+                                if (parsed.Uri.StartsWith("hm://connect-state/v1/cluster"))
+                                {
+                                    var clusterUpdate = ClusterUpdate.Parser.ParseFrom(parsed.Payload.Span);
+                                    var cluster = clusterUpdate.Cluster;
+                                    remoteInfo.With(remoteInfo.SpotifyConnectionIdRef.Value, cluster);
+                                }
+
+                                break;
+                            case SpotifyRemoteMessageType.Request:
+                            {
+                                using var jsonDocument = JsonDocument.Parse(parsed.Payload);
+                                var request = jsonDocument.RootElement;
+                                var messageId = request.GetProperty("message_id").GetInt32();
+                                var sentBy = request.GetProperty("sent_by_device_id").GetString();
+                                var command = request.GetProperty("command");
+                                var endpoint = command.GetProperty("endpoint").GetString() switch
+                                {
+                                    "transfer" => SpotifyRequestCommandType.Transfer,
+                                    _ => throw new ArgumentOutOfRangeException()
+                                };
+                                ReadOnlyMemory<byte> data = command.GetProperty("data").GetBytesFromBase64();
+                                var requestCommand = new SpotifyRequestCommand(
+                                    MessageId: messageId,
+                                    SentBy: sentBy,
+                                    Endpoint: endpoint,
+                                    Data: data
+                                );
+                                atomic(() => remoteInfo.DeviceStateRef
+                                    .Swap(f =>
+                                    {
+                                        return f.Match(
+                                            None: () => new SpotifyDeviceState(config,
+                                                connection.Deviceid, messageId,
+                                                sentBy, Option<PlayOrigin>.None)
+                                            {
+                                                LastCommandId = messageId,
+                                                LastCommandSentByDeviceId = sentBy
+                                            },
+                                            Some: s => s with
+                                            {
+                                                LastCommandId = messageId,
+                                                LastCommandSentByDeviceId = sentBy
+                                            }
+                                        );
+                                    }));
+                                var didSomething = await SpotifyPlaybackRuntime<RT>
+                                    .Handle(requestCommand, player, remoteInfo, connection, config)
+                                    .Run(rt);
+
+                                bool success = false;
+                                if (didSomething.IsSucc)
+                                {
+                                    var response = didSomething.Match(Succ: r => r, Fail: _ => throw new Exception());
+                                    success = response;
+                                }
+
+                                var responsePayload = new
+                                {
+                                    type = "reply",
+                                    key = parsed.Uri,
+                                    payload = new
+                                    {
+                                        success = success.ToString().ToLower()
+                                    }
+                                };
+                                ReadOnlyMemory<byte> responsePayloadJson =
+                                    JsonSerializer.SerializeToUtf8Bytes(responsePayload);
+                                await coreWriteChannel.Writer.WriteAsync(new SpotifyWebsocketMessage
+                                {
+                                    Data = responsePayloadJson
+                                }, ct);
+                                break;
+                            }
+                            default:
+                                throw new ArgumentOutOfRangeException();
+                        }
+                    }
+                }, TaskCreationOptions.LongRunning);
+                return unit;
+            })
             select remoteInfo;
     }
+
 
     private static Aff<RT, Unit>
         ConnectAndAuthenticateToWebsocket(
@@ -152,7 +274,8 @@ internal static class SpotifyRemoteClient<RT>
         from dealer in AP<RT>.FetchDealer().Map(x => $"wss://{x.Host}:{x.Port}?access_token={{0}}")
         from accessToken in connectionInfo.FetchAccessToken().ToAff()
         let finalDealerUrl = string.Format(dealer, accessToken)
-        let newDeviceState = new SpotifyDeviceState(Config: config, DeviceId: connectionInfo.Deviceid)
+        let newDeviceState = new SpotifyDeviceState(Config: config, DeviceId: connectionInfo.Deviceid, Option<int>.None,
+            None, None)
         from websocket in Ws<RT>.Connect(finalDealerUrl)
         from message in Ws<RT>.Read(websocket)
         from connectionId in ParseConnectionId(message)
@@ -419,7 +542,7 @@ public class SpotifyRemoteInfo
     public IObservable<Option<Cluster>> ClusterChanged => ClusterRef.OnChange();
 
     internal SpotifyRemoteInfo With(
-        string spotifyConnectionId,
+        Option<string> spotifyConnectionId,
         Cluster cluster)
     {
         atomic(() =>
@@ -437,71 +560,8 @@ public class SpotifyRemoteInfo
     }
 }
 
-internal readonly record struct SpotifyDeviceState(SpotifyRemoteConfig Config, string DeviceId)
-{
-    public PutStateRequest BuildPutStateRequest(PutStateReason reason, Option<TimeSpan> playerTime)
-    {
-        return new PutStateRequest
-        {
-            PutStateReason = reason,
-            Device = new Device
-            {
-                PlayerState = BuildPlayerState(this),
-                DeviceInfo = new DeviceInfo
-                {
-                    CanPlay = true,
-                    Volume = (uint)(Config.InitialVolume * ushort.MaxValue),
-                    Name = Config.DeviceName,
-                    DeviceId = DeviceId,
-                    DeviceType = Config.DeviceType,
-                    DeviceSoftwareVersion = "1.0.0",
-                    ClientId = SpotifyConstants.KEYMASTER_CLIENT_ID,
-                    SpircVersion = "3.2.6",
-                    Capabilities = new Capabilities
-                    {
-                        CanBePlayer = true,
-                        GaiaEqConnectId = true,
-                        SupportsLogout = true,
-                        IsObservable = true,
-                        CommandAcks = true,
-                        SupportsRename = false,
-                        SupportsPlaylistV2 = true,
-                        IsControllable = true,
-                        SupportsTransferCommand = true,
-                        SupportsCommandRequest = true,
-                        VolumeSteps = (int)64,
-                        SupportsGzipPushes = true,
-                        NeedsFullPlayerState = false,
-                        SupportedTypes = { "audio/episode", "audio/track" }
-                    }
-                }
-            }
-        };
-    }
-
-    private static PlayerState BuildPlayerState(SpotifyDeviceState deviceState)
-    {
-        return new PlayerState
-        {
-            SessionId = string.Empty,
-            PlaybackId = string.Empty,
-            Suppressions = new Suppressions(),
-            ContextRestrictions = new Restrictions(),
-            Options = new ContextPlayerOptions
-            {
-                RepeatingContext = false,
-                RepeatingTrack = false,
-                ShufflingContext = false
-            },
-            PositionAsOfTimestamp = 0,
-            Position = 0,
-            PlaybackSpeed = 1.0,
-            IsPlaying = false
-        };
-    }
-}
-
 public readonly record struct SpotifyRemoteConfig(
     string DeviceName,
     DeviceType DeviceType,
+    PreferredQualityType PreferredQuality,
     float InitialVolume = 0.5f);
