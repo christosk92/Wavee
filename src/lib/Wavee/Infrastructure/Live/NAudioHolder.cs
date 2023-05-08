@@ -48,6 +48,11 @@ internal sealed class NAudioHolder
             await Task.Delay(10);
         }
     }
+
+    public void DiscardBuffer()
+    {
+        _bufferedWaveProvider.ClearBuffer();
+    }
 }
 
 internal struct AudioSamplesConverter

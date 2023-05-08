@@ -12,7 +12,6 @@ public interface IPlayContext
     /// </summary>
     /// <param name="at">
     /// An either with on the left: Random shuffle and on the right maybe an index.
-    /// If the right option is None, then the player should play from the beginning.
     /// </param>
     /// <returns>
     /// A stream that can be played, with metadata.

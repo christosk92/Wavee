@@ -40,7 +40,8 @@ public static class Http<RT> where RT : struct, HasHttp<RT>
     public static Aff<RT, HttpResponseMessage> Put(string url,
         Option<AuthenticationHeaderValue> authheader,
         Option<HashMap<string, string>> headers,
-        HttpContent content) =>
-        from httpResponse in default(RT).HttpEff.MapAsync(e => e.Put(url, authheader, headers, content))
+        HttpContent content,
+        CancellationToken ct = default) =>
+        from httpResponse in default(RT).HttpEff.MapAsync(e => e.Put(url, authheader, headers, content, ct))
         select httpResponse;
 }

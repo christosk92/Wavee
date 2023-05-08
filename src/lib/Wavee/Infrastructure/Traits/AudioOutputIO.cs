@@ -9,6 +9,7 @@ public interface AudioOutputIO
     ValueTask<Unit> Write(ReadOnlyMemory<double> data);
     Unit Start();
     Unit Stop();
+    Unit DiscardBuffer();
 }
 
 /// <summary>

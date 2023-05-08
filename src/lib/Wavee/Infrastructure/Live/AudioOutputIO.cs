@@ -37,4 +37,10 @@ internal readonly struct AudioOutputIO : Traits.AudioOutputIO
         _nAudioHolder.Stop();
         return unit;
     }
+
+    public Unit DiscardBuffer()
+    {
+        _nAudioHolder.DiscardBuffer();
+        return unit;
+    }
 }

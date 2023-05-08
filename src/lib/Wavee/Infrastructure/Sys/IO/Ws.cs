@@ -21,8 +21,7 @@ public static class Ws<RT>
     /// <typeparam name="RT">Runtime</typeparam>
     /// <returns>A new websocket client.</returns>
     [Pure, MethodImpl(AffOpt.mops)]
-    public static Aff<RT, WebSocket> Connect(string url) =>
-        from ct in cancelToken<RT>()
+    public static Aff<RT, WebSocket> Connect(string url, CancellationToken ct = default) =>
         from ws in default(RT).WsEff.MapAsync(e => e.Connect(url, ct))
         select ws;
 
@@ -54,5 +53,4 @@ public static class Ws<RT>
         from ct in cancelToken<RT>()
         from res in default(RT).WsEff.MapAsync(e => e.Receive(socket))
         select res;
-
 }

@@ -41,4 +41,9 @@ public static class AudioOutput<RT>
     public static Aff<RT, Unit> Write(ReadOnlyMemory<byte> data) =>
         from _ in default(RT).AudioOutputEff.MapAsync(e => e.Write(data))
         select unit;
+
+    [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Eff<RT, Unit> DiscardBuffer() =>
+        from _ in default(RT).AudioOutputEff.Map(e => e.DiscardBuffer())
+        select unit;
 }

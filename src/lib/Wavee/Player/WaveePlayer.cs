@@ -1,292 +1,345 @@
-﻿using System.ComponentModel.Design;
-using System.Reactive.Linq;
+﻿using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Threading.Channels;
-using LanguageExt.Common;
 using LanguageExt.UnsafeValueAccess;
 using NAudio.Wave;
+using Wavee.Infrastructure.Live;
 using Wavee.Infrastructure.Sys.IO;
 using Wavee.Infrastructure.Traits;
-using Wavee.Player.Context;
 using Wavee.Player.Playback;
+
+// ReSharper disable HeapView.BoxingAllocation
+
+[assembly: InternalsVisibleTo("Wavee.Spotify.Playback")]
+[assembly: InternalsVisibleTo("Wavee.Spotify.Remote")]
 
 namespace Wavee.Player;
 
-internal sealed class WaveePlayer<RT> : IWaveePlayer
-    where RT : struct, HasAudioOutput<RT>
+public static class WaveePlayer
 {
-    private readonly RT _runtime;
-    private readonly Ref<Option<IPlayContext>> _playContext = Ref(Option<IPlayContext>.None);
-    private readonly Ref<Option<CurrentPositionRecord>> _currentPosition = Ref(Option<CurrentPositionRecord>.None);
-    private readonly Ref<Option<PlayingItem>> _currentItem = Ref(Option<PlayingItem>.None);
-    private readonly Ref<bool> _isPaused = Ref(false);
-    private readonly Ref<bool> _playbackIsHappening = Ref(false);
-    private readonly Ref<RepeatState> _repeatState = Ref(RepeatState.None);
-    private readonly Ref<bool> _shuffle = Ref(false);
-
-    private readonly Ref<HashMap<Guid, Channel<IInternalPlaybackCommand>>> _playbackChannels =
-        Ref(LanguageExt.HashMap<Guid, Channel<IInternalPlaybackCommand>>.Empty);
-    //private readonly Channel<IInternalPlaybackCommand> _internalCommandChannel;
-    public WaveePlayer(RT runtime)
+    static WaveePlayer()
     {
-        // _internalCommandChannel = Channel.CreateUnbounded<IInternalPlaybackCommand>();
-        _runtime = runtime;
+        WaveePlayerRuntime<WaveeRuntime>.Runtime = WaveeCore.Runtime;
     }
-    public async Task<Unit> Command(IWaveePlayerCommand command)
+
+    public static async ValueTask<IDisposable> Play(IAudioStream stream,
+        Option<TimeSpan> from,
+        Option<bool> isPaused,
+        Action<IWaveePlayerState> stateChanged,
+        CancellationToken ct = default)
     {
-        switch (command)
+        var stateChangedObserver =
+            WaveePlayerRuntime<WaveeRuntime>.State.OnChange()
+                .Subscribe(stateChanged);
+        var aff = WaveePlayerRuntime<WaveeRuntime>.Play(stream, from, isPaused, ct);
+        var playResult = await aff.Run(WaveeCore.Runtime);
+        playResult.ThrowIfFail();
+        return stateChangedObserver;
+    }
+
+    public static async ValueTask Pause()
+    {
+        var aff = WaveePlayerRuntime<WaveeRuntime>.Pause();
+        var pauseResult = await aff.Run(WaveeCore.Runtime);
+        pauseResult.ThrowIfFail();
+    }
+
+    public static async ValueTask Seek(TimeSpan to)
+    {
+        var aff = WaveePlayerRuntime<WaveeRuntime>.Seek(to);
+        var seekResult = await aff.Run(WaveeCore.Runtime);
+        seekResult.ThrowIfFail();
+    }
+
+    public static async ValueTask Resume()
+    {
+        var aff = WaveePlayerRuntime<WaveeRuntime>.Resume();
+        var resumeResult = await aff.Run(WaveeCore.Runtime);
+        resumeResult.ThrowIfFail();
+    }
+}
+
+public interface IAudioStream
+{
+    IPlaybackItem Item { get; }
+    Stream AsStream();
+}
+
+internal static class WaveePlayerRuntime<RT> where RT : struct, HasAudioOutput<RT>
+{
+    private static ChannelWriter<IInternalPlaybackCommand> _commandWriter;
+    public static RT Runtime { get; set; }
+
+    public static Ref<IWaveePlayerState> State = Ref((IWaveePlayerState)new InvalidPlayerState(DateTimeOffset.UtcNow));
+
+    static WaveePlayerRuntime()
+    {
+        var channel = Channel.CreateUnbounded<IInternalPlaybackCommand>();
+        _commandWriter = channel.Writer;
+
+        var commandReader = channel.Reader;
+        Task.Factory.StartNew(async () =>
         {
-            case PlayContextCommand playContextCmd:
-                var playbackId = Guid.NewGuid();
-                var newChannel = Channel.CreateUnbounded<IInternalPlaybackCommand>();
-                atomic(() => _playbackChannels.Swap(r =>
-                {
-                    return r.Fold(r, (acc, kv) =>
-                    {
-                        kv.Value.Writer.TryComplete();
-                        return acc.Remove(kv.Key);
-                    }).Add(playbackId, newChannel);
-                }));
-                var run = await HandlePlayContext(
-                    playbackId,
-                    newChannel.Reader,
-                    playContextCmd,
-                    _playContext,
-                    _currentPosition,
-                    _currentItem,
-                    _isPaused,
-                    _playbackIsHappening,
-                    playContextCmd.StartFrom,
-                    playContextCmd.StartPlayback,
-                    _shuffle.Value,
-                    OnPlaybackEnded).Run(_runtime);
-                return Unit.Default;
-            case SeekCommand seekCmd:
-                {
-                    var channel = _playbackChannels.Value.Last().Value;
-                    await channel.Writer.WriteAsync(new InternalSeekToCmd(seekCmd.Position));
-                    break;
-                }
-            case PauseCommand:
-                {
-                    var channel = _playbackChannels.Value.Last().Value;
-                    await channel.Writer.WriteAsync(new InternalPauseCmd());
-                    break;
-                }
-
-            case ResumeCommand:
-                {
-                    var channel = _playbackChannels.Value.Last().Value;
-                    await channel.Writer.WriteAsync(new InternalResumeCmd());
-                    break;
-                }
-            case StopCommand:
-                {
-                    var channel = _playbackChannels.Value.Last().Value;
-                    await channel.Writer.WriteAsync(new InternalStopCmd());
-                    break;
-                }
-        }
-
-        return unit;
-    }
-
-    public Option<IPlayContext> PlayContext => _playContext.Value;
-
-
-    private void OnPlaybackEnded(TimeSpan aTimeSpan)
-    {
-
-    }
-
-    public bool PlaybackIsHappening => _playbackIsHappening.Value;
-    public bool IsPaused => _isPaused.Value;
-    public bool IsShuffling => _shuffle.Value;
-    public RepeatState RepeatState => _repeatState.Value;
-    public Option<TimeSpan> CurrentPosition => _currentPosition.Value.Map(x => x.Position);
-    public Option<PlayingItem> CurrentItem => _currentItem.Value;
-    public IObservable<Option<IPlayContext>> PlayContextChanged => _playContext.OnChange();
-
-    public IObservable<Option<PlayingItem>> CurrentItemChanged => _currentItem.OnChange();
-    public IObservable<Option<TimeSpan>> CurrentPositionChanged => _currentPosition.OnChange()
-        .Where(x => x.Match(Some: f => !f.IsIntermediate, None: () => true))
-        .Select(c => c.Map(f => f.Position));
-
-    public IObservable<Option<TimeSpan>> CurrentPositionChangedSpam => _currentPosition.OnChange()
-        .Select(c => c.Map(f => f.Position));
-
-    public IObservable<bool> IsPausedChanged => _isPaused.OnChange();
-    public IObservable<bool> PlaybackIsHappeningChanged => _playbackIsHappening.OnChange();
-    public IObservable<bool> IsShufflingChanged => _shuffle.OnChange();
-    public IObservable<RepeatState> RepeatStateChanged => _repeatState.OnChange();
-
-
-    private static Aff<RT, Unit> HandlePlayContext(
-        Guid playbackId,
-        ChannelReader<IInternalPlaybackCommand> commandReader,
-        PlayContextCommand playContextCmd,
-        Ref<Option<IPlayContext>> playContext,
-        Ref<Option<CurrentPositionRecord>> currentPosition,
-        Ref<Option<PlayingItem>> currentItem,
-        Ref<bool> isPaused,
-        Ref<bool> playbackIsHappening,
-        Option<TimeSpan> startAt,
-        Option<bool> start,
-        bool shuffle,
-        Action<TimeSpan> onPlaybackEnded) =>
-        from index in GetIndex(playContextCmd, shuffle)
-        from streamAndIndex in playContextCmd.Context.GetStreamAt(index).ToAff()
-            //let ____ = commander.WriteAsync(new InternalStopCmd(Some(newplaybackid)))
-        let _ = atomic(() => playContext.Swap(_ => Some(playContextCmd.Context)))
-        let __ = atomic(() => currentItem.Swap(_ => Some(new PlayingItem(streamAndIndex.Stream.Item, PlaybackReasonType.Context, streamAndIndex.AbsoluteIndex))))
-        from ___ in StartPlayback(
-            playbackId,
-            streamAndIndex.Stream, currentPosition, isPaused,
-            playbackIsHappening,
-            startAt,
-            start,
-            commandReader,
-            onPlaybackEnded)
-        select unit;
-
-    private static Eff<RT, Unit> StartPlayback(
-        Guid playbackId,
-        IPlaybackStream metadataStream,
-        Ref<Option<CurrentPositionRecord>> currentPosition,
-        Ref<bool> isPaused,
-        Ref<bool> playbackIsHappening,
-        Option<TimeSpan> startAt,
-        Option<bool> start,
-        ChannelReader<IInternalPlaybackCommand> commandChannel,
-        Action<TimeSpan> onPlaybackEnded)
-    {
-        //first we need to match a decoder
-        var audioStream = metadataStream.AsStream();
-
-        return
-            from decoder in audioStream.OpenAudioDecoder()
-            from _ in Eff<RT, Unit>((rt) =>
+            await foreach (var command in commandReader.ReadAllAsync())
             {
-                Task.Run(async () =>
+                switch (command)
                 {
-                    bool initial = true;
-                    while (true)
-                    {
-                        if (commandChannel.TryRead(out var command))
+                    case InternalStopCommand:
+                        AudioOutput<RT>.Stop().Run(Runtime);
+                        AudioOutput<RT>.DiscardBuffer().Run(Runtime);
+                        atomic(() => State.Swap(f =>
                         {
-                            switch (command)
+                            switch (f)
                             {
-                                case InternalPauseCmd:
-                                    AudioOutput<RT>.Stop().Run(rt);
-                                    atomic(() => isPaused.Swap(_ => true));
-                                    break;
-                                case InternalResumeCmd:
-                                    AudioOutput<RT>.Start().Run(rt);
-                                    atomic(() => isPaused.Swap(_ => false));
-                                    break;
-                                case InternalSeekToCmd seekTo:
-                                    decoder.CurrentTime = seekTo.Position;
-                                    atomic(() => currentPosition.Swap(_ => Some(new CurrentPositionRecord(seekTo.Position, false))));
-                                    break;
-                                case InternalStopCmd stop:
-                                    if (stop.InExchangeFor != playbackId)
+                                case IWaveeInPlaybackState playbackState:
+                                    playbackState.Decoder.Dispose();
+                                    playbackState.Stream.AsStream().Dispose();
+                                    return new StoppedPlayerState(DateTimeOffset.UtcNow,
+                                        Item: Some(playbackState.Stream.Item));
+                                case StoppedPlayerState stoppedState:
+                                    return stoppedState with { Since = DateTimeOffset.UtcNow };
+                                default:
+                                    return new StoppedPlayerState(DateTimeOffset.UtcNow, None);
+                            }
+                        }));
+                        break;
+                    case InternalResumeCommand:
+                        AudioOutput<RT>.Start().Run(Runtime);
+                        atomic(() => State.Swap(f =>
+                        {
+                            switch (f)
+                            {
+                                case WaveePausedState paused:
+                                    return paused.ToPlaying();
+                                default:
+                                    return f;
+                            }
+                        }));
+                        break;
+                    case InternalPauseCommand:
+                        AudioOutput<RT>.Stop().Run(Runtime);
+                        atomic(() => State.Swap(f =>
+                        {
+                            switch (f)
+                            {
+                                case WaveePlayingState playing:
+                                    return playing.ToPaused();
+                                default:
+                                    return f;
+                            }
+                        }));
+                        break;
+                    case InternalSeekCommand to:
+                        atomic(() => State.Swap(f =>
+                        {
+                            switch (f)
+                            {
+                                case WaveePausedState paused:
+                                    paused.Decoder.CurrentTime = to.SeekTo;
+                                    return paused with
                                     {
-                                        AudioOutput<RT>.Stop().Run(rt);
-                                        var stoppedAt = decoder.CurrentTime;
-                                        onPlaybackEnded(stoppedAt);
-                                        return;
+                                        PositionAsOfTimestamp = paused.Decoder.CurrentTime,
+                                        Since = DateTimeOffset.UtcNow
+                                    };
+                                case WaveePlayingState playing:
+                                    AudioOutput<RT>.DiscardBuffer().Run(Runtime);
+                                    playing.Decoder.CurrentTime = to.SeekTo;
+                                    return playing with
+                                    {
+                                        PositionAsOfTimestamp = playing.Decoder.CurrentTime,
+                                        Since = DateTimeOffset.UtcNow
+                                    };
+                                default:
+                                    return f;
+                            }
+                        }));
+                        break;
+                    case InternalPlayCommand play:
+                        //if we are already playing, stop
+                        if (State.Value is IWaveeInPlaybackState playing)
+                        {
+                            AudioOutput<RT>.Stop().Run(Runtime);
+                            AudioOutput<RT>.DiscardBuffer().Run(Runtime);
+                            playing.Decoder.Dispose();
+                            playing.Stream.AsStream().Dispose();
+                        }
+
+                        var startAt = play.StartAt;
+                        var startPaused = play.StartPaused;
+                        var decoderMaybe =
+                            play.Stream.AsStream().OpenAudioDecoder().Run();
+                        bool initial = true;
+                        await Task.Factory.StartNew(async () =>
+                        {
+                            do
+                            {
+                                if (decoderMaybe.IsFail)
+                                {
+                                    Debugger.Break();
+                                }
+
+                                var decoder = decoderMaybe.ThrowIfFail();
+
+                                if (startAt.IsSome)
+                                {
+                                    decoder.CurrentTime = startAt.ValueUnsafe();
+                                    startAt = None;
+                                }
+
+                                if (startPaused.IsSome)
+                                {
+                                    var paused = startPaused.ValueUnsafe();
+                                    if (paused)
+                                    {
+                                        AudioOutput<RT>.Stop().Run(Runtime);
+                                        atomic(() => State.Swap(_ =>
+                                            new WaveePausedState(DateTimeOffset.UtcNow, play.Stream,
+                                                decoder.CurrentTime)
+                                            {
+                                                Decoder = decoder
+                                            }));
+                                    }
+                                    else
+                                    {
+                                        AudioOutput<RT>.Start().Run(Runtime);
+                                        atomic(() => State.Swap(_ =>
+                                            new WaveePlayingState(DateTimeOffset.UtcNow, play.Stream,
+                                                decoder.CurrentTime)
+                                            {
+                                                Decoder = decoder
+                                            }));
                                     }
 
-                                    break;
-                            }
-                        }
-                        else if (commandChannel.Completion.IsCompleted)
-                        {
-                            return;
-                        }
+                                    startPaused = Option<bool>.None;
+                                }
+                                else if (initial)
+                                {
+                                    AudioOutput<RT>.Start().Run(Runtime);
 
-                        if (startAt.IsSome)
-                        {
-                            decoder.CurrentTime = startAt.ValueUnsafe();
-                            startAt = None;
-                        }
+                                    atomic(() =>
+                                        State.Swap(_ =>
+                                            new WaveePlayingState(DateTimeOffset.UtcNow, play.Stream,
+                                                decoder.CurrentTime)
+                                            {
+                                                Decoder = decoder
+                                            }));
+                                    initial = false;
+                                }
 
-                        if (start.IsSome)
-                        {
-                            var startVal = start.ValueUnsafe();
-                            atomic(() => isPaused.Swap(_ => !startVal));
-                            start = None;
-                            if (startVal)
-                            {
-                                AudioOutput<RT>.Start().Run(rt);
-                            }
-                            else
-                            {
-                                AudioOutput<RT>.Stop().Run(rt);
-                            }
-                        }
-                        else if (initial)
-                        {
-                            AudioOutput<RT>.Start().Run(rt);
-                        }
+                                const uint bufferSize = 4096;
+                                Memory<byte> buffer = new byte[bufferSize];
+                                var sample = decoder.Read(buffer.Span);
+                                if (sample == 0)
+                                {
+                                    //end of stream
+                                    return;
+                                }
 
-                        initial = false;
-                        const uint bufferSize = 4096;
-                        Memory<byte> buffer = new byte[bufferSize];
-                        var sample = decoder.Read(buffer.Span);
-                        if (sample == 0)
-                        {
-                            //end of stream
-                            onPlaybackEnded(decoder.CurrentTime);
-                            return;
-                        }
-
-                        //TODO: normalisation/equalizer etc
-
-                        var wrote = await AudioOutput<RT>.Write(buffer)
-                            .Run(rt);
-                        atomic(() =>
-                        {
-                            currentPosition.Swap(_ => Some(new CurrentPositionRecord(decoder.CurrentTime, true)));
-                            playbackIsHappening.Swap(_ => true);
-                        });
-                    }
-                });
-                return unit;
-            })
-            select unit;
-        // return Eff((rt) =>
-        // {
-        //     return 
-        // });
+                                var wrote = await AudioOutput<RT>.Write(buffer)
+                                    .Run(Runtime);
+                            } while (State.Value is IWaveeInPlaybackState);
+                        }, CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+                        break;
+                }
+            }
+        });
     }
 
-    private static Eff<RT, Either<Shuffle, Option<int>>> GetIndex(PlayContextCommand playContextCmd, bool shuffle)
+    public static Aff<RT, Unit> Play(IAudioStream stream,
+        Option<TimeSpan> startAt,
+        Option<bool> startPaused,
+        CancellationToken ct = default) =>
+        from _ in Aff(async () =>
+        {
+            await _commandWriter.WriteAsync(new InternalPlayCommand(stream, startAt, startPaused), ct);
+            return unit;
+        })
+        select unit;
+
+    public static Aff<RT, Unit> Seek(TimeSpan to) =>
+        from _ in Aff(async () =>
+        {
+            await _commandWriter.WriteAsync(new InternalSeekCommand(to));
+            return unit;
+        })
+        select unit;
+
+    public static Aff<RT, Unit> Pause() =>
+        from _ in Aff(async () =>
+        {
+            await _commandWriter.WriteAsync(new InternalPauseCommand());
+            return unit;
+        })
+        select unit;
+
+    public static Aff<RT, Unit> Resume() =>
+        from _ in Aff(async () =>
+        {
+            await _commandWriter.WriteAsync(new InternalResumeCommand());
+            return unit;
+        })
+        select unit;
+
+    private interface IInternalPlaybackCommand
     {
-        if (playContextCmd.IndexInContext.IsSome)
-        {
-            return SuccessEff(Either<Shuffle, Option<int>>.Right(Some(playContextCmd.IndexInContext.ValueUnsafe())));
-        }
+    }
 
-        if (shuffle)
-        {
-            return SuccessEff(Either<Shuffle, Option<int>>.Left(new Shuffle()));
-        }
+    private readonly record struct InternalStopCommand : IInternalPlaybackCommand;
 
-        return SuccessEff(Either<Shuffle, Option<int>>.Right(None));
+    private readonly record struct InternalPauseCommand : IInternalPlaybackCommand;
+
+    private readonly record struct InternalResumeCommand : IInternalPlaybackCommand;
+
+    private readonly record struct InternalSeekCommand(TimeSpan SeekTo) : IInternalPlaybackCommand;
+
+    private readonly record struct InternalPlayCommand
+        (IAudioStream Stream, Option<TimeSpan> StartAt, Option<bool> StartPaused) : IInternalPlaybackCommand;
+}
+
+public interface IWaveePlayerState
+{
+}
+
+public interface IWaveeInPlaybackState : IWaveePlayerState
+{
+    DateTimeOffset Since { get; init; }
+    IAudioStream Stream { get; }
+    TimeSpan PositionAsOfTimestamp { get; init; }
+    internal WaveStream Decoder { get; }
+}
+
+public readonly record struct WaveePausedState
+    (DateTimeOffset Since, IAudioStream Stream, TimeSpan PositionAsOfTimestamp) : IWaveeInPlaybackState
+{
+    public required WaveStream Decoder { get; init; }
+
+    public TimeSpan Position => Decoder.CurrentTime;
+
+    public WaveePlayingState ToPlaying()
+    {
+        return new(DateTimeOffset.UtcNow, Stream, Decoder.CurrentTime)
+        {
+            Decoder = Decoder
+        };
     }
 }
 
-internal interface IInternalPlaybackCommand { }
-internal readonly record struct InternalSeekToCmd(TimeSpan Position) : IInternalPlaybackCommand;
-internal readonly record struct InternalPauseCmd : IInternalPlaybackCommand;
-internal readonly record struct InternalResumeCmd : IInternalPlaybackCommand;
-internal readonly record struct InternalStopCmd(Option<Guid> InExchangeFor) : IInternalPlaybackCommand;
-
-public enum RepeatState
+public readonly record struct WaveePlayingState(DateTimeOffset Since, IAudioStream Stream,
+    TimeSpan PositionAsOfTimestamp) : IWaveeInPlaybackState
 {
-    None,
-    RepeatOne,
-    RepeatAll
+    public TimeSpan Position => Decoder.CurrentTime;
+
+    public WaveePausedState ToPaused()
+    {
+        return new(DateTimeOffset.UtcNow, Stream, Decoder.CurrentTime)
+        {
+            Decoder = Decoder
+        };
+    }
+
+    public required WaveStream Decoder { get; init; }
 }
 
-internal readonly record struct CurrentPositionRecord(TimeSpan Position, bool IsIntermediate);
+public readonly record struct InvalidPlayerState(DateTimeOffset Since) : IWaveePlayerState;
+
+public readonly record struct StoppedPlayerState(DateTimeOffset Since, Option<IPlaybackItem> Item) : IWaveePlayerState;
