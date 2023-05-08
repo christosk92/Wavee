@@ -5,14 +5,10 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
     </PropertyGroup>
-
     <ItemGroup>
-      <PackageReference Include="LanguageExt.Core" Version="4.4.3" />
+        <PackageReference Include="LanguageExt.Core" Version="4.4.3" />
     </ItemGroup>
-
     <ItemGroup>
-      <ProjectReference Include="..\Wavee.Spotify.Proto\Wavee.Spotify.Proto.csproj" />
-      <ProjectReference Include="..\Wavee.Spotify\Wavee.Spotify.csproj" />
+      <ProjectReference Include="..\Wavee.Spotify.Playback\Wavee.Spotify.Playback.csproj" />
     </ItemGroup>
-
 </Project>

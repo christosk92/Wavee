@@ -1,16 +1,7 @@
-﻿using System.Diagnostics;
-using System.Security.Cryptography;
-using Eum.Spotify;
-using Eum.Spotify.connectstate;
+﻿using Eum.Spotify;
 using Google.Protobuf;
-using LanguageExt;
-using LanguageExt.UnsafeValueAccess;
-using Spotify.Metadata;
 using Wavee;
 using Wavee.Spotify;
-using Wavee.Spotify.Sys.Mercury;
-using Wavee.Spotify.Sys.Playback;
-using Wavee.Spotify.Sys.Remote;
 
 var loginCredentials = new LoginCredentials
 {
@@ -25,15 +16,16 @@ var productInfo = await info.ProductInfo();
 var countryCodeAgain = await info.CountryCode();
 
 var player = WaveeCore.Player;
-var remoteInfo = await info.Connect(
-    player: player,
-    config: new SpotifyRemoteConfig(
-        DeviceName: "Wavee",
-        DeviceType.Computer,
-        PreferredQualityType.High
-    ));
-remoteInfo.ClusterChanged.Subscribe((c) =>
-{
-    var k = c.ValueUnsafe();
-});
+
+// var remoteInfo = await info.Connect(
+//     player: player,
+//     config: new SpotifyRemoteConfig(
+//         DeviceName: "Wavee",
+//         DeviceType.Computer,
+//         PreferredQualityType.High
+//     ));
+// remoteInfo.ClusterChanged.Subscribe((c) =>
+// {
+//     var k = c.ValueUnsafe();
+// });
 Console.ReadLine();

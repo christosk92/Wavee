@@ -1,10 +1,13 @@
 ﻿using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Runtime.CompilerServices;
 using System.Text.Json.Serialization;
 using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
 using Wavee.Infrastructure.Sys.IO;
 using Wavee.Infrastructure.Traits;
+
+[assembly: InternalsVisibleTo("Wavee.Spotify.Playback")]
 
 namespace Wavee.Spotify.Sys;
 

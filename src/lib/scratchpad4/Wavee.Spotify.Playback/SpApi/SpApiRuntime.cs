@@ -5,9 +5,10 @@ using Google.Protobuf;
 using LanguageExt.Effects.Traits;
 using Wavee.Infrastructure.Sys.IO;
 using Wavee.Infrastructure.Traits;
+using Wavee.Spotify.Sys;
 using Wavee.Spotify.Sys.Tokens;
 
-namespace Wavee.Spotify.Sys.SpApi;
+namespace Wavee.Spotify.Playback.SpApi;
 
 internal static class SpApiRuntime<RT> where RT : struct, HasCancel<RT>, HasHttp<RT>
 {
@@ -15,7 +16,6 @@ internal static class SpApiRuntime<RT> where RT : struct, HasCancel<RT>, HasHttp
     public static Aff<RT, StorageResolveResponse> GetAudioStorage(
         SpotifyConnectionInfo connectionInfo,
         ByteString fileId,
-        string userId,
         CancellationToken ct = default) =>
         from baseUrl in AP<RT>.FetchSpClient()
             .Map(x=> $"https://{x.Host}:{x.Port}")
