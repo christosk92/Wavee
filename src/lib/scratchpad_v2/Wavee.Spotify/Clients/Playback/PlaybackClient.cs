@@ -1,10 +1,13 @@
-﻿using Wavee.Infrastructure.Traits;
+﻿using LanguageExt.Effects.Traits;
+using Wavee.Infrastructure.Traits;
 using Wavee.Spotify.Clients.Mercury;
+using Wavee.Spotify.Clients.Mercury.Metadata;
 using Wavee.Spotify.Clients.Remote;
+using Wavee.Spotify.Infrastructure.Sys;
 
 namespace Wavee.Spotify.Clients.Playback;
 
-internal readonly struct PlaybackClient<RT> : IPlaybackClient where RT : struct, HasLog<RT>
+internal readonly struct PlaybackClient<RT> : IPlaybackClient where RT : struct, HasLog<RT>, HasCancel<RT>
 {
     private static AtomHashMap<Guid, Action<SpotifyPlaybackInfo>> _onPlaybackInfo =
         LanguageExt.AtomHashMap<Guid, Action<SpotifyPlaybackInfo>>.Empty;
@@ -37,19 +40,41 @@ internal readonly struct PlaybackClient<RT> : IPlaybackClient where RT : struct,
     public async Task<SpotifyPlaybackInfo> PlayTrack(string uri, CancellationToken ct = default)
     {
         var baseInfo = new SpotifyPlaybackInfo(uri,
+            None, LanguageExt.HashMap<string, string>.Empty,
             uri, None, None, false, true);
-        
+
         _onPlaybackInfo.Iter(x => x(baseInfo));
+
+        //start loading track
+        var trackStreamAff = await SpotifyPlayback<RT>.LoadTrack(
+            uri,
+            _mainConnectionId,
+            _getBearer,
+            _mercury, ct).Run(_runtime);
         
-        
-        
-        return new SpotifyPlaybackInfo();
+        var stream = trackStreamAff.ThrowIfFail();
+        _onPlaybackInfo.Iter(x =>
+        {
+            baseInfo = baseInfo.EnrichFrom(stream.Metadata); 
+            x(baseInfo);
+        });
+
+        return baseInfo;
     }
 }
 
-public readonly record struct SpotifyPlaybackInfo(Option<string> TrackUri,
+public readonly record struct SpotifyPlaybackInfo(
+    Option<string> TrackUri,
+    Option<int> Duration,
+    HashMap<string, string> Metadata,
     Option<string> ContextUri,
     Option<string> PlaybackId,
     Option<TimeSpan> Position,
     bool Paused,
-    bool Buffering);
+    bool Buffering)
+{
+    public SpotifyPlaybackInfo EnrichFrom(TrackOrEpisode streamMetadata)
+    {
+        throw new NotImplementedException();
+    }
+}
