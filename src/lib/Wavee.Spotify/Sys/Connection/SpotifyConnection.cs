@@ -194,7 +194,7 @@ internal static class SpotifyConnection<RT> where RT : struct,
             select newConnectionInfo.With(connectionResult.Item1);
     }
 
-    private static Aff<RT, Unit> StartMessageReader(Guid connectionId,
+    internal static Aff<RT, Unit> StartMessageReader(Guid connectionId,
         ChannelWriter<SpotifyPacket> writer,
         ChannelReader<SpotifyPacket> reader,
         APWelcome welcomeMessage,

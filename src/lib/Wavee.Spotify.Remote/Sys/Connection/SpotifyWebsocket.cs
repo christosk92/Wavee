@@ -6,6 +6,7 @@ using System.Text.Json;
 using CommunityToolkit.HighPerformance;
 using Wavee.Infrastructure.Sys.IO;
 using Wavee.Infrastructure.Traits;
+using Wavee.Spotify.Remote.Helpers;
 using Wavee.Spotify.Sys;
 
 namespace Wavee.Spotify.Remote.Sys.Connection;

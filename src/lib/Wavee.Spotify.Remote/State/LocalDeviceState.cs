@@ -1,7 +1,7 @@
 ﻿using Eum.Spotify.connectstate;
 using LanguageExt.UnsafeValueAccess;
 
-namespace Wavee.Spotify.Remote;
+namespace Wavee.Spotify.Remote.State;
 
 internal readonly record struct LocalDeviceState(PlayerState State,
     DeviceInfo DeviceInfo,

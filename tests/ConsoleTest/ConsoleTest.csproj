@@ -5,11 +5,19 @@
         <TargetFramework>net8.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+        <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     </PropertyGroup>
+
+    <ItemGroup>
+      <Content Include="..\Wavee\.dockerignore">
+        <Link>.dockerignore</Link>
+      </Content>
+    </ItemGroup>
 
     <ItemGroup>
       <ProjectReference Include="..\..\src\lib\Wavee.Spotify.Playback\Wavee.Spotify.Playback.csproj" />
       <ProjectReference Include="..\..\src\lib\Wavee.Spotify.Proto\Wavee.Spotify.Proto.csproj" />
+      <ProjectReference Include="..\..\src\lib\Wavee.Spotify.Remote\Wavee.Spotify.Remote.csproj" />
       <ProjectReference Include="..\..\src\lib\Wavee.Spotify\Wavee.Spotify.csproj" />
       <ProjectReference Include="..\..\src\lib\Wavee\Wavee.csproj" />
     </ItemGroup>
@@ -17,6 +25,6 @@
     <ItemGroup>
       <PackageReference Include="LanguageExt.Core" Version="4.4.3" />
     </ItemGroup>
-
+    
 
 </Project>

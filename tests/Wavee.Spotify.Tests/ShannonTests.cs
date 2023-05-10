@@ -1,5 +1,5 @@
 ﻿using System.Text;
-using Wavee.Spotify.Infrastructure.Crypto;
+using Wavee.Spotify.Sys.Crypto;
 
 namespace Wavee.Spotify.Tests;
 
