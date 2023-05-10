@@ -38,6 +38,32 @@ public readonly record struct LocalDeviceState(
         };
     }
 
+    public LocalDeviceState SetContextUri(Option<string> infoContextUri)
+    {
+        if (infoContextUri.IsSome)
+        {
+            var contextUri = infoContextUri.ValueUnsafe();
+            State.ContextUri = contextUri;
+            State.ContextUrl = $"context://{contextUri}";
+
+            return this with
+            {
+                State = State
+            };
+        }
+
+        return this;
+    }
+
+    public LocalDeviceState SetDuration(Option<int> infoDuration)
+    {
+        State.Duration = infoDuration.IfNone(0);
+        return this with
+        {
+            State = State
+        };
+    }
+
     public LocalDeviceState Buffering(Option<string> trackUri)
     {
         State.IsPlaying = false;
@@ -49,6 +75,30 @@ public readonly record struct LocalDeviceState(
         };
     }
 
+    public LocalDeviceState Paused()
+    {
+        State.IsPlaying = true;
+        State.IsBuffering = false;
+        State.IsPaused = true;
+        return this with
+        {
+            State = State
+        };
+    }
+    public LocalDeviceState SetTrack(Option<ProvidedTrack> infoTrack)
+    {
+        if (infoTrack.IsSome)
+        {
+            var track = infoTrack.ValueUnsafe();
+            State.Track = track;
+            return this with
+            {
+                State = State
+            };
+        }
+
+        return this;
+    }
     public LocalDeviceState Playing()
     {
         var wasPaused = State.IsPaused;
@@ -71,7 +121,7 @@ public readonly record struct LocalDeviceState(
         };
     }
 
-    private LocalDeviceState SetPosition(long pos)
+    internal LocalDeviceState SetPosition(long pos)
     {
         State.Timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         State.PositionAsOfTimestamp = pos;
@@ -204,4 +254,5 @@ public readonly record struct LocalDeviceState(
             State = clusterPlayerState
         };
     }
+    
 }

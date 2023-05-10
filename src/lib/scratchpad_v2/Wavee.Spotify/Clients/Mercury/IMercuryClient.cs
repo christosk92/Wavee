@@ -3,6 +3,8 @@ using System.Threading.Channels;
 using Eum.Spotify;
 using Google.Protobuf;
 using LanguageExt.UnsafeValueAccess;
+using Spotify.Metadata;
+using Wavee.Spotify.Clients.Info;
 using Wavee.Spotify.Infrastructure;
 using Wavee.Spotify.Infrastructure.Connection;
 
@@ -11,6 +13,8 @@ namespace Wavee.Spotify.Clients.Mercury;
 public interface IMercuryClient
 {
     Task<MercuryResponse> Get(string uri, CancellationToken ct = default);
+    Task<Track> GetTrack(SpotifyId id, CancellationToken ct = default);
+    Task<Episode> GetEpisode(SpotifyId id, CancellationToken ct = default);
 }
 
 internal readonly struct MercuryClient : IMercuryClient
@@ -101,6 +105,20 @@ internal readonly struct MercuryClient : IMercuryClient
         }
 
         return default;
+    }
+
+    public async Task<Track> GetTrack(SpotifyId id, CancellationToken ct = default)
+    {
+        const string uri = "hm://metadata/4/track/{0}";
+        var response = await Get(string.Format(uri, id.ToBase16()), ct);
+        return Track.Parser.ParseFrom(response.Body.Span);
+    }
+
+    public async Task<Episode> GetEpisode(SpotifyId id, CancellationToken ct = default)
+    {
+        const string uri = "hm://metadata/4/episode/{0}";
+        var response = await Get(string.Format(uri, id.ToBase16()), ct);
+        return Episode.Parser.ParseFrom(response.Body.Span);
     }
 
 

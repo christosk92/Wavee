@@ -152,16 +152,31 @@ internal readonly struct RemoteClient<RT> : IRemoteClient where RT : struct, Has
                 using var disposable = playbackInfoChanged.Subscribe(async info =>
                 {
                     var build = lastState
-                        .Swap(f => f
-                            .SetActive(true)
-                            .Buffering(info.TrackUri)).ValueUnsafe();
+                        .Swap(f =>
+                        {
+                            var k = f
+                                .SetActive(true);
+                            if (info.Buffering)
+                                k = k.Buffering(None);
+                            if (info.Paused)
+                                k = k.Paused();
+                            else k = k.Playing();
+
+                            k = k.SetDuration(info.Duration);
+
+                            k = k.SetContextUri(info.ContextUri);
+
+                            k = k.SetTrack(info.Track);
+                            k = k.SetPosition((long)info.Position.IfNone(TimeSpan.Zero).TotalMilliseconds);
+                            return k;
+                        }).ValueUnsafe();
                     //TODO: Build local state
                     var putState = build.BuildPutState(PutStateReason.PlayerStateChanged, info.Position);
                     var aff = await RemoteState<RT>.Put(putState, build.DeviceId,
                         build.ConnectionId,
                         getBearer, ct).Run(rt);
                 });
-                
+
                 bool breakOut = false;
                 while (!breakOut)
                 {
