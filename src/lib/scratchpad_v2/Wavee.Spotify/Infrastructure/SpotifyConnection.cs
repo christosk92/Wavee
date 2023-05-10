@@ -1,37 +1,66 @@
+using System.Buffers.Binary;
 using System.Net.NetworkInformation;
 using System.Text;
 using System.Threading.Channels;
 using LanguageExt.Effects.Traits;
+using Wavee.Infrastructure.Sys;
+using Wavee.Infrastructure.Traits;
 using Wavee.Spotify.Clients.Info;
+using Wavee.Spotify.Clients.Mercury;
+using Wavee.Spotify.Clients.Playback;
+using Wavee.Spotify.Clients.Remote;
+using Wavee.Spotify.Clients.Token;
 using Wavee.Spotify.Infrastructure.Connection;
 
 namespace Wavee.Spotify.Infrastructure;
 
-internal sealed class SpotifyConnection<RT> : ISpotifyConnection where RT : struct, HasCancel<RT>
+internal delegate bool PackageListenerRequest(SpotifyPacket packet);
+
+internal readonly record struct PackageListenerRecord(PackageListenerRequest Request,
+    ChannelWriter<SpotifyPacket> Writer);
+
+internal sealed class SpotifyConnection<RT> : ISpotifyConnection
+    where RT : struct, HasLog<RT>, HasWebsocket<RT>, HasHttp<RT>
 {
     private readonly CancellationTokenSource _cts;
     private readonly ChannelWriter<SpotifyPacket> _channelWriter;
-    private readonly ChannelReader<SpotifyPacket> _coreChannelReader;
     private readonly RT _runtime;
     private readonly InternalSpotifyConnectionInfo _info;
 
-    private readonly AtomHashMap<Func<SpotifyPacket, bool>, Func<SpotifyPacket, bool>> _packetListeners =
-        LanguageExt.AtomHashMap<Func<SpotifyPacket, bool>, Func<SpotifyPacket, bool>>.Empty;
+    private readonly AtomHashMap<Guid, PackageListenerRecord> _packetListeners =
+        LanguageExt.AtomHashMap<Guid, PackageListenerRecord>.Empty;
 
     private readonly AtomSeq<SpotifyPacket> _packetsWithoutPurpose = LanguageExt.AtomSeq<SpotifyPacket>.Empty;
 
-    public SpotifyConnection(InternalSpotifyConnectionInfo info, ChannelReader<SpotifyPacket> coreChannelReader,
+    public SpotifyConnection(InternalSpotifyConnectionInfo info,
+        ChannelReader<SpotifyPacket> coreChannelReader,
         ChannelWriter<SpotifyPacket> channelWriter,
         RT runtime)
     {
         _cts = new CancellationTokenSource();
         _info = info;
-        _coreChannelReader = coreChannelReader;
         _channelWriter = channelWriter;
         _runtime = runtime;
 
-        //start a ping listener
-        _packetListeners.Add(x => x.Command is SpotifyPacketType.Ping or SpotifyPacketType.PongAck, PingPong);
+        var pingPongChannel = Channel.CreateUnbounded<SpotifyPacket>();
+
+        _packetListeners.Add(Guid.NewGuid(), new PackageListenerRecord(
+            x => x.Command is SpotifyPacketType.Ping or SpotifyPacketType.PongAck,
+            pingPongChannel.Writer));
+
+        _ = Task.Factory.StartNew(
+                async () =>
+                {
+                    await foreach (var packet in pingPongChannel.Reader.ReadAllAsync(_cts.Token))
+                    {
+                        PingPong(
+                            runtime,
+                            channelWriter,
+                            packet);
+                    }
+                },
+                TaskCreationOptions.LongRunning)
+            .Result;
 
         _ = Task.Factory.StartNew(
                 async () =>
@@ -42,33 +71,86 @@ internal sealed class SpotifyConnection<RT> : ISpotifyConnection where RT : stru
             .Result;
     }
 
-    private bool PingPong(SpotifyPacket arg)
+    // ReSharper disable once HeapView.BoxingAllocation
+    public ISpotifyConnectionInfo Info => new SpotifyConnectionInfo<RT>(_runtime,
+        CountryCodeAff(_packetListeners, _packetsWithoutPurpose),
+        ProductInfoAff(_packetListeners, _packetsWithoutPurpose));
+
+    public IMercuryClient Mercury => new MercuryClient(
+        connectionId: _info.ConnectionId,
+        channelWriter: _channelWriter,
+        addPackageListener: request =>
+        {
+            var newId = Guid.NewGuid();
+            var newChannel = Channel.CreateUnbounded<SpotifyPacket>();
+            _packetListeners.Add(newId, new PackageListenerRecord(request, newChannel.Writer));
+            return (newId, newChannel.Reader);
+        },
+        removePackageListener: id =>
+        {
+            var listener = _packetListeners[id];
+            listener.Writer.TryComplete();
+            _packetListeners.Remove(id);
+        }
+    );
+
+    public ITokenClient Token => new TokenClient(
+        connectionId: _info.ConnectionId,
+        mercuryClient: Mercury
+    );
+
+    public IRemoteClient Remote => new RemoteClient<RT>(
+        mainConnectionId: _info.ConnectionId,
+        getBearer: () => Token.GetToken(),
+        deviceId: _info.Deviceid,
+        deviceName: _info.Config.Remote.DeviceName,
+        deviceType: _info.Config.Remote.DeviceType,
+        runtime: _runtime,
+        playbackClient: Playback
+    );
+
+    public IPlaybackClient Playback => new PlaybackClient<RT>(
+        mainConnectionId: _info.ConnectionId,
+        getBearer: () => Token.GetToken(),
+        mercury: Mercury,
+        runtime: _runtime,
+        playbackInfo => RemoteClient<RT>.OnPlaybackChanged(_info.ConnectionId, playbackInfo)
+    );
+
+    private static Unit PingPong(
+        RT runtime,
+        ChannelWriter<SpotifyPacket> pingPongWriter,
+        SpotifyPacket arg)
     {
         switch (arg.Command)
         {
             case SpotifyPacketType.Ping:
             {
+                var serverTimestamp =
+                    BinaryPrimitives.ReadUInt32BigEndian(arg.Data.Span);
+                var clientTimestamp = (uint)DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+                _ = Log<RT>.logInfo(
+                        $"Received ping request from server with timestamp: {serverTimestamp}, Client: {clientTimestamp}")
+                    .Run(runtime);
+
                 //ping back
                 var pong = new SpotifyPacket(SpotifyPacketType.Pong, new byte[4]);
-                _channelWriter.TryWrite(pong);
+                pingPongWriter.TryWrite(pong);
                 break;
             }
             case SpotifyPacketType.PongAck:
             {
+                var pkg = arg.Data.Span;
+                _ = Log<RT>.logInfo("Received Pong acknowledgment from server.").Run(runtime);
                 break;
             }
         }
 
-        return true;
+        return unit;
     }
 
-
-    public ISpotifyConnectionInfo Info => new SpotifyConnectionInfo<RT>(_runtime,
-        CountryCodeAff(_packetListeners, _packetsWithoutPurpose),
-        ProductInfoAff(_packetListeners, _packetsWithoutPurpose));
-
     private static Aff<RT, Option<HashMap<string, string>>> ProductInfoAff(
-        AtomHashMap<Func<SpotifyPacket, bool>, Func<SpotifyPacket, bool>> packetListeners,
+        AtomHashMap<Guid, PackageListenerRecord> packetListeners,
         AtomSeq<SpotifyPacket> packetsWithoutPurpose)
     {
         return Aff<RT, Option<HashMap<string, string>>>(async rt =>
@@ -79,7 +161,7 @@ internal sealed class SpotifyConnection<RT> : ISpotifyConnection where RT : stru
     }
 
     private static Aff<RT, Option<string>> CountryCodeAff(
-        AtomHashMap<Func<SpotifyPacket, bool>, Func<SpotifyPacket, bool>> packetListeners,
+        AtomHashMap<Guid, PackageListenerRecord> packetListeners,
         AtomSeq<SpotifyPacket> packetsWithoutPurpose)
     {
         if (packetsWithoutPurpose.Any(f => f.Command is SpotifyPacketType.CountryCode))
@@ -89,29 +171,25 @@ internal sealed class SpotifyConnection<RT> : ISpotifyConnection where RT : stru
             return SuccessEff(Some(countryCodeString));
         }
 
-        var tcs = new TaskCompletionSource<Option<string>>();
-        var listener = new Func<SpotifyPacket, bool>(packet =>
-        {
-            if (packet.Command is SpotifyPacketType.CountryCode)
-            {
-                var countryCodeString = Encoding.UTF8.GetString(packet.Data.Span);
-                tcs.SetResult(Some(countryCodeString));
-            }
+        var channel = Channel.CreateUnbounded<SpotifyPacket>();
+        var listenerId = Guid.NewGuid();
+        packetListeners.Add(listenerId,
+            new PackageListenerRecord(f => f.Command is SpotifyPacketType.CountryCode, channel.Writer));
 
-            return false;
-        });
-
-        packetListeners.Add(f => f.Command is SpotifyPacketType.CountryCode, listener);
 
         return Aff<RT, Option<string>>(async rt =>
         {
-            await tcs.Task;
-            return tcs.Task.Result;
+            var packet = await channel.Reader.ReadAsync();
+            packetsWithoutPurpose.Add(packet);
+            var countryCodeString = Encoding.UTF8.GetString(packet.Data.Span);
+            channel.Writer.TryComplete();
+            packetListeners.Remove(listenerId);
+            return Some(countryCodeString);
         });
     }
 
     private static async Task StartChannelListener(ChannelReader<SpotifyPacket> coreChannelReader,
-        AtomHashMap<Func<SpotifyPacket, bool>, Func<SpotifyPacket, bool>> packetListeners,
+        AtomHashMap<Guid, PackageListenerRecord> packetListeners,
         AtomSeq<SpotifyPacket> packetsWithoutPurpose,
         CancellationToken ct = default)
     {
@@ -121,19 +199,14 @@ internal sealed class SpotifyConnection<RT> : ISpotifyConnection where RT : stru
             {
                 foreach (var listener in packetListeners)
                 {
-                    if (listener.Key(packet))
+                    if (listener.Value.Request(packet))
                     {
-                        if (listener.Value(packet))
-                        {
-                            packetsWithoutPurpose.Add(packet);
-                        }
-                        packetListeners.Remove(listener.Key);
+                        listener.Value.Writer.TryWrite(packet);
                     }
                     else
                     {
                         packetsWithoutPurpose.Add(packet);
                     }
-
                 }
             }
             else

@@ -44,13 +44,13 @@ public static class Ws<RT>
     /// Read the a message from the socket. This will block until a full message is read.
     /// </summary>
     /// <param name="socket">The socket stream to read from.</param>
+    /// <param name="cancellationToken"></param>
     /// <typeparam name="RT">Runtime</typeparam>
     /// <returns>
     /// A portion in memory of the data read from the remote host.
     /// </returns>
     [Pure, MethodImpl(AffOpt.mops)]
-    public static Aff<RT, ReadOnlyMemory<byte>> Read(WebSocket socket) =>
-        from ct in cancelToken<RT>()
-        from res in default(RT).WsEff.MapAsync(e => e.Receive(socket))
+    public static Aff<RT, ReadOnlyMemory<byte>> Read(WebSocket socket, CancellationToken cancellationToken) =>
+        from res in default(RT).WsEff.MapAsync(e => e.Receive(socket, cancellationToken))
         select res;
 }

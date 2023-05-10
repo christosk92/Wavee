@@ -2,7 +2,7 @@
 
 [assembly: InternalsVisibleTo("Wavee.Spotify.Tests")]
 
-namespace Wavee.Spotify.Sys.Crypto;
+namespace Wavee.Spotify.Infrastructure.Crypto;
 internal class Shannon
 {
     /*

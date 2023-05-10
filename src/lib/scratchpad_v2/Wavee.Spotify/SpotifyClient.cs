@@ -5,7 +5,10 @@ using System.Runtime.CompilerServices;
 using System.Threading.Channels;
 using Eum.Spotify;
 using LanguageExt.Common;
+using LanguageExt.UnsafeValueAccess;
+using Microsoft.Extensions.Logging;
 using Wavee.Infrastructure.Live;
+using Wavee.Infrastructure.Sys;
 using Wavee.Infrastructure.Sys.IO;
 using Wavee.Infrastructure.Traits;
 using Wavee.Spotify.Configs;
@@ -22,8 +25,11 @@ public static class SpotifyClient
     public static async Task<ISpotifyConnection> Create(
         LoginCredentials credentials,
         SpotifyConfig config,
+        Option<ILogger> logger,
         CancellationToken ct = default)
     {
+        _ = WaveeCore.Runtime;
+        atomic(() => WaveeCore.Logger.Swap(_ => logger));
         //these are not related
 
         //this one is used from the tcp connection and dispatches them to ConnectionConsumer
@@ -39,7 +45,8 @@ public static class SpotifyClient
         var newInfo = new InternalSpotifyConnectionInfo
         {
             ConnectionId = connectionId,
-            Deviceid = deviceId
+            Deviceid = deviceId,
+            Config = config,
         };
 
         var aff = from info in SpotifyClientRuntime<WaveeRuntime>.AuthenticateWithoutConnectionId(
@@ -49,7 +56,7 @@ public static class SpotifyClient
                 credentials: credentials,
                 deviceId: deviceId,
                 ct: ct)
-            let connection = new SpotifyConnection<WaveeRuntime>(info, 
+            let connection = new SpotifyConnection<WaveeRuntime>(info,
                 coreChannel.Reader,
                 coreWriteChannel.Writer,
                 WaveeCore.Runtime)
@@ -61,7 +68,7 @@ public static class SpotifyClient
     }
 }
 
-internal static class SpotifyClientRuntime<RT> where RT : struct, HasTCP<RT>, HasHttp<RT>
+internal static class SpotifyClientRuntime<RT> where RT : struct, HasTCP<RT>, HasHttp<RT>, HasLog<RT>
 {
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Aff<RT, InternalSpotifyConnectionInfo> AuthenticateWithoutConnectionId(
@@ -73,7 +80,9 @@ internal static class SpotifyClientRuntime<RT> where RT : struct, HasTCP<RT>, Ha
         CancellationToken ct)
     {
         return
+            from l in Log<RT>.logInfo("Authenticating...")
             from connectionResult in ConnectAndAuthenticate(credentials, deviceId, ct)
+            from l2 in Log<RT>.logInfo($"Authenticated as {connectionResult.Item1.CanonicalUsername} !")
             let newConnectionInfo = connectionInfo.With(connectionResult.Item1)
             from _ in StartMessageReader(
                 connectionId: newConnectionInfo.ConnectionId,
@@ -249,8 +258,9 @@ internal static class SpotifyClientRuntime<RT> where RT : struct, HasTCP<RT>, Ha
         ChannelWriter<SpotifyPacket> writer,
         ChannelReader<SpotifyPacket> reader,
         LoginCredentials credentials, string deviceId, CancellationToken ct) =>
+        from _ in Log<RT>.logInfo("Disconnected from Spotify")
         from __ in SuccessEff(atomic(() => connectionInfo.With(None)))
-        from _ in AuthenticateWithoutConnectionId(connectionInfo, writer, reader, credentials, deviceId, ct)
+        from ___ in AuthenticateWithoutConnectionId(connectionInfo, writer, reader, credentials, deviceId, ct)
         select unit;
 }
 
@@ -259,6 +269,7 @@ internal class InternalSpotifyConnectionInfo
     internal readonly Ref<Option<APWelcome>> WelcomeMessage = Ref(Option<APWelcome>.None);
     public required Guid ConnectionId { get; init; }
     public required string Deviceid { get; init; }
+    public required SpotifyConfig Config { get; init; }
     public Option<APWelcome> Welcome => WelcomeMessage.Value;
     public IObservable<Option<APWelcome>> WelcomeChanged => WelcomeMessage.OnChange();
 

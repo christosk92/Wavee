@@ -6,7 +6,6 @@ using Wavee.Infrastructure.Sys.IO;
 using Wavee.Infrastructure.Traits;
 using Wavee.Spotify.Infrastructure.Connection;
 using Wavee.Spotify.Infrastructure.Crypto;
-using Wavee.Spotify.Sys.Crypto;
 
 namespace Wavee.Spotify.Infrastructure.Authentication;
 
@@ -91,15 +90,15 @@ internal static class Authentication<RT>
             _ => CpuFamily.CpuUnknown
         };
 
-        string osString = Environment.OSVersion.Platform.ToString();
+        string osString = Environment.OSVersion.Platform.ToString().ToLower();
         var os = osString switch
         {
-            "Android" => Os.Android,
-            "FreeBSD" or "NetBSD" or "OpenBSD" => Os.Freebsd,
-            "iOS" => Os.Iphone,
-            "Linux" => Os.Linux,
-            "macOS" => Os.Osx,
-            "Windows" => Os.Windows,
+            "android" => Os.Android,
+            "freebsd" or "netbsd" or "openbsd" => Os.Freebsd,
+            "io" => Os.Iphone,
+            "linux" => Os.Linux,
+            "macoS" => Os.Osx,
+            "windows" => Os.Windows,
             _ => Os.Unknown
         };
 

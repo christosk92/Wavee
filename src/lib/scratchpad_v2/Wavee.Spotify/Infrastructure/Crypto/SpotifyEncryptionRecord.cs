@@ -1,6 +1,5 @@
 ﻿using System.Buffers.Binary;
 using Wavee.Spotify.Infrastructure.Connection;
-using Wavee.Spotify.Sys.Crypto;
 
 namespace Wavee.Spotify.Infrastructure.Crypto;
 
