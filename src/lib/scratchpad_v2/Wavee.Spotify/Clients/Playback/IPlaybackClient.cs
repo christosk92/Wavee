@@ -1,8 +1,12 @@
-﻿namespace Wavee.Spotify.Clients.Playback;
+﻿using Wavee.Spotify.Configs;
+
+namespace Wavee.Spotify.Clients.Playback;
 
 public interface IPlaybackClient
 {
     Guid Listen(Action<SpotifyPlaybackInfo> onPlaybackInfo);
     
-    Task<SpotifyPlaybackInfo> PlayTrack(string uri, CancellationToken ct = default);
+    Task<SpotifyPlaybackInfo> PlayTrack(string uri,
+        Option<PreferredQualityType> preferredQualityOverride,
+        CancellationToken ct = default);
 }

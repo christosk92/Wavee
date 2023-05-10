@@ -21,6 +21,9 @@ var config = new SpotifyConfig(
     Remote: new SpotifyRemoteConfig(
         DeviceName: "Wavee Test",
         DeviceType: DeviceType.Chromebook
+    ),
+    Playback: new SpotifyPlaybackConfig(
+        PreferredQualityType.High
     )
 );
 var log = new LoggerConfiguration()
@@ -35,14 +38,13 @@ ILoggerFactory loggerFactory = LoggerFactory.Create(builder =>
 var logger = loggerFactory.CreateLogger<Program>();
 var connection = await SpotifyClient.Create(loginCredentials, config, Option<ILogger>.Some(logger));
 var remoteCluster = await connection.Remote.Connect(CancellationToken.None);
-remoteCluster.Subscribe(state =>
-{
-    logger.LogInformation("Remote state: {state}", state);
-});
+remoteCluster.Subscribe(state => { logger.LogInformation("Remote state: {state}", state); });
 
 //https://open.spotify.com/track/3K8wfMDLxwtLGuVrYobxVe?si=518e3b12e14443fb
 //https://open.spotify.com/playlist/2TAyTkj953qz8fG2IXq1V0?si=1028b95ac678473e
 //var playback = await connection.Playback.PlayContext
-var playback = await connection.Playback.PlayTrack("spotify:track:3K8wfMDLxwtLGuVrYobxVe", CancellationToken.None);
+var playback = await connection.Playback.PlayTrack("spotify:track:3K8wfMDLxwtLGuVrYobxVe",
+    Option<PreferredQualityType>.None,
+    CancellationToken.None);
 
 Console.ReadLine();

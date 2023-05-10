@@ -6,6 +6,7 @@ using Wavee.Spotify.Clients.Info;
 using Wavee.Spotify.Clients.Mercury;
 using Wavee.Spotify.Clients.Mercury.Metadata;
 using Wavee.Spotify.Clients.Remote;
+using Wavee.Spotify.Configs;
 using Wavee.Spotify.Id;
 using Wavee.Spotify.Infrastructure.Sys;
 
@@ -22,14 +23,16 @@ internal readonly struct PlaybackClient<RT> : IPlaybackClient where RT : struct,
     private readonly Func<ValueTask<string>> _getBearer;
     private readonly IMercuryClient _mercury;
     private readonly RT _runtime;
+    private readonly PreferredQualityType _preferredQuality;
 
     public PlaybackClient(Guid mainConnectionId, Func<ValueTask<string>> getBearer, IMercuryClient mercury, RT runtime,
-        Action<SpotifyPlaybackInfo> onPlaybackInfo)
+        Action<SpotifyPlaybackInfo> onPlaybackInfo, PreferredQualityType preferredQuality)
     {
         _mainConnectionId = mainConnectionId;
         _getBearer = getBearer;
         _mercury = mercury;
         _runtime = runtime;
+        _preferredQuality = preferredQuality;
         _onPlaybackInfo.AddOrUpdate(mainConnectionId, onPlaybackInfo);
     }
 
@@ -41,7 +44,9 @@ internal readonly struct PlaybackClient<RT> : IPlaybackClient where RT : struct,
         return g;
     }
 
-    public async Task<SpotifyPlaybackInfo> PlayTrack(string uri, CancellationToken ct = default)
+    public async Task<SpotifyPlaybackInfo> PlayTrack(string uri,
+        Option<PreferredQualityType> preferredQualityOverride,
+        CancellationToken ct = default)
     {
         var baseInfo = new SpotifyPlaybackInfo(Option<ProvidedTrack>.None,
             None,
@@ -52,6 +57,7 @@ internal readonly struct PlaybackClient<RT> : IPlaybackClient where RT : struct,
         //start loading track
         var trackStreamAff = await SpotifyPlayback<RT>.LoadTrack(
             SpotifyId.FromUri(uri),
+            preferredQualityOverride.IfNone(_preferredQuality),
             _mainConnectionId,
             _getBearer,
             _mercury, ct).Run(_runtime);
@@ -59,7 +65,8 @@ internal readonly struct PlaybackClient<RT> : IPlaybackClient where RT : struct,
         var stream = trackStreamAff.ThrowIfFail();
         _onPlaybackInfo.Iter(x =>
         {
-            baseInfo = baseInfo.EnrichFrom(stream.Metadata)
+            baseInfo = baseInfo
+                .EnrichFrom(stream.Metadata)
                 .WithPaused(false);
             x(baseInfo);
         });

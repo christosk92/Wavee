@@ -114,7 +114,8 @@ internal sealed class SpotifyConnection<RT> : ISpotifyConnection
         getBearer: () => Token.GetToken(),
         mercury: Mercury,
         runtime: _runtime,
-        playbackInfo => RemoteClient<RT>.OnPlaybackChanged(_info.ConnectionId, playbackInfo)
+        playbackInfo => RemoteClient<RT>.OnPlaybackChanged(_info.ConnectionId, playbackInfo),
+        preferredQuality: _info.Config.Playback.PreferredQualityType
     );
 
     private static Unit PingPong(
