@@ -8,13 +8,16 @@ namespace Wavee.VorbisDecoder
     /// </summary>
     internal sealed class VorbisReader : IVorbisReader
     {
-        internal static Func<Stream, bool, Contracts.IContainerReader> CreateContainerReader { get; set; } = (s, cod) => new ContainerReader(s, cod);
-        internal static Func<Contracts.IPacketProvider, IStreamDecoder> CreateStreamDecoder { get; set; } = pp => new StreamDecoder(pp, new Factory());
+        internal static Func<Stream, bool, Contracts.IContainerReader> CreateContainerReader { get; set; } =
+            (s, cod) => new ContainerReader(s, cod);
+
+        internal static Func<Contracts.IPacketProvider, double, IStreamDecoder> CreateStreamDecoder { get; set; } =
+            (pp, d) => new StreamDecoder(pp, new Factory(), d);
 
         private readonly List<IStreamDecoder> _decoders;
         private readonly Contracts.IContainerReader _containerReader;
         private readonly bool _closeOnDispose;
-
+        private readonly double _duration;
         private IStreamDecoder _streamDecoder;
 
         /// <summary>
@@ -26,8 +29,8 @@ namespace Wavee.VorbisDecoder
         /// Creates a new instance of <see cref="VorbisReader"/> reading from the specified file.
         /// </summary>
         /// <param name="fileName">The file to read from.</param>
-        public VorbisReader(string fileName)
-            : this(File.OpenRead(fileName), true)
+        public VorbisReader(string fileName, double duration)
+            : this(File.OpenRead(fileName), duration, true)
         {
         }
 
@@ -36,7 +39,7 @@ namespace Wavee.VorbisDecoder
         /// </summary>
         /// <param name="stream">The <see cref="Stream"/> to read from.</param>
         /// <param name="closeOnDispose"><see langword="true"/> to take ownership and clean up the instance when disposed, otherwise <see langword="false"/>.</param>
-        public VorbisReader(Stream stream, bool closeOnDispose = true)
+        public VorbisReader(Stream stream, double duration, bool closeOnDispose = true)
         {
             _decoders = new List<IStreamDecoder>();
 
@@ -55,22 +58,34 @@ namespace Wavee.VorbisDecoder
 
                 throw new ArgumentException("Could not load the specified container!", nameof(containerReader));
             }
+
+            _duration = duration;
             _closeOnDispose = closeOnDispose;
             _containerReader = containerReader;
             _streamDecoder = _decoders[0];
         }
 
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
-        [Obsolete("Use \"new StreamDecoder(Contracts.IPacketProvider)\" and the container's NewStreamCallback or Streams property instead.", true)]
-        public VorbisReader(Contracts.IContainerReader containerReader) => throw new NotSupportedException();
+        [Obsolete(
+            "Use \"new StreamDecoder(Contracts.IPacketProvider)\" and the container's NewStreamCallback or Streams property instead.",
+            true)]
+        public VorbisReader(Contracts.IContainerReader containerReader, double duration)
+        {
+            _duration = duration;
+            throw new NotSupportedException();
+        }
 
         [Obsolete("Use \"new StreamDecoder(Contracts.IPacketProvider)\" instead.", true)]
-        public VorbisReader(Contracts.IPacketProvider packetProvider) => throw new NotSupportedException();
+        public VorbisReader(Contracts.IPacketProvider packetProvider, double duration)
+        {
+            _duration = duration;
+            throw new NotSupportedException();
+        }
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 
         private bool ProcessNewStream(Contracts.IPacketProvider packetProvider)
         {
-            var decoder = CreateStreamDecoder(packetProvider);
+            var decoder = CreateStreamDecoder(packetProvider, _duration);
             decoder.ClipSamples = true;
 
             var ea = new NewStreamEventArgs(decoder);
@@ -80,6 +95,7 @@ namespace Wavee.VorbisDecoder
                 _decoders.Add(decoder);
                 return true;
             }
+
             return false;
         }
 
@@ -94,6 +110,7 @@ namespace Wavee.VorbisDecoder
                 {
                     decoder.Dispose();
                 }
+
                 _decoders.Clear();
             }
 
@@ -157,7 +174,8 @@ namespace Wavee.VorbisDecoder
         /// Gets the comments in the current selected Vorbis stream
         /// </summary>
         [Obsolete("Use .Tags.All instead.")]
-        public string[] Comments => _streamDecoder.Tags.All.SelectMany(k => k.Value, (kvp, Item) => $"{kvp.Key}={Item}").ToArray();
+        public string[] Comments => _streamDecoder.Tags.All.SelectMany(k => k.Value, (kvp, Item) => $"{kvp.Key}={Item}")
+            .ToArray();
 
         /// <summary>
         /// Gets whether the previous short sample count was due to a parameter change in the stream.
@@ -222,10 +240,7 @@ namespace Wavee.VorbisDecoder
         public TimeSpan TimePosition
         {
             get => _streamDecoder.TimePosition;
-            set
-            {
-                _streamDecoder.TimePosition = value;
-            }
+            set { _streamDecoder.TimePosition = value; }
         }
 
         /// <summary>
@@ -234,10 +249,7 @@ namespace Wavee.VorbisDecoder
         public long SamplePosition
         {
             get => _streamDecoder.SamplePosition;
-            set
-            {
-                _streamDecoder.SamplePosition = value;
-            }
+            set { _streamDecoder.SamplePosition = value; }
         }
 
         /// <summary>
@@ -338,6 +350,7 @@ namespace Wavee.VorbisDecoder
             {
                 return _streamDecoder.Read(buffer, offset, count);
             }
+
             return 0;
         }
 
@@ -357,6 +370,7 @@ namespace Wavee.VorbisDecoder
             {
                 return _streamDecoder.Read(buffer, 0, count);
             }
+
             return 0;
         }
 

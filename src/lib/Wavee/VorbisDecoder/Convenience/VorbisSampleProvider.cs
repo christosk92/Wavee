@@ -11,6 +11,7 @@ namespace Wavee.VorbisDecoder.Convenience
     {
         private Contracts.IContainerReader _containerReader;
         private IStreamDecoder _streamDecoder;
+        private readonly double _duration;
         private readonly LinkedList<IStreamDecoder> _streamDecoders = new LinkedList<IStreamDecoder>();
         private bool _hasEnded;
 
@@ -37,7 +38,7 @@ namespace Wavee.VorbisDecoder.Convenience
         /// <summary>
         /// Gets the length of the current stream, in samples.
         /// </summary>
-        public long Length => _streamDecoder.TotalSamples;
+        public long Length => _streamDecoder.TotalTime.Ticks / 10000000 * WaveFormat.SampleRate;
 
         /// <summary>
         /// Gets the <see cref="IStreamStats"/> instance for the current stream.
@@ -84,7 +85,7 @@ namespace Wavee.VorbisDecoder.Convenience
             IStreamDecoder decoder;
             try
             {
-                decoder = new StreamDecoder(packetProvider);
+                decoder = new StreamDecoder(packetProvider, _duration);
             }
 #pragma warning disable CA1031 // Do not catch general exception types
             catch (Exception ex)
@@ -250,8 +251,9 @@ namespace Wavee.VorbisDecoder.Convenience
         /// Creates a new instance of <see cref="VorbisSampleProvider"/>.
         /// </summary>
         /// <param name="sourceStream">The stream to read for data.</param>
-        public VorbisSampleProvider(System.IO.Stream sourceStream, bool closeOnDispose = false)
+        public VorbisSampleProvider(System.IO.Stream sourceStream, double duration, bool closeOnDispose = false)
         {
+            this._duration = duration;
             _containerReader = new ContainerReader(sourceStream, closeOnDispose)
             {
                 NewStreamCallback = ProcessNewStream
@@ -269,8 +271,8 @@ namespace Wavee.VorbisDecoder.Convenience
         /// Creates a new instance of <see cref="VorbisSampleProvider"/> that will attempt to use the specified <see cref="Contracts.IPacketProvider"/> to decode audio.
         /// </summary>
         /// <param name="packetProvider"></param>
-        public VorbisSampleProvider(Contracts.IPacketProvider packetProvider)
-            : this(new StreamDecoder(packetProvider), packetProvider.CanSeek)
+        public VorbisSampleProvider(Contracts.IPacketProvider packetProvider, double duration)
+            : this(new StreamDecoder(packetProvider, duration), packetProvider.CanSeek, duration)
         {
         }
 
@@ -280,11 +282,12 @@ namespace Wavee.VorbisDecoder.Convenience
         /// <param name="streamDecoder">The decoder to read from.</param>
         /// <param name="allowSeek">Sets whether to allow seek operations to be attempted on this stream.  Note that setting this to <see langword="true"/>
         /// when the underlying stream doesn't support it will still generate an exception from the decoder when attempting seek operations.</param>
-        public VorbisSampleProvider(IStreamDecoder streamDecoder, bool allowSeek)
+        public VorbisSampleProvider(IStreamDecoder streamDecoder, bool allowSeek, double duration)
         {
             _streamDecoders.AddLast(streamDecoder);
             SwitchToDecoder(streamDecoder);
             CanSeek = allowSeek;
+            _duration = duration;
         }
 
         /// <summary>

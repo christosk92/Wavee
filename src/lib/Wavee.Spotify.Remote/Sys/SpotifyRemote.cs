@@ -7,6 +7,7 @@ using Eum.Spotify;
 using Eum.Spotify.connectstate;
 using Eum.Spotify.transfer;
 using Google.Protobuf;
+using Google.Protobuf.WellKnownTypes;
 using LanguageExt.UnsafeValueAccess;
 using Wavee.Common;
 using Wavee.Infrastructure.Sys.IO;
@@ -33,10 +34,8 @@ internal static class SpotifyRemote<RT> where RT : struct, HasWebsocket<RT>, Has
         var spotifyRequests = Channel.CreateUnbounded<ISpotifyRemoteMessage>();
         SpotifyRequests = spotifyRequests.Writer;
 
-        Task.Factory.StartNew(async () =>
-        {
-            await ProcessMessages(spotifyRequests.Reader.ReadAllAsync());
-        }, TaskCreationOptions.LongRunning);
+        Task.Factory.StartNew(async () => { await ProcessMessages(spotifyRequests.Reader.ReadAllAsync()); },
+            TaskCreationOptions.LongRunning);
     }
 
     private static async Task ProcessMessages(IAsyncEnumerable<ISpotifyRemoteMessage> messages)
@@ -46,7 +45,8 @@ internal static class SpotifyRemote<RT> where RT : struct, HasWebsocket<RT>, Has
 
         await foreach (var message in messages)
         {
-            (activeConnectionId, playerSession) = await HandleMessage(message, activeConnectionId, playerSession);
+            (activeConnectionId, playerSession) =
+                await HandleMessage(message, activeConnectionId, playerSession);
         }
     }
 
@@ -70,14 +70,54 @@ internal static class SpotifyRemote<RT> where RT : struct, HasWebsocket<RT>, Has
         return message switch
         {
             SpotifyTransferRequest transfer => await HandleTransferRequest(transfer, playerSession),
+            SpotifyPauseRequest pause => await HandlePauseRequest(pause, playerSession),
+            SpotifyResumeRequest resume => await HandleResumeRequest(resume, playerSession),
+            SpotifySeekToRequest seek => await HandleSeekToMessage(seek, playerSession),
             _ => (activeConnectionId, playerSession)
         };
+    }
+
+    private static async Task<(Option<string>, Option<IDisposable>)> HandlePauseRequest(
+        SpotifyPauseRequest pauseRequest,
+        Option<IDisposable> playerSession)
+    {
+        if (playerSession.IsSome)
+        {
+            await WaveePlayer.Pause();
+        }
+
+        return (pauseRequest.ConnectionId, playerSession);
+    }
+
+    private static async Task<(Option<string>, Option<IDisposable>)> HandleSeekToMessage(
+        SpotifySeekToRequest seekToRequest,
+        Option<IDisposable> playerSession)
+    {
+        if (playerSession.IsSome)
+        {
+            await WaveePlayer.Seek(TimeSpan.FromMilliseconds(seekToRequest.Value));
+        }
+
+        return (seekToRequest.ConnectionId, playerSession);
+    }
+
+    private static async Task<(Option<string>, Option<IDisposable>)> HandleResumeRequest(
+        SpotifyResumeRequest pauseRequest,
+        Option<IDisposable> playerSession)
+    {
+        if (playerSession.IsSome)
+        {
+            await WaveePlayer.Resume();
+        }
+
+        return (pauseRequest.ConnectionId, playerSession);
     }
 
     private static async Task<(Option<string>, Option<IDisposable>)> HandleTransferRequest(
         SpotifyTransferRequest transfer,
         Option<IDisposable> playerSession)
     {
+        playerSession.IfSome(x => x.Dispose());
         atomic(() =>
         {
             transfer.LocalDeviceState.Swap(k =>
@@ -198,7 +238,7 @@ internal static class SpotifyRemote<RT> where RT : struct, HasWebsocket<RT>, Has
     {
         switch (state)
         {
-            case WaveePlayingState playing:
+            case IWaveeInPlaybackState playing:
                 atomic(() =>
                 {
                     localDeviceState.Swap(state =>
@@ -211,7 +251,7 @@ internal static class SpotifyRemote<RT> where RT : struct, HasWebsocket<RT>, Has
                                 (long)playing.Position.TotalMilliseconds;
                             state.State.Position = 0;
                             state.State.IsBuffering = false;
-                            state.State.IsPaused = false;
+                            state.State.IsPaused = playing is WaveePausedState;
                             state.State.IsPlaying = true;
 
                             var tr = new ProvidedTrack();
@@ -348,9 +388,46 @@ internal static class SpotifyRemote<RT> where RT : struct, HasWebsocket<RT>, Has
                             var sentByDeviceId = request.RootElement.GetProperty("sent_by_device_id").GetString();
                             var command = request.RootElement.GetProperty("command");
                             var commandEndpoint = command.GetProperty("endpoint").GetString();
-                            ReadOnlyMemory<byte> data = command.GetProperty("data").GetBytesFromBase64();
+                            ReadOnlyMemory<byte> data = command.TryGetProperty("data", out var dt)
+                                ? dt.GetBytesFromBase64()
+                                : ReadOnlyMemory<byte>.Empty;
                             switch (commandEndpoint)
                             {
+                                case "play":
+                                    var context = command.GetProperty("context")
+                                    break;
+                                case "seek_to":
+                                {
+                                    var value = command.GetProperty("value").GetUInt64();
+                                    var spotifySeekToMessage =
+                                        new SpotifySeekToRequest
+                                        {
+                                            ConnectionId = connectionId.ConnectionId,
+                                            MessageId = messageId,
+                                            SentByDeviceId = sentByDeviceId,
+                                            Endpoint = SpotifyRequestEndpointType.SeekTo,
+                                            Value = value,
+                                            LocalDeviceState = localDeviceState,
+                                            GetBearerFunc = getBearerFunc,
+                                            Runtime = rt,
+                                        };
+                                    await SpotifyRequests.WriteAsync(spotifySeekToMessage, cancellationToken)
+                                        .ConfigureAwait(false);
+
+                                    var reply = new
+                                    {
+                                        type = "reply",
+                                        key = msg.Uri,
+                                        payload = new
+                                        {
+                                            success = true.ToString().ToLower()
+                                        }
+                                    };
+                                    ReadOnlyMemory<byte> replyJson = JsonSerializer.SerializeToUtf8Bytes(reply);
+                                    var sendAff = await Ws<RT>.Write(connectionId.Socket, replyJson)
+                                        .Run(rt);
+                                    break;
+                                }
                                 case "transfer":
                                 {
                                     var spotifyTransferMessage =
@@ -365,6 +442,66 @@ internal static class SpotifyRemote<RT> where RT : struct, HasWebsocket<RT>, Has
                                             GetBearerFunc = getBearerFunc,
                                             GetTrackFunc = getTrackFunc,
                                             AudioKeyFunc = fetchAudioKeyFunc,
+                                            Runtime = rt,
+                                        };
+                                    await SpotifyRequests.WriteAsync(spotifyTransferMessage, cancellationToken)
+                                        .ConfigureAwait(false);
+
+                                    var reply = new
+                                    {
+                                        type = "reply",
+                                        key = msg.Uri,
+                                        payload = new
+                                        {
+                                            success = true.ToString().ToLower()
+                                        }
+                                    };
+                                    ReadOnlyMemory<byte> replyJson = JsonSerializer.SerializeToUtf8Bytes(reply);
+                                    var sendAff = await Ws<RT>.Write(connectionId.Socket, replyJson)
+                                        .Run(rt);
+                                    break;
+                                }
+                                case "resume":
+                                {
+                                    var spotifyTransferMessage =
+                                        new SpotifyResumeRequest
+                                        {
+                                            ConnectionId = connectionId.ConnectionId,
+                                            MessageId = messageId,
+                                            SentByDeviceId = sentByDeviceId,
+                                            Endpoint = SpotifyRequestEndpointType.Transfer,
+                                            LocalDeviceState = localDeviceState,
+                                            GetBearerFunc = getBearerFunc,
+                                            Runtime = rt,
+                                        };
+                                    await SpotifyRequests.WriteAsync(spotifyTransferMessage, cancellationToken)
+                                        .ConfigureAwait(false);
+
+                                    var reply = new
+                                    {
+                                        type = "reply",
+                                        key = msg.Uri,
+                                        payload = new
+                                        {
+                                            success = true.ToString().ToLower()
+                                        }
+                                    };
+                                    ReadOnlyMemory<byte> replyJson = JsonSerializer.SerializeToUtf8Bytes(reply);
+                                    var sendAff = await Ws<RT>.Write(connectionId.Socket, replyJson)
+                                        .Run(rt);
+                                    break;
+                                }
+                                case "pause":
+                                {
+                                    var spotifyTransferMessage =
+                                        new SpotifyPauseRequest
+                                        {
+                                            ConnectionId = connectionId.ConnectionId,
+                                            MessageId = messageId,
+                                            SentByDeviceId = sentByDeviceId,
+                                            Endpoint = SpotifyRequestEndpointType.Transfer,
+                                            LocalDeviceState = localDeviceState,
+                                            GetBearerFunc = getBearerFunc,
                                             Runtime = rt,
                                         };
                                     await SpotifyRequests.WriteAsync(spotifyTransferMessage, cancellationToken)
@@ -431,17 +568,35 @@ internal static class SpotifyRemote<RT> where RT : struct, HasWebsocket<RT>, Has
         SpotifyRequestEndpointType Endpoint { get; }
     }
 
-    private record SpotifyTransferRequest : ISpotifyRemoteMessage
+    private abstract record AbsSpotifyRequest : ISpotifyRemoteMessage
     {
         public required Option<string> ConnectionId { get; init; }
         public required uint MessageId { get; init; }
         public required string SentByDeviceId { get; init; }
         public required SpotifyRequestEndpointType Endpoint { get; init; }
-        public required TransferState Data { get; init; }
+
         public required LanguageExt.Ref<LocalDeviceState> LocalDeviceState { get; init; }
 
         public required RT Runtime { get; init; }
         public required Func<ValueTask<string>> GetBearerFunc { get; init; }
+    }
+
+    private record SpotifyPauseRequest : AbsSpotifyRequest
+    {
+    }
+
+    private record SpotifyResumeRequest : AbsSpotifyRequest
+    {
+    }
+
+    private record SpotifySeekToRequest : AbsSpotifyRequest
+    {
+        public required ulong Value { get; init; }
+    }
+
+    private record SpotifyTransferRequest : AbsSpotifyRequest
+    {
+        public required TransferState Data { get; init; }
         public required Func<SpotifyId, Aff<RT, TrackOrEpisode>> GetTrackFunc { get; init; }
 
         public required
@@ -451,6 +606,7 @@ internal static class SpotifyRemote<RT> where RT : struct, HasWebsocket<RT>, Has
 
     private enum SpotifyRequestEndpointType
     {
-        Transfer
+        Transfer,
+        SeekTo
     }
 }

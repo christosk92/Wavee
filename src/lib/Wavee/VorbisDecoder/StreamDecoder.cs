@@ -40,15 +40,16 @@ namespace Wavee.VorbisDecoder
         /// Creates a new instance of <see cref="StreamDecoder"/>.
         /// </summary>
         /// <param name="packetProvider">A <see cref="Contracts.IPacketProvider"/> instance for the decoder to read from.</param>
-        public StreamDecoder(Contracts.IPacketProvider packetProvider)
-            : this(packetProvider, new Factory())
+        public StreamDecoder(Contracts.IPacketProvider packetProvider, double duration)
+            : this(packetProvider, new Factory(), duration)
         {
         }
 
-        internal StreamDecoder(Contracts.IPacketProvider packetProvider, IFactory factory)
+        internal StreamDecoder(Contracts.IPacketProvider packetProvider, IFactory factory, double duration)
         {
             _packetProvider = packetProvider ?? throw new ArgumentNullException(nameof(packetProvider));
             _factory = factory ?? throw new ArgumentNullException(nameof(factory));
+            _duration = duration;
 
             _stats = new StreamStats();
 
@@ -92,6 +93,7 @@ namespace Wavee.VorbisDecoder
                 {
                     return new ArgumentException("Found Theora bitsream.");
                 }
+
                 return new ArgumentException("Could not find Vorbis data to decode.");
             }
             finally
@@ -124,7 +126,8 @@ namespace Wavee.VorbisDecoder
             return true;
         }
 
-        private static bool ProcessHeaderPacket(IPacket packet, Func<IPacket, bool> processAction, Action<IPacket> doneAction)
+        private static bool ProcessHeaderPacket(IPacket packet, Func<IPacket, bool> processAction,
+            Action<IPacket> doneAction)
         {
             if (packet != null)
             {
@@ -137,12 +140,16 @@ namespace Wavee.VorbisDecoder
                     doneAction(packet);
                 }
             }
+
             return false;
         }
 
-        static private readonly byte[] PacketSignatureStream = { 0x01, 0x76, 0x6f, 0x72, 0x62, 0x69, 0x73, 0x00, 0x00, 0x00, 0x00 };
+        static private readonly byte[] PacketSignatureStream =
+            { 0x01, 0x76, 0x6f, 0x72, 0x62, 0x69, 0x73, 0x00, 0x00, 0x00, 0x00 };
+
         static private readonly byte[] PacketSignatureComments = { 0x03, 0x76, 0x6f, 0x72, 0x62, 0x69, 0x73 };
         static private readonly byte[] PacketSignatureBooks = { 0x05, 0x76, 0x6f, 0x72, 0x62, 0x69, 0x73 };
+        private double _duration;
 
         static private bool ValidateHeader(IPacket packet, byte[] expected)
         {
@@ -153,6 +160,7 @@ namespace Wavee.VorbisDecoder
                     return false;
                 }
             }
+
             return true;
         }
 
@@ -171,6 +179,7 @@ namespace Wavee.VorbisDecoder
             {
                 throw new InvalidDataException("Could not read full string!");
             }
+
             return Encoding.UTF8.GetString(buf);
         }
 
@@ -319,7 +328,8 @@ namespace Wavee.VorbisDecoder
         {
             if (buffer == null) throw new ArgumentNullException(nameof(buffer));
             if (offset < 0 || offset + count > buffer.Length) throw new ArgumentOutOfRangeException(nameof(offset));
-            if (count % _channels != 0) throw new ArgumentOutOfRangeException(nameof(count), "Must be a multiple of Channels!");
+            if (count % _channels != 0)
+                throw new ArgumentOutOfRangeException(nameof(count), "Must be a multiple of Channels!");
             if (_packetProvider == null) throw new ObjectDisposedException(nameof(StreamDecoder));
 
             // if the caller didn't ask for any data, bail early
@@ -357,7 +367,8 @@ namespace Wavee.VorbisDecoder
                     if (samplePosition.HasValue && !_hasPosition)
                     {
                         _hasPosition = true;
-                        _currentPosition = samplePosition.Value - (_prevPacketEnd - _prevPacketStart) - (idx - offset) / _channels;
+                        _currentPosition = samplePosition.Value - (_prevPacketEnd - _prevPacketStart) -
+                                           (idx - offset) / _channels;
                     }
                 }
 
@@ -401,6 +412,7 @@ namespace Wavee.VorbisDecoder
                     target[idx++] = Utils.ClipValue(_prevPacketBuf[ch][_prevPacketStart], ref _hasClipped);
                 }
             }
+
             return idx - targetIndex;
         }
 
@@ -414,13 +426,16 @@ namespace Wavee.VorbisDecoder
                     target[idx++] = _prevPacketBuf[ch][_prevPacketStart];
                 }
             }
+
             return idx - targetIndex;
         }
 
         private bool ReadNextPacket(int bufferedSamples, out long? samplePosition)
         {
             // decode the next packet now so we can start overlapping with it
-            var curPacket = DecodeNextPacket(out var startIndex, out var validLen, out var totalLen, out var isEndOfStream, out samplePosition, out var bitsRead, out var bitsRemaining, out var containerOverheadBits);
+            var curPacket = DecodeNextPacket(out var startIndex, out var validLen, out var totalLen,
+                out var isEndOfStream, out samplePosition, out var bitsRead, out var bitsRemaining,
+                out var containerOverheadBits);
             _eosFound |= isEndOfStream;
             if (curPacket == null)
             {
@@ -465,7 +480,9 @@ namespace Wavee.VorbisDecoder
             return true;
         }
 
-        private float[][] DecodeNextPacket(out int packetStartindex, out int packetValidLength, out int packetTotalLength, out bool isEndOfStream, out long? samplePosition, out int bitsRead, out int bitsRemaining, out int containerOverheadBits)
+        private float[][] DecodeNextPacket(out int packetStartindex, out int packetValidLength,
+            out int packetTotalLength, out bool isEndOfStream, out long? samplePosition, out int bitsRead,
+            out int bitsRemaining, out int containerOverheadBits)
         {
             IPacket packet = null;
             try
@@ -506,7 +523,9 @@ namespace Wavee.VorbisDecoder
                                 _nextPacketBuf[i] = new float[_block1Size];
                             }
                         }
-                        if (mode.Decode(packet, _nextPacketBuf, out packetStartindex, out packetValidLength, out packetTotalLength))
+
+                        if (mode.Decode(packet, _nextPacketBuf, out packetStartindex, out packetValidLength,
+                                out packetTotalLength))
                         {
                             // per the spec, do not decode more samples than the last granulePosition
                             samplePosition = packet.GranulePosition;
@@ -514,9 +533,11 @@ namespace Wavee.VorbisDecoder
                             bitsRemaining = packet.BitsRemaining;
                             return _nextPacketBuf;
                         }
+
                         bitsRemaining = packet.BitsRead + packet.BitsRemaining;
                     }
                 }
+
                 packetStartindex = 0;
                 packetValidLength = 0;
                 packetTotalLength = 0;
@@ -532,7 +553,8 @@ namespace Wavee.VorbisDecoder
             }
         }
 
-        private static void OverlapBuffers(float[][] previous, float[][] next, int prevStart, int prevLen, int nextStart, int channels)
+        private static void OverlapBuffers(float[][] previous, float[][] next, int prevStart, int prevLen,
+            int nextStart, int channels)
         {
             for (; prevStart < prevLen; prevStart++, nextStart++)
             {
@@ -565,7 +587,8 @@ namespace Wavee.VorbisDecoder
         public void SeekTo(long samplePosition, SeekOrigin seekOrigin = SeekOrigin.Begin)
         {
             if (_packetProvider == null) throw new ObjectDisposedException(nameof(StreamDecoder));
-            if (!_packetProvider.CanSeek) throw new InvalidOperationException("Seek is not supported by the Contracts.IPacketProvider instance.");
+            if (!_packetProvider.CanSeek)
+                throw new InvalidOperationException("Seek is not supported by the Contracts.IPacketProvider instance.");
 
             switch (seekOrigin)
             {
@@ -609,8 +632,10 @@ namespace Wavee.VorbisDecoder
                 _eosFound = true;
                 if (_packetProvider.GetGranuleCount() != samplePosition)
                 {
-                    throw new InvalidOperationException("Could not read pre-roll packet!  Try seeking again prior to reading more samples.");
+                    throw new InvalidOperationException(
+                        "Could not read pre-roll packet!  Try seeking again prior to reading more samples.");
                 }
+
                 _prevPacketStart = _prevPacketStop;
                 _currentPosition = samplePosition;
                 return;
@@ -622,13 +647,17 @@ namespace Wavee.VorbisDecoder
                 ResetDecoder();
                 // we'll use this to force ReadSamples to fail to read
                 _eosFound = true;
-                throw new InvalidOperationException("Could not read pre-roll packet!  Try seeking again prior to reading more samples.");
+                throw new InvalidOperationException(
+                    "Could not read pre-roll packet!  Try seeking again prior to reading more samples.");
             }
 
             // adjust our indexes to match what we want
             _prevPacketStart += rollForward;
             _currentPosition = samplePosition;
         }
+
+        public long TotalSamples => (long)(TimeSpan.FromMilliseconds(_duration)
+            .TotalSeconds * SampleRate);
 
         private int GetPacketGranules(IPacket curPacket)
         {
@@ -695,12 +724,7 @@ namespace Wavee.VorbisDecoder
         /// <summary>
         /// Gets the total duration of the decoded stream.
         /// </summary>
-        public TimeSpan TotalTime => TimeSpan.FromSeconds((double)TotalSamples / _sampleRate);
-
-        /// <summary>
-        /// Gets the total number of samples in the decoded stream.
-        /// </summary>
-        public long TotalSamples => _packetProvider?.GetGranuleCount() ?? throw new ObjectDisposedException(nameof(StreamDecoder));
+        public TimeSpan TotalTime => TimeSpan.FromMilliseconds(_duration);
 
         /// <summary>
         /// Gets or sets the current time position of the stream.

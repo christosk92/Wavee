@@ -7,16 +7,12 @@ namespace Wavee.VorbisDecoder.Convenience
     {
         VorbisSampleProvider _sampleProvider;
 
-        public VorbisWaveReader(string fileName)
-            : this(System.IO.File.OpenRead(fileName), true)
-        {
-        }
 
-        public VorbisWaveReader(System.IO.Stream sourceStream, bool closeOnDispose = false)
+        public VorbisWaveReader(System.IO.Stream sourceStream, double duration, bool closeOnDispose = false)
         {
             // To maintain consistent semantics with v1.1, we don't expose the events and auto-advance / stream removal features of VorbisSampleProvider.
             // If one wishes to use those features, they should really use VorbisSampleProvider directly...
-            _sampleProvider = new VorbisSampleProvider(sourceStream, closeOnDispose);
+            _sampleProvider = new VorbisSampleProvider(sourceStream, duration, closeOnDispose);
         }
 
         protected override void Dispose(bool disposing)
@@ -26,7 +22,7 @@ namespace Wavee.VorbisDecoder.Convenience
                 _sampleProvider?.Dispose();
                 _sampleProvider = null;
             }
-            
+
             base.Dispose(disposing);
         }
 
@@ -47,8 +43,7 @@ namespace Wavee.VorbisDecoder.Convenience
         }
 
         // This buffer can be static because it can only be used by 1 instance per thread
-        [ThreadStatic]
-        static float[] _conversionBuffer = null;
+        [ThreadStatic] static float[] _conversionBuffer = null;
 
         public override int Read(byte[] buffer, int offset, int count)
         {
@@ -77,7 +72,9 @@ namespace Wavee.VorbisDecoder.Convenience
 
         public int Read(float[] buffer, int offset, int count)
         {
-            if (IsParameterChange) throw new InvalidOperationException("A parameter change is pending.  Call ClearParameterChange() to clear it.");
+            if (IsParameterChange)
+                throw new InvalidOperationException(
+                    "A parameter change is pending.  Call ClearParameterChange() to clear it.");
 
             return _sampleProvider.Read(buffer, offset, count);
         }
@@ -86,7 +83,9 @@ namespace Wavee.VorbisDecoder.Convenience
         public bool IsParameterChange => false;
 
         [Obsolete("Was never used and will be removed.")]
-        public void ClearParameterChange() { }
+        public void ClearParameterChange()
+        {
+        }
 
         public int StreamCount => _sampleProvider.StreamCount;
 
@@ -99,6 +98,7 @@ namespace Wavee.VorbisDecoder.Convenience
                 NextStreamIndex = _sampleProvider.GetNextStreamIndex();
                 return NextStreamIndex.HasValue;
             }
+
             return false;
         }
 
@@ -136,7 +136,8 @@ namespace Wavee.VorbisDecoder.Convenience
         /// <summary>
         /// Gets the comments in the current selected Vorbis stream
         /// </summary>
-        public string[] Comments => _sampleProvider.Tags.All.SelectMany(k => k.Value, (kvp, Item) => $"{kvp.Key}={Item}").ToArray();
+        public string[] Comments => _sampleProvider.Tags.All
+            .SelectMany(k => k.Value, (kvp, Item) => $"{kvp.Key}={Item}").ToArray();
 
         /// <summary>
         /// Gets the number of bits read that are related to framing and transport alone

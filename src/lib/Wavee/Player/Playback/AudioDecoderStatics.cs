@@ -5,16 +5,16 @@ namespace Wavee.Player.Playback;
 
 internal static class AudioDecoderStatics
 {
-    public static Eff<WaveStream> OpenAudioDecoder(this Stream stream) =>
+    public static Eff<WaveStream> OpenAudioDecoder(this Stream stream, double duration) =>
         from format in ReadFormat(stream)
-        from decoder in OpenDecoderPrivate(format, stream)
+        from decoder in OpenDecoderPrivate(format, stream, duration)
         select decoder;
 
-    private static Eff<WaveStream> OpenDecoderPrivate(MagicAudioFileType format, Stream stream)
+    private static Eff<WaveStream> OpenDecoderPrivate(MagicAudioFileType format, Stream stream, double duration)
     {
         return format switch
         {
-            MagicAudioFileType.Vorbis => SuccessEff((WaveStream)new VorbisWaveReader(stream, true)),
+            MagicAudioFileType.Vorbis => SuccessEff((WaveStream)new VorbisWaveReader(stream, duration, true)),
             MagicAudioFileType.Mp3 => SuccessEff((WaveStream)new WaveChannel32((new Mp3FileReader(stream)))),
             _ => FailEff<WaveStream>(new NotSupportedException($"Unsupported audio format: {format}"))
         };

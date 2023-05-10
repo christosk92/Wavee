@@ -22,6 +22,9 @@ public static class WaveePlayer
         WaveePlayerRuntime<WaveeRuntime>.Runtime = WaveeCore.Runtime;
     }
 
+    public static IDisposable RegisterStateChange(Action<IWaveePlayerState> stateChanged)
+        => WaveePlayerRuntime<WaveeRuntime>.State.OnChange().Subscribe(stateChanged);
+
     public static async ValueTask<IDisposable> Play(IAudioStream stream,
         Option<TimeSpan> from,
         Option<bool> isPaused,
@@ -167,7 +170,7 @@ internal static class WaveePlayerRuntime<RT> where RT : struct, HasAudioOutput<R
                         var startAt = play.StartAt;
                         var startPaused = play.StartPaused;
                         var decoderMaybe =
-                            play.Stream.AsStream().OpenAudioDecoder().Run();
+                            play.Stream.AsStream().OpenAudioDecoder(play.Stream.Item.Duration).Run();
                         bool initial = true;
                         await Task.Factory.StartNew(async () =>
                         {
@@ -306,6 +309,7 @@ public interface IWaveeInPlaybackState : IWaveePlayerState
     IAudioStream Stream { get; }
     TimeSpan PositionAsOfTimestamp { get; init; }
     internal WaveStream Decoder { get; }
+    TimeSpan Position { get; }
 }
 
 public readonly record struct WaveePausedState

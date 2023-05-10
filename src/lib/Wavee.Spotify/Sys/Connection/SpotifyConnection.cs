@@ -164,13 +164,6 @@ internal static class SpotifyConnection<RT> where RT : struct,
                 spotifyEncryptionRecord: connectionResult.Item3,
                 onDisconnection: async (rt, errorMaybe) =>
                 {
-                    // lock (disconnectionLock)
-                    // {
-                    //     if (handledDisconnection)
-                    //         return;
-                    //     handledDisconnection = true;
-                    // }
-
                     if (errorMaybe.IsNone)
                     {
                         //do nothing

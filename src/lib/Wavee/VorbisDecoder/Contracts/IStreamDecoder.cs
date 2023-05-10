@@ -40,10 +40,6 @@
         /// </summary>
         TimeSpan TotalTime { get; }
 
-        /// <summary>
-        /// Gets the total number of samples in the decoded stream.
-        /// </summary>
-        long TotalSamples { get; }
 
         /// <summary>
         /// Gets or sets the current time position of the stream.
@@ -74,6 +70,8 @@
         /// Gets the <see cref="IStreamStats"/> instance for this stream.
         /// </summary>
         IStreamStats Stats { get; }
+
+        long TotalSamples => (long)(TotalTime.TotalSeconds * SampleRate);
 
         /// <summary>
         /// Seeks the stream by the specified duration.
