@@ -165,10 +165,15 @@ internal readonly struct RemoteClient<RT> : IRemoteClient
 
                             k = k.SetDuration(info.Duration);
 
-                            k = k.SetContextUri(info.ContextUri, info.ContextMetadata);
+                            k = k.SetContextUri(info.ContextUri,
+                                info.ContextUrl,
+                                info.ContextMetadata,
+                                info.ContextRestrictions);
 
                             k = k.SetTrack(info.Track);
 
+                            k = k.SetIndex(info.Index);
+                            
                             k = k.SetPosition((long)info.Position.IfNone(TimeSpan.Zero).TotalMilliseconds);
                             return k;
                         }));

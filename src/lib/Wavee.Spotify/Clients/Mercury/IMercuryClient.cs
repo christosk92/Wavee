@@ -22,7 +22,7 @@ public interface IMercuryClient
     Task<SpotifyContext> ContextResolve(string uri, CancellationToken ct = default);
 }
 
-public readonly record struct SpotifyContext(HashMap<string, string> Metadata, Seq<ContextPage> Pages);
+public readonly record struct SpotifyContext(string Url, HashMap<string, string> Metadata, Seq<ContextPage> Pages, HashMap<string, Seq<string>> Restrictions);
 
 internal readonly struct MercuryClient : IMercuryClient
 {
@@ -151,8 +151,14 @@ internal readonly struct MercuryClient : IMercuryClient
         var pages = jsonDocument.RootElement.TryGetProperty("pages", out var pagesElement)
             ? pagesElement.Clone().EnumerateArray().Select(ContextHelper.ParsePage).ToSeq()
             : Empty;
-
-        return new SpotifyContext(metadata, pages);
+        var url = jsonDocument.RootElement.TryGetProperty("url", out var urlElement)
+            ? urlElement.GetString()
+            : null;
+        var restrictions = jsonDocument.RootElement.TryGetProperty("restrictions", out var restrictionsElement)
+            ? restrictionsElement.EnumerateObject().Fold(new HashMap<string, Seq<string>>(),
+                (acc, x) => acc.Add(x.Name, x.Value.EnumerateArray().Select(x => x.GetString()).ToSeq()))
+            : Empty;
+        return new SpotifyContext(url,metadata, pages,restrictions);
     }
 
 

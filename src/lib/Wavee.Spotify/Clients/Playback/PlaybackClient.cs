@@ -70,6 +70,9 @@ internal readonly struct PlaybackClient<RT> : IPlaybackClient
         var baseInfo = new SpotifyPlaybackInfo(Option<ProvidedTrack>.None,
             None,
             uri,
+            Option<string>.None,
+            LanguageExt.HashMap<string, Seq<string>>.Empty,
+            None,
             Empty,
             None, None, false, true);
 
@@ -94,6 +97,9 @@ internal readonly struct PlaybackClient<RT> : IPlaybackClient
             Option<ProvidedTrack>.None,
             None,
             uri,
+            None,
+            Empty,
+            Option<int>.None,
             Empty,
             None, None, false, true);
 
@@ -101,6 +107,7 @@ internal readonly struct PlaybackClient<RT> : IPlaybackClient
 
         var ctx = await _mercury.ContextResolve(uri, ct);
         Option<ContextTrack> track = None;
+        Option<int> index = None;
         while (track.IsNone)
         {
             if (ctx.Pages.Count == 0)
@@ -121,6 +128,7 @@ internal readonly struct PlaybackClient<RT> : IPlaybackClient
                     {
                         var item = page.Tracks[startFrom - depth];
                         track = Some(item);
+                        index = Some(startFrom);
                         break;
                     }
 
@@ -161,6 +169,7 @@ internal readonly struct PlaybackClient<RT> : IPlaybackClient
                             //we have the track
                             var item = ctx.Pages.SelectMany(x => x.Tracks).ElementAt(startFrom);
                             track = Some(item);
+                            index = Some(startFrom);
                             break;
                         }
                         //we need to load the next page
@@ -176,7 +185,13 @@ internal readonly struct PlaybackClient<RT> : IPlaybackClient
         _onPlaybackInfo.Iter(x =>
         {
             baseInfo = baseInfo
-                .EnrichContext(track.ValueUnsafe(), ctx.Metadata)
+                .EnrichContext(
+                    uri,
+                    ctx.Url,
+                    track.ValueUnsafe(),
+                    ctx.Metadata,
+                    ctx.Restrictions)
+                .EnrichIndex(index)
                 .WithBuffering();
             x(baseInfo);
         });
@@ -195,7 +210,12 @@ internal readonly struct PlaybackClient<RT> : IPlaybackClient
                     _onPlaybackInfo.Iter(x =>
                     {
                         baseInfo = baseInfo
-                            .EnrichContext(nextTrack, ctx.Metadata)
+                            .EnrichContext(uri,
+                                ctx.Url,
+                                nextTrack,
+                                ctx.Metadata,
+                                ctx.Restrictions)
+                            .EnrichIndex(theoreticalNext)
                             .WithBuffering();
                         x(baseInfo);
                     });
@@ -335,6 +355,9 @@ public readonly record struct SpotifyPlaybackInfo(
     Option<ProvidedTrack> Track,
     Option<int> Duration,
     Option<string> ContextUri,
+    Option<string> ContextUrl,
+    HashMap<string, Seq<string>> ContextRestrictions,
+    Option<int> Index,
     HashMap<string, string> ContextMetadata,
     Option<string> PlaybackId,
     Option<TimeSpan> Position,
@@ -374,17 +397,35 @@ public readonly record struct SpotifyPlaybackInfo(
         };
     }
 
-    public SpotifyPlaybackInfo EnrichContext(ContextTrack ctxTrack, HashMap<string, string> ctxMetadata)
+    public SpotifyPlaybackInfo EnrichIndex(Option<int> index)
+    {
+        return this with
+        {
+            Index = index
+        };
+    }
+
+    public SpotifyPlaybackInfo EnrichContext(
+        string contextUrl,
+        string contextUri,
+        ContextTrack ctxTrack,
+        HashMap<string, string> ctxMetadata,
+        HashMap<string, Seq<string>> contextRestrictions)
     {
         var track = Track.IfNone(new ProvidedTrack());
         track.Provider = "context";
+        // ContextUri = contextUri;
         if (ctxTrack.HasUri)
             track.Uri = ctxTrack.Uri;
         if (ctxTrack.HasUid)
             track.Uid = ctxTrack.Uid;
+
         return this with
         {
             Track = track,
+            ContextUrl = contextUrl,
+            ContextRestrictions = contextRestrictions,
+            ContextUri = contextUri,
             ContextMetadata = ctxMetadata
         };
     }

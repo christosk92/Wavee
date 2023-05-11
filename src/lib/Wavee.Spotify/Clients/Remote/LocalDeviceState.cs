@@ -1,6 +1,8 @@
-﻿using System.Security.Cryptography;
+﻿using System.Diagnostics;
+using System.Security.Cryptography;
 using Eum.Spotify.connectstate;
 using LanguageExt.UnsafeValueAccess;
+using Wavee.Spotify.Clients.Playback;
 
 namespace Wavee.Spotify.Clients.Remote;
 
@@ -38,19 +40,42 @@ public readonly record struct LocalDeviceState(
         };
     }
 
-    public LocalDeviceState SetContextUri(Option<string> infoContextUri, HashMap<string, string> metadata)
+    public LocalDeviceState SetContextUri(Option<string> infoContextUri,
+        Option<string> contextUrl,
+        HashMap<string, string> metadata,
+        HashMap<string, Seq<string>> contextRestrictions)
     {
         if (infoContextUri.IsSome)
         {
             var contextUri = infoContextUri.ValueUnsafe();
             State.ContextUri = contextUri;
-            State.ContextUrl = $"context://{contextUri}";
+            State.ContextUrl = contextUrl.IfNone(string.Empty);
             State.ContextMetadata.Clear();
             foreach (var (key, value) in metadata)
             {
                 State.ContextMetadata.Add(key, value);
             }
 
+            var restrictions = new RestrictionsManager();
+            foreach (var (key, reasons) in contextRestrictions)
+            {
+                switch (key)
+                {
+                    case "disallow_toggling_repeat_context_reasons":
+                        foreach (var reason in reasons)
+                            restrictions.Disallow(RestrictionsManager.Action.REPEAT_CONTEXT, reason);
+                        break;
+                    case "disallow_toggling_shuffle_reasons":
+                        foreach (var reason in reasons)
+                            restrictions.Disallow(RestrictionsManager.Action.SHUFFLE, reason);
+                        break;
+                    default:
+                        Debugger.Break();
+                        break;
+                }
+            }
+
+            State.ContextRestrictions = restrictions.ToProto();
             return this with
             {
                 State = State
@@ -97,6 +122,7 @@ public readonly record struct LocalDeviceState(
         {
             var track = infoTrack.ValueUnsafe();
             State.Track = track;
+            track.Metadata["context_uri"] = State.ContextUri;
             return this with
             {
                 State = State
@@ -271,5 +297,22 @@ public readonly record struct LocalDeviceState(
         {
             LastMessageId = Some((uint)commandOptionsMessageId),
         };
+    }
+
+    public LocalDeviceState SetIndex(Option<int> infoIndex)
+    {
+        if (infoIndex.IsSome)
+        {
+            State.Index = new ContextIndex
+            {
+                Track = (uint)infoIndex.ValueUnsafe()
+            };
+            return this with
+            {
+                State = State
+            };
+        }
+
+        return this;
     }
 }
