@@ -45,7 +45,6 @@ internal sealed class VlcHolder
         if (closeOtherStreams)
         {
             //just end all the streams so we can start a new one
-            _mediaPlayer.Iter(x => x.Stop());
             _cancellationTokens.Iter(x => x.Cancel());
             //the media player will be removed from the atomseqs when it ends as per bottom fnc.
         }
@@ -75,7 +74,6 @@ internal sealed class VlcHolder
             }
             finally
             {
-                cts.Dispose();
                 atomic(() =>
                 {
                     _mediaInput.Swap(f => f.Filter(x => x != mediaInput));
@@ -83,6 +81,17 @@ internal sealed class VlcHolder
                     _mediaPlayer.Swap(f => f.Filter(x => x != mediaPlayer));
                     _cancellationTokens.Swap(f => f.Filter(x => x != cts));
                 });
+                try
+                {
+                    cts.Dispose();
+                }
+                catch (Exception)
+                {
+                }
+
+                mediaPlayer.Dispose();
+                media.Dispose();
+                mediaInput.Dispose();
             }
         }, cts.Token);
 
