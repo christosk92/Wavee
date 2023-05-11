@@ -10,12 +10,12 @@ namespace Wavee.Spotify.Clients.Playback.Streams;
 
 internal sealed class DecryptedSpotifyStream<RT> : IDisposable where RT : struct, HasHttp<RT>
 {
-    private readonly EncryptedSpotifyStream<RT> _encryptedSpotifyStream;
+    private readonly IEncryptedSpotifyStream _encryptedSpotifyStream;
     private readonly Option<IAudioDecrypt> _audioDecrypt;
     private readonly Option<ReadOnlyMemory<byte>>[] _decryptedChunks;
     private long _position;
 
-    public DecryptedSpotifyStream(EncryptedSpotifyStream<RT> encryptedSpotifyStream,
+    public DecryptedSpotifyStream(IEncryptedSpotifyStream encryptedSpotifyStream,
         Either<AesKeyError, AudioKey> key)
     {
         _encryptedSpotifyStream = encryptedSpotifyStream;

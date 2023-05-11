@@ -2,6 +2,8 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Wavee.Infrastructure.Traits;
+using Wavee.Spotify.Cache;
+using Wavee.Spotify.Cache.Repositories;
 
 namespace Wavee.Infrastructure.Live;
 
@@ -11,7 +13,10 @@ public readonly struct WaveeRuntime :
     HasHttp<WaveeRuntime>,
     HasAudioOutput<WaveeRuntime>,
     HasWebsocket<WaveeRuntime>,
-    HasLog<WaveeRuntime>
+    HasLog<WaveeRuntime>,
+    HasDatabase<WaveeRuntime>,
+    HasTrackRepo<WaveeRuntime>,
+    HasFileRepo<WaveeRuntime>
 {
     readonly RuntimeEnv env;
 
@@ -31,9 +36,9 @@ public readonly struct WaveeRuntime :
     /// <summary>
     /// Constructor function
     /// </summary>
-    public static WaveeRuntime New(Option<ILogger> logger) =>
-        new WaveeRuntime(new RuntimeEnv(new CancellationTokenSource(), 
-            logger.IfNone(NullLogger.Instance), new VlcHolder()));
+    public static WaveeRuntime New(Option<ILogger> logger, Option<DatabaseIO> database) =>
+        new WaveeRuntime(new RuntimeEnv(new CancellationTokenSource(),
+            logger.IfNone(NullLogger.Instance), new VlcHolder(), database.IfNone(new EmptyDb())));
 
     /// <summary>
     /// Create a new Runtime with a fresh cancellation token
@@ -41,7 +46,7 @@ public readonly struct WaveeRuntime :
     /// <remarks>Used by localCancel to create new cancellation context for its sub-environment</remarks>
     /// <returns>New runtime</returns>
     public WaveeRuntime LocalCancel =>
-        new WaveeRuntime(new RuntimeEnv(new CancellationTokenSource(),  Env.Logger, new VlcHolder()));
+        new WaveeRuntime(new RuntimeEnv(new CancellationTokenSource(), Env.Logger, Env.VlcHolder, Env.Database));
 
     /// <summary>
     /// Direct access to cancellation token
@@ -73,24 +78,29 @@ public readonly struct WaveeRuntime :
     public Eff<WaveeRuntime, WebsocketIO> WsEff =>
         SuccessEff(Live.WebsocketIOImpl.Default);
 
+    public Aff<WaveeRuntime, DatabaseIO> Database => Eff<WaveeRuntime, DatabaseIO>((rt) => rt.env.Database);
+
     internal class RuntimeEnv
     {
         public readonly CancellationTokenSource Source;
         public readonly CancellationToken Token;
         public readonly VlcHolder VlcHolder;
         public ILogger Logger;
+        public DatabaseIO Database;
 
-        public RuntimeEnv(CancellationTokenSource source, CancellationToken token, 
-            ILogger logger, VlcHolder vlcHolder)
+        public RuntimeEnv(CancellationTokenSource source, CancellationToken token,
+            ILogger logger, VlcHolder vlcHolder, DatabaseIO database)
         {
             Source = source;
             Token = token;
             Logger = logger;
             VlcHolder = vlcHolder;
+            Database = database;
         }
 
-        public RuntimeEnv(CancellationTokenSource source, ILogger logger, VlcHolder vlcHolder) : this(source,
-            source.Token, logger, vlcHolder)
+        public RuntimeEnv(CancellationTokenSource source, ILogger logger, VlcHolder vlcHolder, DatabaseIO database) :
+            this(source,
+                source.Token, logger, vlcHolder, database)
         {
         }
     }

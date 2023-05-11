@@ -1,6 +1,7 @@
 ﻿using System.Buffers.Binary;
 using Google.Protobuf;
 using Wavee.Spotify.Clients.Info;
+using Wavee.Spotify.Id;
 using Wavee.Spotify.Infrastructure.Connection;
 
 namespace Wavee.Spotify.Clients.Mercury.Key;

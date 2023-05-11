@@ -1,14 +1,12 @@
 ﻿using System.Net.Http.Headers;
-using System.Net.WebSockets;
 using Eum.Spotify.connectstate;
 using Google.Protobuf;
-using LanguageExt.Common;
 using Wavee.Infrastructure.Sys.IO;
 using Wavee.Infrastructure.Traits;
 using Wavee.Spotify.Clients.Remote;
 using Wavee.Spotify.Helpers;
 
-namespace Wavee.Spotify.Infrastructure.Sys;
+namespace Wavee.Spotify.Infrastructure.Sys.Remote;
 
 public static class RemoteState<RT> where RT : struct, HasWebsocket<RT>, HasHttp<RT>, HasAudioOutput<RT>
 {

@@ -5,23 +5,23 @@ using Wavee.Spotify.Clients.Playback.Cdn;
 
 namespace Wavee.Spotify.Clients.Playback.Streams;
 
-internal sealed class EncryptedSpotifyStream<RT> : IDisposable where RT : struct, HasHttp<RT>
+internal sealed class EncryptedSpotifyStream<RT> : IEncryptedSpotifyStream, IDisposable where RT : struct, HasHttp<RT>
 {
-    private readonly MaybeExpiringUrl _cdnUrl;
     private readonly TrackOrEpisode _metadata;
     private readonly int _numberOfChunks;
 
     private readonly Option<TaskCompletionSource<ReadOnlyMemory<byte>>>[] _requested;
     private readonly Func<int, Task<ReadOnlyMemory<byte>>> _getChunk;
+    private readonly Option<Action<ReadOnlyMemory<byte>>> _finished;
 
     public EncryptedSpotifyStream(
-        MaybeExpiringUrl cdnUrl,
         TrackOrEpisode metadata,
         ReadOnlyMemory<byte> firstChunk,
         int numberOfChunks,
-        long length, Func<int, Task<ReadOnlyMemory<byte>>> getChunk)
+        long length,
+        Func<int, Task<ReadOnlyMemory<byte>>> getChunk,
+        Option<Action<ReadOnlyMemory<byte>>> finished)
     {
-        _cdnUrl = cdnUrl;
         _metadata = metadata;
         _numberOfChunks = numberOfChunks;
         _requested = new Option<TaskCompletionSource<ReadOnlyMemory<byte>>>[numberOfChunks];
@@ -31,6 +31,7 @@ internal sealed class EncryptedSpotifyStream<RT> : IDisposable where RT : struct
 
         Length = length;
         _getChunk = getChunk;
+        _finished = finished;
     }
 
     public long Position { get; set; }
@@ -64,6 +65,25 @@ internal sealed class EncryptedSpotifyStream<RT> : IDisposable where RT : struct
         else
         {
             chunk = await _requested[index].ValueUnsafe().Task;
+        }
+
+        //check if we are done
+        if (_finished.IsSome)
+        {
+            if (_requested.All(x => x.IsSome))
+            {
+                var totalLength = Length;
+                Memory<byte> final = new byte[totalLength];
+                var offset = 0;
+                for (var i = 0; i < _numberOfChunks; i++)
+                {
+                    var chunkToCopy = _requested[i].ValueUnsafe().Task.Result;
+                    chunkToCopy.CopyTo(final.Slice(offset));
+                    offset += chunkToCopy.Length;
+                }
+
+                _finished.IfSome(action1 => action1(final));
+            }
         }
 
         if (index + preloadAhead < _numberOfChunks)
@@ -130,4 +150,13 @@ internal sealed class EncryptedSpotifyStream<RT> : IDisposable where RT : struct
         //clear _requested
         _requested.AsSpan().Clear();
     }
+}
+
+internal interface IEncryptedSpotifyStream : IDisposable
+{
+    int NumberOfChunks { get; }
+    long Position { get; set; }
+    long Length { get; }
+    long Seek(long to, SeekOrigin begin);
+    int Read(Span<byte> buffer);
 }

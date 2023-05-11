@@ -159,23 +159,14 @@ internal readonly struct RemoteClient<RT> : IRemoteClient
                                 .SetActive(true);
                             if (info.Buffering)
                                 k = k.Buffering(None);
-                            if (info.Paused)
-                                k = k.Paused();
-                            else k = k.Playing();
-
-                            k = k.SetDuration(info.Duration);
-
-                            k = k.SetContextUri(info.ContextUri,
-                                info.ContextUrl,
-                                info.ContextMetadata,
-                                info.ContextRestrictions);
-
-                            k = k.SetTrack(info.Track);
-
-                            k = k.SetIndex(info.Index);
+                            k = info.Paused ? k.Paused() : k.Playing();
                             
-                            k = k.SetPosition((long)info.Position.IfNone(TimeSpan.Zero).TotalMilliseconds);
-                            return k;
+                            return k.
+                                    SetDuration(info.Duration).
+                                    SetContextUri(info.ContextUri, info.ContextUrl, info.ContextMetadata, info.ContextRestrictions).
+                                    SetTrack(info.Track).
+                                    SetIndex(info.Index).
+                                    SetPosition((long)info.Position.IfNone(TimeSpan.Zero).TotalMilliseconds);
                         }));
                     var vol = AudioOutput<RT>.Volume().Run(rt).ThrowIfFail();
                     var putState = build.BuildPutState(PutStateReason.PlayerStateChanged,

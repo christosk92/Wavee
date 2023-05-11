@@ -1,15 +1,12 @@
 ﻿using System.Net.WebSockets;
 using System.Text.Json;
 using Eum.Spotify.connectstate;
-using LanguageExt.Common;
 using LanguageExt.UnsafeValueAccess;
 using Wavee.Infrastructure.Sys.IO;
 using Wavee.Infrastructure.Traits;
-using Wavee.Spotify.Clients.Mercury.Metadata;
 using Wavee.Spotify.Clients.Remote;
-using Wavee.Spotify.Infrastructure.Sys.Remote;
 
-namespace Wavee.Spotify.Infrastructure.Sys;
+namespace Wavee.Spotify.Infrastructure.Sys.Remote;
 
 internal static class Remote<RT> where RT : struct, HasWebsocket<RT>, HasHttp<RT>, HasAudioOutput<RT>
 {

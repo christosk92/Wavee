@@ -5,6 +5,9 @@ using LanguageExt.Common;
 using Spotify.Metadata;
 using Wavee.Infrastructure.Sys.IO;
 using Wavee.Infrastructure.Traits;
+using Wavee.Spotify.Cache;
+using Wavee.Spotify.Cache.Domain.Chunks;
+using Wavee.Spotify.Cache.Repositories;
 using Wavee.Spotify.Clients.Mercury.Key;
 using Wavee.Spotify.Clients.Mercury.Metadata;
 using Wavee.Spotify.Clients.Playback;
@@ -13,9 +16,31 @@ using Wavee.Spotify.Clients.Playback.Streams;
 
 namespace Wavee.Spotify.Infrastructure.Sys;
 
-internal static class SpotifyStreams<RT> where RT : struct, HasHttp<RT>
+internal static class SpotifyStreams<RT> where RT : struct, HasHttp<RT>, HasTrackRepo<RT>, HasFileRepo<RT>
 {
-    public static Aff<RT, EncryptedSpotifyStream<RT>> OpenEncryptedStream(
+    public static Aff<RT, IEncryptedSpotifyStream> OpenEncryptedFileStream(EncryptedAudioFile cachedFile,
+        TrackOrEpisode metadata)
+    {
+        var totalSize = cachedFile.Data.Length;
+        var numberOfChunks = CalculateNumberOfChunks(totalSize, SpotifyPlaybackConstants.ChunkSize);
+        return SuccessAff(
+            (IEncryptedSpotifyStream)new EncryptedSpotifyStream<RT>(metadata, cachedFile.Data,
+                numberOfChunks, totalSize,
+                i => GetChunkFromMemory(i, cachedFile),
+                Option<Action<ReadOnlyMemory<byte>>>.None));
+    }
+
+    private static Task<ReadOnlyMemory<byte>> GetChunkFromMemory(int index, EncryptedAudioFile cachedFile)
+    {
+        var chunkStart = index * SpotifyPlaybackConstants.ChunkSize;
+        var chunkEnd = Math.Min(chunkStart + SpotifyPlaybackConstants.ChunkSize, cachedFile.Data.Length);
+        var chunkLength = chunkEnd - chunkStart;
+        var chunk = cachedFile.Data.Slice(chunkStart, chunkLength);
+        return Task.FromResult(chunk);
+    }
+
+    public static Aff<RT, IEncryptedSpotifyStream> OpenEncryptedStream(
+        AudioFile file,
         MaybeExpiringUrl cdnUrl,
         TrackOrEpisode metadata, CancellationToken ct = default) =>
         from firstChunk in Http<RT>.GetWithContentRange(cdnUrl.Url, 0, SpotifyPlaybackConstants.ChunkSize, ct)
@@ -27,14 +52,23 @@ internal static class SpotifyStreams<RT> where RT : struct, HasHttp<RT>
             return memory;
         })
         from rt in Eff<RT, RT>((rt) => rt)
-        select new EncryptedSpotifyStream<RT>(cdnUrl, metadata, firstChunkMemory, numberOfChunks, totalSize,
-            i => GetChunk(i, cdnUrl, rt, ct));
+        select (IEncryptedSpotifyStream)new EncryptedSpotifyStream<RT>(metadata, firstChunkMemory,
+            numberOfChunks, totalSize,
+            i => GetChunk(i, cdnUrl, rt, ct),
+            new Action<ReadOnlyMemory<byte>>(r => FinishedDownloading(file, r, rt)));
+
+    private static async void FinishedDownloading(
+        AudioFile file,
+        ReadOnlyMemory<byte> fileData, RT runtime)
+    {
+        var aff = SpotifyCache<RT>.CacheFile(file, fileData);
+        _ = await aff.Run(runtime);
+    }
 
     public static Eff<RT, (DecryptedSpotifyStream<RT> Stream, Option<NormalisationData> NormalisationDatas)>
-        OpenDecryptionStream<RT>(
-            EncryptedSpotifyStream<RT> encryptedSpotifyStream,
+        OpenDecryptionStream(
+            IEncryptedSpotifyStream encryptedSpotifyStream,
             Either<AesKeyError, AudioKey> key, bool isVorbis)
-        where RT : struct, HasHttp<RT>
     {
         var decryptionStream = new DecryptedSpotifyStream<RT>(encryptedSpotifyStream, key);
         var normData = isVorbis ? NormalisationData.ParseFromOgg(decryptionStream) : Option<NormalisationData>.None;
@@ -52,7 +86,7 @@ internal static class SpotifyStreams<RT> where RT : struct, HasHttp<RT>
             chosenFile,
             metadata));
     }
-    
+
     private static async Task<ReadOnlyMemory<byte>> GetChunk<RT>(int index, MaybeExpiringUrl cdnUrl, RT hasHttp,
         CancellationToken ct) where RT : struct, HasHttp<RT>
     {
@@ -74,7 +108,7 @@ internal static class SpotifyStreams<RT> where RT : struct, HasHttp<RT>
         );
     }
 
-    
+
     private static long GetTotalSizeFromContentRange(ContentRangeHeaderValue contentRange)
     {
         return contentRange.Length ??
@@ -85,5 +119,4 @@ internal static class SpotifyStreams<RT> where RT : struct, HasHttp<RT>
     {
         return (int)Math.Ceiling((double)totalSize / chunkSize);
     }
-    
 }

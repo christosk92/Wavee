@@ -1,9 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
-using System.Text;
 using Eum.Spotify.connectstate;
 using Google.Protobuf;
 using Spotify.Metadata;
-using Wavee.Spotify.Clients.Info;
 
 namespace Wavee.Spotify.Id;
 

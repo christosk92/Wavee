@@ -1,9 +1,8 @@
 ﻿using System.Numerics;
 using System.Text;
 using Wavee.Spotify.Helpers;
-using Wavee.Spotify.Id;
 
-namespace Wavee.Spotify.Clients.Info;
+namespace Wavee.Spotify.Id;
 
 /// <summary>
 ///     A Spotify URI is a resource identifier that can be entered in the Spotify desktop client's search box to locate an

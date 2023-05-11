@@ -8,6 +8,7 @@ using Spotify.Metadata;
 using Wavee.Infrastructure.Traits;
 using Wavee.Player;
 using Wavee.Player.States;
+using Wavee.Spotify.Cache.Repositories;
 using Wavee.Spotify.Clients.Info;
 using Wavee.Spotify.Clients.Mercury;
 using Wavee.Spotify.Clients.Mercury.Key;
@@ -20,7 +21,7 @@ using Wavee.Spotify.Infrastructure.Sys;
 namespace Wavee.Spotify.Clients.Playback;
 
 internal readonly struct PlaybackClient<RT> : IPlaybackClient
-    where RT : struct, HasLog<RT>, HasHttp<RT>, HasAudioOutput<RT>
+    where RT : struct, HasLog<RT>, HasHttp<RT>, HasAudioOutput<RT>, HasTrackRepo<RT>, HasFileRepo<RT>
 {
     private static AtomHashMap<Guid, Action<SpotifyPlaybackInfo>> _onPlaybackInfo =
         LanguageExt.AtomHashMap<Guid, Action<SpotifyPlaybackInfo>>.Empty;

@@ -11,6 +11,7 @@ using Wavee;
 using Wavee.Spotify;
 using Wavee.Spotify.Clients.Info;
 using Wavee.Spotify.Configs;
+using Wavee.Spotify.Id;
 using ILogger = Microsoft.Extensions.Logging.ILogger;
 
 var loginCredentials = new LoginCredentials
@@ -21,6 +22,7 @@ var loginCredentials = new LoginCredentials
 };
 
 var config = new SpotifyConfig(
+    CachePath: Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Wavee", "Spotify"),
     Remote: new SpotifyRemoteConfig(
         DeviceName: "Wavee Test",
         DeviceType: DeviceType.Computer
@@ -34,13 +36,16 @@ var log = new LoggerConfiguration()
     .MinimumLevel.Debug()
     .WriteTo.Console()
     .CreateLogger();
+
 ILoggerFactory loggerFactory = LoggerFactory.Create(builder =>
 {
     builder.ClearProviders();
     builder.AddSerilog(log);
 });
 var logger = loggerFactory.CreateLogger<Program>();
-var connection = await SpotifyClient.Create(loginCredentials, config, Option<ILogger>.Some(logger));
+var connection = await SpotifyClient.Create(loginCredentials,
+    config,
+    Option<ILogger>.Some(logger));
 var remoteCluster = await connection.Remote.Connect(CancellationToken.None);
 remoteCluster.Subscribe(state =>
 {

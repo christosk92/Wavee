@@ -7,6 +7,8 @@ using LanguageExt.UnsafeValueAccess;
 using Spotify.Metadata;
 using Wavee.Infrastructure.Sys.IO;
 using Wavee.Infrastructure.Traits;
+using Wavee.Spotify.Cache;
+using Wavee.Spotify.Cache.Repositories;
 using Wavee.Spotify.Clients.Info;
 using Wavee.Spotify.Clients.Mercury;
 using Wavee.Spotify.Clients.Mercury.Key;
@@ -14,10 +16,11 @@ using Wavee.Spotify.Clients.Mercury.Metadata;
 using Wavee.Spotify.Clients.Playback.Cdn;
 using Wavee.Spotify.Clients.Playback.Streams;
 using Wavee.Spotify.Configs;
+using Wavee.Spotify.Id;
 
 namespace Wavee.Spotify.Infrastructure.Sys;
 
-internal static class SpotifyPlayback<RT> where RT : struct, HasHttp<RT>
+internal static class SpotifyPlayback<RT> where RT : struct, HasHttp<RT>, HasTrackRepo<RT>, HasFileRepo<RT>
 {
     public static Aff<RT, ISpotifyStream> LoadTrack(
         SpotifyId id,
@@ -43,10 +46,18 @@ internal static class SpotifyPlayback<RT> where RT : struct, HasHttp<RT>
             .Map(e => e.Match(
                 Left: x => throw new Exception("Error fetching audio key"),
                 Right: x => x))
-        from cdnUrl in GetUrl(file, getBearer, ct)
-        let isVorbis = file.Format is AudioFile.Types.Format.OggVorbis96 or AudioFile.Types.Format.OggVorbis160
+        from chosenEncryptionStreamAff in SpotifyCache<RT>.GetFile(file.FileId)
+            .Map(x => x.Match(
+                Some: cachedFile => SpotifyStreams<RT>.OpenEncryptedFileStream(cachedFile, metadata),
+                None: () =>
+                    from cdnUrl in GetUrl(file, getBearer, ct)
+                    from encryptedStream in SpotifyStreams<RT>.OpenEncryptedStream(file, cdnUrl.Urls.First(), metadata)
+                    select encryptedStream
+            ))
+        let isVorbis = file.Format is AudioFile.Types.Format.OggVorbis96
+            or AudioFile.Types.Format.OggVorbis160
             or AudioFile.Types.Format.OggVorbis320
-        from encryptedStream in SpotifyStreams<RT>.OpenEncryptedStream(cdnUrl.Urls.First(), metadata)
+        from encryptedStream in chosenEncryptionStreamAff
         from decryptedStream in SpotifyStreams<RT>.OpenDecryptionStream(encryptedStream, audioKey, isVorbis)
         from subFile in SpotifyStreams<RT>.ExtractFinalStream(decryptedStream.Stream,
             decryptedStream.NormalisationDatas, isVorbis, file,
@@ -58,8 +69,15 @@ internal static class SpotifyPlayback<RT> where RT : struct, HasHttp<RT>
     {
         return id.Type switch
         {
-            AudioItemType.Track => mercury.GetTrack(id, ct).ToAff()
-                .Map(x => new TrackOrEpisode(Right(x))),
+            AudioItemType.Track =>
+                from cachedTrackAff in SpotifyCache<RT>.GetTrack(id.IdStr)
+                    .Map(c => c.Match(
+                        Some: x => SuccessAff(x),
+                        None: () => from track in mercury.GetTrack(id, ct).ToAff()
+                            from _ in SpotifyCache<RT>.CacheTrack(track, id.IdStr)
+                            select track))
+                from cachedTrack in cachedTrackAff
+                select new TrackOrEpisode(Right(cachedTrack)),
             AudioItemType.Episode => mercury.GetEpisode(id, ct).ToAff()
                 .Map(x => new TrackOrEpisode(Left(x))),
             _ => FailAff<RT, TrackOrEpisode>(Error.New("Unsupported type"))

@@ -3,6 +3,7 @@ using LanguageExt.UnsafeValueAccess;
 using Spotify.Metadata;
 using Wavee.Spotify.Clients.Info;
 using Wavee.Spotify.Configs;
+using Wavee.Spotify.Id;
 
 namespace Wavee.Spotify.Clients.Mercury.Metadata;
 

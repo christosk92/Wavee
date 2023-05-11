@@ -3,6 +3,7 @@
 namespace Wavee.Spotify.Configs;
 
 public readonly record struct SpotifyConfig(
+    Option<string> CachePath,
     SpotifyRemoteConfig Remote,
     SpotifyPlaybackConfig Playback
 );

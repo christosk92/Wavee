@@ -5,11 +5,15 @@ using System.Runtime.CompilerServices;
 using System.Threading.Channels;
 using Eum.Spotify;
 using LanguageExt.Common;
+using LanguageExt.Effects.Database;
+using LinqToDB;
 using Microsoft.Extensions.Logging;
 using Wavee.Infrastructure.Live;
 using Wavee.Infrastructure.Sys;
 using Wavee.Infrastructure.Sys.IO;
 using Wavee.Infrastructure.Traits;
+using Wavee.Spotify.Cache;
+using Wavee.Spotify.Cache.Entities;
 using Wavee.Spotify.Configs;
 using Wavee.Spotify.Infrastructure;
 using Wavee.Spotify.Infrastructure.Authentication;
@@ -21,6 +25,7 @@ namespace Wavee.Spotify;
 
 public static class SpotifyClient
 {
+
     public static async Task<ISpotifyConnection> Create(
         LoginCredentials credentials,
         SpotifyConfig config,
@@ -28,6 +33,24 @@ public static class SpotifyClient
         CancellationToken ct = default)
     {
         _ = WaveeCore.Runtime;
+
+        if (config.CachePath.IsSome)
+        {
+            atomic(() =>
+            {
+                var path = Path.Combine(config.CachePath.IfNone(""), "cache.db");
+                Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+                var connString = $"Data Source={path};Version=3;";
+                var ctx = new LocalCacheContext(LinqToDB.ProviderName.SQLite, connString);
+                
+                return WaveeCore.Database.Swap(_ =>
+                {
+                    var newdb = new DatabaseLive(ctx);
+                    return newdb;
+                });
+            });
+        }
+
         atomic(() => WaveeCore.Logger.Swap(_ => logger));
         //these are not related
 

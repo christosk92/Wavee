@@ -7,12 +7,14 @@ using LanguageExt.Effects.Traits;
 using LanguageExt.UnsafeValueAccess;
 using Wavee.Infrastructure.Sys;
 using Wavee.Infrastructure.Traits;
+using Wavee.Spotify.Cache.Repositories;
 using Wavee.Spotify.Clients.Info;
 using Wavee.Spotify.Clients.Mercury;
 using Wavee.Spotify.Clients.Mercury.Key;
 using Wavee.Spotify.Clients.Playback;
 using Wavee.Spotify.Clients.Remote;
 using Wavee.Spotify.Clients.Token;
+using Wavee.Spotify.Id;
 using Wavee.Spotify.Infrastructure.Connection;
 
 namespace Wavee.Spotify.Infrastructure;
@@ -23,7 +25,7 @@ internal readonly record struct PackageListenerRecord(PackageListenerRequest Req
     ChannelWriter<SpotifyPacket> Writer);
 
 internal sealed class SpotifyConnection<RT> : ISpotifyConnection
-    where RT : struct, HasLog<RT>, HasWebsocket<RT>, HasHttp<RT>, HasAudioOutput<RT>
+    where RT : struct, HasLog<RT>, HasWebsocket<RT>, HasHttp<RT>, HasAudioOutput<RT>, HasTrackRepo<RT>, HasFileRepo<RT>
 {
     private readonly CancellationTokenSource _cts;
     private readonly ChannelWriter<SpotifyPacket> _channelWriter;

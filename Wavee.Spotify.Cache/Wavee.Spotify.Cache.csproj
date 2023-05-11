@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net7.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="CommunityToolkit.HighPerformance" Version="8.2.0" />
+      <PackageReference Include="LanguageExt.Effects.Database" Version="1.0.0-preview9" />
+      <PackageReference Include="System.Data.SQLite" Version="1.0.117" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\src\lib\Wavee.Spotify.Proto\Wavee.Spotify.Proto.csproj" />
+    </ItemGroup>
+
+</Project>
