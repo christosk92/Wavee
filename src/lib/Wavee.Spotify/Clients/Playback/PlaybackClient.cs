@@ -187,8 +187,8 @@ internal readonly struct PlaybackClient<RT> : IPlaybackClient
         {
             baseInfo = baseInfo
                 .EnrichContext(
-                    uri,
-                    ctx.Url,
+                    contextUri: uri,
+                    contextUrl: ctx.Url,
                     track.ValueUnsafe(),
                     ctx.Metadata,
                     ctx.Restrictions)
@@ -211,8 +211,9 @@ internal readonly struct PlaybackClient<RT> : IPlaybackClient
                     _onPlaybackInfo.Iter(x =>
                     {
                         baseInfo = baseInfo
-                            .EnrichContext(uri,
-                                ctx.Url,
+                            .EnrichContext(
+                                contextUri: uri,
+                                contextUrl: ctx.Url,
                                 nextTrack,
                                 ctx.Metadata,
                                 ctx.Restrictions)
@@ -407,8 +408,8 @@ public readonly record struct SpotifyPlaybackInfo(
     }
 
     public SpotifyPlaybackInfo EnrichContext(
-        string contextUrl,
         string contextUri,
+        string contextUrl,
         ContextTrack ctxTrack,
         HashMap<string, string> ctxMetadata,
         HashMap<string, Seq<string>> contextRestrictions)
