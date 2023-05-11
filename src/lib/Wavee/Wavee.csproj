@@ -5,11 +5,12 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
     </PropertyGroup>
+
     <ItemGroup>
-        <PackageReference Include="LanguageExt.Core" Version="4.4.3" />
-        <PackageReference Include="LanguageExt.Rx" Version="4.4.3" />
-        <PackageReference Include="NAudio" Version="2.1.0" />
-        <PackageReference Include="NAudio.Core" Version="2.1.0" />
+      <PackageReference Include="LanguageExt.Core" Version="4.4.3" />
+      <PackageReference Include="LanguageExt.Rx" Version="4.4.3" />
+      <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.0-preview.3.23174.8" />
+      <PackageReference Include="NAudio" Version="2.1.0" />
     </ItemGroup>
 
 </Project>

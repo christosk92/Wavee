@@ -1,13 +1,22 @@
-﻿using Wavee.Infrastructure.Live;
-using Wavee.Player;
+﻿using System.Runtime.CompilerServices;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
+using Wavee.Infrastructure.Live;
 
+[assembly: InternalsVisibleTo("Wavee.Spotify")]
+[assembly: InternalsVisibleTo("Wavee.Player")]
 namespace Wavee;
 
-public static class WaveeCore
+internal static class WaveeCore
 {
+    public static Ref<Option<ILogger>> Logger = Ref(Option<ILogger>.None);
+
+
     static WaveeCore()
     {
-        Runtime = WaveeRuntime.New();
+        Runtime = WaveeRuntime.New(Logger);
+
+        Logger.OnChange().Subscribe(c => { Runtime.Env.Logger = c.IfNone(NullLogger.Instance); });
     }
 
     public static WaveeRuntime Runtime { get; }

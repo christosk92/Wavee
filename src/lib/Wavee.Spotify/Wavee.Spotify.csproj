@@ -7,14 +7,15 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Wavee.Spotify.Proto\Wavee.Spotify.Proto.csproj" />
-      <ProjectReference Include="..\Wavee\Wavee.csproj" />
+      <PackageReference Include="BouncyCastle.Cryptography" Version="2.2.1" />
+      <PackageReference Include="CommunityToolkit.HighPerformance" Version="8.2.0" />
+      <PackageReference Include="LanguageExt.Core" Version="4.4.3" />
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="Base62-Net" Version="1.2.157201" />
-      <PackageReference Include="BouncyCastle.Cryptography" Version="2.2.1" />
-      <PackageReference Include="CommunityToolkit.HighPerformance" Version="8.2.0" />
+      <ProjectReference Include="..\Wavee.Player\Wavee.Player.csproj" />
+      <ProjectReference Include="..\Wavee.Spotify.Proto\Wavee.Spotify.Proto.csproj" />
+      <ProjectReference Include="..\Wavee\Wavee.csproj" />
     </ItemGroup>
 
 </Project>
