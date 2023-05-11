@@ -2,8 +2,6 @@
 using System.Threading.Channels;
 using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
-using LibVLCSharp.Shared;
-using NAudio.Wave;
 using Wavee.Infrastructure.Sys.IO;
 using Wavee.Infrastructure.Traits;
 using Wavee.Player.Commanding;
@@ -36,6 +34,7 @@ internal static class WaveePlayerRuntime<RT> where RT : struct, HasAudioOutput<R
                                     return f.Match(
                                         Some: r =>
                                         {
+                                            r.Decoder.Dispose();
                                             AudioOutput<RT>.Stop().Run(rt);
                                             return Option<AudioSession>.None;
                                         },
@@ -43,7 +42,7 @@ internal static class WaveePlayerRuntime<RT> where RT : struct, HasAudioOutput<R
                                 }));
 
                                 await HandlePlay(play.Runtime,
-                                    play.SourceId,
+                                    play.PlaybackId,
                                     play.Stream, audioSession, state);
                                 break;
                             case InternalPauseCommand<RT> pause:
@@ -100,12 +99,11 @@ internal static class WaveePlayerRuntime<RT> where RT : struct, HasAudioOutput<R
 
     private static async Task HandlePlay(
         RT runtime,
-        string SourceId,
+        string playbackId,
         IAudioStream playStream,
         Ref<Option<AudioSession>> audioSession,
         Ref<IWaveePlayerState> state)
     {
-        var playbackId = Guid.NewGuid().ToString();
         var stream = playStream.AsStream();
         // var decoderMaybe =
         //     AudioDecoderRuntime.OpenAudioDecoder(playStream.AsStream(), playStream.TotalDuration)
@@ -117,7 +115,6 @@ internal static class WaveePlayerRuntime<RT> where RT : struct, HasAudioOutput<R
         await Task.Factory.StartNew(async () =>
         {
             atomic(() => state.Swap(_ => new WaveePlayingState(playbackId,
-                SourceId,
                 stream)
             {
                 Timestamp = DateTimeOffset.UtcNow,
@@ -127,6 +124,25 @@ internal static class WaveePlayerRuntime<RT> where RT : struct, HasAudioOutput<R
             var r = AudioOutput<RT>.PlayStream(stream, true).Run(runtime);
             var t = r.ThrowIfFail();
             await t;
+
+            var alreadyGoingToNextTrack = audioSession.Value.IsSome
+                                          && audioSession.Value.ValueUnsafe().PlaybackId != playbackId;
+            Option<IWaveePlayerState> oldState = None;
+            //save current state
+            if (alreadyGoingToNextTrack)
+                oldState = Some(state.Value);
+            atomic(() => state.Swap(_ => new WaveeEndOfTrackState(playbackId, stream,
+                alreadyGoingToNextTrack
+            )
+            {
+                Position = AudioOutput<RT>.Position().Run(runtime).ThrowIfFail()
+                    .IfNone(TimeSpan.Zero)
+            }));
+
+            if (oldState.IsSome)
+                atomic(() => state.Swap(_ => oldState.ValueUnsafe()));
+
+            GC.Collect();
         });
     }
 }

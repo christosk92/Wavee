@@ -240,30 +240,33 @@ internal readonly struct PlaybackClient<RT> : IPlaybackClient
             x(baseInfo);
         });
 
+        Option<string> playbackId = None;
         IDisposable listener = default;
         PlaybackClient<RT> tmpThis = this;
-        string previousPlaybackId = string.Empty;
-        string sourceId = string.Empty;
         listener = WaveePlayer.Instance.StateObservable.Select(async state =>
         {
+            if (state is WaveeEndOfTrackState p)
+            {
+                if (
+                    playbackId.IsSome &&
+                    baseInfo.PlaybackId.IsSome &&
+                    p.PlaybackId == baseInfo.PlaybackId.ValueUnsafe())
+                {
+                    listener?.Dispose();
+                }
+            }
+
             switch (state)
             {
-                case WaveePlayingState playing:
-                    if (string.IsNullOrEmpty(previousPlaybackId))
-                        previousPlaybackId = playing.PlaybackId;
-
-                    if (sourceId != playing.SourceId
-                        && playing.PlaybackId != previousPlaybackId)
+                case WaveeEndOfTrackState eot:
+                    if (!eot.GoingToNextTrackAlready)
                     {
-                        previousPlaybackId = playing.PlaybackId;
-                        //we are playing a different track
-                        //lets stop listening
-                        listener.Dispose();
                         //start loading next track
                         _onPlaybackInfo.Iter(x =>
                         {
                             baseInfo = baseInfo
-                                .WithPosition(playing.Position)
+                                .MaybeNewPlaybackId(playbackId)
+                                .WithPosition(eot.Position)
                                 .WithPaused(true);
                             x(baseInfo);
                         });
@@ -287,13 +290,14 @@ internal readonly struct PlaybackClient<RT> : IPlaybackClient
                                 onTrackPlayed,
                                 mercury, ct);
                         }
-
-                        return;
                     }
 
+                    break;
+                case WaveePlayingState playing:
                     _onPlaybackInfo.Iter(x =>
                     {
                         baseInfo = baseInfo
+                            .MaybeNewPlaybackId(playbackId)
                             .WithPosition(playing.Position)
                             .WithPaused(false);
                         x(baseInfo);
@@ -303,14 +307,16 @@ internal readonly struct PlaybackClient<RT> : IPlaybackClient
                     _onPlaybackInfo.Iter(x =>
                     {
                         baseInfo = baseInfo
+                            .MaybeNewPlaybackId(playbackId)
                             .WithPosition(paused.Position)
                             .WithPaused(true);
                         x(baseInfo);
                     });
+
                     break;
             }
         }).Subscribe();
-        sourceId = await WaveePlayer.Instance.Play(stream);
+        playbackId = await WaveePlayer.Instance.Play(stream);
         return unit;
     }
 
@@ -349,6 +355,14 @@ public readonly record struct SpotifyPlaybackInfo(
         {
             Paused = b,
             Buffering = false
+        };
+    }
+
+    public SpotifyPlaybackInfo MaybeNewPlaybackId(Option<string> playbackId)
+    {
+        return this with
+        {
+            PlaybackId = playbackId
         };
     }
 

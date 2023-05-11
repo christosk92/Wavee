@@ -8,7 +8,7 @@ using Wavee.Spotify.Clients.Mercury.Key;
 
 namespace Wavee.Spotify.Clients.Playback.Streams;
 
-internal sealed class DecryptedSpotifyStream<RT> where RT : struct, HasHttp<RT>
+internal sealed class DecryptedSpotifyStream<RT> : IDisposable where RT : struct, HasHttp<RT>
 {
     private readonly EncryptedSpotifyStream<RT> _encryptedSpotifyStream;
     private readonly Option<IAudioDecrypt> _audioDecrypt;
@@ -85,6 +85,16 @@ internal sealed class DecryptedSpotifyStream<RT> where RT : struct, HasHttp<RT>
             .CopyTo(buf);
         Position += len;
         return len;
+    }
+
+    public void Dispose()
+    {
+        _encryptedSpotifyStream.Dispose();
+        //clear decrypted chunks
+        for (var i = 0; i < _decryptedChunks.Length; i++)
+        {
+            _decryptedChunks[i] = Option<ReadOnlyMemory<byte>>.None;
+        }
     }
 }
 

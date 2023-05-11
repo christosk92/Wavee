@@ -11,7 +11,6 @@
       <PackageReference Include="LanguageExt.Rx" Version="4.4.3" />
       <PackageReference Include="LibVLCSharp" Version="3.7.0" />
       <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.0-preview.3.23174.8" />
-      <PackageReference Include="NAudio" Version="2.1.0" />
       <PackageReference Include="VideoLAN.LibVLC.Windows" Version="3.0.18" />
     </ItemGroup>
 

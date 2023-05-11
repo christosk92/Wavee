@@ -23,6 +23,12 @@ internal sealed class SpotifyStream<RT> : Stream, ISpotifyStream where RT : stru
         _offset = (long)offset;
     }
 
+    protected override void Dispose(bool disposing)
+    {
+        _decryptedStream.Dispose();
+        base.Dispose(disposing);
+    }
+
     public AudioFile ChosenFile { get; }
 
     public TrackOrEpisode Metadata { get; }

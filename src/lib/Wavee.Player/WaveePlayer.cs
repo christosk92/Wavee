@@ -45,11 +45,11 @@ public sealed class WaveePlayer : IWaveePlayer
 
     public async ValueTask<string> Play(IAudioStream stream)
     {
-        var sourceId = Guid.NewGuid().ToString();
+        var playbackId = Guid.NewGuid().ToString();
         await _commandWriter.WriteAsync(new InternalPlayCommand<WaveeRuntime>(WaveeCore.Runtime,
-            sourceId,
+            playbackId,
             stream));
-        return sourceId;
+        return playbackId;
     }
 
     public IWaveePlayerState State => _state.Value;

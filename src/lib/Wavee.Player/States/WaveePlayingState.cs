@@ -1,9 +1,6 @@
-﻿using NAudio.Wave;
-
-namespace Wavee.Player.States;
+﻿namespace Wavee.Player.States;
 
 public readonly record struct WaveePlayingState(string PlaybackId,
-    string SourceId,
     Stream Decoder) : IWaveePlayerInPlaybackState
 {
     public required DateTimeOffset Timestamp { get; init; }
@@ -33,10 +30,10 @@ public readonly record struct WaveePausedState(string PlaybackId, Stream Decoder
     public required TimeSpan Position { get; init; }
 }
 
-// public readonly record struct WaveeEndOfTrackState(
-//     string PlaybackId, Stream Decoder,
-//     bool GoingToNextTrackAlready) : IWaveePlayerInPlaybackState
-// {
-//     public DateTimeOffset Since { get; } = new DateTimeOffset();
-//     public required TimeSpan Position { get; init; }
-// }
+public readonly record struct WaveeEndOfTrackState(
+    string PlaybackId, Stream Decoder,
+    bool GoingToNextTrackAlready) : IWaveePlayerInPlaybackState
+{
+    public DateTimeOffset Since { get; } = new DateTimeOffset();
+    public required TimeSpan Position { get; init; }
+}

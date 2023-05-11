@@ -5,7 +5,7 @@ using Wavee.Spotify.Clients.Playback.Cdn;
 
 namespace Wavee.Spotify.Clients.Playback.Streams;
 
-internal sealed class EncryptedSpotifyStream<RT> where RT : struct, HasHttp<RT>
+internal sealed class EncryptedSpotifyStream<RT> : IDisposable where RT : struct, HasHttp<RT>
 {
     private readonly MaybeExpiringUrl _cdnUrl;
     private readonly TrackOrEpisode _metadata;
@@ -123,5 +123,11 @@ internal sealed class EncryptedSpotifyStream<RT> where RT : struct, HasHttp<RT>
         }
 
         return Position;
+    }
+
+    public void Dispose()
+    {
+        //clear _requested
+        _requested.AsSpan().Clear();
     }
 }

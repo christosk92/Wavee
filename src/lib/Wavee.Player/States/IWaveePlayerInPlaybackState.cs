@@ -1,5 +1,3 @@
-using NAudio.Wave;
-
 namespace Wavee.Player.States;
 
 public interface IWaveePlayerInPlaybackState : IWaveePlayerState
