@@ -32,8 +32,8 @@ public readonly struct WaveeRuntime :
     /// Constructor function
     /// </summary>
     public static WaveeRuntime New(Option<ILogger> logger) =>
-        new WaveeRuntime(new RuntimeEnv(new CancellationTokenSource(), new NAudioHolder(),
-            logger.IfNone(NullLogger.Instance)));
+        new WaveeRuntime(new RuntimeEnv(new CancellationTokenSource(), 
+            logger.IfNone(NullLogger.Instance), new VlcHolder()));
 
     /// <summary>
     /// Create a new Runtime with a fresh cancellation token
@@ -41,7 +41,7 @@ public readonly struct WaveeRuntime :
     /// <remarks>Used by localCancel to create new cancellation context for its sub-environment</remarks>
     /// <returns>New runtime</returns>
     public WaveeRuntime LocalCancel =>
-        new WaveeRuntime(new RuntimeEnv(new CancellationTokenSource(), new NAudioHolder(), Env.Logger));
+        new WaveeRuntime(new RuntimeEnv(new CancellationTokenSource(),  Env.Logger, new VlcHolder()));
 
     /// <summary>
     /// Direct access to cancellation token
@@ -68,7 +68,7 @@ public readonly struct WaveeRuntime :
 
 
     public Eff<WaveeRuntime, Traits.AudioOutputIO> AudioOutputEff
-        => Eff<WaveeRuntime, Traits.AudioOutputIO>(static rt => new AudioOutputIO(rt.Env.NAudioHolder));
+        => Eff<WaveeRuntime, Traits.AudioOutputIO>(static rt => new VlcAudioOutputIO(rt.Env.VlcHolder));
 
     public Eff<WaveeRuntime, WebsocketIO> WsEff =>
         SuccessEff(Live.WebsocketIOImpl.Default);
@@ -77,20 +77,20 @@ public readonly struct WaveeRuntime :
     {
         public readonly CancellationTokenSource Source;
         public readonly CancellationToken Token;
-        public readonly NAudioHolder NAudioHolder;
+        public readonly VlcHolder VlcHolder;
         public ILogger Logger;
 
-        public RuntimeEnv(CancellationTokenSource source, CancellationToken token, NAudioHolder nAudioHolder,
-            ILogger logger)
+        public RuntimeEnv(CancellationTokenSource source, CancellationToken token, 
+            ILogger logger, VlcHolder vlcHolder)
         {
             Source = source;
             Token = token;
-            NAudioHolder = nAudioHolder;
             Logger = logger;
+            VlcHolder = vlcHolder;
         }
 
-        public RuntimeEnv(CancellationTokenSource source, NAudioHolder nAudioHolder, ILogger logger) : this(source,
-            source.Token, nAudioHolder, logger)
+        public RuntimeEnv(CancellationTokenSource source, ILogger logger, VlcHolder vlcHolder) : this(source,
+            source.Token, logger, vlcHolder)
         {
         }
     }

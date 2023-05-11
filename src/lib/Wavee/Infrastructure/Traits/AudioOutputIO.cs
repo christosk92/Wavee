@@ -5,11 +5,12 @@ namespace Wavee.Infrastructure.Traits;
 
 public interface AudioOutputIO
 {
-    ValueTask<Unit> Write(ReadOnlyMemory<byte> data);
-    ValueTask<Unit> Write(ReadOnlyMemory<double> data);
+    Task<Unit> PutStream(Stream audioStream, bool closeOtherStreams);
     Unit Start();
+    Unit Pause();
+    Unit Seek(TimeSpan to);
+    Option<TimeSpan> Position { get; }
     Unit Stop();
-    Unit DiscardBuffer();
 }
 
 /// <summary>

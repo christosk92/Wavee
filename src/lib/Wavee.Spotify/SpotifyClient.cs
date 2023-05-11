@@ -5,7 +5,6 @@ using System.Runtime.CompilerServices;
 using System.Threading.Channels;
 using Eum.Spotify;
 using LanguageExt.Common;
-using LanguageExt.UnsafeValueAccess;
 using Microsoft.Extensions.Logging;
 using Wavee.Infrastructure.Live;
 using Wavee.Infrastructure.Sys;

@@ -1,4 +1,5 @@
-﻿using Wavee.Spotify.Configs;
+﻿using Wavee.Spotify.Clients.Playback.Streams;
+using Wavee.Spotify.Configs;
 
 namespace Wavee.Spotify.Clients.Playback;
 

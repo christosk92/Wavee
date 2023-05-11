@@ -11,7 +11,8 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="Audio\" />
+      <PackageReference Include="LibVLCSharp" Version="3.7.0" />
+      <PackageReference Include="VideoLAN.LibVLC.Windows" Version="3.0.18" />
     </ItemGroup>
 
 </Project>

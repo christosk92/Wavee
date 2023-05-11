@@ -5,9 +5,9 @@ using System.Threading.Channels;
 using Eum.Spotify;
 using Wavee.Infrastructure.Live;
 using Wavee.Infrastructure.Sys.IO;
-using Wavee.Spotify.Sys.Connection;
-using Wavee.Spotify.Sys.Connection.Contracts;
-using Wavee.Spotify.Sys.Crypto;
+using Wavee.Spotify.Infrastructure;
+using Wavee.Spotify.Infrastructure.Connection;
+using Wavee.Spotify.Infrastructure.Crypto;
 using static LanguageExt.Prelude;
 
 namespace Wavee.Spotify.Tests;
@@ -103,7 +103,7 @@ public class TcpCommunicationTests
         var stream = tcpClient.GetStream();
 
         var processMessagesTask =
-            Task.Run(() => SpotifyConnection<WaveeRuntime>.StartMessageReader(
+            Task.Run(() => SpotifyConnection<WaveeRuntime>.ListenForMessages(
                     Guid.NewGuid(),
                     channel.Writer,
                     channel.Reader,

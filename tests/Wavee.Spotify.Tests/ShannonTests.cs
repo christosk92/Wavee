@@ -1,14 +1,14 @@
 ﻿using System.Text;
-using Wavee.Spotify.Sys.Crypto;
+using Wavee.Spotify.Infrastructure.Crypto;
 
 namespace Wavee.Spotify.Tests;
 
-public class ShannonTests
+public sealed class ShannonTests
 {
     private static byte[] testKey = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
     private static byte[] originalData = Encoding.UTF8.GetBytes("This is a test message.");
 
-    
+
     [Fact]
     public void TestEncryptionDecryption()
     {

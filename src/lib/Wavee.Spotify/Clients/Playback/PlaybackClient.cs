@@ -11,6 +11,7 @@ using Wavee.Spotify.Clients.Info;
 using Wavee.Spotify.Clients.Mercury;
 using Wavee.Spotify.Clients.Mercury.Key;
 using Wavee.Spotify.Clients.Mercury.Metadata;
+using Wavee.Spotify.Clients.Playback.Streams;
 using Wavee.Spotify.Configs;
 using Wavee.Spotify.Id;
 using Wavee.Spotify.Infrastructure.Sys;
@@ -60,6 +61,7 @@ internal readonly struct PlaybackClient<RT> : IPlaybackClient
         return g;
     }
 
+
     public async Task<SpotifyPlaybackInfo> PlayTrack(string uri,
         Option<PreferredQualityType> preferredQualityOverride,
         CancellationToken ct = default)
@@ -72,77 +74,16 @@ internal readonly struct PlaybackClient<RT> : IPlaybackClient
 
         _onPlaybackInfo.Iter(x => x(baseInfo));
 
-        //start loading track
-        var trackStreamAff = await SpotifyPlayback<RT>.LoadTrack(
+        await Play(baseInfo,
             SpotifyId.FromUri(uri),
-            preferredQualityOverride.IfNone(_preferredQuality),
-            _getBearer,
-            _fetchAudioKeyFunc,
-            _mercury, ct).Run(_runtime);
+            uri,
+            _autoplay,
+            0,
+            i => (None, None),
+            _mercury,
+            ct
+        );
 
-        var stream = trackStreamAff.ThrowIfFail();
-        _onPlaybackInfo.Iter(x =>
-        {
-            baseInfo = baseInfo
-                .EnrichFrom(stream.Metadata)
-                .WithBuffering();
-            x(baseInfo);
-        });
-
-        //start playing track
-        IDisposable listener = default;
-        bool autoplay = _autoplay;
-        var mercury = _mercury;
-        PlaybackClient<RT> tmpThis = this;
-        listener = WaveePlayer.Instance.StateObservable.Subscribe(async state =>
-        {
-            switch (state)
-            {
-                case WaveePlayingState playing:
-                    _onPlaybackInfo.Iter(x =>
-                    {
-                        baseInfo = baseInfo
-                            .EnrichFrom(stream.Metadata)
-                            .WithPosition(playing.Position)
-                            .WithPaused(false);
-                        x(baseInfo);
-                    });
-                    break;
-                case WaveePausedState paused:
-                    _onPlaybackInfo.Iter(x =>
-                    {
-                        baseInfo = baseInfo
-                            .EnrichFrom(stream.Metadata)
-                            .WithPosition(paused.Position)
-                            .WithPaused(true);
-                        x(baseInfo);
-                    });
-                    break;
-                case WaveeEndOfTrackState eot:
-                    if (!eot.GoingToNextTrackAlready)
-                    {
-                        //start loading next track
-                        _onPlaybackInfo.Iter(x =>
-                        {
-                            baseInfo = baseInfo
-                                .EnrichFrom(stream.Metadata)
-                                .WithPosition(eot.Position)
-                                .WithPaused(true);
-                            x(baseInfo);
-                        });
-
-                        if (autoplay)
-                        {
-                            var autoPlayContext = await mercury.AutoplayQuery(uri, ct);
-                            await tmpThis.PlayContext(autoPlayContext, 0, CancellationToken.None);
-                        }
-                    }
-
-                    listener?.Dispose();
-                    break;
-            }
-        });
-        await WaveePlayer.Instance.Play(stream);
         return baseInfo;
     }
 
@@ -229,29 +170,76 @@ internal readonly struct PlaybackClient<RT> : IPlaybackClient
             //we need to load the next page
         }
 
-        //start loading track
         var tr = track.ValueUnsafe();
-        var trackStreamAff = await SpotifyPlayback<RT>.LoadTrack(
+
+        _onPlaybackInfo.Iter(x =>
+        {
+            baseInfo = baseInfo
+                .EnrichContext(track.ValueUnsafe(), ctx.Metadata)
+                .WithBuffering();
+            x(baseInfo);
+        });
+
+        await Play(baseInfo,
             tr.HasUri ? SpotifyId.FromUri(tr.Uri) : SpotifyId.FromRaw(tr.Gid.Span, AudioItemType.Track),
+            uri,
+            _autoplay,
+            startFrom,
+            i =>
+            {
+                var theoreticalNext = i + 1;
+                var nextTrack = ctx.Pages.SelectMany(x => x.Tracks).ElementAtOrDefault(theoreticalNext);
+                if (nextTrack != null)
+                {
+                    _onPlaybackInfo.Iter(x =>
+                    {
+                        baseInfo = baseInfo
+                            .EnrichContext(nextTrack, ctx.Metadata)
+                            .WithBuffering();
+                        x(baseInfo);
+                    });
+                    return (Some(theoreticalNext), Some(
+                        nextTrack.HasUri
+                            ? SpotifyId.FromUri(nextTrack.Uri)
+                            : SpotifyId.FromRaw(nextTrack.Gid.Span, AudioItemType.Track)));
+                }
+
+                return (None, None);
+            },
+            _mercury, ct);
+
+
+        return baseInfo;
+    }
+
+    private async Task<Unit> Play(
+        SpotifyPlaybackInfo baseInfo,
+        SpotifyId id,
+        string context,
+        bool autoplay,
+        int startFrom,
+        Func<int, (Option<int>, Option<SpotifyId>)> onTrackPlayed,
+        IMercuryClient mercury,
+        CancellationToken ct = default)
+    {
+        var trackStreamAff = await SpotifyPlayback<RT>.LoadTrack(
+            id,
             _preferredQuality,
             _getBearer,
             _fetchAudioKeyFunc,
             _mercury, ct).Run(_runtime);
 
         var stream = trackStreamAff.ThrowIfFail();
+
         _onPlaybackInfo.Iter(x =>
         {
             baseInfo = baseInfo
                 .EnrichFrom(stream.Metadata)
-                .EnrichContext(track.ValueUnsafe(), ctx.Metadata)
                 .WithBuffering();
             x(baseInfo);
         });
 
-        //start playing track
         IDisposable listener = default;
-        bool autoplay = _autoplay;
-        var mercury = _mercury;
         PlaybackClient<RT> tmpThis = this;
         listener = WaveePlayer.Instance.StateObservable.Subscribe(async state =>
         {
@@ -287,10 +275,24 @@ internal readonly struct PlaybackClient<RT> : IPlaybackClient
                             x(baseInfo);
                         });
 
-                        if (autoplay)
+
+                        var (nextIndex, nextTrack) = onTrackPlayed(startFrom);
+                        if (nextIndex.IsNone)
                         {
-                            var autoPlayContext = await mercury.AutoplayQuery(uri, ct);
+                            var autoPlayContext = await mercury.AutoplayQuery(context, ct);
                             await tmpThis.PlayContext(autoPlayContext, 0, CancellationToken.None);
+                        }
+                        else
+                        {
+                            var nextTrackId = nextTrack.ValueUnsafe();
+                            await tmpThis.Play(
+                                baseInfo,
+                                nextTrackId,
+                                context,
+                                autoplay,
+                                nextIndex.ValueUnsafe(),
+                                onTrackPlayed,
+                                mercury, ct);
                         }
                     }
 
@@ -299,9 +301,7 @@ internal readonly struct PlaybackClient<RT> : IPlaybackClient
             }
         });
         await WaveePlayer.Instance.Play(stream);
-        return baseInfo;
-
-        return baseInfo;
+        return unit;
     }
 
     public async Task<bool> Pause(CancellationToken ct = default)
@@ -367,7 +367,7 @@ public readonly record struct SpotifyPlaybackInfo(
 
     public SpotifyPlaybackInfo EnrichFrom(TrackOrEpisode streamMetadata)
     {
-        var track = new ProvidedTrack();
+        var track = Track.IfNone(new ProvidedTrack());
 
         return this with
         {

@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "MediaPlayerTest (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "MediaPlayerTest (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}

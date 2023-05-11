@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Wavee.Infrastructure.Live;
 
+[assembly: InternalsVisibleTo("Wavee.Spotify.Tests")]
 [assembly: InternalsVisibleTo("Wavee.Spotify")]
 [assembly: InternalsVisibleTo("Wavee.Player")]
 namespace Wavee;

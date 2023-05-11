@@ -2,6 +2,7 @@
 using System.Threading.Channels;
 using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
+using LibVLCSharp.Shared;
 using NAudio.Wave;
 using Wavee.Infrastructure.Sys.IO;
 using Wavee.Infrastructure.Traits;
@@ -13,7 +14,7 @@ namespace Wavee.Player.Sys;
 internal static class WaveePlayerRuntime<RT> where RT : struct, HasAudioOutput<RT>
 {
     private readonly record struct AudioSession(string PlaybackId,
-        WaveStream Decoder);
+        Stream Decoder);
 
     public static Aff<RT, Unit> Start(ChannelReader<IInternalPlayerCommand> reader,
         Ref<IWaveePlayerState> state)
@@ -35,8 +36,7 @@ internal static class WaveePlayerRuntime<RT> where RT : struct, HasAudioOutput<R
                                     return f.Match(
                                         Some: r =>
                                         {
-                                            r.Decoder.Dispose();
-                                            _ = AudioOutput<RT>.DiscardBuffer().Run(play.Runtime);
+                                            AudioOutput<RT>.Stop().Run(rt); 
                                             return Option<AudioSession>.None;
                                         },
                                         None: () => Option<AudioSession>.None);
@@ -58,15 +58,29 @@ internal static class WaveePlayerRuntime<RT> where RT : struct, HasAudioOutput<R
                                     if (f is IWaveePlayerInPlaybackState p)
                                     {
                                         var paused = p is WaveePausedState;
-                                        AudioOutput<RT>.Stop();
-                                        AudioOutput<RT>.DiscardBuffer().Run(seekCommand.runtime);
-                                        p.Decoder.CurrentTime = seekCommand.To;
-                                        if (!paused)
+                                        AudioOutput<RT>.Seek(seekCommand.To).Run(seekCommand.runtime);
+                                        // AudioOutput<RT>.Stop();
+                                        //  AudioOutput<RT>.DiscardBuffer().Run(seekCommand.runtime);
+                                        // if (!paused)
+                                        // {
+                                        //     AudioOutput<RT>.Start().Run(seekCommand.runtime);
+                                        // }
+                                        return p switch
                                         {
-                                            AudioOutput<RT>.Start().Run(seekCommand.runtime);
-                                        }
-
-                                        return p;
+                                            WaveePlayingState pl => pl with
+                                            {
+                                                PositionAsOfTimestamp = seekCommand.To,
+                                                Timestamp = DateTimeOffset.Now
+                                            },
+                                            WaveePausedState pl => pl with
+                                            {
+                                                Position = seekCommand.To
+                                            },
+                                            WaveeEndOfTrackState pl => pl with
+                                            {
+                                                Position = seekCommand.To
+                                            },
+                                        };
                                     }
 
                                     return f;
@@ -78,7 +92,6 @@ internal static class WaveePlayerRuntime<RT> where RT : struct, HasAudioOutput<R
                     {
                         Console.WriteLine(e);
                     }
-                    
                 }
             }, TaskCreationOptions.LongRunning);
 
@@ -93,35 +106,36 @@ internal static class WaveePlayerRuntime<RT> where RT : struct, HasAudioOutput<R
         Ref<IWaveePlayerState> state)
     {
         var playbackId = Guid.NewGuid().ToString();
-        var decoderMaybe =
-            AudioDecoderRuntime.OpenAudioDecoder(playStream.AsStream(), playStream.TotalDuration)
-                .Run();
-        var decoder = decoderMaybe.ThrowIfFail();
-        var audioSessionValue = new AudioSession(playbackId, decoder);
+        var stream = playStream.AsStream();
+        // var decoderMaybe =
+        //     AudioDecoderRuntime.OpenAudioDecoder(playStream.AsStream(), playStream.TotalDuration)
+        //         .Run();
+        // var decoder = decoderMaybe.ThrowIfFail();
+        var audioSessionValue = new AudioSession(playbackId, stream);
         atomic(() => audioSession.Swap(_ => audioSessionValue));
         _ = AudioOutput<RT>.Start().Run(runtime);
         await Task.Factory.StartNew(async () =>
         {
             Memory<byte> buffer = new byte[4096 * 2];
-            atomic(() => state.Swap(_ => new WaveePlayingState(playbackId, decoder)));
-            while (true)
+            atomic(() => state.Swap(_ => new WaveePlayingState(playbackId, stream)
             {
-                var readMaybe = Try(() => decoder.Read(buffer.Span))();
-                var read = readMaybe.Match(Succ: r => r, Fail: _ => 0);
-                if (read == 0 && decoder.CurrentTime >= decoder.TotalTime)
-                {
-                    break;
-                }
+                Timestamp = DateTimeOffset.UtcNow,
+                PositionAsOfTimestamp = TimeSpan.Zero
+            }));
 
-                var run = await AudioOutput<RT>.Write(buffer[..read]).Run(
-                    runtime);
-            }
+            var r = AudioOutput<RT>.PlayStream(stream, true).Run(runtime);
+            var t = r.ThrowIfFail();
+            await t;
 
             var alreadyGoingToNextTrack = audioSession.Value.IsSome
                                           && audioSession.Value.ValueUnsafe().PlaybackId != playbackId;
-            atomic(() => state.Swap(_ => new WaveeEndOfTrackState(playbackId, decoder,
+            atomic(() => state.Swap(_ => new WaveeEndOfTrackState(playbackId, stream,
                 alreadyGoingToNextTrack
-            )));
+            )
+            {
+                Position = AudioOutput<RT>.Position().Run(runtime).ThrowIfFail()
+                    .IfNone(TimeSpan.Zero)
+            }));
         });
     }
 }

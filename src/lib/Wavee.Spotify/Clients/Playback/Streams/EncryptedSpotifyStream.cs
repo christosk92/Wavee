@@ -51,7 +51,7 @@ internal sealed class EncryptedSpotifyStream<RT> where RT : struct, HasHttp<RT>
         return firstChunkToRead.Length;
     }
 
-    private async ValueTask<ReadOnlyMemory<byte>> FetchChunk(int index, int preloadAhead = 10)
+    private async ValueTask<ReadOnlyMemory<byte>> FetchChunk(int index, int preloadAhead = 2)
     {
         ReadOnlyMemory<byte> chunk;
         if (_requested[index].IsNone)
