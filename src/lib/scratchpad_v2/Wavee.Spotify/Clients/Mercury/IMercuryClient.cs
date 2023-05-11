@@ -1,6 +1,9 @@
 ﻿using System.Buffers.Binary;
+using System.Text;
+using System.Text.Json;
 using System.Threading.Channels;
 using Eum.Spotify;
+using Eum.Spotify.context;
 using Google.Protobuf;
 using LanguageExt.UnsafeValueAccess;
 using Spotify.Metadata;
@@ -15,7 +18,11 @@ public interface IMercuryClient
     Task<MercuryResponse> Get(string uri, CancellationToken ct = default);
     Task<Track> GetTrack(SpotifyId id, CancellationToken ct = default);
     Task<Episode> GetEpisode(SpotifyId id, CancellationToken ct = default);
+    Task<string> AutoplayQuery(string uri, CancellationToken ct = default);
+    Task<SpotifyContext> ContextResolve(string uri, CancellationToken ct = default);
 }
+
+public readonly record struct SpotifyContext(HashMap<string, string> Metadata, Seq<ContextPage> Pages);
 
 internal readonly struct MercuryClient : IMercuryClient
 {
@@ -119,6 +126,74 @@ internal readonly struct MercuryClient : IMercuryClient
         const string uri = "hm://metadata/4/episode/{0}";
         var response = await Get(string.Format(uri, id.ToBase16()), ct);
         return Episode.Parser.ParseFrom(response.Body.Span);
+    }
+
+    public async Task<string> AutoplayQuery(string uri, CancellationToken ct = default)
+    {
+        const string query = "hm://autoplay-enabled/query?uri={0}";
+        var response = await Get(string.Format(query, uri), ct);
+        var context = Encoding.UTF8.GetString(response.Body.Span);
+        return context;
+    }
+
+    public async Task<SpotifyContext> ContextResolve(string uri, CancellationToken ct = default)
+    {
+        const string query = "hm://context-resolve/v1/{0}";
+        var response = await Get(string.Format(query, uri), ct);
+
+        using var jsonDocument = JsonDocument.Parse(response.Body);
+        var metadata = jsonDocument.RootElement.TryGetProperty("metadata", out var metadataElement)
+            ? metadataElement.EnumerateObject().Fold(new HashMap<string, string>(),
+                (acc, x) => acc.Add(x.Name, x.Value.GetString()))
+            : Empty;
+
+        static ContextPage ParsePage(JsonElement page)
+        {
+            var pg = new ContextPage();
+            if (page.TryGetProperty("next_page_url", out var nextPageUrl))
+            {
+                pg.NextPageUrl = nextPageUrl.GetString();
+            }
+
+            if (page.TryGetProperty("page_url", out var pageUrl))
+                pg.PageUrl = pageUrl.GetString();
+
+            if (page.TryGetProperty("tracks", out var tracks))
+            {
+                using var tracksenum = tracks.EnumerateArray();
+                foreach (var track in tracksenum)
+                {
+                    //uri, uid, metadata
+                    var ctxTrack = new ContextTrack
+                    {
+                        Uri = track.GetProperty("uri").GetString(),
+                    };
+                    if (track.TryGetProperty("uid", out var uid))
+                        ctxTrack.Uid = uid.GetString();
+
+                    if (track.TryGetProperty("metadata", out var metadata))
+                    {
+                        ctxTrack = metadata.EnumerateObject().Fold(
+                            ctxTrack,
+                            (acc, x) =>
+                            {
+                                acc.Metadata[x.Name] = x.Value.GetString();
+                                return acc;
+                            });
+                    }
+
+                    pg.Tracks.Add(ctxTrack);
+                }
+            }
+
+            return pg;
+        }
+
+        var pages = jsonDocument.RootElement.TryGetProperty("pages", out var pagesElement)
+            ? pagesElement.Clone().EnumerateArray().Select(ParsePage).ToSeq()
+            : Empty;
+
+        return new SpotifyContext(metadata, pages);
     }
 
 

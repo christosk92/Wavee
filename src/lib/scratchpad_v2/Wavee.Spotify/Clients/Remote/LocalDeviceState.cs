@@ -38,13 +38,18 @@ public readonly record struct LocalDeviceState(
         };
     }
 
-    public LocalDeviceState SetContextUri(Option<string> infoContextUri)
+    public LocalDeviceState SetContextUri(Option<string> infoContextUri, HashMap<string, string> metadata)
     {
         if (infoContextUri.IsSome)
         {
             var contextUri = infoContextUri.ValueUnsafe();
             State.ContextUri = contextUri;
             State.ContextUrl = $"context://{contextUri}";
+            State.ContextMetadata.Clear();
+            foreach (var (key, value) in metadata)
+            {
+                State.ContextMetadata.Add(key, value);
+            }
 
             return this with
             {

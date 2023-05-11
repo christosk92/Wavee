@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Text;
 using Eum.Spotify;
 using Eum.Spotify.connectstate;
 using Google.Protobuf;
@@ -6,7 +7,9 @@ using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
 using Microsoft.Extensions.Logging;
 using Serilog;
+using Wavee;
 using Wavee.Spotify;
+using Wavee.Spotify.Clients.Info;
 using Wavee.Spotify.Configs;
 using ILogger = Microsoft.Extensions.Logging.ILogger;
 
@@ -39,7 +42,10 @@ ILoggerFactory loggerFactory = LoggerFactory.Create(builder =>
 var logger = loggerFactory.CreateLogger<Program>();
 var connection = await SpotifyClient.Create(loginCredentials, config, Option<ILogger>.Some(logger));
 var remoteCluster = await connection.Remote.Connect(CancellationToken.None);
-remoteCluster.Subscribe(state => { logger.LogInformation("Remote state: {state}", state); });
+remoteCluster.Subscribe(state =>
+{
+    logger.LogInformation("Remote state: {state}", state);
+});
 
 while (true)
 {
@@ -54,14 +60,34 @@ while (true)
         var command = input.Split(' ', StringSplitOptions.RemoveEmptyEntries);
         switch (command[0])
         {
+            case "-mercury":
+                var uri = command[1];
+                var mercury = await connection.Mercury.Get(uri);
+                logger.LogInformation(Encoding.UTF8.GetString(mercury.Body.Span));
+                break;
             case "-seek":
                 if (TimeSpan.TryParse(command[1], out var ts))
                     await connection.Playback.Seek(ts, CancellationToken.None);
                 break;
             case "-play":
-                var playback = await connection.Playback.PlayTrack(command[1],
-                    Option<PreferredQualityType>.None,
-                    CancellationToken.None);
+                var id = SpotifyId.FromUri(command[1]);
+                switch (id.Type)
+                {
+                    case AudioItemType.Track:
+                        var playback = await connection.Playback.PlayTrack(
+                            command[1],
+                            Option<PreferredQualityType>.None,
+                            CancellationToken.None);
+                        break;
+                    case AudioItemType.Playlist:
+                    case AudioItemType.Album:
+                        var p = await connection.Playback.PlayContext(
+                            command[1],
+                            0,
+                            CancellationToken.None);
+                        break;
+                }
+
                 break;
             case "-pause":
                 await connection.Playback.Pause(CancellationToken.None);

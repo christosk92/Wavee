@@ -10,6 +10,9 @@ public interface IPlaybackClient
         Option<PreferredQualityType> preferredQualityOverride,
         CancellationToken ct = default);
 
+    Task<SpotifyPlaybackInfo> PlayContext(string uri,
+        int startFrom, CancellationToken ct = default);
+
     Task<bool> Pause(CancellationToken ct = default);
     Task<bool> Seek(TimeSpan to, CancellationToken ct = default);
 }
