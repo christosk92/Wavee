@@ -2,11 +2,14 @@ using System.Buffers.Binary;
 using System.Net.NetworkInformation;
 using System.Text;
 using System.Threading.Channels;
+using Google.Protobuf;
 using LanguageExt.Effects.Traits;
+using LanguageExt.UnsafeValueAccess;
 using Wavee.Infrastructure.Sys;
 using Wavee.Infrastructure.Traits;
 using Wavee.Spotify.Clients.Info;
 using Wavee.Spotify.Clients.Mercury;
+using Wavee.Spotify.Clients.Mercury.Key;
 using Wavee.Spotify.Clients.Playback;
 using Wavee.Spotify.Clients.Remote;
 using Wavee.Spotify.Clients.Token;
@@ -20,7 +23,7 @@ internal readonly record struct PackageListenerRecord(PackageListenerRequest Req
     ChannelWriter<SpotifyPacket> Writer);
 
 internal sealed class SpotifyConnection<RT> : ISpotifyConnection
-    where RT : struct, HasLog<RT>, HasWebsocket<RT>, HasHttp<RT>
+    where RT : struct, HasLog<RT>, HasWebsocket<RT>, HasHttp<RT>, HasAudioOutput<RT>
 {
     private readonly CancellationTokenSource _cts;
     private readonly ChannelWriter<SpotifyPacket> _channelWriter;
@@ -112,11 +115,74 @@ internal sealed class SpotifyConnection<RT> : ISpotifyConnection
     public IPlaybackClient Playback => new PlaybackClient<RT>(
         mainConnectionId: _info.ConnectionId,
         getBearer: () => Token.GetToken(),
+        fetchAudioKeyFunc: (id, byteString, arg3) =>
+            FetchAudioKeyFunc(_channelWriter,
+                addPackageListener: request =>
+                {
+                    var newId = Guid.NewGuid();
+                    var newChannel = Channel.CreateUnbounded<SpotifyPacket>();
+                    _packetListeners.Add(newId, new PackageListenerRecord(request, newChannel.Writer));
+                    return (newId, newChannel.Reader);
+                },
+                removePackageListener: id =>
+                {
+                    var listener = _packetListeners[id];
+                    listener.Writer.TryComplete();
+                    _packetListeners.Remove(id);
+                },
+                _info.ConnectionId,
+                id,
+                byteString,
+                arg3),
         mercury: Mercury,
         runtime: _runtime,
         playbackInfo => RemoteClient<RT>.OnPlaybackChanged(_info.ConnectionId, playbackInfo),
         preferredQuality: _info.Config.Playback.PreferredQualityType
     );
+
+
+    private static Atom<HashMap<Guid, uint>> _audioKeySequence = Atom(LanguageExt.HashMap<Guid, uint>.Empty);
+    private static Aff<RT, Either<AesKeyError, AudioKey>> FetchAudioKeyFunc(
+        ChannelWriter<SpotifyPacket> channelWriter,
+        Func<PackageListenerRequest, (Guid ListenerId, ChannelReader<SpotifyPacket> Reader)> addPackageListener,
+        Action<Guid> removePackageListener,
+        Guid infoConnectionId,
+        SpotifyId id, ByteString fileId, CancellationToken cancellationToken)
+    {
+        return Aff<RT, Either<AesKeyError, AudioKey>>(async rt =>
+        {
+            var nextSeqMap = atomic(() => _audioKeySequence.Swap(x => x.AddOrUpdate(infoConnectionId,
+                Some: x => x + 1,
+                None: () => 0
+            )));
+            var nextSeq = nextSeqMap.ValueUnsafe().Find(infoConnectionId)
+                .IfNoneUnsafe(() => throw new Exception("Should not happen"));
+
+            var (listenerId, reader) = addPackageListener(x =>
+                (x.Command is SpotifyPacketType.AesKey or SpotifyPacketType.AesKeyError) &&
+                BinaryPrimitives.ReadUInt32BigEndian(x.Data.Slice(0, 4).Span) == nextSeq);
+            
+            var buildPacket = AesPacketBuilder.BuildRequest(id, fileId, nextSeq);
+            channelWriter.TryWrite(buildPacket);
+
+            await foreach (var packet in reader.ReadAllAsync(cancellationToken))
+            {
+                removePackageListener(listenerId);
+                switch (packet.Command)
+                {
+                    case SpotifyPacketType.AesKey:
+                        var key = packet.Data.Slice(4, 16);
+                        return Right(new AudioKey(key));
+                    case SpotifyPacketType.AesKeyError:
+                        var errorCode = packet.Data.Span[4];
+                        var errorType = packet.Data.Span[5];
+                        return Left(new AesKeyError(errorCode, errorType));
+                }
+            }
+            throw new Exception("Should not happen");
+        });
+    }
+
 
     private static Unit PingPong(
         RT runtime,

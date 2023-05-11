@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using LanguageExt.UnsafeValueAccess;
 using Spotify.Metadata;
+using Wavee.Spotify.Clients.Info;
 using Wavee.Spotify.Configs;
 
 namespace Wavee.Spotify.Clients.Mercury.Metadata;
@@ -83,10 +84,10 @@ public readonly record struct TrackOrEpisode(Either<Episode, Track> Value)
 
     private static HashMap<PreferredQualityType, AudioFile.Types.Format[]> FormatsMap { get; }
 
-    // public string Uri => Value.Match(
-    //     Left: e => SpotifyId.FromGid(e.Gid, AudioItemType.Episode),
-    //     Right: t => SpotifyId.FromGid(t.Gid, AudioItemType.Track)
-    // );
+    public SpotifyId Id => Value.Match(
+        Left: e => SpotifyId.FromRaw(e.Gid.Span, AudioItemType.Episode),
+        Right: t => SpotifyId.FromRaw(t.Gid.Span, AudioItemType.Track)
+    );
 
     public string Name => Value.Match(
         Left: e => e.Name,
@@ -97,6 +98,7 @@ public readonly record struct TrackOrEpisode(Either<Episode, Track> Value)
         Left: e => e.Duration,
         Right: t => t.Duration
     );
+
 
     public string GetImage(Image.Types.Size size)
     {

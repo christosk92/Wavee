@@ -1,35 +1,44 @@
 ﻿using Eum.Spotify.connectstate;
+using Google.Protobuf;
 using LanguageExt.Effects.Traits;
 using Spotify.Metadata;
+using Wavee.Infrastructure.Sys.IO;
 using Wavee.Infrastructure.Traits;
 using Wavee.Spotify.Clients.Info;
 using Wavee.Spotify.Clients.Mercury;
+using Wavee.Spotify.Clients.Mercury.Key;
 using Wavee.Spotify.Clients.Mercury.Metadata;
 using Wavee.Spotify.Clients.Remote;
 using Wavee.Spotify.Configs;
 using Wavee.Spotify.Id;
 using Wavee.Spotify.Infrastructure.Sys;
+using Wavee.VorbisDecoder.Convenience;
 
 namespace Wavee.Spotify.Clients.Playback;
 
-internal readonly struct PlaybackClient<RT> : IPlaybackClient where RT : struct, HasLog<RT>, HasCancel<RT>
+internal readonly struct PlaybackClient<RT> : IPlaybackClient where RT : struct, HasLog<RT>, HasHttp<RT>, HasAudioOutput<RT>
 {
     private static AtomHashMap<Guid, Action<SpotifyPlaybackInfo>> _onPlaybackInfo =
         LanguageExt.AtomHashMap<Guid, Action<SpotifyPlaybackInfo>>.Empty;
 
     private readonly Guid _mainConnectionId;
 
-    //private readonly Action<SpotifyPlaybackInfo> _onPlaybackInfo;
     private readonly Func<ValueTask<string>> _getBearer;
+    private readonly Func<SpotifyId, ByteString, CancellationToken, Aff<RT, Either<AesKeyError, AudioKey>>> _fetchAudioKeyFunc;
     private readonly IMercuryClient _mercury;
     private readonly RT _runtime;
     private readonly PreferredQualityType _preferredQuality;
 
-    public PlaybackClient(Guid mainConnectionId, Func<ValueTask<string>> getBearer, IMercuryClient mercury, RT runtime,
-        Action<SpotifyPlaybackInfo> onPlaybackInfo, PreferredQualityType preferredQuality)
+    public PlaybackClient(Guid mainConnectionId,
+        Func<ValueTask<string>> getBearer,
+        Func<SpotifyId, ByteString, CancellationToken, Aff<RT, Either<AesKeyError, AudioKey>>> fetchAudioKeyFunc,
+        IMercuryClient mercury, RT runtime,
+        Action<SpotifyPlaybackInfo> onPlaybackInfo,
+        PreferredQualityType preferredQuality)
     {
         _mainConnectionId = mainConnectionId;
         _getBearer = getBearer;
+        _fetchAudioKeyFunc = fetchAudioKeyFunc;
         _mercury = mercury;
         _runtime = runtime;
         _preferredQuality = preferredQuality;
@@ -58,11 +67,31 @@ internal readonly struct PlaybackClient<RT> : IPlaybackClient where RT : struct,
         var trackStreamAff = await SpotifyPlayback<RT>.LoadTrack(
             SpotifyId.FromUri(uri),
             preferredQualityOverride.IfNone(_preferredQuality),
-            _mainConnectionId,
-            _getBearer,
+            _getBearer, 
+            _fetchAudioKeyFunc,
             _mercury, ct).Run(_runtime);
 
         var stream = trackStreamAff.ThrowIfFail();
+        
+        //start playing track
+        //dummy< DO NOT USE IN PROD
+        RT runtime1 = _runtime;
+        await Task.Factory.StartNew(async () =>
+        {
+            AudioOutput<RT>.Start().Run(runtime1);
+            await using var inputStream = stream.AsStream();
+            await using var decoder = new VorbisWaveReader(inputStream, stream.Metadata.Duration, true);
+            var buffer = new byte[decoder.WaveFormat.AverageBytesPerSecond];
+            while (true)
+            {
+                var read = await decoder.ReadAsync(buffer, 0, buffer.Length, ct);
+                if (read == 0)
+                    break;
+
+                await AudioOutput<RT>.Write(buffer).Run(runtime: runtime1);
+            }
+        });
+
         _onPlaybackInfo.Iter(x =>
         {
             baseInfo = baseInfo

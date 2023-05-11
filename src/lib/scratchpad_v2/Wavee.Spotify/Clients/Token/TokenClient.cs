@@ -30,7 +30,13 @@ internal readonly struct TokenClient : ITokenClient
                     var uri = string.Format(KEYMASTER_URI, string.Join(",", scopes), SpotifyConstants.KEYMASTER_CLIENT_ID);
                     var response = await mercuryClient.Get(uri, token);
                     var tokenData = JsonSerializer.Deserialize<MercuryTokenData>(response.Body.Span);
-                    Tokens.AddOrUpdate(connectionId, None: () => tokenData, Some: _ => tokenData);
+                    Tokens.AddOrUpdate(connectionId, None: () => tokenData with
+                    {
+                        CreatedAt = DateTimeOffset.UtcNow
+                    }, Some: _ => tokenData with
+                    {
+                        CreatedAt = DateTimeOffset.UtcNow
+                    });
                     return tokenData.AccessToken;
                 }
             );
@@ -60,7 +66,7 @@ internal readonly struct TokenClient : ITokenClient
         [property: JsonPropertyName("permissions")]
         ushort[] Permissions)
     {
-        private DateTimeOffset CreatedAt { get; } = DateTimeOffset.UtcNow;
+        internal DateTimeOffset CreatedAt { get; init; }
         public bool IsExpired => CreatedAt.AddSeconds(ExpiresIn) < DateTimeOffset.UtcNow;
     }
 }
