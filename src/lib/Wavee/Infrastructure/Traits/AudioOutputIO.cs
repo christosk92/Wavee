@@ -11,6 +11,9 @@ public interface AudioOutputIO
     Unit Seek(TimeSpan to);
     Option<TimeSpan> Position { get; }
     Unit Stop();
+    Unit SetVolume(double volumeFrac);
+    
+    double Volume { get; }
 }
 
 /// <summary>

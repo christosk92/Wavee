@@ -90,6 +90,7 @@ public readonly record struct LocalDeviceState(
             State = State
         };
     }
+
     public LocalDeviceState SetTrack(Option<ProvidedTrack> infoTrack)
     {
         if (infoTrack.IsSome)
@@ -104,6 +105,7 @@ public readonly record struct LocalDeviceState(
 
         return this;
     }
+
     public LocalDeviceState Playing()
     {
         var wasPaused = State.IsPaused;
@@ -137,14 +139,17 @@ public readonly record struct LocalDeviceState(
         };
     }
 
-    public PutStateRequest BuildPutState(PutStateReason reason, Option<TimeSpan> playerTime)
+    public PutStateRequest BuildPutState(PutStateReason reason,
+        double volumeFrac,
+        Option<TimeSpan> playerTime)
     {
         var putState = new PutStateRequest
         {
             MemberType = MemberType.ConnectState,
             Device = new Device
             {
-                DeviceInfo = BuildDeviceInfo(DeviceId, DeviceName, DeviceType, 1 * ushort.MaxValue),
+                DeviceInfo = BuildDeviceInfo(DeviceId, DeviceName, DeviceType,
+                    volumeFrac),
                 PlayerState = State
             },
             IsActive = IsActive,
@@ -208,7 +213,7 @@ public readonly record struct LocalDeviceState(
     }
 
     private static DeviceInfo BuildDeviceInfo(string deviceId, string deviceName, DeviceType deviceType,
-        float initialVolume)
+        double initialVolume)
     {
         return new DeviceInfo
         {
@@ -259,5 +264,12 @@ public readonly record struct LocalDeviceState(
             State = clusterPlayerState
         };
     }
-    
+
+    public LocalDeviceState FromVolume(int commandOptionsMessageId)
+    {
+        return this with
+        {
+            LastMessageId = Some((uint)commandOptionsMessageId),
+        };
+    }
 }

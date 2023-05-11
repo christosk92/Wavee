@@ -36,12 +36,15 @@ internal static class WaveePlayerRuntime<RT> where RT : struct, HasAudioOutput<R
                                     return f.Match(
                                         Some: r =>
                                         {
-                                            AudioOutput<RT>.Stop().Run(rt); 
+                                            AudioOutput<RT>.Stop().Run(rt);
                                             return Option<AudioSession>.None;
                                         },
                                         None: () => Option<AudioSession>.None);
                                 }));
-                                await HandlePlay(play.Runtime, play.Stream, audioSession, state);
+
+                                await HandlePlay(play.Runtime,
+                                    play.SourceId,
+                                    play.Stream, audioSession, state);
                                 break;
                             case InternalPauseCommand<RT> pause:
                                 _ = AudioOutput<RT>.Stop().Run(pause.Runtime);
@@ -76,10 +79,6 @@ internal static class WaveePlayerRuntime<RT> where RT : struct, HasAudioOutput<R
                                             {
                                                 Position = seekCommand.To
                                             },
-                                            WaveeEndOfTrackState pl => pl with
-                                            {
-                                                Position = seekCommand.To
-                                            },
                                         };
                                     }
 
@@ -101,6 +100,7 @@ internal static class WaveePlayerRuntime<RT> where RT : struct, HasAudioOutput<R
 
     private static async Task HandlePlay(
         RT runtime,
+        string SourceId,
         IAudioStream playStream,
         Ref<Option<AudioSession>> audioSession,
         Ref<IWaveePlayerState> state)
@@ -116,8 +116,9 @@ internal static class WaveePlayerRuntime<RT> where RT : struct, HasAudioOutput<R
         _ = AudioOutput<RT>.Start().Run(runtime);
         await Task.Factory.StartNew(async () =>
         {
-            Memory<byte> buffer = new byte[4096 * 2];
-            atomic(() => state.Swap(_ => new WaveePlayingState(playbackId, stream)
+            atomic(() => state.Swap(_ => new WaveePlayingState(playbackId,
+                SourceId,
+                stream)
             {
                 Timestamp = DateTimeOffset.UtcNow,
                 PositionAsOfTimestamp = TimeSpan.Zero
@@ -126,16 +127,6 @@ internal static class WaveePlayerRuntime<RT> where RT : struct, HasAudioOutput<R
             var r = AudioOutput<RT>.PlayStream(stream, true).Run(runtime);
             var t = r.ThrowIfFail();
             await t;
-
-            var alreadyGoingToNextTrack = audioSession.Value.IsSome
-                                          && audioSession.Value.ValueUnsafe().PlaybackId != playbackId;
-            atomic(() => state.Swap(_ => new WaveeEndOfTrackState(playbackId, stream,
-                alreadyGoingToNextTrack
-            )
-            {
-                Position = AudioOutput<RT>.Position().Run(runtime).ThrowIfFail()
-                    .IfNone(TimeSpan.Zero)
-            }));
         });
     }
 }

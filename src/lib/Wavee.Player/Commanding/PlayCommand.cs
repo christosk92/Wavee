@@ -2,6 +2,7 @@
 
 public readonly record struct InternalPlayCommand<RT>(
     RT Runtime,
+    string SourceId,
     IAudioStream Stream) : IInternalPlayerCommand;
 
 public readonly record struct InternalPauseCommand<RT>(

@@ -43,10 +43,13 @@ public sealed class WaveePlayer : IWaveePlayer
         return true;
     }
 
-    public async ValueTask<Unit> Play(IAudioStream stream)
+    public async ValueTask<string> Play(IAudioStream stream)
     {
-        await _commandWriter.WriteAsync(new InternalPlayCommand<WaveeRuntime>(WaveeCore.Runtime, stream));
-        return unit;
+        var sourceId = Guid.NewGuid().ToString();
+        await _commandWriter.WriteAsync(new InternalPlayCommand<WaveeRuntime>(WaveeCore.Runtime,
+            sourceId,
+            stream));
+        return sourceId;
     }
 
     public IWaveePlayerState State => _state.Value;
@@ -56,7 +59,7 @@ public sealed class WaveePlayer : IWaveePlayer
 public interface IWaveePlayer
 {
     ValueTask<bool> Pause();
-    ValueTask<Unit> Play(IAudioStream stream);
+    ValueTask<string> Play(IAudioStream stream);
     ValueTask<bool> Seek(TimeSpan to);
     IWaveePlayerState State { get; }
     IObservable<IWaveePlayerState> StateObservable { get; }

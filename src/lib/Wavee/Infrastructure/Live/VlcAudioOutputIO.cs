@@ -5,6 +5,7 @@ namespace Wavee.Infrastructure.Live;
 
 internal readonly struct VlcAudioOutputIO : Traits.AudioOutputIO
 {
+    private static double _volume = 0.5f;
     private readonly VlcHolder _vlcHolder;
 
     public VlcAudioOutputIO(VlcHolder vlcHolder)
@@ -16,6 +17,7 @@ internal readonly struct VlcAudioOutputIO : Traits.AudioOutputIO
     {
         var tcs = new TaskCompletionSource<Unit>();
         _vlcHolder.SetStream(audioStream, 
+            _volume,
             closeOtherStreams,
             () => tcs.SetResult(unit));
         return tcs.Task;
@@ -50,4 +52,13 @@ internal readonly struct VlcAudioOutputIO : Traits.AudioOutputIO
         _vlcHolder.Stop();
         return unit;
     }
+
+    public Unit SetVolume(double volumeFrac)
+    {
+        _volume = volumeFrac;
+        _vlcHolder.SetVolume(volumeFrac);
+        return unit;
+    }
+
+    public double Volume => _volume;
 }

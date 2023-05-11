@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System.Reactive.Linq;
+using System.Text.Json;
 using Eum.Spotify.connectstate;
 using Eum.Spotify.context;
 using Google.Protobuf;
@@ -241,36 +242,28 @@ internal readonly struct PlaybackClient<RT> : IPlaybackClient
 
         IDisposable listener = default;
         PlaybackClient<RT> tmpThis = this;
-        listener = WaveePlayer.Instance.StateObservable.Subscribe(async state =>
+        string previousPlaybackId = string.Empty;
+        string sourceId = string.Empty;
+        listener = WaveePlayer.Instance.StateObservable.Select(async state =>
         {
             switch (state)
             {
                 case WaveePlayingState playing:
-                    _onPlaybackInfo.Iter(x =>
+                    if (string.IsNullOrEmpty(previousPlaybackId))
+                        previousPlaybackId = playing.PlaybackId;
+
+                    if (sourceId != playing.SourceId
+                        && playing.PlaybackId != previousPlaybackId)
                     {
-                        baseInfo = baseInfo
-                            .WithPosition(playing.Position)
-                            .WithPaused(false);
-                        x(baseInfo);
-                    });
-                    break;
-                case WaveePausedState paused:
-                    _onPlaybackInfo.Iter(x =>
-                    {
-                        baseInfo = baseInfo
-                            .WithPosition(paused.Position)
-                            .WithPaused(true);
-                        x(baseInfo);
-                    });
-                    break;
-                case WaveeEndOfTrackState eot:
-                    if (!eot.GoingToNextTrackAlready)
-                    {
+                        previousPlaybackId = playing.PlaybackId;
+                        //we are playing a different track
+                        //lets stop listening
+                        listener.Dispose();
                         //start loading next track
                         _onPlaybackInfo.Iter(x =>
                         {
                             baseInfo = baseInfo
-                                .WithPosition(eot.Position)
+                                .WithPosition(playing.Position)
                                 .WithPaused(true);
                             x(baseInfo);
                         });
@@ -294,13 +287,30 @@ internal readonly struct PlaybackClient<RT> : IPlaybackClient
                                 onTrackPlayed,
                                 mercury, ct);
                         }
+
+                        return;
                     }
 
-                    listener?.Dispose();
+                    _onPlaybackInfo.Iter(x =>
+                    {
+                        baseInfo = baseInfo
+                            .WithPosition(playing.Position)
+                            .WithPaused(false);
+                        x(baseInfo);
+                    });
+                    break;
+                case WaveePausedState paused:
+                    _onPlaybackInfo.Iter(x =>
+                    {
+                        baseInfo = baseInfo
+                            .WithPosition(paused.Position)
+                            .WithPaused(true);
+                        x(baseInfo);
+                    });
                     break;
             }
-        });
-        await WaveePlayer.Instance.Play(stream);
+        }).Subscribe();
+        sourceId = await WaveePlayer.Instance.Play(stream);
         return unit;
     }
 

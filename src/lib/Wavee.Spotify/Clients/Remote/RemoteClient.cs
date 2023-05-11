@@ -4,6 +4,7 @@ using System.Text.Json;
 using Eum.Spotify.connectstate;
 using LanguageExt.UnsafeValueAccess;
 using Wavee.Infrastructure.Sys;
+using Wavee.Infrastructure.Sys.IO;
 using Wavee.Infrastructure.Traits;
 using Wavee.Spotify.Clients.Mercury.Metadata;
 using Wavee.Spotify.Clients.Playback;
@@ -12,7 +13,8 @@ using Wavee.Spotify.Infrastructure.Sys.Remote;
 
 namespace Wavee.Spotify.Clients.Remote;
 
-internal readonly struct RemoteClient<RT> : IRemoteClient where RT : struct, HasWebsocket<RT>, HasHttp<RT>, HasLog<RT>
+internal readonly struct RemoteClient<RT> : IRemoteClient
+    where RT : struct, HasWebsocket<RT>, HasHttp<RT>, HasLog<RT>, HasAudioOutput<RT>
 {
     private readonly string _deviceId;
     private readonly string _deviceName;
@@ -148,10 +150,9 @@ internal readonly struct RemoteClient<RT> : IRemoteClient where RT : struct, Has
         {
             await Task.Factory.StartNew(async () =>
             {
-                Atom<LocalDeviceState> lastState = Atom(hello.LocalState);
                 using var disposable = playbackInfoChanged.Subscribe(async info =>
                 {
-                    var build = lastState
+                    var build = atomic(() => hello.LocalState
                         .Swap(f =>
                         {
                             var k = f
@@ -170,9 +171,11 @@ internal readonly struct RemoteClient<RT> : IRemoteClient where RT : struct, Has
 
                             k = k.SetPosition((long)info.Position.IfNone(TimeSpan.Zero).TotalMilliseconds);
                             return k;
-                        }).ValueUnsafe();
-                    //TODO: Build local state
-                    var putState = build.BuildPutState(PutStateReason.PlayerStateChanged, info.Position);
+                        }));
+                    var vol = AudioOutput<RT>.Volume().Run(rt).ThrowIfFail();
+                    var putState = build.BuildPutState(PutStateReason.PlayerStateChanged,
+                        vol,
+                        info.Position);
                     var aff = await RemoteState<RT>.Put(putState, build.DeviceId,
                         build.ConnectionId,
                         getBearer, ct).Run(rt);
@@ -184,7 +187,7 @@ internal readonly struct RemoteClient<RT> : IRemoteClient where RT : struct, Has
                     var run = await Remote<RT>
                         .ListenForMessages(websocket, remoteClusterRef,
                             getBearer,
-                            lastState,
+                            hello.LocalState,
                             onRequest,
                             CancellationToken.None)
                         .Run(rt);
@@ -199,7 +202,7 @@ internal readonly struct RemoteClient<RT> : IRemoteClient where RT : struct, Has
                             await Task.Delay(3000);
                             var connResult = await ConnectWithDisconnection(
                                 remoteClusterRef,
-                                lastState.Value,
+                                hello.LocalState.Value,
                                 playbackInfoChanged,
                                 deviceId,
                                 deviceName,
@@ -226,7 +229,6 @@ internal readonly struct RemoteClient<RT> : IRemoteClient where RT : struct, Has
                     else
                     {
                         var newState = run.ThrowIfFail();
-                        lastState.Swap(_ => newState);
                     }
                 }
             }, TaskCreationOptions.LongRunning);

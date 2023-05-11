@@ -11,7 +11,7 @@ using Wavee.Spotify.Infrastructure.Sys.Remote;
 
 namespace Wavee.Spotify.Infrastructure.Sys;
 
-internal static class Remote<RT> where RT : struct, HasWebsocket<RT>, HasHttp<RT>
+internal static class Remote<RT> where RT : struct, HasWebsocket<RT>, HasHttp<RT>, HasAudioOutput<RT>
 {
     public static Aff<RT, WebSocket> Connect(Func<ValueTask<string>> getBearer, CancellationToken ct) =>
         from bearer in getBearer().ToAff()
@@ -19,7 +19,7 @@ internal static class Remote<RT> where RT : struct, HasWebsocket<RT>, HasHttp<RT
         from websocket in Ws<RT>.Connect(dealer, ct)
         select websocket;
 
-    public static Aff<RT, (LocalDeviceState LocalState, Cluster RemoteState)> Hello(
+    public static Aff<RT, (Ref<LocalDeviceState> LocalState, Cluster RemoteState)> Hello(
         Option<LocalDeviceState> localState,
         WebSocket websocket,
         string deviceId,
@@ -59,16 +59,18 @@ internal static class Remote<RT> where RT : struct, HasWebsocket<RT>, HasHttp<RT
         from message in Ws<RT>.Read(websocket, ct)
         select SpotifyWebsocketMessage.ParseFrom(message);
 
-    public static Aff<RT, LocalDeviceState> ListenForMessages(WebSocket websocket,
+    public static Aff<RT, Unit> ListenForMessages(WebSocket websocket,
         Ref<Option<Cluster>> remoteClusterRef,
         Func<ValueTask<string>> getBearerFunc,
-        LocalDeviceState localDeviceState,
+        Ref<LocalDeviceState> localDeviceState,
         Func<SpotifyWebsocketMessage, LocalDeviceState, Task<LocalDeviceState>> onRequest,
         CancellationToken ct) =>
         from message in ReadNextMessage(websocket, ct)
         from newState in message.Type switch
         {
-            SpotifyWebsocketMessageType.Message => HandleMessage(message, remoteClusterRef, localDeviceState),
+            SpotifyWebsocketMessageType.Message => HandleMessage(message, remoteClusterRef,
+                getBearerFunc,
+                localDeviceState),
             SpotifyWebsocketMessageType.Request =>
                 from deviceState in HandleRequest(message, remoteClusterRef, getBearerFunc, localDeviceState, onRequest,
                     ct)
@@ -92,34 +94,58 @@ internal static class Remote<RT> where RT : struct, HasWebsocket<RT>, HasHttp<RT
         return JsonSerializer.SerializeToUtf8Bytes(reply);
     }
 
-    private static Aff<RT, LocalDeviceState> HandleRequest(SpotifyWebsocketMessage message,
+    private static Aff<RT, Unit> HandleRequest(SpotifyWebsocketMessage message,
         Ref<Option<Cluster>> remoteClusterRef,
         Func<ValueTask<string>> getBearerFunc,
-        LocalDeviceState localDeviceState,
+        Ref<LocalDeviceState> localDeviceState,
         Func<SpotifyWebsocketMessage, LocalDeviceState, Task<LocalDeviceState>> onRequest,
         CancellationToken ct)
     {
         atomic(() => remoteClusterRef.Swap(_ => Option<Cluster>.None));
 
         return
-            from newLocalState in onRequest(message, localDeviceState).ToAff()
-            let putState = newLocalState.BuildPutState(PutStateReason.NewDevice, Option<TimeSpan>.None)
-            from _ in RemoteState<RT>.Put(putState, localDeviceState.DeviceId, localDeviceState.ConnectionId,
+            from newLocalState in onRequest(message, localDeviceState)
+                .Map(f => atomic(() => localDeviceState.Swap(_ => f)))
+                .ToAff()
+            let putState = newLocalState.BuildPutState(PutStateReason.NewDevice,
+                0.5,
+                Option<TimeSpan>.None)
+            from _ in RemoteState<RT>.Put(putState, newLocalState.DeviceId, newLocalState.ConnectionId,
                 getBearerFunc, ct)
-            select newLocalState;
+            select unit;
     }
 
-    private static Aff<RT, LocalDeviceState> HandleMessage(SpotifyWebsocketMessage message,
+    private static Aff<RT, Unit> HandleMessage(SpotifyWebsocketMessage message,
         Ref<Option<Cluster>> remoteClusterRef,
-        LocalDeviceState localDeviceState)
+        Func<ValueTask<string>> getBearerFunc,
+        Ref<LocalDeviceState> localDeviceState)
     {
         if (message.Uri.StartsWith("hm://connect-state/v1/cluster"))
         {
             var clusterUpdate = ClusterUpdate.Parser.ParseFrom(message.Payload.ValueUnsafe().Span);
             atomic(() => remoteClusterRef.Swap(_ => clusterUpdate.Cluster));
-            localDeviceState = localDeviceState.FromClusterUpdate(clusterUpdate.Cluster.PlayerState);
+            atomic(() => localDeviceState.Swap(f => f.FromClusterUpdate(clusterUpdate.Cluster.PlayerState)));
+        }
+        else if (message.Uri.Equals("hm://connect-state/v1/connect/volume"))
+        {
+            var vl = SetVolumeCommand.Parser.ParseFrom(message.Payload.ValueUnsafe().Span);
+            var frac = (double)vl.Volume / ushort.MaxValue;
+
+            return
+                from _ in AudioOutput<RT>.SetVolume(frac)
+                from d in SuccessEff(
+                    atomic(() => localDeviceState.Swap(f => f.FromVolume(vl.CommandOptions.MessageId))))
+                from pos in AudioOutput<RT>.Position()
+                from ___ in RemoteState<RT>.Put(d.BuildPutState(PutStateReason.PlayerStateChanged,
+                        frac,
+                        pos),
+                    d.DeviceId,
+                    d.ConnectionId,
+                    getBearerFunc,
+                    CancellationToken.None)
+                select unit;
         }
 
-        return SuccessEff(localDeviceState);
+        return SuccessEff(unit);
     }
 }

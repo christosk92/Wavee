@@ -10,9 +10,9 @@ using Wavee.Spotify.Helpers;
 
 namespace Wavee.Spotify.Infrastructure.Sys;
 
-public static class RemoteState<RT> where RT : struct, HasWebsocket<RT>, HasHttp<RT>
+public static class RemoteState<RT> where RT : struct, HasWebsocket<RT>, HasHttp<RT>, HasAudioOutput<RT>
 {
-    public static Aff<RT, (LocalDeviceState LocalState, Cluster RemoteState)> Hello(
+    public static Aff<RT, (Ref<LocalDeviceState> LocalState, Cluster RemoteState)> Hello(
         Option<LocalDeviceState> localDeviceState, string connectionId,
         string deviceId,
         string deviceName,
@@ -21,7 +21,7 @@ public static class RemoteState<RT> where RT : struct, HasWebsocket<RT>, HasHttp
         CancellationToken ct = default)
     {
         var newState =
-            localDeviceState.Match(
+            Ref(localDeviceState.Match(
                 Some: r => r with
                 {
                     DeviceId = deviceId,
@@ -29,13 +29,16 @@ public static class RemoteState<RT> where RT : struct, HasWebsocket<RT>, HasHttp
                     DeviceType = deviceType,
                     ConnectionId = connectionId
                 }, None: () => LocalDeviceState.New(connectionId, deviceId, deviceName, deviceType)
-            );
+            ));
 
         return
-            from putState in Eff(() => newState.BuildPutState(PutStateReason.NewDevice, None))
+            from vol in AudioOutput<RT>.Volume()
+            from putState in Eff(() => newState.Value.BuildPutState(PutStateReason.NewDevice,
+                vol,
+                None))
             from putStateResult in Put(putState,
-                newState.DeviceId,
-                newState.ConnectionId,
+                newState.Value.DeviceId,
+                newState.Value.ConnectionId,
                 getBearer, ct)
             select (newState, putStateResult);
     }

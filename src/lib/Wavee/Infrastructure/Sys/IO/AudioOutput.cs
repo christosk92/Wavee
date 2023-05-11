@@ -26,7 +26,7 @@ public static class AudioOutput<RT>
     public static Eff<RT, Unit> Pause() =>
         from _ in default(RT).AudioOutputEff.Map(e => e.Pause())
         select unit;
-    
+
     /// <summary>
     /// Halt current audio playback. Aka pausing.
     /// </summary>
@@ -36,6 +36,9 @@ public static class AudioOutput<RT>
         from _ in default(RT).AudioOutputEff.Map(e => e.Stop())
         select unit;
 
+    public static Eff<RT, Unit> SetVolume(double volumeFrac) =>
+        from _ in default(RT).AudioOutputEff.Map(e => e.SetVolume(Math.Clamp(volumeFrac, 0, 1)))
+        select unit;
 
     /// <summary>
     /// Resume audio playback. Aka resuming.
@@ -53,4 +56,8 @@ public static class AudioOutput<RT>
     public static Eff<RT, Option<TimeSpan>> Position() =>
         from pos in default(RT).AudioOutputEff.Map(e => e.Position)
         select pos;
+
+    public static Eff<RT, double> Volume() =>
+        from vol in default(RT).AudioOutputEff.Map(e => e.Volume)
+        select vol;
 }

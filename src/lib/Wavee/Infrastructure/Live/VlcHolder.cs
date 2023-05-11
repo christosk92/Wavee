@@ -40,7 +40,9 @@ internal sealed class VlcHolder
 
     public Option<TimeSpan> Position => _mediaPlayer.LastOrNone().Map(x => TimeSpan.FromMilliseconds(x.Time));
 
-    public void SetStream(Stream stream, bool closeOtherStreams, Action onEnded)
+    public void SetStream(Stream stream,
+        double volumeFrac,
+        bool closeOtherStreams, Action onEnded)
     {
         if (closeOtherStreams)
         {
@@ -58,14 +60,21 @@ internal sealed class VlcHolder
         {
             try
             {
+                bool initial = true;
                 while (true)
                 {
                     await Task.Delay(100, cts.Token);
                     if (mediaPlayer.State is VLCState.Ended
                         or VLCState.Stopped or VLCState.Error)
                     {
-                        onEnded();
                         break;
+                    }
+
+                    if ((media.State is VLCState.Playing or VLCState.Paused)
+                        && initial)
+                    {
+                        mediaPlayer.Volume = (int)(volumeFrac * 100);
+                        initial = false;
                     }
                 }
             }
@@ -74,6 +83,7 @@ internal sealed class VlcHolder
             }
             finally
             {
+                onEnded();
                 atomic(() =>
                 {
                     _mediaInput.Swap(f => f.Filter(x => x != mediaInput));
@@ -110,5 +120,10 @@ internal sealed class VlcHolder
     {
         _mediaPlayer.LastOrNone().IfSome(x => x.Stop());
         _cancellationTokens.LastOrNone().IfSome(x => x.Cancel());
+    }
+
+    public void SetVolume(double volumeFrac)
+    {
+        _mediaPlayer.LastOrNone().IfSome(x => x.Volume = (int)(volumeFrac * 100));
     }
 }
