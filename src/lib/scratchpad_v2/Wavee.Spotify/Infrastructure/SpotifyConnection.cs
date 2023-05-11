@@ -137,11 +137,13 @@ internal sealed class SpotifyConnection<RT> : ISpotifyConnection
         mercury: Mercury,
         runtime: _runtime,
         playbackInfo => RemoteClient<RT>.OnPlaybackChanged(_info.ConnectionId, playbackInfo),
-        preferredQuality: _info.Config.Playback.PreferredQualityType
+        preferredQuality: _info.Config.Playback.PreferredQualityType,
+        autoplay: _info.Config.Playback.Autoplay
     );
 
 
     private static Atom<HashMap<Guid, uint>> _audioKeySequence = Atom(LanguageExt.HashMap<Guid, uint>.Empty);
+
     private static Aff<RT, Either<AesKeyError, AudioKey>> FetchAudioKeyFunc(
         ChannelWriter<SpotifyPacket> channelWriter,
         Func<PackageListenerRequest, (Guid ListenerId, ChannelReader<SpotifyPacket> Reader)> addPackageListener,
@@ -161,7 +163,7 @@ internal sealed class SpotifyConnection<RT> : ISpotifyConnection
             var (listenerId, reader) = addPackageListener(x =>
                 (x.Command is SpotifyPacketType.AesKey or SpotifyPacketType.AesKeyError) &&
                 BinaryPrimitives.ReadUInt32BigEndian(x.Data.Slice(0, 4).Span) == nextSeq);
-            
+
             var buildPacket = AesPacketBuilder.BuildRequest(id, fileId, nextSeq);
             channelWriter.TryWrite(buildPacket);
 
@@ -179,6 +181,7 @@ internal sealed class SpotifyConnection<RT> : ISpotifyConnection
                         return Left(new AesKeyError(errorCode, errorType));
                 }
             }
+
             throw new Exception("Should not happen");
         });
     }

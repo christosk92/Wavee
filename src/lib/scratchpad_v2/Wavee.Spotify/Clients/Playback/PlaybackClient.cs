@@ -1,22 +1,21 @@
 ﻿using Eum.Spotify.connectstate;
 using Google.Protobuf;
-using LanguageExt.Effects.Traits;
 using Spotify.Metadata;
-using Wavee.Infrastructure.Sys.IO;
 using Wavee.Infrastructure.Traits;
+using Wavee.Player;
+using Wavee.Player.States;
 using Wavee.Spotify.Clients.Info;
 using Wavee.Spotify.Clients.Mercury;
 using Wavee.Spotify.Clients.Mercury.Key;
 using Wavee.Spotify.Clients.Mercury.Metadata;
-using Wavee.Spotify.Clients.Remote;
 using Wavee.Spotify.Configs;
 using Wavee.Spotify.Id;
 using Wavee.Spotify.Infrastructure.Sys;
-using Wavee.VorbisDecoder.Convenience;
 
 namespace Wavee.Spotify.Clients.Playback;
 
-internal readonly struct PlaybackClient<RT> : IPlaybackClient where RT : struct, HasLog<RT>, HasHttp<RT>, HasAudioOutput<RT>
+internal readonly struct PlaybackClient<RT> : IPlaybackClient
+    where RT : struct, HasLog<RT>, HasHttp<RT>, HasAudioOutput<RT>
 {
     private static AtomHashMap<Guid, Action<SpotifyPlaybackInfo>> _onPlaybackInfo =
         LanguageExt.AtomHashMap<Guid, Action<SpotifyPlaybackInfo>>.Empty;
@@ -24,17 +23,21 @@ internal readonly struct PlaybackClient<RT> : IPlaybackClient where RT : struct,
     private readonly Guid _mainConnectionId;
 
     private readonly Func<ValueTask<string>> _getBearer;
-    private readonly Func<SpotifyId, ByteString, CancellationToken, Aff<RT, Either<AesKeyError, AudioKey>>> _fetchAudioKeyFunc;
+
+    private readonly Func<SpotifyId, ByteString, CancellationToken, Aff<RT, Either<AesKeyError, AudioKey>>>
+        _fetchAudioKeyFunc;
+
     private readonly IMercuryClient _mercury;
     private readonly RT _runtime;
     private readonly PreferredQualityType _preferredQuality;
+    private readonly bool _autoplay;
 
     public PlaybackClient(Guid mainConnectionId,
         Func<ValueTask<string>> getBearer,
         Func<SpotifyId, ByteString, CancellationToken, Aff<RT, Either<AesKeyError, AudioKey>>> fetchAudioKeyFunc,
         IMercuryClient mercury, RT runtime,
         Action<SpotifyPlaybackInfo> onPlaybackInfo,
-        PreferredQualityType preferredQuality)
+        PreferredQualityType preferredQuality, bool autoplay)
     {
         _mainConnectionId = mainConnectionId;
         _getBearer = getBearer;
@@ -42,6 +45,7 @@ internal readonly struct PlaybackClient<RT> : IPlaybackClient where RT : struct,
         _mercury = mercury;
         _runtime = runtime;
         _preferredQuality = preferredQuality;
+        _autoplay = autoplay;
         _onPlaybackInfo.AddOrUpdate(mainConnectionId, onPlaybackInfo);
     }
 
@@ -67,40 +71,70 @@ internal readonly struct PlaybackClient<RT> : IPlaybackClient where RT : struct,
         var trackStreamAff = await SpotifyPlayback<RT>.LoadTrack(
             SpotifyId.FromUri(uri),
             preferredQualityOverride.IfNone(_preferredQuality),
-            _getBearer, 
+            _getBearer,
             _fetchAudioKeyFunc,
             _mercury, ct).Run(_runtime);
 
         var stream = trackStreamAff.ThrowIfFail();
-        
-        //start playing track
-        //dummy< DO NOT USE IN PROD
-        RT runtime1 = _runtime;
-        await Task.Factory.StartNew(async () =>
-        {
-            AudioOutput<RT>.Start().Run(runtime1);
-            await using var inputStream = stream.AsStream();
-            await using var decoder = new VorbisWaveReader(inputStream, stream.Metadata.Duration, true);
-            var buffer = new byte[decoder.WaveFormat.AverageBytesPerSecond];
-            while (true)
-            {
-                var read = await decoder.ReadAsync(buffer, 0, buffer.Length, ct);
-                if (read == 0)
-                    break;
-
-                await AudioOutput<RT>.Write(buffer).Run(runtime: runtime1);
-            }
-        });
-
         _onPlaybackInfo.Iter(x =>
         {
             baseInfo = baseInfo
                 .EnrichFrom(stream.Metadata)
-                .WithPaused(false);
+                .WithBuffering();
             x(baseInfo);
         });
 
+        //start playing track
+        IDisposable listener = default;
+        listener = WaveePlayer.Instance.StateObservable.Subscribe(state =>
+        {
+            switch (state)
+            {
+                case WaveePlayingState playing:
+                    _onPlaybackInfo.Iter(x =>
+                    {
+                        baseInfo = baseInfo
+                            .EnrichFrom(stream.Metadata)
+                            .WithPosition(playing.Position)
+                            .WithPaused(false);
+                        x(baseInfo);
+                    });
+                    break;
+                case WaveePausedState paused:
+                    _onPlaybackInfo.Iter(x =>
+                    {
+                        baseInfo = baseInfo
+                            .EnrichFrom(stream.Metadata)
+                            .WithPosition(paused.Position)
+                            .WithPaused(true);
+                        x(baseInfo);
+                    });
+                    break;
+                case WaveeEndOfTrackState eot:
+                    if (!eot.GoingToNextTrackAlready)
+                    {
+                        //start loading next track
+                        _onPlaybackInfo.Iter(x =>
+                        {
+                            baseInfo = baseInfo
+                                .EnrichFrom(stream.Metadata)
+                                .WithPosition(eot.Position)
+                                .WithPaused(true);
+                            x(baseInfo);
+                        });
+                    }
+
+                    listener?.Dispose();
+                    break;
+            }
+        });
+        await WaveePlayer.Instance.Play(stream);
         return baseInfo;
+    }
+
+    public async Task<bool> Pause(CancellationToken ct = default)
+    {
+        return await WaveePlayer.Instance.Pause();
     }
 }
 
@@ -113,6 +147,14 @@ public readonly record struct SpotifyPlaybackInfo(
     bool Paused,
     bool Buffering)
 {
+    public SpotifyPlaybackInfo WithPosition(TimeSpan playingPosition)
+    {
+        return this with
+        {
+            Position = playingPosition
+        };
+    }
+
     public SpotifyPlaybackInfo WithPaused(bool b)
     {
         return this with
@@ -121,6 +163,15 @@ public readonly record struct SpotifyPlaybackInfo(
             Buffering = false
         };
     }
+
+    public SpotifyPlaybackInfo WithBuffering()
+    {
+        return this with
+        {
+            Buffering = true,
+        };
+    }
+
 
     public SpotifyPlaybackInfo EnrichFrom(TrackOrEpisode streamMetadata)
     {

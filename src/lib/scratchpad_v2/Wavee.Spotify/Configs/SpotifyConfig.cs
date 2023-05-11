@@ -7,7 +7,10 @@ public readonly record struct SpotifyConfig(
     SpotifyPlaybackConfig Playback
 );
 
-public readonly record struct SpotifyPlaybackConfig(PreferredQualityType PreferredQualityType);
+public readonly record struct SpotifyPlaybackConfig(
+    PreferredQualityType PreferredQualityType,
+    bool Autoplay
+);
 
 public readonly record struct SpotifyRemoteConfig(
     string DeviceName,

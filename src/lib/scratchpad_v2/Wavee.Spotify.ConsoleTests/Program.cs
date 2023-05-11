@@ -23,7 +23,8 @@ var config = new SpotifyConfig(
         DeviceType: DeviceType.Computer
     ),
     Playback: new SpotifyPlaybackConfig(
-        PreferredQualityType.High
+        PreferredQualityType.High,
+        Autoplay: true
     )
 );
 var log = new LoggerConfiguration()
@@ -40,13 +41,42 @@ var connection = await SpotifyClient.Create(loginCredentials, config, Option<ILo
 var remoteCluster = await connection.Remote.Connect(CancellationToken.None);
 remoteCluster.Subscribe(state => { logger.LogInformation("Remote state: {state}", state); });
 
-//https://open.spotify.com/track/3K8wfMDLxwtLGuVrYobxVe?si=518e3b12e14443fb
-//https://open.spotify.com/playlist/2TAyTkj953qz8fG2IXq1V0?si=1028b95ac678473e
-//https://open.spotify.com/track/0afoCntatBcJGjz525RxBT?si=62bb8201d730434d
-//https://open.spotify.com/track/49jhaFKylisSzgaReEP2Jt?si=4eef71c9b1cf4897
-//var playback = await connection.Playback.PlayContext
-var playback = await connection.Playback.PlayTrack("spotify:track:49jhaFKylisSzgaReEP2Jt",
-    Option<PreferredQualityType>.None,
-    CancellationToken.None);
+while (true)
+{
+    try
+    {
+        var input = Console.ReadLine();
+
+        //commands:
+        //-play <uri>
+        //-pause
+
+        var command = input.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        switch (command[0])
+        {
+            case "-play":
+                var playback = await connection.Playback.PlayTrack(command[1],
+                    Option<PreferredQualityType>.None,
+                    CancellationToken.None);
+                break;
+            case "-pause":
+                await connection.Playback.Pause(CancellationToken.None);
+                break;
+        }
+    }
+    catch (Exception e)
+    {
+        logger.LogError(e, "Error");
+    }
+}
+
+// //https://open.spotify.com/track/3K8wfMDLxwtLGuVrYobxVe?si=518e3b12e14443fb
+// //https://open.spotify.com/playlist/2TAyTkj953qz8fG2IXq1V0?si=1028b95ac678473e
+// //https://open.spotify.com/track/0afoCntatBcJGjz525RxBT?si=62bb8201d730434d
+// //https://open.spotify.com/track/49jhaFKylisSzgaReEP2Jt?si=4eef71c9b1cf4897
+// //var playback = await connection.Playback.PlayContext
+// var playback = await connection.Playback.PlayTrack("spotify:track:49jhaFKylisSzgaReEP2Jt",
+//     Option<PreferredQualityType>.None,
+//     CancellationToken.None);
 
 Console.ReadLine();
