@@ -20,7 +20,7 @@ var loginCredentials = new LoginCredentials
 var config = new SpotifyConfig(
     Remote: new SpotifyRemoteConfig(
         DeviceName: "Wavee Test",
-        DeviceType: DeviceType.Chromebook
+        DeviceType: DeviceType.Computer
     ),
     Playback: new SpotifyPlaybackConfig(
         PreferredQualityType.High
@@ -42,8 +42,10 @@ remoteCluster.Subscribe(state => { logger.LogInformation("Remote state: {state}"
 
 //https://open.spotify.com/track/3K8wfMDLxwtLGuVrYobxVe?si=518e3b12e14443fb
 //https://open.spotify.com/playlist/2TAyTkj953qz8fG2IXq1V0?si=1028b95ac678473e
+//https://open.spotify.com/track/0afoCntatBcJGjz525RxBT?si=62bb8201d730434d
+//https://open.spotify.com/track/49jhaFKylisSzgaReEP2Jt?si=4eef71c9b1cf4897
 //var playback = await connection.Playback.PlayContext
-var playback = await connection.Playback.PlayTrack("spotify:track:3K8wfMDLxwtLGuVrYobxVe",
+var playback = await connection.Playback.PlayTrack("spotify:track:49jhaFKylisSzgaReEP2Jt",
     Option<PreferredQualityType>.None,
     CancellationToken.None);
 
