@@ -57,6 +57,7 @@ while (true)
         //-play <uri>
         //-pause
         //-seek <ts>
+        //-play <uri> maybe(index)
         var command = input.Split(' ', StringSplitOptions.RemoveEmptyEntries);
         switch (command[0])
         {
@@ -79,12 +80,23 @@ while (true)
                             Option<PreferredQualityType>.None,
                             CancellationToken.None);
                         break;
+                    case AudioItemType.Artist:
                     case AudioItemType.Playlist:
                     case AudioItemType.Album:
-                        var p = await connection.Playback.PlayContext(
-                            command[1],
-                            0,
-                            CancellationToken.None);
+                        if(command.Length > 2 && int.TryParse(command[2], out var index))
+                        {
+                            var p = await connection.Playback.PlayContext(
+                                command[1],
+                                index,
+                                CancellationToken.None);
+                        }
+                        else
+                        {
+                            var p = await connection.Playback.PlayContext(
+                                command[1],
+                                0,
+                                CancellationToken.None);
+                        }
                         break;
                 }
 

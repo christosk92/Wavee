@@ -1,4 +1,5 @@
-﻿using Eum.Spotify.connectstate;
+﻿using System.Text.Json;
+using Eum.Spotify.connectstate;
 using Eum.Spotify.context;
 using Google.Protobuf;
 using LanguageExt.UnsafeValueAccess;
@@ -198,6 +199,31 @@ internal readonly struct PlaybackClient<RT> : IPlaybackClient
             else
             {
                 //lets check if we have more pages
+                foreach (var page in ctx.Pages)
+                {
+                    if (page.HasNextPageUrl)
+                    {
+                        //we need to load the next page
+                        var nextPage = await _mercury.Get(page.NextPageUrl, ct);
+                    }
+                    else if (page.HasPageUrl)
+                    {
+                        var nextPage = await _mercury.Get(page.PageUrl, ct);
+                        using var doc = JsonDocument.Parse(nextPage.Body);
+                        var parsedCtxPage = ContextHelper.ParsePage(doc.RootElement);
+                        page.NextPageUrl = parsedCtxPage.NextPageUrl;
+                        page.Tracks.AddRange(parsedCtxPage.Tracks);
+                        page.PageUrl = string.Empty;
+                        if (startFrom < ctx.Pages.Sum(x => x.Tracks.Count))
+                        {
+                            //we have the track
+                            var item = ctx.Pages.SelectMany(x => x.Tracks).ElementAt(startFrom);
+                            track = Some(item);
+                            break;
+                        }
+                        //we need to load the next page
+                    }
+                }
             }
 
             //we need to load the next page
@@ -328,7 +354,10 @@ public readonly record struct SpotifyPlaybackInfo(
     {
         var track = Track.IfNone(new ProvidedTrack());
         track.Provider = "context";
-
+        if (ctxTrack.HasUri)
+            track.Uri = ctxTrack.Uri;
+        if (ctxTrack.HasUid)
+            track.Uid = ctxTrack.Uid;
         return this with
         {
             Track = track,
