@@ -50,10 +50,14 @@ while (true)
         //commands:
         //-play <uri>
         //-pause
-
+        //-seek <ts>
         var command = input.Split(' ', StringSplitOptions.RemoveEmptyEntries);
         switch (command[0])
         {
+            case "-seek":
+                if (TimeSpan.TryParse(command[1], out var ts))
+                    await connection.Playback.Seek(ts, CancellationToken.None);
+                break;
             case "-play":
                 var playback = await connection.Playback.PlayTrack(command[1],
                     Option<PreferredQualityType>.None,

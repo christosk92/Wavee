@@ -136,6 +136,11 @@ internal readonly struct PlaybackClient<RT> : IPlaybackClient
     {
         return await WaveePlayer.Instance.Pause();
     }
+
+    public async Task<bool> Seek(TimeSpan to, CancellationToken ct = default)
+    {
+        return await WaveePlayer.Instance.Seek(to);
+    }
 }
 
 public readonly record struct SpotifyPlaybackInfo(

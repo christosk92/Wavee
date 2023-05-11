@@ -25,6 +25,15 @@ public sealed class WaveePlayer : IWaveePlayer
             .Result;
     }
 
+    public async ValueTask<bool> Seek(TimeSpan to)
+    {
+        if (_state.Value is not IWaveePlayerInPlaybackState)
+            return false;
+
+        await _commandWriter.WriteAsync(new InternalSeekCommand<WaveeRuntime>(WaveeCore.Runtime, to));
+        return true;
+    }
+
     public async ValueTask<bool> Pause()
     {
         if (_state.Value is not WaveePlayingState)
@@ -48,6 +57,7 @@ public interface IWaveePlayer
 {
     ValueTask<bool> Pause();
     ValueTask<Unit> Play(IAudioStream stream);
+    ValueTask<bool> Seek(TimeSpan to);
     IWaveePlayerState State { get; }
     IObservable<IWaveePlayerState> StateObservable { get; }
 }

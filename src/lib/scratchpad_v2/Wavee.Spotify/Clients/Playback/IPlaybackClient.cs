@@ -11,4 +11,5 @@ public interface IPlaybackClient
         CancellationToken ct = default);
 
     Task<bool> Pause(CancellationToken ct = default);
+    Task<bool> Seek(TimeSpan to, CancellationToken ct = default);
 }

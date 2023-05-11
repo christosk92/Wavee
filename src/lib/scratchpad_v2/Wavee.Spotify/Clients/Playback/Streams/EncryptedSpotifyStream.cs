@@ -51,7 +51,7 @@ internal sealed class EncryptedSpotifyStream<RT> where RT : struct, HasHttp<RT>
         return firstChunkToRead.Length;
     }
 
-    private async ValueTask<ReadOnlyMemory<byte>> FetchChunk(int index, int preloadAhead = 2)
+    private async ValueTask<ReadOnlyMemory<byte>> FetchChunk(int index, int preloadAhead = 10)
     {
         ReadOnlyMemory<byte> chunk;
         if (_requested[index].IsNone)
@@ -68,19 +68,22 @@ internal sealed class EncryptedSpotifyStream<RT> where RT : struct, HasHttp<RT>
 
         if (index + preloadAhead < _numberOfChunks)
         {
-            _ = Task.Run(async () =>
+            for (var i = index + 1; i < index + preloadAhead; i++)
             {
-                for (var i = index + 1; i < index + preloadAhead; i++)
+                if (_requested[i].IsNone)
                 {
-                    if (_requested[i].IsNone)
+                    var tcs = new TaskCompletionSource<ReadOnlyMemory<byte>>();
+                    _requested[i] = tcs;
+                    var i1 = i;
+                    _ = Task.Run(async () =>
                     {
-                        var tcs = new TaskCompletionSource<ReadOnlyMemory<byte>>();
-                        _requested[i] = tcs;
-                        var preloaded = await _getChunk(i);
+                        var preloaded = await _getChunk(i1);
                         tcs.SetResult(preloaded);
-                    }
+                    });
                 }
-            });
+            }
+
+            ;
         }
 
         return chunk;

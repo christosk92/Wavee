@@ -79,7 +79,25 @@ public readonly record struct TrackOrEpisode(Either<Episode, Track> Value)
 
     public Option<AudioFile> FindAlternativeFile(PreferredQualityType quality)
     {
-        throw new NotImplementedException();
+        return Value.Match(
+            Left: episode => None,
+            Right: track =>
+            {
+                var alt = track.Alternative
+                    .Fold(Option<AudioFile>.None, (files, track1) =>
+                    {
+                        return track1.File.Find(f =>
+                        {
+                            var r = FormatsMap.Find(quality).Map(x => x.Contains(f.Format));
+                            return r.Match(
+                                Some: t => t,
+                                None: () => false
+                            );
+                        });
+                    });
+                return alt;
+            }
+        );
     }
 
     private static HashMap<PreferredQualityType, AudioFile.Types.Format[]> FormatsMap { get; }
