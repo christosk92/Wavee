@@ -157,7 +157,7 @@ internal readonly struct MercuryClient : IMercuryClient
             : null;
         var restrictions = jsonDocument.RootElement.TryGetProperty("restrictions", out var restrictionsElement)
             ? restrictionsElement.EnumerateObject().Fold(new HashMap<string, Seq<string>>(),
-                (acc, x) => acc.Add(x.Name, x.Value.EnumerateArray().Select(x => x.GetString()).ToSeq()))
+                (acc, x) => acc.Add(x.Name, x.Value.Clone().EnumerateArray().Select(y => y.GetString()).ToSeq()!))
             : Empty;
         return new SpotifyContext(url,metadata, pages,restrictions);
     }

@@ -17,6 +17,6 @@
 
     <ItemGroup>
       <ProjectReference Include="..\..\..\Wavee.Spotify.Cache\Wavee.Spotify.Cache.csproj" />
-    </ItemGroup>
+    </ItemGroup> 
 
 </Project>

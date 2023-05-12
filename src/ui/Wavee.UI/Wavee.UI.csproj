@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.0-preview.3.23174.8" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="ReactiveUI" Version="18.4.44" />
+    <PackageReference Include="Serilog" Version="3.0.0-dev-01998" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="4.1.1-dev-00910" />
+    <PackageReference Include="Serilog.Sinks.File" Version="5.0.1-dev-00947" />
+  </ItemGroup>
+
+</Project>

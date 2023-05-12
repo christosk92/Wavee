@@ -34,8 +34,8 @@ internal sealed class DecryptedSpotifyStream<RT> : IDisposable where RT : struct
         }
         set
         {
-            _position = value;
-            _encryptedSpotifyStream.Position = value;
+            _position = Math.Min(value, Length);
+            _encryptedSpotifyStream.Position = Math.Min(value, Length);
         }
     }
 
