@@ -15,7 +15,6 @@
     <Content Remove="Assets\Fonts\MediaPlayerIcons.ttf" />
   </ItemGroup>
   <ItemGroup>
-    <None Remove="Views\Playlists\CreatePlaylistView.xaml" />
     <None Remove="Views\Shell\ShellView.xaml" />
     <None Remove="Views\Sidebar\Resources.xaml" />
     <None Remove="Views\Sidebar\SidebarControl.xaml" />
@@ -58,9 +57,6 @@
     <None Update="Assets\Fonts\MediaPlayerIcons.ttf">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <Page Update="Views\Playlists\CreatePlaylistView.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
     <Page Update="Views\Sidebar\SidebarTemplates.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -77,6 +73,9 @@
     <Page Update="Views\Sidebar\SidebarControl.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Views\Dialogs\" />
   </ItemGroup>
 
   <!-- 

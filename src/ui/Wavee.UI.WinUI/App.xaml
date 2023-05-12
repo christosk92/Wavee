@@ -30,7 +30,7 @@
                             <SolidColorBrush x:Key="App.Theme.Sidebar.BackgroundBrush"
                                              Color="#993A3A3A" />
                             <SolidColorBrush x:Key="App.Theme.FileArea.BackgroundBrush"
-                                             Color="#993A3A3A" />
+                                             Color="#663A3A3A" />
                         </ResourceDictionary>
                         <ResourceDictionary x:Key="HighContrast">
                             <SolidColorBrush x:Key="App.Theme.BackgroundBrush"

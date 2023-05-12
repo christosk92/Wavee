@@ -9,6 +9,13 @@
 
     <sidebar:SidebarControl SidebarItems="{x:Bind ViewModel.SidebarItems}"
                             Playlists="{x:Bind ViewModel.Playlists}"
+                            OnCreatePlaylistRequested="SidebarControl_OnOnCreatePlaylistRequested"
                             User="{x:Bind ViewModel.CurrentUser, Mode=OneWay}"
-                            x:Name="SidebarControl" />
+                            x:Name="SidebarControl">
+        <sidebar:SidebarControl.NavigationFrame>
+            <ContentControl x:Name="NavigationFrame"
+                            VerticalContentAlignment="Stretch"
+                            HorizontalContentAlignment="Stretch" />
+        </sidebar:SidebarControl.NavigationFrame>
+    </sidebar:SidebarControl>
 </UserControl>

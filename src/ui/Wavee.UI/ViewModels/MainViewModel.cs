@@ -114,8 +114,14 @@ public sealed class MainViewModel : ReactiveObject
             .CountChanged() // emits the count of items whenever it changes
             .Select(count => count.Count > 0) // maps the count to a boolean
             .ObserveOn(RxApp.MainThreadScheduler); // ensure that subscribers receive notifications on the main thread
+
+        Instance = this;
     }
+    public static MainViewModel Instance { get; private set; }
     public IObservable<bool> HasPlaylists { get; }
+    public IObservable<bool> UserIsLoggedIn => this.WhenAnyValue(x => x.CurrentUser)
+        .Select(user => user is { IsLoggedIn: true });
+
     public PlaylistSortProperty PlaylistSorts
     {
         get => _playlistSorts;
@@ -146,5 +152,7 @@ public enum PlaylistSortProperty
 public enum PlaylistSourceFilter
 {
     Yours,
-    Others
+    Others,
+    Spotify,
+    Local
 }

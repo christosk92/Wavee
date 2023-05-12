@@ -2,12 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Drawing;
+using System.Linq;
 using CommunityToolkit.Labs.WinUI;
 using CommunityToolkit.WinUI.UI;
 using DynamicData;
 using LanguageExt;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Input;
 using ReactiveUI;
 using Wavee.UI.Bases;
 using Wavee.UI.Helpers;
@@ -34,6 +36,8 @@ namespace Wavee.UI.WinUI.Views.Sidebar
         public static readonly DependencyProperty PlaylistSortProperty = DependencyProperty.Register(
             nameof(PlaylistSort), typeof(PlaylistSortProperty), typeof(SidebarControl)
             , new PropertyMetadata(default(PlaylistSortProperty), SortChanged));
+
+        public static readonly DependencyProperty NavigationFrameProperty = DependencyProperty.Register(nameof(NavigationFrame), typeof(object), typeof(SidebarControl), new PropertyMetadata(default(object)));
 
         private static void SortChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
@@ -64,6 +68,12 @@ namespace Wavee.UI.WinUI.Views.Sidebar
                         break;
                     case PlaylistSourceFilter.Others:
                         items.Add(k.PlaylistFilterTokenView.Items[1]);
+                        break;
+                    case PlaylistSourceFilter.Spotify:
+                        items.Add(k.PlaylistFilterTokenView.Items[3]);
+                        break;
+                    case PlaylistSourceFilter.Local:
+                        items.Add(k.PlaylistFilterTokenView.Items[4]);
                         break;
                     default:
                         throw new ArgumentOutOfRangeException();
@@ -115,6 +125,14 @@ namespace Wavee.UI.WinUI.Views.Sidebar
             set => SetValue(PlaylistSortProperty, value);
         }
 
+        public object NavigationFrame
+        {
+            get => (object)GetValue(NavigationFrameProperty);
+            set => SetValue(NavigationFrameProperty, value);
+        }
+
+        public event EventHandler? OnCreatePlaylistRequested;
+
         public void SetSidebarWidth(double width)
         {
             CoreSplitView.OpenPaneLength = width;
@@ -164,7 +182,7 @@ namespace Wavee.UI.WinUI.Views.Sidebar
 
         private void PlaylistFilterTokenView_OnItemClick(object sender, ItemClickEventArgs e)
         {
-            var selectedItems = PlaylistFilterTokenView.SelectedItems;
+            var selectedItems = PlaylistFilterTokenView.SelectedItems.Where(c => c is not null).ToArr();
             var items = new PlaylistSourceFilter[selectedItems.Count];
             for (var index = 0; index < selectedItems.Count; index++)
             {
@@ -173,6 +191,8 @@ namespace Wavee.UI.WinUI.Views.Sidebar
                 {
                     "yours" => PlaylistSourceFilter.Yours,
                     "others" => PlaylistSourceFilter.Others,
+                    "spotify" => PlaylistSourceFilter.Spotify,
+                    "local" => PlaylistSourceFilter.Local,
                     _ => throw new ArgumentOutOfRangeException()
                 };
             }
@@ -191,6 +211,11 @@ namespace Wavee.UI.WinUI.Views.Sidebar
                 "custom" => ViewModels.PlaylistSortProperty.Custom,
                 _ => throw new ArgumentOutOfRangeException()
             };
+        }
+
+        private void CreatePLaylistTapped(object sender, TappedRoutedEventArgs e)
+        {
+            OnCreatePlaylistRequested?.Invoke(this, EventArgs.Empty);
         }
     }
 }

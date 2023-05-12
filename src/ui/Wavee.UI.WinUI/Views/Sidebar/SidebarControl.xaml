@@ -85,7 +85,7 @@
                 </ListView>
 
                 <StackPanel Grid.Row="2"
-                            Margin="6,0">
+                            Margin="0,0,6,0">
                     <Grid Margin="0,6,0,6">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" />
@@ -103,21 +103,26 @@
                                   SelectionChanged="PlaylistSortComboBoxSelectionChanged"
                                   Margin="0,0,0,0"
                                   HorizontalAlignment="Stretch">
-                            <ComboBoxItem Tag="custom" Content="Custom" />
-                            <ComboBoxItem Tag="created" Content="Created" />
-                            <ComboBoxItem Tag="alph" Content="Alphabetical" />
-                            <ComboBoxItem Tag="recent" Content="Recent" />
+                            <ComboBoxItem Tag="custom"
+                                          Content="Custom" />
+                            <ComboBoxItem Tag="created"
+                                          Content="Created" />
+                            <ComboBoxItem Tag="alph"
+                                          Content="Alphabetical" />
+                            <ComboBoxItem Tag="recent"
+                                          Content="Recent" />
                         </ComboBox>
 
                         <Button CornerRadius="0,4,4,0"
                                 VerticalAlignment="Center"
-                                Padding="5"
+                                Tapped="CreatePLaylistTapped"
+                                Padding="4.5"
                                 Grid.Column="2">
                             <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}"
                                       Glyph="&#xE109;" />
                         </Button>
                     </Grid>
-                    <labs:TokenView Margin="8,4"
+                    <labs:TokenView Margin="8,4,0,4"
                                     x:FieldModifier="public"
                                     IsItemClickEnabled="True"
                                     ItemClick="PlaylistFilterTokenView_OnItemClick"
@@ -127,6 +132,10 @@
                                         Content="Yours" />
                         <labs:TokenItem Tag="others"
                                         Content="Others" />
+                        <labs:TokenItem Tag="spotify"
+                                        Content="Spotify" />
+                        <labs:TokenItem Tag="local"
+                                        Content="Local" />
                     </labs:TokenView>
                 </StackPanel>
 
@@ -217,7 +226,10 @@
                     </Style>
                 </labs:PropertySizer.Style>
             </labs:PropertySizer>
-            <Grid Grid.Column="1" />
+            <ContentControl Grid.Column="1"
+                            Content="{x:Bind NavigationFrame, Mode=OneWay}"
+                            VerticalContentAlignment="Stretch"
+                            HorizontalContentAlignment="Stretch" />
         </Grid>
     </SplitView>
 </UserControl>
