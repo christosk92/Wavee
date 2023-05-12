@@ -8,6 +8,7 @@ using DynamicData;
 using DynamicData.Binding;
 using LanguageExt;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Input;
 using ReactiveUI;
 using Wavee.UI.ViewModels;
 
@@ -54,5 +55,10 @@ namespace Wavee.UI.WinUI.Views.Playlists
         }
 
         public CreatePlaylistViewModel ViewModel { get; set; }
+
+        private void WhyDisabledSync_OnTapped(object sender, TappedRoutedEventArgs e)
+        {
+            ExplainWhyYouCannotSyncTooltip.IsOpen = true;
+        }
     }
 }

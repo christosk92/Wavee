@@ -57,7 +57,6 @@
                         </Grid>
                     </Border>
                     <Button AllowDrop="True"
-                          
                             HorizontalAlignment="Stretch"
                             VerticalAlignment="Stretch"
                             Background="Transparent" />
@@ -106,15 +105,19 @@
                         </UserControl>
 
                         <Button Content="Why can't I create in Spotify?"
+                                Tapped="WhyDisabledSync_OnTapped"
                                 Style="{ThemeResource TextBlockButtonStyle}"
                                 x:Name="WhyDisabledSync" />
 
-                        <TeachingTip x:Name="ToggleThemeTeachingTip1"
+                        <TeachingTip x:Name="ExplainWhyYouCannotSyncTooltip"
                                      Target="{x:Bind WhyDisabledSync}"
-                                     Title="Change themes without hassle"
-                                     Subtitle="It's easier than ever to see control samples in both light and dark theme!">
+                                     Title="You need to be signed in"
+                                     ActionButtonContent="Sign in now"
+                                     ActionButtonStyle="{ThemeResource AccentButtonStyle}"
+                                     Subtitle="In order to create a playlist that's also visible in Spotify, you need to sign-in with your Spotify account.">
                             <TeachingTip.IconSource>
-                                <SymbolIconSource Symbol="Refresh" />
+                                <FontIconSource FontFamily="Segoe Fluent Icons"
+                                                Glyph="&#xE167;" />
                             </TeachingTip.IconSource>
                         </TeachingTip>
                     </StackPanel>
