@@ -5,6 +5,7 @@ using System.Reactive.Linq;
 using System.Windows.Forms;
 using LanguageExt;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
 using ReactiveUI;
 using Wavee.UI.Helpers;
 using Wavee.UI.ViewModels;

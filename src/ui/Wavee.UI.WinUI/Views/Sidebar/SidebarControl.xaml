@@ -28,9 +28,11 @@
                     <!--  Search Box            -->
                     <RowDefinition Height="Auto" />
                     <!--  Regular Sidebar Items -->
-                    <RowDefinition Height="Auto" />
+                    <RowDefinition x:FieldModifier="public"
+                                   x:Name="RegularRow"
+                                   Height="Auto" />
                     <!--  Sorting & Filtering   -->
-                    <RowDefinition />
+                    <RowDefinition x:FieldModifier="public" x:Name="PlaylistsRow" />
                     <!--  Playlists             -->
                     <RowDefinition Height="Auto" />
                     <!--  Bottom Padding        -->

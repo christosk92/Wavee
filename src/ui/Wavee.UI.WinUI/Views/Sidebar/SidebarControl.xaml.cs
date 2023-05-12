@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Drawing;
 using System.Linq;
+using System.Threading.Tasks;
 using CommunityToolkit.Labs.WinUI;
 using CommunityToolkit.WinUI.UI;
 using DynamicData;
@@ -70,10 +71,10 @@ namespace Wavee.UI.WinUI.Views.Sidebar
                         items.Add(k.PlaylistFilterTokenView.Items[1]);
                         break;
                     case PlaylistSourceFilter.Spotify:
-                        items.Add(k.PlaylistFilterTokenView.Items[3]);
+                        items.Add(k.PlaylistFilterTokenView.Items[2]);
                         break;
                     case PlaylistSourceFilter.Local:
-                        items.Add(k.PlaylistFilterTokenView.Items[4]);
+                        items.Add(k.PlaylistFilterTokenView.Items[3]);
                         break;
                     default:
                         throw new ArgumentOutOfRangeException();
@@ -180,8 +181,9 @@ namespace Wavee.UI.WinUI.Views.Sidebar
             };
         }
 
-        private void PlaylistFilterTokenView_OnItemClick(object sender, ItemClickEventArgs e)
+        private async void PlaylistFilterTokenView_OnItemClick(object sender, ItemClickEventArgs e)
         {
+            await Task.Delay(30);
             var selectedItems = PlaylistFilterTokenView.SelectedItems.Where(c => c is not null).ToArr();
             var items = new PlaylistSourceFilter[selectedItems.Count];
             for (var index = 0; index < selectedItems.Count; index++)

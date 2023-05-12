@@ -113,14 +113,18 @@ public sealed class MainViewModel : ReactiveObject
             .Connect()
             .CountChanged() // emits the count of items whenever it changes
             .Select(count => count.Count > 0) // maps the count to a boolean
+            .StartWith(false) // emit an initial value
             .ObserveOn(RxApp.MainThreadScheduler); // ensure that subscribers receive notifications on the main thread
 
         Instance = this;
+        //invoke HasPlaylists
     }
     public static MainViewModel Instance { get; private set; }
     public IObservable<bool> HasPlaylists { get; }
-    public IObservable<bool> UserIsLoggedIn => this.WhenAnyValue(x => x.CurrentUser)
-        .Select(user => user is { IsLoggedIn: true });
+    public IObservable<bool> UserIsLoggedIn => this
+        .WhenAnyValue(x => x.CurrentUser)
+        .Select(user => user is { IsLoggedIn: true })
+        .StartWith(false);
 
     public PlaylistSortProperty PlaylistSorts
     {
