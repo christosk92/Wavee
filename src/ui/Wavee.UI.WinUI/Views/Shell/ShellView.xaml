@@ -9,5 +9,6 @@
 
     <sidebar:SidebarControl SidebarItems="{x:Bind ViewModel.SidebarItems}"
                             Playlists="{x:Bind ViewModel.Playlists}"
+                            User="{x:Bind ViewModel.CurrentUser, Mode=OneWay}"
                             x:Name="SidebarControl" />
 </UserControl>

@@ -2,8 +2,10 @@
 using System.Reactive.Linq;
 using DynamicData;
 using DynamicData.Binding;
+using LanguageExt;
 using ReactiveUI;
 using Wavee.UI.Bases;
+using Wavee.UI.Users;
 using Wavee.UI.ViewModels.Playlist;
 using Wavee.UI.ViewModels.Sidebar;
 
@@ -14,6 +16,8 @@ public sealed class MainViewModel : ReactiveObject
     private readonly ReadOnlyObservableCollection<PlaylistViewModel> _playlistItemsView;
     private readonly SourceCache<PlaylistViewModel, string> _items = new(s => s.Id);
     private PlaylistSortProperty _playlistSorts;
+    private User _currentUser;
+    private Seq<PlaylistSourceFilter> _playlistSourceFilters;
     public static UiConfig UiConfig => Services.UiConfig;
     public IReadOnlyList<AbsSidebarItemViewModel> SidebarItems { get; }
 
@@ -66,6 +70,8 @@ public sealed class MainViewModel : ReactiveObject
             }
         };
         PlaylistSorts = UiConfig.PlaylistSortProperty;
+
+
         var sortExpressionObservable =
             this.WhenAnyValue(x => x.PlaylistSorts)
                 .Select(sortProperty =>
@@ -87,19 +93,45 @@ public sealed class MainViewModel : ReactiveObject
                     }
                 });
 
+        var filterExpressionObservable =
+            this.WhenAnyValue(x => x.PlaylistSourceFilters)
+                .Select(filterProperty =>
+                {
+                    return (Func<PlaylistViewModel, bool>)(t => (filterProperty.Contains(PlaylistSourceFilter.Yours) && t.OwnerId == CurrentUser.Id) ||
+                                                                (filterProperty.Contains(PlaylistSourceFilter.Others) && t.OwnerId != CurrentUser.Id));
+                });
 
         _items
-            .Connect() 
+            .Connect()
             .Sort(sortExpressionObservable)
+            .Filter(filterExpressionObservable)
             .ObserveOn(RxApp.MainThreadScheduler)
             .Bind(out _playlistItemsView)
             .Subscribe();
-    }
 
+        HasPlaylists = _items
+            .Connect()
+            .CountChanged() // emits the count of items whenever it changes
+            .Select(count => count.Count > 0) // maps the count to a boolean
+            .ObserveOn(RxApp.MainThreadScheduler); // ensure that subscribers receive notifications on the main thread
+    }
+    public IObservable<bool> HasPlaylists { get; }
     public PlaylistSortProperty PlaylistSorts
     {
         get => _playlistSorts;
         set => this.RaiseAndSetIfChanged(ref _playlistSorts, value);
+    }
+
+    public User CurrentUser
+    {
+        get => _currentUser;
+        set => this.RaiseAndSetIfChanged(ref _currentUser, value);
+    }
+
+    public Seq<PlaylistSourceFilter> PlaylistSourceFilters
+    {
+        get => _playlistSourceFilters;
+        set => this.RaiseAndSetIfChanged(ref _playlistSourceFilters, value);
     }
 }
 
@@ -109,4 +141,10 @@ public enum PlaylistSortProperty
     Created,
     Alphabetical,
     RecentlyPlayed
+}
+
+public enum PlaylistSourceFilter
+{
+    Yours,
+    Others
 }

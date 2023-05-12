@@ -12,7 +12,7 @@
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="Resources.xaml" />
-                <local:SidebarTemplates/>
+                <local:SidebarTemplates />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </UserControl.Resources>
@@ -56,10 +56,10 @@
                                         VerticalAlignment="Center"
                                         Orientation="Vertical">
                                 <TextBlock x:Name="Name"
-                                           Text="Guest"
+                                           Text="{x:Bind GetDisplayName(User),Mode=OneWay}"
                                            FontSize="16" />
                                 <TextBlock x:Name="Product"
-                                           Text="Offline"
+                                           Text="{x:Bind ParseProductString(User),Mode=OneWay}"
                                            Opacity=".6"
                                            FontWeight="Bold"
                                            FontSize="9" />
@@ -97,11 +97,16 @@
                                                   Content="Playlists" />
 
                         <ComboBox Grid.Column="1"
+                                  x:Name="PlaylistSortComboBox"
                                   CornerRadius="4,0,0,4"
                                   VerticalAlignment="Center"
+                                  SelectionChanged="PlaylistSortComboBoxSelectionChanged"
                                   Margin="0,0,0,0"
                                   HorizontalAlignment="Stretch">
-                            <TextBlock Text="Custom order" />
+                            <ComboBoxItem Tag="custom" Content="Custom" />
+                            <ComboBoxItem Tag="created" Content="Created" />
+                            <ComboBoxItem Tag="alph" Content="Alphabetical" />
+                            <ComboBoxItem Tag="recent" Content="Recent" />
                         </ComboBox>
 
                         <Button CornerRadius="0,4,4,0"
@@ -112,11 +117,16 @@
                                       Glyph="&#xE109;" />
                         </Button>
                     </Grid>
-                    <labs:TokenView SelectedIndex="1"
-                                    Margin="8,4"
+                    <labs:TokenView Margin="8,4"
+                                    x:FieldModifier="public"
+                                    IsItemClickEnabled="True"
+                                    ItemClick="PlaylistFilterTokenView_OnItemClick"
+                                    x:Name="PlaylistFilterTokenView"
                                     SelectionMode="Multiple">
-                        <labs:TokenItem Content="Yours" />
-                        <labs:TokenItem Content="Others" />
+                        <labs:TokenItem Tag="yours"
+                                        Content="Yours" />
+                        <labs:TokenItem Tag="others"
+                                        Content="Others" />
                     </labs:TokenView>
                 </StackPanel>
 
@@ -125,6 +135,12 @@
                           ItemsSource="{x:Bind Playlists}"
                           x:Name="PlaylistsListView" />
 
+                <TextBlock Text="It's empty here..."
+                           Grid.Row="3"
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Center"
+                           x:Name="NoPlaylistsView"
+                           x:FieldModifier="public" />
 
                 <Border Grid.Row="4" />
             </Grid>

@@ -8,6 +8,7 @@ public class PlaylistViewModel : ReactiveObject
     private string _name;
     private int _index;
     public string Id { get; }
+    public string OwnerId { get; }
 
     public DateTimeOffset CreatedAt { get; }
 
