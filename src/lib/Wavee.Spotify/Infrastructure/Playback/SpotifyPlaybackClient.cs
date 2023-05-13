@@ -84,6 +84,10 @@ internal class SpotifyPlaybackClient<R> : ISpotifyPlaybackClient
             select Unit.Default;
 
         var run = await aff.Run(_runtime);
+        if (run.IsFail)
+        {
+            var err = run.Match(Succ: _ => throw new Exception("shouldn't happen"), Fail: x => x);
+        }
     }
 
     // private static string Parse(string uri)
