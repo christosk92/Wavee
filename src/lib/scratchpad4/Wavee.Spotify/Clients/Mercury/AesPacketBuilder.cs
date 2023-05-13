@@ -2,10 +2,9 @@
 using Google.Protobuf;
 using Wavee.Core.Id;
 using Wavee.Spotify.Extensions;
-using Wavee.Spotify.Infrastructure;
 using Wavee.Spotify.Infrastructure.Connection;
 
-namespace Wavee.Spotify.Clients.Mercury.Key;
+namespace Wavee.Spotify.Clients.Mercury;
 
 internal static class AesPacketBuilder
 {

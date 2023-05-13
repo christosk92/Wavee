@@ -1,57 +1,18 @@
 ﻿using Eum.Spotify;
 using Eum.Spotify.connectstate;
 using Google.Protobuf;
-using Google.Protobuf.WellKnownTypes;
 using LanguageExt;
 using Microsoft.Extensions.Logging;
-using Spotify.Metadata;
-using Wavee;
 using Wavee.AudioOutput.LibVLC;
 using Wavee.Core.Contracts;
+using Wavee.Core.Enums;
 using Wavee.Core.Id;
-using Wavee.Core.Infrastructure.Live;
-using Wavee.Core.Infrastructure.Sys.IO;
-using Wavee.Player;
 using Wavee.Spotify.Configs;
 using Wavee.Spotify.Infrastructure;
+using Wavee.Spotify.Playback;
 
 LibVlcOutput.SetAsMainOutput();
 
-//"C:\Users\chris-pc\Music\goodbyemylove.mp3"
-// using var fs = File.OpenRead(@"C:\Users\chris-pc\Music\goodbyemylove.mp3");
-// var waiter = AudioOutput<WaveeRuntime>.PlayStream(fs, span =>
-//     {
-//         var ts = span;
-//     }, true)
-//     .Run(WaveeCore.Runtime).ThrowIfFail();
-// await waiter;
-
-//"C:\Users\chris-pc\Downloads\file_example_MP3_700KB.mp3"
-// var trackId = new AudioId("goodbyemylove", AudioItemType.Track, "local");
-//
-// WaveePlayer.StateChanged.Subscribe(state =>
-// {
-//     Console.WriteLine(state);
-// });
-//
-// WaveePlayer.PlayContext(new WaveeContext(
-//     Option<IShuffleProvider>.None,
-//     new AudioId("local", AudioItemType.Unknown, "local"),
-//     "Local",
-//     new List<FutureTrack>
-//     {
-//         new FutureTrack(trackId, StreamFuture)
-//     }
-// ), TimeSpan.Zero, 0, false);
-//
-// Task<IAudioStream> StreamFuture()
-// {
-//     //"C:\Users\chris-pc\Downloads\file_example_MP3_700KB.mp3"
-//     var fs = File.OpenRead(@"C:\Users\chris-pc\Downloads\file_example_MP3_700KB.mp3");
-//     return Task.FromResult<IAudioStream>(new MaskedFsStream(fs, trackId));
-// }
-//
-// var c2 = Console.ReadLine();
 var credentials = new LoginCredentials
 {
     Username = Environment.GetEnvironmentVariable("SPOTIFY_USERNAME"),
@@ -60,7 +21,7 @@ var credentials = new LoginCredentials
 };
 
 var config = new SpotifyConfig(
-    CachePath: Option<string>.None,
+    CachePath: "cache_temp.db",
     Remote: new SpotifyRemoteConfig(
         DeviceName: "Wavee Test",
         DeviceType.Computer
@@ -74,10 +35,11 @@ var config = new SpotifyConfig(
 
 var spotifyCore = await SpotifyClient.Create(credentials, config, Option<ILogger>.None);
 spotifyCore.RemoteClient.StateChanged.Subscribe(x => { Console.WriteLine(x); });
-await spotifyCore.PlaybackClient.PlayContext("spotify:playlist:37i9dQZF1E8LX1dPtJZHnT", 0, TimeSpan.Zero, true,
+await spotifyCore.PlaybackClient.PlayContext("spotify:playlist:3fqV1HDw2Rppn1ZwpLIKuK",
+    1, TimeSpan.Zero, true,
+    Option<PreferredQualityType>.None,
     CancellationToken.None);
 
-var track = await spotifyCore.GetTrackAsync("3HGlpIqHEInelCfDZYd0Ki");
 var c = Console.ReadLine();
 
 class MaskedFsStream : IAudioStream
@@ -97,5 +59,6 @@ class MaskedFsStream : IAudioStream
         return _fs;
     }
 
-    private readonly record struct DummyTrack(AudioId Id, string Title, Seq<ITrackArtist> Artists, ITrackAlbum Album, TimeSpan Duration, bool CanPlay) : ITrack;
+    private readonly record struct DummyTrack(AudioId Id, string Title, Seq<ITrackArtist> Artists, ITrackAlbum Album,
+        TimeSpan Duration, bool CanPlay) : ITrack;
 }

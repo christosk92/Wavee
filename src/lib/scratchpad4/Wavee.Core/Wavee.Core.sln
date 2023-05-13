@@ -24,6 +24,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Wavee.Spotify.Playback", ".
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Wavee.AudioOutput.LibVLC", "..\Wavee.AudioOutput.LibVLC\Wavee.AudioOutput.LibVLC.csproj", "{E2724764-1C71-4852-82F2-53DF0821B612}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Wavee.Spotify.Cache", "..\Wavee.Spotify.Cache\Wavee.Spotify.Cache.csproj", "{B0824932-9B20-4CBB-923E-2A64DA93257B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DatabaseEffect", "..\..\..\..\external\database-effect\src\DatabaseEffect.csproj", "{6C2D52B5-6122-46A2-A5A0-AD9C1D4A7E9F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -70,6 +74,14 @@ Global
 		{E2724764-1C71-4852-82F2-53DF0821B612}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E2724764-1C71-4852-82F2-53DF0821B612}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E2724764-1C71-4852-82F2-53DF0821B612}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B0824932-9B20-4CBB-923E-2A64DA93257B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B0824932-9B20-4CBB-923E-2A64DA93257B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B0824932-9B20-4CBB-923E-2A64DA93257B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B0824932-9B20-4CBB-923E-2A64DA93257B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6C2D52B5-6122-46A2-A5A0-AD9C1D4A7E9F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6C2D52B5-6122-46A2-A5A0-AD9C1D4A7E9F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6C2D52B5-6122-46A2-A5A0-AD9C1D4A7E9F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6C2D52B5-6122-46A2-A5A0-AD9C1D4A7E9F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{C427C3AB-D413-4EA8-B390-AFFA6248AD00} = {5EE6B491-82C1-4511-8FA3-133D939175F9}
@@ -77,5 +89,6 @@ Global
 		{72318B4D-E1DD-46DB-B4B8-056E425477E0} = {5EE6B491-82C1-4511-8FA3-133D939175F9}
 		{26760E9B-890F-4F22-849B-C54DF16E194E} = {E271C3E4-2CAC-4B22-87B0-B660794375A6}
 		{3F6551EF-A6F3-4ED1-956B-83CB774AFC45} = {5EE6B491-82C1-4511-8FA3-133D939175F9}
+		{B0824932-9B20-4CBB-923E-2A64DA93257B} = {5EE6B491-82C1-4511-8FA3-133D939175F9}
 	EndGlobalSection
 EndGlobal

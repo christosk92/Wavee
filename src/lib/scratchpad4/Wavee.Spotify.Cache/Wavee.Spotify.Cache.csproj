@@ -7,13 +7,12 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="LanguageExt.Core" Version="4.4.3" />
-      <PackageReference Include="LanguageExt.Rx" Version="4.4.3" />
-      <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.0-preview.3.23174.8" />
+      <PackageReference Include="Microsoft.Data.Sqlite" Version="8.0.0-preview.3.23174.2" />
     </ItemGroup>
 
     <ItemGroup>
       <ProjectReference Include="..\..\..\..\external\database-effect\src\DatabaseEffect.csproj" />
+      <ProjectReference Include="..\Wavee.Spotify.Proto\Wavee.Spotify.Proto.csproj" />
     </ItemGroup>
 
 </Project>

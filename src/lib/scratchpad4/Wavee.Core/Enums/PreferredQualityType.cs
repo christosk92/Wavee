@@ -1,4 +1,4 @@
-namespace Wavee.Spotify.Configs;
+namespace Wavee.Core.Enums;
 
 public enum PreferredQualityType
 {

@@ -1,5 +1,4 @@
-﻿using Wavee.Spotify.Clients.Mercury.Metadata;
-using Wavee.Spotify.Models.Responses;
+﻿using Wavee.Spotify.Models.Responses;
 
 namespace Wavee.Spotify.Infrastructure.Remote;
 

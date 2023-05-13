@@ -5,11 +5,13 @@ using System.Runtime.CompilerServices;
 using System.Threading.Channels;
 using Eum.Spotify;
 using LanguageExt.Common;
+using LanguageExt.Effects.Database;
 using Microsoft.Extensions.Logging;
 using Wavee.Core.Infrastructure.Live;
 using Wavee.Core.Infrastructure.Sys;
 using Wavee.Core.Infrastructure.Sys.IO;
 using Wavee.Core.Infrastructure.Traits;
+using Wavee.Spotify.Cache;
 using Wavee.Spotify.Configs;
 using Wavee.Spotify.Infrastructure.Authentication;
 using Wavee.Spotify.Infrastructure.Connection;
@@ -29,6 +31,11 @@ public static class SpotifyClient
         CancellationToken ct = default)
     {
         _ = WaveeCore.Runtime;
+        atomic(() => WaveeCore.Database.Swap(_ => config.CachePath.Match(
+                Some: r => SpotifyCache<WaveeRuntime>.BuildSqliteConnection(r),
+                None: () => Option<DatabaseIO>.None)
+            )
+        );
         atomic(() => WaveeCore.Logger.Swap(_ => logger));
         //these are not related
 

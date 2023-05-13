@@ -8,9 +8,10 @@ using Wavee.Core.Infrastructure.Sys;
 using Wavee.Core.Infrastructure.Traits;
 using Wavee.Spotify.Clients.Info;
 using Wavee.Spotify.Clients.Mercury;
-using Wavee.Spotify.Clients.Mercury.Key;
 using Wavee.Spotify.Clients.Token;
+using Wavee.Spotify.Configs;
 using Wavee.Spotify.Infrastructure.Connection;
+using Wavee.Spotify.Playback.Infrastructure.Key;
 
 namespace Wavee.Spotify.Infrastructure;
 
@@ -19,12 +20,12 @@ internal delegate bool PackageListenerRequest(SpotifyPacket packet);
 internal readonly record struct PackageListenerRecord(PackageListenerRequest Request,
     ChannelWriter<SpotifyPacket> Writer);
 
-internal sealed class SpotifyConnection<RT> 
+internal sealed class SpotifyConnection<RT>
     where RT : struct, HasLog<RT>, HasWebsocket<RT>, HasHttp<RT>, HasAudioOutput<RT>
 {
     private readonly CancellationTokenSource _cts;
     private readonly ChannelWriter<SpotifyPacket> _channelWriter;
-    private readonly RT _runtime;
+    internal readonly RT _runtime;
     private readonly InternalSpotifyConnectionInfo _info;
 
     private readonly AtomHashMap<Guid, PackageListenerRecord> _packetListeners =
@@ -71,6 +72,8 @@ internal sealed class SpotifyConnection<RT>
             .Result;
     }
 
+    public SpotifyConfig Config => _info.Config;
+
     // ReSharper disable once HeapView.BoxingAllocation
     public ISpotifyConnectionInfo Info => new SpotifyConnectionInfo<RT>(_runtime,
         CountryCodeAff(_packetListeners, _packetsWithoutPurpose),
@@ -98,7 +101,27 @@ internal sealed class SpotifyConnection<RT>
         connectionId: _info.ConnectionId,
         mercuryClient: Mercury
     );
-    
+
+    public Aff<RT, Either<AesKeyError, AudioKey>>
+        FetchAudioKeyFunc(AudioId id, ByteString fileId, CancellationToken ct) =>
+        FetchAudioKeyFunc(_channelWriter,
+            addPackageListener: request =>
+            {
+                var newId = Guid.NewGuid();
+                var newChannel = Channel.CreateUnbounded<SpotifyPacket>();
+                _packetListeners.Add(newId, new PackageListenerRecord(request, newChannel.Writer));
+                return (newId, newChannel.Reader);
+            },
+            removePackageListener: id =>
+            {
+                var listener = _packetListeners[id];
+                listener.Writer.TryComplete();
+                _packetListeners.Remove(id);
+            },
+            _info.ConnectionId,
+            id,
+            fileId,
+            ct);
 
 
     private static readonly Atom<HashMap<Guid, uint>> AudioKeySequence = Atom(LanguageExt.HashMap<Guid, uint>.Empty);

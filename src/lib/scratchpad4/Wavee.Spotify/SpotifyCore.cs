@@ -3,6 +3,7 @@ using Wavee.Core.Contracts;
 using Wavee.Core.Id;
 using Wavee.Core.Infrastructure.Live;
 using Wavee.Core.Infrastructure.Traits;
+using Wavee.Spotify.Cache;
 using Wavee.Spotify.Infrastructure;
 using Wavee.Spotify.Infrastructure.Playback;
 using Wavee.Spotify.Infrastructure.Remote;
@@ -12,7 +13,7 @@ using Wavee.Spotify.Remote.Infrastructure;
 namespace Wavee.Spotify;
 
 internal sealed class SpotifyCore<R> : ISpotifyCore
-    where R : struct, HasLog<R>, HasWebsocket<R>, HasHttp<R>, HasAudioOutput<R>
+    where R : struct, HasLog<R>, HasWebsocket<R>, HasHttp<R>, HasAudioOutput<R>,  HasDatabase<R>
 {
     private readonly SpotifyConnection<R> _connection;
     private readonly SpotifyRemoteConnection<R> _remoteConnection;
@@ -26,7 +27,9 @@ internal sealed class SpotifyCore<R> : ISpotifyCore
 
         PlaybackClient = new SpotifyPlaybackClient<R>(
             connection: _connection,
-            remoteConnection: _remoteConnection
+            preferredQualityType: _connection.Config.Playback.PreferredQualityType,
+            remoteConnection: _remoteConnection,
+            runtime: _connection._runtime
         );
     }
 
@@ -41,7 +44,7 @@ internal sealed class SpotifyCore<R> : ISpotifyCore
         var track = await _connection.Mercury.GetTrack(new AudioId(id, AudioItemType.Track, ISpotifyCore.SourceId), ct);
         return SpotifyTrackResponse.From(countryCoe, cdnUrl, track);
     }
-    
+
     public ISpotifyPlaybackClient PlaybackClient { get; }
 
     public ISpotifyRemoteClient RemoteClient =>

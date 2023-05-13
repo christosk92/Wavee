@@ -1,12 +1,12 @@
-﻿using System.Text;
+﻿using System.Numerics;
+using System.Text;
+using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
 using Spotify.Metadata;
+using Wavee.Core.Enums;
 using Wavee.Core.Id;
-using Wavee.Spotify.Configs;
-using Wavee.Spotify.Extensions;
-using Wavee.Spotify.Infrastructure;
 
-namespace Wavee.Spotify.Clients.Mercury.Metadata;
+namespace Wavee.Spotify.Playback.Metadata;
 
 public readonly record struct TrackOrEpisode(Either<Episode, Track> Value)
 {
@@ -104,21 +104,40 @@ public readonly record struct TrackOrEpisode(Either<Episode, Track> Value)
 
     private static HashMap<PreferredQualityType, AudioFile.Types.Format[]> FormatsMap { get; }
 
-    public AudioId Id => Value.Match(
-        Left: e => e.ToId(),
-        Right: t => t.ToId()
-    );
+    // public AudioId Id => Value.Match(
+    //     Left: e => e.ToId(),
+    //     Right: t => t.ToId()
+    // );
 
     public string Name => Value.Match(
         Left: e => e.Name,
         Right: t => t.Name
     );
+    
 
-    public int Duration => Value.Match(
-        Left: e => e.Duration,
-        Right: t => t.Duration
+    private const string source = "spotify";
+
+    public AudioId Id => Value.Match(
+        Left: episode => new AudioId(Encode(episode.Gid.Span), AudioItemType.PodcastEpisode, source),
+        Right: track => new AudioId(Encode(track.Gid.Span), AudioItemType.Track, source)
     );
 
+    private const string BASE62_CHARS = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+    private static string Encode(ReadOnlySpan<byte> raw)
+    {
+        BigInteger value = new BigInteger(raw, true, true);
+        if (value == 0) return BASE62_CHARS[0].ToString();
+
+        StringBuilder sb = new StringBuilder();
+        while (value > 0)
+        {
+            value = BigInteger.DivRem(value, BASE62_CHARS.Length, out BigInteger remainder);
+            sb.Insert(0, BASE62_CHARS[(int)remainder]);
+        }
+
+        return sb.ToString();
+    }
 
     public string GetImage(Image.Types.Size size)
     {
@@ -145,20 +164,15 @@ public readonly record struct TrackOrEpisode(Either<Episode, Track> Value)
             });
         return res.ValueUnsafe();
     }
-
-    private static readonly byte[] BASE16_DIGITS = "0123456789abcdef".Select(c => (byte)c).ToArray();
-
-    private static string ToBase16(ReadOnlySpan<byte> fileIdSpan)
+    public static string ToBase16(ReadOnlySpan<byte> raw)
     {
-        Span<byte> buffer = new byte[40];
-        var i = 0;
-        foreach (var v in fileIdSpan)
+        //convert to hex
+        var hex = new StringBuilder(raw.Length * 2);
+        foreach (var b in raw)
         {
-            buffer[i] = BASE16_DIGITS[v >> 4];
-            buffer[i + 1] = BASE16_DIGITS[v & 0x0f];
-            i += 2;
+            hex.AppendFormat("{0:x2}", b);
         }
 
-        return Encoding.UTF8.GetString(buffer);
+        return hex.ToString();
     }
 }

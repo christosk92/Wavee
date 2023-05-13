@@ -1,4 +1,8 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using System.Linq.Expressions;
+using LanguageExt.Effects.Database;
+using LinqToDB;
+using LinqToDB.Linq;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Wavee.Core.Infrastructure.Traits;
 
@@ -10,7 +14,8 @@ public readonly struct WaveeRuntime :
     HasHttp<WaveeRuntime>,
     HasAudioOutput<WaveeRuntime>,
     HasWebsocket<WaveeRuntime>,
-    HasLog<WaveeRuntime>
+    HasLog<WaveeRuntime>,
+    HasDatabase<WaveeRuntime>
 {
     readonly RuntimeEnv env;
 
@@ -30,9 +35,11 @@ public readonly struct WaveeRuntime :
     /// <summary>
     /// Constructor function
     /// </summary>
-    public static WaveeRuntime New(Option<ILogger> logger, Option<AudioOutputIO> audioOutput) =>
+    public static WaveeRuntime New(Option<ILogger> logger,
+        Option<AudioOutputIO> audioOutput,
+        Option<DatabaseIO> db) =>
         new WaveeRuntime(new RuntimeEnv(new CancellationTokenSource(),
-            logger.IfNone(NullLogger.Instance), audioOutput));
+            logger.IfNone(NullLogger.Instance), audioOutput, db));
 
     /// <summary>
     /// Create a new Runtime with a fresh cancellation token
@@ -40,7 +47,7 @@ public readonly struct WaveeRuntime :
     /// <remarks>Used by localCancel to create new cancellation context for its sub-environment</remarks>
     /// <returns>New runtime</returns>
     public WaveeRuntime LocalCancel =>
-        new WaveeRuntime(new RuntimeEnv(new CancellationTokenSource(), Env.Logger, Env.AudioOutputIo));
+        new WaveeRuntime(new RuntimeEnv(new CancellationTokenSource(), Env.Logger, Env.AudioOutputIo, Env.Database));
 
     /// <summary>
     /// Direct access to cancellation token
@@ -71,27 +78,120 @@ public readonly struct WaveeRuntime :
 
     public Eff<WaveeRuntime, WebsocketIO> WsEff =>
         SuccessEff(Live.WebsocketIOImpl.Default);
-    
+
+    public Aff<WaveeRuntime, DatabaseIO> Database =>
+        Eff<WaveeRuntime, Option<DatabaseIO>>((rt) => rt.Env.Database)
+            .Map(x => x.IfNone(EmptyDbIO.Default));
+
     internal class RuntimeEnv
     {
         public readonly CancellationTokenSource Source;
         public readonly CancellationToken Token;
         public Option<AudioOutputIO> AudioOutputIo;
         public ILogger Logger;
+        public Option<DatabaseIO> Database;
 
         public RuntimeEnv(CancellationTokenSource source, CancellationToken token,
-            ILogger logger, Option<AudioOutputIO> audioOutputIo)
+            ILogger logger, Option<AudioOutputIO> audioOutputIo, Option<DatabaseIO> database)
         {
             Source = source;
             Token = token;
             Logger = logger;
             AudioOutputIo = audioOutputIo;
+            Database = database;
         }
 
-        public RuntimeEnv(CancellationTokenSource source, ILogger logger, Option<AudioOutputIO> audioOutputIo) :
+        public RuntimeEnv(CancellationTokenSource source, ILogger logger, Option<AudioOutputIO> audioOutputIo,
+            Option<DatabaseIO> database) :
             this(source,
-                source.Token, logger, audioOutputIo)
+                source.Token, logger, audioOutputIo, database)
         {
+        }
+    }
+
+    private readonly struct EmptyDbIO : DatabaseIO
+    {
+        public static EmptyDbIO Default = new EmptyDbIO();
+        public Aff<TKey> Insert<T, TKey>(T entity, CancellationToken token = new CancellationToken())
+            where T : class, IEntity<TKey>
+        {
+            return SuccessAff<TKey>(default);
+        }
+
+        public Aff<TKey> Insert<T, TKey>(Func<IValueInsertable<T>, IValueInsertable<T>> provider,
+            CancellationToken token = new CancellationToken()) where T : class, IEntity<TKey>
+        {
+            return SuccessAff<TKey>(default);
+        }
+
+        public Aff<Guid> InsertGuid<T>(T entity, CancellationToken token = new CancellationToken())
+            where T : class, IEntity<Guid>
+        {
+            return SuccessAff<Guid>(default);
+        }
+
+        public Aff<Guid> InsertGuid<T>(Func<IValueInsertable<T>, IValueInsertable<T>> provider,
+            CancellationToken token = new CancellationToken()) where T : class, IEntity<Guid>
+        {
+            return SuccessAff<Guid>(default);
+        }
+
+        public Aff<Unit> Update<T>(T entity, CancellationToken token = new CancellationToken()) where T : class
+        {
+            return SuccessAff<Unit>(unit);
+        }
+
+        public Aff<Unit> Update<T>(Func<ITable<T>, IUpdatable<T>> updater,
+            CancellationToken token = new CancellationToken()) where T : class
+        {
+            return SuccessAff<Unit>(unit);
+        }
+
+        public Aff<Unit> Delete<T>(Expression<Func<T, bool>> filter, CancellationToken token = new CancellationToken())
+            where T : class
+        {
+            return SuccessAff<Unit>(unit);
+        }
+
+        public Aff<Option<T>> FindOne<T>(Expression<Func<T, bool>> filter,
+            CancellationToken token = new CancellationToken()) where T : class
+        {
+            return SuccessAff<Option<T>>(None);
+        }
+
+        public Aff<Arr<T>> Find<T>(Expression<Func<T, bool>> filter, CancellationToken token = new CancellationToken())
+            where T : class
+        {
+            return SuccessAff<Arr<T>>(Empty);
+        }
+
+        public Aff<int> Count<T>(Func<ITable<T>, IQueryable<T>> query,
+            CancellationToken token = new CancellationToken()) where T : class
+        {
+            return SuccessAff<int>(0);
+        }
+
+        public Aff<DataAndCount<T>> FindAndCount<T>(IQueryable<T> query, DataLimit limit,
+            CancellationToken token = new CancellationToken()) where T : class
+        {
+            return SuccessAff<DataAndCount<T>>(new DataAndCount<T>(Empty, 0));
+        }
+
+        public Eff<ITable<T>> Table<T>() where T : class
+        {
+            return SuccessEff<ITable<T>>(default);
+        }
+
+        public Eff<IQueryable<A>> GetCte<T, A>(Func<IQueryable<T>, IQueryable<A>> body, Option<string> name)
+            where T : class
+        {
+            return SuccessEff<IQueryable<A>>(new EnumerableQuery<A>(Enumerable.Empty<A>()));
+        }
+
+        public Eff<IQueryable<T>> GetRecursiveCte<T>(Func<IQueryable<T>, IQueryable<T>> body, Option<string> name)
+            where T : class
+        {
+            return SuccessEff<IQueryable<T>>(new EnumerableQuery<T>(Enumerable.Empty<T>()));
         }
     }
 }
