@@ -186,7 +186,7 @@ public readonly record struct WaveePlayerState(
             var st = State;
             return this with
             {
-                State = nextTrack.Match(
+                State = nextTrack.Match<IWaveePlaybackState>(
                     Some: track => new WaveeLoadingState(
                         IndexInContext: Some(theoreticalNextIndex),
                         TrackId: Some(track.Id),
@@ -197,12 +197,15 @@ public readonly record struct WaveePlayerState(
                     {
                         Stream = track.StreamFuture()
                     },
-                    None: () => st switch
+                    None: () =>
                     {
-                        WaveeLoadingState loadingState => loadingState.ToEndedState(),
-                        WaveePlayingState playingState => playingState.ToEndedState(),
-                        WaveePausedState pausedState => pausedState.ToEndedState(),
-                        _ => st
+                        return new WaveePermanentEndedState(st switch
+                        {
+                            WaveeLoadingState loadingState => loadingState.ToEndedState(),
+                            WaveePlayingState playingState => playingState.ToEndedState(),
+                            WaveePausedState pausedState => pausedState.ToEndedState(),
+                            WaveeEndedState e => e
+                        });
                     }),
                 IsShuffling = IsShuffling,
                 RepeatState = RepeatState,

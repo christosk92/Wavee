@@ -4,6 +4,11 @@ using Wavee.Core.Id;
 
 namespace Wavee.Player.States;
 
+public readonly record struct WaveePermanentEndedState(WaveeEndedState EndedWith) : IWaveePlaybackState
+{
+    public Option<AudioId> TrackId => EndedWith.TrackId;
+}
+
 public readonly record struct WaveeEndedState(ITrack Track,
     TimeSpan Position,
     Option<int> IndexInContext,

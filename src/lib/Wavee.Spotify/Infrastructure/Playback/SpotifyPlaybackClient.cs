@@ -62,7 +62,7 @@ internal class SpotifyPlaybackClient<R> : ISpotifyPlaybackClient
             return;
         }
 
-        if (obj.State is WaveeEndedState endedState)
+        if (obj.State is WaveePermanentEndedState endedState)
         {
             //check if autoplay is enabled
             //if so, play next track from autoplay endpoint
