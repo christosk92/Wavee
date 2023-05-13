@@ -14,7 +14,10 @@ public readonly record struct WaveePausedState(
 
     public WaveePlayingState ToPlayingState()
     {
-        return new WaveePlayingState(Track, Position, IndexInContext, FromQueue)
+        return new WaveePlayingState(
+            DateTimeOffset.UtcNow,
+            Position,
+            Track, IndexInContext, FromQueue)
         {
             Stream = Stream
         };

@@ -22,9 +22,14 @@ public static class AudioOutput<RT>
     /// </summary>
     /// <returns></returns>
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Eff<RT, Unit> Pause() =>
-        from _ in default(RT).AudioOutputEff.Map(e => e.IfSome(x => x.Pause()))
-        select unit;
+    public static Eff<RT, TimeSpan> Pause() =>
+        from _ in default(RT).AudioOutputEff.Map(e =>
+            e.IfSome(x => x.Pause()))
+        from pos in default(RT).AudioOutputEff.Map(e =>
+            e.Match(
+                Some: x => x.Position(),
+                None: () => TimeSpan.Zero))
+        select pos;
 
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Eff<RT, Task> PlayStream(Stream stream,
@@ -34,4 +39,9 @@ public static class AudioOutput<RT>
             Some: x => x.PlayStream(stream, onPositionChanged, closeOtherStreams),
             None: () => Task.CompletedTask))
         select handle;
+
+    [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Eff<RT, Unit> Seek(TimeSpan seekPosition) =>
+        from _ in default(RT).AudioOutputEff.Map(e => e.IfSome(x => x.Seek(seekPosition)))
+        select unit;
 }

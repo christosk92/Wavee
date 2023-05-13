@@ -26,30 +26,32 @@ LibVlcOutput.SetAsMainOutput();
 //     .Run(WaveeCore.Runtime).ThrowIfFail();
 // await waiter;
 
-var trackId = new AudioId("goodbyemylove", AudioItemType.Track, "local");
-
-WaveePlayer.StateChanged.Subscribe(state =>
-{
-    Console.WriteLine(state);
-});
-
-WaveePlayer.PlayContext(new WaveeContext(
-    Option<IShuffleProvider>.None,
-    new AudioId("local", AudioItemType.Unknown, "local"),
-    "Local",
-    new List<FutureTrack>
-    {
-        new FutureTrack(trackId, StreamFuture)
-    }
-), TimeSpan.Zero, 0, false);
-
-Task<IAudioStream> StreamFuture()
-{
-    var fs = File.OpenRead(@"C:\Users\chris-pc\Music\goodbyemylove.mp3");
-    return Task.FromResult<IAudioStream>(new MaskedFsStream(fs, trackId));
-}
-
-var c2 = Console.ReadLine();
+//"C:\Users\chris-pc\Downloads\file_example_MP3_700KB.mp3"
+// var trackId = new AudioId("goodbyemylove", AudioItemType.Track, "local");
+//
+// WaveePlayer.StateChanged.Subscribe(state =>
+// {
+//     Console.WriteLine(state);
+// });
+//
+// WaveePlayer.PlayContext(new WaveeContext(
+//     Option<IShuffleProvider>.None,
+//     new AudioId("local", AudioItemType.Unknown, "local"),
+//     "Local",
+//     new List<FutureTrack>
+//     {
+//         new FutureTrack(trackId, StreamFuture)
+//     }
+// ), TimeSpan.Zero, 0, false);
+//
+// Task<IAudioStream> StreamFuture()
+// {
+//     //"C:\Users\chris-pc\Downloads\file_example_MP3_700KB.mp3"
+//     var fs = File.OpenRead(@"C:\Users\chris-pc\Downloads\file_example_MP3_700KB.mp3");
+//     return Task.FromResult<IAudioStream>(new MaskedFsStream(fs, trackId));
+// }
+//
+// var c2 = Console.ReadLine();
 var credentials = new LoginCredentials
 {
     Username = Environment.GetEnvironmentVariable("SPOTIFY_USERNAME"),

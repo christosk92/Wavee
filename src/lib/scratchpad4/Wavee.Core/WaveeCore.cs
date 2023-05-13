@@ -6,6 +6,7 @@ using Wavee.Core.Infrastructure.Live;
 using Wavee.Core.Infrastructure.Traits;
 
 [assembly: InternalsVisibleTo("Wavee.Spotify.Tests")]
+[assembly: InternalsVisibleTo("Wavee.Player.Tests")]
 [assembly: InternalsVisibleTo("Wavee.Spotify")]
 [assembly: InternalsVisibleTo("Wavee.Player")]
 [assembly: InternalsVisibleTo("Wavee.AudioOutput.LibVLC")]

@@ -40,8 +40,9 @@ public readonly record struct WaveeLoadingState(
                 Stream = stream
             }
             : new WaveePlayingState(
-                stream.Track,
+                DateTimeOffset.UtcNow,
                 StartFrom,
+                stream.Track,
                 IndexInContext,
                 FromQueue)
             {

@@ -41,7 +41,7 @@ public sealed class LibVlcOutput : AudioOutputIO
 
         atomic(() => _outputs.Swap(x => x.Add(output)));
         output.Player.Play();
-        var tcs = new TaskCompletionSource<Unit>();
+        var tcs = new TaskCompletionSource<Unit>(TaskCreationOptions.RunContinuationsAsynchronously);
         try
         {
             output.Player.PositionChanged += (sender, args) =>
@@ -51,14 +51,21 @@ public sealed class LibVlcOutput : AudioOutputIO
             output.Player.Stopped += (sender, args) =>
             {
                 atomic(() => _outputs.Swap(x => x.Filter(x => x != output)));
-                output.Dispose();
                 tcs.SetResult(Unit.Default);
+                output.Dispose();
             };
             output.Player.EndReached += (sender, args) =>
             {
-                atomic(() => atomic(() => _outputs.Swap(x => x.Filter(x => x != output))));
-                output.Dispose();
-                tcs.SetResult(Unit.Default);
+                try
+                {
+                    atomic(() => atomic(() => _outputs.Swap(x => x.Filter(x => x != output))));
+                    tcs.SetResult(Unit.Default);
+                    output.Dispose();
+                }
+                catch (Exception e)
+                {
+                    tcs.SetException(e);
+                }
             };
         }
         catch (Exception e)
@@ -67,6 +74,19 @@ public sealed class LibVlcOutput : AudioOutputIO
         }
 
         return tcs.Task;
+    }
+
+    public TimeSpan Position()
+    {
+        return _outputs.LastOrNone().Match(
+            Some: o => TimeSpan.FromSeconds(o.Player.Position),
+            None: () => TimeSpan.Zero);
+    }
+
+    public Unit Seek(TimeSpan seekPosition)
+    {
+        _outputs.LastOrNone().IfSome(o => o.Player.Time = (long)seekPosition.TotalMilliseconds);
+        return Unit.Default;
     }
 
     private class VlcOutput : IDisposable
@@ -86,9 +106,9 @@ public sealed class LibVlcOutput : AudioOutputIO
 
         public void Dispose()
         {
-            Player.Dispose();
             Input.Dispose();
             Media.Dispose();
+            Player.Dispose();
             Stream = null;
         }
     }

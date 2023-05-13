@@ -101,15 +101,15 @@ public readonly record struct WaveePlayerState(
                     },
                     WaveePlayingState playingState => playingState with
                     {
-                        Position = TimeSpan.Zero
+                        PositionAsOfSince = TimeSpan.Zero
                     },
                     WaveePausedState pausedState => pausedState.ToPlayingState() with
                     {
-                        Position = TimeSpan.Zero
+                        PositionAsOfSince = TimeSpan.Zero
                     },
                     WaveeEndedState endedState => endedState.ToPlayingState() with
                     {
-                        Position = TimeSpan.Zero
+                        PositionAsOfSince = TimeSpan.Zero
                     },
                     _ => State
                 }

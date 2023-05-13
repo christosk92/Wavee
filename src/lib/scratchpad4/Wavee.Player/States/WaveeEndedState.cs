@@ -13,7 +13,10 @@ public readonly record struct WaveeEndedState(ITrack Track,
 
     public WaveePlayingState ToPlayingState()
     {
-        return new WaveePlayingState(Track, Position, IndexInContext, FromQueue)
+        return new WaveePlayingState(
+            DateTimeOffset.UtcNow,
+            Position,
+            Track, IndexInContext, FromQueue)
         {
             Stream = Stream
         };

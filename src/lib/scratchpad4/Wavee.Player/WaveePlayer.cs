@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Reactive.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading.Channels;
 using LanguageExt;
 using LanguageExt.Effects.Traits;
@@ -26,6 +27,7 @@ public static class WaveePlayer
         false,
         Que<FutureTrack>.Empty
     ));
+    public static WaveePlayerState State => _state.Value;
 
     private static ChannelWriter<IInternalPlayerCommand> _commandChannelWriter;
 
@@ -38,11 +40,27 @@ public static class WaveePlayer
         StartMainLoop(channel.Reader);
     }
 
+    public static void SkipNext(bool immediately)
+    {
+        _commandChannelWriter.TryWrite(new SkipNextCommand(immediately));
+    }
     public static void PlayContext(WaveeContext context, TimeSpan startFrom, int index, bool startPaused)
     {
         _commandChannelWriter.TryWrite(new PlayContextCommand(context, startFrom, index, startPaused));
     }
-    
+    public static void Pause()
+    {
+        _commandChannelWriter.TryWrite(PauseCommand.Default);
+    }
+    public static void Resume()
+    {
+        _commandChannelWriter.TryWrite(ResumeCommand.Default);
+    }
+    public static void Seek(TimeSpan position)
+    {
+        _commandChannelWriter.TryWrite(new SeekCommand(position));
+    }
+
     private static async void StartMainLoop(ChannelReader<IInternalPlayerCommand> channelReader)
     {
         await Task.Factory.StartNew(async () =>
@@ -51,6 +69,9 @@ public static class WaveePlayer
             {
                 switch (command)
                 {
+                    case SeekCommand seek:
+                        AudioOutput<WaveeRuntime>.Seek(seek.Position).Run(Runtime).ThrowIfFail();
+                        break;
                     case SkipNextCommand skipNext:
                         if (!skipNext.Immediately)
                         {
@@ -61,10 +82,34 @@ public static class WaveePlayer
                         _playerLock.Release();
                         break;
                     case PauseCommand:
-                        AudioOutput<WaveeRuntime>.Pause().Run(Runtime);
+                        var pos = AudioOutput<WaveeRuntime>.Pause().Run(Runtime).ThrowIfFail();
+                        atomic(() => _state.Swap(f =>
+                        {
+                            return f with
+                            {
+                                State = f.State switch
+                                {
+                                    WaveeLoadingState loadingState => loadingState with { StartPaused = true },
+                                    WaveePlayingState playingState => playingState.ToPausedState(pos),
+                                    _ => f.State
+                                }
+                            };
+                        }));
                         break;
                     case ResumeCommand:
                         AudioOutput<WaveeRuntime>.Start().Run(Runtime);
+                        atomic(() => _state.Swap(f =>
+                        {
+                            return f with
+                            {
+                                State = f.State switch
+                                {
+                                    WaveeLoadingState loadingState => loadingState with { StartPaused = true },
+                                    WaveePausedState pausedState => pausedState.ToPlayingState(),
+                                    _ => f.State
+                                }
+                            };
+                        }));
                         break;
                     case PlayContextCommand playContext:
                         //end track if playing
@@ -125,11 +170,14 @@ public static class WaveePlayer
                 var stream = inPlaybackState.Stream.AsStream();
                 //put stream into audio output and wait for it to finish
                 await _playerLock.WaitAsync();
+
                 void OnPositionChanged(TimeSpan obj)
                 {
                     //check for crossfades
                 }
-                var handle = AudioOutput<WaveeRuntime>.PlayStream(stream, OnPositionChanged,  closeOtherStreams).Run(Runtime).ThrowIfFail();
+
+                var handle = AudioOutput<WaveeRuntime>.PlayStream(stream, OnPositionChanged, closeOtherStreams)
+                    .Run(Runtime).ThrowIfFail();
                 if (startPaused)
                 {
                     AudioOutput<WaveeRuntime>.Pause().Run(Runtime);
@@ -138,6 +186,7 @@ public static class WaveePlayer
                 {
                     AudioOutput<WaveeRuntime>.Start().Run(Runtime);
                 }
+
                 await handle;
                 atomic(() => _state.Swap(f => f with
                 {
@@ -151,9 +200,9 @@ public static class WaveePlayer
             }
         });
     }
-    
 
-    public static IObservable<WaveePlayerState> StateChanged => _state.OnChange();
+
+    public static IObservable<WaveePlayerState> StateChanged => _state.OnChange().StartWith(State);
 
     private interface IInternalPlayerCommand
     {
@@ -163,7 +212,15 @@ public static class WaveePlayer
 
     private readonly record struct PlayContextCommand(WaveeContext Context, Option<TimeSpan> StartFrom,
         Option<int> Index, Option<bool> StartPaused) : IInternalPlayerCommand;
-    private readonly record struct ResumeCommand : IInternalPlayerCommand;
 
-    private readonly record struct PauseCommand : IInternalPlayerCommand;
+    private readonly record struct ResumeCommand : IInternalPlayerCommand
+    {
+        public static ResumeCommand Default = new();
+    }
+    private readonly record struct PauseCommand : IInternalPlayerCommand
+    {
+        public static PauseCommand Default = new();
+    }
+
+    private readonly record struct SeekCommand(TimeSpan Position) : IInternalPlayerCommand;
 }

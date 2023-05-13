@@ -7,6 +7,8 @@ public interface AudioOutputIO
     Unit Start();
     Unit Pause();
     Task PlayStream(Stream stream, Action<TimeSpan> onPositionChanged, bool closeOtherStreams);
+    TimeSpan Position();
+    Unit Seek(TimeSpan seekPosition);
 }
 
 /// <summary>
