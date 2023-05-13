@@ -27,7 +27,7 @@ var config = new SpotifyConfig(
         DeviceType.Computer
     ),
     Playback: new SpotifyPlaybackConfig(
-        PreferredQualityType.High,
+        PreferredQualityType.Highest,
         Autoplay: true
     )
 );
@@ -36,7 +36,7 @@ var config = new SpotifyConfig(
 var spotifyCore = await SpotifyClient.Create(credentials, config, Option<ILogger>.None);
 spotifyCore.RemoteClient.StateChanged.Subscribe(x => { Console.WriteLine(x); });
 await spotifyCore.PlaybackClient.PlayContext("spotify:playlist:3fqV1HDw2Rppn1ZwpLIKuK",
-    1, TimeSpan.Zero, true,
+    3, TimeSpan.Zero, true,
     Option<PreferredQualityType>.None,
     CancellationToken.None);
 

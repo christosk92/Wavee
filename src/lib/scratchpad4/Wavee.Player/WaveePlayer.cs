@@ -27,6 +27,7 @@ public static class WaveePlayer
         false,
         Que<FutureTrack>.Empty
     ));
+
     public static WaveePlayerState State => _state.Value;
 
     private static ChannelWriter<IInternalPlayerCommand> _commandChannelWriter;
@@ -44,18 +45,22 @@ public static class WaveePlayer
     {
         _commandChannelWriter.TryWrite(new SkipNextCommand(immediately));
     }
+
     public static void PlayContext(WaveeContext context, TimeSpan startFrom, int index, bool startPaused)
     {
         _commandChannelWriter.TryWrite(new PlayContextCommand(context, startFrom, index, startPaused));
     }
+
     public static void Pause()
     {
         _commandChannelWriter.TryWrite(PauseCommand.Default);
     }
+
     public static void Resume()
     {
         _commandChannelWriter.TryWrite(ResumeCommand.Default);
     }
+
     public static void Seek(TimeSpan position)
     {
         _commandChannelWriter.TryWrite(new SeekCommand(position));
@@ -78,8 +83,10 @@ public static class WaveePlayer
                             await _playerLock.WaitAsync();
                         }
 
-                        atomic(() => _state.Swap(f => f.SkipNext(skipNext.Immediately)));
+                        var swappedTo = atomic(() => _state.Swap(f => f.SkipNext(skipNext.Immediately)));
                         _playerLock.Release();
+                        if (swappedTo.State is WaveeLoadingState)
+                            _playerReady.Set();
                         break;
                     case PauseCommand:
                         var pos = AudioOutput<WaveeRuntime>.Pause().Run(Runtime).ThrowIfFail();
@@ -196,6 +203,7 @@ public static class WaveePlayer
                         WaveePausedState p => p.ToEndedState(),
                     }
                 }));
+                _commandChannelWriter.TryWrite(new SkipNextCommand(false));
                 _playerLock.Release();
             }
         });
@@ -217,6 +225,7 @@ public static class WaveePlayer
     {
         public static ResumeCommand Default = new();
     }
+
     private readonly record struct PauseCommand : IInternalPlayerCommand
     {
         public static PauseCommand Default = new();
