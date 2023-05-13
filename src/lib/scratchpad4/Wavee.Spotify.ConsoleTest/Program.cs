@@ -53,6 +53,7 @@ class MaskedFsStream : IAudioStream
     }
 
     public ITrack Track { get; }
+    public Option<string> Uid { get; }
 
     public Stream AsStream()
     {

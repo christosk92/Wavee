@@ -8,6 +8,8 @@
 
     <ItemGroup>
       <ProjectReference Include="..\Wavee.Core\Wavee.Core.csproj" />
+      <ProjectReference Include="..\Wavee.Player\Wavee.Player.csproj" />
+      <ProjectReference Include="..\Wavee.Spotify.Playback\Wavee.Spotify.Playback.csproj" />
       <ProjectReference Include="..\Wavee.Spotify.Proto\Wavee.Spotify.Proto.csproj" />
     </ItemGroup>
 

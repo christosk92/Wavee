@@ -28,12 +28,11 @@ public sealed class SpotifyRemoteConnection<R> where R : struct, HasWebsocket<R>
 
         ConnectionId = Ref(Option<string>.None);
         LatestCluster = Ref(Option<Cluster>.None);
-        DeviceState = Ref(SpotifyLocalDeviceState.New("device-id", "device-name", DeviceType.Unknown));
     }
-    
-    private Ref<SpotifyLocalDeviceState> DeviceState { get; }
+
     private Ref<Option<string>> ConnectionId { get; }
     private Ref<Option<Cluster>> LatestCluster { get; }
+    public Option<string> ActualConnectionId => ConnectionId.Value;
 
     private Atom<HashMap<Guid, Channel<SpotifyWebsocketMessage>>> Listeners =
         Atom(LanguageExt.HashMap<Guid, Channel<SpotifyWebsocketMessage>>.Empty);
@@ -45,11 +44,6 @@ public sealed class SpotifyRemoteConnection<R> where R : struct, HasWebsocket<R>
         return id;
     }
 
-    public Unit SwapDeviceState(SpotifyLocalDeviceState deviceState)
-    {
-        atomic(() => { DeviceState.Swap(_ => deviceState); });
-        return unit;
-    }
 
     public Unit SwapConnectionId(string connId)
     {
@@ -85,7 +79,7 @@ public sealed class SpotifyRemoteConnection<R> where R : struct, HasWebsocket<R>
 
         return unit;
     }
-    
+
     private void HandleMessage(SpotifyWebsocketMessage message)
     {
         if (message.Uri.StartsWith("hm://connect-state/v1/cluster"))

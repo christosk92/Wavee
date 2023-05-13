@@ -68,7 +68,6 @@ public static class SpotifyRemoteRuntime<R> where R : struct, HasWebsocket<R>, H
             connection.SwapLatestCluster(initialCluster);
             return unit;
         })
-        from ___ in Eff(() => connection.SwapDeviceState(emptyState))
         from ____ in Aff<R, Unit>(async (r) =>
         {
             await Task.Factory.StartNew(async () =>
@@ -86,14 +85,14 @@ public static class SpotifyRemoteRuntime<R> where R : struct, HasWebsocket<R>, H
                         break;
                     }
                 }
-                
+
                 //TODO: Attempt to reconnect
             }, ct);
             return unit;
         })
         select emptyState;
 
-    private static Aff<R, Cluster>
+    public static Aff<R, Cluster>
         PutState(
             string baseUrl,
             PutStateRequest putState,

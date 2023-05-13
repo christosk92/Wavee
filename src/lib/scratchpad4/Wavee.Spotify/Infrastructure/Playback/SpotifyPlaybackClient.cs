@@ -1,28 +1,37 @@
 ﻿using System.Numerics;
+using System.Reactive.Linq;
 using System.Text;
+using Eum.Spotify.connectstate;
 using Google.Protobuf;
+using LanguageExt.UnsafeValueAccess;
 using Wavee.Core.Contracts;
 using Wavee.Core.Enums;
 using Wavee.Core.Id;
 using Wavee.Core.Infrastructure.Traits;
 using Wavee.Player;
+using Wavee.Player.States;
 using Wavee.Spotify.Cache;
 using Wavee.Spotify.Clients.Mercury;
+using Wavee.Spotify.Infrastructure.Remote;
 using Wavee.Spotify.Infrastructure.Sys;
 using Wavee.Spotify.Models.Responses;
 using Wavee.Spotify.Playback.Infrastructure.Sys;
 using Wavee.Spotify.Playback.Metadata;
 using Wavee.Spotify.Remote.Infrastructure;
+using Wavee.Spotify.Remote.Infrastructure.Sys;
+using Wavee.Spotify.Remote.Models;
 
 namespace Wavee.Spotify.Infrastructure.Playback;
 
 internal class SpotifyPlaybackClient<R> : ISpotifyPlaybackClient
-    where R : struct, HasAudioOutput<R>, HasWebsocket<R>, HasLog<R>, HasHttp<R>,  HasDatabase<R>
+    where R : struct, HasAudioOutput<R>, HasWebsocket<R>, HasLog<R>, HasHttp<R>, HasDatabase<R>
 {
     private readonly SpotifyConnection<R> _connection;
     private readonly SpotifyRemoteConnection<R> _remoteConnection;
     private readonly R _runtime;
     private readonly PreferredQualityType _preferredQualityType;
+    private Atom<Option<DateTimeOffset>> _startedPlayingAt = Atom(Option<DateTimeOffset>.None);
+
     public SpotifyPlaybackClient(SpotifyConnection<R> connection,
         SpotifyRemoteConnection<R> remoteConnection, R runtime, PreferredQualityType preferredQualityType)
     {
@@ -30,19 +39,64 @@ internal class SpotifyPlaybackClient<R> : ISpotifyPlaybackClient
         _remoteConnection = remoteConnection;
         _runtime = runtime;
         _preferredQualityType = preferredQualityType;
+
+        WaveePlayer.StateChanged.Select(async s => await PlayerStateChanged(s)).Subscribe();
     }
 
-    private static AudioId Parse(string uri)
+    private async Task PlayerStateChanged(WaveePlayerState obj)
     {
-        ReadOnlySpan<string> contextidParts = uri.Split(':');
-        return new AudioId(contextidParts[2], contextidParts[1] switch
+        if (obj.State.TrackId.IsNone
+            || obj.State.TrackId.ValueUnsafe().Source is not ISpotifyCore.SourceId)
         {
-            "track" => AudioItemType.Track,
-            "episode" => AudioItemType.PodcastEpisode,
-            "playlist" => AudioItemType.Playlist,
-            "album" => AudioItemType.Album,
-        }, ISpotifyCore.SourceId);
+            //not active anymore
+            //notify
+            return;
+        }
+
+        //active! notify
+        var baseState = new SpotifyLocalDeviceState(
+                DeviceId: _connection.DeviceId,
+                DeviceName: _connection.Config.Remote.DeviceName,
+                DeviceType: _connection.Config.Remote.DeviceType,
+                IsActive: true,
+                PlayingSince: atomic(() => _startedPlayingAt.Swap(x =>
+                    x.IfNone(DateTimeOffset.UtcNow)).Bind(x => x)))
+            .SetShuffling(obj.IsShuffling)
+            .SetRepeatState(obj.RepeatState);
+        var putState = obj.State switch
+        {
+            WaveeLoadingState loading => baseState.SetLoading(loading),
+            WaveePlayingState playing => baseState.SetPlaying(playing),
+            WaveePausedState paused => baseState.SetPaused(paused),
+        };
+        var playerTime = obj.State switch
+        {
+            WaveeLoadingState loading => loading.StartFrom,
+            WaveePlayingState playing => playing.Position,
+            WaveePausedState paused => paused.Position,
+        };
+        var connId = _remoteConnection.ActualConnectionId.IfNone(string.Empty);
+        var bearerFunc = () => _connection.Token.GetToken();
+        var putStateRequest = putState.BuildPutState(PutStateReason.PlayerStateChanged, playerTime);
+        var aff =
+            from sp in AP<R>.FetchSpClient().Map(x => $"https://{x.Host}:{x.Port}")
+            from _ in SpotifyRemoteRuntime<R>.PutState(sp, putStateRequest, connId, bearerFunc, CancellationToken.None)
+            select Unit.Default;
+
+        var run = await aff.Run(_runtime);
     }
+
+    // private static string Parse(string uri)
+    // {
+    //     ReadOnlySpan<string> contextidParts = uri.Split(':');
+    //     return new AudioId(contextidParts[2], contextidParts[1] switch
+    //     {
+    //         "track" => AudioItemType.Track,
+    //         "episode" => AudioItemType.PodcastEpisode,
+    //         "playlist" => AudioItemType.Playlist,
+    //         "album" => AudioItemType.Album,
+    //     }, ISpotifyCore.SourceId);
+    // }
 
     public async Task PlayContext(
         string contextUri,
@@ -58,7 +112,7 @@ internal class SpotifyPlaybackClient<R> : ISpotifyPlaybackClient
             preferredQualityType,
             contextResolve, _runtime);
         var ctx = new WaveeContext(Option<IShuffleProvider>.None,
-            Context: Parse(contextUri),
+            Id: contextUri,
             Name: contextResolve.Metadata.Find("context_description").IfNone(string.Empty),
             FutureTracks: tracks
         );
@@ -89,7 +143,8 @@ internal class SpotifyPlaybackClient<R> : ISpotifyPlaybackClient
                         "episode" => AudioItemType.PodcastEpisode,
                     }, ISpotifyCore.SourceId);
                     yield return new FutureTrack(id,
-                        () => StreamFuture(connection, id, preferredQualityType, track.HasUid ? track.Uid : None, runtime));
+                        () => StreamFuture(connection, id, preferredQualityType, track.HasUid ? track.Uid : None,
+                            runtime));
                 }
             }
             else

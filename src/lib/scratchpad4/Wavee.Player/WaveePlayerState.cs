@@ -252,7 +252,7 @@ public readonly struct RandomShuffler : IShuffleProvider
 
 public readonly record struct WaveeContext(
     Option<IShuffleProvider> ShuffleProvider,
-    AudioId Context,
+    string Id,
     string Name,
     IEnumerable<FutureTrack> FutureTracks);
 

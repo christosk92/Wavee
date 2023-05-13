@@ -72,6 +72,7 @@ internal sealed class SpotifyConnection<RT>
             .Result;
     }
 
+    public string DeviceId => _info.Deviceid;
     public SpotifyConfig Config => _info.Config;
 
     // ReSharper disable once HeapView.BoxingAllocation

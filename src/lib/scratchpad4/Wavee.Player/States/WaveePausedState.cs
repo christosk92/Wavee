@@ -1,5 +1,6 @@
 ﻿using LanguageExt;
 using Wavee.Core.Contracts;
+using Wavee.Core.Id;
 
 namespace Wavee.Player.States;
 
@@ -30,4 +31,6 @@ public readonly record struct WaveePausedState(
             Stream = Stream
         };
     }
+
+    public Option<AudioId> TrackId => Track.Id;
 }
