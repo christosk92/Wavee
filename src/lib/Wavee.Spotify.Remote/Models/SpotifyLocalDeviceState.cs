@@ -34,7 +34,23 @@ public readonly record struct SpotifyLocalDeviceState(
             IsActive = IsActive,
             PutStateReason = reason,
         };
-
+        if (playerTime.IsSome)
+        {
+            putState.HasBeenPlayingForMs = (uint)playerTime.ValueUnsafe().TotalMilliseconds;
+        }
+        else
+        {
+            putState.HasBeenPlayingForMs = 0;
+        }
+        if (PlayingSince.IsSome)
+        {
+            putState.StartedPlayingAt = (ulong)PlayingSince.ValueUnsafe().ToUnixTimeMilliseconds();
+        }
+        else
+        {
+            putState.StartedPlayingAt = 0;
+        }
+        putState.ClientSideTimestamp = (ulong)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         return putState;
     }
 

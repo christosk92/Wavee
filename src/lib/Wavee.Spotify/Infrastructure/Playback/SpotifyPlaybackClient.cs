@@ -31,6 +31,7 @@ internal class SpotifyPlaybackClient<R> : ISpotifyPlaybackClient
     private readonly R _runtime;
     private readonly PreferredQualityType _preferredQualityType;
     private Atom<Option<DateTimeOffset>> _startedPlayingAt = Atom(Option<DateTimeOffset>.None);
+    private Atom<SpotifyLocalDeviceState> _localDeviceState;
 
     public SpotifyPlaybackClient(SpotifyConnection<R> connection,
         SpotifyRemoteConnection<R> remoteConnection, R runtime, PreferredQualityType preferredQualityType)
@@ -39,7 +40,12 @@ internal class SpotifyPlaybackClient<R> : ISpotifyPlaybackClient
         _remoteConnection = remoteConnection;
         _runtime = runtime;
         _preferredQualityType = preferredQualityType;
-
+        _localDeviceState = Atom(new SpotifyLocalDeviceState(
+            DeviceId: _connection.DeviceId,
+            DeviceName: _connection.Config.Remote.DeviceName,
+            DeviceType: _connection.Config.Remote.DeviceType,
+            IsActive: false,
+            PlayingSince: Option<DateTimeOffset>.None));
         WaveePlayer.StateChanged.Select(async s => await PlayerStateChanged(s)).Subscribe();
     }
 
@@ -54,21 +60,26 @@ internal class SpotifyPlaybackClient<R> : ISpotifyPlaybackClient
         }
 
         //active! notify
-        var baseState = new SpotifyLocalDeviceState(
-                DeviceId: _connection.DeviceId,
-                DeviceName: _connection.Config.Remote.DeviceName,
-                DeviceType: _connection.Config.Remote.DeviceType,
-                IsActive: true,
-                PlayingSince: atomic(() => _startedPlayingAt.Swap(x =>
-                    x.IfNone(DateTimeOffset.UtcNow)).Bind(x => x)))
-            .SetShuffling(obj.IsShuffling)
-            .SetRepeatState(obj.RepeatState);
-        var putState = obj.State switch
+        var putState = _localDeviceState.Swap(f =>
         {
-            WaveeLoadingState loading => baseState.SetLoading(loading),
-            WaveePlayingState playing => baseState.SetPlaying(playing),
-            WaveePausedState paused => baseState.SetPaused(paused),
-        };
+            var baseState = (f with
+                {
+                    DeviceId = _connection.DeviceId,
+                    DeviceName = _connection.Config.Remote.DeviceName,
+                    DeviceType = _connection.Config.Remote.DeviceType,
+                    IsActive = true,
+                    PlayingSince = atomic(() => _startedPlayingAt.Swap(x =>
+                        x.IfNone(DateTimeOffset.UtcNow)).Bind(x => x))
+                })
+                .SetShuffling(obj.IsShuffling)
+                .SetRepeatState(obj.RepeatState);
+            return obj.State switch
+            {
+                WaveeLoadingState loading => baseState.SetLoading(loading),
+                WaveePlayingState playing => baseState.SetPlaying(playing),
+                WaveePausedState paused => baseState.SetPaused(paused),
+            };
+        }).ValueUnsafe();
         var playerTime = obj.State switch
         {
             WaveeLoadingState loading => loading.StartFrom,

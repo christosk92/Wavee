@@ -34,8 +34,8 @@ var config = new SpotifyConfig(
 
 var spotifyCore = await SpotifyClient.Create(credentials, config, Option<ILogger>.None);
 spotifyCore.RemoteClient.StateChanged.Subscribe(x => { Console.WriteLine(x); });
-await spotifyCore.PlaybackClient.PlayContext("spotify:playlist:2TAyTkj953qz8fG2IXq1V0",
-    1, TimeSpan.Zero, true,
+await spotifyCore.PlaybackClient.PlayContext("spotify:track:2DwUdMJ5uxv20EhAildreg",
+    0, TimeSpan.Zero, true,
     Option<PreferredQualityType>.None,
     CancellationToken.None);
 
