@@ -25,7 +25,7 @@ public class WaveePlayerBehaviorTests
 
         stateChanged.Subscribe(stateChangedObserver);
 
-        var contextId = new AudioId("ContextId", AudioItemType.Playlist, "Test Context");
+        var contextId = "test:context";
         var futureTrack = new FutureTrack(new AudioId("TrackId", AudioItemType.Track, "test"),
             () => Task.FromResult<IAudioStream>(new Mock<IAudioStream>().Object));
         var context = new WaveeContext(Option<IShuffleProvider>.None,

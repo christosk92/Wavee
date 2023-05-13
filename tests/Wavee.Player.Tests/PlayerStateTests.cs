@@ -75,7 +75,7 @@ public class PlayerStateTests
         var trackAudioId = new AudioId(trackId, AudioItemType.Track, "test");
         var context = new WaveeContext(
             Option<IShuffleProvider>.None,
-            new AudioId("ContextId", AudioItemType.Playlist, contextName),
+            "ContextId",
             contextName,
             new List<FutureTrack> { new FutureTrack(trackAudioId, () => CreateFakeStream(trackAudioId)) }
         );
@@ -119,6 +119,8 @@ public class PlayerStateTests
         }
 
         public ITrack Track { get; }
+        public Option<string> Uid { get; }
+
         public Stream AsStream()
         {
             throw new NotImplementedException();

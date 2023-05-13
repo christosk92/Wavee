@@ -29,6 +29,8 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\..\src\lib\Wavee.Core\Wavee.Core.csproj" />
+      <ProjectReference Include="..\..\src\lib\Wavee.Player\Wavee.Player.csproj" />
       <ProjectReference Include="..\..\Wavee.Player\Wavee.Player.csproj" />
     </ItemGroup>
 

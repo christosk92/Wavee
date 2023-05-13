@@ -7,6 +7,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\..\..\external\database-effect\src\DatabaseEffect.csproj" />
       <ProjectReference Include="..\Wavee.Core\Wavee.Core.csproj" />
     </ItemGroup>
 

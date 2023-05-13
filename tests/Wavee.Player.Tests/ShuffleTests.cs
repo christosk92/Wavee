@@ -20,7 +20,8 @@ public class ShuffleTests
         var rng = new MockRandomNumberGenerator(new[] { 1, 3, 2, 0, 9, 7, 8, 5, 6, 4 }); // mock "random" sequence
         var context = new WaveeContext(
             rng,
-            new AudioId("ContextId", AudioItemType.Playlist, "Test Context"), "Test Context",
+            "ContextId",
+            "test",
             tracks);
         var state = new WaveePlayerState(
             new WaveeLoadingState(0, new AudioId("0", AudioItemType.Track, "test"), false, TimeSpan.Zero, false, true)

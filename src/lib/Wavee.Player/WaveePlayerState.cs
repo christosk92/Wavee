@@ -116,6 +116,12 @@ public readonly record struct WaveePlayerState(
             };
         }
 
+        //dispose of the current stream
+        if (State is IWaveeInPlaybackState playbackState)
+        {
+            playbackState.Stream.AsStream().Dispose();
+        }
+
         //no repeat state, or we are repeating the context
         //but first lets check if we have an item in a queue
         if (Queue.Count > 0)
