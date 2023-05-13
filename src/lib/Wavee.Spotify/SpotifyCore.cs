@@ -29,7 +29,8 @@ internal sealed class SpotifyCore<R> : ISpotifyCore
             connection: _connection,
             preferredQualityType: _connection.Config.Playback.PreferredQualityType,
             remoteConnection: _remoteConnection,
-            runtime: _connection._runtime
+            runtime: _connection._runtime,
+            autoplay: _connection.Config.Playback.Autoplay
         );
     }
 

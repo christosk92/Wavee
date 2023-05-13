@@ -29,17 +29,20 @@ internal class SpotifyPlaybackClient<R> : ISpotifyPlaybackClient
     private readonly SpotifyConnection<R> _connection;
     private readonly SpotifyRemoteConnection<R> _remoteConnection;
     private readonly R _runtime;
+    private readonly bool _autoplay;
     private readonly PreferredQualityType _preferredQualityType;
     private Atom<Option<DateTimeOffset>> _startedPlayingAt = Atom(Option<DateTimeOffset>.None);
     private Atom<SpotifyLocalDeviceState> _localDeviceState;
 
     public SpotifyPlaybackClient(SpotifyConnection<R> connection,
-        SpotifyRemoteConnection<R> remoteConnection, R runtime, PreferredQualityType preferredQualityType)
+        SpotifyRemoteConnection<R> remoteConnection, R runtime, PreferredQualityType preferredQualityType,
+        bool autoplay)
     {
         _connection = connection;
         _remoteConnection = remoteConnection;
         _runtime = runtime;
         _preferredQualityType = preferredQualityType;
+        _autoplay = autoplay;
         _localDeviceState = Atom(new SpotifyLocalDeviceState(
             DeviceId: _connection.DeviceId,
             DeviceName: _connection.Config.Remote.DeviceName,
@@ -56,6 +59,27 @@ internal class SpotifyPlaybackClient<R> : ISpotifyPlaybackClient
         {
             //not active anymore
             //notify
+            return;
+        }
+
+        if (obj.State is WaveeEndedState endedState)
+        {
+            //check if autoplay is enabled
+            //if so, play next track from autoplay endpoint
+            //else, notify ended
+            if (_autoplay)
+            {
+                //great, we can autoplay
+                var contextUri = obj.Context;
+                if (contextUri.IsSome)
+                {
+                    var ctxUri = contextUri.ValueUnsafe().Id;
+                    var autoplay = await _connection.Mercury.AutoplayQuery(ctxUri);
+                    await PlayContext(autoplay, 0, TimeSpan.Zero, true, Option<PreferredQualityType>.None);
+                    return;
+                }
+            }
+
             return;
         }
 
