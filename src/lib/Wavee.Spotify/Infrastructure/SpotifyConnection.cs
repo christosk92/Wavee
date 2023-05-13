@@ -1,9 +1,7 @@
 using System.Buffers.Binary;
-using System.Net.NetworkInformation;
 using System.Text;
 using System.Threading.Channels;
 using Google.Protobuf;
-using LanguageExt.Effects.Traits;
 using LanguageExt.UnsafeValueAccess;
 using Wavee.Infrastructure.Sys;
 using Wavee.Infrastructure.Traits;
@@ -11,11 +9,10 @@ using Wavee.Spotify.Cache.Repositories;
 using Wavee.Spotify.Clients.Info;
 using Wavee.Spotify.Clients.Mercury;
 using Wavee.Spotify.Clients.Mercury.Key;
-using Wavee.Spotify.Clients.Playback;
-using Wavee.Spotify.Clients.Remote;
 using Wavee.Spotify.Clients.Token;
 using Wavee.Spotify.Id;
 using Wavee.Spotify.Infrastructure.Connection;
+using Wavee.Spotify.Remote;
 
 namespace Wavee.Spotify.Infrastructure;
 

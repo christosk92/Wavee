@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Wavee.Spotify.Proto\Wavee.Spotify.Proto.csproj" />
+      <ProjectReference Include="..\Wavee.Spotify\Wavee.Spotify.csproj" />
+      <ProjectReference Include="..\Wavee\Wavee.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="BouncyCastle.Cryptography" Version="2.2.1" />
+      <PackageReference Include="LanguageExt.Core" Version="4.4.3" />
+    </ItemGroup>
+
+</Project>

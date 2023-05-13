@@ -121,7 +121,6 @@ internal static class Remote<RT> where RT : struct, HasWebsocket<RT>, HasHttp<RT
         {
             var clusterUpdate = ClusterUpdate.Parser.ParseFrom(message.Payload.ValueUnsafe().Span);
             atomic(() => remoteClusterRef.Swap(_ => clusterUpdate.Cluster));
-            atomic(() => localDeviceState.Swap(f => f.FromClusterUpdate(clusterUpdate.Cluster.PlayerState)));
         }
         else if (message.Uri.Equals("hm://connect-state/v1/connect/volume"))
         {

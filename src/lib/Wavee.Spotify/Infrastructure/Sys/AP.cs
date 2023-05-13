@@ -7,7 +7,6 @@ using Wavee.Infrastructure.Sys.IO;
 using Wavee.Infrastructure.Traits;
 
 [assembly: InternalsVisibleTo("Wavee.Spotify.Playback")]
-
 namespace Wavee.Spotify.Infrastructure.Sys;
 
 internal static class AP<RT> where RT : struct, HasHttp<RT>
