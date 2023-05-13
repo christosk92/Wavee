@@ -4,8 +4,8 @@ using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.Math;
 using Org.BouncyCastle.Security;
-using Wavee.Infrastructure.Traits;
-using Wavee.Spotify.Clients.Mercury.Key;
+using Wavee.Core.Infrastructure.Traits;
+using Wavee.Spotify.Playback.Infrastructure.Key;
 
 namespace Wavee.Spotify.Playback.Playback.Streams;
 

@@ -1,4 +1,6 @@
 ﻿using Eum.Spotify.connectstate;
+using Wavee.Core.Enums;
+using Wavee.Spotify.Playback;
 
 namespace Wavee.Spotify.Configs;
 

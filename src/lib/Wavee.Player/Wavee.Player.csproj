@@ -7,12 +7,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Wavee\Wavee.csproj" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <PackageReference Include="LibVLCSharp" Version="3.7.0" />
-      <PackageReference Include="VideoLAN.LibVLC.Windows" Version="3.0.18" />
+      <ProjectReference Include="..\Wavee.Core\Wavee.Core.csproj" />
     </ItemGroup>
 
 </Project>

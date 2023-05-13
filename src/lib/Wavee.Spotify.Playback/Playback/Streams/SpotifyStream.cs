@@ -1,8 +1,8 @@
-﻿using Google.Protobuf.WellKnownTypes;
-using LanguageExt;
+﻿using LanguageExt;
 using Spotify.Metadata;
-using Wavee.Infrastructure.Traits;
-using Wavee.Spotify.Clients.Mercury.Metadata;
+using Wavee.Core.Contracts;
+using Wavee.Core.Infrastructure.Traits;
+using Wavee.Spotify.Playback.Infrastructure.Sys;
 
 namespace Wavee.Spotify.Playback.Playback.Streams;
 
@@ -15,12 +15,14 @@ internal sealed class SpotifyStream<RT> : Stream, ISpotifyStream where RT : stru
     public SpotifyStream(DecryptedSpotifyStream<RT> decryptedStream,
         Option<NormalisationData> normalisationDatas,
         ulong offset, AudioFile chosenFile,
-        TrackOrEpisode metadata)
+        Option<string> uid,
+        ITrack track)
     {
+        Uid = uid;
         _decryptedStream = decryptedStream;
         _normalisationDatas = normalisationDatas;
         ChosenFile = chosenFile;
-        Metadata = metadata;
+        Track = track;
         _offset = (long)offset;
     }
 
@@ -31,11 +33,9 @@ internal sealed class SpotifyStream<RT> : Stream, ISpotifyStream where RT : stru
     }
 
     public AudioFile ChosenFile { get; }
+    public Option<string> Uid { get; }
 
-    public TrackOrEpisode Metadata { get; }
-
-    public string TrackId => Metadata.Id.ToUri();
-    public int TotalDuration => Metadata.Duration;
+    public ITrack Track { get; }
 
     public Stream AsStream()
     {

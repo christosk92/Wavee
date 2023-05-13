@@ -6,8 +6,8 @@ using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using Eum.Spotify;
 using Google.Protobuf;
-using Wavee.Infrastructure.Sys.IO;
-using Wavee.Infrastructure.Traits;
+using Wavee.Core.Infrastructure.Sys.IO;
+using Wavee.Core.Infrastructure.Traits;
 using Wavee.Spotify.Infrastructure.Crypto;
 
 namespace Wavee.Spotify.Infrastructure.Connection;

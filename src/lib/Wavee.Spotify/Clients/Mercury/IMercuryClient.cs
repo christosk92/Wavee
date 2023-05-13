@@ -7,8 +7,8 @@ using Eum.Spotify.context;
 using Google.Protobuf;
 using LanguageExt.UnsafeValueAccess;
 using Spotify.Metadata;
-using Wavee.Spotify.Clients.Info;
-using Wavee.Spotify.Id;
+using Wavee.Core.Id;
+using Wavee.Spotify.Extensions;
 using Wavee.Spotify.Infrastructure;
 using Wavee.Spotify.Infrastructure.Connection;
 
@@ -17,13 +17,14 @@ namespace Wavee.Spotify.Clients.Mercury;
 public interface IMercuryClient
 {
     Task<MercuryResponse> Get(string uri, CancellationToken ct = default);
-    Task<Track> GetTrack(SpotifyId id, CancellationToken ct = default);
-    Task<Episode> GetEpisode(SpotifyId id, CancellationToken ct = default);
+    Task<Track> GetTrack(AudioId id, CancellationToken ct = default);
+    Task<Episode> GetEpisode(AudioId id, CancellationToken ct = default);
     Task<string> AutoplayQuery(string uri, CancellationToken ct = default);
     Task<SpotifyContext> ContextResolve(string uri, CancellationToken ct = default);
 }
 
-public readonly record struct SpotifyContext(string Url, HashMap<string, string> Metadata, Seq<ContextPage> Pages, HashMap<string, Seq<string>> Restrictions);
+public readonly record struct SpotifyContext(string Url, HashMap<string, string> Metadata, Seq<ContextPage> Pages,
+    HashMap<string, Seq<string>> Restrictions);
 
 internal readonly struct MercuryClient : IMercuryClient
 {
@@ -115,14 +116,14 @@ internal readonly struct MercuryClient : IMercuryClient
         return default;
     }
 
-    public async Task<Track> GetTrack(SpotifyId id, CancellationToken ct = default)
+    public async Task<Track> GetTrack(AudioId id, CancellationToken ct = default)
     {
-        const string uri = "hm://metadata/4/track/{0}";
+        const string uri = "hm://metadata/4/track/{0}?market=from_token";
         var response = await Get(string.Format(uri, id.ToBase16()), ct);
         return Track.Parser.ParseFrom(response.Body.Span);
     }
 
-    public async Task<Episode> GetEpisode(SpotifyId id, CancellationToken ct = default)
+    public async Task<Episode> GetEpisode(AudioId id, CancellationToken ct = default)
     {
         const string uri = "hm://metadata/4/episode/{0}";
         var response = await Get(string.Format(uri, id.ToBase16()), ct);
@@ -159,7 +160,7 @@ internal readonly struct MercuryClient : IMercuryClient
             ? restrictionsElement.EnumerateObject().Fold(new HashMap<string, Seq<string>>(),
                 (acc, x) => acc.Add(x.Name, x.Value.Clone().EnumerateArray().Select(y => y.GetString()).ToSeq()!))
             : Empty;
-        return new SpotifyContext(url,metadata, pages,restrictions);
+        return new SpotifyContext(url, metadata, pages, restrictions);
     }
 
 

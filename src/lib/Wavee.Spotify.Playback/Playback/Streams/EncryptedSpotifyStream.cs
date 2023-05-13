@@ -1,13 +1,11 @@
 ﻿using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
-using Wavee.Infrastructure.Traits;
-using Wavee.Spotify.Clients.Mercury.Metadata;
+using Wavee.Core.Infrastructure.Traits;
 
 namespace Wavee.Spotify.Playback.Playback.Streams;
 
 internal sealed class EncryptedSpotifyStream<RT> : IEncryptedSpotifyStream, IDisposable where RT : struct, HasHttp<RT>
 {
-    private readonly TrackOrEpisode _metadata;
     private readonly int _numberOfChunks;
 
     private readonly Option<TaskCompletionSource<ReadOnlyMemory<byte>>>[] _requested;
@@ -15,14 +13,12 @@ internal sealed class EncryptedSpotifyStream<RT> : IEncryptedSpotifyStream, IDis
     private readonly Option<Action<ReadOnlyMemory<byte>>> _finished;
 
     public EncryptedSpotifyStream(
-        TrackOrEpisode metadata,
         ReadOnlyMemory<byte> firstChunk,
         int numberOfChunks,
         long length,
         Func<int, Task<ReadOnlyMemory<byte>>> getChunk,
         Option<Action<ReadOnlyMemory<byte>>> finished)
     {
-        _metadata = metadata;
         _numberOfChunks = numberOfChunks;
         _requested = new Option<TaskCompletionSource<ReadOnlyMemory<byte>>>[numberOfChunks];
         var firstTcs = new TaskCompletionSource<ReadOnlyMemory<byte>>();

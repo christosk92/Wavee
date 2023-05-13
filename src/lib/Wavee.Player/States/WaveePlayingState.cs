@@ -1,39 +1,33 @@
-﻿namespace Wavee.Player.States;
+﻿using LanguageExt;
+using Wavee.Core.Contracts;
+using Wavee.Core.Id;
 
-public readonly record struct WaveePlayingState(string PlaybackId,
-    Stream Decoder) : IWaveePlayerInPlaybackState
+namespace Wavee.Player.States;
+
+public readonly record struct WaveePlayingState(
+    DateTimeOffset Since,
+    TimeSpan PositionAsOfSince,
+    ITrack Track,
+    Option<int> IndexInContext,
+    bool FromQueue
+) : IWaveeInPlaybackState
 {
-    public required DateTimeOffset Timestamp { get; init; }
-    public required TimeSpan PositionAsOfTimestamp { get; init; }
-
-    public TimeSpan Position
+    public TimeSpan Position => (DateTimeOffset.UtcNow - Since) + PositionAsOfSince;
+    public required IAudioStream Stream { get; init; }
+    public WaveePausedState ToPausedState(TimeSpan position)
     {
-        get
+        return new WaveePausedState(Track, position, IndexInContext, FromQueue)
         {
-            var now = DateTimeOffset.Now;
-            var elapsed = now - Timestamp;
-            return PositionAsOfTimestamp + elapsed;
-        }
-    }
-
-    public WaveePausedState ToPaused()
-    {
-        return new WaveePausedState(PlaybackId, Decoder)
-        {
-            Position = Position
+            Stream = Stream
         };
     }
-}
+    public WaveeEndedState ToEndedState()
+    {
+        return new WaveeEndedState(Track, Position, IndexInContext, FromQueue)
+        {
+            Stream = Stream
+        };
+    }
 
-public readonly record struct WaveePausedState(string PlaybackId, Stream Decoder) : IWaveePlayerInPlaybackState
-{
-    public required TimeSpan Position { get; init; }
-}
-
-public readonly record struct WaveeEndOfTrackState(
-    string PlaybackId, Stream Decoder,
-    bool GoingToNextTrackAlready) : IWaveePlayerInPlaybackState
-{
-    public DateTimeOffset Since { get; } = new DateTimeOffset();
-    public required TimeSpan Position { get; init; }
+    public Option<AudioId> TrackId => Track.Id;
 }

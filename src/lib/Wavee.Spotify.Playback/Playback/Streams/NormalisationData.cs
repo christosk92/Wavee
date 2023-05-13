@@ -1,6 +1,6 @@
 ﻿using System.Buffers.Binary;
 using LanguageExt;
-using Wavee.Infrastructure.Traits;
+using Wavee.Core.Infrastructure.Traits;
 
 namespace Wavee.Spotify.Playback.Playback.Streams;
 

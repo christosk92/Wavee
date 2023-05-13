@@ -3,16 +3,15 @@ using System.Text;
 using System.Threading.Channels;
 using Google.Protobuf;
 using LanguageExt.UnsafeValueAccess;
-using Wavee.Infrastructure.Sys;
-using Wavee.Infrastructure.Traits;
-using Wavee.Spotify.Cache.Repositories;
+using Wavee.Core.Id;
+using Wavee.Core.Infrastructure.Sys;
+using Wavee.Core.Infrastructure.Traits;
 using Wavee.Spotify.Clients.Info;
 using Wavee.Spotify.Clients.Mercury;
-using Wavee.Spotify.Clients.Mercury.Key;
 using Wavee.Spotify.Clients.Token;
-using Wavee.Spotify.Id;
+using Wavee.Spotify.Configs;
 using Wavee.Spotify.Infrastructure.Connection;
-using Wavee.Spotify.Remote;
+using Wavee.Spotify.Playback.Infrastructure.Key;
 
 namespace Wavee.Spotify.Infrastructure;
 
@@ -21,12 +20,12 @@ internal delegate bool PackageListenerRequest(SpotifyPacket packet);
 internal readonly record struct PackageListenerRecord(PackageListenerRequest Request,
     ChannelWriter<SpotifyPacket> Writer);
 
-internal sealed class SpotifyConnection<RT> : ISpotifyConnection
-    where RT : struct, HasLog<RT>, HasWebsocket<RT>, HasHttp<RT>, HasAudioOutput<RT>, HasTrackRepo<RT>, HasFileRepo<RT>
+internal sealed class SpotifyConnection<RT>
+    where RT : struct, HasLog<RT>, HasWebsocket<RT>, HasHttp<RT>, HasAudioOutput<RT>
 {
     private readonly CancellationTokenSource _cts;
     private readonly ChannelWriter<SpotifyPacket> _channelWriter;
-    private readonly RT _runtime;
+    internal readonly RT _runtime;
     private readonly InternalSpotifyConnectionInfo _info;
 
     private readonly AtomHashMap<Guid, PackageListenerRecord> _packetListeners =
@@ -73,6 +72,9 @@ internal sealed class SpotifyConnection<RT> : ISpotifyConnection
             .Result;
     }
 
+    public string DeviceId => _info.Deviceid;
+    public SpotifyConfig Config => _info.Config;
+
     // ReSharper disable once HeapView.BoxingAllocation
     public ISpotifyConnectionInfo Info => new SpotifyConnectionInfo<RT>(_runtime,
         CountryCodeAff(_packetListeners, _packetsWithoutPurpose),
@@ -101,58 +103,40 @@ internal sealed class SpotifyConnection<RT> : ISpotifyConnection
         mercuryClient: Mercury
     );
 
-    public IRemoteClient Remote => new RemoteClient<RT>(
-        mainConnectionId: _info.ConnectionId,
-        getBearer: () => Token.GetToken(),
-        deviceId: _info.Deviceid,
-        deviceName: _info.Config.Remote.DeviceName,
-        deviceType: _info.Config.Remote.DeviceType,
-        runtime: _runtime,
-        playbackClient: Playback
-    );
-
-    public IPlaybackClient Playback => new PlaybackClient<RT>(
-        mainConnectionId: _info.ConnectionId,
-        getBearer: () => Token.GetToken(),
-        fetchAudioKeyFunc: (id, byteString, arg3) =>
-            FetchAudioKeyFunc(_channelWriter,
-                addPackageListener: request =>
-                {
-                    var newId = Guid.NewGuid();
-                    var newChannel = Channel.CreateUnbounded<SpotifyPacket>();
-                    _packetListeners.Add(newId, new PackageListenerRecord(request, newChannel.Writer));
-                    return (newId, newChannel.Reader);
-                },
-                removePackageListener: id =>
-                {
-                    var listener = _packetListeners[id];
-                    listener.Writer.TryComplete();
-                    _packetListeners.Remove(id);
-                },
-                _info.ConnectionId,
-                id,
-                byteString,
-                arg3),
-        mercury: Mercury,
-        runtime: _runtime,
-        playbackInfo => RemoteClient<RT>.OnPlaybackChanged(_info.ConnectionId, playbackInfo),
-        preferredQuality: _info.Config.Playback.PreferredQualityType,
-        autoplay: _info.Config.Playback.Autoplay
-    );
+    public Aff<RT, Either<AesKeyError, AudioKey>>
+        FetchAudioKeyFunc(AudioId id, ByteString fileId, CancellationToken ct) =>
+        FetchAudioKeyFunc(_channelWriter,
+            addPackageListener: request =>
+            {
+                var newId = Guid.NewGuid();
+                var newChannel = Channel.CreateUnbounded<SpotifyPacket>();
+                _packetListeners.Add(newId, new PackageListenerRecord(request, newChannel.Writer));
+                return (newId, newChannel.Reader);
+            },
+            removePackageListener: id =>
+            {
+                var listener = _packetListeners[id];
+                listener.Writer.TryComplete();
+                _packetListeners.Remove(id);
+            },
+            _info.ConnectionId,
+            id,
+            fileId,
+            ct);
 
 
-    private static Atom<HashMap<Guid, uint>> _audioKeySequence = Atom(LanguageExt.HashMap<Guid, uint>.Empty);
+    private static readonly Atom<HashMap<Guid, uint>> AudioKeySequence = Atom(LanguageExt.HashMap<Guid, uint>.Empty);
 
     private static Aff<RT, Either<AesKeyError, AudioKey>> FetchAudioKeyFunc(
         ChannelWriter<SpotifyPacket> channelWriter,
         Func<PackageListenerRequest, (Guid ListenerId, ChannelReader<SpotifyPacket> Reader)> addPackageListener,
         Action<Guid> removePackageListener,
         Guid infoConnectionId,
-        SpotifyId id, ByteString fileId, CancellationToken cancellationToken)
+        AudioId id, ByteString fileId, CancellationToken cancellationToken)
     {
         return Aff<RT, Either<AesKeyError, AudioKey>>(async rt =>
         {
-            var nextSeqMap = atomic(() => _audioKeySequence.Swap(x => x.AddOrUpdate(infoConnectionId,
+            var nextSeqMap = atomic(() => AudioKeySequence.Swap(x => x.AddOrUpdate(infoConnectionId,
                 Some: x => x + 1,
                 None: () => 0
             )));
