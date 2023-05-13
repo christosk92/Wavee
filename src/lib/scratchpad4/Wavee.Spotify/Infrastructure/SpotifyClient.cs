@@ -10,6 +10,7 @@ using Wavee.Core.Infrastructure.Live;
 using Wavee.Core.Infrastructure.Sys;
 using Wavee.Core.Infrastructure.Sys.IO;
 using Wavee.Core.Infrastructure.Traits;
+using Wavee.Spotify.Configs;
 using Wavee.Spotify.Infrastructure.Authentication;
 using Wavee.Spotify.Infrastructure.Connection;
 using Wavee.Spotify.Infrastructure.Crypto;

@@ -1,6 +1,7 @@
 ﻿using Spotify.Metadata;
 using Wavee.Core.Contracts;
 using Wavee.Core.Id;
+using Wavee.Spotify.Extensions;
 using Wavee.Spotify.Infrastructure;
 
 namespace Wavee.Spotify.Models.Responses;

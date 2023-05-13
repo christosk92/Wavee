@@ -8,6 +8,7 @@ using Google.Protobuf;
 using LanguageExt.UnsafeValueAccess;
 using Spotify.Metadata;
 using Wavee.Core.Id;
+using Wavee.Spotify.Extensions;
 using Wavee.Spotify.Infrastructure;
 using Wavee.Spotify.Infrastructure.Connection;
 

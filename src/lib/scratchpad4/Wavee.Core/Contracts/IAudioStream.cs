@@ -1,8 +1,7 @@
-﻿using Wavee.Core.Contracts;
-
-namespace Wavee.Player;
+﻿namespace Wavee.Core.Contracts;
 
 public interface IAudioStream
 {
     ITrack Track { get; }
+    Stream AsStream();
 }

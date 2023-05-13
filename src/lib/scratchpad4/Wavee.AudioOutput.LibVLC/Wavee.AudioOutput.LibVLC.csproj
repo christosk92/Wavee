@@ -1,19 +1,17 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <OutputType>Exe</OutputType>
         <TargetFramework>net8.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Wavee.AudioOutput.LibVLC\Wavee.AudioOutput.LibVLC.csproj" />
-      <ProjectReference Include="..\Wavee.Spotify\Wavee.Spotify.csproj" />
+      <ProjectReference Include="..\Wavee.Core\Wavee.Core.csproj" />
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="VideoLAN.LibVLC.Windows" Version="3.0.18" />
+      <PackageReference Include="LibVLCSharp" Version="3.7.0" />
     </ItemGroup>
 
 </Project>

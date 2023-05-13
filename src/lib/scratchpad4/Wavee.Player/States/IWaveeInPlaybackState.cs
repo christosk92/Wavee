@@ -1,4 +1,6 @@
-﻿namespace Wavee.Player.States;
+﻿using Wavee.Core.Contracts;
+
+namespace Wavee.Player.States;
 
 public interface IWaveeInPlaybackState : IWaveePlaybackState
 {

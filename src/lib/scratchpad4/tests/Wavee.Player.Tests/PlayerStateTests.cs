@@ -25,14 +25,16 @@ public class PlayerStateTests
             new FutureTrack(secondT, () => CreateFakeStream(secondT)));
 
         var state = new WaveePlayerState(
-            new WaveeLoadingState(0, firstTrackAudioId, false, TimeSpan.Zero, false)
+            new WaveeLoadingState(0, 
+                firstTrackAudioId, 
+                false, TimeSpan.Zero, false, true)
             {
                 Stream = CreateFakeStream(firstTrackAudioId)
             }, Option<WaveeContext>.None,
             RepeatStateType.None, false, queue);
 
         // Act
-        var newState = state.SkipNext();
+        var newState = state.SkipNext(true);
 
         // Assert
         Assert.True(newState.Queue.IsEmpty);
@@ -50,14 +52,14 @@ public class PlayerStateTests
             new WaveeLoadingState(0,
                 firstTrackAudioId,
                 false,
-                TimeSpan.Zero, false)
+                TimeSpan.Zero, false, true)
             {
                 Stream = CreateFakeStream(firstTrackAudioId)
             }, Option<WaveeContext>.None,
             RepeatStateType.RepeatTrack, false, new Que<FutureTrack>());
 
         // Act
-        var newState = state.SkipNext();
+        var newState = state.SkipNext(true);
 
         // Assert
         Assert.True(newState.State is WaveeLoadingState);
@@ -82,7 +84,7 @@ public class PlayerStateTests
             new WaveeLoadingState(0,
                 trackAudioId,
                 false,
-                TimeSpan.Zero, false)
+                TimeSpan.Zero, false, true)
             {
                 Stream = CreateFakeStream(trackAudioId)
             },
@@ -93,7 +95,7 @@ public class PlayerStateTests
         );
 
         // Act: Set context and add to queue
-        var stateWithContext = state.SetContext(context, Some(0), Some(TimeSpan.Zero), Some(false));
+        var stateWithContext = state.PlayContext(context, Some(0), Some(TimeSpan.Zero), Some(false));
         var newState = stateWithContext.AddToQueue(queueTrack);
 
         // Assert
@@ -117,6 +119,10 @@ public class PlayerStateTests
         }
 
         public ITrack Track { get; }
+        public Stream AsStream()
+        {
+            throw new NotImplementedException();
+        }
 
         public Task<Stream> GetStreamAsync()
         {

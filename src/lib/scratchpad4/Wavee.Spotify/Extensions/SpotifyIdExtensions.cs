@@ -1,10 +1,9 @@
-﻿using System.Buffers;
-using System.Numerics;
+﻿using System.Numerics;
 using System.Text;
 using Spotify.Metadata;
 using Wavee.Core.Id;
 
-namespace Wavee.Spotify.Infrastructure;
+namespace Wavee.Spotify.Extensions;
 
 internal static class SpotifyIdExtensions
 {

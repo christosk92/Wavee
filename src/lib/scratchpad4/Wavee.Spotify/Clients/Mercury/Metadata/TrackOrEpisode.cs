@@ -2,6 +2,8 @@
 using LanguageExt.UnsafeValueAccess;
 using Spotify.Metadata;
 using Wavee.Core.Id;
+using Wavee.Spotify.Configs;
+using Wavee.Spotify.Extensions;
 using Wavee.Spotify.Infrastructure;
 
 namespace Wavee.Spotify.Clients.Mercury.Metadata;

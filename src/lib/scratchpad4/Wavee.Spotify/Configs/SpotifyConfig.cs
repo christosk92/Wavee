@@ -1,6 +1,6 @@
 ﻿using Eum.Spotify.connectstate;
 
-namespace Wavee.Spotify.Infrastructure;
+namespace Wavee.Spotify.Configs;
 
 public readonly record struct SpotifyConfig(
     Option<string> CachePath,

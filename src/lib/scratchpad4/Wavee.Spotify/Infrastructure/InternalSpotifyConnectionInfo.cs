@@ -1,4 +1,5 @@
 ﻿using Eum.Spotify;
+using Wavee.Spotify.Configs;
 
 namespace Wavee.Spotify.Infrastructure;
 

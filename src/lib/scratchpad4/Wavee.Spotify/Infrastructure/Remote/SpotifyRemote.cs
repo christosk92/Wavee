@@ -20,5 +20,4 @@ internal readonly struct SpotifyRemote<R> : ISpotifyRemoteClient
             .OnClusterChange()
             .Throttle(TimeSpan.FromMilliseconds(50))
             .Select(SpotifyRemoteState.From);
-
 }

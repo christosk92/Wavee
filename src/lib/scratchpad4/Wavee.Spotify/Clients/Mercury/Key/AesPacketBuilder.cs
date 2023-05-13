@@ -1,6 +1,7 @@
 ﻿using System.Buffers.Binary;
 using Google.Protobuf;
 using Wavee.Core.Id;
+using Wavee.Spotify.Extensions;
 using Wavee.Spotify.Infrastructure;
 using Wavee.Spotify.Infrastructure.Connection;
 

@@ -4,6 +4,7 @@ using Wavee.Core.Id;
 using Wavee.Core.Infrastructure.Live;
 using Wavee.Core.Infrastructure.Traits;
 using Wavee.Spotify.Infrastructure;
+using Wavee.Spotify.Infrastructure.Playback;
 using Wavee.Spotify.Infrastructure.Remote;
 using Wavee.Spotify.Models.Responses;
 using Wavee.Spotify.Remote.Infrastructure;
@@ -15,12 +16,18 @@ internal sealed class SpotifyCore<R> : ISpotifyCore
 {
     private readonly SpotifyConnection<R> _connection;
     private readonly SpotifyRemoteConnection<R> _remoteConnection;
+
     public SpotifyCore(
         SpotifyConnection<R> connection,
         SpotifyRemoteConnection<R> remoteConnection)
     {
         _connection = connection;
         _remoteConnection = remoteConnection;
+
+        PlaybackClient = new SpotifyPlaybackClient<R>(
+            connection: _connection,
+            remoteConnection: _remoteConnection
+        );
     }
 
     public string Id { get; } = ISpotifyCore.SourceId;
@@ -34,7 +41,8 @@ internal sealed class SpotifyCore<R> : ISpotifyCore
         var track = await _connection.Mercury.GetTrack(new AudioId(id, AudioItemType.Track, ISpotifyCore.SourceId), ct);
         return SpotifyTrackResponse.From(countryCoe, cdnUrl, track);
     }
-
+    
+    public ISpotifyPlaybackClient PlaybackClient { get; }
 
     public ISpotifyRemoteClient RemoteClient =>
         new SpotifyRemote<R>(
@@ -51,5 +59,6 @@ public interface ISpotifyCore : IAudioCore
 {
     const string SourceId = "spotify";
     ISpotifyRemoteClient RemoteClient { get; }
+    ISpotifyPlaybackClient PlaybackClient { get; }
     AudioId FromUri(string uri);
 }

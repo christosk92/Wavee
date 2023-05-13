@@ -1,9 +1,12 @@
-﻿namespace Wavee.Core.Infrastructure.Traits;
+﻿using Wavee.Core.Contracts;
+
+namespace Wavee.Core.Infrastructure.Traits;
 
 public interface AudioOutputIO
 {
     Unit Start();
     Unit Pause();
+    Task PlayStream(Stream stream, Action<TimeSpan> onPositionChanged, bool closeOtherStreams);
 }
 
 /// <summary>

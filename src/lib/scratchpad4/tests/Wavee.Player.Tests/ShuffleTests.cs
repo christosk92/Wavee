@@ -1,5 +1,6 @@
 ﻿using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
+using Wavee.Core.Contracts;
 using Wavee.Core.Enums;
 using Wavee.Core.Id;
 using Wavee.Player.States;
@@ -22,7 +23,7 @@ public class ShuffleTests
             new AudioId("ContextId", AudioItemType.Playlist, "Test Context"), "Test Context",
             tracks);
         var state = new WaveePlayerState(
-            new WaveeLoadingState(0, new AudioId("0", AudioItemType.Track, "test"), false, TimeSpan.Zero, false)
+            new WaveeLoadingState(0, new AudioId("0", AudioItemType.Track, "test"), false, TimeSpan.Zero, false, true)
             {
                 Stream = null
             },
@@ -30,7 +31,7 @@ public class ShuffleTests
 
         // Act
         var newState = state.Shuffle(true);
-        var nextTrackState = newState.SkipNext();
+        var nextTrackState = newState.SkipNext(true);
         // Assert
         // Based on the mock "random" sequence, the first track after shuffling should be the one at index 1 in the original list
         Assert.Equal(tracks[1].Id, ((WaveeLoadingState)nextTrackState.State).TrackId.ValueUnsafe());

@@ -1,4 +1,5 @@
 ﻿using LanguageExt;
+using Wavee.Core.Contracts;
 using Wavee.Core.Id;
 
 namespace Wavee.Player.States;
@@ -8,7 +9,8 @@ public readonly record struct WaveeLoadingState(
     Option<AudioId> TrackId,
     bool FromQueue,
     TimeSpan StartFrom,
-    bool StartPaused
+    bool StartPaused,
+    bool CloseOtherStreams
 ) : IWaveePlaybackState
 {
     public required Task<IAudioStream> Stream { get; init; }
@@ -24,5 +26,26 @@ public readonly record struct WaveeLoadingState(
         {
             Stream = stream
         };
+    }
+
+    public IWaveeInPlaybackState ToPlayingOrPaused(IAudioStream stream)
+    {
+        return StartPaused
+            ? new WaveePausedState(
+                stream.Track,
+                StartFrom,
+                IndexInContext,
+                FromQueue)
+            {
+                Stream = stream
+            }
+            : new WaveePlayingState(
+                stream.Track,
+                StartFrom,
+                IndexInContext,
+                FromQueue)
+            {
+                Stream = stream
+            };
     }
 }
