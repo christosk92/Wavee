@@ -10,7 +10,7 @@ internal sealed class SpotifyStream<RT> : Stream, ISpotifyStream where RT : stru
 {
     private readonly Option<NormalisationData> _normalisationDatas;
     private readonly long _offset;
-    private readonly DecryptedSpotifyStream<RT> _decryptedStream;
+    private DecryptedSpotifyStream<RT> _decryptedStream;
 
     public SpotifyStream(DecryptedSpotifyStream<RT> decryptedStream,
         Option<NormalisationData> normalisationDatas,
@@ -29,6 +29,7 @@ internal sealed class SpotifyStream<RT> : Stream, ISpotifyStream where RT : stru
     protected override void Dispose(bool disposing)
     {
         _decryptedStream.Dispose();
+        _decryptedStream = null!;
         base.Dispose(disposing);
     }
 

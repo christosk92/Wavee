@@ -44,20 +44,28 @@ public sealed class LibVlcOutput : AudioOutputIO
         var tcs = new TaskCompletionSource<Unit>(TaskCreationOptions.RunContinuationsAsynchronously);
         try
         {
-            output.Player.PositionChanged += (sender, args) =>
+            void PlayerOnPositionChanged(object? sender, MediaPlayerPositionChangedEventArgs e)
             {
-                onPositionChanged(TimeSpan.FromSeconds(args.Position));
-            };
-            output.Player.Stopped += (sender, args) =>
+                onPositionChanged(TimeSpan.FromSeconds(e.Position));
+            }
+            
+            void Stopped(object? sender, EventArgs e)
             {
-                atomic(() => _outputs.Swap(x => x.Filter(x => x != output)));
+                output.Player.Stopped -= Stopped;
+                output.Player.PositionChanged -= PlayerOnPositionChanged;
+                output.Player.EndReached -= EndReached;
+                
                 tcs.SetResult(Unit.Default);
                 output.Dispose();
-            };
-            output.Player.EndReached += (sender, args) =>
+            }
+            void EndReached(object? sender, EventArgs _)
             {
                 try
                 {
+                    output.Player.Stopped -= Stopped;
+                    output.Player.PositionChanged -= PlayerOnPositionChanged;
+                    output.Player.EndReached -= EndReached;
+                    
                     atomic(() => atomic(() => _outputs.Swap(x => x.Filter(x => x != output))));
                     tcs.SetResult(Unit.Default);
                     output.Dispose();
@@ -66,7 +74,11 @@ public sealed class LibVlcOutput : AudioOutputIO
                 {
                     tcs.SetException(e);
                 }
-            };
+            }
+            
+            output.Player.PositionChanged += PlayerOnPositionChanged;
+            output.Player.Stopped += Stopped;
+            output.Player.EndReached += EndReached;
         }
         catch (Exception e)
         {

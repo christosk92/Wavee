@@ -8,9 +8,9 @@ internal sealed class EncryptedSpotifyStream<RT> : IEncryptedSpotifyStream, IDis
 {
     private readonly int _numberOfChunks;
 
-    private readonly Option<TaskCompletionSource<ReadOnlyMemory<byte>>>[] _requested;
-    private readonly Func<int, Task<ReadOnlyMemory<byte>>> _getChunk;
-    private readonly Option<Action<ReadOnlyMemory<byte>>> _finished;
+    private Option<TaskCompletionSource<ReadOnlyMemory<byte>>>[] _requested;
+    private Func<int, Task<ReadOnlyMemory<byte>>> _getChunk;
+    private Option<Action<ReadOnlyMemory<byte>>> _finished;
 
     public EncryptedSpotifyStream(
         ReadOnlyMemory<byte> firstChunk,
@@ -145,6 +145,8 @@ internal sealed class EncryptedSpotifyStream<RT> : IEncryptedSpotifyStream, IDis
     {
         //clear _requested
         _requested.AsSpan().Clear();
+        _getChunk = null;
+        _finished = None;
     }
 }
 
