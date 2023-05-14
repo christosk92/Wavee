@@ -74,11 +74,11 @@ internal sealed class SpotifyStream<RT> : Stream, ISpotifyStream where RT : stru
     public override bool CanRead => true;
     public override bool CanSeek => true;
     public override bool CanWrite => false;
-    public override long Length => _decryptedStream.Length - _offset;
+    public override long Length => Math.Max(0, _decryptedStream.Length - _offset);
 
     public override long Position
     {
-        get => _decryptedStream.Position - _offset;
-        set => _decryptedStream.Position = value + _offset;
+        get => Math.Max(0, _decryptedStream.Position - _offset);
+        set => _decryptedStream.Position = Math.Min(value + _offset, Length);
     }
 }

@@ -28,6 +28,25 @@ internal sealed class EncryptedSpotifyStream<RT> : IEncryptedSpotifyStream, IDis
         Length = length;
         _getChunk = getChunk;
         _finished = finished;
+
+        Task.Run(() =>
+        {
+            for(int i = 1; i < _numberOfChunks; i++)
+            {
+                if (_requested[i].IsNone)
+                {
+                    var tcs = new TaskCompletionSource<ReadOnlyMemory<byte>>();
+                    _requested[i] = tcs;
+                    var i1 = i;
+                    _ = Task.Run(async () =>
+                    {
+                        var preloaded = await _getChunk(i1);
+                        tcs.SetResult(preloaded);
+                    });
+                }
+            }
+
+        });
     }
 
     public long Position { get; set; }
@@ -39,7 +58,7 @@ internal sealed class EncryptedSpotifyStream<RT> : IEncryptedSpotifyStream, IDis
         var chunkToRead = (int)(Position / SpotifyPlaybackConstants.ChunkSize);
         var chunkOffset = (int)(Position % SpotifyPlaybackConstants.ChunkSize);
 
-        var chunkFinal = FetchChunk(chunkToRead).ConfigureAwait(false).GetAwaiter().GetResult();
+        var chunkFinal = FetchChunk(chunkToRead, NumberOfChunks).ConfigureAwait(false).GetAwaiter().GetResult();
 
         var firstChunkToRead =
             chunkFinal.Slice(chunkOffset, Math.Min(buffer.Length, chunkFinal.Length - chunkOffset));
@@ -81,27 +100,6 @@ internal sealed class EncryptedSpotifyStream<RT> : IEncryptedSpotifyStream, IDis
                 _finished.IfSome(action1 => action1(final));
             }
         }
-
-        if (index + preloadAhead < _numberOfChunks)
-        {
-            for (var i = index + 1; i < index + preloadAhead; i++)
-            {
-                if (_requested[i].IsNone)
-                {
-                    var tcs = new TaskCompletionSource<ReadOnlyMemory<byte>>();
-                    _requested[i] = tcs;
-                    var i1 = i;
-                    _ = Task.Run(async () =>
-                    {
-                        var preloaded = await _getChunk(i1);
-                        tcs.SetResult(preloaded);
-                    });
-                }
-            }
-
-            ;
-        }
-
         return chunk;
     }
 
