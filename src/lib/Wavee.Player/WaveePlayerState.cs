@@ -83,6 +83,61 @@ public readonly record struct WaveePlayerState(
         };
     }
 
+    public Option<Task<IAudioStream>> GetNextStreamForPreload()
+    {
+        if (RepeatState is RepeatStateType.RepeatTrack)
+        {
+            //return current stream
+            return State switch
+            {
+                WaveeLoadingState loadingState => Some(loadingState.Stream),
+                WaveePlayingState playingState => Some(Task.FromResult(playingState.Stream)),
+                WaveePausedState pausedState => Some(Task.FromResult(pausedState.Stream)),
+                WaveeEndedState endedState => Some(Task.FromResult(endedState.Stream)),
+                _ => None
+            };
+        }
+
+        //check if we have a queue
+        if (Queue.Count > 0)
+        {
+            //we have a queue, so lets get the first item from the queue
+            var item = Queue.Head();
+            return Some(item.StreamFuture());
+        }
+
+        //no queue, so lets check if we have a context
+        if (Context.IsSome)
+        {
+            var ctx = Context.ValueUnsafe();
+            //we have a context, so lets check if we have a next track
+            var index = State switch
+            {
+                WaveeLoadingState loadingState => loadingState.IndexInContext.IfNone(0),
+                WaveePlayingState playingState => playingState.IndexInContext.IfNone(0),
+                WaveePausedState pausedState => pausedState.IndexInContext.IfNone(0),
+                WaveeEndedState endedState => endedState.IndexInContext.IfNone(0),
+                _ => 0
+            };
+            var theoreticalNextIndex = index + 1;
+            //check if we have a next track
+            if (ctx.FutureTracks.Count() > theoreticalNextIndex)
+            {
+                //we have a next track, so lets return it
+                return Some(ctx.FutureTracks.ElementAt(theoreticalNextIndex).StreamFuture());
+            }
+
+            //check if repeat state is set to repeat context
+            if (RepeatState is RepeatStateType.RepeatContext)
+            {
+                //we are repeating the context, so lets return the first track
+                return Some(Context.ValueUnsafe().FutureTracks.ElementAt(0).StreamFuture());
+            }
+        }
+
+        return None;
+    }
+
     public WaveePlayerState SkipNext(bool immediatly)
     {
         //check if we have a repeat state
@@ -116,12 +171,6 @@ public readonly record struct WaveePlayerState(
             };
         }
 
-        //dispose of the current stream
-        if (State is IWaveeInPlaybackState playbackState)
-        {
-            playbackState.Stream.AsStream().Dispose();
-        }
-
         //no repeat state, or we are repeating the context
         //but first lets check if we have an item in a queue
         if (Queue.Count > 0)
@@ -148,11 +197,15 @@ public readonly record struct WaveePlayerState(
                     StartPaused: false,
                     CloseOtherStreams: immediatly)
                 {
-                    Stream = item.StreamFuture()
+                    Stream = PreloadedStream.Match(
+                        Some: r => r,
+                        None: () => item.StreamFuture()
+                    )
                 },
                 IsShuffling = IsShuffling,
                 RepeatState = RepeatState,
-                Queue = newQueue
+                Queue = newQueue,
+                PreloadedStream = None
             };
         }
 
@@ -184,6 +237,7 @@ public readonly record struct WaveePlayerState(
             var nextTrack = GetNextTrack(context, rep, theoreticalNextIndex);
 
             var st = State;
+            var preloadedStream = PreloadedStream;
             return this with
             {
                 State = nextTrack.Match<IWaveePlaybackState>(
@@ -195,7 +249,10 @@ public readonly record struct WaveePlayerState(
                         StartPaused: false,
                         immediatly)
                     {
-                        Stream = track.StreamFuture()
+                        Stream = preloadedStream.Match(
+                            Some: r => r,
+                            None: () => track.StreamFuture()
+                        ),
                     },
                     None: () =>
                     {
@@ -209,7 +266,8 @@ public readonly record struct WaveePlayerState(
                     }),
                 IsShuffling = IsShuffling,
                 RepeatState = RepeatState,
-                Queue = Queue
+                Queue = Queue,
+                PreloadedStream = None
             };
         }
 
@@ -246,6 +304,8 @@ public readonly record struct WaveePlayerState(
 
         return nextTrack;
     }
+
+    public Option<Task<IAudioStream>> PreloadedStream { get; init; }
 }
 
 public readonly struct RandomShuffler : IShuffleProvider

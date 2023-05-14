@@ -1,117 +1,188 @@
-﻿using System.Net.Http.Headers;
-using System.Text;
-using Eum.Spotify.storage;
+﻿using System.Security.Cryptography;
 using Google.Protobuf;
 using LanguageExt;
 using LanguageExt.Effects.Traits;
-using Spotify.Metadata;
+using LanguageExt.UnsafeValueAccess;
+using Org.BouncyCastle.Crypto;
+using Org.BouncyCastle.Crypto.Parameters;
+using Org.BouncyCastle.Math;
+using Org.BouncyCastle.Security;
 using Wavee.Core.Contracts;
 using Wavee.Core.Enums;
 using Wavee.Core.Id;
-using Wavee.Core.Infrastructure.Sys.IO;
 using Wavee.Core.Infrastructure.Traits;
-using Wavee.Spotify.Cache;
 using Wavee.Spotify.Playback.Infrastructure.Key;
 using Wavee.Spotify.Playback.Metadata;
-using Wavee.Spotify.Playback.Playback.Cdn;
+using Wavee.Spotify.Playback.Playback;
+using Aes = System.Runtime.Intrinsics.Arm.Aes;
 
 namespace Wavee.Spotify.Playback.Infrastructure.Sys;
 
-public static class SpotifyPlaybackRuntime<RT> where RT : struct, HasHttp<RT>, HasDatabase<RT>
+public static class SpotifyPlaybackRuntime<R> where R : struct
 {
-    public static Aff<RT, ISpotifyStream> LoadTrack(
-        string spClientUrl,
-        TrackOrEpisode metadata,
-        Option<string> uid,
+    public static Aff<R, SpotifyStream> LoadTrack<R>(string sp,
+        TrackOrEpisode trackOrEpisode,
+        Option<string> trackUid,
         Func<TrackOrEpisode, ITrack> mapper,
         PreferredQualityType preferredQuality,
         Func<ValueTask<string>> getBearer,
-        Func<AudioId, ByteString, CancellationToken, Aff<RT, Either<AesKeyError, AudioKey>>>
-            fetchAudioKeyFunc, CancellationToken ct) =>
-        //from file in Eff(() => metadata.FindFile(preferredQuality).ValueUnsafe())
-        from file in Eff<RT, AudioFile>((_) =>
-        {
-            var chosenFile = metadata.FindFile(preferredQuality)
-                .Match(
-                    Some: x => x,
-                    None: () => metadata.FindAlternativeFile(preferredQuality)
-                        .Match(Some: x => x,
-                            None: () => throw new Exception("No file found"))
-                );
-            return chosenFile;
-        })
-        from audioKey in fetchAudioKeyFunc(metadata.Id, file.FileId, ct)
-            .Map(e => e.Match(
-                Left: x => throw new Exception("Error fetching audio key"),
-                Right: x => x))
-        from chosenEncryptionStreamAff in SpotifyCache<RT>.GetFile(file.FileId)
-            .Map(x => x.Match(
-                Some: cachedFile => SpotifyStreams<RT>.OpenEncryptedFileStream(cachedFile, metadata),
-                None: () =>
-                    from cdnUrl in GetUrl(spClientUrl, file, getBearer, ct)
-                    from encryptedStream in SpotifyStreams<RT>.OpenEncryptedStream(file, cdnUrl.Urls.First(), metadata)
-                    select encryptedStream
-            ))
-        let isVorbis = file.Format is AudioFile.Types.Format.OggVorbis96
-            or AudioFile.Types.Format.OggVorbis160
-            or AudioFile.Types.Format.OggVorbis320
-        from encryptedStream in chosenEncryptionStreamAff
-        from decryptedStream in SpotifyStreams<RT>.OpenDecryptionStream(encryptedStream, audioKey, isVorbis)
-        from subFile in SpotifyStreams<RT>.ExtractFinalStream(decryptedStream.Stream,
-            decryptedStream.NormalisationDatas, isVorbis, file,
-            metadata,
-            uid,mapper)
-        select (ISpotifyStream)subFile;
-
-    private static LanguageExt.Aff<RT, CdnUrl> GetUrl(
-        string spClientUrl,
-        AudioFile file, Func<ValueTask<string>> getBearer,
-        CancellationToken ct = default) =>
-        from jwt in getBearer().ToAff()
-            .Map(x => new AuthenticationHeaderValue("Bearer", x))
-        from cdnUrl in GetAudioStorage(spClientUrl, jwt, file.FileId, ct)
-        let urls = MaybeExpiringUrl.From(cdnUrl)
-        let cdnUrlResposne = new CdnUrl(file.FileId, urls)
-        select cdnUrlResposne;
-
-    private static LanguageExt.Aff<RT, StorageResolveResponse> GetAudioStorage(
-        string spClientUrl,
-        AuthenticationHeaderValue header,
-        ByteString fileId,
-        CancellationToken ct = default)
-    {
-        var url = $"{spClientUrl}/storage-resolve/files/audio/interactive/{ToBase16(fileId.Span)}";
-        return
-            from response in Http<RT>.Get(url, header, LanguageExt.Option<LanguageExt.HashMap<string, string>>.None, ct)
-                .MapAsync(async x =>
-                {
-                    x.EnsureSuccessStatusCode();
-                    await using var data = await x.Content.ReadAsStreamAsync(ct);
-                    return StorageResolveResponse.Parser.ParseFrom(data);
-                })
-            select response;
-    }
-
-
-    private static string ToBase16(ReadOnlySpan<byte> fileIdSpan)
-    {
-        Span<byte> buffer = new byte[40];
-        var i = 0;
-        foreach (var v in fileIdSpan)
-        {
-            buffer[i] = BASE16_DIGITS[v >> 4];
-            buffer[i + 1] = BASE16_DIGITS[v & 0x0f];
-            i += 2;
-        }
-
-        return Encoding.UTF8.GetString(buffer);
-    }
-
-    private static readonly byte[] BASE16_DIGITS = "0123456789abcdef".Select(c => (byte)c).ToArray();
+        Func<AudioId, ByteString, CancellationToken, Aff<R, Either<AesKeyError, AudioKey>>> fetchAudioKeyFunc,
+        CancellationToken ct)
+        where R : struct, HasAudioOutput<R>, HasWebsocket<R>, HasLog<R>, HasHttp<R>, HasDatabase<R> =>
+        
 }
 
-public interface ISpotifyStream : IAudioStream
+public abstract class SpotifyStream : Stream, IAudioStream
 {
-    AudioFile ChosenFile { get; }
-    Option<string> Uid { get; }
+    private readonly long _headerOffset;
+    private readonly long _totalLength;
+    private long _position;
+    //private readonly Option<AesAudioDecrypt> _decrypt;
+
+    protected SpotifyStream(
+        long headerOffset,
+        long totalLength,
+        Option<CrossfadeController> crossfadeController,
+        Option<AudioKey> audioKey)
+    {
+        Position = 0;
+        _headerOffset = headerOffset;
+        _totalLength = totalLength;
+        CrossfadeController = crossfadeController;
+    }
+
+    public abstract byte[] GetChunk(int chunkIndex);
+
+    public override int Read(byte[] buffer, int offset, int count)
+    {
+        return 0;
+    }
+
+    public override long Seek(long offset, SeekOrigin origin)
+    {
+        Position = origin switch
+        {
+            SeekOrigin.Begin => offset,
+            SeekOrigin.Current => Position + offset,
+            SeekOrigin.End => Length + offset,
+            _ => throw new ArgumentOutOfRangeException(nameof(origin), origin, null)
+        };
+        return Position;
+    }
+
+    public override void SetLength(long value)
+    {
+        throw new NotSupportedException();
+    }
+
+    public override void Write(byte[] buffer, int offset, int count)
+    {
+        throw new NotSupportedException();
+    }
+
+    public override void Flush()
+    {
+        throw new NotSupportedException();
+    }
+
+    public override bool CanRead => true;
+    public override bool CanSeek => true;
+    public override bool CanWrite => false;
+    public override long Length => _totalLength - _headerOffset;
+
+    public override long Position
+    {
+        get => Math.Max(0, _position - _headerOffset);
+        set => _position = Math.Min(value + _headerOffset, Length);
+    }
+
+    public ITrack Track { get; }
+    public Option<string> Uid { get; }
+
+    public Stream AsStream()
+    {
+        return this;
+    }
+
+    public Option<CrossfadeController> CrossfadeController { get; }
+
+
+    // private sealed class AesAudioDecrypt
+    // {
+    //     private static byte[] AUDIO_AES_IV = new byte[]
+    //     {
+    //         0x72, 0xe0, 0x67, 0xfb, 0xdd, 0xcb, 0xcf, 0x77, 0xeb, 0xe8, 0xbc, 0x64, 0x3f, 0x63, 0x0d, 0x93,
+    //     };
+    //
+    //     private static BigInteger IvInt = new BigInteger(1, AUDIO_AES_IV);
+    //     private static readonly BigInteger IvDiff = BigInteger.ValueOf(0x100);
+    //     private readonly IBufferedCipher _cipher;
+    //     private readonly KeyParameter _spec;
+    //
+    //     public AesAudioDecrypt(ReadOnlyMemory<byte> key)
+    //     {
+    //         _spec = ParameterUtilities.CreateKeyParameter("AES", key.ToArray());
+    //         _cipher = CipherUtilities.GetCipher("AES/CTR/NoPadding");
+    //     }
+    //
+    //     public Unit Decrypt(byte[] buf, int chunkIndex)
+    //     {
+    //         var iv = IvInt.Add(
+    //             BigInteger.ValueOf(SpotifyPlaybackConstants.ChunkSize * chunkIndex / 16));
+    //         for (var i = 0; i < buf.Length; i += 4096)
+    //         {
+    //             _cipher.Init(true, new ParametersWithIV(_spec, iv.ToByteArray()));
+    //
+    //             var count = Math.Min(4096, buf.Length - i);
+    //
+    //             var processed = _cipher.DoFinal(buf,
+    //                 i,
+    //                 count,
+    //                 buf, i);
+    //             if (count != processed)
+    //                 throw new IOException(string.Format("Couldn't process all data, actual: %d, expected: %d",
+    //                     processed, count));
+    //
+    //             iv = iv.Add(IvDiff);
+    //         }
+    //
+    //         return unit;
+    //     }
+    //
+    //     public Unit Seek(long to, SeekOrigin origin)
+    //     {
+    //         throw new NotImplementedException();
+    //     }
+    // }
+}
+
+internal sealed class Aes128CtrAudioDecrypt
+{
+    private AesManaged aes;
+    private ICryptoTransform decryptor;
+    private CryptoStream cs;
+
+    public Aes128CtrAudioDecrypt(byte[] key, byte[] iv)
+    {
+        aes = new AesManaged();
+        aes.Mode = CipherMode.ECB;
+        aes.Padding = PaddingMode.None;
+
+        decryptor = aes.CreateDecryptor(key, iv);
+    }
+
+    public byte[] Decrypt(byte[] cipher)
+    {
+        using var ms = new MemoryStream();
+        cs = new CryptoStream(ms, decryptor, CryptoStreamMode.Write);
+        cs.Write(cipher, 0, cipher.Length);
+        cs.Close();
+        return ms.ToArray();
+    }
+
+    public void Seek(long offset, SeekOrigin origin)
+    {
+        cs.FlushFinalBlock();
+        cs.Seek(offset, origin);
+    }
 }

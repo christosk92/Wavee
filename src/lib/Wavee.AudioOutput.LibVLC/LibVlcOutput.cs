@@ -36,8 +36,9 @@ public sealed class LibVlcOutput : AudioOutputIO
         throw new NotImplementedException();
     }
 
-    public Task PlayStream(Stream stream, Action<TimeSpan> onPositionChanged, bool closeOtherStreams)
+    public Task PlayStream(IAudioStream ass, Action<TimeSpan> onPositionChanged, bool closeOtherStreams)
     {
+        var stream = ass.AsStream();
         var output = new VlcOutput(stream);
         if (closeOtherStreams)
         {

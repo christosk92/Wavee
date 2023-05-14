@@ -30,4 +30,5 @@ public readonly record struct WaveePlayingState(
     }
 
     public Option<AudioId> TrackId => Track.Id;
+    public required Option<string> Uid { get; init; }
 }

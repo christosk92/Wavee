@@ -9,7 +9,7 @@ public interface AudioOutputIO
     Unit Pause();
 
     //ValueTask<Unit> WriteSamples(ReadOnlySpan<float> samples, CancellationToken ct = default);
-    Task PlayStream(Stream stream, Action<TimeSpan> onPositionChanged, bool closeOtherStreams);
+    Task PlayStream(IAudioStream stream, Action<TimeSpan> onPositionChanged, bool closeOtherStreams);
     TimeSpan Position();
     Unit Seek(TimeSpan seekPosition);
 }

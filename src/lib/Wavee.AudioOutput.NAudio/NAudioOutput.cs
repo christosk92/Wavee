@@ -1,6 +1,9 @@
 ﻿using System.Buffers;
+using System.Runtime.InteropServices;
 using LanguageExt;
+using LanguageExt.UnsafeValueAccess;
 using NAudio.Wave;
+using Wavee.Core.Contracts;
 using Wavee.Core.Infrastructure.Traits;
 using static LanguageExt.Prelude;
 
@@ -30,13 +33,49 @@ public sealed class NAudioOutput : AudioOutputIO
         atomic(() => WaveeCore.AudioOutput.Swap(_ => _instance));
     }
 
-    private class nHolder : IDisposable
+    private class FadeInOutSampleProvider : ISampleProvider
     {
-        public nHolder(Stream stream)
+        private readonly CrossfadeController _crossfadeController;
+        private readonly ISampleProvider _source;
+        private Func<TimeSpan> _position;
+        private TimeSpan _trackDuration;
+
+        public FadeInOutSampleProvider(ISampleProvider source, WaveFormat waveFormat, Func<TimeSpan> position,
+            CrossfadeController crossfadeController, TimeSpan trackDuration)
         {
-            WaveStream = AudioDecoderRuntime.OpenAudioDecoder(stream).Run().ThrowIfFail();
+            _source = source;
+            WaveFormat = waveFormat;
+            _position = position;
+            _crossfadeController = crossfadeController;
+            _trackDuration = trackDuration;
         }
 
+        public int Read(float[] buffer, int offset, int count)
+        {
+            var position = _position();
+            var samples = _source.Read(buffer, offset, count);
+            var factor = _crossfadeController.GetFactor(position, _trackDuration);
+            for (int i = 0; i < samples; i++)
+            {
+                buffer[i + offset] *= factor;
+            }
+
+            return samples;
+        }
+
+        public WaveFormat WaveFormat { get; }
+    }
+
+    private class nHolder : IDisposable
+    {
+        public nHolder(IAudioStream stream)
+        {
+            WaveStream = AudioDecoderRuntime.OpenAudioDecoder(stream.AsStream()).Run().ThrowIfFail();
+            SampleProvider = new FadeInOutSampleProvider(WaveStream.ToSampleProvider(), WaveStream.WaveFormat,
+                () => WaveStream.CurrentTime, stream.CrossfadeController.ValueUnsafe(), stream.Track.Duration);
+        }
+
+        public ISampleProvider SampleProvider { get; }
         public WaveStream? WaveStream { get; set; }
 
         public void Seek(TimeSpan position)
@@ -93,9 +132,9 @@ public sealed class NAudioOutput : AudioOutputIO
     //     throw new NotImplementedException();
     // }
 
-    public Task PlayStream(Stream stream, Action<TimeSpan> onPositionChanged, bool closeOtherStreams)
+    public Task PlayStream(IAudioStream audioStream, Action<TimeSpan> onPositionChanged, bool closeOtherStreams)
     {
-        var output = new nHolder(stream);
+        var output = new nHolder(audioStream);
         if (closeOtherStreams)
         {
             _outputs.Iter(o => o.Dispose());
@@ -112,17 +151,19 @@ public sealed class NAudioOutput : AudioOutputIO
             // byte[] samples = ArrayPool<byte>.Shared.Rent(samplesSpan.Length);
 
             //read samples
-            var samplesSpan = new byte[4096];
+            var samplesFloat = new float[4096];
             if (output.WaveStream != null)
             {
                 while (true)
                 {
                     try
                     {
-                        int read = output.WaveStream.Read(samplesSpan);
+                        int read = output.SampleProvider.Read(samplesFloat, 0, samplesFloat.Length);
                         if (read > 0)
                         {
-                            _bufferedWaveProvider.AddSamples(samplesSpan, 0, read);
+                            //convert to bytes
+                            var samplesSpan = MemoryMarshal.Cast<float, byte>(samplesFloat.AsSpan(0, read)).ToArray();
+                            _bufferedWaveProvider.AddSamples(samplesSpan, 0, samplesSpan.Length);
                             onPositionChanged(output.WaveStream.CurrentTime);
                             while (_bufferedWaveProvider.BufferedDuration.TotalSeconds > 0.5)
                             {

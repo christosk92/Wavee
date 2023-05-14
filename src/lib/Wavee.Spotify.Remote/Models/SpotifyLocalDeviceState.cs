@@ -1,14 +1,11 @@
 ﻿using System.Security.Cryptography;
 using Eum.Spotify.connectstate;
-using Google.Protobuf.WellKnownTypes;
 using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
-using Spotify.Metadata;
 using Wavee.Core.Enums;
 using Wavee.Core.Id;
 using Wavee.Player;
 using Wavee.Player.States;
-using Wavee.Spotify.Playback.Infrastructure.Sys;
 
 namespace Wavee.Spotify.Remote.Models;
 
@@ -244,7 +241,7 @@ public readonly record struct SpotifyLocalDeviceState(
 
     public SpotifyLocalDeviceState SetPlaying(WaveePlayingState playing)
     {
-        var uid = ((ISpotifyStream)playing.Stream).Uid;
+        var uid = playing.Uid;
         if (uid.IsSome)
         {
             State.Track.Uid = uid.ValueUnsafe();

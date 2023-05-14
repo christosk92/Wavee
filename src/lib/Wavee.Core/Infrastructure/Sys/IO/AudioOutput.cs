@@ -35,7 +35,7 @@ public static class AudioOutput<RT>
         select pos;
 
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Eff<RT, Task> PlayStream(Stream stream,
+    public static Eff<RT, Task> PlayStream(IAudioStream stream,
         Action<TimeSpan> onPositionChanged,
         bool closeOtherStreams) =>
         from handle in default(RT).AudioOutputEff.Map(e => e.Match(

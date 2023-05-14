@@ -27,7 +27,7 @@ public readonly record struct NormalisationData(
         return 1;
     }
 
-    internal static Option<NormalisationData> ParseFromOgg<RT>(DecryptedSpotifyStream<RT> decryptedFile) where RT : struct, HasHttp<RT>
+    internal static Option<NormalisationData> ParseFromOgg<RT>(Stream decryptedFile) where RT : struct, HasHttp<RT>
     {
         var newpos = decryptedFile.Seek((long)SPOTIFY_NORMALIZATION_HEADER_START_OFFSET, SeekOrigin.Begin);
         if (newpos != (long)SPOTIFY_NORMALIZATION_HEADER_START_OFFSET)
