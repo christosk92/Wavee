@@ -35,6 +35,7 @@ public readonly record struct SpotifyWebsocketMessage(HashMap<string, string> He
                 ? SpotifyWebsocketMessageType.ConnectionId
                 : SpotifyWebsocketMessageType.Message,
             "request" => SpotifyWebsocketMessageType.Request,
+            "pong" => SpotifyWebsocketMessageType.Pong,
             _ => throw new Exception("Unknown websocket message type")
         };
 
@@ -103,5 +104,6 @@ public enum SpotifyWebsocketMessageType
 {
     ConnectionId,
     Message,
-    Request
+    Request,
+    Pong
 }

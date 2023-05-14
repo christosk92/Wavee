@@ -25,6 +25,11 @@ public sealed class SpotifyRemoteConnection<R> where R : struct, HasWebsocket<R>
                 HandleMessage(message);
             }
         });
+        
+        Task.Factory.StartNew(async () =>
+        {
+            
+        });
 
         ConnectionId = Ref(Option<string>.None);
         LatestCluster = Ref(Option<Cluster>.None);

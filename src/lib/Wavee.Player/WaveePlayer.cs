@@ -87,6 +87,7 @@ public static class WaveePlayer
                         _playerLock.Release();
                         if (swappedTo.State is WaveeLoadingState)
                             _playerReady.Set();
+                        GC.Collect();
                         break;
                     case PauseCommand:
                         var pos = AudioOutput<WaveeRuntime>.Pause().Run(Runtime).ThrowIfFail();

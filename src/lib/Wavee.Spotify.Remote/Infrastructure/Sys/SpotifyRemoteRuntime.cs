@@ -1,5 +1,6 @@
 ﻿using System.Net.Http.Headers;
 using System.Net.WebSockets;
+using System.Text.Json;
 using Eum.Spotify.connectstate;
 using Google.Protobuf;
 using LanguageExt;
@@ -90,6 +91,32 @@ public static class SpotifyRemoteRuntime<R> where R : struct, HasWebsocket<R>, H
             }, ct);
             return unit;
         })
+        from _____ in Aff<R, Unit>(async (r) =>
+        {
+            await Task.Factory.StartNew(async () =>
+            {
+                while (true)
+                {
+                    //{"type":"ping"}
+                    var pingMessage = new
+                    {
+                        type = "ping"
+                    };
+                    ReadOnlyMemory<byte> json = JsonSerializer.SerializeToUtf8Bytes(pingMessage);
+                    var aff =
+                        from msg in WriteMessage(ws, json, ct)
+                        select unit;
+
+                    var result = await aff.Run(r);
+                    if (result.IsFail)
+                    {
+                        break;
+                    }
+                    await Task.Delay(TimeSpan.FromSeconds(25));
+                }
+            }, ct);
+            return unit;
+        })
         select emptyState;
 
     public static Aff<R, Cluster>
@@ -132,4 +159,9 @@ public static class SpotifyRemoteRuntime<R> where R : struct, HasWebsocket<R>, H
         ReadNextMessage(WebSocket websocket, CancellationToken ct = default) =>
         from message in Ws<R>.Read(websocket, ct)
         select SpotifyWebsocketMessage.ParseFrom(message);
+
+    private static Aff<R, Unit> WriteMessage(WebSocket websocket, ReadOnlyMemory<byte> msg,
+        CancellationToken ct = default) =>
+        from message in Ws<R>.Write(websocket, msg)
+        select unit;
 }
