@@ -10,6 +10,7 @@ using Wavee.Core.Infrastructure.Traits;
 [assembly: InternalsVisibleTo("Wavee.Spotify")]
 [assembly: InternalsVisibleTo("Wavee.Player")]
 [assembly: InternalsVisibleTo("Wavee.AudioOutput.LibVLC")]
+[assembly: InternalsVisibleTo("Wavee.AudioOutput.NAudio")]
 namespace Wavee;
 
 public static class WaveeCore

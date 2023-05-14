@@ -94,13 +94,13 @@ public sealed class LibVlcOutput : AudioOutputIO
     public TimeSpan Position()
     {
         return _outputs.LastOrNone().Match(
-            Some: o => TimeSpan.FromSeconds(o.Player.Position),
+            Some: o => TimeSpan.FromMilliseconds(o.Player.Time),
             None: () => TimeSpan.Zero);
     }
 
     public Unit Seek(TimeSpan seekPosition)
     {
-        _outputs.LastOrNone().IfSome(o => o.Player.Time = (long)seekPosition.TotalMilliseconds);
+        _outputs.LastOrNone().IfSome(o => o.Player.SeekTo(seekPosition));
         return Unit.Default;
     }
 
@@ -121,10 +121,7 @@ public sealed class LibVlcOutput : AudioOutputIO
 
         public void Dispose()
         {
-            Task.Run(() =>
-            {
-                Player.Dispose();
-            });
+            Task.Run(() => { Player.Dispose(); });
             Input.Dispose();
             Media.Dispose();
             Player = null;

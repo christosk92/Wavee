@@ -93,7 +93,9 @@ internal class SpotifyPlaybackClient<R> : ISpotifyPlaybackClient
                     DeviceType = _connection.Config.Remote.DeviceType,
                     IsActive = true,
                     PlayingSince = atomic(() => _startedPlayingAt.Swap(x =>
-                        x.IfNone(DateTimeOffset.UtcNow)).Bind(x => x))
+                        x.IfNone(DateTimeOffset.UtcNow)).Bind(x => x)),
+                    LastCommandId = _remoteConnection.LastCommandId,
+                    LastCommandSentBy = _remoteConnection.LastCommandSentBy,
                 })
                 .SetShuffling(obj.IsShuffling)
                 .SetRepeatState(obj.RepeatState);
@@ -181,8 +183,10 @@ internal class SpotifyPlaybackClient<R> : ISpotifyPlaybackClient
                         "track" => AudioItemType.Track,
                         "episode" => AudioItemType.PodcastEpisode,
                     }, ISpotifyCore.SourceId);
+                    var uid = track.HasUid ? track.Uid : Option<string>.None;
                     yield return new FutureTrack(id,
-                        () => StreamFuture(connection, id, preferredQualityType, track.HasUid ? track.Uid : None,
+                        Uid: uid,
+                        () => StreamFuture(connection, id, preferredQualityType, uid,
                             runtime));
                 }
             }

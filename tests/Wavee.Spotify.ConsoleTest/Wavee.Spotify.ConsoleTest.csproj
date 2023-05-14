@@ -9,12 +9,14 @@
 
     <ItemGroup>
       <ProjectReference Include="..\..\src\lib\Wavee.AudioOutput.LibVLC\Wavee.AudioOutput.LibVLC.csproj" />
+      <ProjectReference Include="..\..\src\lib\Wavee.AudioOutput.NAudio\Wavee.AudioOutput.NAudio.csproj" />
       <ProjectReference Include="..\..\src\lib\Wavee.Core\Wavee.Core.csproj" />
       <ProjectReference Include="..\..\src\lib\Wavee.Spotify.Proto\Wavee.Spotify.Proto.csproj" />
       <ProjectReference Include="..\..\src\lib\Wavee.Spotify\Wavee.Spotify.csproj" />
     </ItemGroup>
 
     <ItemGroup>
+      <PackageReference Include="NAudio" Version="2.1.0" />
       <PackageReference Include="VideoLAN.LibVLC.Windows" Version="3.0.18" />
     </ItemGroup>
 

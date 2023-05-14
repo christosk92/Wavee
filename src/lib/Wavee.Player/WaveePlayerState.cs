@@ -265,4 +265,6 @@ public readonly record struct WaveeContext(
     string Name,
     IEnumerable<FutureTrack> FutureTracks);
 
-public readonly record struct FutureTrack(AudioId Id, Func<Task<IAudioStream>> StreamFuture);
+public readonly record struct FutureTrack(AudioId Id,
+    Option<string> Uid,
+    Func<Task<IAudioStream>> StreamFuture);

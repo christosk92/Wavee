@@ -13,10 +13,13 @@ public static class AudioOutput<RT>
     /// </summary>
     /// <returns></returns>
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Eff<RT, Unit> Start() =>
+    public static Eff<RT, TimeSpan> Start() =>
         from _ in default(RT).AudioOutputEff.Map(e => e.IfSome(x => x.Start()))
-        select unit;
-
+        from pos in default(RT).AudioOutputEff.Map(e =>
+            e.Match(
+                Some: x => x.Position(),
+                None: () => TimeSpan.Zero))
+        select pos;
     /// <summary>
     /// Halt current audio playback. Aka pausing.
     /// </summary>
@@ -44,4 +47,11 @@ public static class AudioOutput<RT>
     public static Eff<RT, Unit> Seek(TimeSpan seekPosition) =>
         from _ in default(RT).AudioOutputEff.Map(e => e.IfSome(x => x.Seek(seekPosition)))
         select unit;
+    
+    public static Eff<RT, TimeSpan> Position =>
+        from pos in default(RT).AudioOutputEff.Map(e =>
+            e.Match(
+                Some: x => x.Position(),
+                None: () => TimeSpan.Zero))
+        select pos;
 }

@@ -41,6 +41,9 @@ public static class WaveePlayer
         StartMainLoop(channel.Reader);
     }
 
+    public static Option<TimeSpan> Position =>
+        AudioOutput<WaveeRuntime>.Position.Run(Runtime).ThrowIfFail();
+
     public static void SkipNext(bool immediately)
     {
         _commandChannelWriter.TryWrite(new SkipNextCommand(immediately));
@@ -51,19 +54,22 @@ public static class WaveePlayer
         _commandChannelWriter.TryWrite(new PlayContextCommand(context, startFrom, index, startPaused));
     }
 
-    public static void Pause()
+    public static Unit Pause()
     {
         _commandChannelWriter.TryWrite(PauseCommand.Default);
+        return unit;
     }
 
-    public static void Resume()
+    public static Unit Resume()
     {
         _commandChannelWriter.TryWrite(ResumeCommand.Default);
+        return unit;
     }
 
-    public static void Seek(TimeSpan position)
+    public static Unit Seek(TimeSpan position, Option<DateTimeOffset> since)
     {
-        _commandChannelWriter.TryWrite(new SeekCommand(position));
+        _commandChannelWriter.TryWrite(new SeekCommand(since.IfNone(DateTimeOffset.UtcNow), position));
+        return unit;
     }
 
     private static async void StartMainLoop(ChannelReader<IInternalPlayerCommand> channelReader)
@@ -76,6 +82,34 @@ public static class WaveePlayer
                 {
                     case SeekCommand seek:
                         AudioOutput<WaveeRuntime>.Seek(seek.Position).Run(Runtime).ThrowIfFail();
+                        //invoke callback
+                        atomic(() => _state.Swap(f =>
+                        {
+                            return f with
+                            {
+                                State = f.State switch
+                                {
+                                    WaveePausedState pausedState => pausedState with
+                                    {
+                                        Position = seek.Position
+                                    },
+                                    WaveePlayingState playingState => playingState with
+                                    {
+                                        PositionAsOfSince = seek.Position,
+                                        Since = seek.Since
+                                    },
+                                    WaveeLoadingState loadingState => loadingState with
+                                    {
+                                        StartFrom = seek.Position
+                                    },
+                                    WaveeEndedState endedState => endedState with
+                                    {
+                                        Position = endedState.Position
+                                    },
+                                    _ => f.State
+                                }
+                            };
+                        }));
                         break;
                     case SkipNextCommand skipNext:
                         if (!skipNext.Immediately)
@@ -105,15 +139,25 @@ public static class WaveePlayer
                         }));
                         break;
                     case ResumeCommand:
-                        AudioOutput<WaveeRuntime>.Start().Run(Runtime);
+                        var newPos =
+                            AudioOutput<WaveeRuntime>.Start().Run(Runtime).ThrowIfFail();
                         atomic(() => _state.Swap(f =>
                         {
                             return f with
                             {
                                 State = f.State switch
                                 {
-                                    WaveeLoadingState loadingState => loadingState with { StartPaused = true },
-                                    WaveePausedState pausedState => pausedState.ToPlayingState(),
+                                    WaveeLoadingState loadingState => loadingState with
+                                    {
+                                        StartFrom = newPos,
+                                        StartPaused = true
+                                    },
+                                    WaveePausedState pausedState => pausedState.ToPlayingState()
+                                        with
+                                        {
+                                            PositionAsOfSince = newPos,
+                                            Since = DateTimeOffset.UtcNow
+                                        },
                                     _ => f.State
                                 }
                             };
@@ -232,5 +276,5 @@ public static class WaveePlayer
         public static PauseCommand Default = new();
     }
 
-    private readonly record struct SeekCommand(TimeSpan Position) : IInternalPlayerCommand;
+    private readonly record struct SeekCommand(DateTimeOffset Since, TimeSpan Position) : IInternalPlayerCommand;
 }

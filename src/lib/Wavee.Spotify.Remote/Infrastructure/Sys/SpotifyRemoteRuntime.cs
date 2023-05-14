@@ -78,6 +78,25 @@ public static class SpotifyRemoteRuntime<R> where R : struct, HasWebsocket<R>, H
                     var aff =
                         from msg in ReadNextMessage(ws, ct)
                         from _ in Eff(() => connection.DispatchMessage(msg))
+                        let isRequest = msg.Type == SpotifyWebsocketMessageType.Request
+                        from dispatchAff in Eff(() =>
+                        {
+                            if (!isRequest) return SuccessAff(unit);
+                            var datareply = new
+                            {
+                                type = "reply",
+                                key = msg.Uri,
+                                payload = new
+                                {
+                                    success = true.ToString().ToLower()
+                                }
+                            };
+                            ReadOnlyMemory<byte> payload = JsonSerializer.SerializeToUtf8Bytes(datareply);
+                            return
+                                from u in WriteMessage(ws, payload)
+                                select unit;
+                        })
+                        from __ in dispatchAff
                         select unit;
 
                     var result = await aff.Run(r);
@@ -112,6 +131,7 @@ public static class SpotifyRemoteRuntime<R> where R : struct, HasWebsocket<R>, H
                     {
                         break;
                     }
+
                     await Task.Delay(TimeSpan.FromSeconds(25));
                 }
             }, ct);

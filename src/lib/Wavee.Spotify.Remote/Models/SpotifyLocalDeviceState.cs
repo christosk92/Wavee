@@ -1,5 +1,6 @@
 ﻿using System.Security.Cryptography;
 using Eum.Spotify.connectstate;
+using Google.Protobuf.WellKnownTypes;
 using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
 using Spotify.Metadata;
@@ -19,6 +20,8 @@ public readonly record struct SpotifyLocalDeviceState(
     Option<DateTimeOffset> PlayingSince)
 {
     public PlayerState State { get; init; } = BuildFreshPlayerState();
+    public Option<uint> LastCommandId { get; init; }
+    public Option<string> LastCommandSentBy { get; init; }
 
     public PutStateRequest BuildPutState(PutStateReason reason,
         Option<TimeSpan> playerTime)
@@ -42,6 +45,7 @@ public readonly record struct SpotifyLocalDeviceState(
         {
             putState.HasBeenPlayingForMs = 0;
         }
+
         if (PlayingSince.IsSome)
         {
             putState.StartedPlayingAt = (ulong)PlayingSince.ValueUnsafe().ToUnixTimeMilliseconds();
@@ -50,6 +54,25 @@ public readonly record struct SpotifyLocalDeviceState(
         {
             putState.StartedPlayingAt = 0;
         }
+
+        if (LastCommandId.IsSome)
+        {
+            putState.LastCommandMessageId = LastCommandId.ValueUnsafe();
+        }
+        else
+        {
+            putState.LastCommandMessageId = 0;
+        }
+
+        if (LastCommandSentBy.IsSome)
+        {
+            putState.LastCommandSentByDeviceId = LastCommandSentBy.ValueUnsafe();
+        }
+        else
+        {
+            putState.LastCommandSentByDeviceId = string.Empty;
+        }
+
         putState.ClientSideTimestamp = (ulong)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         return putState;
     }
@@ -151,21 +174,73 @@ public readonly record struct SpotifyLocalDeviceState(
 
         if (WaveePlayer.State.Context.IsSome)
         {
-            var id = WaveePlayer.State.Context.ValueUnsafe().Id;
+            var ctx = WaveePlayer.State.Context.ValueUnsafe();
+            var id = ctx.Id;
             State.ContextUri = id;
             State.ContextUrl = $"context://{id}";
             State.ContextMetadata.Clear();
             State.ContextRestrictions = new Restrictions();
+            UpdateNextPrevTracks(State, ctx.FutureTracks, loading.IndexInContext, Que<FutureTrack>.Empty);
         }
 
         State.SessionId = GenerateSessionId();
-
         return (this with
         {
             State = State
-        }).SetPosition(loading.StartFrom);
+        }).SetPosition();
     }
 
+    private static void UpdateNextPrevTracks(
+        PlayerState state,
+        IEnumerable<FutureTrack> context,
+        Option<int> currentIndex,
+        Que<FutureTrack> queue)
+    {
+        //max prev = 17
+        //max next = 50
+        //prev tracks = from below current index to start of context 
+        var prevTracks = currentIndex.IsSome
+            ? context.Take(currentIndex.IfNone(0)).Reverse().Take(17)
+            : Enumerable.Empty<FutureTrack>();
+
+        //next tracks = from current index to end of context + queue
+        var nextTracks = currentIndex.IsSome
+            ? context.Skip(currentIndex.IfNone(0) + 1)
+                .Take(50)
+                .Concat(queue)
+            : context;
+
+        state.NextTracks.Clear();
+        state.PrevTracks.Clear();
+
+        static string ToUri(AudioId id)
+        {
+            var typeStr = id.Type switch
+            {
+                AudioItemType.Track => "track",
+                AudioItemType.PodcastEpisode => "episode",
+            };
+            return $"spotify:{typeStr}:{id.Id}";
+        }
+
+        foreach (var track in prevTracks)
+        {
+            state.PrevTracks.Add(new ProvidedTrack
+            {
+                Uri = ToUri(track.Id),
+                Uid = track.Uid.IfNone(string.Empty)
+            });
+        }
+
+        foreach (var track in nextTracks)
+        {
+            state.NextTracks.Add(new ProvidedTrack
+            {
+                Uri = ToUri(track.Id),
+                Uid = track.Uid.IfNone(string.Empty)
+            });
+        }
+    }
 
     public SpotifyLocalDeviceState SetPlaying(WaveePlayingState playing)
     {
@@ -183,6 +258,7 @@ public readonly record struct SpotifyLocalDeviceState(
             };
         }
 
+        var wasPaused = State.IsPaused;
         State.IsPlaying = true;
         State.IsBuffering = false;
         State.IsPaused = false;
@@ -190,19 +266,27 @@ public readonly record struct SpotifyLocalDeviceState(
         return (this with
         {
             State = State
-        }).SetPosition(playing.Position);
+        }).SetPosition();
     }
 
     public SpotifyLocalDeviceState SetPaused(WaveePausedState paused)
     {
-        throw new NotImplementedException();
+        var wasPaused = State.IsPaused;
+        State.IsPlaying = true;
+        State.IsBuffering = false;
+        State.IsPaused = true;
+        return (this with
+        {
+            State = State
+        }).SetPosition();
     }
 
-    private SpotifyLocalDeviceState SetPosition(TimeSpan position)
+    private SpotifyLocalDeviceState SetPosition()
     {
         State.Timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-        State.PositionAsOfTimestamp = (long)position.TotalMilliseconds;
+        State.PositionAsOfTimestamp = (long)WaveePlayer.Position.IfNone(TimeSpan.Zero).TotalMilliseconds;
         State.Position = 0L;
+
         return this with
         {
             State = State

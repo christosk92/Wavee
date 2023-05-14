@@ -4,13 +4,14 @@ using Google.Protobuf;
 using LanguageExt;
 using Microsoft.Extensions.Logging;
 using Wavee.AudioOutput.LibVLC;
+using Wavee.AudioOutput.NAudio;
 using Wavee.Core.Contracts;
 using Wavee.Core.Enums;
 using Wavee.Core.Id;
 using Wavee.Spotify.Configs;
 using Wavee.Spotify.Infrastructure;
 
-LibVlcOutput.SetAsMainOutput();
+NAudioOutput.SetAsMainOutput();
 
 var credentials = new LoginCredentials
 {
@@ -32,6 +33,7 @@ var config = new SpotifyConfig(
 );
 
 
+//https://open.spotify.com/album/6lumjI581TEGHeTviSikrm?si=cc17ba62e1c34c46
 var spotifyCore = await SpotifyClient.Create(credentials, config, Option<ILogger>.None);
 spotifyCore.RemoteClient.StateChanged.Subscribe(x => { Console.WriteLine(x); });
 await spotifyCore.PlaybackClient.PlayContext("spotify:album:6lumjI581TEGHeTviSikrm",

@@ -1,9 +1,11 @@
 ﻿using System.Reactive.Linq;
+using System.Text.Json;
 using System.Threading.Channels;
 using Eum.Spotify.connectstate;
 using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
 using Wavee.Core.Infrastructure.Traits;
+using Wavee.Player;
 using Wavee.Spotify.Remote.Models;
 using static LanguageExt.Prelude;
 
@@ -11,6 +13,9 @@ namespace Wavee.Spotify.Remote.Infrastructure;
 
 public sealed class SpotifyRemoteConnection<R> where R : struct, HasWebsocket<R>
 {
+    public Option<string> LastCommandSentBy { get; private set; }
+    public Option<uint> LastCommandId { get; private set; }
+
     public SpotifyRemoteConnection()
     {
         //setup basic listener
@@ -25,11 +30,8 @@ public sealed class SpotifyRemoteConnection<R> where R : struct, HasWebsocket<R>
                 HandleMessage(message);
             }
         });
-        
-        Task.Factory.StartNew(async () =>
-        {
-            
-        });
+
+        Task.Factory.StartNew(async () => { });
 
         ConnectionId = Ref(Option<string>.None);
         LatestCluster = Ref(Option<Cluster>.None);
@@ -92,5 +94,50 @@ public sealed class SpotifyRemoteConnection<R> where R : struct, HasWebsocket<R>
             var clusterUpdate = ClusterUpdate.Parser.ParseFrom(message.Payload.ValueUnsafe().Span);
             atomic(() => LatestCluster.Swap(_ => clusterUpdate.Cluster));
         }
+        else if (message.Type is SpotifyWebsocketMessageType.Request)
+        {
+            HandleRequest(message);
+        }
+    }
+
+    private void HandleRequest(SpotifyWebsocketMessage message)
+    {
+        using var jsonDcument = JsonDocument.Parse(message.Payload.ValueUnsafe());
+        var messageId = jsonDcument.RootElement.GetProperty("message_id").GetUInt32();
+        var sentBy = jsonDcument.RootElement.GetProperty("sent_by_device_id").GetString();
+        var command = jsonDcument.RootElement.GetProperty("command");
+        ReadOnlySpan<char> endpoint = command.GetProperty("endpoint").GetString();
+        _ = endpoint switch
+        {
+            "pause" => HandlePause(messageId, sentBy),
+            "resume" => HandleResume(messageId, sentBy),
+            "seek_to" => HandleSeekTo(messageId, sentBy, command),
+            _ => throw new ArgumentOutOfRangeException()
+        };
+    }
+
+    private Unit HandlePause(uint messageId, string sentBy)
+    {
+        LastCommandId = messageId;
+        LastCommandSentBy = sentBy;
+        return WaveePlayer.Pause();
+    }
+
+    private Unit HandleResume(uint messageId, string sentBy)
+    {
+        LastCommandId = messageId;
+        LastCommandSentBy = sentBy;
+        return WaveePlayer.Resume();
+    }
+
+    private Unit HandleSeekTo(uint messageId, string sentBy, JsonElement command)
+    {
+        LastCommandId = messageId;
+        LastCommandSentBy = sentBy;
+        var value = command.GetProperty("value").GetDouble();
+        var ts = TimeSpan.FromMilliseconds(value);
+        //100 ms?
+        WaveePlayer.Seek(ts, None);
+        return unit;
     }
 }

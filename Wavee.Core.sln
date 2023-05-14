@@ -28,6 +28,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Wavee.Spotify.Cache", "src\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DatabaseEffect", "external\database-effect\src\DatabaseEffect.csproj", "{6C2D52B5-6122-46A2-A5A0-AD9C1D4A7E9F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Wavee.AudioOutput.NAudio", "src\lib\Wavee.AudioOutput.NAudio\Wavee.AudioOutput.NAudio.csproj", "{BC81C1F1-7946-49AA-A8DD-19481EE8DA27}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -82,6 +84,10 @@ Global
 		{6C2D52B5-6122-46A2-A5A0-AD9C1D4A7E9F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6C2D52B5-6122-46A2-A5A0-AD9C1D4A7E9F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6C2D52B5-6122-46A2-A5A0-AD9C1D4A7E9F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BC81C1F1-7946-49AA-A8DD-19481EE8DA27}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BC81C1F1-7946-49AA-A8DD-19481EE8DA27}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BC81C1F1-7946-49AA-A8DD-19481EE8DA27}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BC81C1F1-7946-49AA-A8DD-19481EE8DA27}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{C427C3AB-D413-4EA8-B390-AFFA6248AD00} = {5EE6B491-82C1-4511-8FA3-133D939175F9}
