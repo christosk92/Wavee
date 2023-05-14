@@ -48,16 +48,18 @@ public sealed class LibVlcOutput : AudioOutputIO
             {
                 onPositionChanged(TimeSpan.FromSeconds(e.Position));
             }
-            
+
             void Stopped(object? sender, EventArgs e)
             {
                 output.Player.Stopped -= Stopped;
                 output.Player.PositionChanged -= PlayerOnPositionChanged;
                 output.Player.EndReached -= EndReached;
-                
+
                 tcs.SetResult(Unit.Default);
                 output.Dispose();
+                onPositionChanged = null;
             }
+
             void EndReached(object? sender, EventArgs _)
             {
                 try
@@ -65,17 +67,18 @@ public sealed class LibVlcOutput : AudioOutputIO
                     output.Player.Stopped -= Stopped;
                     output.Player.PositionChanged -= PlayerOnPositionChanged;
                     output.Player.EndReached -= EndReached;
-                    
+
                     atomic(() => atomic(() => _outputs.Swap(x => x.Filter(x => x != output))));
                     tcs.SetResult(Unit.Default);
                     output.Dispose();
+                    onPositionChanged = null;
                 }
                 catch (Exception e)
                 {
                     tcs.SetException(e);
                 }
             }
-            
+
             output.Player.PositionChanged += PlayerOnPositionChanged;
             output.Player.Stopped += Stopped;
             output.Player.EndReached += EndReached;
@@ -103,10 +106,10 @@ public sealed class LibVlcOutput : AudioOutputIO
 
     private class VlcOutput : IDisposable
     {
-        public readonly MediaPlayer Player;
-        private readonly StreamMediaInput Input;
+        public MediaPlayer Player;
+        private StreamMediaInput Input;
         public Stream Stream;
-        private readonly Media Media;
+        private Media Media;
 
         public VlcOutput(Stream stream)
         {
@@ -118,9 +121,15 @@ public sealed class LibVlcOutput : AudioOutputIO
 
         public void Dispose()
         {
+            Task.Run(() =>
+            {
+                Player.Dispose();
+            });
             Input.Dispose();
             Media.Dispose();
-            Player.Dispose();
+            Player = null;
+            Media = null;
+            Input = null;
             Stream = null;
         }
     }
