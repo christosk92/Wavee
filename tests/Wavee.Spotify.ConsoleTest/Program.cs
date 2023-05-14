@@ -32,11 +32,11 @@ var config = new SpotifyConfig(
     )
 );
 
-
+//https://open.spotify.com/playlist/1xaI099prElMKypSdl40Bl?si=f3e7559f3ed7421d
 //https://open.spotify.com/album/6lumjI581TEGHeTviSikrm?si=cc17ba62e1c34c46
 var spotifyCore = await SpotifyClient.Create(credentials, config, Option<ILogger>.None);
 spotifyCore.RemoteClient.StateChanged.Subscribe(x => { Console.WriteLine(x); });
-await spotifyCore.PlaybackClient.PlayContext("spotify:album:6lumjI581TEGHeTviSikrm",
+await spotifyCore.PlaybackClient.PlayContext("spotify:playlist:1xaI099prElMKypSdl40Bl",
     0, TimeSpan.Zero, true,
     Option<PreferredQualityType>.None,
     CancellationToken.None);

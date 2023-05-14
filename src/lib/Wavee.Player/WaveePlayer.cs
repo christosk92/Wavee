@@ -1,4 +1,5 @@
-﻿using System.Reactive.Linq;
+﻿using System.Diagnostics;
+using System.Reactive.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Channels;
 using LanguageExt;
@@ -78,106 +79,114 @@ public static class WaveePlayer
         {
             await foreach (var command in channelReader.ReadAllAsync())
             {
-                switch (command)
+                try
                 {
-                    case SeekCommand seek:
-                        AudioOutput<WaveeRuntime>.Seek(seek.Position).Run(Runtime).ThrowIfFail();
-                        //invoke callback
-                        atomic(() => _state.Swap(f =>
-                        {
-                            return f with
+                    switch (command)
+                    {
+                        case SeekCommand seek:
+                            AudioOutput<WaveeRuntime>.Seek(seek.Position).Run(Runtime).ThrowIfFail();
+                            //invoke callback
+                            atomic(() => _state.Swap(f =>
                             {
-                                State = f.State switch
+                                return f with
                                 {
-                                    WaveePausedState pausedState => pausedState with
+                                    State = f.State switch
                                     {
-                                        Position = seek.Position
-                                    },
-                                    WaveePlayingState playingState => playingState with
-                                    {
-                                        PositionAsOfSince = seek.Position,
-                                        Since = seek.Since
-                                    },
-                                    WaveeLoadingState loadingState => loadingState with
-                                    {
-                                        StartFrom = seek.Position
-                                    },
-                                    WaveeEndedState endedState => endedState with
-                                    {
-                                        Position = endedState.Position
-                                    },
-                                    _ => f.State
-                                }
-                            };
-                        }));
-                        break;
-                    case SkipNextCommand skipNext:
-                        if (!skipNext.Immediately)
-                        {
-                            await _playerLock.WaitAsync();
-                        }
-
-                        var swappedTo = atomic(() => _state.Swap(f => f.SkipNext(skipNext.Immediately)));
-                        _playerLock.Release();
-                        if (swappedTo.State is WaveeLoadingState)
-                            _playerReady.Set();
-                        GC.Collect();
-                        break;
-                    case PauseCommand:
-                        var pos = AudioOutput<WaveeRuntime>.Pause().Run(Runtime).ThrowIfFail();
-                        atomic(() => _state.Swap(f =>
-                        {
-                            return f with
-                            {
-                                State = f.State switch
-                                {
-                                    WaveeLoadingState loadingState => loadingState with { StartPaused = true },
-                                    WaveePlayingState playingState => playingState.ToPausedState(pos),
-                                    _ => f.State
-                                }
-                            };
-                        }));
-                        break;
-                    case ResumeCommand:
-                        var newPos =
-                            AudioOutput<WaveeRuntime>.Start().Run(Runtime).ThrowIfFail();
-                        atomic(() => _state.Swap(f =>
-                        {
-                            return f with
-                            {
-                                State = f.State switch
-                                {
-                                    WaveeLoadingState loadingState => loadingState with
-                                    {
-                                        StartFrom = newPos,
-                                        StartPaused = true
-                                    },
-                                    WaveePausedState pausedState => pausedState.ToPlayingState()
-                                        with
+                                        WaveePausedState pausedState => pausedState with
                                         {
-                                            PositionAsOfSince = newPos,
-                                            Since = DateTimeOffset.UtcNow
+                                            Position = seek.Position
                                         },
-                                    _ => f.State
-                                }
-                            };
-                        }));
-                        break;
-                    case PlayContextCommand playContext:
-                        //end track if playing
-                        atomic(() => _state.Swap(f => f.PlayContext(
-                            context: playContext.Context,
-                            startFrom: playContext.StartFrom,
-                            index: playContext.Index,
-                            startPaused: playContext.StartPaused
-                        )));
-                        //wait for player to be ready
-                        await _playerLock.WaitAsync();
-                        _playerReady.Set();
-                        _playerLock.Release();
-                        break;
-                    default:
-                        throw new ArgumentOutOfRangeException(nameof(command));
+                                        WaveePlayingState playingState => playingState with
+                                        {
+                                            PositionAsOfSince = seek.Position,
+                                            Since = seek.Since
+                                        },
+                                        WaveeLoadingState loadingState => loadingState with
+                                        {
+                                            StartFrom = seek.Position
+                                        },
+                                        WaveeEndedState endedState => endedState with
+                                        {
+                                            Position = endedState.Position
+                                        },
+                                        _ => f.State
+                                    }
+                                };
+                            }));
+                            break;
+                        case SkipNextCommand skipNext:
+                            if (!skipNext.Immediately)
+                            {
+                                await _playerLock.WaitAsync();
+                            }
+
+                            var swappedTo = atomic(() => _state.Swap(f => f.SkipNext(skipNext.Immediately)));
+                            _playerLock.Release();
+                            if (swappedTo.State is WaveeLoadingState)
+                                _playerReady.Set();
+                            GC.Collect();
+                            break;
+                        case PauseCommand:
+                            var pos = AudioOutput<WaveeRuntime>.Pause().Run(Runtime).ThrowIfFail();
+                            atomic(() => _state.Swap(f =>
+                            {
+                                return f with
+                                {
+                                    State = f.State switch
+                                    {
+                                        WaveeLoadingState loadingState => loadingState with { StartPaused = true },
+                                        WaveePlayingState playingState => playingState.ToPausedState(pos),
+                                        _ => f.State
+                                    }
+                                };
+                            }));
+                            break;
+                        case ResumeCommand:
+                            var newPos =
+                                AudioOutput<WaveeRuntime>.Start().Run(Runtime).ThrowIfFail();
+                            atomic(() => _state.Swap(f =>
+                            {
+                                return f with
+                                {
+                                    State = f.State switch
+                                    {
+                                        WaveeLoadingState loadingState => loadingState with
+                                        {
+                                            StartFrom = newPos,
+                                            StartPaused = true
+                                        },
+                                        WaveePausedState pausedState => pausedState.ToPlayingState()
+                                            with
+                                            {
+                                                PositionAsOfSince = newPos,
+                                                Since = DateTimeOffset.UtcNow
+                                            },
+                                        _ => f.State
+                                    }
+                                };
+                            }));
+                            break;
+                        case PlayContextCommand playContext:
+                            //end track if playing
+                            atomic(() => _state.Swap(f => f.PlayContext(
+                                context: playContext.Context,
+                                startFrom: playContext.StartFrom,
+                                index: playContext.Index,
+                                startPaused: playContext.StartPaused
+                            )));
+                            //wait for player to be ready
+                            await _playerLock.WaitAsync();
+                            _playerReady.Set();
+                            _playerLock.Release();
+                            break;
+                        default:
+                            throw new ArgumentOutOfRangeException(nameof(command));
+                    }
+                }
+                catch (Exception e)
+                {
+                    Debug.WriteLine(e);
+                    //   Log<WaveeRuntime>
                 }
             }
         });

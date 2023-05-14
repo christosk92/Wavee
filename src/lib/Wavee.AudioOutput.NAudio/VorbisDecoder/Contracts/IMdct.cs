@@ -2,6 +2,6 @@
 {
     interface IMdct
     {
-        void Reverse(float[] samples, int sampleCount);
+        void Reverse(Span<float> samples, int sampleCount);
     }
 }

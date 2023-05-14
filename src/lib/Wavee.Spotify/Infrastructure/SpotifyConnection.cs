@@ -208,7 +208,6 @@ internal sealed class SpotifyConnection<RT>
     {
         return Aff<RT, Option<HashMap<string, string>>>(async rt =>
         {
-            await Task.Delay(1000);
             return Option<HashMap<string, string>>.None;
         });
     }

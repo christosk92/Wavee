@@ -31,6 +31,11 @@ public sealed class LibVlcOutput : AudioOutputIO
         return Unit.Default;
     }
 
+    public ValueTask<Unit> WriteSamples(ReadOnlySpan<float> samples, CancellationToken ct = default)
+    {
+        throw new NotImplementedException();
+    }
+
     public Task PlayStream(Stream stream, Action<TimeSpan> onPositionChanged, bool closeOtherStreams)
     {
         var output = new VlcOutput(stream);

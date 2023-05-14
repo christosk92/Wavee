@@ -5,7 +5,10 @@ namespace Wavee.Core.Infrastructure.Traits;
 public interface AudioOutputIO
 {
     Unit Start();
+
     Unit Pause();
+
+    //ValueTask<Unit> WriteSamples(ReadOnlySpan<float> samples, CancellationToken ct = default);
     Task PlayStream(Stream stream, Action<TimeSpan> onPositionChanged, bool closeOtherStreams);
     TimeSpan Position();
     Unit Seek(TimeSpan seekPosition);

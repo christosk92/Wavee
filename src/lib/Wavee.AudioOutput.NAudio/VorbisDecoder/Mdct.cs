@@ -10,13 +10,14 @@ namespace NVorbis
 
         Dictionary<int, MdctImpl> _setupCache = new Dictionary<int, MdctImpl>();
 
-        public void Reverse(float[] samples, int sampleCount)
+        public void Reverse(Span<float> samples, int sampleCount)
         {
             if (!_setupCache.TryGetValue(sampleCount, out var impl))
             {
                 impl = new MdctImpl(sampleCount);
                 _setupCache[sampleCount] = impl;
             }
+
             impl.CalcReverse(samples);
         }
 
@@ -48,6 +49,7 @@ namespace NVorbis
                     _b[k2] = (float)Math.Cos((k2 + 1) * M_PI / n / 2) * .5f;
                     _b[k2 + 1] = (float)Math.Sin((k2 + 1) * M_PI / n / 2) * .5f;
                 }
+
                 for (k = k2 = 0; k < _n8; ++k, k2 += 2)
                 {
                     _c[k2] = (float)Math.Cos(2 * (k2 + 1) * M_PI / n);
@@ -62,20 +64,21 @@ namespace NVorbis
                 }
             }
 
-            internal void CalcReverse(float[] buffer)
+            internal void CalcReverse(Span<float> buffer)
             {
-                float[] u, v;
-
-                var buf2 = new float[_n2];
+                //Span<float> u, v;
+                Span<float> u;
+                Span<float> v;
+                Span<float> buf2 = new float[_n2];
 
                 // copy and reflect spectral data
                 // step 0
 
                 {
                     var d = _n2 - 2; // buf2
-                    var AA = 0;     // A
-                    var e = 0;      // buffer
-                    var e_stop = _n2;// buffer
+                    var AA = 0; // A
+                    var e = 0; // buffer
+                    var e_stop = _n2; // buffer
                     while (e != e_stop)
                     {
                         buf2[d + 1] = (buffer[e] * _a[AA] - buffer[e + 2] * _a[AA + 1]);
@@ -103,13 +106,13 @@ namespace NVorbis
                 // step 2
 
                 {
-                    var AA = _n2 - 8;    // A
+                    var AA = _n2 - 8; // A
 
-                    var e0 = _n4;        // v
-                    var e1 = 0;         // v
+                    var e0 = _n4; // v
+                    var e1 = 0; // v
 
-                    var d0 = _n4;        // u
-                    var d1 = 0;         // u
+                    var d0 = _n4; // u
+                    var d1 = 0; // u
 
                     while (AA >= 0)
                     {
@@ -189,8 +192,8 @@ namespace NVorbis
                 {
                     var bit = 0;
 
-                    var d0 = _n4 - 4;    // v
-                    var d1 = _n2 - 4;    // v
+                    var d0 = _n4 - 4; // v
+                    var d1 = _n2 - 4; // v
                     while (d0 >= 0)
                     {
                         int k4;
@@ -215,8 +218,8 @@ namespace NVorbis
 
                 // step 7
                 {
-                    var c = 0;      // C
-                    var d = 0;      // v
+                    var c = 0; // C
+                    var d = 0; // v
                     var e = _n2 - 4; // v
 
                     while (d < e)
@@ -261,9 +264,9 @@ namespace NVorbis
                 {
                     var b = _n2 - 8; // B
                     var e = _n2 - 8; // buf2
-                    var d0 = 0;     // buffer
-                    var d1 = _n2 - 4;// buffer
-                    var d2 = _n2;    // buffer
+                    var d0 = 0; // buffer
+                    var d1 = _n2 - 4; // buffer
+                    var d2 = _n2; // buffer
                     var d3 = _n - 4; // buffer
                     while (e >= 0)
                     {
@@ -312,10 +315,10 @@ namespace NVorbis
                 }
             }
 
-            void step3_iter0_loop(int n, float[] e, int i_off, int k_off)
+            void step3_iter0_loop(int n, Span<float> e, int i_off, int k_off)
             {
-                var ee0 = i_off;        // e
-                var ee2 = ee0 + k_off;  // e
+                var ee0 = i_off; // e
+                var ee2 = ee0 + k_off; // e
                 var a = 0;
                 for (int i = n >> 2; i > 0; --i)
                 {
@@ -358,12 +361,12 @@ namespace NVorbis
                 }
             }
 
-            void step3_inner_r_loop(int lim, float[] e, int d0, int k_off, int k1)
+            void step3_inner_r_loop(int lim, Span<float> e, int d0, int k_off, int k1)
             {
                 float k00_20, k01_21;
 
-                var e0 = d0;            // e
-                var e2 = e0 + k_off;    // e
+                var e0 = d0; // e
+                var e2 = e0 + k_off; // e
                 int a = 0;
 
                 for (int i = lim >> 2; i > 0; --i)
@@ -409,7 +412,7 @@ namespace NVorbis
                 }
             }
 
-            void step3_inner_s_loop(int n, float[] e, int i_off, int k_off, int a, int a_off, int k0)
+            void step3_inner_s_loop(int n, Span<float> e, int i_off, int k_off, int a, int a_off, int k0)
             {
                 var A0 = _a[a];
                 var A1 = _a[a + 1];
@@ -422,8 +425,8 @@ namespace NVorbis
 
                 float k00, k11;
 
-                var ee0 = i_off;        // e
-                var ee2 = ee0 + k_off;  // e
+                var ee0 = i_off; // e
+                var ee2 = ee0 + k_off; // e
 
                 for (int i = n; i > 0; --i)
                 {
@@ -460,11 +463,11 @@ namespace NVorbis
                 }
             }
 
-            void step3_inner_s_loop_ld654(int n, float[] e, int i_off, int base_n)
+            void step3_inner_s_loop_ld654(int n, Span<float> e, int i_off, int base_n)
             {
                 var a_off = base_n >> 3;
                 var A2 = _a[a_off];
-                var z = i_off;          // e
+                var z = i_off; // e
                 var @base = z - 16 * n; // e
 
                 while (z > @base)
@@ -506,7 +509,7 @@ namespace NVorbis
                 }
             }
 
-            private void iter_54(float[] e, int z)
+            private void iter_54(Span<float> e, int z)
             {
                 float k00, k11, k22, k33;
                 float y0, y1, y2, y3;
