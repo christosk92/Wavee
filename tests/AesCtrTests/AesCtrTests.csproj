@@ -12,6 +12,7 @@
     <ItemGroup>
         <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.5.0" />
         <PackageReference Include="xunit" Version="2.4.2" />
+        <PackageReference Include="xunit.assert" Version="2.4.2" />
         <PackageReference Include="xunit.extensibility.core" Version="2.4.2" />
         <PackageReference Include="xunit.runner.visualstudio" Version="2.4.5">
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -25,6 +26,15 @@
 
     <ItemGroup>
       <ProjectReference Include="..\..\src\lib\AesCtr\AesCtr.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Update="short_input.bin">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+      <None Update="short_output.bin">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
     </ItemGroup>
 
 </Project>

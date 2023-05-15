@@ -1,4 +1,5 @@
-﻿using Eum.Spotify;
+﻿using AesCtr;
+using Eum.Spotify;
 using Eum.Spotify.connectstate;
 using Google.Protobuf;
 using LanguageExt;

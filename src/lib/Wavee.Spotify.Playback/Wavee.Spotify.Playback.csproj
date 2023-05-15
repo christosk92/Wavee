@@ -8,6 +8,8 @@
 
     <ItemGroup>
       <ProjectReference Include="..\..\..\external\database-effect\src\DatabaseEffect.csproj" />
+      <ProjectReference Include="..\AesCtrBouncyCastle\AesCtrBouncyCastle.csproj" />
+      <ProjectReference Include="..\AesCtr\AesCtr.csproj" />
       <ProjectReference Include="..\Wavee.Player\Wavee.Player.csproj" />
       <ProjectReference Include="..\Wavee.Spotify.Cache\Wavee.Spotify.Cache.csproj" />
       <ProjectReference Include="..\Wavee.Spotify.Proto\Wavee.Spotify.Proto.csproj" />

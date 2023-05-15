@@ -147,6 +147,22 @@ internal class SpotifyPlaybackClient<R> : ISpotifyPlaybackClient
         Option<PreferredQualityType> preferredQualityTypeOverride,
         CancellationToken ct = default)
     {
+        //spotify:track:584hTOO20B2WKK8PjPB1Gw
+        var id = new AudioId("1M85o2ruB9uTj68dIXj6dJ", AudioItemType.Track, ISpotifyCore.SourceId);
+        var tr = await StreamFuture(_connection, id, PreferredQualityType.High, _runtime);
+        var str = tr.AsStream();
+        //copy to file
+        str.Position = 0;
+        using var fs = File.Create("test_spotify.ogg");
+        int read = 0;
+        var buffer = new byte[8192];
+        do
+        {
+            read = await str.ReadAsync(buffer, 0, buffer.Length, ct);
+            await fs.WriteAsync(buffer, 0, read, ct);
+        } while (read > 0);
+
+        await fs.FlushAsync(ct);
         var preferredQualityType = preferredQualityTypeOverride.Match(x => x, () => _preferredQualityType);
         var contextResolve = await _connection.Mercury.ContextResolve(contextUri, ct);
         var tracks = GetTracks(_connection,
@@ -186,7 +202,7 @@ internal class SpotifyPlaybackClient<R> : ISpotifyPlaybackClient
                     var uid = track.HasUid ? track.Uid : Option<string>.None;
                     yield return new FutureTrack(id,
                         Uid: uid,
-                        () => StreamFuture(connection, id, preferredQualityType, uid,
+                        () => StreamFuture(connection, id, preferredQualityType,
                             runtime));
                 }
             }
@@ -221,7 +237,6 @@ internal class SpotifyPlaybackClient<R> : ISpotifyPlaybackClient
 
     private static async Task<IAudioStream> StreamFuture(SpotifyConnection<R> connection, AudioId id,
         PreferredQualityType preferredQuality,
-        Option<string> trackUid,
         R runtime)
     {
         var countryMaybe = await connection.Info.CountryCode;
@@ -241,7 +256,7 @@ internal class SpotifyPlaybackClient<R> : ISpotifyPlaybackClient
         var getBearer = () => connection.Token.GetToken();
         var aff =
             from sp in AP<R>.FetchSpClient().Map(x => $"https://{x.Host}:{x.Port}")
-            from stream in SpotifyPlaybackRuntime<R>.LoadTrack(sp, new TrackOrEpisode(track), trackUid, mapper,
+            from stream in SpotifyPlaybackRuntime<R>.LoadTrack(sp, new TrackOrEpisode(track), mapper,
                 preferredQuality,
                 getBearer,
                 fetchAudioKeyFunc,

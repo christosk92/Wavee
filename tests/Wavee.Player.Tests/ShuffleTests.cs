@@ -14,7 +14,7 @@ public class ShuffleTests
     {
         // Arrange
         var tracks = Enumerable.Range(1, 10)
-            .Select(i => new FutureTrack(new AudioId(i.ToString(), AudioItemType.Track, "test"),
+            .Select(i => new FutureTrack(new AudioId(i.ToString(), AudioItemType.Track, "test"),Option<string>.None,
                 () => Task.FromResult<IAudioStream>(null)))
             .ToList();
         var rng = new MockRandomNumberGenerator(new[] { 1, 3, 2, 0, 9, 7, 8, 5, 6, 4 }); // mock "random" sequence

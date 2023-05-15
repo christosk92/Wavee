@@ -22,11 +22,11 @@ public class PlayerStateTests
         var secondT = new AudioId(secondTrackId, AudioItemType.Track, source);
 
         var queue = new Que<FutureTrack>().Enqueue(
-            new FutureTrack(secondT, () => CreateFakeStream(secondT)));
+            new FutureTrack(secondT, Option<string>.None, () => CreateFakeStream(secondT)));
 
         var state = new WaveePlayerState(
-            new WaveeLoadingState(0, 
-                firstTrackAudioId, 
+            new WaveeLoadingState(0,
+                firstTrackAudioId,
                 false, TimeSpan.Zero, false, true)
             {
                 Stream = CreateFakeStream(firstTrackAudioId)
@@ -77,9 +77,10 @@ public class PlayerStateTests
             Option<IShuffleProvider>.None,
             "ContextId",
             contextName,
-            new List<FutureTrack> { new FutureTrack(trackAudioId, () => CreateFakeStream(trackAudioId)) }
+            new List<FutureTrack>
+                { new FutureTrack(trackAudioId, Option<string>.None, () => CreateFakeStream(trackAudioId)) }
         );
-        var queueTrack = new FutureTrack(trackAudioId, () => CreateFakeStream(trackAudioId));
+        var queueTrack = new FutureTrack(trackAudioId, Option<string>.None, () => CreateFakeStream(trackAudioId));
         var state = new WaveePlayerState(
             new WaveeLoadingState(0,
                 trackAudioId,
@@ -125,6 +126,8 @@ public class PlayerStateTests
         {
             throw new NotImplementedException();
         }
+
+        public Option<CrossfadeController> CrossfadeController { get; }
 
         public Task<Stream> GetStreamAsync()
         {

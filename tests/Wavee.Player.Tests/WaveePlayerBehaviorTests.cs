@@ -26,7 +26,7 @@ public class WaveePlayerBehaviorTests
         stateChanged.Subscribe(stateChangedObserver);
 
         var contextId = "test:context";
-        var futureTrack = new FutureTrack(new AudioId("TrackId", AudioItemType.Track, "test"),
+        var futureTrack = new FutureTrack(new AudioId("TrackId", AudioItemType.Track, "test"),Option<string>.None,
             () => Task.FromResult<IAudioStream>(new Mock<IAudioStream>().Object));
         var context = new WaveeContext(Option<IShuffleProvider>.None,
             contextId,
@@ -57,7 +57,7 @@ public class WaveePlayerBehaviorTests
     private AudioOutputIO BuildMockAudioOutput()
     {
         var moc = new Mock<AudioOutputIO>();
-        moc.Setup(x => x.PlayStream(It.IsAny<Stream>(), It.IsAny<Action<TimeSpan>>(), It.IsAny<bool>()))
+        moc.Setup(x => x.PlayStream(It.IsAny<IAudioStream>(), It.IsAny<Action<TimeSpan>>(), It.IsAny<bool>()))
             .Returns(Task.Delay(TimeSpan.FromHours(1)));
 
         moc.Setup(x => x.Pause())

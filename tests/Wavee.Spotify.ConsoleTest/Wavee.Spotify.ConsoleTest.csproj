@@ -8,6 +8,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\..\src\lib\AesCtr\AesCtr.csproj" />
       <ProjectReference Include="..\..\src\lib\Wavee.AudioOutput.LibVLC\Wavee.AudioOutput.LibVLC.csproj" />
       <ProjectReference Include="..\..\src\lib\Wavee.AudioOutput.NAudio\Wavee.AudioOutput.NAudio.csproj" />
       <ProjectReference Include="..\..\src\lib\Wavee.Core\Wavee.Core.csproj" />

@@ -1,188 +1,132 @@
-﻿using System.Security.Cryptography;
+﻿using System.Net.Http.Headers;
+using System.Security.Cryptography;
+using System.Text;
+using AesCtr;
+using AesCtrBouncyCastle;
+using Eum.Spotify.storage;
 using Google.Protobuf;
 using LanguageExt;
+using LanguageExt.Common;
 using LanguageExt.Effects.Traits;
 using LanguageExt.UnsafeValueAccess;
 using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.Math;
 using Org.BouncyCastle.Security;
+using Spotify.Metadata;
 using Wavee.Core.Contracts;
 using Wavee.Core.Enums;
 using Wavee.Core.Id;
+using Wavee.Core.Infrastructure.Sys.IO;
 using Wavee.Core.Infrastructure.Traits;
 using Wavee.Spotify.Playback.Infrastructure.Key;
 using Wavee.Spotify.Playback.Metadata;
 using Wavee.Spotify.Playback.Playback;
+using Wavee.Spotify.Playback.Playback.Cdn;
+using Wavee.Spotify.Playback.Playback.Streams;
 using Aes = System.Runtime.Intrinsics.Arm.Aes;
 
 namespace Wavee.Spotify.Playback.Infrastructure.Sys;
 
-public static class SpotifyPlaybackRuntime<R> where R : struct
+public static class SpotifyPlaybackRuntime<R> where R : struct, HasHttp<R>
 {
-    public static Aff<R, SpotifyStream> LoadTrack<R>(string sp,
+    /// <summary>
+    /// The minimum size of a block that is requested from the Spotify servers in one request.
+    /// This is the block size that is typically requested while doing a `seek()` on a file.
+    /// Note: smaller requests can happen if part of the block is downloaded already.
+    /// </summary>
+    private const int MINIMUM_DOWNLOAD_SIZE = 64 * 1024;
+
+    public static Aff<R, SpotifyStream> LoadTrack(string sp,
         TrackOrEpisode trackOrEpisode,
-        Option<string> trackUid,
         Func<TrackOrEpisode, ITrack> mapper,
         PreferredQualityType preferredQuality,
         Func<ValueTask<string>> getBearer,
         Func<AudioId, ByteString, CancellationToken, Aff<R, Either<AesKeyError, AudioKey>>> fetchAudioKeyFunc,
-        CancellationToken ct)
-        where R : struct, HasAudioOutput<R>, HasWebsocket<R>, HasLog<R>, HasHttp<R>, HasDatabase<R> =>
-        
-}
+        CancellationToken ct) =>
+        from audioFile in Eff(() => trackOrEpisode.FindFile(preferredQuality).Match(
+            Some: x => x,
+            None: () => trackOrEpisode.FindAlternativeFile(preferredQuality)
+                .Match(
+                    Some: f => f,
+                    None: () => throw new Exception("No audio file found")
+                )
+        ))
+        from audioKey in fetchAudioKeyFunc(trackOrEpisode.Id, audioFile.FileId, ct).Map(x => x.Match(
+            Left: err => None,
+            Right: key => Some(key)
+        ))
+        //TODO: Cache
+        from stream in OpenHttpEncryptedStream(getBearer, sp, audioFile.FileId, ct)
+        from decryptedStream in OpenDecryptedStream(stream, audioKey)
+        from offsetAndNormData in ReadNormalisationData(decryptedStream, audioFile.Format)
+        select new SpotifyStream(decryptedStream, mapper(trackOrEpisode), offsetAndNormData.Item1,
+            offsetAndNormData.Item2, stream.Length, None);
 
-public abstract class SpotifyStream : Stream, IAudioStream
-{
-    private readonly long _headerOffset;
-    private readonly long _totalLength;
-    private long _position;
-    //private readonly Option<AesAudioDecrypt> _decrypt;
-
-    protected SpotifyStream(
-        long headerOffset,
-        long totalLength,
-        Option<CrossfadeController> crossfadeController,
-        Option<AudioKey> audioKey)
+    private static Eff<(Option<NormalisationData> Normdata, long Offset)> ReadNormalisationData(Stream stream,
+        AudioFile.Types.Format format)
     {
-        Position = 0;
-        _headerOffset = headerOffset;
-        _totalLength = totalLength;
-        CrossfadeController = crossfadeController;
-    }
+        var isOggVorbis = format == AudioFile.Types.Format.OggVorbis96 ||
+                          format == AudioFile.Types.Format.OggVorbis160 ||
+                          format == AudioFile.Types.Format.OggVorbis320;
 
-    public abstract byte[] GetChunk(int chunkIndex);
-
-    public override int Read(byte[] buffer, int offset, int count)
-    {
-        return 0;
-    }
-
-    public override long Seek(long offset, SeekOrigin origin)
-    {
-        Position = origin switch
+        if (!isOggVorbis) return SuccessEff((Option<NormalisationData>.None, 0L));
+        return Eff(() =>
         {
-            SeekOrigin.Begin => offset,
-            SeekOrigin.Current => Position + offset,
-            SeekOrigin.End => Length + offset,
-            _ => throw new ArgumentOutOfRangeException(nameof(origin), origin, null)
-        };
-        return Position;
+            var normData = NormalisationData.ParseFromOgg(stream);
+            const ulong offset = SpotifyPlaybackConstants.SPOTIFY_OGG_HEADER_END;
+            return (normData, (long)offset);
+        });
     }
 
-    public override void SetLength(long value)
+    private static Eff<AesCtrBouncyCastleStream> OpenDecryptedStream(Stream stream, Option<AudioKey> audioKey) =>
+        Eff(() =>
+        {
+            var aes128 = new AesCtrBouncyCastleStream(stream, audioKey.ValueUnsafe().Key.ToArray(),
+                SpotifyPlaybackConstants.AUDIO_AES_IV, SpotifyPlaybackConstants.ChunkSize);
+            return aes128;
+            // var aes128 = new Aes128CtrStream(stream, audioKey.ValueUnsafe().Key.ToArray(),
+            //     SpotifyPlaybackConstants.AUDIO_AES_IV);
+            // return new Aes128CtrWrapperStream(aes128);
+        });
+
+    private static Aff<R, HttpEncryptedSpotifyStream<R>> OpenHttpEncryptedStream(Func<ValueTask<string>> getBearer,
+        string spClientUrl,
+        ByteString fileId,
+        CancellationToken ct) =>
+        from base16Id in SuccessEff(ToBase16(fileId.Span))
+        from bearer in getBearer().ToAff()
+            .Map(x => new AuthenticationHeaderValue("Bearer", x))
+        from storage in Http<R>.Get($"{spClientUrl}/storage-resolve/files/audio/interactive/{base16Id}", bearer,
+                Option<HashMap<string, string>>.None, ct)
+            .MapAsync(async x =>
+            {
+                await using var stream = await x.Content.ReadAsStreamAsync(ct);
+                return StorageResolveResponse.Parser.ParseFrom(stream);
+            })
+        from cdnUrls in GetCdnUrls(fileId, storage)
+        from totalLength in GetTotalLength(cdnUrls, ct)
+        select new HttpEncryptedSpotifyStream<R>(cdnUrls, MINIMUM_DOWNLOAD_SIZE, totalLength);
+        
+
+    private static Aff<R, long> GetTotalLength(string url, CancellationToken ct = default) =>
+        Http<R>.Head(url, Option<HashMap<string, string>>.None, ct)
+            .Map(x => x.Content.Headers.ContentLength.Value);
+    private static Eff<string> GetCdnUrls(ByteString fileId, StorageResolveResponse storage) => Eff(() =>
     {
-        throw new NotSupportedException();
-    }
+        var maybeExpiring = MaybeExpiringUrl.From(storage);
+        return new CdnUrl(fileId, maybeExpiring).Urls.First().Url;
+    });
 
-    public override void Write(byte[] buffer, int offset, int count)
+    private static string ToBase16(ReadOnlySpan<byte> raw)
     {
-        throw new NotSupportedException();
-    }
+        //convert to hex
+        var hex = new StringBuilder(raw.Length * 2);
+        foreach (var b in raw)
+        {
+            hex.AppendFormat("{0:x2}", b);
+        }
 
-    public override void Flush()
-    {
-        throw new NotSupportedException();
-    }
-
-    public override bool CanRead => true;
-    public override bool CanSeek => true;
-    public override bool CanWrite => false;
-    public override long Length => _totalLength - _headerOffset;
-
-    public override long Position
-    {
-        get => Math.Max(0, _position - _headerOffset);
-        set => _position = Math.Min(value + _headerOffset, Length);
-    }
-
-    public ITrack Track { get; }
-    public Option<string> Uid { get; }
-
-    public Stream AsStream()
-    {
-        return this;
-    }
-
-    public Option<CrossfadeController> CrossfadeController { get; }
-
-
-    // private sealed class AesAudioDecrypt
-    // {
-    //     private static byte[] AUDIO_AES_IV = new byte[]
-    //     {
-    //         0x72, 0xe0, 0x67, 0xfb, 0xdd, 0xcb, 0xcf, 0x77, 0xeb, 0xe8, 0xbc, 0x64, 0x3f, 0x63, 0x0d, 0x93,
-    //     };
-    //
-    //     private static BigInteger IvInt = new BigInteger(1, AUDIO_AES_IV);
-    //     private static readonly BigInteger IvDiff = BigInteger.ValueOf(0x100);
-    //     private readonly IBufferedCipher _cipher;
-    //     private readonly KeyParameter _spec;
-    //
-    //     public AesAudioDecrypt(ReadOnlyMemory<byte> key)
-    //     {
-    //         _spec = ParameterUtilities.CreateKeyParameter("AES", key.ToArray());
-    //         _cipher = CipherUtilities.GetCipher("AES/CTR/NoPadding");
-    //     }
-    //
-    //     public Unit Decrypt(byte[] buf, int chunkIndex)
-    //     {
-    //         var iv = IvInt.Add(
-    //             BigInteger.ValueOf(SpotifyPlaybackConstants.ChunkSize * chunkIndex / 16));
-    //         for (var i = 0; i < buf.Length; i += 4096)
-    //         {
-    //             _cipher.Init(true, new ParametersWithIV(_spec, iv.ToByteArray()));
-    //
-    //             var count = Math.Min(4096, buf.Length - i);
-    //
-    //             var processed = _cipher.DoFinal(buf,
-    //                 i,
-    //                 count,
-    //                 buf, i);
-    //             if (count != processed)
-    //                 throw new IOException(string.Format("Couldn't process all data, actual: %d, expected: %d",
-    //                     processed, count));
-    //
-    //             iv = iv.Add(IvDiff);
-    //         }
-    //
-    //         return unit;
-    //     }
-    //
-    //     public Unit Seek(long to, SeekOrigin origin)
-    //     {
-    //         throw new NotImplementedException();
-    //     }
-    // }
-}
-
-internal sealed class Aes128CtrAudioDecrypt
-{
-    private AesManaged aes;
-    private ICryptoTransform decryptor;
-    private CryptoStream cs;
-
-    public Aes128CtrAudioDecrypt(byte[] key, byte[] iv)
-    {
-        aes = new AesManaged();
-        aes.Mode = CipherMode.ECB;
-        aes.Padding = PaddingMode.None;
-
-        decryptor = aes.CreateDecryptor(key, iv);
-    }
-
-    public byte[] Decrypt(byte[] cipher)
-    {
-        using var ms = new MemoryStream();
-        cs = new CryptoStream(ms, decryptor, CryptoStreamMode.Write);
-        cs.Write(cipher, 0, cipher.Length);
-        cs.Close();
-        return ms.ToArray();
-    }
-
-    public void Seek(long offset, SeekOrigin origin)
-    {
-        cs.FlushFinalBlock();
-        cs.Seek(offset, origin);
+        return hex.ToString();
     }
 }

@@ -24,7 +24,8 @@ public readonly record struct WaveeEndedState(ITrack Track,
             Position,
             Track, IndexInContext, FromQueue)
         {
-            Stream = Stream
+            Stream = Stream,
+            Uid = None
         };
     }
 

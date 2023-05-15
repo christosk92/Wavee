@@ -46,7 +46,8 @@ public readonly record struct WaveeLoadingState(
                 IndexInContext,
                 FromQueue)
             {
-                Stream = stream
+                Stream = stream,
+                Uid = Option<string>.None
             };
     }
 }

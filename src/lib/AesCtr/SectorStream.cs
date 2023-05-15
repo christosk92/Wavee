@@ -126,7 +126,6 @@
             get => _baseStream.Position - _offset;
             set
             {
-                ValidateSizeMultiple(value);
                 _baseStream.Position = value + _offset;
                 CurrentSector = value / SectorSize;
             }
@@ -139,8 +138,8 @@
         {
             ValidateSizeMultiple(value);
 
-            if (value > _maxBufferSize)
-                throw new ArgumentException($"Value cannot be greater than {_maxBufferSize}");
+            // if (value > _maxBufferSize)
+            //     throw new ArgumentException($"Value cannot be greater than {_maxBufferSize}");
         }
 
         /// <summary>

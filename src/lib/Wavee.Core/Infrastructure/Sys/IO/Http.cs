@@ -42,4 +42,8 @@ public static class Http<RT> where RT : struct, HasHttp<RT>
         CancellationToken ct = default) =>
         from httpResponse in default(RT).HttpEff.MapAsync(e => e.Put(url, authheader, headers, content, ct))
         select httpResponse;
+
+    public static Aff<RT, HttpResponseMessage> Head(string url, Option<HashMap<string, string>> none, CancellationToken ct) =>
+        from httpResponse in default(RT).HttpEff.MapAsync(e => e.Head(url, none, ct))
+        select httpResponse;
 }

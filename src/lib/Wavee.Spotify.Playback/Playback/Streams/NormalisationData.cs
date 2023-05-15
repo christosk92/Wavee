@@ -1,4 +1,5 @@
 ﻿using System.Buffers.Binary;
+using AesCtr;
 using LanguageExt;
 using Wavee.Core.Infrastructure.Traits;
 
@@ -27,7 +28,7 @@ public readonly record struct NormalisationData(
         return 1;
     }
 
-    internal static Option<NormalisationData> ParseFromOgg<RT>(Stream decryptedFile) where RT : struct, HasHttp<RT>
+    internal static Option<NormalisationData> ParseFromOgg(Stream decryptedFile)
     {
         var newpos = decryptedFile.Seek((long)SPOTIFY_NORMALIZATION_HEADER_START_OFFSET, SeekOrigin.Begin);
         if (newpos != (long)SPOTIFY_NORMALIZATION_HEADER_START_OFFSET)
@@ -38,12 +39,13 @@ public readonly record struct NormalisationData(
         Span<byte> albumGainDb_Bytes = stackalloc byte[sizeof(float)];
         Span<byte> albumPeakDb_Bytes = stackalloc byte[sizeof(float)];
 
-        decryptedFile.Read(trackGainDb_Bytes);
-        decryptedFile.Read(trackPeakDb_Bytes);
-        decryptedFile.Read(albumGainDb_Bytes);
-        decryptedFile.Read(albumPeakDb_Bytes);
-
+        var read = decryptedFile.Read(trackGainDb_Bytes);
         var trackGainDb = BinaryPrimitives.ReadSingleLittleEndian(trackGainDb_Bytes);
+        
+        var i = decryptedFile.Read(trackPeakDb_Bytes);
+        var read1 = decryptedFile.Read(albumGainDb_Bytes);
+        var i1 = decryptedFile.Read(albumPeakDb_Bytes);
+
         var trackPeakDb = BinaryPrimitives.ReadSingleLittleEndian(trackPeakDb_Bytes);
         var albumGainDb = BinaryPrimitives.ReadSingleLittleEndian(albumGainDb_Bytes);
         var albumPeakDb = BinaryPrimitives.ReadSingleLittleEndian(albumPeakDb_Bytes);

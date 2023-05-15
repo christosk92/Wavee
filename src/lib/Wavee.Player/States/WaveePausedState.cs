@@ -20,6 +20,7 @@ public readonly record struct WaveePausedState(
             Position,
             Track, IndexInContext, FromQueue)
         {
+            Uid = Option<string>.None,
             Stream = Stream
         };
     }

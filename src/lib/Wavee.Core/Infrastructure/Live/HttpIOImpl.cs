@@ -74,4 +74,22 @@ internal sealed class HttpIOImpl : HttpIO
         var response = await _client.SendAsync(request, ct);
         return response;
     }
+
+    public async ValueTask<HttpResponseMessage> Head(string url, Option<HashMap<string, string>> headers,
+        CancellationToken ct = default)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, url);
+        //
+        if (headers.IsSome)
+        {
+            foreach (var (key, value) in headers.ValueUnsafe())
+            {
+                request.Headers.Add(key, value);
+            }
+        }
+
+        var response = await _client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, ct);
+
+        return response;
+    }
 }

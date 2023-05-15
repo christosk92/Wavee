@@ -12,6 +12,8 @@ public interface HttpIO
 
     ValueTask<HttpResponseMessage> Put(string url, Option<AuthenticationHeaderValue> authheader,
         Option<HashMap<string, string>> headers, HttpContent content, CancellationToken ct = default);
+
+    ValueTask<HttpResponseMessage> Head(string url, Option<HashMap<string, string>> headers, CancellationToken ct = default);
 }
 
 /// <summary>
