@@ -1,4 +1,5 @@
-﻿using Org.BouncyCastle.Crypto;
+﻿using System.Diagnostics;
+using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.Math;
 using Org.BouncyCastle.Security;
@@ -14,6 +15,8 @@ public sealed class AesCtrBouncyCastleStream : Stream
     private static readonly BigInteger IvDiff = BigInteger.ValueOf(0x100);
     private readonly Stream _stream;
     private int chunk_size;
+    private long _position;
+
     public AesCtrBouncyCastleStream(Stream stream, byte[] key, byte[] iv, int chunkSize)
     {
         _stream = stream;
@@ -22,53 +25,53 @@ public sealed class AesCtrBouncyCastleStream : Stream
         _spec = ParameterUtilities.CreateKeyParameter("AES", key);
         _cipher = CipherUtilities.GetCipher("AES/CTR/NoPadding");
     }
-    
+
     public override int Read(byte[] buffer, int offset, int count)
     {
         //we can only decrypt whole chunks at once
-        var chunkIndex = (int)(_stream.Position / chunk_size);
-        var chunkOffset = (int)(_stream.Position % chunk_size);
+        var prevPos = _stream.Position;
+        var chunkIndex = (int)(Position / chunk_size);
+        var chunkOffset = (int)(Position % chunk_size);
 
-        if(_cache.TryGetValue(chunkIndex, out var cachedChunk))
+        bool wasNone = false;
+        if (!_cache.TryGetValue(chunkIndex, out var cachedChunk))
         {
-            //we have the chunk in cache, copy it to the buffer
-            var copy = Math.Min(cachedChunk.Length - chunkOffset, count);
-            cachedChunk.Span.Slice(chunkOffset, copy).CopyTo(buffer.AsSpan(offset, copy));
-            _stream.Position += copy;
-            return copy;
+            wasNone = true;
+            _stream.Position = chunkIndex * chunk_size;
+
+            var newChunk = new byte[chunk_size];
+            _stream.Read(newChunk);
+            Decrypt(chunkIndex, newChunk);
+
+            cachedChunk = newChunk;
+            _cache.Add(chunkIndex, newChunk);
         }
-        
+
+        var len = Math.Min(count, cachedChunk.Length - chunkOffset);
+        Array.Copy(cachedChunk.ToArray(), chunkOffset, buffer, offset, len);
+        Position += len;
+        return len;
+    }
+
+    private void Decrypt(int chunkIndex, byte[] chunk)
+    {
         var iv = IvInt.Add(
             BigInteger.ValueOf(chunk_size * chunkIndex / 16));
-        
-        //read whole chunk into buffer
-        var tempBuffer = new byte[chunk_size];
-        var positionBeforeRead = _stream.Position;
-        var bytesRead = _stream.Read(tempBuffer, offset, chunk_size);
-        
-        for (var i = 0; i < tempBuffer.Length; i += 4096)
+        for (var i = 0; i < chunk.Length; i += 4096)
         {
             _cipher.Init(true, new ParametersWithIV(_spec, iv.ToByteArray()));
 
-            var c = Math.Min(4096, tempBuffer.Length - i);
-            var processed = _cipher.DoFinal(tempBuffer,
+            var c = Math.Min(4096, chunk.Length - i);
+            var processed = _cipher.DoFinal(chunk,
                 i,
                 c,
-                tempBuffer, i);
+                chunk, i);
             if (c != processed)
                 throw new IOException(string.Format("Couldn't process all data, actual: %d, expected: %d",
                     processed, c));
 
             iv = iv.Add(IvDiff);
         }
-        
-        //copy the decrypted chunk to the buffer
-        var copySize = Math.Min(bytesRead, count);
-        tempBuffer.AsSpan(chunkOffset, copySize).CopyTo(buffer.AsSpan(offset, copySize));
-        _cache.Add(chunkIndex, tempBuffer);
-        //restore stream position
-        _stream.Position = positionBeforeRead + copySize;
-        return copySize;
     }
 
     public override void Flush()
@@ -96,9 +99,14 @@ public sealed class AesCtrBouncyCastleStream : Stream
     public override bool CanWrite => _stream.CanWrite;
     public override long Length => _stream.Length;
 
+
     public override long Position
     {
-        get => _stream.Position;
-        set => _stream.Position = value;
+        get { return _position; }
+        set
+        {
+            _position = value;
+            _stream.Position = value;
+        }
     }
 }

@@ -64,16 +64,18 @@ public readonly record struct WaveePlayerState(
         Option<bool> startPaused)
     {
         var ind = index.IfNone(0);
+        var track = context.FutureTracks.ElementAt(ind);
         return this with
         {
             Context = Some(context),
             State = new WaveeLoadingState(
                 IndexInContext: ind,
-                TrackId: context.FutureTracks.ElementAt(ind).Id,
+                TrackId: track.Id,
+                Uid: track.Uid,
                 FromQueue: false,
                 StartFrom: startFrom.IfNone(TimeSpan.Zero),
                 StartPaused: startPaused.IfNone(false),
-                CloseOtherStreams: true)
+                StartFadeIn: false)
             {
                 Stream = context.FutureTracks.ElementAt(ind).StreamFuture()
             },
@@ -83,62 +85,62 @@ public readonly record struct WaveePlayerState(
         };
     }
 
-    public Option<Task<IAudioStream>> GetNextStreamForPreload()
-    {
-        if (RepeatState is RepeatStateType.RepeatTrack)
-        {
-            //return current stream
-            return State switch
-            {
-                WaveeLoadingState loadingState => Some(loadingState.Stream),
-                WaveePlayingState playingState => Some(Task.FromResult(playingState.Stream)),
-                WaveePausedState pausedState => Some(Task.FromResult(pausedState.Stream)),
-                WaveeEndedState endedState => Some(Task.FromResult(endedState.Stream)),
-                _ => None
-            };
-        }
+    // public Option<Task<IAudioStream>> GetNextStreamForPreload()
+    // {
+    //     if (RepeatState is RepeatStateType.RepeatTrack)
+    //     {
+    //         //return current stream
+    //         return State switch
+    //         {
+    //             WaveeLoadingState loadingState => Some(loadingState.Stream),
+    //             WaveePlayingState playingState => Some(Task.FromResult(playingState.Stream)),
+    //             WaveePausedState pausedState => Some(Task.FromResult(pausedState.Stream)),
+    //             WaveeEndedState endedState => Some(Task.FromResult(endedState.Stream)),
+    //             _ => None
+    //         };
+    //     }
+    //
+    //     //check if we have a queue
+    //     if (Queue.Count > 0)
+    //     {
+    //         //we have a queue, so lets get the first item from the queue
+    //         var item = Queue.Head();
+    //         return Some(item.StreamFuture());
+    //     }
+    //
+    //     //no queue, so lets check if we have a context
+    //     if (Context.IsSome)
+    //     {
+    //         var ctx = Context.ValueUnsafe();
+    //         //we have a context, so lets check if we have a next track
+    //         var index = State switch
+    //         {
+    //             WaveeLoadingState loadingState => loadingState.IndexInContext.IfNone(0),
+    //             WaveePlayingState playingState => playingState.IndexInContext.IfNone(0),
+    //             WaveePausedState pausedState => pausedState.IndexInContext.IfNone(0),
+    //             WaveeEndedState endedState => endedState.IndexInContext.IfNone(0),
+    //             _ => 0
+    //         };
+    //         var theoreticalNextIndex = index + 1;
+    //         //check if we have a next track
+    //         if (ctx.FutureTracks.Count() > theoreticalNextIndex)
+    //         {
+    //             //we have a next track, so lets return it
+    //             return Some(ctx.FutureTracks.ElementAt(theoreticalNextIndex).StreamFuture());
+    //         }
+    //
+    //         //check if repeat state is set to repeat context
+    //         if (RepeatState is RepeatStateType.RepeatContext)
+    //         {
+    //             //we are repeating the context, so lets return the first track
+    //             return Some(Context.ValueUnsafe().FutureTracks.ElementAt(0).StreamFuture());
+    //         }
+    //     }
+    //
+    //     return None;
+    // }
 
-        //check if we have a queue
-        if (Queue.Count > 0)
-        {
-            //we have a queue, so lets get the first item from the queue
-            var item = Queue.Head();
-            return Some(item.StreamFuture());
-        }
-
-        //no queue, so lets check if we have a context
-        if (Context.IsSome)
-        {
-            var ctx = Context.ValueUnsafe();
-            //we have a context, so lets check if we have a next track
-            var index = State switch
-            {
-                WaveeLoadingState loadingState => loadingState.IndexInContext.IfNone(0),
-                WaveePlayingState playingState => playingState.IndexInContext.IfNone(0),
-                WaveePausedState pausedState => pausedState.IndexInContext.IfNone(0),
-                WaveeEndedState endedState => endedState.IndexInContext.IfNone(0),
-                _ => 0
-            };
-            var theoreticalNextIndex = index + 1;
-            //check if we have a next track
-            if (ctx.FutureTracks.Count() > theoreticalNextIndex)
-            {
-                //we have a next track, so lets return it
-                return Some(ctx.FutureTracks.ElementAt(theoreticalNextIndex).StreamFuture());
-            }
-
-            //check if repeat state is set to repeat context
-            if (RepeatState is RepeatStateType.RepeatContext)
-            {
-                //we are repeating the context, so lets return the first track
-                return Some(Context.ValueUnsafe().FutureTracks.ElementAt(0).StreamFuture());
-            }
-        }
-
-        return None;
-    }
-
-    public WaveePlayerState SkipNext(bool immediatly)
+    public WaveePlayerState SkipNext(bool crossfade)
     {
         //check if we have a repeat state
         //if we do, check if we are repeating a track
@@ -152,19 +154,44 @@ public readonly record struct WaveePlayerState(
                     WaveeLoadingState loadingState => loadingState with
                     {
                         StartFrom = TimeSpan.Zero,
-                        StartPaused = false
+                        StartPaused = false,
+                        StartFadeIn = crossfade,
                     },
-                    WaveePlayingState playingState => playingState with
+                    WaveePlayingState playingState => new WaveeLoadingState(
+                        IndexInContext: playingState.IndexInContext,
+                        TrackId: playingState.TrackId,
+                        Uid: playingState.Uid,
+                        FromQueue: false,
+                        StartFrom: TimeSpan.Zero,
+                        StartPaused: false,
+                        StartFadeIn: crossfade
+                    )
                     {
-                        PositionAsOfSince = TimeSpan.Zero
+                        Stream = Task.FromResult(playingState.Stream)
                     },
-                    WaveePausedState pausedState => pausedState.ToPlayingState() with
+                    WaveePausedState pausedState =>  new WaveeLoadingState(
+                        IndexInContext: pausedState.IndexInContext,
+                        TrackId: pausedState.TrackId,
+                        Uid: pausedState.Uid,
+                        FromQueue: false,
+                        StartFrom: TimeSpan.Zero,
+                        StartPaused: false,
+                        StartFadeIn: crossfade
+                    )
                     {
-                        PositionAsOfSince = TimeSpan.Zero
+                        Stream = Task.FromResult(pausedState.Stream)
                     },
-                    WaveeEndedState endedState => endedState.ToPlayingState() with
+                    WaveeEndedState endedState => new WaveeLoadingState(
+                        IndexInContext: endedState.IndexInContext,
+                        TrackId: endedState.TrackId,
+                        Uid: endedState.Uid,
+                        FromQueue: false,
+                        StartFrom: TimeSpan.Zero,
+                        StartPaused: false,
+                        StartFadeIn: crossfade
+                    )
                     {
-                        PositionAsOfSince = TimeSpan.Zero
+                        Stream = Task.FromResult(endedState.Stream)
                     },
                     _ => State
                 }
@@ -192,10 +219,11 @@ public readonly record struct WaveePlayerState(
                 State = new WaveeLoadingState(
                     IndexInContext: indexInContext,
                     TrackId: Some(item.Id),
+                    Uid: item.Uid,
                     FromQueue: true,
                     StartFrom: TimeSpan.Zero,
                     StartPaused: false,
-                    CloseOtherStreams: immediatly)
+                    StartFadeIn: crossfade)
                 {
                     Stream = PreloadedStream.Match(
                         Some: r => r,
@@ -244,10 +272,11 @@ public readonly record struct WaveePlayerState(
                     Some: track => new WaveeLoadingState(
                         IndexInContext: Some(theoreticalNextIndex),
                         TrackId: Some(track.Id),
+                        Uid: track.Uid,
                         FromQueue: false,
                         StartFrom: TimeSpan.Zero,
                         StartPaused: false,
-                        immediatly)
+                        crossfade)
                     {
                         Stream = preloadedStream.Match(
                             Some: r => r,

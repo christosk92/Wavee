@@ -1,5 +1,4 @@
-﻿using AesCtr;
-using Eum.Spotify;
+﻿using Eum.Spotify;
 using Eum.Spotify.connectstate;
 using Google.Protobuf;
 using LanguageExt;
@@ -39,8 +38,8 @@ var config = new SpotifyConfig(
 //https://open.spotify.com/playlist/37i9dQZF1DZ06evO2y645c?si=d1aa4d81c0644769
 var spotifyCore = await SpotifyClient.Create(credentials, config, Option<ILogger>.None);
 spotifyCore.RemoteClient.StateChanged.Subscribe(x => { Console.WriteLine(x); });
-await spotifyCore.PlaybackClient.PlayContext("spotify:playlist:37i9dQZF1DZ06evO2y645c",
-    0, TimeSpan.Zero, true,
+await spotifyCore.PlaybackClient.PlayContext("spotify:artist:72nLe76yBFSlP6VBzME358",
+    2, TimeSpan.Zero, true,
     Option<PreferredQualityType>.None,
     CancellationToken.None);
 

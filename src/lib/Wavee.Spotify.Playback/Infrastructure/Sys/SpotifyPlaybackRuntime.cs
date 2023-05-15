@@ -1,7 +1,6 @@
 ﻿using System.Net.Http.Headers;
 using System.Security.Cryptography;
 using System.Text;
-using AesCtr;
 using AesCtrBouncyCastle;
 using Eum.Spotify.storage;
 using Google.Protobuf;
@@ -61,7 +60,7 @@ public static class SpotifyPlaybackRuntime<R> where R : struct, HasHttp<R>
         from decryptedStream in OpenDecryptedStream(stream, audioKey)
         from offsetAndNormData in ReadNormalisationData(decryptedStream, audioFile.Format)
         select new SpotifyStream(decryptedStream, mapper(trackOrEpisode), offsetAndNormData.Item1,
-            offsetAndNormData.Item2, stream.Length, None);
+            offsetAndNormData.Item2, stream.Length, new CrossfadeController(TimeSpan.FromSeconds(10)));
 
     private static Eff<(Option<NormalisationData> Normdata, long Offset)> ReadNormalisationData(Stream stream,
         AudioFile.Types.Format format)
@@ -105,13 +104,21 @@ public static class SpotifyPlaybackRuntime<R> where R : struct, HasHttp<R>
                 return StorageResolveResponse.Parser.ParseFrom(stream);
             })
         from cdnUrls in GetCdnUrls(fileId, storage)
-        from totalLength in GetTotalLength(cdnUrls, ct)
-        select new HttpEncryptedSpotifyStream<R>(cdnUrls, MINIMUM_DOWNLOAD_SIZE, totalLength);
-        
+        from firstChunkAndLength in GetFirstChunk(cdnUrls, SpotifyPlaybackConstants.ChunkSize, ct)
+        select new HttpEncryptedSpotifyStream<R>(cdnUrls, firstChunkAndLength.FirstChunk,
+            firstChunkAndLength.TotalLength);
 
-    private static Aff<R, long> GetTotalLength(string url, CancellationToken ct = default) =>
-        Http<R>.Head(url, Option<HashMap<string, string>>.None, ct)
-            .Map(x => x.Content.Headers.ContentLength.Value);
+
+    private static Aff<R, (ReadOnlyMemory<byte> FirstChunk, long TotalLength)> GetFirstChunk(string url, int chunkSize,
+        CancellationToken ct = default) =>
+        Http<R>.GetWithContentRange(url, 0, chunkSize - 1, ct)
+            .MapAsync(async x =>
+            {
+                var length = x.Content.Headers.ContentRange?.Length ?? throw new Exception("No content length");
+                ReadOnlyMemory<byte> firstChunk = await x.Content.ReadAsByteArrayAsync(ct);
+                return (firstChunk, length);
+            });
+
     private static Eff<string> GetCdnUrls(ByteString fileId, StorageResolveResponse storage) => Eff(() =>
     {
         var maybeExpiring = MaybeExpiringUrl.From(storage);

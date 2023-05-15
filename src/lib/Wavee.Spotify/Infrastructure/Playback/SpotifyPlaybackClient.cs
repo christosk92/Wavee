@@ -54,8 +54,8 @@ internal class SpotifyPlaybackClient<R> : ISpotifyPlaybackClient
 
     private async Task PlayerStateChanged(WaveePlayerState obj)
     {
-        if (obj.State.TrackId.IsNone
-            || obj.State.TrackId.ValueUnsafe().Source is not ISpotifyCore.SourceId)
+        if (obj.State.TrackId.IsSome
+            && obj.State.TrackId.ValueUnsafe().Source is not ISpotifyCore.SourceId)
         {
             //not active anymore
             //notify
@@ -147,22 +147,6 @@ internal class SpotifyPlaybackClient<R> : ISpotifyPlaybackClient
         Option<PreferredQualityType> preferredQualityTypeOverride,
         CancellationToken ct = default)
     {
-        //spotify:track:584hTOO20B2WKK8PjPB1Gw
-        var id = new AudioId("1M85o2ruB9uTj68dIXj6dJ", AudioItemType.Track, ISpotifyCore.SourceId);
-        var tr = await StreamFuture(_connection, id, PreferredQualityType.High, _runtime);
-        var str = tr.AsStream();
-        //copy to file
-        str.Position = 0;
-        using var fs = File.Create("test_spotify.ogg");
-        int read = 0;
-        var buffer = new byte[8192];
-        do
-        {
-            read = await str.ReadAsync(buffer, 0, buffer.Length, ct);
-            await fs.WriteAsync(buffer, 0, read, ct);
-        } while (read > 0);
-
-        await fs.FlushAsync(ct);
         var preferredQualityType = preferredQualityTypeOverride.Match(x => x, () => _preferredQualityType);
         var contextResolve = await _connection.Mercury.ContextResolve(contextUri, ct);
         var tracks = GetTracks(_connection,

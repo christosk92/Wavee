@@ -8,6 +8,7 @@ public readonly record struct WaveePausedState(
     ITrack Track,
     TimeSpan Position,
     Option<int> IndexInContext,
+    Option<string> Uid,
     bool FromQueue
 ) : IWaveeInPlaybackState
 {
@@ -18,7 +19,9 @@ public readonly record struct WaveePausedState(
         return new WaveePlayingState(
             DateTimeOffset.UtcNow,
             Position,
-            Track, IndexInContext, FromQueue)
+            Track, IndexInContext,
+            Uid,
+            FromQueue)
         {
             Uid = Option<string>.None,
             Stream = Stream
@@ -27,7 +30,7 @@ public readonly record struct WaveePausedState(
 
     public WaveeEndedState ToEndedState()
     {
-        return new WaveeEndedState(Track, Position, IndexInContext, FromQueue)
+        return new WaveeEndedState(Track, Position, IndexInContext, Uid, FromQueue)
         {
             Stream = Stream
         };

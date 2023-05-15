@@ -7,10 +7,11 @@ namespace Wavee.Player.States;
 public readonly record struct WaveeLoadingState(
     Option<int> IndexInContext,
     Option<AudioId> TrackId,
+    Option<string> Uid,
     bool FromQueue,
     TimeSpan StartFrom,
     bool StartPaused,
-    bool CloseOtherStreams
+    bool StartFadeIn
 ) : IWaveePlaybackState
 {
     public required Task<IAudioStream> Stream { get; init; }
@@ -22,6 +23,7 @@ public readonly record struct WaveeLoadingState(
             stream.Track,
             stream.Track.Duration,
             IndexInContext,
+            Uid,
             FromQueue)
         {
             Stream = stream
@@ -35,6 +37,7 @@ public readonly record struct WaveeLoadingState(
                 stream.Track,
                 StartFrom,
                 IndexInContext,
+                Uid,
                 FromQueue)
             {
                 Stream = stream
@@ -44,6 +47,7 @@ public readonly record struct WaveeLoadingState(
                 StartFrom,
                 stream.Track,
                 IndexInContext,
+                Uid,
                 FromQueue)
             {
                 Stream = stream,

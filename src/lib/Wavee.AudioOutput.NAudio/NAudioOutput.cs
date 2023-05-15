@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
 using NAudio.Wave;
+using Wavee.Core;
 using Wavee.Core.Contracts;
 using Wavee.Core.Infrastructure.Traits;
 using static LanguageExt.Prelude;
@@ -18,12 +19,14 @@ public sealed class NAudioOutput : AudioOutputIO
     private readonly WaveFormat waveFormat;
 
     private readonly BufferedWaveProvider _bufferedWaveProvider;
-    private readonly AtomSeq<nHolder> _outputs = LanguageExt.AtomSeq<nHolder>.Empty;
 
     public NAudioOutput()
     {
         waveFormat = WaveFormat.CreateIeeeFloatWaveFormat(sampleRate, channels);
-        _bufferedWaveProvider = new BufferedWaveProvider(waveFormat);
+        _bufferedWaveProvider = new BufferedWaveProvider(waveFormat)
+        {
+
+        };
         _waveOutEvent.Init(_bufferedWaveProvider);
     }
 
@@ -33,87 +36,6 @@ public sealed class NAudioOutput : AudioOutputIO
         atomic(() => WaveeCore.AudioOutput.Swap(_ => _instance));
     }
 
-    private class FadeInOutSampleProvider : ISampleProvider
-    {
-        private readonly CrossfadeController _crossfadeController;
-        private readonly ISampleProvider _source;
-        private Func<TimeSpan> _position;
-        private TimeSpan _trackDuration;
-
-        public FadeInOutSampleProvider(ISampleProvider source, WaveFormat waveFormat, Func<TimeSpan> position,
-            CrossfadeController crossfadeController, TimeSpan trackDuration)
-        {
-            _source = source;
-            WaveFormat = waveFormat;
-            _position = position;
-            _crossfadeController = crossfadeController;
-            _trackDuration = trackDuration;
-        }
-
-        public int Read(float[] buffer, int offset, int count)
-        {
-            var position = _position();
-            var samples = _source.Read(buffer, offset, count);
-            var factor = _crossfadeController.GetFactor(position, _trackDuration);
-            for (int i = 0; i < samples; i++)
-            {
-                buffer[i + offset] *= factor;
-            }
-
-            return samples;
-        }
-
-        public WaveFormat WaveFormat { get; }
-    }
-
-    private class nHolder : IDisposable
-    {
-        public nHolder(IAudioStream stream)
-        {
-            WaveStream = AudioDecoderRuntime.OpenAudioDecoder(stream.AsStream()).Run().ThrowIfFail();
-            SampleProvider = new FadeInOutSampleProvider(WaveStream.ToSampleProvider(), WaveStream.WaveFormat,
-                () => WaveStream.CurrentTime, stream.CrossfadeController.ValueUnsafe(), stream.Track.Duration);
-        }
-
-        public ISampleProvider SampleProvider { get; }
-        public WaveStream? WaveStream { get; set; }
-
-        public void Seek(TimeSpan position)
-        {
-            if (WaveStream is not null && WaveStream.CanSeek)
-            {
-                bool succeeded = false;
-                while (!succeeded)
-                {
-                    try
-                    {
-                        WaveStream.CurrentTime = position;
-                        succeeded = true;
-                    }
-                    catch (Exception ex)
-                    {
-                        succeeded = false;
-                        //try go back a bit
-                        if (position.TotalSeconds > 0)
-                        {
-                            position = position.Subtract(TimeSpan.FromSeconds(0.1));
-                        }
-                        else
-                        {
-                            //give up
-                            break;
-                        }
-                    }
-                }
-            }
-        }
-
-        public void Dispose()
-        {
-            WaveStream = null;
-            WaveStream?.Dispose();
-        }
-    }
 
     public Unit Start()
     {
@@ -127,87 +49,63 @@ public sealed class NAudioOutput : AudioOutputIO
         return Prelude.unit;
     }
 
-    // public ValueTask<Unit> WriteSamples(ReadOnlySpan<float> samples, CancellationToken ct = default)
-    // {
-    //     throw new NotImplementedException();
-    // }
-
-    public Task PlayStream(IAudioStream audioStream, Action<TimeSpan> onPositionChanged, bool closeOtherStreams)
+    public ValueTask<IAudioDecoder> OpenDecoder(IAudioStream stream)
     {
-        var output = new nHolder(audioStream);
-        if (closeOtherStreams)
+        var decoder = AudioDecoderRuntime.OpenAudioDecoder(stream.AsStream()).Run().ThrowIfFail();
+        return new ValueTask<IAudioDecoder>(new NAudioMaskedAsAudioDecoder(decoder, stream.Track.Duration));
+    }
+
+    public Unit DiscardSamples()
+    {
+        _bufferedWaveProvider.ClearBuffer();
+        return Prelude.unit;
+    }
+
+    public Unit WriteSamples(ReadOnlySpan<float> sample)
+    {
+        //cast to byte array
+        var byteSpan = MemoryMarshal.Cast<float, byte>(sample).ToArray();
+
+        //write to output
+        _bufferedWaveProvider.AddSamples(byteSpan, 0, byteSpan.Length);
+        while (_bufferedWaveProvider.BufferedDuration.TotalSeconds > 0.5)
         {
-            _outputs.Iter(o => o.Dispose());
+            Thread.Sleep(50);
         }
 
-        Prelude.atomic(() => _outputs.Swap(x => x.Add(output)));
+        return unit;
+    }
 
-        var tcs = new TaskCompletionSource<Unit>(TaskCreationOptions.RunContinuationsAsynchronously);
+    private class NAudioMaskedAsAudioDecoder : IAudioDecoder
+    {
+        private readonly WaveStream _waveStream;
+        private readonly ISampleProvider _sampleProvider;
 
-        Task.Factory.StartNew(async () =>
+        public NAudioMaskedAsAudioDecoder(WaveStream waveStream, TimeSpan totalTime)
         {
-            //read samples
-            //Memory<byte> samplesSpan = new byte[1024];
-            // byte[] samples = ArrayPool<byte>.Shared.Rent(samplesSpan.Length);
+            _waveStream = waveStream;
+            TotalTime = totalTime;
+            _sampleProvider = _waveStream.ToSampleProvider();
+        }
 
-            //read samples
-            var samplesFloat = new float[4096];
-            if (output.WaveStream != null)
-            {
-                while (true)
-                {
-                    try
-                    {
-                        int read = output.SampleProvider.Read(samplesFloat, 0, samplesFloat.Length);
-                        if (read > 0)
-                        {
-                            //convert to bytes
-                            var samplesSpan = MemoryMarshal.Cast<float, byte>(samplesFloat.AsSpan(0, read)).ToArray();
-                            _bufferedWaveProvider.AddSamples(samplesSpan, 0, samplesSpan.Length);
-                            onPositionChanged(output.WaveStream.CurrentTime);
-                            while (_bufferedWaveProvider.BufferedDuration.TotalSeconds > 0.5)
-                            {
-                                await Task.Delay(5);
-                            }
-                        }
-                        else
-                        {
-                            break;
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        onPositionChanged(output.WaveStream.CurrentTime);
-                    }
-                }
-            }
+        public void Dispose()
+        {
+            _waveStream.Dispose();
+        }
 
+        public Span<float> ReadSamples(int samples)
+        {
+            var output = new float[samples];
+            var read = _sampleProvider.Read(output, 0, samples);
+            return output.AsSpan(0, read);
+        }
 
-            tcs.SetResult(Prelude.unit);
+        public TimeSpan Position => _waveStream.CurrentTime;
+        public TimeSpan TotalTime { get; }
 
-            atomic(() => _outputs.Swap(x => x.Filter(f => f != output)));
-            output.Dispose();
-            onPositionChanged = null;
-        });
-
-        return tcs.Task;
-    }
-
-    public TimeSpan Position()
-    {
-        //last one
-        return _outputs.LastOrNone().Match(
-            Some: o => o.WaveStream?.CurrentTime ?? TimeSpan.Zero,
-            None: () => TimeSpan.Zero);
-    }
-
-    public Unit Seek(TimeSpan seekPosition)
-    {
-        //last one
-        _waveOutEvent.Pause();
-        _outputs.LastOrNone().IfSome(o => o.Seek(seekPosition));
-        _bufferedWaveProvider.ClearBuffer();
-        _waveOutEvent.Play();
-        return Prelude.unit;
+        public void Seek(TimeSpan pPosition)
+        {
+            _waveStream.CurrentTime = pPosition;
+        }
     }
 }

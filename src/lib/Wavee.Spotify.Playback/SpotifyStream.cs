@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics;
-using AesCtr;
 using LanguageExt;
 using Wavee.Core.Contracts;
 using Wavee.Spotify.Playback.Playback.Streams;
@@ -26,6 +25,7 @@ public sealed class SpotifyStream : Stream, IAudioStream
         CrossfadeController = crossfadeController;
         _decryptedStream = stream;
         Track = track;
+        Position = 0;
     }
 
     public override int Read(byte[] buffer, int offset, int count)
@@ -35,6 +35,7 @@ public sealed class SpotifyStream : Stream, IAudioStream
         {
             Debugger.Break();
         }
+
         return read;
     }
 
@@ -48,7 +49,7 @@ public sealed class SpotifyStream : Stream, IAudioStream
             _ => throw new ArgumentOutOfRangeException(nameof(origin), origin, null)
         };
 
-        _decryptedStream.Seek(Position, SeekOrigin.Begin);
+        _decryptedStream.Seek(offset + _headerOffset, SeekOrigin.Begin);
         return Position;
     }
 

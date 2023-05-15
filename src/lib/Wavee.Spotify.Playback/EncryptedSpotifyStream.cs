@@ -58,12 +58,18 @@ internal sealed class HttpEncryptedSpotifyStream<R> : EncryptedSpotifyStream whe
     private AtomHashMap<int, TaskCompletionSource<ReadOnlyMemory<byte>>> _chunks =
         LanguageExt.AtomHashMap<int, TaskCompletionSource<ReadOnlyMemory<byte>>>.Empty;
 
-    public HttpEncryptedSpotifyStream(string cdnUrl, int minimumDownloadSize, long length) : base(length)
+    public HttpEncryptedSpotifyStream(string cdnUrl, ReadOnlyMemory<byte> firstChunk,
+        long length) : base(length)
     {
         _cdnUrl = cdnUrl;
         const int chunkSize = SpotifyPlaybackConstants.ChunkSize;
         var chunks = (int)Math.Ceiling((double)length / chunkSize);
-        for (var i = 0; i < chunks; i++)
+        var firstOne = new TaskCompletionSource<ReadOnlyMemory<byte>>(TaskCreationOptions
+            .RunContinuationsAsynchronously);
+        firstOne.SetResult(firstChunk);
+        _chunks.Add(0, firstOne);
+
+        for (var i = 1; i < chunks; i++)
         {
             var chunk = i;
             var tcs = new TaskCompletionSource<ReadOnlyMemory<byte>>(TaskCreationOptions
@@ -76,7 +82,7 @@ internal sealed class HttpEncryptedSpotifyStream<R> : EncryptedSpotifyStream whe
                 request.Headers.Range = new RangeHeaderValue(chunk * chunkSize,
                     chunk == chunks - 1 ? length - 1 : chunk * chunkSize + chunkSize - 1);
                 using var response = await _client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
-                var stream = await response.Content.ReadAsByteArrayAsync();
+                ReadOnlyMemory<byte> stream = await response.Content.ReadAsByteArrayAsync();
                 tcs.SetResult(stream);
             });
         }
@@ -85,26 +91,20 @@ internal sealed class HttpEncryptedSpotifyStream<R> : EncryptedSpotifyStream whe
     public override async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
     {
         var chunkIndex = (int)(Position / SpotifyPlaybackConstants.ChunkSize);
-        var chunkOffset = (int)(Position % SpotifyPlaybackConstants.ChunkSize);
-        var chunkSize = (int)Math.Min(count, SpotifyPlaybackConstants.ChunkSize - chunkOffset);
         if (chunkIndex >= _chunks.Count)
         {
             return 0;
         }
-        
-        var chunk = await _chunks[chunkIndex].Task;
-        try
-        {
-            chunk.Slice(0, chunkSize).CopyTo(buffer.AsMemory(offset, chunkSize));
-        }
-        catch (Exception e)
-        {
-            Debugger.Break();
-            throw;
-        }
 
-        Position += chunkSize;
-        return chunkSize;
+        var chunk = await _chunks[chunkIndex].Task;
+        var actualChunkSize = chunk.Length;  // Actual size of the chunk
+        //var bytesToRead = Math.Min(count, actualChunkSize);
+        //make sure offset is not out of bounds
+        var bytesToRead = Math.Min(count, actualChunkSize - offset);
+        
+        chunk.Slice(0, bytesToRead).CopyTo(buffer.AsMemory(offset, bytesToRead));
+        Position += bytesToRead;
+        return bytesToRead;
     }
 
 

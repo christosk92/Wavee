@@ -70,13 +70,19 @@ public class CrossfadeController
         return 1f;
     }
 
+    public bool MaybeFlagCrossFadeOut(TimeSpan position, TimeSpan trackDuration)
+    {
+        if (!_crossfadeOutStarted && position.TotalMilliseconds > trackDuration.TotalMilliseconds - _crossfadeDuration.TotalMilliseconds)
+        {
+            _crossfadeOutStarted = true;
+            return true;
+        }
+
+        return false;
+    }
+
     public void FlagCrossFadeIn()
     {
         _crossfadeStarted = true;
-    }
-
-    public void FlagCrossFadeOut()
-    {
-        _crossfadeOutStarted = true;
     }
 }

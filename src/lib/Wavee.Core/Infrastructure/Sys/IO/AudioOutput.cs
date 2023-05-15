@@ -13,45 +13,32 @@ public static class AudioOutput<RT>
     /// </summary>
     /// <returns></returns>
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Eff<RT, TimeSpan> Start() =>
+    public static Eff<RT, Unit> Start() =>
         from _ in default(RT).AudioOutputEff.Map(e => e.IfSome(x => x.Start()))
-        from pos in default(RT).AudioOutputEff.Map(e =>
-            e.Match(
-                Some: x => x.Position(),
-                None: () => TimeSpan.Zero))
-        select pos;
+        select unit;
+
     /// <summary>
     /// Halt current audio playback. Aka pausing.
     /// </summary>
     /// <returns></returns>
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Eff<RT, TimeSpan> Pause() =>
+    public static Eff<RT, Unit> Pause() =>
         from _ in default(RT).AudioOutputEff.Map(e =>
             e.IfSome(x => x.Pause()))
-        from pos in default(RT).AudioOutputEff.Map(e =>
-            e.Match(
-                Some: x => x.Position(),
-                None: () => TimeSpan.Zero))
-        select pos;
+        select unit;
 
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Eff<RT, Task> PlayStream(IAudioStream stream,
-        Action<TimeSpan> onPositionChanged,
-        bool closeOtherStreams) =>
-        from handle in default(RT).AudioOutputEff.Map(e => e.Match(
-            Some: x => x.PlayStream(stream, onPositionChanged, closeOtherStreams),
-            None: () => Task.CompletedTask))
+    public static Aff<RT, IAudioDecoder> Decode(IAudioStream stream) =>
+        from handle in default(RT).AudioOutputEff.MapAsync(e => e.Match(
+            Some: x => x.OpenDecoder(stream),
+            None: () => throw new Exception("No audio output device available")))
         select handle;
 
-    [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Eff<RT, Unit> Seek(TimeSpan seekPosition) =>
-        from _ in default(RT).AudioOutputEff.Map(e => e.IfSome(x => x.Seek(seekPosition)))
-        select unit;
+    public static Eff<RT, AudioOutputIO> GetAudioOutput() =>
+        from handle in default(RT).AudioOutputEff.Map(x=> x.Match(Some: r => r, None: () => throw new Exception("No audio output device available")))
+        select handle;
     
-    public static Eff<RT, TimeSpan> Position =>
-        from pos in default(RT).AudioOutputEff.Map(e =>
-            e.Match(
-                Some: x => x.Position(),
-                None: () => TimeSpan.Zero))
-        select pos;
+    public static Eff<RT, Unit> DiscardSamples() =>
+        from _ in default(RT).AudioOutputEff.Map(e => e.IfSome(x => x.DiscardSamples()))
+        select unit;
 }

@@ -9,21 +9,24 @@ public readonly record struct WaveePlayingState(
     TimeSpan PositionAsOfSince,
     ITrack Track,
     Option<int> IndexInContext,
+    Option<string> Uid,
     bool FromQueue
 ) : IWaveeInPlaybackState
 {
     public TimeSpan Position => (DateTimeOffset.UtcNow - Since) + PositionAsOfSince;
     public required IAudioStream Stream { get; init; }
+
     public WaveePausedState ToPausedState(TimeSpan position)
     {
-        return new WaveePausedState(Track, position, IndexInContext, FromQueue)
+        return new WaveePausedState(Track, position, IndexInContext, Uid, FromQueue)
         {
             Stream = Stream
         };
     }
+
     public WaveeEndedState ToEndedState()
     {
-        return new WaveeEndedState(Track, Position, IndexInContext, FromQueue)
+        return new WaveeEndedState(Track, Position, IndexInContext, Uid, FromQueue)
         {
             Stream = Stream
         };
