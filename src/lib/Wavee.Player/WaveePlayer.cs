@@ -84,63 +84,7 @@ public static class WaveePlayer
         }, TaskCreationOptions.LongRunning);
     }
 
-    public static Option<TimeSpan> Position =>
-        State.State switch
-        {
-            WaveePlayingState playingState => playingState.Position,
-            WaveePausedState pausedState => pausedState.Position,
-            WaveeEndedState endedState => endedState.Position,
-            _ => Option<TimeSpan>.None
-        };
-
-    public static void SkipNext(bool immediately)
-    {
-        _commandChannelWriter.TryWrite(new SkipNextCommand(immediately, false));
-    }
-
-    public static void PlayContext(WaveeContext context, TimeSpan startFrom, int index, bool startPaused)
-    {
-        _commandChannelWriter.TryWrite(new PlayContextCommand(context, startFrom, index, startPaused));
-    }
-
-    public static Unit Pause()
-    {
-        _commandChannelWriter.TryWrite(PauseCommand.Default);
-        return unit;
-    }
-
-    public static Unit Resume()
-    {
-        _commandChannelWriter.TryWrite(ResumeCommand.Default);
-        return unit;
-    }
-
-    public static Unit Seek(TimeSpan position, Option<DateTimeOffset> since)
-    {
-        _commandChannelWriter.TryWrite(new SeekCommand(since.IfNone(DateTimeOffset.UtcNow), position));
-        return unit;
-    }
-
-    private static void SkipNextInternal(SkipNextCommand skipNextCommand)
-    {
-        //if we have a playback, end it
-        atomic(() => _state.Swap(f =>
-        {
-            return f with
-            {
-                State = f.State switch
-                {
-                    WaveePlayingState p => p.ToEndedState(),
-                    WaveePausedState p => p.ToEndedState(),
-                    _ => f.State
-                }
-            };
-        }));
-
-        //if we have a context, skip to the next track
-        var newState = atomic(() => _state.Swap(f => f.SkipNext(skipNextCommand.MarkForCrossfade)));
-        _playerReady.Set();
-    }
+    #region Playback
 
     private static async Task DoPlaybackLoop()
     {
@@ -201,34 +145,9 @@ public static class WaveePlayer
         }
     }
 
-    private static void SeekInternal(SeekCommand seekCommand)
-    {
-        atomic(() =>
-        {
-            _state.Swap(f => f with
-            {
-                State = f.State switch
-                {
-                    WaveePlayingState playingState => playingState with
-                    {
-                        PositionAsOfSince = seekCommand.Position,
-                        Since = DateTimeOffset.UtcNow
-                    },
-                    WaveePausedState pausedState => pausedState with
-                    {
-                        Position = pausedState.Position
-                    },
-                    _ => f.State
-                }
-            });
-        });
-    }
-
     private static bool DoPlayback(IAudioDecoder output, TimeSpan duration,
         Option<CrossfadeController> crossfadeController)
     {
-        //TODO: Config
-
         //start reading samples, manipulating them 
         //and sending them to the output
         TimeSpan prevPositionAsOf = TimeSpan.Zero;
@@ -324,7 +243,10 @@ public static class WaveePlayer
                         if (fadingoutSamples.Length == 0)
                         {
                             //we're done
+                            //dispose the decoder
+                            fadingoutDecoder.Dispose();
                             _crossfadingOutDecoder = None;
+                            GC.Collect();
                         }
                         else
                         {
@@ -387,9 +309,104 @@ public static class WaveePlayer
         {
             listener.Dispose();
             _commandChannelWriter.TryWrite(new SkipNextCommand(false, false));
+            //dispose the output
+            output.Dispose();
+            GC.Collect();
         }
 
         return isCrossfading;
+    }
+
+    #endregion
+
+    #region Public commanding
+
+    public static Option<TimeSpan> Position =>
+        State.State switch
+        {
+            WaveePlayingState playingState => playingState.Position,
+            WaveePausedState pausedState => pausedState.Position,
+            WaveeEndedState endedState => endedState.Position,
+            _ => Option<TimeSpan>.None
+        };
+
+    public static void SkipNext(bool immediately)
+    {
+        _commandChannelWriter.TryWrite(new SkipNextCommand(immediately, false));
+    }
+
+    public static void PlayContext(WaveeContext context, TimeSpan startFrom, int index, bool startPaused)
+    {
+        _commandChannelWriter.TryWrite(new PlayContextCommand(context, startFrom, index, startPaused));
+    }
+
+    public static Unit Pause()
+    {
+        _commandChannelWriter.TryWrite(PauseCommand.Default);
+        return unit;
+    }
+
+    public static Unit Resume()
+    {
+        _commandChannelWriter.TryWrite(ResumeCommand.Default);
+        return unit;
+    }
+
+    public static Unit Seek(TimeSpan position, Option<DateTimeOffset> since)
+    {
+        _commandChannelWriter.TryWrite(new SeekCommand(since.IfNone(DateTimeOffset.UtcNow), position));
+        return unit;
+    }
+
+    public static IObservable<WaveePlayerState> StateChanged => _state.OnChange().StartWith(State);
+
+    #endregion
+
+    #region Internal Commanding
+
+    private static void SkipNextInternal(SkipNextCommand skipNextCommand)
+    {
+        //if we have a playback, end it
+        atomic(() => _state.Swap(f =>
+        {
+            return f with
+            {
+                State = f.State switch
+                {
+                    WaveePlayingState p => p.ToEndedState(),
+                    WaveePausedState p => p.ToEndedState(),
+                    _ => f.State
+                }
+            };
+        }));
+
+        //if we have a context, skip to the next track
+        var newState = atomic(() => _state.Swap(f => f.SkipNext(skipNextCommand.MarkForCrossfade)));
+        _playerReady.Set();
+    }
+
+
+    private static void SeekInternal(SeekCommand seekCommand)
+    {
+        atomic(() =>
+        {
+            _state.Swap(f => f with
+            {
+                State = f.State switch
+                {
+                    WaveePlayingState playingState => playingState with
+                    {
+                        PositionAsOfSince = seekCommand.Position,
+                        Since = DateTimeOffset.UtcNow
+                    },
+                    WaveePausedState pausedState => pausedState with
+                    {
+                        Position = pausedState.Position
+                    },
+                    _ => f.State
+                }
+            });
+        });
     }
 
     private static Task PlayContextInternal(PlayContextCommand playContextCommand)
@@ -403,7 +420,9 @@ public static class WaveePlayer
         return Task.CompletedTask;
     }
 
-    public static IObservable<WaveePlayerState> StateChanged => _state.OnChange().StartWith(State);
+    #endregion
+
+    #region Structs
 
     private interface IInternalPlayerCommand
     {
@@ -427,4 +446,6 @@ public static class WaveePlayer
     }
 
     private readonly record struct SeekCommand(DateTimeOffset Since, TimeSpan Position) : IInternalPlayerCommand;
+
+    #endregion
 }

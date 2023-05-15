@@ -48,7 +48,9 @@ public sealed class AesCtrBouncyCastleStream : Stream
         }
 
         var len = Math.Min(count, cachedChunk.Length - chunkOffset);
-        Array.Copy(cachedChunk.ToArray(), chunkOffset, buffer, offset, len);
+        //  Array.Copy(cachedChunk, chunkOffset, buffer, offset, len);
+        cachedChunk.Span.Slice(chunkOffset, len).CopyTo(buffer.AsSpan(offset, len));
+
         Position += len;
         return len;
     }

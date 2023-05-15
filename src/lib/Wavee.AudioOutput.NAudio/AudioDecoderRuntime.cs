@@ -16,7 +16,7 @@ internal static class AudioDecoderRuntime
     {
         return format switch
         {
-            MagicAudioFileType.Vorbis => SuccessEff((WaveStream)new VorbisWaveReader(stream, false)),
+            MagicAudioFileType.Vorbis => SuccessEff((WaveStream)new VorbisWaveReader(stream, true)),
             MagicAudioFileType.Mp3 => SuccessEff((WaveStream)new WaveChannel32((new Mp3FileReader(stream)))),
             _ => FailEff<WaveStream>(new NotSupportedException($"Unsupported audio format: {format}"))
         };
