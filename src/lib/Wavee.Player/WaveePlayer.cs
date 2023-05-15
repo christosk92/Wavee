@@ -66,6 +66,12 @@ public static class WaveePlayer
                         case SkipNextCommand skipNextCommand:
                             SkipNextInternal(skipNextCommand);
                             break;
+                        case ResumeCommand:
+                            ResumeInternal();
+                            break;
+                        case PauseCommand:
+                            PauseInternal();
+                            break;
                     }
                 }
                 catch (Exception x)
@@ -96,25 +102,24 @@ public static class WaveePlayer
         }
 
         var stream = await loadingState.Stream;
-        atomic(() => _state.Swap(f => f with
-        {
-            State = loadingState.ToPlayingOrPaused(stream)
-        }));
-
-        if (State.State is WaveePausedState)
-        {
-            AudioOutput<WaveeRuntime>.Pause().Run(Runtime).ThrowIfFail();
-        }
-
-        if (State.State is WaveePlayingState)
-        {
-            AudioOutput<WaveeRuntime>.Start().Run(Runtime).ThrowIfFail();
-        }
-
         //start consuming the stream
         try
         {
             var output = (await AudioOutput<WaveeRuntime>.Decode(stream).Run(Runtime)).ThrowIfFail();
+            var newState = atomic(() => _state.Swap(f => f with
+            {
+                State = loadingState.ToPlayingOrPaused(stream, output)
+            }));
+            switch (newState.State)
+            {
+                case WaveePausedState:
+                    AudioOutput<WaveeRuntime>.Pause().Run(Runtime).ThrowIfFail();
+                    break;
+                case WaveePlayingState:
+                    AudioOutput<WaveeRuntime>.Start().Run(Runtime).ThrowIfFail();
+                    break;
+            }
+
             stream.CrossfadeController.IfSome(x =>
             {
                 if (loadingState.StartFadeIn)
@@ -148,63 +153,6 @@ public static class WaveePlayer
     private static bool DoPlayback(IAudioDecoder output, TimeSpan duration,
         Option<CrossfadeController> crossfadeController)
     {
-        //start reading samples, manipulating them 
-        //and sending them to the output
-        TimeSpan prevPositionAsOf = TimeSpan.Zero;
-        DateTimeOffset prevPositionAsOfSince = DateTimeOffset.MinValue;
-
-        using var listener = _state.OnChange()
-            .Where(c => c.State is WaveePausedState || c.State is WaveePlayingState)
-            .Select(c =>
-            {
-                static TimeSpan Seek(IAudioDecoder decoder, TimeSpan position)
-                {
-                    bool success = false;
-                    while (!success)
-                    {
-                        try
-                        {
-                            decoder.Seek(position);
-                            return position;
-                        }
-                        catch (Exception e)
-                        {
-                            Debug.WriteLine(e);
-                            //go back a bit
-                            position -= TimeSpan.FromMilliseconds(50);
-                        }
-                    }
-
-                    return position;
-                }
-
-                switch (c.State)
-                {
-                    case WaveePlayingState p:
-                        if (p.Since != prevPositionAsOfSince && p.PositionAsOfSince != prevPositionAsOf)
-                        {
-                            //seek
-                            prevPositionAsOf = Seek(output, p.PositionAsOfSince);
-                            AudioOutput<WaveeRuntime>.DiscardSamples().Run(WaveeCore.Runtime);
-                            prevPositionAsOfSince = p.Since;
-                        }
-
-                        break;
-                    case WaveePausedState p:
-                        if (p.Position != prevPositionAsOf)
-                        {
-                            //seek
-                            prevPositionAsOf = Seek(output, p.Position);
-                            AudioOutput<WaveeRuntime>.DiscardSamples().Run(WaveeCore.Runtime);
-                        }
-
-                        break;
-                }
-
-                return unit;
-            }).Subscribe();
-
-
         static (bool notifiedTrackEnd, bool isCrossfading) Loop(IAudioDecoder output,
             Option<CrossfadeController> crossfadeController, TimeSpan duration)
         {
@@ -215,7 +163,17 @@ public static class WaveePlayer
                 try
                 {
                     int samples = 1024;
-                    var sample = output.ReadSamples(samples);
+                    Span<float> sample = Span<float>.Empty;
+                    try
+                    {
+                        sample = output.ReadSamples(samples);
+                    }
+                    catch (Exception d)
+                    {
+                        notifiedTrackEnd = true;
+                        break;
+                    }
+
                     if (sample.Length == 0)
                     {
                         break;
@@ -307,13 +265,12 @@ public static class WaveePlayer
 
         if (!notify)
         {
-            listener.Dispose();
             _commandChannelWriter.TryWrite(new SkipNextCommand(false, false));
             //dispose the output
             output.Dispose();
-            GC.Collect();
         }
 
+        GC.Collect();
         return isCrossfading;
     }
 
@@ -364,9 +321,57 @@ public static class WaveePlayer
 
     #region Internal Commanding
 
+    private static void ResumeInternal()
+    {
+        atomic(() => _state.Swap(f =>
+        {
+            return f.State switch
+            {
+                WaveePausedState p => f with
+                {
+                    State = p.ToPlayingState()
+                },
+                _ => f
+            };
+        }));
+
+        AudioOutput<WaveeRuntime>.Start().Run(WaveeCore.Runtime);
+    }
+
+    private static void PauseInternal()
+    {
+        atomic(() => _state.Swap(f =>
+        {
+            return f.State switch
+            {
+                WaveePlayingState p => f with
+                {
+                    State = p.ToPausedState(p.Decoder.Position)
+                },
+                _ => f
+            };
+        }));
+
+        AudioOutput<WaveeRuntime>.Pause().Run(WaveeCore.Runtime);
+    }
+
     private static void SkipNextInternal(SkipNextCommand skipNextCommand)
     {
         //if we have a playback, end it
+        if (skipNextCommand.Immediately)
+        {
+            // dispose the decoder
+            switch (_state.Value.State)
+            {
+                case WaveePlayingState playingState:
+                    playingState.Decoder.Dispose();
+                    break;
+                case WaveePausedState pausedState:
+                    pausedState.Decoder.Dispose();
+                    break;
+            }
+        }
+
         atomic(() => _state.Swap(f =>
         {
             return f with
@@ -379,7 +384,6 @@ public static class WaveePlayer
                 }
             };
         }));
-
         //if we have a context, skip to the next track
         var newState = atomic(() => _state.Swap(f => f.SkipNext(skipNextCommand.MarkForCrossfade)));
         _playerReady.Set();
@@ -397,11 +401,13 @@ public static class WaveePlayer
                     WaveePlayingState playingState => playingState with
                     {
                         PositionAsOfSince = seekCommand.Position,
-                        Since = DateTimeOffset.UtcNow
+                        Since = DateTimeOffset.UtcNow,
+                        Decoder = playingState.Decoder.Seek(seekCommand.Position)
                     },
                     WaveePausedState pausedState => pausedState with
                     {
-                        Position = pausedState.Position
+                        Position = pausedState.Position,
+                        Decoder = pausedState.Decoder.Seek(seekCommand.Position)
                     },
                     _ => f.State
                 }

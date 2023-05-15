@@ -1,4 +1,5 @@
 ﻿using LanguageExt;
+using Wavee.Core;
 using Wavee.Core.Contracts;
 using Wavee.Core.Id;
 
@@ -13,6 +14,7 @@ public readonly record struct WaveePausedState(
 ) : IWaveeInPlaybackState
 {
     public required IAudioStream Stream { get; init; }
+    public required IAudioDecoder Decoder { get; init; }
 
     public WaveePlayingState ToPlayingState()
     {
@@ -24,7 +26,8 @@ public readonly record struct WaveePausedState(
             FromQueue)
         {
             Uid = Option<string>.None,
-            Stream = Stream
+            Stream = Stream,
+            Decoder = Decoder
         };
     }
 

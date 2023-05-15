@@ -112,6 +112,7 @@ public sealed class SpotifyRemoteConnection<R> where R : struct, HasWebsocket<R>
             "pause" => HandlePause(messageId, sentBy),
             "resume" => HandleResume(messageId, sentBy),
             "seek_to" => HandleSeekTo(messageId, sentBy, command),
+            "skip_next" => HandleSkipNext(messageId, sentBy),
             _ => throw new ArgumentOutOfRangeException()
         };
     }
@@ -128,6 +129,14 @@ public sealed class SpotifyRemoteConnection<R> where R : struct, HasWebsocket<R>
         LastCommandId = messageId;
         LastCommandSentBy = sentBy;
         return WaveePlayer.Resume();
+    }
+
+    private Unit HandleSkipNext(uint messageId, string sentBy)
+    {
+        LastCommandId = messageId;
+        LastCommandSentBy = sentBy;
+        WaveePlayer.SkipNext(true);
+        return unit;
     }
 
     private Unit HandleSeekTo(uint messageId, string sentBy, JsonElement command)

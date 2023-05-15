@@ -101,7 +101,9 @@ public static class SpotifyPlaybackRuntime<R> where R : struct, HasHttp<R>
             .MapAsync(async x =>
             {
                 await using var stream = await x.Content.ReadAsStreamAsync(ct);
-                return StorageResolveResponse.Parser.ParseFrom(stream);
+                var r = StorageResolveResponse.Parser.ParseFrom(stream);
+                x.Dispose();
+                return r;
             })
         from cdnUrls in GetCdnUrls(fileId, storage)
         from firstChunkAndLength in GetFirstChunk(cdnUrls, SpotifyPlaybackConstants.ChunkSize, ct)
@@ -116,6 +118,7 @@ public static class SpotifyPlaybackRuntime<R> where R : struct, HasHttp<R>
             {
                 var length = x.Content.Headers.ContentRange?.Length ?? throw new Exception("No content length");
                 ReadOnlyMemory<byte> firstChunk = await x.Content.ReadAsByteArrayAsync(ct);
+                x.Dispose();
                 return (firstChunk, length);
             });
 

@@ -21,6 +21,7 @@ public interface IMercuryClient
     Task<Episode> GetEpisode(AudioId id, CancellationToken ct = default);
     Task<string> AutoplayQuery(string uri, CancellationToken ct = default);
     Task<SpotifyContext> ContextResolve(string uri, CancellationToken ct = default);
+    Task<SpotifyContext> ContextResolveRaw(string uri, CancellationToken ct = default);
 }
 
 public readonly record struct SpotifyContext(string Url, HashMap<string, string> Metadata, Seq<ContextPage> Pages,
@@ -138,12 +139,26 @@ internal readonly struct MercuryClient : IMercuryClient
         return context;
     }
 
+    //ContextResolveRaw
+    public async Task<SpotifyContext> ContextResolveRaw(string uri, CancellationToken ct = default)
+    {
+        var response = await Get(uri, ct);
+        using var jsonDocument = JsonDocument.Parse(response.Body);
+        var parsed = Parse(jsonDocument);
+        return parsed;
+    }
+
     public async Task<SpotifyContext> ContextResolve(string uri, CancellationToken ct = default)
     {
         const string query = "hm://context-resolve/v1/{0}";
         var response = await Get(string.Format(query, uri), ct);
-
         using var jsonDocument = JsonDocument.Parse(response.Body);
+        var parsed = Parse(jsonDocument);
+        return parsed;
+    }
+
+    private static SpotifyContext Parse(JsonDocument jsonDocument)
+    {
         var metadata = jsonDocument.RootElement.TryGetProperty("metadata", out var metadataElement)
             ? metadataElement.EnumerateObject().Fold(new HashMap<string, string>(),
                 (acc, x) => acc.Add(x.Name, x.Value.GetString()))
@@ -156,6 +171,19 @@ internal readonly struct MercuryClient : IMercuryClient
         var url = jsonDocument.RootElement.TryGetProperty("url", out var urlElement)
             ? urlElement.GetString()
             : null;
+
+        var tracks = jsonDocument.RootElement.TryGetProperty("tracks", out var tracksElement)
+            ? tracksElement.Clone().EnumerateArray().Select(ContextHelper.ParseTrack).ToSeq()
+            : Empty;
+        //if(pages is empty, add tracks to pages)
+        if (pages.IsEmpty && !tracks.IsEmpty)
+        {
+            pages = Seq1(new ContextPage
+            {
+                Tracks = { tracks }
+            });
+        }
+
         var restrictions = jsonDocument.RootElement.TryGetProperty("restrictions", out var restrictionsElement)
             ? restrictionsElement.EnumerateObject().Fold(new HashMap<string, Seq<string>>(),
                 (acc, x) => acc.Add(x.Name, x.Value.Clone().EnumerateArray().Select(y => y.GetString()).ToSeq()!))

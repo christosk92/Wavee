@@ -5,6 +5,29 @@ namespace Wavee.Spotify.Clients.Mercury;
 
 internal static class ContextHelper
 {
+    public static ContextTrack ParseTrack(JsonElement track)
+    {
+        var ctxTrack = new ContextTrack
+        {
+            Uri = track.GetProperty("uri").GetString(),
+        };
+        if (track.TryGetProperty("uid", out var uid))
+            ctxTrack.Uid = uid.GetString();
+
+        if (track.TryGetProperty("metadata", out var metadata))
+        {
+            ctxTrack = metadata.EnumerateObject().Fold(
+                ctxTrack,
+                (acc, x) =>
+                {
+                    acc.Metadata[x.Name] = x.Value.GetString();
+                    return acc;
+                });
+        }
+
+        return ctxTrack;
+    }
+
     public static ContextPage ParsePage(JsonElement page)
     {
         var pg = new ContextPage();
@@ -22,23 +45,7 @@ internal static class ContextHelper
             foreach (var track in tracksenum)
             {
                 //uri, uid, metadata
-                var ctxTrack = new ContextTrack
-                {
-                    Uri = track.GetProperty("uri").GetString(),
-                };
-                if (track.TryGetProperty("uid", out var uid))
-                    ctxTrack.Uid = uid.GetString();
-
-                if (track.TryGetProperty("metadata", out var metadata))
-                {
-                    ctxTrack = metadata.EnumerateObject().Fold(
-                        ctxTrack,
-                        (acc, x) =>
-                        {
-                            acc.Metadata[x.Name] = x.Value.GetString();
-                            return acc;
-                        });
-                }
+                var ctxTrack = ParseTrack(track);
 
                 pg.Tracks.Add(ctxTrack);
             }

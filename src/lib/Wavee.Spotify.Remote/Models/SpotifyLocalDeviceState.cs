@@ -220,22 +220,29 @@ public readonly record struct SpotifyLocalDeviceState(
             return $"spotify:{typeStr}:{id.Id}";
         }
 
-        foreach (var track in prevTracks)
+        try
         {
-            state.PrevTracks.Add(new ProvidedTrack
+            foreach (var track in prevTracks)
             {
-                Uri = ToUri(track.Id),
-                Uid = track.Uid.IfNone(string.Empty)
-            });
-        }
+                state.PrevTracks.Add(new ProvidedTrack
+                {
+                    Uri = ToUri(track.Id),
+                    Uid = track.Uid.IfNone(string.Empty)
+                });
+            }
 
-        foreach (var track in nextTracks)
-        {
-            state.NextTracks.Add(new ProvidedTrack
+            foreach (var track in nextTracks)
             {
-                Uri = ToUri(track.Id),
-                Uid = track.Uid.IfNone(string.Empty)
-            });
+                state.NextTracks.Add(new ProvidedTrack
+                {
+                    Uri = ToUri(track.Id),
+                    Uid = track.Uid.IfNone(string.Empty)
+                });
+            }
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
         }
     }
 

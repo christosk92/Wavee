@@ -197,7 +197,7 @@ internal class SpotifyPlaybackClient<R> : ISpotifyPlaybackClient
                 if (page.HasPageUrl)
                 {
                     var pageUrl = page.PageUrl;
-                    var pageResolve = connection.Mercury.ContextResolve(pageUrl).ConfigureAwait(false)
+                    var pageResolve = connection.Mercury.ContextResolveRaw(pageUrl).ConfigureAwait(false)
                         .GetAwaiter().GetResult();
                     foreach (var track in GetTracks(connection, preferredQualityType, pageResolve, runtime))
                     {
@@ -207,7 +207,7 @@ internal class SpotifyPlaybackClient<R> : ISpotifyPlaybackClient
                 else if (page.HasNextPageUrl)
                 {
                     var pageUrl = page.NextPageUrl;
-                    var pageResolve = connection.Mercury.ContextResolve(pageUrl).ConfigureAwait(false)
+                    var pageResolve = connection.Mercury.ContextResolveRaw(pageUrl).ConfigureAwait(false)
                         .GetAwaiter().GetResult();
                     foreach (var track in GetTracks(connection, preferredQualityType, pageResolve, runtime))
                     {

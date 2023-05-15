@@ -17,20 +17,5 @@ public readonly record struct WaveeEndedState(ITrack Track,
 ) : IWaveeInPlaybackState
 {
     public required IAudioStream Stream { get; init; }
-
-    public WaveePlayingState ToPlayingState()
-    {
-        return new WaveePlayingState(
-            DateTimeOffset.UtcNow,
-            Position,
-            Track, IndexInContext,
-            Uid,
-            FromQueue)
-        {
-            Stream = Stream,
-            Uid = None
-        };
-    }
-
     public Option<AudioId> TrackId => Track.Id;
 }

@@ -25,7 +25,6 @@ public sealed class NAudioOutput : AudioOutputIO
         waveFormat = WaveFormat.CreateIeeeFloatWaveFormat(sampleRate, channels);
         _bufferedWaveProvider = new BufferedWaveProvider(waveFormat)
         {
-
         };
         _waveOutEvent.Init(_bufferedWaveProvider);
     }
@@ -103,9 +102,21 @@ public sealed class NAudioOutput : AudioOutputIO
         public TimeSpan Position => _waveStream.CurrentTime;
         public TimeSpan TotalTime { get; }
 
-        public void Seek(TimeSpan pPosition)
+        public IAudioDecoder Seek(TimeSpan pPosition)
         {
-            _waveStream.CurrentTime = pPosition;
+            while (true)
+            {
+                try
+                {
+                    _waveStream.CurrentTime = pPosition;
+                    return this;
+                }
+                catch (Exception)
+                {
+                    //go back a bit
+                    pPosition = pPosition.Subtract(TimeSpan.FromMilliseconds(100));
+                }
+            }
         }
     }
 }

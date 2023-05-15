@@ -1,4 +1,5 @@
 ﻿using LanguageExt;
+using Wavee.Core;
 using Wavee.Core.Contracts;
 using Wavee.Core.Id;
 
@@ -30,7 +31,7 @@ public readonly record struct WaveeLoadingState(
         };
     }
 
-    public IWaveeInPlaybackState ToPlayingOrPaused(IAudioStream stream)
+    public IWaveeInPlaybackState ToPlayingOrPaused(IAudioStream stream, IAudioDecoder audioDecoder)
     {
         return StartPaused
             ? new WaveePausedState(
@@ -40,7 +41,8 @@ public readonly record struct WaveeLoadingState(
                 Uid,
                 FromQueue)
             {
-                Stream = stream
+                Stream = stream,
+                Decoder = audioDecoder
             }
             : new WaveePlayingState(
                 DateTimeOffset.UtcNow,
@@ -51,7 +53,8 @@ public readonly record struct WaveeLoadingState(
                 FromQueue)
             {
                 Stream = stream,
-                Uid = Option<string>.None
+                Uid = Option<string>.None,
+                Decoder = audioDecoder
             };
     }
 }

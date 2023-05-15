@@ -1,4 +1,5 @@
 ﻿using LanguageExt;
+using Wavee.Core;
 using Wavee.Core.Contracts;
 using Wavee.Core.Id;
 
@@ -15,12 +16,14 @@ public readonly record struct WaveePlayingState(
 {
     public TimeSpan Position => (DateTimeOffset.UtcNow - Since) + PositionAsOfSince;
     public required IAudioStream Stream { get; init; }
+    public required IAudioDecoder Decoder { get; init; }
 
     public WaveePausedState ToPausedState(TimeSpan position)
     {
         return new WaveePausedState(Track, position, IndexInContext, Uid, FromQueue)
         {
-            Stream = Stream
+            Stream = Stream,
+            Decoder = Decoder
         };
     }
 
