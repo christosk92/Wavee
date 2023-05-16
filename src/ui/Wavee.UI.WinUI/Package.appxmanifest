@@ -8,11 +8,11 @@
   IgnorableNamespaces="uap rescap">
 
   <Identity
-    Name="b5a9e374-c6c3-48f2-9720-788a7db55045"
+    Name="7bb685ba-d1ee-431e-aec4-047aeae63c42"
     Publisher="CN=chris-pc"
     Version="1.0.0.0" />
 
-  <mp:PhoneIdentity PhoneProductId="b5a9e374-c6c3-48f2-9720-788a7db55045" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
+  <mp:PhoneIdentity PhoneProductId="7bb685ba-d1ee-431e-aec4-047aeae63c42" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 
   <Properties>
     <DisplayName>Wavee.UI.WinUI</DisplayName>

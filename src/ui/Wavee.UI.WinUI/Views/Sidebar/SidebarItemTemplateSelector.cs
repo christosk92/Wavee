@@ -1,6 +1,6 @@
 ﻿using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Wavee.UI.ViewModels.Sidebar;
+using Wavee.UI.WinUI.Views.Sidebar.Items;
 
 namespace Wavee.UI.WinUI.Views.Sidebar;
 

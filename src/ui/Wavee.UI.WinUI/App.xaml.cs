@@ -1,102 +1,72 @@
 ﻿using System;
-using System.Diagnostics;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.IO;
+using System.Reactive.Linq;
+using System.Runtime.CompilerServices;
+using Windows.Graphics;
+using LanguageExt;
+using LanguageExt.UnsafeValueAccess;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Media;
 using ReactiveUI;
-using System.IO;
+using Wavee.UI.Infrastructure.Live;
+using Wavee.UI.Infrastructure.Sys;
+using TimeSpan = System.TimeSpan;
+using Unit = LanguageExt.Unit;
 using System.Reactive;
-using System.Reactive.Concurrency;
-using Serilog;
-using Wavee.UI.Daemon;
-using System.Threading.Tasks;
-using Windows.ApplicationModel.Wallet;
-using Windows.Foundation;
-using Windows.Graphics;
-using Microsoft.UI.Windowing;
-using Wavee.UI.Helpers;
-using Wavee.UI.WinUI.Helpers;
-using Wavee.UI.WinUI.Views.Shell;
-using Windows.UI.ViewManagement;
-using Windows.UI.WindowManagement;
-using Microsoft.UI;
+using System.Reactive.Linq;
 using System.Runtime.InteropServices;
+using Microsoft.UI;
+using Microsoft.UI.Windowing;
+using Wavee.UI.WinUI.Views;
 using WinRT.Interop;
 
 namespace Wavee.UI.WinUI;
 
-/// <summary>
-/// Provides application-specific behavior to supplement the default Application class.
-/// </summary>
-public partial class App : Application
+public partial class App : Application, INotifyPropertyChanged
 {
-    public Config Config { get; }
-    public Global? Global { get; private set; }
+    private int _width;
+    private int _height;
 
+    static App()
+    {
+        Runtime = WaveeUIRuntime.New(string.Empty);
+        var home = Environment<WaveeUIRuntime>.getEnvironmentVariable("APPDATA").Run(Runtime)
+            .ThrowIfFail();
+        if (home.IsNone)
+        {
+            throw new System.Exception("APPDATA environment variable not set");
+        }
 
-    /// <summary>
-    /// Initializes the singleton application object.  This is the first line of authored code
-    /// executed, and as such is the logical equivalent of main() or WinMain().
-    /// </summary>
+        const string appName = "WaveeUI";
+        Runtime = Runtime.WithPath(Path.Combine(home.ValueUnsafe(), appName));
+    }
+
     public App()
     {
         this.InitializeComponent();
-        Config = new Config(LoadOrCreateConfigs(), Array.Empty<string>());
-
-        Log.Logger = new LoggerConfiguration()
-            .MinimumLevel.Debug()
-            .WriteTo.File(Path.Combine(Config.DataDir, "Logs", "log.txt"), rollingInterval: RollingInterval.Day)
-            .WriteTo.Console()
-            .CreateLogger();
-
-        Global = CreateGlobal();
     }
 
-    /// <summary>
-    /// Invoked when the application is launched.
-    /// </summary>
-    /// <param name="args">Details about the launch request and process.</param>
+    public static WaveeUIRuntime Runtime { get; }
+
     protected override async void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
     {
-        RxApp.DefaultExceptionHandler = Observer.Create<Exception>(ex =>
-        {
-            if (Debugger.IsAttached)
-            {
-                Debugger.Break();
-            }
+        _ = await UiConfig<WaveeUIRuntime>.CreateDefaultIfNotExists.Run(Runtime);
 
-            Log.Error(ex, "An application-crash error occurred.");
-
-            RxApp.MainThreadScheduler.Schedule(() => throw new ApplicationException("Exception has been thrown in unobserved ThrownExceptions", ex));
-        });
-
-
-        UiConfig uiConfig = LoadOrCreateUiConfig(Config.DataDir);
-        Services.Initialize(Global!, uiConfig);
-
-        await StartupHelper.ModifyStartupSettingAsync(uiConfig.RunOnSystemStartup).ConfigureAwait(false);
-
-        var configWidth = Services.UiConfig.WindowWidth;
-        var configHeight = Services.UiConfig.WindowHeight;
-
-        MWindow = new Window
+        var window = new Window
         {
             SystemBackdrop = new MicaBackdrop(),
             ExtendsContentIntoTitleBar = true,
-            Content = new ShellView(),
+            Content = new ShellView()
         };
-        //move to last saved position
-        MWindow.AppWindow.Move(new PointInt32());
-
-        // if (configWidth is not null && configHeight is not null)
-        // {
-        //     MWindow.AppWindow.Resize(new SizeInt32((int)configWidth.Value, (int)configHeight.Value));
-        // }
-
-        double scaleAdjustment = GetScaleAdjustment();
-
-        var actualWidth = (configWidth ?? 800) * scaleAdjustment;
-        var actualHeight = (configHeight ?? 600) * scaleAdjustment;
-
+        MWindow = window;
+        
+        
+        var scaleAdjustment = GetScaleAdjustment();
+        var width = (await UiConfig<WaveeUIRuntime>.WindowWidth.Run(Runtime)).IfFail(800) * scaleAdjustment;
+        var height = (await UiConfig<WaveeUIRuntime>.WindowHeight.Run(Runtime)).IfFail(600) * scaleAdjustment;
+        
         var hWnd = WinRT.Interop.WindowNative.GetWindowHandle(MWindow);
         Microsoft.UI.WindowId windowId = Microsoft.UI.Win32Interop.GetWindowIdFromWindow(hWnd);
         Microsoft.UI.Windowing.AppWindow appWindow = Microsoft.UI.Windowing.AppWindow.GetFromWindowId(windowId);
@@ -106,52 +76,69 @@ public partial class App : Application
         double displayRegionWidth = displayArea.WorkArea.Width;
         double displayRegionHeight = displayArea.WorkArea.Height;
 
-        var x = (displayRegionWidth - actualWidth) / 2;
-        var y = (displayRegionHeight - actualHeight) / 2;
+        var x = (displayRegionWidth - width) / 2;
+        var y = (displayRegionHeight - height) / 2;
 
         appWindow.Move(new PointInt32((int)x, (int)y));
+        
+        window.AppWindow.Resize(new SizeInt32(
+            _Width: (int)width,
+            _Height: (int)height
+        ));
+        _width = (int)width;
+        _height = (int)height;
 
+        this.WhenAnyValue(
+                x => x.Height,
+                x => x.Width)
+            .Throttle(TimeSpan.FromMilliseconds(500))
+            .ObserveOn(RxApp.TaskpoolScheduler)
+            .Select(async (___) =>
+            {
+                var aff =
+                    from _ in UiConfig<WaveeUIRuntime>.SetWindowWidth((uint)Width)
+                    from __ in UiConfig<WaveeUIRuntime>.SetWindowHeight((uint)Height)
+                    select Unit.Default;
 
-        appWindow.Resize(new SizeInt32((int)(actualWidth),
-            (int)(actualHeight)));
-        MWindow.SizeChanged += MWindow_SizeChanged;
-
-        ThemeHelper.ApplyTheme(uiConfig.Theme);
-
-        MWindow.Activate();
+                var run = await aff.Run(Runtime);
+            })
+            .Subscribe();
+        window.SizeChanged += (sender, eventArgs) =>
+        {
+            Width = (int)eventArgs.Size._width;
+            Height = (int)eventArgs.Size._height;
+        };
+        window.Activate();
     }
 
-    private void MWindow_SizeChanged(object sender, WindowSizeChangedEventArgs args)
+    public static Window MWindow { get; private set; }
+    public int Width
     {
-        Services.UiConfig.WindowWidth = args.Size.Width;
-        Services.UiConfig.WindowHeight = args.Size.Height;
+        get => _width;
+        set => SetField(ref _width, value);
     }
 
-    private static UiConfig LoadOrCreateUiConfig(string dataDir)
+    public int Height
     {
-        Directory.CreateDirectory(dataDir);
-
-        UiConfig uiConfig = new(Path.Combine(dataDir, "UiConfig.json"));
-        uiConfig.LoadFile(createIfMissing: true);
-
-        return uiConfig;
+        get => _height;
+        set => SetField(ref _height, value);
     }
-    private Global CreateGlobal()
+
+    public event PropertyChangedEventHandler PropertyChanged;
+
+    protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
     {
-        return new Global(Config.DataDir, Config);
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
 
-    private PersistentConfig LoadOrCreateConfigs()
+    protected bool SetField<T>(ref T field, T value, [CallerMemberName] string propertyName = null)
     {
-        Directory.CreateDirectory(Config.DataDir);
-
-        PersistentConfig persistentConfig = new(Path.Combine(Config.DataDir, "Config.json"));
-        persistentConfig.LoadFile(createIfMissing: true);
-
-
-        return persistentConfig;
+        if (EqualityComparer<T>.Default.Equals(field, value)) return false;
+        field = value;
+        OnPropertyChanged(propertyName);
+        return true;
     }
-
+    
     [DllImport("Shcore.dll", SetLastError = true)]
     internal static extern int GetDpiForMonitor(IntPtr hmonitor, Monitor_DPI_Type dpiType, out uint dpiX, out uint dpiY);
 
@@ -181,6 +168,4 @@ public partial class App : Application
         return scaleFactorPercent / 100.0;
     }
 
-
-    public static Window MWindow { get; private set; }
 }

@@ -6,7 +6,6 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:labs="using:CommunityToolkit.Labs.WinUI"
              xmlns:sizerBaseLocal="using:CommunityToolkit.Labs.WinUI.SizerBaseLocal"
-             xmlns:sidebar="using:Wavee.UI.ViewModels.Sidebar"
              mc:Ignorable="d">
     <UserControl.Resources>
         <ResourceDictionary>
@@ -39,12 +38,12 @@
                 </Grid.RowDefinitions>
 
                 <StackPanel>
-                    <Border  Background="{ThemeResource LayerFillColorDefaultBrush}"
-                             CornerRadius="0"
-                             Margin="-1,0"
-                             Padding="12,12"
-                             BorderThickness="0,1"
-                             BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
+                    <Border Background="{ThemeResource LayerFillColorDefaultBrush}"
+                            CornerRadius="0"
+                            Margin="-1,0"
+                            Padding="12,12"
+                            BorderThickness="0,1"
+                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto" />
@@ -58,10 +57,8 @@
                                         VerticalAlignment="Center"
                                         Orientation="Vertical">
                                 <TextBlock x:Name="Name"
-                                           Text="{x:Bind GetDisplayName(User),Mode=OneWay}"
                                            FontSize="16" />
                                 <TextBlock x:Name="Product"
-                                           Text="{x:Bind ParseProductString(User),Mode=OneWay}"
                                            Opacity=".6"
                                            FontWeight="Bold"
                                            FontSize="9" />
@@ -102,22 +99,13 @@
                                   x:Name="PlaylistSortComboBox"
                                   CornerRadius="4,0,0,4"
                                   VerticalAlignment="Center"
-                                  SelectionChanged="PlaylistSortComboBoxSelectionChanged"
                                   Margin="0,0,0,0"
-                                  HorizontalAlignment="Stretch">
-                            <ComboBoxItem Tag="custom"
-                                          Content="Custom" />
-                            <ComboBoxItem Tag="created"
-                                          Content="Created" />
-                            <ComboBoxItem Tag="alph"
-                                          Content="Alphabetical" />
-                            <ComboBoxItem Tag="recent"
-                                          Content="Recent" />
-                        </ComboBox>
+                                  HorizontalAlignment="Stretch" />
 
                         <Button CornerRadius="0,4,4,0"
                                 VerticalAlignment="Center"
-                                Tapped="CreatePLaylistTapped"
+                                x:Name="AddPlaylistButton"
+                                Tapped="AddPlaylistButton_OnTapped"
                                 Padding="4.5"
                                 Grid.Column="2">
                             <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}"
@@ -127,18 +115,8 @@
                     <labs:TokenView Margin="8,4,0,4"
                                     x:FieldModifier="public"
                                     IsItemClickEnabled="True"
-                                    ItemClick="PlaylistFilterTokenView_OnItemClick"
                                     x:Name="PlaylistFilterTokenView"
-                                    SelectionMode="Multiple">
-                        <labs:TokenItem Tag="yours"
-                                        Content="Yours" />
-                        <labs:TokenItem Tag="others"
-                                        Content="Others" />
-                        <labs:TokenItem Tag="spotify"
-                                        Content="Spotify" />
-                        <labs:TokenItem Tag="local"
-                                        Content="Local" />
-                    </labs:TokenView>
+                                    SelectionMode="Multiple"/>
                 </StackPanel>
 
                 <ListView Grid.Row="3"
@@ -148,10 +126,10 @@
 
                 <TextBlock Text="It's empty here..."
                            Grid.Row="3"
+                           Visibility="{x:Bind HideIfNonZero(Playlists.Count), Mode=OneWay}"
                            HorizontalAlignment="Center"
                            VerticalAlignment="Center"
-                           x:Name="NoPlaylistsView"
-                           x:FieldModifier="public" />
+                           x:Name="NoPlaylistsView"/>
 
                 <Border Grid.Row="4" />
             </Grid>

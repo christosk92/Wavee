@@ -64,7 +64,7 @@ public readonly record struct WaveePlayerState(
         Option<bool> startPaused)
     {
         var ind = index.IfNone(0);
-        var track = context.FutureTracks.ElementAt(ind);
+        var track = context.FutureTracks.ElementAtOrDefault(ind);
         return this with
         {
             Context = Some(context),
