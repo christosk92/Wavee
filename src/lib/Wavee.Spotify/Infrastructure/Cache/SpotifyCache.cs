@@ -1,4 +1,5 @@
-﻿using Google.Protobuf;
+﻿using System.ComponentModel;
+using Google.Protobuf;
 using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
 using Spotify.Metadata;
@@ -18,21 +19,24 @@ public readonly struct SpotifyCache
     {
         _storagePath = cachePath.Map(x => Path.Combine(x, "Storage"));
         _dbPath = cachePath.Map(x => Path.Combine(x, "cache.db"));
-        using var db = new SQLiteConnection(_dbPath.ValueUnsafe());
-        try
+        if (_dbPath.IsSome && !_initialized)
         {
-            db.CreateTable<CachedTrack>();
-        }
-        catch (SQLiteException)
-        {
-        }
+            using var db = new SQLiteConnection(_dbPath.ValueUnsafe());
+            try
+            {
+                db.CreateTable<CachedTrack>();
+            }
+            catch (SQLiteException)
+            {
+            }
 
-        try
-        {
-            db.CreateTable<CachedEpisode>();
-        }
-        catch (SQLiteException)
-        {
+            try
+            {
+                db.CreateTable<CachedEpisode>();
+            }
+            catch (SQLiteException)
+            {
+            }
         }
 
         _initialized = true;

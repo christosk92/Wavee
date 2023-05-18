@@ -10,7 +10,7 @@ using Wavee.UI.Infrastructure.Traits;
 
 namespace Wavee.UI.ViewModels;
 
-public sealed class ShellViewModel<R> : ReactiveObject where R : struct, HasFile<R>, HasDirectory<R>, HasLocalPath<R>
+public sealed class ShellViewModel<R> : ReactiveObject where R : struct, HasFile<R>, HasDirectory<R>, HasLocalPath<R>, HasSpotify<R>
 {
     private readonly ReadOnlyObservableCollection<PlaylistInfo> _playlistItemsView;
     private readonly SourceCache<PlaylistInfo, AudioId> _items = new(s => s.Id);
@@ -18,6 +18,7 @@ public sealed class ShellViewModel<R> : ReactiveObject where R : struct, HasFile
     private readonly R _runtime;
     public ShellViewModel(R runtime, User user)
     {
+        Playback = new PlaybackViewModel<R>(runtime);
         User = user;
 
         _runtime = runtime;
@@ -47,6 +48,8 @@ public sealed class ShellViewModel<R> : ReactiveObject where R : struct, HasFile
     public User User { get; }
     public static ShellViewModel<R> Instance { get; private set; }
     public ReadOnlyObservableCollection<PlaylistInfo> Playlists => _playlistItemsView;
+
+    public PlaybackViewModel<R> Playback { get; private set; }
 
     public PlaylistSortProperty PlaylistSort
     {

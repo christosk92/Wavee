@@ -5,7 +5,7 @@ using Wavee.Core.Ids;
 
 namespace Wavee.Spotify.Models.Response;
 
-internal readonly record struct SpotifyTrackResponse(AudioId Id, string Title, Seq<ITrackArtist> Artists,
+public readonly record struct SpotifyTrackResponse(AudioId Id, string Title, Seq<ITrackArtist> Artists,
     ITrackAlbum Album, TimeSpan Duration, bool CanPlay) : ITrack
 {
     public static SpotifyTrackResponse From(string country, string cdnUrl, Track track)

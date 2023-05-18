@@ -39,6 +39,6 @@ client.RemoteClient.StateChanged
     });
 GC.Collect();
 
-await client.PlaybackClient.PlayContext("spotify:album:4iJ9B2uDKJzclQo7U9BqS8", 9);
+await client.PlaybackClient.PlayContext("spotify:album:6lumjI581TEGHeTviSikrm", 0);
 
 Console.Read();

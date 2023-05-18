@@ -29,8 +29,15 @@ public partial class App : Application
 
     static App()
     {
+        var localCache = Environment<WaveeUIRuntime>.getEnvironmentVariable("LOCALAPPDATA").Run(Runtime)
+            .ThrowIfFail();
+        if (localCache.IsNone)
+            throw new Exception("LOCALAPPDATA environment variable not set");
+
+        var cachePath = Path.Combine(localCache.ValueUnsafe(), "WaveeUI", "Cache");
+        Directory.CreateDirectory(cachePath);
         _config = new SpotifyConfig(
-            CachePath: Option<string>.None,
+            CachePath: cachePath,
             Remote: new SpotifyRemoteConfig(
                 DeviceName: "Wavee",
                 DeviceType: DeviceType.Computer

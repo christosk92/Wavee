@@ -2,6 +2,9 @@
 using LanguageExt;
 using LanguageExt.Attributes;
 using LanguageExt.Effects.Traits;
+using Wavee.Spotify.Infrastructure.Cache;
+using Wavee.Spotify.Infrastructure.Mercury;
+using Wavee.Spotify.Infrastructure.Remote.Messaging;
 
 namespace Wavee.UI.Infrastructure.Traits;
 
@@ -9,6 +12,11 @@ public interface SpotifyIO
 {
     ValueTask<Unit> Authenticate(LoginCredentials credentials, CancellationToken ct = default);
     Option<APWelcome> WelcomeMessage();
+    Option<IObservable<SpotifyRemoteState>> ObserveRemoteState();
+    Option<SpotifyCache> Cache();
+    Option<string> CountryCode();
+    Option<string> CdnUrl();
+    MercuryClient Mercury();
 }
 
 /// <summary>

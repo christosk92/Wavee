@@ -94,6 +94,8 @@ public sealed class SpotifyClient
         new SpotifyCache(_config.CachePath);
     public SpotifyRemoteClient RemoteClient { get; }
     public SpotifyPlaybackClient PlaybackClient { get; }
+    public Option<string> CountryCode => _country.Value;
+    public HashMap<string, string> ProductInfo => _productInfo.Value;
 
     private void OnpackageRemoveSubscriptionRequested(ChannelReader<SpotifySendPacket> reader)
     {
@@ -249,7 +251,7 @@ public sealed class SpotifyClient
                         (SpotifyPacketType)received.Header[0],
                         received.Payload.ToArray());
                     bool dispatched = false;
-                    foreach (var (dispatchConditional, dispatcher)in Subscribers[connectionId])
+                    foreach (var (dispatchConditional, dispatcher) in Subscribers[connectionId])
                     {
                         if (dispatchConditional(toSendPacket))
                         {
