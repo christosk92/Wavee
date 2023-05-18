@@ -6,6 +6,7 @@ using Eum.Spotify;
 using LanguageExt;
 using Wavee.Spotify.Infrastructure.ApResolver;
 using Wavee.Spotify.Infrastructure.Authentication;
+using Wavee.Spotify.Infrastructure.Cache;
 using Wavee.Spotify.Infrastructure.Connection;
 using Wavee.Spotify.Infrastructure.Connection.Crypto;
 using Wavee.Spotify.Infrastructure.Mercury;
@@ -61,6 +62,7 @@ public sealed class SpotifyClient
             tokenClient: TokenClient,
             mercuryClient: MercuryClient,
             audioKeyClient: AudioKeyClient,
+            cacheFactory: () => Cache,
             config: _config.Playback,
             country: _country,
             productInfo: _productInfo
@@ -88,7 +90,8 @@ public sealed class SpotifyClient
             connectionId: _connectionId,
             mercuryClient: MercuryClient
         );
-
+    public SpotifyCache Cache =>
+        new SpotifyCache(_config.CachePath);
     public SpotifyRemoteClient RemoteClient { get; }
     public SpotifyPlaybackClient PlaybackClient { get; }
 

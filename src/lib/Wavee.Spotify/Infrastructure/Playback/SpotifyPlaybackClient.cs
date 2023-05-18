@@ -1,12 +1,9 @@
 ﻿using System.Net.Http.Headers;
 using System.Reactive.Linq;
 using System.Text;
-using AesCtr;
 using AesCtrBouncyCastle;
-using AesCtrNative;
 using Eum.Spotify.storage;
 using Google.Protobuf;
-using Google.Protobuf.WellKnownTypes;
 using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
 using Spotify.Metadata;
@@ -16,6 +13,7 @@ using Wavee.Core.Playback;
 using Wavee.Core.Player;
 using Wavee.Core.Player.PlaybackStates;
 using Wavee.Spotify.Infrastructure.ApResolver;
+using Wavee.Spotify.Infrastructure.Cache;
 using Wavee.Spotify.Infrastructure.Mercury;
 using Wavee.Spotify.Infrastructure.Mercury.Token;
 using Wavee.Spotify.Infrastructure.Playback.Cdn;
@@ -29,6 +27,7 @@ public sealed class SpotifyPlaybackClient
     private readonly TokenClient _tokenClient;
     private readonly MercuryClient _mercuryClient;
     private readonly AudioKeyClient _audioKeyClient;
+    private readonly Func<SpotifyCache> _cacheFactory;
     private readonly SpotifyPlaybackConfig _config;
 
     private readonly Ref<Option<string>> _country;
@@ -36,6 +35,7 @@ public sealed class SpotifyPlaybackClient
 
     public SpotifyPlaybackClient(TokenClient tokenClient, MercuryClient mercuryClient,
         AudioKeyClient audioKeyClient,
+        Func<SpotifyCache> cacheFactory,
         SpotifyPlaybackConfig config,
         Ref<Option<string>> country,
         Ref<HashMap<string, string>> productInfo)
@@ -46,6 +46,7 @@ public sealed class SpotifyPlaybackClient
         _country = country;
         _productInfo = productInfo;
         _audioKeyClient = audioKeyClient;
+        _cacheFactory = cacheFactory;
 
         //listen to end of context
         WaveePlayer.StateChanged
@@ -78,6 +79,7 @@ public sealed class SpotifyPlaybackClient
         var initialContext = await _mercuryClient.ContextResolve(contextUri);
         var futureTracks = BuildFutureTracks(
             _audioKeyClient,
+            cacheFactory: _cacheFactory,
             initialContext,
             _mercuryClient,
             _tokenClient,
@@ -95,6 +97,7 @@ public sealed class SpotifyPlaybackClient
 
     private static IEnumerable<FutureTrack> BuildFutureTracks(
         AudioKeyClient audioKeyClient,
+        Func<SpotifyCache> cacheFactory,
         SpotifyContext context,
         MercuryClient mercuryClient,
         TokenClient tokenClient,
@@ -123,7 +126,9 @@ public sealed class SpotifyPlaybackClient
 
                     yield return new FutureTrack(id,
                         Metadata: trackMetadata,
-                        () => StreamFuture(audioKeyClient, mercuryClient, tokenClient, id,
+                        () => StreamFuture(
+                            cacheFactory(),
+                            audioKeyClient, mercuryClient, tokenClient, id,
                             trackMetadata,
                             playbackConfig));
                 }
@@ -137,7 +142,8 @@ public sealed class SpotifyPlaybackClient
                     var pageUrl = page.PageUrl;
                     var pageResolve = mercuryClient.ContextResolveRaw(pageUrl).ConfigureAwait(false)
                         .GetAwaiter().GetResult();
-                    foreach (var track in BuildFutureTracks(audioKeyClient, pageResolve, mercuryClient, tokenClient,
+                    foreach (var track in BuildFutureTracks(audioKeyClient, cacheFactory, pageResolve, mercuryClient,
+                                 tokenClient,
                                  playbackConfig, country, cdnUrl))
                     {
                         yield return track;
@@ -148,7 +154,8 @@ public sealed class SpotifyPlaybackClient
                     var pageUrl = page.NextPageUrl;
                     var pageResolve = mercuryClient.ContextResolveRaw(pageUrl).ConfigureAwait(false)
                         .GetAwaiter().GetResult();
-                    foreach (var track in BuildFutureTracks(audioKeyClient, pageResolve, mercuryClient, tokenClient,
+                    foreach (var track in BuildFutureTracks(audioKeyClient, cacheFactory, pageResolve, mercuryClient,
+                                 tokenClient,
                                  playbackConfig, country, cdnUrl))
                     {
                         yield return track;
@@ -159,6 +166,7 @@ public sealed class SpotifyPlaybackClient
     }
 
     private static async Task<IAudioStream> StreamFuture(
+        SpotifyCache cache,
         AudioKeyClient audioKeyClient,
         MercuryClient mercuryClient,
         TokenClient tokenClient,
@@ -169,10 +177,18 @@ public sealed class SpotifyPlaybackClient
         var sp = await ApResolve.GetSpClient(CancellationToken.None);
         var spUrl = $"https://{sp.host}:{sp.port}";
 
-        var metadata = await mercuryClient.GetMetadata(id, trackMetadata.Find("country").IfNone("US"));
+        var metadata = await cache.Get(id)
+            .IfNoneAsync(async () =>
+            {
+                var metadata = await mercuryClient.GetMetadata(id, trackMetadata.Find("country").IfNone("US"));
+                cache.Save(metadata);
+                return metadata;
+            });
+
         var stream = await LoadTrack(
             spUrl,
             metadata,
+            cache,
             trackMetadata,
             playbackConfig.PreferredQualityType,
             playbackConfig.CrossfadeDuration,
@@ -188,6 +204,7 @@ public sealed class SpotifyPlaybackClient
 
     public static Aff<SpotifyStream> LoadTrack(string sp,
         TrackOrEpisode trackOrEpisode,
+        SpotifyCache cache,
         HashMap<string, string> streamMetadata,
         PreferredQualityType preferredQuality,
         Option<TimeSpan> crossfadeDuration,
@@ -206,8 +223,18 @@ public sealed class SpotifyPlaybackClient
             Left: err => None,
             Right: key => Some(key)
         )).ToAff()
-        //TODO: Cache
-        from stream in OpenHttpEncryptedStream(getBearer, sp, audioFile.FileId, ct)
+        let trackId = trackOrEpisode.Id.ToBase16()
+        from cachedStreamAff in cache.OpenEncryptedAudioFile(trackId, audioFile.Format)
+            .BiMap(
+                Some: x => SuccessAff(x),
+                None: () => OpenHttpEncryptedStream(
+                    trackId,
+                    getBearer, sp, audioFile.FileId,
+                    audioFile.Format,
+                    cache, ct)
+            ).ToAff()
+        from stream in cachedStreamAff
+        //from stream in OpenHttpEncryptedStream(getBearer, sp, audioFile.FileId, ct)
         from decryptedStream in OpenDecryptedStream(stream, audioKey)
         from offsetAndNormData in ReadNormalisationData(decryptedStream, audioFile.Format)
         select new SpotifyStream(decryptedStream, trackOrEpisode,
@@ -242,10 +269,13 @@ public sealed class SpotifyPlaybackClient
             // return (Stream)(new Aes128CtrWrapperStream(aes128));
         });
 
-    private static Aff<HttpEncryptedSpotifyStream> OpenHttpEncryptedStream(
+    private static Aff<Stream> OpenHttpEncryptedStream(
+        string trackId,
         TokenClient getBearer,
         string spClientUrl,
         ByteString fileId,
+        AudioFile.Types.Format fileFormat,
+        SpotifyCache spotifyCache,
         CancellationToken ct) =>
         from base16Id in SuccessEff(ToBase16(fileId.Span))
         from bearer in getBearer.GetToken(ct).ToAff()
@@ -261,8 +291,11 @@ public sealed class SpotifyPlaybackClient
             })
         from cdnUrls in GetCdnUrls(fileId, storage)
         from firstChunkAndLength in GetFirstChunk(cdnUrls, SpotifyPlaybackConstants.ChunkSize, ct)
-        select new HttpEncryptedSpotifyStream(cdnUrls, firstChunkAndLength.FirstChunk,
-            firstChunkAndLength.TotalLength);
+        select (Stream)new HttpEncryptedSpotifyStream(
+            trackId,
+            fileFormat,
+            cdnUrls, firstChunkAndLength.FirstChunk,
+            firstChunkAndLength.TotalLength, spotifyCache);
 
 
     private static Aff<(ReadOnlyMemory<byte> FirstChunk, long TotalLength)> GetFirstChunk(string url, int chunkSize,

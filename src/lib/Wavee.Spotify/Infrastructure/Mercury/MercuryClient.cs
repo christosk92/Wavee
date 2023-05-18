@@ -9,9 +9,9 @@ using Wavee.Spotify.Infrastructure.Tcp;
 
 namespace Wavee.Spotify.Infrastructure.Mercury;
 
-public struct MercuryClient
+public readonly struct MercuryClient
 {
-    private static Atom<HashMap<Guid, ulong>> _seq = Atom(LanguageExt.HashMap<Guid, ulong>.Empty);
+    private static readonly Atom<HashMap<Guid, ulong>> _seq = Atom(LanguageExt.HashMap<Guid, ulong>.Empty);
 
     private readonly Guid _connectionId;
 

@@ -8,7 +8,6 @@
 
     <ItemGroup>
       <ProjectReference Include="..\AesCtrBouncyCastle\AesCtrBouncyCastle.csproj" />
-      <ProjectReference Include="..\AesCtrNative\AesCtrNative.csproj" />
       <ProjectReference Include="..\Wavee.Core\Wavee.Core.csproj" />
       <ProjectReference Include="..\Wavee.Spotify.Proto\Wavee.Spotify.Proto.csproj" />
     </ItemGroup>
@@ -16,10 +15,7 @@
     <ItemGroup>
       <PackageReference Include="CommunityToolkit.HighPerformance" Version="8.2.0" />
       <PackageReference Include="LanguageExt.Rx" Version="4.4.3" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <Folder Include="Infrastructure\Cache\" />
+      <PackageReference Include="sqlite-net-pcl" Version="1.9.141-beta" />
     </ItemGroup>
 
 </Project>

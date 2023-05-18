@@ -8,8 +8,10 @@ using Wavee.Spotify.Infrastructure.Playback;
 
 NAudioOutput.SetAsDefaultOutput();
 
+//C:\Users\chris-pc\Documents\spotify_cache
+var cache = "C:\\Users\\chris-pc\\Documents\\spotify_cache";
 var config = new SpotifyConfig(
-    CachePath: Option<string>.None,
+    CachePath: cache,
     Remote: new SpotifyRemoteConfig(
         DeviceName: "Wavee",
         DeviceType: DeviceType.Computer
@@ -37,6 +39,6 @@ client.RemoteClient.StateChanged
     });
 GC.Collect();
 
-await client.PlaybackClient.PlayContext("spotify:artist:4F0WbuD4S82qZOkTYbsUxJ", 0);
+await client.PlaybackClient.PlayContext("spotify:album:4iJ9B2uDKJzclQo7U9BqS8", 9);
 
 Console.Read();

@@ -1,5 +1,7 @@
 ﻿using System.Net.Http.Headers;
 using LanguageExt;
+using Spotify.Metadata;
+using Wavee.Spotify.Infrastructure.Cache;
 
 namespace Wavee.Spotify.Infrastructure.Playback;
 
@@ -55,8 +57,13 @@ internal sealed class HttpEncryptedSpotifyStream : EncryptedSpotifyStream
     private AtomHashMap<int, TaskCompletionSource<ReadOnlyMemory<byte>>> _chunks =
         LanguageExt.AtomHashMap<int, TaskCompletionSource<ReadOnlyMemory<byte>>>.Empty;
 
-    public HttpEncryptedSpotifyStream(string cdnUrl, ReadOnlyMemory<byte> firstChunk,
-        long length) : base(length)
+    public HttpEncryptedSpotifyStream(
+        string trackId,
+        AudioFile.Types.Format format,
+        string cdnUrl,
+        ReadOnlyMemory<byte> firstChunk,
+        long length,
+        SpotifyCache spotifyCache) : base(length)
     {
         _cdnUrl = cdnUrl;
         const int chunkSize = SpotifyPlaybackConstants.ChunkSize;
@@ -81,6 +88,15 @@ internal sealed class HttpEncryptedSpotifyStream : EncryptedSpotifyStream
                 using var response = await _client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
                 ReadOnlyMemory<byte> stream = await response.Content.ReadAsByteArrayAsync();
                 tcs.SetResult(stream);
+
+                //if we fetched all chunks, save them to cache
+                if (_chunks.All(x => x.Value.Task.IsCompletedSuccessfully))
+                {
+                    var allData = _chunks.Values
+                        .Select(x => x.Task.Result)
+                        .SelectMany(c => c.ToArray()).ToArray();
+                    spotifyCache.SaveEncryptedFile(trackId, format, allData);
+                }
             });
         }
     }
@@ -94,11 +110,11 @@ internal sealed class HttpEncryptedSpotifyStream : EncryptedSpotifyStream
         }
 
         var chunk = await _chunks[chunkIndex].Task;
-        var actualChunkSize = chunk.Length;  // Actual size of the chunk
+        var actualChunkSize = chunk.Length; // Actual size of the chunk
         //var bytesToRead = Math.Min(count, actualChunkSize);
         //make sure offset is not out of bounds
         var bytesToRead = Math.Min(count, actualChunkSize - offset);
-        
+
         chunk.Slice(0, bytesToRead).CopyTo(buffer.AsMemory(offset, bytesToRead));
         Position += bytesToRead;
         return bytesToRead;
