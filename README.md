@@ -1,4 +1,4 @@
-# Eum.Windows
+# Wavee
 
 ![image](https://github.com/christosk92/Eum.Windows/assets/13438702/81f4eea5-2289-45bc-85dc-ef7ad6d7fff0)
 
