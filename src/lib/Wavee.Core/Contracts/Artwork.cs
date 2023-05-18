@@ -1,4 +1,6 @@
-﻿namespace Wavee.Core.Contracts;
+﻿using LanguageExt;
+
+namespace Wavee.Core.Contracts;
 
 public readonly record struct Artwork(string Url, 
     Option<int> Width,

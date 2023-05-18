@@ -1,7 +1,7 @@
 ﻿namespace Wavee.Spotify.Infrastructure.Connection;
 
 [Flags]
-public enum SpotifyPacketType
+internal enum SpotifyPacketType : byte
 {
     SecretBlock = 0x02,
     Ping = 0x04,

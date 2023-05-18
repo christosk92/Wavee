@@ -1,4 +1,5 @@
-﻿using LanguageExt;
+﻿using Eum.Spotify;
+using LanguageExt;
 using LanguageExt.Attributes;
 using LanguageExt.Effects.Traits;
 
@@ -6,7 +7,8 @@ namespace Wavee.UI.Infrastructure.Traits;
 
 public interface SpotifyIO
 {
-    
+    ValueTask<Unit> Authenticate(LoginCredentials credentials, CancellationToken ct = default);
+    Option<APWelcome> WelcomeMessage();
 }
 
 /// <summary>

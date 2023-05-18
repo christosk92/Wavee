@@ -1,4 +1,7 @@
+using Eum.Spotify;
 using Microsoft.UI.Xaml.Controls;
+using Wavee.UI.Infrastructure.Live;
+using Wavee.UI.Infrastructure.Sys;
 using Wavee.UI.ViewModels;
 using Wavee.UI.WinUI.Views.Sidebar.Items;
 
@@ -6,9 +9,9 @@ namespace Wavee.UI.WinUI.Views;
 
 public sealed partial class ShellView : UserControl
 {
-    public ShellView()
+    public ShellView(WaveeUIRuntime runtime, User userId)
     {
-        ViewModel = new ShellViewModel();
+        ViewModel = new ShellViewModel<WaveeUIRuntime>(runtime, userId);
         this.InitializeComponent();
         NavigationService = new NavigationService(NavigationFrame);
         SidebarControl.SidebarItems = new AbsSidebarItemViewModel[]
@@ -58,5 +61,5 @@ public sealed partial class ShellView : UserControl
         };
     }
     public static NavigationService NavigationService { get; set; }
-    public ShellViewModel ViewModel { get; }
+    public ShellViewModel<WaveeUIRuntime> ViewModel { get; }
 }

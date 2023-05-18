@@ -1,174 +1,107 @@
-﻿using System.Numerics;
+﻿using System.Net.Http.Headers;
 using System.Reactive.Linq;
 using System.Text;
-using Eum.Spotify.connectstate;
+using AesCtr;
+using AesCtrBouncyCastle;
+using AesCtrNative;
+using Eum.Spotify.storage;
 using Google.Protobuf;
+using Google.Protobuf.WellKnownTypes;
+using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
-using Wavee.Core.Contracts;
-using Wavee.Core.Enums;
-using Wavee.Core.Id;
-using Wavee.Core.Infrastructure.Traits;
-using Wavee.Player;
-using Wavee.Player.States;
-using Wavee.Spotify.Cache;
-using Wavee.Spotify.Clients.Mercury;
-using Wavee.Spotify.Infrastructure.Remote;
-using Wavee.Spotify.Infrastructure.Sys;
-using Wavee.Spotify.Models.Responses;
-using Wavee.Spotify.Playback.Infrastructure.Sys;
-using Wavee.Spotify.Playback.Metadata;
-using Wavee.Spotify.Remote.Infrastructure;
-using Wavee.Spotify.Remote.Infrastructure.Sys;
-using Wavee.Spotify.Remote.Models;
+using Spotify.Metadata;
+using Wavee.Core.Ids;
+using Wavee.Core.Infrastructure.IO;
+using Wavee.Core.Playback;
+using Wavee.Core.Player;
+using Wavee.Core.Player.PlaybackStates;
+using Wavee.Spotify.Infrastructure.ApResolver;
+using Wavee.Spotify.Infrastructure.Mercury;
+using Wavee.Spotify.Infrastructure.Mercury.Token;
+using Wavee.Spotify.Infrastructure.Playback.Cdn;
+using Wavee.Spotify.Infrastructure.Playback.Key;
+using Wavee.Spotify.Infrastructure.Playback.Streams;
 
 namespace Wavee.Spotify.Infrastructure.Playback;
 
-internal class SpotifyPlaybackClient<R> : ISpotifyPlaybackClient
-    where R : struct, HasAudioOutput<R>, HasWebsocket<R>, HasLog<R>, HasHttp<R>, HasDatabase<R>
+public sealed class SpotifyPlaybackClient
 {
-    private readonly SpotifyConnection<R> _connection;
-    private readonly SpotifyRemoteConnection<R> _remoteConnection;
-    private readonly R _runtime;
-    private readonly bool _autoplay;
-    private readonly PreferredQualityType _preferredQualityType;
-    private Atom<Option<DateTimeOffset>> _startedPlayingAt = Atom(Option<DateTimeOffset>.None);
-    private Atom<SpotifyLocalDeviceState> _localDeviceState;
+    private readonly TokenClient _tokenClient;
+    private readonly MercuryClient _mercuryClient;
+    private readonly AudioKeyClient _audioKeyClient;
+    private readonly SpotifyPlaybackConfig _config;
 
-    public SpotifyPlaybackClient(SpotifyConnection<R> connection,
-        SpotifyRemoteConnection<R> remoteConnection, R runtime, PreferredQualityType preferredQualityType,
-        bool autoplay)
+    private readonly Ref<Option<string>> _country;
+    private readonly Ref<HashMap<string, string>> _productInfo;
+
+    public SpotifyPlaybackClient(TokenClient tokenClient, MercuryClient mercuryClient,
+        AudioKeyClient audioKeyClient,
+        SpotifyPlaybackConfig config,
+        Ref<Option<string>> country,
+        Ref<HashMap<string, string>> productInfo)
     {
-        _connection = connection;
-        _remoteConnection = remoteConnection;
-        _runtime = runtime;
-        _preferredQualityType = preferredQualityType;
-        _autoplay = autoplay;
-        _localDeviceState = Atom(new SpotifyLocalDeviceState(
-            DeviceId: _connection.DeviceId,
-            DeviceName: _connection.Config.Remote.DeviceName,
-            DeviceType: _connection.Config.Remote.DeviceType,
-            IsActive: false,
-            PlayingSince: Option<DateTimeOffset>.None));
-        WaveePlayer.StateChanged.Select(async s => await PlayerStateChanged(s)).Subscribe();
-    }
+        _tokenClient = tokenClient;
+        _mercuryClient = mercuryClient;
+        _config = config;
+        _country = country;
+        _productInfo = productInfo;
+        _audioKeyClient = audioKeyClient;
 
-    private async Task PlayerStateChanged(WaveePlayerState obj)
-    {
-        if (obj.State.TrackId.IsSome
-            && obj.State.TrackId.ValueUnsafe().Source is not ISpotifyCore.SourceId)
-        {
-            //not active anymore
-            //notify
-            return;
-        }
-
-        if (obj.State is WaveePermanentEndedState endedState)
-        {
-            //check if autoplay is enabled
-            //if so, play next track from autoplay endpoint
-            //else, notify ended
-            if (_autoplay)
+        //listen to end of context
+        WaveePlayer.StateChanged
+            .Where(x => x.PlaybackState is PermanentEndOfContextPlaybackState)
+            .Select(async c =>
             {
-                //great, we can autoplay
-                var contextUri = obj.Context;
-                if (contextUri.IsSome)
+                //potential autoplay
+                if (!config.Autoplay)
                 {
-                    var ctxUri = contextUri.ValueUnsafe().Id;
-                    var autoplay = await _connection.Mercury.AutoplayQuery(ctxUri);
-                    await PlayContext(autoplay, 0, TimeSpan.Zero, true, Option<PreferredQualityType>.None);
-                    return;
+                    return unit;
                 }
-            }
 
-            return;
-        }
-
-        //active! notify
-        var putState = _localDeviceState.Swap(f =>
-        {
-            var baseState = (f with
-                {
-                    DeviceId = _connection.DeviceId,
-                    DeviceName = _connection.Config.Remote.DeviceName,
-                    DeviceType = _connection.Config.Remote.DeviceType,
-                    IsActive = true,
-                    PlayingSince = atomic(() => _startedPlayingAt.Swap(x =>
-                        x.IfNone(DateTimeOffset.UtcNow)).Bind(x => x)),
-                    LastCommandId = _remoteConnection.LastCommandId,
-                    LastCommandSentBy = _remoteConnection.LastCommandSentBy,
-                })
-                .SetShuffling(obj.IsShuffling)
-                .SetRepeatState(obj.RepeatState);
-            return obj.State switch
-            {
-                WaveeLoadingState loading => baseState.SetLoading(loading),
-                WaveePlayingState playing => baseState.SetPlaying(playing),
-                WaveePausedState paused => baseState.SetPaused(paused),
-            };
-        }).ValueUnsafe();
-        var playerTime = obj.State switch
-        {
-            WaveeLoadingState loading => loading.StartFrom,
-            WaveePlayingState playing => playing.Position,
-            WaveePausedState paused => paused.Position,
-        };
-        var connId = _remoteConnection.ActualConnectionId.IfNone(string.Empty);
-        var bearerFunc = () => _connection.Token.GetToken();
-        var putStateRequest = putState.BuildPutState(PutStateReason.PlayerStateChanged, playerTime);
-        var aff =
-            from sp in AP<R>.FetchSpClient().Map(x => $"https://{x.Host}:{x.Port}")
-            from _ in SpotifyRemoteRuntime<R>.PutState(sp, putStateRequest, connId, bearerFunc, CancellationToken.None)
-            select Unit.Default;
-
-        var run = await aff.Run(_runtime);
-        if (run.IsFail)
-        {
-            var err = run.Match(Succ: _ => throw new Exception("shouldn't happen"), Fail: x => x);
-        }
+                var autoplay = await _mercuryClient.AutoplayQuery(c.Context.ValueUnsafe().Id);
+                await PlayContext(autoplay, None);
+                return unit;
+            })
+            .Subscribe();
     }
 
-    // private static string Parse(string uri)
-    // {
-    //     ReadOnlySpan<string> contextidParts = uri.Split(':');
-    //     return new AudioId(contextidParts[2], contextidParts[1] switch
-    //     {
-    //         "track" => AudioItemType.Track,
-    //         "episode" => AudioItemType.PodcastEpisode,
-    //         "playlist" => AudioItemType.Playlist,
-    //         "album" => AudioItemType.Album,
-    //     }, ISpotifyCore.SourceId);
-    // }
-
-    public async Task PlayContext(
-        string contextUri,
-        int indexInContext,
-        TimeSpan position,
-        bool startPlaying,
-        Option<PreferredQualityType> preferredQualityTypeOverride,
-        CancellationToken ct = default)
+    public async ValueTask PlayContext(string contextUri, Option<int> startFromIndexInContext)
     {
-        var preferredQualityType = preferredQualityTypeOverride.Match(x => x, () => _preferredQualityType);
-        var contextResolve = await _connection.Mercury.ContextResolve(contextUri, ct);
-        var tracks = GetTracks(_connection,
-            preferredQualityType,
-            contextResolve, _runtime);
-        var ctx = new WaveeContext(Option<IShuffleProvider>.None,
+        var country = _country.Value.IfNone("US");
+        var cdnUrl = _productInfo.Value.Find("image_url").IfNone("https://i.scdn.co/image/{file_id}");
+        var context = await BuildContext(contextUri, country, cdnUrl);
+        await WaveePlayer.PlayContext(context, startFromIndexInContext);
+    }
+
+    private async Task<WaveeContext> BuildContext(string contextUri, string country, string cdnUrl)
+    {
+        var initialContext = await _mercuryClient.ContextResolve(contextUri);
+        var futureTracks = BuildFutureTracks(
+            _audioKeyClient,
+            initialContext,
+            _mercuryClient,
+            _tokenClient,
+            _config,
+            country,
+            cdnUrl);
+
+        return new WaveeContext(
             Id: contextUri,
-            Name: contextResolve.Metadata.Find("context_description").IfNone(string.Empty),
-            FutureTracks: tracks
+            Name: initialContext.Metadata.Find("context_description").IfNone(contextUri.ToString()),
+            FutureTracks: futureTracks,
+            ShuffleProvider: None
         );
-
-        //build an ienumerable lazy list of tracks
-        WaveePlayer.PlayContext(ctx, position, indexInContext, !startPlaying);
     }
 
-    private static IEnumerable<FutureTrack> GetTracks(
-        SpotifyConnection<R> connection,
-        PreferredQualityType preferredQualityType,
-        SpotifyContext contextResolve,
-        R runtime)
+    private static IEnumerable<FutureTrack> BuildFutureTracks(
+        AudioKeyClient audioKeyClient,
+        SpotifyContext context,
+        MercuryClient mercuryClient,
+        TokenClient tokenClient,
+        SpotifyPlaybackConfig playbackConfig,
+        string country, string cdnUrl)
     {
-        foreach (var page in contextResolve.Pages)
+        foreach (var page in context.Pages)
         {
             //check if the page has tracks
             //if it does, yield return each track
@@ -177,17 +110,22 @@ internal class SpotifyPlaybackClient<R> : ISpotifyPlaybackClient
             {
                 foreach (var track in page.Tracks)
                 {
-                    ReadOnlySpan<string> trackid = track.Uri.Split(':');
-                    var id = new AudioId(trackid[2], trackid[1] switch
-                    {
-                        "track" => AudioItemType.Track,
-                        "episode" => AudioItemType.PodcastEpisode,
-                    }, ISpotifyCore.SourceId);
+                    var id = AudioId.FromUri(track.Uri);
                     var uid = track.HasUid ? track.Uid : Option<string>.None;
+                    var trackMetadata = track.Metadata.ToHashMap();
+                    if (uid.IsSome)
+                    {
+                        trackMetadata = trackMetadata.Add("spotify_uid", uid.ValueUnsafe());
+                    }
+
+                    trackMetadata = trackMetadata.Add("country", country);
+                    trackMetadata = trackMetadata.Add("cdnurl", cdnUrl);
+
                     yield return new FutureTrack(id,
-                        Uid: uid,
-                        () => StreamFuture(connection, id, preferredQualityType,
-                            runtime));
+                        Metadata: trackMetadata,
+                        () => StreamFuture(audioKeyClient, mercuryClient, tokenClient, id,
+                            trackMetadata,
+                            playbackConfig));
                 }
             }
             else
@@ -197,9 +135,10 @@ internal class SpotifyPlaybackClient<R> : ISpotifyPlaybackClient
                 if (page.HasPageUrl)
                 {
                     var pageUrl = page.PageUrl;
-                    var pageResolve = connection.Mercury.ContextResolveRaw(pageUrl).ConfigureAwait(false)
+                    var pageResolve = mercuryClient.ContextResolveRaw(pageUrl).ConfigureAwait(false)
                         .GetAwaiter().GetResult();
-                    foreach (var track in GetTracks(connection, preferredQualityType, pageResolve, runtime))
+                    foreach (var track in BuildFutureTracks(audioKeyClient, pageResolve, mercuryClient, tokenClient,
+                                 playbackConfig, country, cdnUrl))
                     {
                         yield return track;
                     }
@@ -207,9 +146,10 @@ internal class SpotifyPlaybackClient<R> : ISpotifyPlaybackClient
                 else if (page.HasNextPageUrl)
                 {
                     var pageUrl = page.NextPageUrl;
-                    var pageResolve = connection.Mercury.ContextResolveRaw(pageUrl).ConfigureAwait(false)
+                    var pageResolve = mercuryClient.ContextResolveRaw(pageUrl).ConfigureAwait(false)
                         .GetAwaiter().GetResult();
-                    foreach (var track in GetTracks(connection, preferredQualityType, pageResolve, runtime))
+                    foreach (var track in BuildFutureTracks(audioKeyClient, pageResolve, mercuryClient, tokenClient,
+                                 playbackConfig, country, cdnUrl))
                     {
                         yield return track;
                     }
@@ -218,43 +158,139 @@ internal class SpotifyPlaybackClient<R> : ISpotifyPlaybackClient
         }
     }
 
-
-    private static async Task<IAudioStream> StreamFuture(SpotifyConnection<R> connection, AudioId id,
-        PreferredQualityType preferredQuality,
-        R runtime)
+    private static async Task<IAudioStream> StreamFuture(
+        AudioKeyClient audioKeyClient,
+        MercuryClient mercuryClient,
+        TokenClient tokenClient,
+        AudioId id,
+        HashMap<string, string> trackMetadata,
+        SpotifyPlaybackConfig playbackConfig)
     {
-        var countryMaybe = await connection.Info.CountryCode;
-        var productInfoMaybe = await connection.Info.ProductInfo;
-        var cdnUrl = productInfoMaybe.Match(x => x["image_url"], () => "https://i.scdn.co/image/{image_id}");
-        var countryCode = countryMaybe.IfNone("US");
-        var track = await connection.Mercury.GetTrack(id);
+        var sp = await ApResolve.GetSpClient(CancellationToken.None);
+        var spUrl = $"https://{sp.host}:{sp.port}";
 
-        static ITrack Mapper(TrackOrEpisode mp, string countrycode, string cdnurl) => mp.Value
-            .Match(Left: e => throw new NotImplementedException(), Right: tr => SpotifyTrackResponse.From(countrycode,
-                cdnurl,
-                tr
-            ));
+        var metadata = await mercuryClient.GetMetadata(id, trackMetadata.Find("country").IfNone("US"));
+        var stream = await LoadTrack(
+            spUrl,
+            metadata,
+            trackMetadata,
+            playbackConfig.PreferredQualityType,
+            playbackConfig.CrossfadeDuration,
+            tokenClient,
+            audioKeyClient,
+            CancellationToken.None
+        ).Run();
+        var r = stream.ThrowIfFail();
 
-        var mapper = (TrackOrEpisode p) => Mapper(p, countryCode, cdnUrl);
-        var fetchAudioKeyFunc = connection.FetchAudioKeyFunc;
-        var getBearer = () => connection.Token.GetToken();
-        var aff =
-            from sp in AP<R>.FetchSpClient().Map(x => $"https://{x.Host}:{x.Port}")
-            from stream in SpotifyPlaybackRuntime<R>.LoadTrack(sp, new TrackOrEpisode(track), mapper,
-                preferredQuality,
-                getBearer,
-                fetchAudioKeyFunc,
-                CancellationToken.None)
-            select stream;
-
-        var affResult = (await aff.Run(runtime));
-        return affResult.ThrowIfFail();
+        return r;
     }
 
 
-    public Task PlayTrack(
-        AudioId id, CancellationToken ct = default)
+    public static Aff<SpotifyStream> LoadTrack(string sp,
+        TrackOrEpisode trackOrEpisode,
+        HashMap<string, string> streamMetadata,
+        PreferredQualityType preferredQuality,
+        Option<TimeSpan> crossfadeDuration,
+        TokenClient getBearer,
+        AudioKeyClient audioKeyClient,
+        CancellationToken ct) =>
+        from audioFile in Eff(() => trackOrEpisode.FindFile(preferredQuality).Match(
+            Some: x => x,
+            None: () => trackOrEpisode.FindAlternativeFile(preferredQuality)
+                .Match(
+                    Some: f => f,
+                    None: () => throw new Exception("No audio file found")
+                )
+        ))
+        from audioKey in audioKeyClient.GetAudioKey(trackOrEpisode.Id, audioFile.FileId, ct).Map(x => x.Match(
+            Left: err => None,
+            Right: key => Some(key)
+        )).ToAff()
+        //TODO: Cache
+        from stream in OpenHttpEncryptedStream(getBearer, sp, audioFile.FileId, ct)
+        from decryptedStream in OpenDecryptedStream(stream, audioKey)
+        from offsetAndNormData in ReadNormalisationData(decryptedStream, audioFile.Format)
+        select new SpotifyStream(decryptedStream, trackOrEpisode,
+            streamMetadata,
+            offsetAndNormData.Item1,
+            offsetAndNormData.Item2, stream.Length, crossfadeDuration.Map(x => new CrossfadeController(x)));
+
+    private static Eff<(Option<NormalisationData> Normdata, long Offset)> ReadNormalisationData(Stream stream,
+        AudioFile.Types.Format format)
     {
-        throw new NotImplementedException();
+        var isOggVorbis = format == AudioFile.Types.Format.OggVorbis96 ||
+                          format == AudioFile.Types.Format.OggVorbis160 ||
+                          format == AudioFile.Types.Format.OggVorbis320;
+
+        if (!isOggVorbis) return SuccessEff((Option<NormalisationData>.None, 0L));
+        return Eff(() =>
+        {
+            var normData = NormalisationData.ParseFromOgg(stream);
+            const ulong offset = SpotifyPlaybackConstants.SPOTIFY_OGG_HEADER_END;
+            return (normData, (long)offset);
+        });
+    }
+
+    private static Eff<Stream> OpenDecryptedStream(Stream stream, Option<AudioKey> audioKey) =>
+        Eff(() =>
+        {
+            var aes128 = new AesCtrBouncyCastleStream(stream, audioKey.ValueUnsafe().Key.ToArray(),
+                SpotifyPlaybackConstants.AUDIO_AES_IV, SpotifyPlaybackConstants.ChunkSize);
+            return (Stream)aes128;
+            // var aes128 = new Aes128CtrStream(stream, audioKey.ValueUnsafe().Key.ToArray(),
+            //     SpotifyPlaybackConstants.AUDIO_AES_IV);
+            // return (Stream)(new Aes128CtrWrapperStream(aes128));
+        });
+
+    private static Aff<HttpEncryptedSpotifyStream> OpenHttpEncryptedStream(
+        TokenClient getBearer,
+        string spClientUrl,
+        ByteString fileId,
+        CancellationToken ct) =>
+        from base16Id in SuccessEff(ToBase16(fileId.Span))
+        from bearer in getBearer.GetToken(ct).ToAff()
+            .Map(x => new AuthenticationHeaderValue("Bearer", x))
+        from storage in HttpIO.GetAsync($"{spClientUrl}/storage-resolve/files/audio/interactive/{base16Id}", bearer,
+                LanguageExt.HashMap<string, string>.Empty, ct).ToAff()
+            .MapAsync(async x =>
+            {
+                await using var stream = await x.Content.ReadAsStreamAsync(ct);
+                var r = StorageResolveResponse.Parser.ParseFrom(stream);
+                x.Dispose();
+                return r;
+            })
+        from cdnUrls in GetCdnUrls(fileId, storage)
+        from firstChunkAndLength in GetFirstChunk(cdnUrls, SpotifyPlaybackConstants.ChunkSize, ct)
+        select new HttpEncryptedSpotifyStream(cdnUrls, firstChunkAndLength.FirstChunk,
+            firstChunkAndLength.TotalLength);
+
+
+    private static Aff<(ReadOnlyMemory<byte> FirstChunk, long TotalLength)> GetFirstChunk(string url, int chunkSize,
+        CancellationToken ct = default) =>
+        HttpIO.GetWithContentRange(url, 0, chunkSize, ct)
+            .MapAsync(async x =>
+            {
+                var length = x.Content.Headers.ContentRange?.Length ?? throw new Exception("No content length");
+                ReadOnlyMemory<byte> firstChunk = await x.Content.ReadAsByteArrayAsync(ct);
+                x.Dispose();
+                return (firstChunk, length);
+            }).ToAff();
+
+    private static Eff<string> GetCdnUrls(ByteString fileId, StorageResolveResponse storage) => Eff(() =>
+    {
+        var maybeExpiring = MaybeExpiringUrl.From(storage);
+        return new CdnUrl(fileId, maybeExpiring).Urls.First().Url;
+    });
+
+    private static string ToBase16(ReadOnlySpan<byte> raw)
+    {
+        //convert to hex
+        var hex = new StringBuilder(raw.Length * 2);
+        foreach (var b in raw)
+        {
+            hex.AppendFormat("{0:x2}", b);
+        }
+
+        return hex.ToString();
     }
 }

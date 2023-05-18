@@ -5,17 +5,23 @@ using DynamicData.Binding;
 using Wavee.Core.Id;
 using Wavee.UI.Models;
 using System.Reactive.Linq;
+using Wavee.UI.Infrastructure.Sys;
+using Wavee.UI.Infrastructure.Traits;
 
 namespace Wavee.UI.ViewModels;
 
-public sealed class ShellViewModel : ReactiveObject
+public sealed class ShellViewModel<R> : ReactiveObject where R : struct, HasFile<R>, HasDirectory<R>, HasLocalPath<R>
 {
     private readonly ReadOnlyObservableCollection<PlaylistInfo> _playlistItemsView;
     private readonly SourceCache<PlaylistInfo, AudioId> _items = new(s => s.Id);
     private PlaylistSortProperty _playlistSort = PlaylistSortProperty.CustomIndex;
-
-    public ShellViewModel()
+    private readonly R _runtime;
+    public ShellViewModel(R runtime, User user)
     {
+        User = user;
+
+        _runtime = runtime;
+        Instance = this;
         var sortExpressionObservable =
             this.WhenAnyValue(x => x.PlaylistSort)
                 .Select(sortProperty =>
@@ -38,7 +44,8 @@ public sealed class ShellViewModel : ReactiveObject
             .Bind(out _playlistItemsView)
             .Subscribe();
     }
-
+    public User User { get; }
+    public static ShellViewModel<R> Instance { get; private set; }
     public ReadOnlyObservableCollection<PlaylistInfo> Playlists => _playlistItemsView;
 
     public PlaylistSortProperty PlaylistSort

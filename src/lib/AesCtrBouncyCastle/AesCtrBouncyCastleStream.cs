@@ -39,19 +39,20 @@ public sealed class AesCtrBouncyCastleStream : Stream
             wasNone = true;
             _stream.Position = chunkIndex * chunk_size;
 
-            var newChunk = new byte[chunk_size];
-            _stream.Read(newChunk);
-            Decrypt(chunkIndex, newChunk);
+            Span<byte> newChunk = new byte[chunk_size];
+            var read = _stream.Read(newChunk);
+            var chunkSlice = newChunk.Slice(0, read).ToArray();
+            Decrypt(chunkIndex, chunkSlice);
 
-            cachedChunk = newChunk;
-            _cache.Add(chunkIndex, newChunk);
+            cachedChunk = chunkSlice;
+            _cache.Add(chunkIndex, chunkSlice);
         }
 
         var len = Math.Min(count, cachedChunk.Length - chunkOffset);
         //  Array.Copy(cachedChunk, chunkOffset, buffer, offset, len);
         cachedChunk.Span.Slice(chunkOffset, len).CopyTo(buffer.AsSpan(offset, len));
 
-        Position += len;
+        Position = prevPos + len;
         return len;
     }
 
@@ -83,7 +84,8 @@ public sealed class AesCtrBouncyCastleStream : Stream
 
     public override long Seek(long offset, SeekOrigin origin)
     {
-        return _stream.Seek(offset, origin);
+        _position = _stream.Seek(offset, origin);
+        return _position;
     }
 
     public override void SetLength(long value)

@@ -17,26 +17,46 @@ using Unit = LanguageExt.Unit;
 using System.Reactive;
 using System.Reactive.Linq;
 using System.Runtime.InteropServices;
+using System.Threading;
+using System.Threading.Tasks;
+using Eum.Spotify;
+using Eum.Spotify.connectstate;
+using Google.Protobuf;
 using Microsoft.UI;
 using Microsoft.UI.Windowing;
+using Wavee.Core.Enums;
+using Wavee.Spotify.Configs;
+using Wavee.UI.ViewModels;
 using Wavee.UI.WinUI.Views;
+using Wavee.UI.WinUI.Views.Setup;
 using WinRT.Interop;
 
 namespace Wavee.UI.WinUI;
 
-public partial class App : Application, INotifyPropertyChanged
+public partial class App : Application
 {
-    private int _width;
-    private int _height;
+    public static readonly SpotifyConfig _config;
 
     static App()
     {
-        Runtime = WaveeUIRuntime.New(string.Empty);
+        _config = new SpotifyConfig(
+            CachePath: Option<string>.None,
+            Remote: new SpotifyRemoteConfig(
+                DeviceName: "Wavee",
+                DeviceType: DeviceType.Computer
+            ),
+            Playback: new SpotifyPlaybackConfig(
+                PreferredQualityType.Normal,
+                CrossfadeDuration: Option<TimeSpan>.None,
+                Autoplay: true
+            )
+        );
+        Runtime = WaveeUIRuntime.New(string.Empty, _config);
         var home = Environment<WaveeUIRuntime>.getEnvironmentVariable("APPDATA").Run(Runtime)
             .ThrowIfFail();
         if (home.IsNone)
         {
-            throw new System.Exception("APPDATA environment variable not set");
+            throw new Exception("APPDATA environment variable not set");
         }
 
         const string appName = "WaveeUI";
@@ -45,33 +65,76 @@ public partial class App : Application, INotifyPropertyChanged
 
     public App()
     {
-        this.InitializeComponent();
+        InitializeComponent();
     }
 
     public static WaveeUIRuntime Runtime { get; }
 
-    protected override async void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
+    protected override async void OnLaunched(LaunchActivatedEventArgs args)
     {
         _ = await UiConfig<WaveeUIRuntime>.CreateDefaultIfNotExists.Run(Runtime);
+        var settings = new SettingsViewModel<WaveeUIRuntime>(Runtime);
+        var defaultUserMaybe = (await UserManagment<WaveeUIRuntime>.GetDefaultUser().Run(Runtime)).ThrowIfFail();
+        var content = defaultUserMaybe.Match(
+            Some: f =>
+            {
+                //read from password vault
+                string password = string.Empty;
+                try
+                {
+                    var passwordVault = new Windows.Security.Credentials.PasswordVault();
+                    var credentials = passwordVault.Retrieve(SigninInView.VAULT_KEY,
+                        f.Id);
+                    credentials.RetrievePassword();
+                    password = credentials.Password;
+                }
+                catch (Exception e)
+                {
+                    var setupView = new SetupView(Runtime);
+                    return setupView;
+                }
 
+                //passowrd is a {authDataBase64}-{number_auth_typ}
+                var authData = password.Split('-');
+                var authDataBase64 = authData[0];
+                var authType = int.Parse(authData[1]);
+                var authdata = ByteString.FromBase64(authDataBase64);
+                var authTyp = (AuthenticationType)authType;
+                var c = new LoginCredentials
+                {
+                    Username = f.Id,
+                    AuthData = authdata,
+                    Typ = authTyp
+                };
+                var signinTask =
+                    Spotify<WaveeUIRuntime>.Authenticate(c, CancellationToken.None)
+                        .Run(Runtime);
+                var shellView = new SigninInView(signinTask, true);
+                return (UIElement)shellView;
+            },
+            None: () =>
+            {
+                var setupView = new SetupView(Runtime);
+                return setupView;
+            });
         var window = new Window
         {
             SystemBackdrop = new MicaBackdrop(),
             ExtendsContentIntoTitleBar = true,
-            Content = new ShellView()
+            Content = content
         };
         MWindow = window;
-        
-        
+
+
         var scaleAdjustment = GetScaleAdjustment();
         var width = (await UiConfig<WaveeUIRuntime>.WindowWidth.Run(Runtime)).IfFail(800) * scaleAdjustment;
         var height = (await UiConfig<WaveeUIRuntime>.WindowHeight.Run(Runtime)).IfFail(600) * scaleAdjustment;
-        
-        var hWnd = WinRT.Interop.WindowNative.GetWindowHandle(MWindow);
-        Microsoft.UI.WindowId windowId = Microsoft.UI.Win32Interop.GetWindowIdFromWindow(hWnd);
-        Microsoft.UI.Windowing.AppWindow appWindow = Microsoft.UI.Windowing.AppWindow.GetFromWindowId(windowId);
-        Microsoft.UI.Windowing.DisplayArea displayArea = Microsoft.UI.Windowing.DisplayArea.GetFromWindowId(windowId,
-            Microsoft.UI.Windowing.DisplayAreaFallback.Primary);
+
+        var hWnd = WindowNative.GetWindowHandle(MWindow);
+        var windowId = Win32Interop.GetWindowIdFromWindow(hWnd);
+        var appWindow = AppWindow.GetFromWindowId(windowId);
+        var displayArea = DisplayArea.GetFromWindowId(windowId,
+            DisplayAreaFallback.Primary);
 
         double displayRegionWidth = displayArea.WorkArea.Width;
         double displayRegionHeight = displayArea.WorkArea.Height;
@@ -80,67 +143,28 @@ public partial class App : Application, INotifyPropertyChanged
         var y = (displayRegionHeight - height) / 2;
 
         appWindow.Move(new PointInt32((int)x, (int)y));
-        
+
         window.AppWindow.Resize(new SizeInt32(
             _Width: (int)width,
             _Height: (int)height
         ));
-        _width = (int)width;
-        _height = (int)height;
+        SettingsViewModel<WaveeUIRuntime>.Instance.Width = (int)width;
+        SettingsViewModel<WaveeUIRuntime>.Instance.Height = (int)height;
 
-        this.WhenAnyValue(
-                x => x.Height,
-                x => x.Width)
-            .Throttle(TimeSpan.FromMilliseconds(500))
-            .ObserveOn(RxApp.TaskpoolScheduler)
-            .Select(async (___) =>
-            {
-                var aff =
-                    from _ in UiConfig<WaveeUIRuntime>.SetWindowWidth((uint)Width)
-                    from __ in UiConfig<WaveeUIRuntime>.SetWindowHeight((uint)Height)
-                    select Unit.Default;
-
-                var run = await aff.Run(Runtime);
-            })
-            .Subscribe();
         window.SizeChanged += (sender, eventArgs) =>
         {
-            Width = (int)eventArgs.Size._width;
-            Height = (int)eventArgs.Size._height;
+            SettingsViewModel<WaveeUIRuntime>.Instance.Width = (int)eventArgs.Size._width;
+            SettingsViewModel<WaveeUIRuntime>.Instance.Height = (int)eventArgs.Size._height;
         };
         window.Activate();
     }
 
     public static Window MWindow { get; private set; }
-    public int Width
-    {
-        get => _width;
-        set => SetField(ref _width, value);
-    }
 
-    public int Height
-    {
-        get => _height;
-        set => SetField(ref _height, value);
-    }
 
-    public event PropertyChangedEventHandler PropertyChanged;
-
-    protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
-    {
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-    }
-
-    protected bool SetField<T>(ref T field, T value, [CallerMemberName] string propertyName = null)
-    {
-        if (EqualityComparer<T>.Default.Equals(field, value)) return false;
-        field = value;
-        OnPropertyChanged(propertyName);
-        return true;
-    }
-    
     [DllImport("Shcore.dll", SetLastError = true)]
-    internal static extern int GetDpiForMonitor(IntPtr hmonitor, Monitor_DPI_Type dpiType, out uint dpiX, out uint dpiY);
+    internal static extern int
+        GetDpiForMonitor(IntPtr hmonitor, Monitor_DPI_Type dpiType, out uint dpiX, out uint dpiY);
 
     internal enum Monitor_DPI_Type : int
     {
@@ -167,5 +191,4 @@ public partial class App : Application, INotifyPropertyChanged
         uint scaleFactorPercent = (uint)(((long)dpiX * 100 + (96 >> 1)) / 96);
         return scaleFactorPercent / 100.0;
     }
-
 }

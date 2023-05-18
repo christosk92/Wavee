@@ -1,4 +1,4 @@
-﻿using Wavee.Core.Id;
+﻿using Wavee.Core.Ids;
 
 namespace Wavee.Core.Contracts;
 

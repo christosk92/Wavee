@@ -14,6 +14,9 @@
   </PropertyGroup>
   <ItemGroup>
     <None Remove="Views\Playlist\CreatePlaylistView.xaml" />
+    <None Remove="Views\Setup\SetupPageContent.xaml" />
+    <None Remove="Views\Setup\SetupView.xaml" />
+    <None Remove="Views\Setup\SigninInView.xaml" />
     <None Remove="Views\ShellView.xaml" />
   </ItemGroup>
 
@@ -30,6 +33,7 @@
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Labs.WinUI.SizerBase" Version="0.0.4" />
     <PackageReference Include="CommunityToolkit.Labs.WinUI.TokenView" Version="0.0.6" />
+    <PackageReference Include="CommunityToolkit.WinUI.Lottie" Version="7.1.2" />
     <PackageReference Include="LanguageExt.Rx" Version="4.4.3" />
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.3.230502000" />
     <PackageReference Include="ReactiveUI.WinUI" Version="18.4.44" />
@@ -45,6 +49,7 @@
     <ProjectCapability Include="Msix" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\lib\Wavee.Spotify\Wavee.Spotify.csproj" />
     <ProjectReference Include="..\Wavee.UI\Wavee.UI.csproj" />
   </ItemGroup>
   <ItemGroup>
@@ -59,6 +64,24 @@
   </ItemGroup>
   <ItemGroup>
     <Page Update="Views\Playlist\CreatePlaylistView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Views\Home\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Page Update="Views\Setup\SigninInView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <Page Update="Views\Setup\SetupPageContent.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <Page Update="Views\Setup\SetupView.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
   </ItemGroup>

@@ -1,3 +1,0 @@
-[submodule "external/database-effect"]
-	path = external/database-effect
-	url = git@github.com:azhdari/database-effect.git

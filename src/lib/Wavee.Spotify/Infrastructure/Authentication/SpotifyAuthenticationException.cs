@@ -4,11 +4,11 @@ namespace Wavee.Spotify.Infrastructure.Authentication;
 
 public sealed class SpotifyAuthenticationException : Exception
 {
-    internal SpotifyAuthenticationException(APLoginFailed failed) : base(
-        failed.ErrorCode.ToString())
+    public SpotifyAuthenticationException(APLoginFailed authFailure)
+        : base(authFailure.ErrorCode.ToString())
     {
-        ErrorCode = failed;
+        AuthFailure = authFailure;
     }
 
-    public APLoginFailed ErrorCode { get; }
+    public APLoginFailed AuthFailure { get; }
 }

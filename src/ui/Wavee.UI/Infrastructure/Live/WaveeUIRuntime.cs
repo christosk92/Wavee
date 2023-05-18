@@ -1,6 +1,7 @@
 ﻿using LanguageExt;
 using LanguageExt.Effects.Traits;
 using System.Text;
+using Wavee.Spotify.Configs;
 using Wavee.UI.Infrastructure.Traits;
 
 namespace Wavee.UI.Infrastructure.Live;
@@ -37,8 +38,8 @@ public readonly struct WaveeUIRuntime :
     /// <summary>
     /// Constructor function
     /// </summary>
-    public static WaveeUIRuntime New(string localPath) =>
-        new WaveeUIRuntime(new RuntimeEnv(new CancellationTokenSource(), System.Text.Encoding.Default, new SpotifyIO(),
+    public static WaveeUIRuntime New(string localPath, SpotifyConfig config) =>
+        new WaveeUIRuntime(new RuntimeEnv(new CancellationTokenSource(), System.Text.Encoding.Default, new LiveSpotify(config),
             localPath));
 
 

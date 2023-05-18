@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using LanguageExt;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using ReactiveUI;
+using Wavee.UI.Infrastructure.Sys;
 using Wavee.UI.Models;
 using Wavee.UI.WinUI.Views.Playlist;
 using Wavee.UI.WinUI.Views.Sidebar.Items;
@@ -17,6 +19,7 @@ namespace Wavee.UI.WinUI.Views.Sidebar
         public static readonly DependencyProperty SidebarItemsProperty = DependencyProperty.Register(nameof(SidebarItems), typeof(IReadOnlyCollection<AbsSidebarItemViewModel>), typeof(SidebarControl), new PropertyMetadata(default(IReadOnlyCollection<AbsSidebarItemViewModel>)));
         public static readonly DependencyProperty PlaylistsProperty = DependencyProperty.Register(nameof(Playlists), typeof(ReadOnlyObservableCollection<PlaylistInfo>), typeof(SidebarControl), new PropertyMetadata(default(ReadOnlyObservableCollection<PlaylistInfo>)));
         public static readonly DependencyProperty NavigationFrameProperty = DependencyProperty.Register(nameof(NavigationFrame), typeof(object), typeof(SidebarControl), new PropertyMetadata(default(object)));
+        public static readonly DependencyProperty UserProperty = DependencyProperty.Register(nameof(User), typeof(User), typeof(SidebarControl), new PropertyMetadata(default(User)));
 
         public SidebarControl()
         {
@@ -48,6 +51,12 @@ namespace Wavee.UI.WinUI.Views.Sidebar
         {
             get => (object)GetValue(NavigationFrameProperty);
             set => SetValue(NavigationFrameProperty, value);
+        }
+
+        public User User
+        {
+            get => (User)GetValue(UserProperty);
+            set => SetValue(UserProperty, value);
         }
 
         public void SetSidebarWidth(double width)
@@ -90,6 +99,28 @@ namespace Wavee.UI.WinUI.Views.Sidebar
         private void AddPlaylistButton_OnTapped(object sender, TappedRoutedEventArgs e)
         {
             NavigationService.Instance.Navigate(typeof(CreatePlaylistView));
+        }
+
+        public string GetInitials(User user)
+        {
+            //display name or id
+            return user
+                .DisplayName
+                .Match(s => s, () => user.Id.ToString())
+                .Substring(0, 2);
+        }
+
+        public string GetDisplayName(User option)
+        {
+            return option.DisplayName.Match(s => s, () => option.Id.ToString());
+        }
+
+        public string GetProduct(User user)
+        {
+            return user
+                .Metadata
+                .Find("product")
+                .Match(s => s, () => "Spotify");
         }
     }
 }

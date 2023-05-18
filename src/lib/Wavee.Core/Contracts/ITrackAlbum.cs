@@ -1,4 +1,5 @@
-﻿using Wavee.Core.Id;
+﻿using LanguageExt;
+using Wavee.Core.Ids;
 
 namespace Wavee.Core.Contracts;
 

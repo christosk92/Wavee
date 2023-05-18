@@ -9,6 +9,24 @@ namespace Wavee.UI.Infrastructure.Sys;
 
 public static class UiConfig<RT> where RT : struct, HasFile<RT>, HasDirectory<RT>, HasLocalPath<RT>
 {
+    //semaphore for file access
+    private static readonly SemaphoreSlim FileLock = new(1, 1);
+
+    private static Eff<Unit> Lock() =>
+        Eff(() =>
+        {
+            FileLock.Wait();
+            return unit;
+        });
+
+    private static Eff<Unit> Release() =>
+        Eff(() =>
+        {
+            FileLock.Release();
+            return unit;
+        });
+
+
     public static Eff<RT, string> ConfigPath =>
         from appData in Local<RT>.localDir
         let configPath = Path.Combine(appData, "configs", "ui_config.json")
@@ -19,7 +37,7 @@ public static class UiConfig<RT> where RT : struct, HasFile<RT>, HasDirectory<RT
         from configPath in ConfigPath
         from exists in File<RT>.exists(configPath)
         where !exists
-        from _ in SerializeAndWrite(configPath, CreateDefaultConfig())
+        from __ in SerializeAndWrite(configPath, CreateDefaultConfig())
         select unit;
 
     public static Aff<RT, uint> WindowWidth =>
@@ -46,16 +64,34 @@ public static class UiConfig<RT> where RT : struct, HasFile<RT>, HasDirectory<RT
         from serialized in SerializeAndWrite(configPath, newConfig)
         select unit;
 
+    // public static Aff<RT, Unit> SetSetupCompleted(bool setupCompleted) =>
+    //     from configPath in ConfigPath
+    //     from config in Deserialize(configPath)
+    //     from newConfig in SuccessEff(config.SetSetupCompleted(setupCompleted))
+    //     from serialized in SerializeAndWrite(configPath, newConfig)
+    //     select unit;
+    //
+    // public static Aff<RT, Unit> SetSetupProgress(int setupProgress) =>
+    //     from configPath in ConfigPath
+    //     from config in Deserialize(configPath)
+    //     from newConfig in SuccessEff(config.SetSetupProgress(setupProgress))
+    //     from serialized in SerializeAndWrite(configPath, newConfig)
+    //     select unit;
+
     private static Aff<RT, Unit> SerializeAndWrite(string file, UiConfigStruct str) =>
         from bytes in Serialize(str)
+        from _ in Lock()
         from __ in File<RT>.writeAllBytes(file, bytes)
+        from ___ in Release()
         select unit;
 
     private static Eff<RT, byte[]> Serialize(UiConfigStruct str) =>
         Eff(() => JsonSerializer.SerializeToUtf8Bytes(str));
 
     private static Eff<RT, UiConfigStruct> Deserialize(string file) =>
+        from _ in Lock()
         from bytes in File<RT>.readAllBytesSync(file)
+        from __ in Release()
         select JsonSerializer.Deserialize<UiConfigStruct>(bytes.Span);
 
     private static UiConfigStruct CreateDefaultConfig() =>
@@ -84,7 +120,30 @@ public static class UiConfig<RT> where RT : struct, HasFile<RT>, HasDirectory<RT
                 }
             };
         }
+
+        // public UiConfigStruct SetSetupCompleted(bool setupCompleted)
+        // {
+        //     return this with
+        //     {
+        //         Setup = Setup with
+        //         {
+        //             SetupCompleted = setupCompleted
+        //         }
+        //     };
+        // }
+        //
+        // public UiConfigStruct SetSetupProgress(int setupProgress)
+        // {
+        //     return this with
+        //     {
+        //         Setup = Setup with
+        //         {
+        //             SetupProgress = setupProgress
+        //         }
+        //     };
+        // }
     }
 
     private readonly record struct WindowConfig(uint Width, uint Height);
+    // private readonly record struct SetupConfig(bool SetupCompleted, int SetupProgress);
 }
