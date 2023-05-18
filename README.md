@@ -1,18 +1,42 @@
 # Wavee
 
-![image](https://github.com/christosk92/Eum.Windows/assets/13438702/81f4eea5-2289-45bc-85dc-ef7ad6d7fff0)
+## Note
 
+I was trying to set-up the project in way that should work for NOT just Spotify, but also Apple Music, Soundcloud etc. 
+However after much deliberation I have decided it is not worth the effort, and better solutions exist out there. 
+So I eventually gave-up, and decided to just focus on Spotify.
 
-(update 3/19) Local playback:
+## General
+Wavee.Spotify is a high performant (meaning low cpu/network/memory usage) Spotify client, written in native C#, without any interop. 
+Playback is powered by NAudio.
+Everything that you would expect the normal Spotify client to have, *should* be included. Obviously some things may be missing as Spotify changes their stuff. But the core functionality (remote control, playback, metadata fetching) should work fine.
 
-![image](https://user-images.githubusercontent.com/13438702/226125785-336afde6-0e39-45d5-9f82-10cbcb44bf29.png)
+Right now, the core is built to talk with Spotify over a raw TCP connection, instead of traditional rest calls. It is unsure for how long this will continue to function, but I have found that requests over this protocol, are much much faster than traditional https.
+You can check the full implementation under [/lib/Wavee.Spotify/Infrastructure/](/lib/Wavee.Spotify/Infrastructure/Connection/SpotifyConnection)
 
+I regularly try out different stuff in a scratchpad, so if you seea commit titled: "promoted from scratchpad", it probably means that there was a large architectural change.
 
+## Updates
+I will try to post regular updates about what I've done, and what needs to be done. Don't expect too much though :)
 
-https://user-images.githubusercontent.com/13438702/211739287-ea3e6cbd-02e5-4607-b901-7179f358b7e6.mp4
-
-
-![image](https://user-images.githubusercontent.com/13438702/211191945-5869bc9b-bfea-4ec7-8028-50c2c30c0ce5.png)
+### 2023/05/19 
+- Refactored connection logic: Removed async (which made it much faster), and removed unnecesary heap allocations by replacing them with ``stackalloc``.
+- Refactor player handler: Make sure access to player states are thread-safe and do not cause side effects.
+- Added basic caching of encrypted audio files (on disk), and track metadata in a sqlite database. This is optional and can be turned on/off using the Config like:
+   ```cs
+   _config = new SpotifyConfig(
+            CachePath: cachePath,
+            Remote: new SpotifyRemoteConfig(
+                DeviceName: "Wavee",
+                DeviceType: DeviceType.Computer
+            ),
+            Playback: new SpotifyPlaybackConfig(
+                PreferredQualityType.Normal,
+                CrossfadeDuration: Option<TimeSpan>.None,
+                Autoplay: true
+            )
+        );
+        ```
 
 
 ![image](https://user-images.githubusercontent.com/13438702/211539400-25468ac1-2458-4b9e-b149-d27a5405a186.png)
