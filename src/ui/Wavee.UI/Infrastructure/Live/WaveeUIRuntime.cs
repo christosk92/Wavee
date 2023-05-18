@@ -1,7 +1,7 @@
 ﻿using LanguageExt;
 using LanguageExt.Effects.Traits;
 using System.Text;
-using Wavee.Spotify.Configs;
+using Wavee.Spotify;
 using Wavee.UI.Infrastructure.Traits;
 
 namespace Wavee.UI.Infrastructure.Live;

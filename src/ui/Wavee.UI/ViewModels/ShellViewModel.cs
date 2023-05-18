@@ -2,9 +2,9 @@
 using ReactiveUI;
 using System.Collections.ObjectModel;
 using DynamicData.Binding;
-using Wavee.Core.Id;
 using Wavee.UI.Models;
 using System.Reactive.Linq;
+using Wavee.Core.Ids;
 using Wavee.UI.Infrastructure.Sys;
 using Wavee.UI.Infrastructure.Traits;
 

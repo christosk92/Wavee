@@ -56,13 +56,13 @@ namespace Wavee.UI.WinUI.Views.Setup
                 switch (ex)
                 {
                     case SpotifyAuthenticationException authenticationException:
-                        ErrorMessage.Text = authenticationException.ErrorCode.ErrorCode switch
+                        ErrorMessage.Text = authenticationException.AuthFailure.ErrorCode switch
                         {
                             ErrorCode.BadCredentials => "Check username and/or password.",
                             ErrorCode.TravelRestriction => "Reached travel limit.",
                             ErrorCode.PremiumAccountRequired => "Premium account required.",
                             ErrorCode.TryAnotherAp => "Try another AP (Try again).",
-                            _ => $"Unknown error ({authenticationException.ErrorCode.ErrorCode.ToString()}"
+                            _ => $"Unknown error ({authenticationException.AuthFailure.ErrorCode.ToString()}"
                         };
                         break;
                     default:
