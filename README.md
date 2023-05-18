@@ -12,7 +12,7 @@ Playback is powered by NAudio.
 Everything that you would expect the normal Spotify client to have, *should* be included. Obviously some things may be missing as Spotify changes their stuff. But the core functionality (remote control, playback, metadata fetching) should work fine.
 
 Right now, the core is built to talk with Spotify over a raw TCP connection, instead of traditional rest calls. It is unsure for how long this will continue to function, but I have found that requests over this protocol, are much much faster than traditional https.
-You can check the full implementation under [/lib/Wavee.Spotify/Infrastructure/Connection/SpotifyConnection.cs](/lib/Wavee.Spotify/Infrastructure/Connection/SpotifyConnection.cs)
+You can check the full implementation under [/src/lib/Wavee.Spotify/Infrastructure/Connection/SpotifyConnection.cs](/src/lib/Wavee.Spotify/Infrastructure/Connection/SpotifyConnection.cs)
 
 I regularly try out different stuff in a scratchpad, so if you seea commit titled: "promoted from scratchpad", it probably means that there was a large architectural change.
 
