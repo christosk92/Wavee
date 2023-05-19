@@ -32,7 +32,8 @@
 
             <DataTemplate x:Key="PlaylistTemplate"
                           x:DataType="models:PlaylistInfo">
-                <TreeViewItem AutomationProperties.Name="{x:Bind Name}">
+                <TreeViewItem Padding="-24,0,0,0"
+                              AutomationProperties.Name="{x:Bind Name}">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Margin="0,0,10,0" />
                         <TextBlock Text="{x:Bind Name}" />
@@ -41,9 +42,8 @@
             </DataTemplate>
             <DataTemplate x:Key="PlaylistTemplateWithMargin"
                           x:DataType="models:PlaylistInfo">
-                <TreeViewItem
-                    Margin="-24,0,0,0"
-                    AutomationProperties.Name="{x:Bind Name}">
+                <TreeViewItem Padding="-34,0,0,0"
+                              AutomationProperties.Name="{x:Bind Name}">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Margin="0,0,10,0" />
                         <TextBlock Text="{x:Bind Name}" />
@@ -149,7 +149,6 @@
                                   VerticalAlignment="Center"
                                   Margin="0,0,0,0"
                                   HorizontalAlignment="Stretch">
-                            Custom index
                         </ComboBox>
 
                         <Button CornerRadius="0,4,4,0"

@@ -56,7 +56,7 @@ public sealed partial class BottomPlayerControl : UserControl
     {
         if (track is not null && track.Album.Artwork.Length > 0)
         {
-            return new Uri(track.Album.Artwork[0].Url);
+            return new Uri(track.Album.Artwork.OrderBy(x => x.Height.IfNone(0)).First().Url);
         }
         else
         {
