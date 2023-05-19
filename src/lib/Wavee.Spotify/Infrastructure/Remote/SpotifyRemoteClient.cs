@@ -28,13 +28,14 @@ public class SpotifyRemoteClient
 
     private readonly string _deviceId;
     internal SpotifyRemoteClient(MercuryClient mercuryClient, TokenClient tokenClient, SpotifyRemoteConfig config,
-        string deviceId)
+        string deviceId,
+        string userId)
     {
         _mercuryClient = mercuryClient;
         _tokenClient = tokenClient;
         _config = config;
         _deviceId = deviceId;
-        _connection = new SpotifyRemoteConnection();
+        _connection = new SpotifyRemoteConnection(userId);
 
         var mn = new ManualResetEvent(false);
         Task.Run(async () =>
@@ -114,6 +115,8 @@ public class SpotifyRemoteClient
         return spotifyLocalDeviceState.SetStateFrom(state);
     }
 
+    public IObservable<SpotifyRootlistUpdateNotification> RootlistChanged =>
+        _connection.OnRootListNotification;
     public IObservable<SpotifyRemoteState> StateChanged =>
         _connection
             .OnClusterChange()

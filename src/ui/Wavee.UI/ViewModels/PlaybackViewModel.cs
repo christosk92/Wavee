@@ -130,6 +130,7 @@ public sealed class PlaybackViewModel<R> : ReactiveObject where R : struct, HasS
             this.RaiseAndSetIfChanged(ref _activeOnDevice, value);
             this.RaisePropertyChanged(nameof(CanControlVolume));
             this.RaisePropertyChanged(nameof(VolumePerc));
+            this.RaisePropertyChanged(nameof(ActiveOnThisDevice));
         }
     }
     public ObservableCollection<SpotifyRemoteDeviceInfo> Devices { get; } = new();

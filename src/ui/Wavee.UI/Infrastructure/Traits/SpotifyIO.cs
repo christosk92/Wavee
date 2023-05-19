@@ -1,4 +1,5 @@
 ﻿using Eum.Spotify;
+using Eum.Spotify.playlist4;
 using LanguageExt;
 using LanguageExt.Attributes;
 using LanguageExt.Effects.Traits;
@@ -13,6 +14,7 @@ public interface SpotifyIO
 {
     ValueTask<Unit> Authenticate(LoginCredentials credentials, CancellationToken ct = default);
     Option<APWelcome> WelcomeMessage();
+    Option<IObservable<SpotifyRootlistUpdateNotification>> ObserveRootlist();
     Option<IObservable<SpotifyRemoteState>> ObserveRemoteState();
     Option<SpotifyCache> Cache();
     Option<string> CountryCode();
@@ -20,6 +22,7 @@ public interface SpotifyIO
     MercuryClient Mercury();
     Option<string> GetOwnDeviceId();
     Option<SpotifyRemoteClient> GetRemoteClient();
+    Aff<SelectedListContent> GetRootList(CancellationToken ct);
 }
 
 /// <summary>

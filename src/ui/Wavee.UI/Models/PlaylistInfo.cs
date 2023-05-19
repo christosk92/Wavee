@@ -1,24 +1,41 @@
-﻿using Wavee.Core.Ids;
+﻿using LanguageExt;
+using Wavee.Core.Ids;
 
 namespace Wavee.UI.Models;
 
-public readonly struct PlaylistInfo
+public record PlaylistInfo
 {
-    public PlaylistInfo(AudioId Id, int Index, string Name)
+    public PlaylistInfo(string Id,
+        int Index,
+        string Name,
+        string OwnerId,
+        bool IsFolder,
+        Seq<PlaylistInfo> SubItems,
+        DateTimeOffset Timestamp, bool isInFolder)
     {
         this.Id = Id;
         this.Index = Index;
         this.Name = Name;
+        this.OwnerId = OwnerId;
+        this.IsFolder = IsFolder;
+        this.SubItems = SubItems;
+        this.Timestamp = Timestamp;
+        IsInFolder = isInFolder;
     }
 
-    public AudioId Id { get;  }
+    public string Id { get; }
     public int Index { get; }
     public string Name { get; }
+    public string OwnerId { get; }
+    public bool IsFolder { get; }
+    public Seq<PlaylistInfo> SubItems { get; }
+    public DateTimeOffset Timestamp { get; }
+    public bool IsInFolder { get; }
 
-    public void Deconstruct(out AudioId Id, out int Index, out string Name)
+
+    public PlaylistInfo AddSubitem(PlaylistInfo playlistInfo)
     {
-        Id = this.Id;
-        Index = this.Index;
-        Name = this.Name;
+        var newSubitems = SubItems.Add(playlistInfo);
+        return new PlaylistInfo(Id, Index, Name, OwnerId, IsFolder, newSubitems, Timestamp, false);
     }
 }

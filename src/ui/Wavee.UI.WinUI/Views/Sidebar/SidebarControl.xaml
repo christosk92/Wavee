@@ -6,6 +6,8 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:labs="using:CommunityToolkit.Labs.WinUI"
              xmlns:sizerBaseLocal="using:CommunityToolkit.Labs.WinUI.SizerBaseLocal"
+             xmlns:templateSelectors="using:Wavee.UI.WinUI.TemplateSelectors"
+             xmlns:models="using:Wavee.UI.Models"
              mc:Ignorable="d">
     <UserControl.Resources>
         <ResourceDictionary>
@@ -13,6 +15,47 @@
                 <ResourceDictionary Source="Resources.xaml" />
                 <local:SidebarTemplates />
             </ResourceDictionary.MergedDictionaries>
+
+            <DataTemplate x:Key="FolderTemplate"
+                          x:DataType="models:PlaylistInfo">
+                <TreeViewItem AutomationProperties.Name="{x:Bind Name}"
+                              ItemsSource="{x:Bind SubItems}"
+                              IsExpanded="True">
+                    <StackPanel Orientation="Horizontal">
+                        <FontIcon FontFamily="/Assets/Fonts/MediaPlayerIcons.ttf#Media Player Fluent Icons"
+                                  Glyph="&#xE838;" />
+                        <TextBlock Margin="0,0,10,0" />
+                        <TextBlock Text="{x:Bind Name}" />
+                    </StackPanel>
+                </TreeViewItem>
+            </DataTemplate>
+
+            <DataTemplate x:Key="PlaylistTemplate"
+                          x:DataType="models:PlaylistInfo">
+                <TreeViewItem AutomationProperties.Name="{x:Bind Name}">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Margin="0,0,10,0" />
+                        <TextBlock Text="{x:Bind Name}" />
+                    </StackPanel>
+                </TreeViewItem>
+            </DataTemplate>
+            <DataTemplate x:Key="PlaylistTemplateWithMargin"
+                          x:DataType="models:PlaylistInfo">
+                <TreeViewItem
+                    Margin="-24,0,0,0"
+                    AutomationProperties.Name="{x:Bind Name}">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Margin="0,0,10,0" />
+                        <TextBlock Text="{x:Bind Name}" />
+                    </StackPanel>
+                </TreeViewItem>
+            </DataTemplate>
+
+
+            <templateSelectors:PlaylistsItemTemplateSelector FolderTemplate="{StaticResource FolderTemplate}"
+                                                             PlaylistTemplate="{StaticResource PlaylistTemplate}"
+                                                             PlaylistTemplateWithMargin="{StaticResource PlaylistTemplateWithMargin}"
+                                                             x:Key="PlaylistsItemTemplateSelector" />
         </ResourceDictionary>
     </UserControl.Resources>
 
@@ -105,7 +148,9 @@
                                   CornerRadius="4,0,0,4"
                                   VerticalAlignment="Center"
                                   Margin="0,0,0,0"
-                                  HorizontalAlignment="Stretch" />
+                                  HorizontalAlignment="Stretch">
+                            Custom index
+                        </ComboBox>
 
                         <Button CornerRadius="0,4,4,0"
                                 VerticalAlignment="Center"
@@ -124,8 +169,8 @@
                                     SelectionMode="Multiple" />
                 </StackPanel>
 
-                <ListView Grid.Row="3"
-                          SelectionChanged="PlaylistsListView_OnSelectionChanged"
+                <TreeView Grid.Row="3"
+                          ItemTemplateSelector="{StaticResource PlaylistsItemTemplateSelector}"
                           ItemsSource="{x:Bind Playlists}"
                           x:Name="PlaylistsListView" />
 
@@ -136,7 +181,8 @@
                            VerticalAlignment="Center"
                            x:Name="NoPlaylistsView" />
 
-                <Border Grid.Row="4" />
+                <Border Grid.Row="4"
+                        Height="110" />
             </Grid>
         </SplitView.Pane>
         <Grid Background="{ThemeResource App.Theme.FileArea.BackgroundBrush}">

@@ -1,4 +1,6 @@
-﻿using System.Text;
+﻿using System;
+using System.IO;
+using System.Text;
 using System.Text.Json;
 using CommunityToolkit.HighPerformance;
 using LanguageExt;
@@ -42,6 +44,10 @@ public readonly record struct SpotifyWebsocketMessage(HashMap<string, string> He
         {
             SpotifyWebsocketMessageType.Request => Some(ReadFromRequest(json.RootElement.GetProperty("payload")
                 .GetProperty("compressed").GetBytesFromBase64())),
+            SpotifyWebsocketMessageType.Message when json.RootElement.TryGetProperty("uri",
+                out var msgUri) &&
+                                                     (msgUri.GetString().StartsWith("hm://playlist/v2/user/") || msgUri.GetString().StartsWith("hm://playlist/user/"))
+                 => Some(ReadFromRootlistUpdate(json.RootElement.GetProperty("payloads"))),
             SpotifyWebsocketMessageType.Message => Some(ReadFromMessage(headers,
                 json.RootElement.GetProperty("payloads"))),
             _ => None
@@ -58,6 +64,27 @@ public readonly record struct SpotifyWebsocketMessage(HashMap<string, string> He
         return gzipDecoded.ToArray();
     }
 
+
+    private static ReadOnlyMemory<byte> ReadFromRootlistUpdate(JsonElement getProperty)
+    {
+        using var enumerator = getProperty.EnumerateArray();
+        using var buffer = new MemoryStream();
+        foreach (var element in enumerator)
+        {
+            ReadOnlySpan<byte> bytes = element.GetBytesFromBase64();
+            buffer.Write(bytes);
+        }
+
+        buffer.Flush();
+        buffer.Seek(0, SeekOrigin.Begin);
+        // if (headers.ContainsKey("Transfer-Encoding") && headers["Transfer-Encoding"] is "gzip")
+        // {
+        //     using var gzipDecoded = GzipHelpers.GzipDecompress(buffer);
+        //     gzipDecoded.Seek(0, SeekOrigin.Begin);
+        //     return gzipDecoded.ToArray();
+        // }
+        return buffer.ToArray();
+    }
     private static ReadOnlyMemory<byte> ReadFromMessage(HashMap<string, string> headers, JsonElement getProperty)
     {
         if (headers.ContainsKey("Transfer-Encoding") ||

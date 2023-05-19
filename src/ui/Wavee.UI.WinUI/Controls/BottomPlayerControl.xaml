@@ -39,7 +39,12 @@
         </ResourceDictionary>
     </UserControl.Resources>
     <Grid x:Name="RootGrid">
-        <Grid x:Name="ControlPanelGrid">
+        <Grid.RowDefinitions>
+            <RowDefinition />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <Grid Height="90"
+              x:Name="ControlPanelGrid">
             <Grid.Resources>
                 <Style BasedOn="{StaticResource AppBarCompactButtonStyle}"
                        TargetType="AppBarButton" />
@@ -190,8 +195,7 @@
                                     IsChecked="{x:Bind Playback.Shuffling, Mode=OneWay}"
                                     Padding="4">
                     <AppBarToggleButton.Icon>
-                        <FontIcon 
-                                  FontWeight="SemiBold"
+                        <FontIcon FontWeight="SemiBold"
                                   Glyph="&#xE8B1;" />
                     </AppBarToggleButton.Icon>
                 </AppBarToggleButton>
@@ -380,6 +384,28 @@
             </UserControl>
         </Grid>
 
+        <Border  Grid.Row="1"
+                 Visibility="{x:Bind TrueCollapsed(Playback.ActiveOnThisDevice), Mode=OneWay}"
+                 CornerRadius="0"
+                 Margin="-4,0,-4,-4"
+                 Padding="4,0"
+                 Background="{ThemeResource AccentAcrylicBackgroundFillColorDefaultBrush}"
+                 Height="24">
+            <StackPanel HorizontalAlignment="Left"
+                        Margin="12,0"
+                        Spacing="4"
+                        Orientation="Horizontal">
+                <FontIcon FontFamily="/Assets/Fonts/MediaPlayerIcons.ttf#Media Player Fluent Icons"
+                          Glyph="&#xE767;"
+                          FontWeight="Bold"
+                          FontSize="14" />
+                <TextBlock FontSize="12"
+                           Opacity=".8"
+                           FontWeight="SemiBold"
+                           VerticalAlignment="Center"
+                           Text="{x:Bind Playback.ActiveDevice.DeviceName, Mode=OneWay}" />
+            </StackPanel>
+        </Border>
         <VisualStateManager.VisualStateGroups>
             <VisualStateGroup x:Name="ControlPanelVisibilityStates">
                 <VisualState x:Name="ControlPanelFadeIn">

@@ -1,11 +1,21 @@
 ﻿using Eum.Spotify;
 using LanguageExt;
+using System;
+using System.Net.Http.Headers;
+using Eum.Spotify.playlist4;
 using Wavee.Spotify;
 using Wavee.Spotify.Infrastructure.Cache;
 using Wavee.Spotify.Infrastructure.Mercury;
 using Wavee.Spotify.Infrastructure.Remote;
 using Wavee.Spotify.Infrastructure.Remote.Messaging;
 using static LanguageExt.Prelude;
+using System.Threading;
+using Wavee.Spotify.Infrastructure.ApResolver;
+using LanguageExt;
+using LanguageExt.Common;
+using LanguageExt.UnsafeValueAccess;
+using Wavee.Core.Infrastructure.IO;
+
 namespace Wavee.UI.Infrastructure.Live;
 
 internal sealed class LiveSpotify : Traits.SpotifyIO
@@ -18,6 +28,21 @@ internal sealed class LiveSpotify : Traits.SpotifyIO
         _config = config;
     }
 
+    public Aff<SelectedListContent> GetRootList(CancellationToken ct) =>
+        from client in Eff(() => _connection.ValueUnsafe())
+        from spclient in ApResolve.GetSpClient(ct).ToAff()
+            .Map(x => $"https://{x.host}:{x.port}")
+            .Map(x =>
+                $"{x}/playlist/v2/user/{client.WelcomeMessage.CanonicalUsername}/rootlist?decorate=revision,length,attributes,timestamp,owner")
+        from bearer in client.TokenClient.GetToken(ct).ToAff().Map(x => new AuthenticationHeaderValue("Bearer", x))
+        from result in HttpIO.GetAsync(spclient, bearer, LanguageExt.HashMap<string, string>.Empty, ct)
+            .ToAff().MapAsync(async r =>
+            {
+                await using var stream = await r.Content.ReadAsStreamAsync(ct);
+                return SelectedListContent.Parser.ParseFrom(stream);
+            })
+        select result;
+
     public async ValueTask<Unit> Authenticate(LoginCredentials credentials, CancellationToken ct = default)
     {
         var core = await SpotifyClient.CreateAsync(credentials, _config, ct);
@@ -29,6 +54,12 @@ internal sealed class LiveSpotify : Traits.SpotifyIO
     {
         var maybe = _connection.Map(x => x.WelcomeMessage);
         return maybe;
+    }
+
+    public Option<IObservable<SpotifyRootlistUpdateNotification>> ObserveRootlist()
+    {
+        return _connection
+            .Map(x => x.RemoteClient.RootlistChanged);
     }
 
     public Option<IObservable<SpotifyRemoteState>> ObserveRemoteState()

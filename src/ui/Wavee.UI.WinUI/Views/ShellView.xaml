@@ -12,7 +12,7 @@
 
     <Grid>
         <sidebar:SidebarControl User="{x:Bind ViewModel.User}"
-                                Playlists="{x:Bind ViewModel.Playlists}"
+                                Playlists="{x:Bind ViewModel.PlaylistsVm.Playlists}"
                                 x:Name="SidebarControl">
             <sidebar:SidebarControl.NavigationFrame>
                 <ContentControl x:Name="NavigationFrame"
@@ -21,14 +21,11 @@
             </sidebar:SidebarControl.NavigationFrame>
         </sidebar:SidebarControl>
 
-        <Border Height="90"
-                VerticalAlignment="Bottom"
+        <Border VerticalAlignment="Bottom"
                 HorizontalAlignment="Stretch"
                 BorderThickness="1"
                 BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
-            <controls1:BottomPlayerControl
-                Playback="{x:Bind ViewModel.Playback}"
-                />
+            <controls1:BottomPlayerControl Playback="{x:Bind ViewModel.Playback}" />
         </Border>
     </Grid>
 </UserControl>

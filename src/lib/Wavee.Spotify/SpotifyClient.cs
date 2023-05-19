@@ -58,7 +58,8 @@ public sealed class SpotifyClient
             tokenClient: TokenClient,
             mercuryClient: MercuryClient,
             config: _config.Remote,
-            deviceId: _deviceId
+            deviceId: _deviceId,
+            userId: WelcomeMessage.CanonicalUsername
         );
 
         PlaybackClient = new SpotifyPlaybackClient(

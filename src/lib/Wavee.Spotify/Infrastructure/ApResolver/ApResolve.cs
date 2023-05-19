@@ -4,7 +4,7 @@ using Array = System.Array;
 
 namespace Wavee.Spotify.Infrastructure.ApResolver;
 
-internal static class ApResolve
+public static class ApResolve
 {
     private static (string Host, ushort Port)[] _dealer = Array.Empty<(string, ushort)>();
     private static (string Host, ushort Port)[] _accessPoint = Array.Empty<(string, ushort)>();

@@ -1,4 +1,5 @@
 ﻿using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using System.Text.Json;
 using System.Threading.Channels;
 using Eum.Spotify.connectstate;
@@ -14,11 +15,16 @@ internal sealed class SpotifyRemoteConnection
     private Atom<HashMap<Guid, Channel<SpotifyWebsocketMessage>>> Listeners =
         Atom(LanguageExt.HashMap<Guid, Channel<SpotifyWebsocketMessage>>.Empty);
 
+    private readonly Subject<SpotifyRootlistUpdateNotification> _rootlistNotifSubj;
+    private readonly string _userId;
+
     private Ref<Option<string>> _connectionId { get; }
     internal Ref<Option<Cluster>> _latestCluster { get; }
 
-    public SpotifyRemoteConnection()
+    public SpotifyRemoteConnection(string userId)
     {
+        _userId = userId;
+        _rootlistNotifSubj = new Subject<SpotifyRootlistUpdateNotification>();
         var listener = Channel.CreateUnbounded<SpotifyWebsocketMessage>();
         var id = AddListener(listener);
 
@@ -39,6 +45,8 @@ internal sealed class SpotifyRemoteConnection
     public Option<uint> LastCommandId { get; private set; }
     public Option<string> ConnectionId => _connectionId.Value;
 
+    public IObservable<SpotifyRootlistUpdateNotification> OnRootListNotification => _rootlistNotifSubj.StartWith(
+        new SpotifyRootlistUpdateNotification(_userId));
     public IObservable<Option<Cluster>> OnClusterChange()
         => _latestCluster.OnChange()
             .StartWith(_latestCluster.Value);
@@ -89,6 +97,10 @@ internal sealed class SpotifyRemoteConnection
             var clusterUpdate = ClusterUpdate.Parser.ParseFrom(message.Payload.ValueUnsafe().Span);
             atomic(() => _latestCluster.Swap(_ => clusterUpdate.Cluster));
             GC.Collect();
+        }
+        else if (message.Uri.Equals($"hm://playlist/v2/user/{_userId}/rootlist"))
+        {
+            atomic(() => _rootlistNotifSubj.OnNext(new SpotifyRootlistUpdateNotification(_userId)));
         }
         else if (message.Type is SpotifyWebsocketMessageType.Request)
         {

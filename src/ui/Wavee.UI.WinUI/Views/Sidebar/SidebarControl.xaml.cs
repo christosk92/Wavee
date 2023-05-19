@@ -70,7 +70,7 @@ namespace Wavee.UI.WinUI.Views.Sidebar
 
         private void FixedSidebarItemsListView_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            PlaylistsListView.SelectedIndex = -1;
+            // PlaylistsListView.SelectedIndex = -1;
         }
 
         private void PlaylistsListView_OnSelectionChanged(object sender, SelectionChangedEventArgs e)

@@ -190,4 +190,9 @@ public sealed partial class BottomPlayerControl : UserControl
         var volumePerc = VolumeSlider.Value;
         await Playback.SetVolumeAsync(volumePerc);
     }
+
+    public Visibility TrueCollapsed(bool b)
+    {
+        return b ? Visibility.Collapsed : Visibility.Visible;
+    }
 }

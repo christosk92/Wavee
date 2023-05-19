@@ -13,6 +13,8 @@ using Wavee.Spotify.Infrastructure.Remote;
 using Wavee.Spotify.Infrastructure.Remote.Messaging;
 using Wavee.Spotify.Models.Response;
 using Wavee.UI.Infrastructure.Traits;
+using System;
+using Eum.Spotify.playlist4;
 
 namespace Wavee.UI.Infrastructure.Sys;
 
@@ -23,12 +25,21 @@ public static class Spotify<R> where R : struct, HasSpotify<R>
         from apwelcome in default(R).SpotifyEff.Map(x => x.WelcomeMessage())
         select apwelcome.ValueUnsafe();
 
+
+    public static Aff<R, SelectedListContent> GetRootList(CancellationToken ct = default) =>
+        from mainAff in default(R).SpotifyEff.Map(x => x.GetRootList(ct))
+        from result in mainAff
+        select result;
+
     public static Eff<R, Option<IObservable<SpotifyRemoteState>>> ObserveRemoteState()
         => default(R).SpotifyEff.Map(x => x.ObserveRemoteState());
 
-    public static Eff<R, Option<string>> GetOwnDeviceId() => 
+    public static Eff<R, Option<IObservable<SpotifyRootlistUpdateNotification>>> ObserveRootlist()
+        => default(R).SpotifyEff.Map(x => x.ObserveRootlist());
+
+    public static Eff<R, Option<string>> GetOwnDeviceId() =>
         default(R).SpotifyEff.Map(x => x.GetOwnDeviceId());
-    
+
     public static Eff<R, Option<SpotifyRemoteClient>> GetRemoteClient() =>
         default(R).SpotifyEff.Map(x => x.GetRemoteClient());
     public static Aff<R, ITrack> GetTrack(AudioId audioId) =>
@@ -53,4 +64,5 @@ public static class Spotify<R> where R : struct, HasSpotify<R>
         from mercury in default(R).SpotifyEff.Map(x => x.Mercury())
         from trackOrEpisode in mercury.GetMetadata(id, country, CancellationToken.None).ToAff()
         select trackOrEpisode;
+
 }
