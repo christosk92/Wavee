@@ -164,4 +164,30 @@ public sealed partial class BottomPlayerControl : UserControl
     {
         return Math.Abs(d) < 0.0001;
     }
+
+    private async void VolumeSlider_OnTapped(object sender, TappedRoutedEventArgs e)
+    {
+        var volumePerc = VolumeSlider.Value;
+        await Playback.SetVolumeAsync(volumePerc);
+    }
+
+    private async void VolumeSlider_OnLoaded(object sender, RoutedEventArgs e)
+    {
+        var slider = (Slider)sender;
+        var thumb = slider.FindDescendant<Thumb>();
+        thumb.ManipulationMode = ManipulationModes.TranslateX | ManipulationModes.TranslateRailsX;
+        thumb.ManipulationCompleted += Volume_Thumb_Manipulation_Completed;
+    }
+
+    private async void Volume_Thumb_Manipulation_Completed(object sender, ManipulationCompletedRoutedEventArgs e)
+    {
+        var volumePerc = VolumeSlider.Value;
+        await Playback.SetVolumeAsync(volumePerc);
+    }
+
+    private async void Volume_OnManipulationCompleted(object sender, ManipulationCompletedRoutedEventArgs e)
+    {
+        var volumePerc = VolumeSlider.Value;
+        await Playback.SetVolumeAsync(volumePerc);
+    }
 }

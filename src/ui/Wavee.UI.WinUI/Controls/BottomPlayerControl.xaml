@@ -372,6 +372,9 @@
                             Grid.Column="1"
                             VerticalAlignment="Center"
                             IsThumbToolTipEnabled="False"
+                            Tapped="VolumeSlider_OnTapped"
+                            ManipulationCompleted="Volume_OnManipulationCompleted"
+                            Loaded="VolumeSlider_OnLoaded"
                             Value="{x:Bind Playback.VolumePerc, Mode=OneWay}" />
                 </Grid>
             </UserControl>

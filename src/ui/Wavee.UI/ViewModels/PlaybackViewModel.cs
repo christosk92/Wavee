@@ -175,7 +175,22 @@ public sealed class PlaybackViewModel<R> : ReactiveObject where R : struct, HasS
     public ICommand ToggleRepeatCommand { get; }
     public ICommand SkipPreviousCommand { get; }
     public ICommand SkipNextCommand { get; }
+    public async Task SetVolumeAsync(double volumePerc)
+    {
+        var volumeFrac = volumePerc / 100;
+        if (ActiveOnThisDevice)
+        {
+            //set player volume
+            return;
+        }
 
+        var aff =
+            from remoteClient in Spotify<R>.GetRemoteClient()
+            from _ in remoteClient.ValueUnsafe().SetVolume(volumeFrac, CancellationToken.None).ToAff()
+            select unit;
+
+        var result = await aff.Run(_runtime);
+    }
     public async Task SeekToAsync(double to)
     {
         _positionMs = GetNewPosition((long)to);
@@ -240,7 +255,7 @@ public sealed class PlaybackViewModel<R> : ReactiveObject where R : struct, HasS
         //remote command
         var aff =
             from remoteClient in Spotify<R>.GetRemoteClient()
-            from _ in remoteClient.ValueUnsafe().SetRepeatState(nextRepeatState,ct).ToAff()
+            from _ in remoteClient.ValueUnsafe().SetRepeatState(nextRepeatState, ct).ToAff()
             select unit;
 
         var result = await aff.Run(_runtime);
@@ -364,4 +379,5 @@ public sealed class PlaybackViewModel<R> : ReactiveObject where R : struct, HasS
         int MinimumDifference,
         Action<long> PositionCallback,
         Option<long> PreviouslyMeasuredTimestamp);
+
 }
