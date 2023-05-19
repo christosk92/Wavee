@@ -19,6 +19,12 @@ I regularly try out different stuff in a scratchpad, so if you seea commit title
 ## Updates
 I will try to post regular updates about what I've done, and what needs to be done. Don't expect too much though :)
 
+### 2023/05/20
+- Implemented player controls for the UI: Seeking, pausing/resuming, shuffling, repeat states, volume.  Note: this needs refactoring a bit more in the Wavee.Spotify.Infrastructure.Remote.SpotifyRemoteClient class.
+- Remote aware player: Show a status bar indicating that playback is happening on a remote device.
+- Fix reconnection logic for TCP connection. Still a bug: Any packages in queue are discared. Obviously we do not want this. So I have to figure out why this happens, since it's a decoupled system. It probably has to do with the fact that the package has already been consumed? But in the case of an error, we need to enqueue it again I guess.
+- Playlists in sidebar, with the ability to sort them.
+
 ### 2023/05/19 
 - Refactored connection logic: Removed async (which made it much faster), and removed unnecesary heap allocations by replacing them with ``stackalloc``.
 - Refactor player handler: Make sure access to player states are thread-safe and do not cause side effects.
