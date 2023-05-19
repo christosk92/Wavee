@@ -5,9 +5,11 @@ using System.Net;
 using Spotify.Metadata;
 using Wavee.Core.Contracts;
 using Wavee.Core.Ids;
+using Wavee.Spotify;
 using Wavee.Spotify.Infrastructure.Cache;
 using Wavee.Spotify.Infrastructure.Mercury;
 using Wavee.Spotify.Infrastructure.Playback;
+using Wavee.Spotify.Infrastructure.Remote;
 using Wavee.Spotify.Infrastructure.Remote.Messaging;
 using Wavee.Spotify.Models.Response;
 using Wavee.UI.Infrastructure.Traits;
@@ -24,11 +26,16 @@ public static class Spotify<R> where R : struct, HasSpotify<R>
     public static Eff<R, Option<IObservable<SpotifyRemoteState>>> ObserveRemoteState()
         => default(R).SpotifyEff.Map(x => x.ObserveRemoteState());
 
+    public static Eff<R, Option<string>> GetOwnDeviceId() => 
+        default(R).SpotifyEff.Map(x => x.GetOwnDeviceId());
+    
+    public static Eff<R, Option<SpotifyRemoteClient>> GetRemoteClient() =>
+        default(R).SpotifyEff.Map(x => x.GetRemoteClient());
     public static Aff<R, ITrack> GetTrack(AudioId audioId) =>
         from countryCode in default(R).SpotifyEff.Map(x => x.CountryCode().IfNone("US"))
         from cdnUrl in default(R).SpotifyEff.Map(x => x.CdnUrl().IfNone("https://i.scdn.co/image/{file_id}"))
         from cache in default(R).SpotifyEff
-            .Map(x => x.Cache().IfNone(new SpotifyCache(Option<string>.None)))
+            .Map(x => x.Cache().IfNone(new SpotifyCache(new SpotifyCacheConfig(Option<string>.None, Option<TimeSpan>.None))))
         from trackOrEpisode in cache.Get(audioId).Map(x => SuccessAff<R, TrackOrEpisode>(x))
             .IfNone(() =>
             {

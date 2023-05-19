@@ -8,9 +8,9 @@
   IgnorableNamespaces="uap rescap">
 
   <Identity
-    Name="7bb685ba-d1ee-431e-aec4-047aeae63c42"
+    Name="7bb685ba-d1ee-431e-aec4-047aeae63c43"
     Publisher="CN=chris-pc"
-    Version="1.0.0.0" />
+    Version="0.0.1.0" />
 
   <mp:PhoneIdentity PhoneProductId="7bb685ba-d1ee-431e-aec4-047aeae63c42" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 

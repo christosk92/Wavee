@@ -15,7 +15,7 @@ internal sealed class SpotifyRemoteConnection
         Atom(LanguageExt.HashMap<Guid, Channel<SpotifyWebsocketMessage>>.Empty);
 
     private Ref<Option<string>> _connectionId { get; }
-    private Ref<Option<Cluster>> _latestCluster { get; }
+    internal Ref<Option<Cluster>> _latestCluster { get; }
 
     public SpotifyRemoteConnection()
     {

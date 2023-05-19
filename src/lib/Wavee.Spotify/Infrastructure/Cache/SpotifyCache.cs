@@ -15,10 +15,10 @@ public readonly struct SpotifyCache
     private readonly Option<string> _storagePath;
     private readonly Option<string> _dbPath;
 
-    public SpotifyCache(Option<string> cachePath)
+    public SpotifyCache(SpotifyCacheConfig cacheConfig)
     {
-        _storagePath = cachePath.Map(x => Path.Combine(x, "Storage"));
-        _dbPath = cachePath.Map(x => Path.Combine(x, "cache.db"));
+        _storagePath = cacheConfig.CachePath.Map(x => Path.Combine(x, "Storage"));
+        _dbPath = cacheConfig.CachePath.Map(x => Path.Combine(x, "cache.db"));
         if (_dbPath.IsSome && !_initialized)
         {
             using var db = new SQLiteConnection(_dbPath.ValueUnsafe());

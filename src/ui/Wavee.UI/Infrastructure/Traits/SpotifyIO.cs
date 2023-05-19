@@ -4,6 +4,7 @@ using LanguageExt.Attributes;
 using LanguageExt.Effects.Traits;
 using Wavee.Spotify.Infrastructure.Cache;
 using Wavee.Spotify.Infrastructure.Mercury;
+using Wavee.Spotify.Infrastructure.Remote;
 using Wavee.Spotify.Infrastructure.Remote.Messaging;
 
 namespace Wavee.UI.Infrastructure.Traits;
@@ -17,6 +18,8 @@ public interface SpotifyIO
     Option<string> CountryCode();
     Option<string> CdnUrl();
     MercuryClient Mercury();
+    Option<string> GetOwnDeviceId();
+    Option<SpotifyRemoteClient> GetRemoteClient();
 }
 
 /// <summary>

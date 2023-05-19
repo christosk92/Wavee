@@ -22,12 +22,14 @@ public class SpotifyRemoteClient
     private readonly Option<uint> _lastCommandId = Option<uint>.None;
     private readonly Option<string> _lastCommandSentBy = Option<string>.None;
 
+    private readonly string _deviceId;
     internal SpotifyRemoteClient(MercuryClient mercuryClient, TokenClient tokenClient, SpotifyRemoteConfig config,
         string deviceId)
     {
         _mercuryClient = mercuryClient;
         _tokenClient = tokenClient;
         _config = config;
+        _deviceId = deviceId;
         _connection = new SpotifyRemoteConnection();
 
         var mn = new ManualResetEvent(false);
@@ -112,5 +114,67 @@ public class SpotifyRemoteClient
         _connection
             .OnClusterChange()
             .Throttle(TimeSpan.FromMilliseconds(50))
-            .Select(SpotifyRemoteState.From);
+            .Select(c => SpotifyRemoteState.From(_deviceId, c));
+    public async ValueTask<Unit> Resume(CancellationToken ct = default)
+    {
+        var toDeviceId = _connection._latestCluster.Value.Map(x => x.ActiveDeviceId);
+        if (toDeviceId.IsNone)
+        {
+            return default;
+        }
+        // https://gae2-spclient.spotify.com/connect-state/v1/player/command/from/1b5327f43e39a20de0ec1dcafa3466f082e28348/to/342d539fa2bc06a1cfa4d03d67c3d90513b75879
+        var command = new
+        {
+            command = new
+            {
+                endpoint = "resume"
+            }
+        };
+        var sp = await SpClientUrl();
+        await SpotifyRemoteRuntime.InvokeCommandOnRemoteDevice(
+            command,
+            sp,
+            toDeviceId.ValueUnsafe(),
+            _deviceId,
+            _tokenClient,
+            ct);
+        return default;
+    }
+
+    public async ValueTask<Unit> Pause(CancellationToken ct = default)
+    {
+        var toDeviceId = _connection._latestCluster.Value.Map(x => x.ActiveDeviceId);
+        if (toDeviceId.IsNone)
+        {
+            return default;
+        }
+        // https://gae2-spclient.spotify.com/connect-state/v1/player/command/from/1b5327f43e39a20de0ec1dcafa3466f082e28348/to/342d539fa2bc06a1cfa4d03d67c3d90513b75879
+        var command = new
+        {
+            command = new
+            {
+                endpoint = "pause"
+            }
+        };
+        var sp = await SpClientUrl();
+        await SpotifyRemoteRuntime.InvokeCommandOnRemoteDevice(
+            command,
+            sp,
+            toDeviceId.ValueUnsafe(),
+            _deviceId,
+            _tokenClient,
+            ct);
+        return default;
+    }
+
+    private static string _spClientUrl;
+    private static async ValueTask<string> SpClientUrl()
+    {
+        if (!string.IsNullOrEmpty(_spClientUrl))
+            return _spClientUrl;
+        var spClient = await ApResolve.GetSpClient(CancellationToken.None);
+        var spClientUrl = $"https://{spClient.host}:{spClient.port}";
+        _spClientUrl = spClientUrl;
+        return spClientUrl;
+    }
 }

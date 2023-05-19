@@ -181,4 +181,20 @@ internal static class SpotifyRemoteRuntime
             .Find("Spotify-Connection-Id")
             .IfNone(string.Empty);
     }
+
+    public static async Task InvokeCommandOnRemoteDevice(object command, 
+        string sp,
+        string toDeviceId, 
+        string fromDeviceId,
+        TokenClient tokenClient, CancellationToken ct)
+    {
+        // https://gae2-spclient.spotify.com/connect-state/v1/player/command/from/1b5327f43e39a20de0ec1dcafa3466f082e28348/to/342d539fa2bc06a1cfa4d03d67c3d90513b75879
+        var url = $"{sp}/connect-state/v1/player/command/from/{fromDeviceId}/to/{toDeviceId}";
+        var token = await tokenClient.GetToken(ct);
+        var bearerHeader = new AuthenticationHeaderValue("Bearer", token);
+        var json = JsonSerializer.SerializeToUtf8Bytes(command);
+        using var content = new ByteArrayContent(json);
+        content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+        using var response = await HttpIO.Post(url, bearerHeader, content, ct);
+    }
 }

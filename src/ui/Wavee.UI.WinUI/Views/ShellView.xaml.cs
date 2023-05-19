@@ -19,15 +19,6 @@ public sealed partial class ShellView : UserControl
     {
         ViewModel = new ShellViewModel<WaveeUIRuntime>(runtime, userId);
         this.InitializeComponent();
-
-        ViewModel.Playback.RegisterPositionCallback(1000, c =>
-        {
-            this.DispatcherQueue.TryEnqueue(() =>
-            {
-                ProgressSlider.Value = c;
-                TimeElapsedElement.Text = FormatDuration(TimeSpan.FromMilliseconds(c));
-            });
-        });
         NavigationService = new NavigationService(NavigationFrame);
         SidebarControl.SidebarItems = new AbsSidebarItemViewModel[]
         {
@@ -77,38 +68,4 @@ public sealed partial class ShellView : UserControl
     }
     public static NavigationService NavigationService { get; set; }
     public ShellViewModel<WaveeUIRuntime> ViewModel { get; }
-
-    public Uri GetImageFor(ITrack track)
-    {
-        if (track is not null && track.Album.Artwork.Length > 0)
-        {
-            return new Uri(track.Album.Artwork[0].Url);
-        }
-        else
-        {
-            return new Uri("ms-appx:///Assets/album_placeholder.png");
-        }
-    }
-
-    public IEnumerable<MetadataItem> TransformItemsForMetadata(ITrack track)
-    {
-        if (track is null) return Enumerable.Empty<MetadataItem>();
-
-        return track.Artists.Select(c => new MetadataItem
-        {
-            Label = c.Name
-        });
-    }
-
-    public string FormatDuration(ITrack track)
-    {
-        if (track is null) return "--:--";
-        return FormatDuration(track.Duration);
-    }
-
-    private static string FormatDuration(TimeSpan duration)
-    {
-        var i = (int)duration.TotalMilliseconds;
-        return $"{i / 60000:00}:{i / 1000 % 60:00}";
-    }
 }

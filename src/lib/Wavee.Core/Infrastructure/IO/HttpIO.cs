@@ -27,7 +27,7 @@ public static class HttpIO
                     break;
             }
         }
-        
+
         return await _httpClient.SendAsync(request, ct);
     }
 
@@ -63,5 +63,15 @@ public static class HttpIO
         request.Headers.Range = new RangeHeaderValue(start, end);
         var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, ct);
         return response;
+    }
+
+    public static async Task<HttpResponseMessage> Post(string url,
+        AuthenticationHeaderValue bearer, 
+        ByteArrayContent content, CancellationToken ct)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Post, url);
+        request.Headers.Authorization = bearer;
+        request.Content = content;
+        return await _httpClient.SendAsync(request, ct);
     }
 }

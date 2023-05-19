@@ -10,6 +10,7 @@ using Wavee.UI.Infrastructure.Sys;
 using TimeSpan = System.TimeSpan;
 using System.Runtime.InteropServices;
 using System.Threading;
+using System.Threading.Tasks;
 using Eum.Spotify;
 using Eum.Spotify.connectstate;
 using Google.Protobuf;
@@ -37,7 +38,10 @@ public partial class App : Application
         var cachePath = Path.Combine(localCache.ValueUnsafe(), "WaveeUI", "Cache");
         Directory.CreateDirectory(cachePath);
         _config = new SpotifyConfig(
-            CachePath: cachePath,
+            Cache: new SpotifyCacheConfig(
+                CachePath: cachePath,
+                CacheNoTouchExpiration: Option<TimeSpan>.None
+                ),
             Remote: new SpotifyRemoteConfig(
                 DeviceName: "Wavee",
                 DeviceType: DeviceType.Computer
@@ -72,18 +76,23 @@ public partial class App : Application
         _ = await UiConfig<WaveeUIRuntime>.CreateDefaultIfNotExists.Run(Runtime);
         var settings = new SettingsViewModel<WaveeUIRuntime>(Runtime);
         var defaultUserMaybe = (await UserManagment<WaveeUIRuntime>.GetDefaultUser().Run(Runtime)).ThrowIfFail();
-        var content = defaultUserMaybe.Match(
-            Some: f =>
+        var content = await defaultUserMaybe.MatchAsync(
+            Some: async f =>
             {
                 //read from password vault
                 string password = string.Empty;
                 try
                 {
-                    var passwordVault = new Windows.Security.Credentials.PasswordVault();
-                    var credentials = passwordVault.Retrieve(SigninInView.VAULT_KEY,
-                        f.Id);
-                    credentials.RetrievePassword();
-                    password = credentials.Password;
+                    using var cts = new CancellationTokenSource();
+                    cts.CancelAfter(TimeSpan.FromSeconds(2));
+                    password = await Task.Run(() =>
+                    {
+                        var passwordVault = new Windows.Security.Credentials.PasswordVault();
+                        var credentials = passwordVault.Retrieve(SigninInView.VAULT_KEY,
+                            f.Id);
+                        credentials.RetrievePassword();
+                        return credentials.Password;
+                    }, cts.Token);
                 }
                 catch (Exception e)
                 {

@@ -1,5 +1,6 @@
 ﻿using Eum.Spotify.connectstate;
 using LanguageExt;
+using System.Linq;
 using Wavee.Core.Ids;
 using Wavee.Core.Playback;
 using Wavee.Spotify.Helpers;
@@ -16,9 +17,11 @@ public readonly record struct SpotifyRemoteState(
     bool IsShuffling,
     RepeatState RepeatState,
     Option<AudioId> ContextUri,
-    TimeSpan Position)
+    TimeSpan Position,
+    HashMap<string, SpotifyRemoteDeviceInfo> Devices)
 {
     internal static SpotifyRemoteState From(
+        string ourDeviceId,
         Option<Cluster> cluster)
     {
         var playerState = cluster.Bind(c => c.PlayerState is not null
@@ -44,6 +47,17 @@ public readonly record struct SpotifyRemoteState(
             ? Some(c.ActiveDeviceId)
             : Option<string>.None);
 
+        var devices = cluster.Map(c => c.Device.ToDictionary(d => d.Key,
+            v => new SpotifyRemoteDeviceInfo(
+                DeviceId: v.Value.DeviceId,
+                DeviceName: v.Value.Name,
+                DeviceType: v.Value.DeviceType,
+                Volume: v.Value.Capabilities.DisableVolume
+                    ? Option<double>.None
+                    : Some((double)v.Value.Volume / ushort.MaxValue)
+            )).Where(x => x.Key != ourDeviceId).ToHashMap())
+            .IfNone(LanguageExt.HashMap<string, SpotifyRemoteDeviceInfo>.Empty);
+
         return new SpotifyRemoteState(
             ActiveDeviceId: activeDeviceId,
             TrackUri: uri,
@@ -54,7 +68,8 @@ public readonly record struct SpotifyRemoteState(
             IsShuffling: playerState.Map(t => t.Options.ShufflingContext).IfNone(false),
             RepeatState: repeatState,
             ContextUri: contextUri,
-            Position: ParsePosition(playerState)
+            Position: ParsePosition(playerState),
+            devices
         );
     }
 
@@ -78,3 +93,9 @@ public readonly record struct SpotifyRemoteState(
         }).IfNone(TimeSpan.Zero);
     }
 }
+
+public readonly record struct SpotifyRemoteDeviceInfo(
+    string DeviceId,
+    string DeviceName,
+    DeviceType DeviceType,
+    Option<double> Volume);

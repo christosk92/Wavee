@@ -91,11 +91,12 @@ public sealed class SpotifyClient
             mercuryClient: MercuryClient
         );
     public SpotifyCache Cache =>
-        new SpotifyCache(_config.CachePath);
+        new SpotifyCache(_config.Cache);
     public SpotifyRemoteClient RemoteClient { get; }
     public SpotifyPlaybackClient PlaybackClient { get; }
     public Option<string> CountryCode => _country.Value;
     public HashMap<string, string> ProductInfo => _productInfo.Value;
+    public string DeviceId => _deviceId;
 
     private void OnpackageRemoveSubscriptionRequested(ChannelReader<SpotifySendPacket> reader)
     {

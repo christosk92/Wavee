@@ -10,12 +10,12 @@
     <PublishProfile>win10-$(Platform).pubxml</PublishProfile>
     <UseWinUI>true</UseWinUI>
     <EnableMsixTooling>true</EnableMsixTooling>
-    <WindowsPackageType>None</WindowsPackageType>
   </PropertyGroup>
   <ItemGroup>
     <Content Remove="Assets\AlbumPlaceholder.png" />
   </ItemGroup>
   <ItemGroup>
+    <None Remove="Controls\BottomPlayerControl.xaml" />
     <None Remove="Styles\ButtonStyles.xaml" />
     <None Remove="Views\Playlist\CreatePlaylistView.xaml" />
     <None Remove="Views\Setup\SetupPageContent.xaml" />
@@ -78,6 +78,9 @@
     <None Update="Assets\AlbumPlaceholder.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <Page Update="Controls\BottomPlayerControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
   <ItemGroup>
     <Page Update="Styles\ButtonStyles.xaml">

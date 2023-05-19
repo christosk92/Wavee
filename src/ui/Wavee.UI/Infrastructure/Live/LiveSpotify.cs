@@ -3,6 +3,7 @@ using LanguageExt;
 using Wavee.Spotify;
 using Wavee.Spotify.Infrastructure.Cache;
 using Wavee.Spotify.Infrastructure.Mercury;
+using Wavee.Spotify.Infrastructure.Remote;
 using Wavee.Spotify.Infrastructure.Remote.Messaging;
 using static LanguageExt.Prelude;
 namespace Wavee.UI.Infrastructure.Live;
@@ -59,5 +60,17 @@ internal sealed class LiveSpotify : Traits.SpotifyIO
         return _connection
             .Map(x => x.MercuryClient)
             .IfNone(() => throw new InvalidOperationException("Mercury client not available"));
+    }
+
+    public Option<string> GetOwnDeviceId()
+    {
+        return _connection
+            .Map(x => x.DeviceId);
+    }
+
+    public Option<SpotifyRemoteClient> GetRemoteClient()
+    {
+        return _connection
+            .Map(x => x.RemoteClient);
     }
 }

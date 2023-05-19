@@ -9,9 +9,11 @@ using Wavee.Spotify.Infrastructure.Playback;
 NAudioOutput.SetAsDefaultOutput();
 
 //C:\Users\chris-pc\Documents\spotify_cache
-var cache = "C:\\Users\\chris-pc\\Documents\\spotify_cache";
+//var cache = "C:\\Users\\chris-pc\\Documents\\spotify_cache";
+var appdata = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+var cache = Path.Combine(appdata, "spotify_cache");
+Directory.CreateDirectory(cache);
 var config = new SpotifyConfig(
-    CachePath: cache,
     Remote: new SpotifyRemoteConfig(
         DeviceName: "Wavee",
         DeviceType: DeviceType.Computer
@@ -20,6 +22,10 @@ var config = new SpotifyConfig(
         PreferredQualityType.Normal,
         CrossfadeDuration: TimeSpan.FromSeconds(10),
         Autoplay: true
+    ),
+    Cache: new SpotifyCacheConfig(
+        CachePath: cache,
+        CacheNoTouchExpiration: TimeSpan.FromDays(1)
     )
 );
 
