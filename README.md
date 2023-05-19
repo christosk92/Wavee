@@ -24,6 +24,9 @@ I will try to post regular updates about what I've done, and what needs to be do
 - Remote aware player: Show a status bar indicating that playback is happening on a remote device.
 - Fix reconnection logic for TCP connection. Still a bug: Any packages in queue are discared. Obviously we do not want this. So I have to figure out why this happens, since it's a decoupled system. It probably has to do with the fact that the package has already been consumed? But in the case of an error, we need to enqueue it again I guess.
 - Playlists in sidebar, with the ability to sort them.
+- Revamped the home page:
+![image](https://github.com/christosk92/Wavee/assets/13438702/23493ae5-6c66-4f80-bb9f-ba5db361cdf6)
+
 
 ### 2023/05/19 
 - Refactored connection logic: Removed async (which made it much faster), and removed unnecesary heap allocations by replacing them with ``stackalloc``.
