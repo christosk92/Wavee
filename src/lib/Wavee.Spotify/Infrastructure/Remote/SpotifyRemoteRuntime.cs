@@ -182,9 +182,9 @@ internal static class SpotifyRemoteRuntime
             .IfNone(string.Empty);
     }
 
-    public static async Task InvokeCommandOnRemoteDevice(object command, 
+    public static async Task InvokeCommandOnRemoteDevice(object command,
         string sp,
-        string toDeviceId, 
+        string toDeviceId,
         string fromDeviceId,
         TokenClient tokenClient, CancellationToken ct)
     {
@@ -196,5 +196,20 @@ internal static class SpotifyRemoteRuntime
         using var content = new ByteArrayContent(json);
         content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
         using var response = await HttpIO.Post(url, bearerHeader, content, ct);
+    }
+
+    public static async Task SetVolume(object command, string sp,
+        string deviceId,
+        string to,
+        TokenClient tokenClient, CancellationToken none)
+    {
+        // /connect-state/v1/connect/volume/from/132709aee590df96ee47ff46704b1926e68b1362/to/1113456521558a98ef06139acd67b36610a8edf4
+        var url = $"{sp}/connect-state/v1/connect/volume/from/{deviceId}/to/{to}";
+        var token = await tokenClient.GetToken(none);
+        var bearerHeader = new AuthenticationHeaderValue("Bearer", token);
+        var json = JsonSerializer.SerializeToUtf8Bytes(command);
+        using var content = new ByteArrayContent(json);
+        content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+        using var response = await HttpIO.Put(url, bearerHeader, LanguageExt.HashMap<string, string>.Empty, content, CancellationToken.None);
     }
 }

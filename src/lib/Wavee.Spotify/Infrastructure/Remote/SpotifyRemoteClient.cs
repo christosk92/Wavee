@@ -1,8 +1,12 @@
-﻿using System.Reactive.Linq;
+﻿using System;
+using System.Reactive.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Eum.Spotify.connectstate;
 using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
 using Wavee.Core.Ids;
+using Wavee.Core.Playback;
 using Wavee.Core.Player;
 using Wavee.Core.Player.PlaybackStates;
 using Wavee.Spotify.Infrastructure.ApResolver;
@@ -115,6 +119,110 @@ public class SpotifyRemoteClient
             .OnClusterChange()
             .Throttle(TimeSpan.FromMilliseconds(50))
             .Select(c => SpotifyRemoteState.From(_deviceId, c));
+
+
+    public async ValueTask<Unit> SkipNext(CancellationToken ct)
+    {
+        var toDeviceId = _connection._latestCluster.Value.Map(x => x.ActiveDeviceId);
+        if (toDeviceId.IsNone)
+        {
+            return default;
+        }
+        var command = new
+        {
+            command = new
+            {
+                endpoint = "skip_next",
+            }
+        };
+        var sp = await SpClientUrl(ct);
+        await SpotifyRemoteRuntime.InvokeCommandOnRemoteDevice(
+            command,
+            sp,
+            toDeviceId.ValueUnsafe(),
+            _deviceId,
+            _tokenClient,
+            ct);
+        return default;
+    }
+
+    public async ValueTask<Unit> SkipPrevious(CancellationToken ct)
+    {
+        var toDeviceId = _connection._latestCluster.Value.Map(x => x.ActiveDeviceId);
+        if (toDeviceId.IsNone)
+        {
+            return default;
+        }
+        var command = new
+        {
+            command = new
+            {
+                endpoint = "skip_prev",
+            }
+        };
+        var sp = await SpClientUrl(ct);
+        await SpotifyRemoteRuntime.InvokeCommandOnRemoteDevice(
+            command,
+            sp,
+            toDeviceId.ValueUnsafe(),
+            _deviceId,
+            _tokenClient,
+            ct);
+        return default;
+    }
+
+    public async ValueTask<Unit> SetRepeatState(RepeatState repeatState, CancellationToken ct)
+    {
+        var toDeviceId = _connection._latestCluster.Value.Map(x => x.ActiveDeviceId);
+        if (toDeviceId.IsNone)
+        {
+            return default;
+        }
+        var command = new
+        {
+            command = new
+            {
+                endpoint = "set_options",
+                repeating_context = repeatState >= RepeatState.Context,
+                repeating_track = repeatState is RepeatState.Track
+            }
+        };
+        var sp = await SpClientUrl(ct);
+        await SpotifyRemoteRuntime.InvokeCommandOnRemoteDevice(
+                       command,
+                                  sp,
+                                  toDeviceId.ValueUnsafe(),
+                                  _deviceId,
+                                  _tokenClient,
+                                  ct);
+        return default;
+    }
+
+    public async ValueTask<Unit> SetShuffleState(bool shuffling, CancellationToken ct)
+    {
+        var toDeviceId = _connection._latestCluster.Value.Map(x => x.ActiveDeviceId);
+        if (toDeviceId.IsNone)
+        {
+            return default;
+        }
+        var command = new
+        {
+            command = new
+            {
+                endpoint = "set_shuffling_context",
+                value = shuffling
+            }
+        };
+        var sp = await SpClientUrl(ct);
+        await SpotifyRemoteRuntime.InvokeCommandOnRemoteDevice(
+            command,
+            sp,
+            toDeviceId.ValueUnsafe(),
+            _deviceId,
+            _tokenClient,
+            ct);
+        return default;
+    }
     public async ValueTask<Unit> Resume(CancellationToken ct = default)
     {
         var toDeviceId = _connection._latestCluster.Value.Map(x => x.ActiveDeviceId);
@@ -130,7 +238,7 @@ public class SpotifyRemoteClient
                 endpoint = "resume"
             }
         };
-        var sp = await SpClientUrl();
+        var sp = await SpClientUrl(ct);
         await SpotifyRemoteRuntime.InvokeCommandOnRemoteDevice(
             command,
             sp,
@@ -156,7 +264,7 @@ public class SpotifyRemoteClient
                 endpoint = "pause"
             }
         };
-        var sp = await SpClientUrl();
+        var sp = await SpClientUrl(ct);
         await SpotifyRemoteRuntime.InvokeCommandOnRemoteDevice(
             command,
             sp,
@@ -166,15 +274,64 @@ public class SpotifyRemoteClient
             ct);
         return default;
     }
-
+    public async ValueTask<Unit> SeekTo(double to, CancellationToken ct = default)
+    {
+        var toDeviceId = _connection._latestCluster.Value.Map(x => x.ActiveDeviceId);
+        if (toDeviceId.IsNone)
+        {
+            return default;
+        }
+        // https://gae2-spclient.spotify.com/connect-state/v1/player/command/from/1b5327f43e39a20de0ec1dcafa3466f082e28348/to/342d539fa2bc06a1cfa4d03d67c3d90513b75879
+        var command = new
+        {
+            command = new
+            {
+                endpoint = "seek_to",
+                value = to
+            }
+        };
+        var sp = await SpClientUrl(ct);
+        await SpotifyRemoteRuntime.InvokeCommandOnRemoteDevice(
+            command,
+            sp,
+            toDeviceId.ValueUnsafe(),
+            _deviceId,
+            _tokenClient,
+            ct);
+        return default;
+    }
+    public async ValueTask<Unit> SetVolume(double newVolumeFrac, CancellationToken ct)
+    {
+        var toDeviceId = _connection._latestCluster.Value.Map(x => x.ActiveDeviceId);
+        if (toDeviceId.IsNone)
+        {
+            return default;
+        }
+        //SetVolume
+        var volumeAsInteger = Math.Clamp((int)(newVolumeFrac * ushort.MaxValue), 0, ushort.MaxValue);
+        var command = new
+        {
+            volume = volumeAsInteger
+        };
+        var sp = await SpClientUrl(ct);
+        await SpotifyRemoteRuntime.SetVolume(
+                       command,
+                       sp,
+                       _deviceId,
+                       toDeviceId.ValueUnsafe(),
+                       _tokenClient,
+                       ct);
+        return unit;
+    }
     private static string _spClientUrl;
-    private static async ValueTask<string> SpClientUrl()
+    private static async ValueTask<string> SpClientUrl(CancellationToken ct)
     {
         if (!string.IsNullOrEmpty(_spClientUrl))
             return _spClientUrl;
-        var spClient = await ApResolve.GetSpClient(CancellationToken.None);
+        var spClient = await ApResolve.GetSpClient(ct);
         var spClientUrl = $"https://{spClient.host}:{spClient.port}";
         _spClientUrl = spClientUrl;
         return spClientUrl;
     }
+
 }

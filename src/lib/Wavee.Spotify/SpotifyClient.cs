@@ -1,8 +1,10 @@
-﻿using System.Net.Sockets;
+﻿using System.Net;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading.Channels;
 using System.Xml;
 using Eum.Spotify;
+using Eum.Spotify.connectstate;
 using LanguageExt;
 using Wavee.Spotify.Infrastructure.ApResolver;
 using Wavee.Spotify.Infrastructure.Authentication;
@@ -26,6 +28,7 @@ public sealed class SpotifyClient
             AtomHashMap<Guid, Seq<(Func<SpotifySendPacket, bool> DispatchConditional, Channel<SpotifySendPacket>
                 Dispatcher)>>();
 
+    private readonly ChannelReader<SpotifySendPacket> _reader;
     private readonly ChannelWriter<SpotifySendPacket> _sender;
     private readonly Guid _connectionId;
     private readonly SpotifyConfig _config;
@@ -47,7 +50,7 @@ public sealed class SpotifyClient
 
         var producerToTcp = Channel.CreateUnbounded<SpotifySendPacket>();
         _sender = producerToTcp.Writer;
-
+        _reader = producerToTcp.Reader;
         StartProducer(networkStream, producerToTcp.Reader, authenticationResult.ConnectionRecord);
         StartConsumer(_connectionId, networkStream, authenticationResult.ConnectionRecord);
 
@@ -69,7 +72,7 @@ public sealed class SpotifyClient
         );
     }
 
-    public APWelcome WelcomeMessage { get; }
+    public APWelcome WelcomeMessage { get; private set; }
 
     public MercuryClient MercuryClient =>
         new MercuryClient(
@@ -206,7 +209,8 @@ public sealed class SpotifyClient
     }
 
 
-    private static void StartProducer(NetworkStream stream,
+    private static void StartProducer(
+        NetworkStream stream,
         ChannelReader<SpotifySendPacket> sender,
         SpotifyConnectionRecord record)
     {
@@ -230,12 +234,13 @@ public sealed class SpotifyClient
                 {
                     Console.WriteLine(e);
                     await Task.Delay(4000);
+                    break;
                 }
             }
         }, TaskCreationOptions.LongRunning);
     }
 
-    private static void StartConsumer(
+    private void StartConsumer(
         Guid connectionId,
         NetworkStream stream,
         SpotifyConnectionRecord record)
@@ -269,7 +274,20 @@ public sealed class SpotifyClient
                 catch (Exception e)
                 {
                     Console.WriteLine(e);
-                    //TODO: Attempt to reconnect
+                    Task.Run(async () =>
+                    {
+                        var newData = await CreateInternalAsync(new LoginCredentials
+                        {
+                            Username = WelcomeMessage.CanonicalUsername,
+                            AuthData = WelcomeMessage.ReusableAuthCredentials,
+                            Typ = WelcomeMessage.ReusableAuthCredentialsType
+                        }, _deviceId, CancellationToken.None);
+
+                        StartConsumer(connectionId, newData.Stream, newData.AuthResult.ConnectionRecord);
+                        StartProducer(newData.Stream, _reader, newData.AuthResult.ConnectionRecord);
+                        WelcomeMessage = newData.AuthResult.WelcomeMessage;
+                    });
+                    break;
                 }
             }
         }, TaskCreationOptions.LongRunning);
@@ -280,17 +298,26 @@ public sealed class SpotifyClient
         SpotifyConfig config,
         CancellationToken ct = default)
     {
-        var (host, port) = await ApResolve.GetAccessPoint(ct);
         var deviceId = Guid.NewGuid().ToString();
-        var tcp = SpotifyConnection.Connect(host, port);
-        var stream = tcp.GetStream();
-        var handshakeResult = SpotifyConnection.Handshake(stream);
-        var authenticationResult = Authenticate.PerformAuth(stream, credentials, handshakeResult, deviceId);
-
+        var (stream, authenticationResult) = await CreateInternalAsync(credentials, deviceId, ct);
         return new SpotifyClient(
             stream,
             authenticationResult,
             config,
             deviceId);
+    }
+
+    internal static async Task<(NetworkStream Stream, SpotifyAuthenticationResult AuthResult)> CreateInternalAsync(
+        LoginCredentials credentials,
+        string deviceId,
+        CancellationToken ct = default)
+    {
+        var (host, port) = await ApResolve.GetAccessPoint(ct);
+        var tcp = SpotifyConnection.Connect(host, port);
+        var stream = tcp.GetStream();
+        var handshakeResult = SpotifyConnection.Handshake(stream);
+        var authenticationResult = Authenticate.PerformAuth(stream, credentials, handshakeResult, deviceId);
+
+        return (stream, authenticationResult);
     }
 }

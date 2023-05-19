@@ -2,7 +2,7 @@
 
 public enum RepeatState
 {
-    None,
-    Context,
-    Track
+    None = 0,
+    Context = 1,
+    Track = 2
 }

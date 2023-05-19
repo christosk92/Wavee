@@ -1,11 +1,14 @@
-﻿using System.Collections.ObjectModel;
+﻿using System;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Reactive.Linq;
+using System.Threading.Tasks;
 using System.Windows.Input;
 using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
 using ReactiveUI;
 using Wavee.Core.Contracts;
+using Wavee.Core.Playback;
 using Wavee.Spotify.Infrastructure.Remote.Messaging;
 using Wavee.UI.Infrastructure.Sys;
 using Wavee.UI.Infrastructure.Traits;
@@ -14,6 +17,7 @@ namespace Wavee.UI.ViewModels;
 
 public sealed class PlaybackViewModel<R> : ReactiveObject where R : struct, HasSpotify<R>
 {
+    private readonly object _positionLock = new();
     private readonly string _ownDeviceId;
     private const uint TIMER_INTERVAL_MS = 50; // 50 MS
     private readonly Dictionary<Guid, PositionCallbackRecord> _positionCallbacks = new();
@@ -24,7 +28,9 @@ public sealed class PlaybackViewModel<R> : ReactiveObject where R : struct, HasS
     private readonly R _runtime;
     private ITrack? _currentTrack;
     private bool _paused;
-
+    private bool _canControlVolume;
+    private bool _shuffling;
+    private RepeatState _repeatState;
     private double _volumePerc;
     public PlaybackViewModel(R runtime)
     {
@@ -32,6 +38,12 @@ public sealed class PlaybackViewModel<R> : ReactiveObject where R : struct, HasS
         _positionMs = 0;
         _positionTimer = new Timer(MainPositionTimerCallback, null, Timeout.Infinite, Timeout.Infinite);
         ResumePauseCommand = ReactiveCommand.CreateFromTask(PauseResume);
+        MuteOrRestoreVolumeCommand = ReactiveCommand.CreateFromTask(MuteOrRestoreVolume);
+        SkipNextCommand = ReactiveCommand.CreateFromTask(SkipNext);
+        SkipPreviousCommand = ReactiveCommand.CreateFromTask(SkipPrevious);
+        ToggleRepeatCommand = ReactiveCommand.CreateFromTask(Repeat);
+        ToggleShuffleCommand = ReactiveCommand.CreateFromTask(Shuffle);
+
         _ownDeviceId = Spotify<R>.GetOwnDeviceId().Run(runtime).ThrowIfFail().ValueUnsafe();
         var remoteStateObservable = Spotify<R>.ObserveRemoteState()
             .Run(runtime)
@@ -54,6 +66,9 @@ public sealed class PlaybackViewModel<R> : ReactiveObject where R : struct, HasS
                         _positionTimer.Change(0, TIMER_INTERVAL_MS);
                         Paused = false;
                     }
+
+                    RepeatState = c.RepeatState;
+                    Shuffling = c.IsShuffling;
 
                     var devices = c.Devices;
                     foreach (var potentialNewDevice in devices)
@@ -140,10 +155,139 @@ public sealed class PlaybackViewModel<R> : ReactiveObject where R : struct, HasS
         set => this.RaiseAndSetIfChanged(ref _paused, value);
     }
 
+    public RepeatState RepeatState
+    {
+        get => _repeatState;
+        set => this.RaiseAndSetIfChanged(ref _repeatState, value);
+    }
+
+    public bool Shuffling
+    {
+        get => _shuffling;
+        set => this.RaiseAndSetIfChanged(ref _shuffling, value);
+    }
+
     public bool ActiveOnThisDevice => ActiveDevice == default
                                       || string.Equals(ActiveDevice.DeviceId, _ownDeviceId);
     public ICommand ResumePauseCommand { get; }
+    public ICommand MuteOrRestoreVolumeCommand { get; }
+    public ICommand ToggleShuffleCommand { get; }
+    public ICommand ToggleRepeatCommand { get; }
+    public ICommand SkipPreviousCommand { get; }
+    public ICommand SkipNextCommand { get; }
 
+    public async Task SeekToAsync(double to)
+    {
+        _positionMs = GetNewPosition((long)to);
+        if (ActiveOnThisDevice)
+        {
+            //seek player
+            return;
+        }
+
+        //remote command
+        var aff =
+            from remoteClient in Spotify<R>.GetRemoteClient()
+            from _ in remoteClient.ValueUnsafe().SeekTo(to).ToAff()
+            select unit;
+
+        var result = await aff.Run(_runtime);
+    }
+
+    private Option<double> previousVolumeAsPerc = Option<double>.None;
+
+    private async Task SkipNext(CancellationToken ct)
+    {
+        if (ActiveOnThisDevice)
+        {
+            //skip player
+            return;
+        }
+        //remote command
+        var aff =
+            from remoteClient in Spotify<R>.GetRemoteClient()
+            from _ in remoteClient.ValueUnsafe().SkipNext(ct).ToAff()
+            select unit;
+        var result = await aff.Run(_runtime);
+    }
+
+    private async Task SkipPrevious(CancellationToken ct)
+    {
+        if (ActiveOnThisDevice)
+        {
+            //skip player
+            return;
+        }
+        //remote command
+        var aff =
+            from remoteClient in Spotify<R>.GetRemoteClient()
+            from _ in remoteClient.ValueUnsafe().SkipPrevious(ct).ToAff()
+            select unit;
+        var result = await aff.Run(_runtime);
+    }
+
+    private async Task Repeat(CancellationToken ct)
+    {
+        var currentRepeatState = _repeatState;
+        var nextRepeatState = (RepeatState)(((int)_repeatState + 1) % 3);
+
+        if (ActiveOnThisDevice)
+        {
+            //set repeat state
+            return;
+        }
+
+        //remote command
+        var aff =
+            from remoteClient in Spotify<R>.GetRemoteClient()
+            from _ in remoteClient.ValueUnsafe().SetRepeatState(nextRepeatState,ct).ToAff()
+            select unit;
+
+        var result = await aff.Run(_runtime);
+    }
+
+    private async Task Shuffle(CancellationToken ct)
+    {
+        var nextShuffleState = !_shuffling;
+        if (ActiveOnThisDevice)
+        {
+            //set shuffle state
+            return;
+        }
+
+        //remote command
+        var aff =
+            from remoteClient in Spotify<R>.GetRemoteClient()
+            from _ in remoteClient.ValueUnsafe().SetShuffleState(nextShuffleState, ct).ToAff()
+            select unit;
+
+        var result = await aff.Run(_runtime);
+    }
+
+    private async Task MuteOrRestoreVolume(CancellationToken ct)
+    {
+        if (!CanControlVolume) return;
+        //check if we need to mute or restore
+        var newVolumePerc = previousVolumeAsPerc.Match(
+                       x => x,
+                       () => 0);
+        var currentVolume = VolumePerc;
+        previousVolumeAsPerc = currentVolume;
+
+        if (ActiveOnThisDevice)
+        {
+            //set volume
+            return;
+        }
+
+
+        var aff =
+            from remoteClient in Spotify<R>.GetRemoteClient()
+            from _ in remoteClient.ValueUnsafe().SetVolume(newVolumePerc / 100, ct).ToAff()
+            select unit;
+
+        var result = await aff.Run(_runtime);
+    }
     private async Task PauseResume(CancellationToken ct)
     {
         if (ActiveOnThisDevice)
@@ -169,9 +313,6 @@ public sealed class PlaybackViewModel<R> : ReactiveObject where R : struct, HasS
     {
         _positionMs = GetNewPosition(_positionMs);
     }
-
-    private readonly object _positionLock = new();
-    private bool _canControlVolume;
 
     private long GetNewPosition(long position)
     {

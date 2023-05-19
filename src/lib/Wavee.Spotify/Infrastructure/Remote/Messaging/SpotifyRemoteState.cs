@@ -36,7 +36,9 @@ public readonly record struct SpotifyRemoteState(
             playerState
                 .Bind(t => !string.IsNullOrEmpty(t.Track?.Uid) ? Some(t.Track.Uid) : Option<string>.None);
 
-        var repeatState = RepeatState.None;
+        var repeatState = playerState.Map(x => x.Options.RepeatingTrack
+                ? RepeatState.Track : (x.Options.RepeatingContext ? RepeatState.Context: RepeatState.None))
+            .IfNone(Core.Playback.RepeatState.None);
 
         var contextUri =
             playerState
