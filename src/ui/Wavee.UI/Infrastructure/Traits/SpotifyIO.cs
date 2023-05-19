@@ -1,4 +1,5 @@
-﻿using Eum.Spotify;
+﻿using System.Text.Json;
+using Eum.Spotify;
 using Eum.Spotify.playlist4;
 using LanguageExt;
 using LanguageExt.Attributes;
@@ -23,6 +24,10 @@ public interface SpotifyIO
     Option<string> GetOwnDeviceId();
     Option<SpotifyRemoteClient> GetRemoteClient();
     Aff<SelectedListContent> GetRootList(CancellationToken ct);
+    Aff<JsonDocument> FetchDesktopHome(string types,
+        int limit, int offset,
+        int contentLimit, int contentOffset,
+        CancellationToken ct);
 }
 
 /// <summary>

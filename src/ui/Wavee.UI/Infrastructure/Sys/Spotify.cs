@@ -14,6 +14,7 @@ using Wavee.Spotify.Infrastructure.Remote.Messaging;
 using Wavee.Spotify.Models.Response;
 using Wavee.UI.Infrastructure.Traits;
 using System;
+using System.Text.Json;
 using Eum.Spotify.playlist4;
 
 namespace Wavee.UI.Infrastructure.Sys;
@@ -29,6 +30,13 @@ public static class Spotify<R> where R : struct, HasSpotify<R>
     public static Aff<R, SelectedListContent> GetRootList(CancellationToken ct = default) =>
         from mainAff in default(R).SpotifyEff.Map(x => x.GetRootList(ct))
         from result in mainAff
+        select result;
+
+    public static Aff<R, JsonDocument> FetchDesktopHome(string types, CancellationToken ct = default) =>
+        from aff in default(R).SpotifyEff.Map(x => x.FetchDesktopHome(types, 20, 0,
+            10, 0,
+            ct))
+        from result in aff
         select result;
 
     public static Eff<R, Option<IObservable<SpotifyRemoteState>>> ObserveRemoteState()
@@ -64,5 +72,4 @@ public static class Spotify<R> where R : struct, HasSpotify<R>
         from mercury in default(R).SpotifyEff.Map(x => x.Mercury())
         from trackOrEpisode in mercury.GetMetadata(id, country, CancellationToken.None).ToAff()
         select trackOrEpisode;
-
 }

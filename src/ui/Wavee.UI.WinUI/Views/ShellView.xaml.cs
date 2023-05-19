@@ -27,13 +27,15 @@ public sealed partial class ShellView : UserControl
             {
                 Icon = "\uE10F",
                 IconFontFamily = "Segoe MDL2 Assets",
-                Title = "Home"
+                Title = "Home",
+                Slug = "home"
             },
             new RegularSidebarItem
             {
                 Icon = "\uE794",
                 IconFontFamily = "/Assets/Fonts/MediaPlayerIcons.ttf#Media Player Fluent Icons",
-                Title = "Browse"
+                Title = "Browse",
+                Slug = "browse"
             },
             new HeaderSidebarItem { Title = "Library" },
             new CountedSidebarItem
@@ -41,28 +43,32 @@ public sealed partial class ShellView : UserControl
                 Icon = "\uE00B",
                 IconFontFamily = "Segoe MDL2 Assets",
                 Title = "Songs",
-                Count = 0
+                Count = 0,
+                Slug = "songs"
             },
             new CountedSidebarItem
             {
                 Icon = "\uE93C",
                 IconFontFamily = "Segoe MDL2 Assets",
                 Title = "Albums",
-                Count = 0
+                Count = 0,
+                Slug = "albums"
             },
             new CountedSidebarItem
             {
                 Icon = "\uEBDA",
                 IconFontFamily = "Segoe MDL2 Assets",
                 Title = "Artists",
-                Count = 0
+                Count = 0,
+                Slug = "artists"
             },
             new CountedSidebarItem
             {
                 Icon = "\uEB44",
                 IconFontFamily = "Segoe MDL2 Assets",
                 Title = "Podcasts",
-                Count = 0
+                Count = 0,
+                Slug = "podcasts"
             }
         };
     }

@@ -171,6 +171,7 @@
                 <TreeView Grid.Row="3"
                           ItemTemplateSelector="{StaticResource PlaylistsItemTemplateSelector}"
                           ItemsSource="{x:Bind Playlists}"
+                          ItemInvoked="PlaylistsListView_OnItemInvoked"
                           x:Name="PlaylistsListView" />
 
                 <TextBlock Text="It's empty here..."

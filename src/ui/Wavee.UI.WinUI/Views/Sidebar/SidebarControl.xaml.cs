@@ -8,6 +8,7 @@ using Microsoft.UI.Xaml.Input;
 using ReactiveUI;
 using Wavee.UI.Infrastructure.Sys;
 using Wavee.UI.Models;
+using Wavee.UI.WinUI.Views.Home;
 using Wavee.UI.WinUI.Views.Playlist;
 using Wavee.UI.WinUI.Views.Sidebar.Items;
 
@@ -18,7 +19,9 @@ namespace Wavee.UI.WinUI.Views.Sidebar
         public static readonly DependencyProperty SidebarWidthProperty = DependencyProperty.Register(nameof(SidebarWidth), typeof(double), typeof(SidebarControl), new PropertyMetadata(Constants.DefaultSidebarWidth));
         public static readonly DependencyProperty SidebarItemsProperty = DependencyProperty.Register(nameof(SidebarItems), typeof(IReadOnlyCollection<AbsSidebarItemViewModel>), typeof(SidebarControl), new PropertyMetadata(default(IReadOnlyCollection<AbsSidebarItemViewModel>)));
         public static readonly DependencyProperty PlaylistsProperty = DependencyProperty.Register(nameof(Playlists), typeof(ReadOnlyObservableCollection<PlaylistInfo>), typeof(SidebarControl), new PropertyMetadata(default(ReadOnlyObservableCollection<PlaylistInfo>)));
-        public static readonly DependencyProperty NavigationFrameProperty = DependencyProperty.Register(nameof(NavigationFrame), typeof(object), typeof(SidebarControl), new PropertyMetadata(default(object)));
+        public static readonly DependencyProperty NavigationFrameProperty = DependencyProperty.Register(nameof(NavigationFrame), typeof(object),
+            typeof(SidebarControl), new PropertyMetadata(default(object)));
+
         public static readonly DependencyProperty UserProperty = DependencyProperty.Register(nameof(User), typeof(User), typeof(SidebarControl), new PropertyMetadata(default(User)));
 
         public SidebarControl()
@@ -70,12 +73,32 @@ namespace Wavee.UI.WinUI.Views.Sidebar
 
         private void FixedSidebarItemsListView_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            // PlaylistsListView.SelectedIndex = -1;
+            PlaylistsListView.SelectedItem = null;
+            if (e.AddedItems.Count > 0)
+            {
+                var item = e.AddedItems[0];
+                NavigateTo(item);
+            }
         }
-
-        private void PlaylistsListView_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void PlaylistsListView_OnItemInvoked(TreeView sender, TreeViewItemInvokedEventArgs args)
         {
             FixedSidebarItemsListView.SelectedIndex = -1;
+            NavigateTo(args.InvokedItem);
+        }
+
+        private static void NavigateTo(object item)
+        {
+            var pageType = item switch
+            {
+                RegularSidebarItem re => re.Slug switch
+                {
+                    "home" => typeof(HomeRootView),
+                    _ => null
+                },
+                _ => null
+            };
+            if (pageType is not null)
+                ShellView.NavigationService.Navigate(pageType);
         }
 
         private void FixedSidebarItemsListView_OnLoaded(object sender, RoutedEventArgs e)

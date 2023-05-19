@@ -2,6 +2,7 @@
 using LanguageExt;
 using System;
 using System.Net.Http.Headers;
+using System.Text.Json;
 using Eum.Spotify.playlist4;
 using Wavee.Spotify;
 using Wavee.Spotify.Infrastructure.Cache;
@@ -40,6 +41,20 @@ internal sealed class LiveSpotify : Traits.SpotifyIO
             {
                 await using var stream = await r.Content.ReadAsStreamAsync(ct);
                 return SelectedListContent.Parser.ParseFrom(stream);
+            })
+        select result;
+
+    public Aff<JsonDocument> FetchDesktopHome(string types, int limit, int offset,
+        int contentLimit, int contentOffset,
+        CancellationToken ct) =>
+        from client in Eff(() => _connection.ValueUnsafe())
+        let apiurl = $"https://api.spotify.com/v1/views/desktop-home?types={types}&offset={offset}&limit={limit}&content_limit={contentLimit}&content_offset={contentOffset}"
+        from bearer in client.TokenClient.GetToken(ct).ToAff().Map(x => new AuthenticationHeaderValue("Bearer", x))
+        from result in HttpIO.GetAsync(apiurl, bearer, LanguageExt.HashMap<string, string>.Empty, ct)
+            .ToAff().MapAsync(async r =>
+            {
+                await using var stream = await r.Content.ReadAsStreamAsync(ct);
+                return await JsonDocument.ParseAsync(stream, default, ct);
             })
         select result;
 
