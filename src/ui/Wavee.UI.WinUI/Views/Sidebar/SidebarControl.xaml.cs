@@ -2,9 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using LanguageExt;
+using LanguageExt.UnsafeValueAccess;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
+using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Media.Imaging;
 using ReactiveUI;
 using Wavee.UI.Infrastructure.Sys;
 using Wavee.UI.Models;
@@ -144,6 +147,18 @@ namespace Wavee.UI.WinUI.Views.Sidebar
                 .Metadata
                 .Find("product")
                 .Match(s => s, () => "Spotify");
+        }
+
+        public ImageSource GetProfilePicture(User user)
+        {
+            if (user.ImageId.IsSome)
+            {
+                var imageId = user.ImageId.ValueUnsafe();
+                var url = new Uri(imageId);
+                return new BitmapImage(url);
+            }
+
+            return null;
         }
     }
 }

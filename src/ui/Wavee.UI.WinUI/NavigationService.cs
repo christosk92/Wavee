@@ -19,7 +19,9 @@ public sealed class NavigationService
     }
     public static NavigationService Instance { get; private set; } = null!;
 
-    public void Navigate(Type pageType, object? parameter = null, bool addToStack = true)
+    public void Navigate(Type pageType,
+        object? parameter = null,
+        bool addToStack = true)
     {
         if (!typeof(INavigablePage).IsAssignableFrom(pageType))
         {

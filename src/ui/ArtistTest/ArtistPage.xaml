@@ -1,0 +1,124 @@
+<UserControl
+    x:Class="ArtistTest.ArtistPage"
+	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    Loaded="ArtistPage_OnLoaded"
+    SizeChanged="ArtistPage_OnSizeChanged"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:artistTest="using:ArtistTest"
+	xmlns:ui="using:CommunityToolkit.WinUI.UI"
+	xmlns:animations="using:CommunityToolkit.WinUI.UI.Animations"
+	xmlns:labs="using:CommunityToolkit.Labs.WinUI">
+    <UserControl.Resources>
+        <labs:TransitionHelper x:Name="BaseTransitoin">
+            <labs:TransitionConfig Id="background"
+                                   ScaleMode="Scale" />
+            <labs:TransitionConfig Id="image"
+                                   ScaleMode="Scale" />
+            <labs:TransitionConfig EnableClipAnimation="true"
+                                   Id="desc" />
+        </labs:TransitionHelper>
+    </UserControl.Resources>
+    <Grid>
+        <ScrollViewer ViewChanged="ScrollViewer_OnViewChanged">
+            <StackPanel>
+                <Grid VerticalAlignment="Top"
+                     x:Name="ImageT">
+                    <artistTest:ImageTransitionControl
+                x:Name="Img"
+                Loaded="Img_OnLoaded"
+                VerticalAlignment="Stretch" TransitionDuration="00:00:01"
+                Source="{x:Bind Artist.HeaderImage}"/>
+                    <StackPanel Margin="24,0,0,-12"
+                                x:Name="MetadataPnale"
+                                Visibility="Visible"
+                                ui:VisualExtensions.NormalizedCenterPoint="0.5"
+                                VerticalAlignment="Bottom">
+                        <animations:Implicit.HideAnimations>
+                            <animations:OpacityAnimation Duration="0:0:1" To="0.0"/>
+                            <animations:ScalarAnimation Target="Translation.Y" Duration="0:0:1" To="-200">
+                                <animations:ScalarKeyFrame Key="0.1" Value="30"/>
+                                <animations:ScalarKeyFrame Key="0.5" Value="0.0"/>
+                            </animations:ScalarAnimation>
+                        </animations:Implicit.HideAnimations>
+                        <animations:Implicit.ShowAnimations>
+                            <animations:TranslationAnimation
+                        Delay="0:0:0.2"
+                        Duration="0:0:1"
+                        From="0, 50, 0" To="0"/>
+                            <animations:OpacityAnimation
+                        Delay="0:0:0.2"
+                        Duration="0:0:1"
+                        From="0" To="1.0"/>
+                        </animations:Implicit.ShowAnimations>
+
+                        <TextBlock Text="VERIFIED ARTIST"
+                           FontWeight="Bold"
+                           FontSize="12"
+                           Opacity=".8"
+                           />
+                        <TextBlock 
+                    FontSize="64"
+                    FontWeight="Bold"
+                    Text="{x:Bind Artist.Name}"/>
+
+                        <TextBlock
+                    FontWeight="SemiBold"
+                    Text="{x:Bind FormatListeners(Artist.MonthlyListeners)}"/>
+
+                        <StackPanel Orientation="Horizontal"
+                            Spacing="8"
+                            Margin="0,12,0,0"
+                            >
+                            <Button
+                        CornerRadius="100"
+                        Padding="9"
+                        Style="{ThemeResource AccentButtonStyle}">
+                                <FontIcon
+                            FontFamily="Segoe Fluent Icons" Glyph="&#xF5B0;" />
+                            </Button>
+
+                            <Button Padding="8">
+                                <StackPanel Spacing="8" Orientation="Horizontal">
+                                    <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE8FA;" />
+                                    <TextBlock Text="Follow"/>
+                                </StackPanel>
+                            </Button>
+                            <Border 
+                                CornerRadius="4"
+                                Padding="0"
+                                Margin="0,4,12,0"
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Top"
+                                Background="{ThemeResource AcrylicBackgroundFillColorBaseBrush}">
+                                <winUi:Segmented
+                                    SelectionChanged="Selector_OnSelectionChanged"
+                                    SelectedIndex="0">
+                                    <winUi:SegmentedItem
+                                        Tag="overview"
+                                        Content="Overview"/>
+                                    <winUi:SegmentedItem 
+                                        Tag="about"
+                                        Content="About"/>
+                                    <winUi:SegmentedItem 
+                                        Tag="concerts"
+                                        Content="Concerts"/>
+                                </winUi:Segmented>
+                            </Border>
+                        </StackPanel>
+                    </StackPanel>
+                </Grid>
+
+                <ContentControl
+                    VerticalAlignment="Stretch"
+                    VerticalContentAlignment="Stretch"
+                    HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Stretch"
+                    x:Name="MainContent"/>
+            </StackPanel>
+        </ScrollViewer>
+
+        <Button Content="Force refresh"
+                VerticalAlignment="Bottom"
+                Tapped="UIElement_OnTapped"/>
+    </Grid>
+</UserControl>

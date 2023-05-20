@@ -26,7 +26,10 @@ public static class Spotify<R> where R : struct, HasSpotify<R>
         from apwelcome in default(R).SpotifyEff.Map(x => x.WelcomeMessage())
         select apwelcome.ValueUnsafe();
 
-
+    public static Aff<R, T> GetFromPublicApi<T>(string endpoint, CancellationToken cancellation) =>
+        from aff in default(R).SpotifyEff.Map(x => x.GetFromPublicApi<T>(endpoint, cancellation))
+        from result in aff
+        select result;
     public static Aff<R, SelectedListContent> GetRootList(CancellationToken ct = default) =>
         from mainAff in default(R).SpotifyEff.Map(x => x.GetRootList(ct))
         from result in mainAff
@@ -72,4 +75,7 @@ public static class Spotify<R> where R : struct, HasSpotify<R>
         from mercury in default(R).SpotifyEff.Map(x => x.Mercury())
         from trackOrEpisode in mercury.GetMetadata(id, country, CancellationToken.None).ToAff()
         select trackOrEpisode;
+
+    public static Eff<R, MercuryClient> Mercury() =>
+        default(R).SpotifyEff.Map(x => x.Mercury());
 }

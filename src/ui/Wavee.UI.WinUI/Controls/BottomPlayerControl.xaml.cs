@@ -70,7 +70,9 @@ public sealed partial class BottomPlayerControl : UserControl
 
         return track.Artists.Select(c => new MetadataItem
         {
-            Label = c.Name
+            Label = c.Name,
+            Command = UICommands.NavigateTo,
+            CommandParameter = c.Id
         });
     }
 

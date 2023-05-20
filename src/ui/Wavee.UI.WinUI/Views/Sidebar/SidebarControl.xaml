@@ -95,6 +95,7 @@
                             </Grid.ColumnDefinitions>
                             <PersonPicture x:Name="Prf"
                                            Width="48"
+                                           ProfilePicture="{x:Bind GetProfilePicture(User), Mode=OneWay}"
                                            Initials="{x:Bind GetInitials(User), Mode=OneWay}"
                                            DisplayName="{x:Bind GetDisplayName(User), Mode=OneWay}"
                                            Height="48" />

@@ -28,6 +28,8 @@ public interface SpotifyIO
         int limit, int offset,
         int contentLimit, int contentOffset,
         CancellationToken ct);
+
+    Aff<T> GetFromPublicApi<T>(string endpoint, CancellationToken cancellation);
 }
 
 /// <summary>

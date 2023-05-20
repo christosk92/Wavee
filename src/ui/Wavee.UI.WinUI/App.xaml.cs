@@ -145,6 +145,9 @@ public partial class App : Application
         double displayRegionWidth = displayArea.WorkArea.Width;
         double displayRegionHeight = displayArea.WorkArea.Height;
 
+        width = Math.Min(width, displayRegionWidth);
+        height = Math.Min(height, displayRegionHeight);
+
         var x = (displayRegionWidth - width) / 2;
         var y = (displayRegionHeight - height) / 2;
 
@@ -162,6 +165,7 @@ public partial class App : Application
             SettingsViewModel<WaveeUIRuntime>.Instance.Width = (int)eventArgs.Size._width;
             SettingsViewModel<WaveeUIRuntime>.Instance.Height = (int)eventArgs.Size._height;
         };
+
         window.Activate();
     }
 

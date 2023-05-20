@@ -15,7 +15,7 @@
     <!--     <panels:HorizontalPanelLayout x:Name="HorizontalPanelLayout" -->
     <!--                                   x:Key="HorizontalPanelLayout" /> -->
     <!-- </UserControl.Resources> -->
-    <Grid Margin="24,0">
+    <Grid Padding="24,0">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition />
@@ -55,7 +55,9 @@
         </StackPanel>
 
 
-        <ScrollViewer Grid.Row="1">
+        <ScrollViewer Margin="0,0,-24,0" Grid.Row="1"
+                      Padding="0,0,24,0"
+                      >
             <Grid x:Name="ActualDataGrid"
                   x:Load="{x:Bind NegateBool(ViewModel.IsLoading), Mode=OneWay}">
                 <ItemsRepeater ItemsSource="{x:Bind ViewModel.Items, Mode=OneWay}">
@@ -80,7 +82,7 @@
                                           ItemsSource="{x:Bind Items}">
                                     <ListView.ItemsPanel>
                                         <ItemsPanelTemplate>
-                                            <panels:HorizontalPanelLayout DesiredWidth="230" />
+                                            <panels:HorizontalPanelLayout DesiredWidth="220" />
                                         </ItemsPanelTemplate>
                                     </ListView.ItemsPanel>
                                     <ListView.ItemTemplate>

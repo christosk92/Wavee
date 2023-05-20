@@ -2,6 +2,7 @@
 using LanguageExt;
 using System;
 using System.Net.Http.Headers;
+using System.Net.Http.Json;
 using System.Text.Json;
 using Eum.Spotify.playlist4;
 using Wavee.Spotify;
@@ -58,6 +59,19 @@ internal sealed class LiveSpotify : Traits.SpotifyIO
             })
         select result;
 
+    public Aff<T> GetFromPublicApi<T>(string endpoint, CancellationToken cancellation) =>
+        from client in Eff(() => _connection.ValueUnsafe())
+        let apiUrl = $"https://api.spotify.com/v1{endpoint}"
+        from bearer in client.TokenClient.GetToken(cancellation).ToAff()
+            .Map(x => new AuthenticationHeaderValue("Bearer", x))
+        from result in HttpIO.GetAsync(apiUrl, bearer, LanguageExt.HashMap<string, string>.Empty, cancellation)
+            .ToAff().MapAsync(async r =>
+            {
+                var result = await r.Content.ReadFromJsonAsync<T>(cancellationToken: cancellation);
+                r.Dispose();
+                return result;
+            })
+        select result;
     public async ValueTask<Unit> Authenticate(LoginCredentials credentials, CancellationToken ct = default)
     {
         var core = await SpotifyClient.CreateAsync(credentials, _config, ct);

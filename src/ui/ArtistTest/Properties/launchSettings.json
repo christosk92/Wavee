@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "ArtistTest (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "ArtistTest (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:ArtistTest.Styles">
+    <Style TargetType="Border" x:Key="EvenBorderStyle">
+        <Setter Property="Background"
+                Value="{ThemeResource LayerFillColorDefaultBrush}"/>
+        <Setter Property="BorderBrush" 
+                Value="{ThemeResource CardStrokeColorDefaultBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+    </Style>
+    <Style TargetType="Border" x:Key="OddBorderStyle">
+        <Setter Property="Background" Value="Transparent"/>
+    </Style>
+</ResourceDictionary>
