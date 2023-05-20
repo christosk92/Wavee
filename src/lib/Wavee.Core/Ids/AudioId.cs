@@ -75,12 +75,18 @@ public readonly record struct AudioId(BigInteger Id, AudioItemType Type, Service
     public static AudioId FromUri(ReadOnlySpan<char> uri)
     {
         //[local,spotify]:[itemtype]:[base62]
-        ReadOnlySpan<char> service = uri.Slice(0, uri.IndexOf(':'));
-        ReadOnlySpan<char> type = uri.Slice(service.Length + 1, uri.LastIndexOf(':') - service.Length - 1);
-        ReadOnlySpan<char> base62 = uri.Slice(uri.LastIndexOf(':') + 1);
+        var firstIndex = uri.IndexOf(':');
+        ReadOnlySpan<char> service = uri.Slice(0, firstIndex);
+        var lastIndex = uri.LastIndexOf(':');
+        if (firstIndex != lastIndex)
+        {
+            ReadOnlySpan<char> type = uri.Slice(service.Length + 1, lastIndex - service.Length - 1);
+            ReadOnlySpan<char> base62 = uri.Slice(lastIndex + 1);
 
-        return FromBase62(base62, GetTypeFrom(type), GetServiceFrom(service));
-        //return new AudioId( GetTypeFrom(type), GetServiceFrom(service));
+            return FromBase62(base62, GetTypeFrom(type), GetServiceFrom(service));
+            //return new AudioId( GetTypeFrom(type), GetServiceFrom(service));
+        }
+        return new AudioId(0, AudioItemType.Track, ServiceType.Local);
     }
 
     public static AudioId FromBase62(ReadOnlySpan<char> base62,
