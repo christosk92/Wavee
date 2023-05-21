@@ -26,6 +26,10 @@ public partial class ArtistPage
             .GetProperty("image")
             .GetString();
 
+        using var profilePics = info.GetProperty("portraits")
+            .EnumerateArray();
+        var profilePic = profilePics.First().GetProperty("uri").GetString();
+
         var monthlyListeners = jsonDoc.RootElement.GetProperty("monthly_listeners")
             .GetProperty("listener_count")
             .GetUInt64();
@@ -141,7 +145,9 @@ public partial class ArtistPage
             headerImage: headerImage,
             monthlyListeners: monthlyListeners,
             topTracks: topTracks,
-            result.ToSeq()
+            result.ToSeq(),
+            profilePic,
+            id: "test"
         );
         MetadataPnale.Visibility = Visibility.Visible;
         _artistFetched.SetResult();
@@ -164,6 +170,7 @@ public partial class ArtistPage
     {
         //ratio is around 1:1, so 1/2
         var topHeight = e.NewSize.Height * 0.5;
+        topHeight = Math.Min(topHeight, 550);
         ImageT.Height = topHeight;
     }
 
@@ -204,14 +211,14 @@ public partial class ArtistPage
             {
                 "overview" => _overview ??= new ArtistOverview(ref _artist),
                 "concerts" => _concerts ??= new ArtistConcerts(ref _artist),
-                "about" => (_about ??= new ArtistAbout(ref _artist)) as UIElement,
+                "about" => (_about ??= new ArtistAbout(_artist.Id)) as UIElement,
                 _ => throw new ArgumentOutOfRangeException()
             };
             MainContent.Content = content;
         }
     }
 
-    private void ScrollViewer_OnViewChanged(object sender, ScrollViewerViewChangedEventArgs e)
+    private async void ScrollViewer_OnViewChanged(object sender, ScrollViewerViewChangedEventArgs e)
     {
         var frac = ((ScrollViewer)sender).VerticalOffset / ImageT.Height;
         var progress = Math.Clamp(frac, 0, 1);
@@ -225,15 +232,18 @@ public partial class ArtistPage
         const double threshold = 0.75;
         if (progress >= 0.75)
         {
-
+            BaseTrans.Source = MetadataPnale;
+            BaseTrans.Target = SecondMetadataPanel;
+            await BaseTrans.StartAsync();
         }
         else
         {
-
+            BaseTrans.Source = SecondMetadataPanel;
+            BaseTrans.Target = MetadataPnale;
+            await BaseTrans.StartAsync();
         }
     }
 }
-
 public readonly struct ArtistView
 {
     public string Name { get; }
@@ -241,14 +251,18 @@ public readonly struct ArtistView
     public ulong MonthlyListeners { get; }
     public Seq<ArtistTopTrackView> TopTracks { get; }
     public Seq<ArtistDiscographyGroupView> Discography { get; }
+    public string ProfilePicture { get; }
+    public string Id { get; }
 
-    public ArtistView(string name, string headerImage, ulong monthlyListeners, Seq<ArtistTopTrackView> topTracks, Seq<ArtistDiscographyGroupView> discography)
+    public ArtistView(string name, string headerImage, ulong monthlyListeners, Seq<ArtistTopTrackView> topTracks, Seq<ArtistDiscographyGroupView> discography, string profilePicture, string id)
     {
         Name = name;
         HeaderImage = headerImage;
         MonthlyListeners = monthlyListeners;
         TopTracks = topTracks;
         Discography = discography;
+        ProfilePicture = profilePicture;
+        Id = id;
     }
 }
 
@@ -286,7 +300,7 @@ public readonly struct ArtistDiscographyTrack
     public string FormatPlaycount(Option<ulong> playcount)
     {
         return playcount.IsSome
-            ? playcount.ValueUnsafe().ToString("N")
+            ? playcount.ValueUnsafe().ToString("N0")
             : "< 1,000";
     }
 }
@@ -303,7 +317,7 @@ public readonly struct ArtistTopTrackView
     public string FormatPlaycount(Option<ulong> playcount)
     {
         return playcount.IsSome
-            ? playcount.ValueUnsafe().ToString("N")
+            ? playcount.ValueUnsafe().ToString("N0")
             : "< 1,000";
     }
 }

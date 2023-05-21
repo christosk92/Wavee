@@ -2864,7 +2864,7 @@ public static class Artists
             }
         }
         """";
-  public const string STARSET = """
+    public const string STARSET = """
                 {
             "uri": "spotify:artist:0kD8IT1CzF7js2XKM9lLLa",
             "info": {
@@ -5395,6 +5395,446 @@ public static class Artists
                 "secondsToExpiration": 354907,
                 "backgroundImage": "https://i.scdn.co/image/ab6761700000c52c905ef1c123e4c50699836895"
             }
+        }
+        """;
+
+    public const string STARSET_INFO = """
+                {
+            "artistGid": "0aeefcb6d9524b13acbb1e06a7a24a10",
+            "name": "STARSET",
+            "mainImageUrl": "https://i.scdn.co/image/ab676161000051749da9b0a2296dbbd97bf5c8ba",
+            "headerImage": {
+                "id": "ab676186bd46a88e4527a34854db4a6e",
+                "uri": "https://i.scdn.co/image/ab6761860000101642b95771bad85cb7ab24b591",
+                "width": 2660,
+                "height": 1140
+            },
+            "autobiography": {
+                "body": "Visionary media collective STARSET have carved out a unique path as part cinematic rock band, part conceptual storytellers, weaving an intricate narrative through multimedia and redefining the concept of a truly immersive entertainment experience. Led by enigmatic front man and PhD candidate Dustin Bates, the band have made a mission to take fans on a journey through music, video, AR-integrated performances, a Marvel graphic novel, and online experiences, blurring the lines of science, fact, and fiction.\n",
+                "links": {
+                    "twitter": "https://twitter.com/starsetonline",
+                    "instagram": "https://instagram.com/starsetonline",
+                    "wikipedia": "https://en.wikipedia.org/wiki/Starset",
+                    "facebook": "https://facebook.com/starsetonline"
+                }
+            },
+            "biography": "Describing their sound as \"cinematic rock,\" the stylistically ambitious Columbus, Ohio rock band Starset emerged in the mid-2010s with a thoroughly developed thematic narrative already in place. Through sweeping science fiction concept albums like 2017's Vessels and 2019's Divisions, the band built a devoted audience and enjoyed chart success in the process. Starset's fourth LP, Horizons, appeared in October 2021 and they landed a hit single a year later with the <a href=\"spotify:artist:5BtHciL0e0zOP7prIHn3pP\">Breaking Benjamin</a> collaboration \"Waiting on the Sky to Change.\"\r\n\nLed by former <a href=\"spotify:artist:2NHZXdh4W3waGwVk3CdP4T\">Downplay</a> frontman Dustin Bates, Starset have constructed an elaborate mythos surrounding themselves (as detailed on their website and shared through their social media posts), in which they insist they were recruited by one Dr. Aston Wise of the Starset Society to spread awareness of scientific phenomena that have been ignored or hidden from public view, most notably transmissions believed to be of human origin that have been broadcast from the constellation Ophiuchus. However, Bates and his bandmates first came together in July 2013, when their debut single, \"Carnivore,\" was released online. A second track, \"My Demons,\" appeared in August 2013, after which the band made its live debut in Salem, Ohio on November 27, 2013. \r\n\nStarset laid down their conceptual premise with 2014's Transmissions, their full-length debut. Released by <a href=\"spotify:search:label%3A%22Razor+%26+Tie%22\">Razor & Tie</a>, it cracked the Top 50 and was followed in 2017 with by their second studio effort, Vessels. A breakout success for the band, Vessels hit number 11 on the Billboard 200 and yielded a hit in the single \"Monster.\" Capitalizing on their momentum, Starset released a deluxe version of the LP (Vessels 2.0) in 2018 featuring reimagined, acoustic, and remixed versions of its songs. During this period, Bates also debuted his electronic side project, MNQN, after which Starset returned to work, releasing their third proper full-length, Divisions, in September 2019. The set debuted at number 37 on the Billboard 200 and further expanded the band's ongoing narrative about a dystopian future world. It was also their first release for the <a href=\"spotify:search:label%3A%22Fearless%22\">Fearless</a> label, which also issued Starset's fourth album, Horizons, in October of 2021. In August 2022, the band collaborated with <a href=\"spotify:artist:5BtHciL0e0zOP7prIHn3pP\">Breaking Benjamin</a> on the single \"Waiting on the Sky to Change,\" a song previously recorded by Bates' old band <a href=\"spotify:artist:2NHZXdh4W3waGwVk3CdP4T\">Downplay</a>. It made a Top 20 showing on Billboard's Mainstream Rock chart. ~ Mark Deming, Rovi",
+            "images": [
+                {
+                    "id": "ab676167665cdc6df8e6f79406ad35a0",
+                    "uri": "https://i.scdn.co/image/ab6761670000ecd499a323920719086bf952ca5f",
+                    "width": 640,
+                    "height": 640
+                },
+                {
+                    "id": "78ab18c6b5ed498f89bdb1860fe1682d",
+                    "uri": "https://i.scdn.co/image/80b1d5b1931c1dfa1c99c022c6a3472e5ee24032",
+                    "width": 640,
+                    "height": 640
+                }
+            ],
+            "imagesCount": 2,
+            "globalChartPosition": 0,
+            "monthlyListeners": 2739978,
+            "monthlyListenersDelta": 1499,
+            "followerCount": 857604,
+            "followingCount": 0,
+            "playlists": {
+                "entries": [
+                    {
+                        "uri": "spotify:user:spotify:playlist:37i9dQZF1DWWJOmJ7nRx0C",
+                        "name": "Rock Hard",
+                        "imageUrl": "https://i.scdn.co/image/ab67706f00000002bc92e8aa9759a755206742b9",
+                        "owner": {
+                            "name": "Spotify",
+                            "uri": "spotify:user:spotify"
+                        },
+                        "listeners": 0
+                    },
+                    {
+                        "uri": "spotify:user:spotify:playlist:37i9dQZF1DWZjmJmeiazwd",
+                        "name": "Ultimate Rock Gaming",
+                        "imageUrl": "https://i.scdn.co/image/ab67706f0000000279b949bf5f567974a439d2cd",
+                        "owner": {
+                            "name": "Spotify",
+                            "uri": "spotify:user:spotify"
+                        },
+                        "listeners": 0
+                    },
+                    {
+                        "uri": "spotify:user:spotify:playlist:37i9dQZF1DZ06evO3iBwVq",
+                        "name": "This Is Breaking Benjamin",
+                        "imageUrl": "https://thisis-images.scdn.co/37i9dQZF1DZ06evO3iBwVq-default.jpg",
+                        "owner": {
+                            "name": "Spotify",
+                            "uri": "spotify:user:spotify"
+                        },
+                        "listeners": 0
+                    },
+                    {
+                        "uri": "spotify:user:spotify:playlist:37i9dQZF1DWSVO64ma1pNY",
+                        "name": "life sucks...i need some rock!",
+                        "imageUrl": "https://i.scdn.co/image/ab67706f00000002bd336b67f088a75bff7cf184",
+                        "owner": {
+                            "name": "Spotify",
+                            "uri": "spotify:user:spotify"
+                        },
+                        "listeners": 0
+                    },
+                    {
+                        "uri": "spotify:user:spotify:playlist:37i9dQZF1DZ06evO07VZe0",
+                        "name": "This Is STARSET",
+                        "imageUrl": "https://thisis-images.scdn.co/37i9dQZF1DZ06evO07VZe0-default.jpg",
+                        "owner": {
+                            "name": "Spotify",
+                            "uri": "spotify:user:spotify"
+                        },
+                        "listeners": 0
+                    },
+                    {
+                        "uri": "spotify:user:spotify:playlist:37i9dQZF1DX2ieLsD6FsU8",
+                        "name": "Best of Rock: 2014",
+                        "imageUrl": "https://i.scdn.co/image/ab67706f00000002344cd4a16a4f7fadf39b8c74",
+                        "owner": {
+                            "name": "Spotify",
+                            "uri": "spotify:user:spotify"
+                        },
+                        "listeners": 0
+                    },
+                    {
+                        "uri": "spotify:user:spotify:playlist:37i9dQZF1DX1X7WV84927n",
+                        "name": "Hard Rock",
+                        "imageUrl": "https://i.scdn.co/image/ab67706f0000000206e23e121fa3188932ec0219",
+                        "owner": {
+                            "name": "Spotify",
+                            "uri": "spotify:user:spotify"
+                        },
+                        "listeners": 0
+                    },
+                    {
+                        "uri": "spotify:user:spotify:playlist:37i9dQZF1DWTdfmfhrL4fH",
+                        "name": "Deep Dive: 10s Rock",
+                        "imageUrl": "https://i.scdn.co/image/ab67706f00000002d6031d8437091dce0cdda6f1",
+                        "owner": {
+                            "name": "Spotify",
+                            "uri": "spotify:user:spotify"
+                        },
+                        "listeners": 0
+                    },
+                    {
+                        "uri": "spotify:user:spotify:playlist:37i9dQZF1DX5FZ0gGkvIRf",
+                        "name": "Best of Kickass Metal 2022",
+                        "imageUrl": "https://i.scdn.co/image/ab67706f00000002ff94e20a3903d2c2f3f649e0",
+                        "owner": {
+                            "name": "Spotify",
+                            "uri": "spotify:user:spotify"
+                        },
+                        "listeners": 0
+                    }
+                ]
+            },
+            "cities": [
+                {
+                    "country": "US",
+                    "region": "IL",
+                    "city": "Chicago",
+                    "listeners": 31360
+                },
+                {
+                    "country": "MX",
+                    "region": "CMX",
+                    "city": "Mexico City",
+                    "listeners": 31281
+                },
+                {
+                    "country": "US",
+                    "region": "TX",
+                    "city": "Dallas",
+                    "listeners": 29941
+                },
+                {
+                    "country": "US",
+                    "region": "MN",
+                    "city": "Minneapolis",
+                    "listeners": 28544
+                },
+                {
+                    "country": "BR",
+                    "region": "SP",
+                    "city": "São Paulo",
+                    "listeners": 27660
+                },
+                {
+                    "country": "GB",
+                    "region": "ENG",
+                    "city": "London",
+                    "listeners": 25846
+                },
+                {
+                    "country": "TR",
+                    "region": "34",
+                    "city": "Istanbul",
+                    "listeners": 25347
+                },
+                {
+                    "country": "US",
+                    "region": "GA",
+                    "city": "Atlanta",
+                    "listeners": 23856
+                },
+                {
+                    "country": "US",
+                    "region": "CO",
+                    "city": "Denver",
+                    "listeners": 22690
+                },
+                {
+                    "country": "US",
+                    "region": "OH",
+                    "city": "Columbus",
+                    "listeners": 22031
+                },
+                {
+                    "country": "US",
+                    "region": "NC",
+                    "city": "Charlotte",
+                    "listeners": 21388
+                },
+                {
+                    "country": "US",
+                    "region": "WA",
+                    "city": "Seattle",
+                    "listeners": 20832
+                },
+                {
+                    "country": "CL",
+                    "region": "RM",
+                    "city": "Santiago",
+                    "listeners": 20561
+                },
+                {
+                    "country": "DE",
+                    "region": "BE",
+                    "city": "Berlin",
+                    "listeners": 19707
+                },
+                {
+                    "country": "US",
+                    "region": "CA",
+                    "city": "Los Angeles",
+                    "listeners": 19621
+                },
+                {
+                    "country": "US",
+                    "region": "TX",
+                    "city": "Houston",
+                    "listeners": 19349
+                },
+                {
+                    "country": "US",
+                    "region": "AZ",
+                    "city": "Phoenix",
+                    "listeners": 19223
+                },
+                {
+                    "country": "US",
+                    "region": "PA",
+                    "city": "Philadelphia",
+                    "listeners": 18460
+                },
+                {
+                    "country": "AU",
+                    "region": "NSW",
+                    "city": "Sydney",
+                    "listeners": 17854
+                },
+                {
+                    "country": "CA",
+                    "region": "ON",
+                    "city": "Toronto",
+                    "listeners": 17260
+                },
+                {
+                    "country": "US",
+                    "region": "TX",
+                    "city": "San Antonio",
+                    "listeners": 16663
+                },
+                {
+                    "country": "DE",
+                    "region": "HH",
+                    "city": "Hamburg",
+                    "listeners": 16275
+                },
+                {
+                    "country": "PE",
+                    "region": "LMA",
+                    "city": "Lima",
+                    "listeners": 16152
+                },
+                {
+                    "country": "CZ",
+                    "region": "10",
+                    "city": "Prague",
+                    "listeners": 16092
+                },
+                {
+                    "country": "FR",
+                    "region": "75",
+                    "city": "Paris",
+                    "listeners": 15787
+                },
+                {
+                    "country": "AU",
+                    "region": "VIC",
+                    "city": "Melbourne",
+                    "listeners": 14853
+                },
+                {
+                    "country": "PL",
+                    "region": "14",
+                    "city": "Warsaw",
+                    "listeners": 14721
+                },
+                {
+                    "country": "CA",
+                    "region": "QC",
+                    "city": "Montreal",
+                    "listeners": 14574
+                },
+                {
+                    "country": "AU",
+                    "region": "QLD",
+                    "city": "Brisbane",
+                    "listeners": 14330
+                },
+                {
+                    "country": "US",
+                    "region": "NY",
+                    "city": "New York City",
+                    "listeners": 13990
+                },
+                {
+                    "country": "FI",
+                    "region": "18",
+                    "city": "Helsinki",
+                    "listeners": 13000
+                },
+                {
+                    "country": "CO",
+                    "region": "DC",
+                    "city": "Bogotá",
+                    "listeners": 12777
+                },
+                {
+                    "country": "US",
+                    "region": "UT",
+                    "city": "Salt Lake City",
+                    "listeners": 12767
+                },
+                {
+                    "country": "ES",
+                    "region": "M",
+                    "city": "Madrid",
+                    "listeners": 12700
+                },
+                {
+                    "country": "DE",
+                    "region": "HE",
+                    "city": "Frankfurt am Main",
+                    "listeners": 12684
+                },
+                {
+                    "country": "TR",
+                    "region": "06",
+                    "city": "Ankara",
+                    "listeners": 12479
+                },
+                {
+                    "country": "US",
+                    "region": "FL",
+                    "city": "Orlando",
+                    "listeners": 12457
+                },
+                {
+                    "country": "HU",
+                    "region": "BU",
+                    "city": "Budapest",
+                    "listeners": 12151
+                },
+                {
+                    "country": "AT",
+                    "region": "9",
+                    "city": "Vienna",
+                    "listeners": 11929
+                },
+                {
+                    "country": "BR",
+                    "region": "RJ",
+                    "city": "Rio de Janeiro",
+                    "listeners": 11843
+                },
+                {
+                    "country": "US",
+                    "region": "CA",
+                    "city": "Sacramento",
+                    "listeners": 11771
+                },
+                {
+                    "country": "IT",
+                    "region": "MI",
+                    "city": "Milan",
+                    "listeners": 11469
+                },
+                {
+                    "country": "DE",
+                    "region": "BY",
+                    "city": "Munich",
+                    "listeners": 11409
+                },
+                {
+                    "country": "US",
+                    "region": "IN",
+                    "city": "Indianapolis",
+                    "listeners": 11409
+                },
+                {
+                    "country": "US",
+                    "region": "NY",
+                    "city": "Brooklyn",
+                    "listeners": 11387
+                },
+                {
+                    "country": "US",
+                    "region": "DC",
+                    "city": "Washington",
+                    "listeners": 11375
+                },
+                {
+                    "country": "MX",
+                    "region": "JAL",
+                    "city": "Guadalajara",
+                    "listeners": 11034
+                },
+                {
+                    "country": "MX",
+                    "region": "NLE",
+                    "city": "Monterrey",
+                    "listeners": 10760
+                },
+                {
+                    "country": "AR",
+                    "region": "C",
+                    "city": "Buenos Aires",
+                    "listeners": 10511
+                },
+                {
+                    "country": "US",
+                    "region": "FL",
+                    "city": "Miami",
+                    "listeners": 10467
+                }
+            ]
         }
         """;
 }

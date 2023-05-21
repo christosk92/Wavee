@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl
+    x:Class="Wavee.UI.WinUI.Components.TrackView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:Wavee.UI.WinUI.Components"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:winUi="using:CommunityToolkit.Labs.WinUI"
+    mc:Ignorable="d">
+    <Grid>
+        <Border Style="{x:Bind GetStyleFor(Index), Mode=OneWay}"
+                VerticalAlignment="Stretch"
+                HorizontalAlignment="Stretch"
+                CornerRadius="8"
+                Padding="8,0">
+            <Grid VerticalAlignment="Center">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition />
+                </Grid.ColumnDefinitions>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock VerticalAlignment="Center"
+                               Width="24"
+                               Text="{x:Bind FormatIndex(Index) ,Mode=OneWay}"
+                               FontWeight="SemiBold" />
+                    <Grid x:Name="ImageShimemrDataGrid"
+                          x:Load="{x:Bind ShowImage, Mode=OneWay}"
+                          Margin="4,0"
+                          VerticalAlignment="Center">
+                        <Border CornerRadius="4"
+                                Width="28"
+                                Height="28">
+                            <Grid>
+                                <winUi:Shimmer x:Load="{x:Bind HasImage(ImageUrl, x:False),Mode=OneWay}"
+                                               x:Name="ImageShimmer" />
+                                <Image DataContext="{x:Bind}"
+                                       x:Name="ImageData"
+                                       x:Load="{x:Bind HasImage(ImageUrl, x:True), Mode=OneWay}">
+                                    <Image.Source>
+                                        <BitmapImage UriSource="{Binding ImageUrl, Mode=OneWay}"
+                                                     DecodePixelHeight="28"
+                                                     DecodePixelWidth="28" />
+                                    </Image.Source>
+                                </Image>
+                            </Grid>
+                        </Border>
+                    </Grid>
+                </StackPanel>
+                <ContentControl VerticalAlignment="Center"
+                                VerticalContentAlignment="Stretch"
+                                HorizontalContentAlignment="Stretch"
+                                Content="{x:Bind View, Mode=OneWay}"
+                                Grid.Column="1" />
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

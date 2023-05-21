@@ -135,10 +135,10 @@ namespace ArtistTest
                 .Create()
                 .Scale(to: new Vector2(1.15f, 1.15f),
                     from: new Vector2(1f,1f),
-                    duration: TimeSpan.FromSeconds(1),
+                    duration: TimeSpan.FromSeconds(0.8),
                     easingMode: EasingMode.EaseInOut,
                     easingType: EasingType.Quintic,
-                    delay: TimeSpan.FromMilliseconds(50)
+                    delay: TimeSpan.FromMilliseconds(20)
                 )
                 .Opacity(
                     from: 0,

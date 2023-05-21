@@ -51,14 +51,16 @@
                             <Grid ColumnSpacing="8">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width=".8*" />
-                                    <ColumnDefinition Width=".5*"/>
-                                    <ColumnDefinition Width=".4*"/>
+                                    <ColumnDefinition Width=".8*"/>
+                                    <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
                                 <TextBlock Grid.Column="0" Text="{x:Bind Title}"/>
 
                                 <TextBlock Grid.Column="1" TextTrimming="CharacterEllipsis" Text="{x:Bind ReleaseName}"/>
 
-                                <TextBlock Grid.Column="2" Text="{x:Bind FormatPlaycount(Playcount)}"/>
+                                <TextBlock 
+                                    HorizontalAlignment="Right"
+                                    Grid.Column="2" Text="{x:Bind FormatPlaycount(Playcount)}"/>
                             </Grid>
                         </local:TrackView.View>
                     </local:TrackView>

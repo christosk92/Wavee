@@ -2,14 +2,15 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using ArtistTest.Sections.Grid;
-using ArtistTest.Sections.List;
 using CommunityToolkit.Labs.WinUI;
 using LanguageExt;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Wavee.UI.ViewModels;
+using Wavee.UI.WinUI.Views.Artist.Sections.Grid;
+using Wavee.UI.WinUI.Views.Artist.Sections.List;
 
-namespace ArtistTest.Sections;
+namespace Wavee.UI.WinUI.Views.Artist.Sections;
 
 public partial class ArtistDiscographyGroupViewView
 {
@@ -90,5 +91,14 @@ public partial class ArtistDiscographyGroupViewView
         GC.Collect();
     }
 
-    private static ConcurrentDictionary<string, Dictionary<string, object>> _pages = new();
+    private static readonly ConcurrentDictionary<string, Dictionary<string, object>> _pages = new();
+
+    public static void ClearAll()
+    {
+        foreach (var (key, value) in _pages)
+        {
+            value.Clear();
+        }
+        _pages.Clear();
+    }
 }

@@ -14,7 +14,7 @@ public static class UICommands
         {
             var pageType = id.Type switch
             {
-                AudioItemType.Artist => typeof(ArtistView),
+                AudioItemType.Artist => typeof(ArtistRootView),
                 _ => null
             };
             if (pageType is not null)

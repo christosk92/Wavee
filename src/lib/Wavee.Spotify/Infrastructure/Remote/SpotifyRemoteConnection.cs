@@ -33,7 +33,14 @@ internal sealed class SpotifyRemoteConnection
             await foreach (var message in listener.Reader.ReadAllAsync())
             {
                 //dispatch cluster messages, connection id etc
-                await HandleMessage(message);
+                try
+                {
+                    await HandleMessage(message);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                }
             }
         });
 

@@ -24,6 +24,7 @@
         <Border VerticalAlignment="Bottom"
                 HorizontalAlignment="Stretch"
                 BorderThickness="1"
+                Margin="0,0,0,-2"
                 BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
             <controls1:BottomPlayerControl Playback="{x:Bind ViewModel.Playback}" />
         </Border>

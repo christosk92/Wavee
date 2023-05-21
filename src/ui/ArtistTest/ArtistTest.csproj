@@ -25,6 +25,7 @@
     <None Remove="ArtistDiscographyLazyTracksView.xaml" />
     <None Remove="ArtistDiscographyListView.xaml" />
     <None Remove="ArtistOverview.xaml" />
+    <None Remove="Components\ArtistAboutSection.xaml" />
     <None Remove="Components\SpotifyView.xaml" />
     <None Remove="ImageTransitionControl.xaml" />
     <None Remove="Styles\BorderStyles.xaml" />
@@ -43,12 +44,14 @@
 
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Labs.WinUI.SegmentedControl" Version="0.0.3" />
+    <PackageReference Include="CommunityToolkit.Labs.WinUI.SettingsControls" Version="0.0.18" />
     <PackageReference Include="CommunityToolkit.Labs.WinUI.Shimmer" Version="0.0.1" />
     <PackageReference Include="CommunityToolkit.Labs.WinUI.TransitionHelper" Version="0.0.1" />
     <PackageReference Include="CommunityToolkit.WinUI.UI.Animations" Version="7.1.2" />
     <PackageReference Include="CommunityToolkit.WinUI.UI.Controls" Version="7.1.2" />
     <PackageReference Include="CommunityToolkit.WinUI.UI.Controls.Media" Version="7.1.2" />
     <PackageReference Include="CommunityToolkit.WinUI.UI.Media" Version="7.1.2" />
+    <PackageReference Include="FontAwesome6.Svg.WinUI" Version="2.5.1" />
     <PackageReference Include="LanguageExt.Core" Version="4.4.3" />
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.3.230502000" />
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.22621.755" />
@@ -85,6 +88,9 @@
     <None Update="Assets\amb.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <Page Update="Components\ArtistAboutSection.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Update="Styles\BorderStyles.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>

@@ -10,15 +10,19 @@
 		<PublishProfile>win10-$(Platform).pubxml</PublishProfile>
 		<UseWinUI>true</UseWinUI>
 		<EnableMsixTooling>true</EnableMsixTooling>
-		<WindowsPackageType>None</WindowsPackageType>
 	</PropertyGroup>
 	<ItemGroup>
 		<Content Remove="Assets\AlbumPlaceholder.png" />
+		<Content Remove="Assets\amb.png" />
 	</ItemGroup>
 	<ItemGroup>
+		<None Remove="Components\TrackView.xaml" />
 		<None Remove="Controls\BottomPlayerControl.xaml" />
 		<None Remove="Controls\SpotifyViewItemView.xaml" />
 		<None Remove="Styles\ButtonStyles.xaml" />
+		<None Remove="Views\Artist\ArtistAbout.xaml" />
+		<None Remove="Views\Artist\ArtistConcerts.xaml" />
+		<None Remove="Views\Artist\ArtistOverview.xaml" />
 		<None Remove="Views\Artist\ArtistView.xaml" />
 		<None Remove="Views\Home\HomeRootView.xaml" />
 		<None Remove="Views\Playlist\CreatePlaylistView.xaml" />
@@ -27,7 +31,6 @@
 		<None Remove="Views\Setup\SigninInView.xaml" />
 		<None Remove="Views\ShellView.xaml" />
 	</ItemGroup>
-
 	<ItemGroup>
 		<Content Include="Assets\SplashScreen.scale-200.png" />
 		<Content Include="Assets\LockScreenLogo.scale-200.png" />
@@ -39,6 +42,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<PackageReference Include="CommunityToolkit.Labs.WinUI.SegmentedControl" Version="0.0.3" />
 		<PackageReference Include="CommunityToolkit.Labs.WinUI.Shimmer" Version="0.0.1" />
 		<PackageReference Include="CommunityToolkit.Labs.WinUI.SizerBase" Version="0.0.4" />
 		<PackageReference Include="CommunityToolkit.Labs.WinUI.TokenView" Version="0.0.6" />
@@ -81,6 +85,42 @@
 		<None Update="Assets\AlbumPlaceholder.png">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
+		<None Update="Assets\amb.png">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="Components\SpotifyView.xaml">
+		  <Generator>MSBuild:Compile</Generator>
+		</None>
+		<None Update="Styles\BorderStyles.xaml">
+		  <Generator>MSBuild:Compile</Generator>
+		</None>
+		<None Update="Views\Artist\Sections\ArtistDiscographyGroupViewView.xaml">
+		  <Generator>MSBuild:Compile</Generator>
+		</None>
+		<None Update="Views\Artist\Sections\Grid\ArtistDiscographyGridView.xaml">
+		  <Generator>MSBuild:Compile</Generator>
+		</None>
+		<None Update="Views\Artist\Sections\List\ArtistDiscographyLazyTracksView.xaml">
+		  <Generator>MSBuild:Compile</Generator>
+		</None>
+		<None Update="Views\Artist\Sections\List\ArtistDiscographyListView.xaml">
+		  <Generator>MSBuild:Compile</Generator>
+		</None>
+		<Page Update="Components\TrackView.xaml">
+		  <Generator>MSBuild:Compile</Generator>
+		</Page>
+		<None Update="Controls\ImageTransitionControl.xaml">
+		  <Generator>MSBuild:Compile</Generator>
+		</None>
+		<Page Update="Views\Artist\ArtistConcerts.xaml">
+		  <Generator>MSBuild:Compile</Generator>
+		</Page>
+		<Page Update="Views\Artist\ArtistAbout.xaml">
+		  <Generator>MSBuild:Compile</Generator>
+		</Page>
+		<Page Update="Views\Artist\ArtistOverview.xaml">
+		  <Generator>MSBuild:Compile</Generator>
+		</Page>
 		<Page Update="Views\Artist\ArtistView.xaml">
 			<Generator>MSBuild:Compile</Generator>
 		</Page>
