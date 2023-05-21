@@ -28,6 +28,10 @@ I will try to post regular updates about what I've done, and what needs to be do
  
  ![image](https://github.com/christosk92/Wavee/assets/13438702/8737eee8-45e1-46e8-a44b-6e4da76f220e)
 
+- Started on context menus:
+
+![image](https://github.com/christosk92/Wavee/assets/13438702/4c27ac96-78da-4c21-a88c-62907572e914)
+
 
 
 ### 2023/05/20
