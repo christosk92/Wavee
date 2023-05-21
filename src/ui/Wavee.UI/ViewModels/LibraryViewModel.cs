@@ -142,6 +142,11 @@ public sealed class LibraryViewModel<R> : ReactiveObject where R : struct, HasSp
 
         return res;
     }
+
+    public bool InLibrary(AudioId id)
+    {
+        return _items.Lookup(id).HasValue;
+    }
 }
 
 public enum LibraryItemType

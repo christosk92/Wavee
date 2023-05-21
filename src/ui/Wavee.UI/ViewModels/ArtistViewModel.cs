@@ -168,7 +168,7 @@ public sealed class ArtistViewModel<R> : ReactiveObject, INavigableViewModel
             topTracks: topTracks,
             res.ToSeq(),
             profilePic,
-            id: "test"
+            id: artistId.ToBase62()
         );
 
         ArtistFetched.SetResult();

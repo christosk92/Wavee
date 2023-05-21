@@ -25,10 +25,13 @@
             <Button Padding="12"
                     Margin="0,0,16,0"
                     CornerRadius="6"
+                    Tag="{x:Bind Id}"
+                    Tapped="SpotifyItemTapped"
                     BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                     BorderThickness="1"
                     Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
                 <components:SpotifyView Title="{x:Bind Title}"
+                                        Id="{x:Bind Id}"
                                         Description="{x:Bind Description}"
                                         Image="{x:Bind Image}" />
             </Button>
@@ -36,31 +39,16 @@
         <DataTemplate x:Key="ArtistView"
                       x:DataType="models:SpotifyViewItem">
             <Button Padding="12"
+                    Tag="{x:Bind Id}"
+                    Tapped="SpotifyItemTapped"
                     Margin="0,0,16,0"
                     CornerRadius="6"
                     BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                     BorderThickness="1"
                     Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
-
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition />
-                        <RowDefinition Height="Auto" />
-                    </Grid.RowDefinitions>
-                    <controls1:ConstrainedBox AspectRatio="1:1">
-                        <Border CornerRadius="400">
-                            <Image Source="{x:Bind Image, Mode=OneWay}" />
-                        </Border>
-                    </controls1:ConstrainedBox>
-                    <TextBlock FontSize="15"
-                               Margin="0,4,0,0"
-                               HorizontalAlignment="Center"
-                               Grid.Row="1"
-                               FontWeight="SemiBold"
-                               Text="{x:Bind Title, Mode=OneWay}"
-                               TextWrapping="Wrap"
-                               MaxLines="2" />
-                </Grid>
+                <components:SpotifyArtistView Title="{x:Bind Title}"
+                                              Id="{x:Bind Id}"
+                                              Image="{x:Bind Image}" />
             </Button>
         </DataTemplate>
 
@@ -111,40 +99,40 @@
         <ScrollViewer Margin="0,0,-24,0"
                       Grid.Row="1"
                       Padding="0,0,24,0">
-           <StackPanel>
-               <Grid x:Name="ActualDataGrid"
-                     x:Load="{x:Bind NegateBool(ViewModel.IsLoading), Mode=OneWay}">
-                   <ItemsRepeater ItemsSource="{x:Bind ViewModel.Items, Mode=OneWay}">
-                       <ItemsRepeater.ItemTemplate>
-                           <DataTemplate x:DataType="viewModels:HomeGroupView">
-                               <Grid>
-                                   <Grid.RowDefinitions>
-                                       <RowDefinition Height="Auto" />
-                                       <RowDefinition />
-                                   </Grid.RowDefinitions>
-                                   <StackPanel Margin="0,0,0,8"
-                                               HorizontalAlignment="Left">
-                                       <TextBlock FontSize="16"
-                                                  FontWeight="SemiBold"
-                                                  Text="{x:Bind Title}" />
-                                       <TextBlock Opacity=".7"
-                                                  Text="{x:Bind TagLine}" />
-                                   </StackPanel>
-                                   <ItemsRepeater Margin="0,0,0,24"
-                                                  Grid.Row="1"
-                                                  ItemTemplate="{StaticResource HomeItemTemplateSelector}"
-                                                  ItemsSource="{x:Bind Items}">
-                                       <ItemsRepeater.Layout>
-                                           <panels:HorizontalAdaptiveLayout DesiredWidth="220" />
-                                       </ItemsRepeater.Layout>
-                                   </ItemsRepeater>
-                               </Grid>
-                           </DataTemplate>
-                       </ItemsRepeater.ItemTemplate>
-                   </ItemsRepeater>
-               </Grid>
+            <StackPanel>
+                <Grid x:Name="ActualDataGrid"
+                      x:Load="{x:Bind NegateBool(ViewModel.IsLoading), Mode=OneWay}">
+                    <ItemsRepeater ItemsSource="{x:Bind ViewModel.Items, Mode=OneWay}">
+                        <ItemsRepeater.ItemTemplate>
+                            <DataTemplate x:DataType="viewModels:HomeGroupView">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition />
+                                    </Grid.RowDefinitions>
+                                    <StackPanel Margin="0,0,0,8"
+                                                HorizontalAlignment="Left">
+                                        <TextBlock FontSize="16"
+                                                   FontWeight="SemiBold"
+                                                   Text="{x:Bind Title}" />
+                                        <TextBlock Opacity=".7"
+                                                   Text="{x:Bind TagLine}" />
+                                    </StackPanel>
+                                    <ItemsRepeater Margin="0,0,0,24"
+                                                   Grid.Row="1"
+                                                   ItemTemplate="{StaticResource HomeItemTemplateSelector}"
+                                                   ItemsSource="{x:Bind Items}">
+                                        <ItemsRepeater.Layout>
+                                            <panels:HorizontalAdaptiveLayout DesiredWidth="220" />
+                                        </ItemsRepeater.Layout>
+                                    </ItemsRepeater>
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsRepeater.ItemTemplate>
+                    </ItemsRepeater>
+                </Grid>
 
-               <Border Height="80"/>
+                <Border Height="80" />
             </StackPanel>
         </ScrollViewer>
 

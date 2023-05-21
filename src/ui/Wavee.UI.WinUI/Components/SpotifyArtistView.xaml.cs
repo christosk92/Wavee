@@ -1,22 +1,33 @@
-using Microsoft.UI.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Controls.Primitives;
+using Microsoft.UI.Xaml.Data;
 using Microsoft.UI.Xaml.Input;
-using System.Windows.Input;
+using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Navigation;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.Foundation;
+using Windows.Foundation.Collections;
+using Microsoft.UI.Input;
 using Wavee.Core.Ids;
 using Wavee.UI.WinUI.Flyouts;
 
+// To learn more about WinUI, the WinUI project structure,
+// and more about our project templates, see: http://aka.ms/winui-project-info.
+
 namespace Wavee.UI.WinUI.Components
 {
-    public sealed partial class SpotifyView : UserControl
+    public sealed partial class SpotifyArtistView : UserControl
     {
-        public static readonly DependencyProperty TitleProperty = DependencyProperty.Register(nameof(Title), typeof(string), typeof(SpotifyView), new PropertyMetadata(default(string)));
-        public static readonly DependencyProperty ImageProperty = DependencyProperty.Register(nameof(Image), typeof(string), typeof(SpotifyView), new PropertyMetadata(default(string)));
-        public static readonly DependencyProperty DescriptionProperty = DependencyProperty.Register(nameof(Description), typeof(string), typeof(SpotifyView), new PropertyMetadata(default(string)));
-        public static readonly DependencyProperty IdProperty = DependencyProperty.Register(nameof(Id), typeof(AudioId), typeof(SpotifyView), new PropertyMetadata(default(AudioId)));
+        public static readonly DependencyProperty TitleProperty = DependencyProperty.Register(nameof(Title), typeof(string), typeof(SpotifyArtistView), new PropertyMetadata(default(string)));
+        public static readonly DependencyProperty ImageProperty = DependencyProperty.Register(nameof(Image), typeof(string), typeof(SpotifyArtistView), new PropertyMetadata(default(string)));
+        public static readonly DependencyProperty IdProperty = DependencyProperty.Register(nameof(Id), typeof(AudioId), typeof(SpotifyArtistView), new PropertyMetadata(default(AudioId)));
 
-        public SpotifyView()
+        public SpotifyArtistView()
         {
             this.InitializeComponent();
         }
@@ -33,19 +44,13 @@ namespace Wavee.UI.WinUI.Components
             set => SetValue(ImageProperty, value);
         }
 
-        public string Description
-        {
-            get => (string)GetValue(DescriptionProperty);
-            set => SetValue(DescriptionProperty, value);
-        }
-
         public AudioId Id
         {
             get => (AudioId)GetValue(IdProperty);
             set => SetValue(IdProperty, value);
         }
 
-        private void SpotifyView_OnPointerEntered(object sender, PointerRoutedEventArgs e)
+        private void SpotifyArtistView_OnPointerEntered(object sender, PointerRoutedEventArgs e)
         {
             if (e.Pointer.PointerDeviceType is PointerDeviceType.Mouse)
             {
@@ -53,7 +58,7 @@ namespace Wavee.UI.WinUI.Components
             }
         }
 
-        private void SpotifyView_OnPointerExited(object sender, PointerRoutedEventArgs e)
+        private void SpotifyArtistView_OnPointerExited(object sender, PointerRoutedEventArgs e)
         {
             if (e.Pointer.PointerDeviceType is PointerDeviceType.Mouse)
             {
@@ -61,7 +66,7 @@ namespace Wavee.UI.WinUI.Components
             }
         }
 
-        private void SpotifyView_OnContextRequested(UIElement sender, ContextRequestedEventArgs args)
+        private void SpotifyArtistView_OnContextRequested(UIElement sender, ContextRequestedEventArgs args)
         {
             Point point = new Point(0, 0);
             var properFlyout = Id.ConstructFlyout();
