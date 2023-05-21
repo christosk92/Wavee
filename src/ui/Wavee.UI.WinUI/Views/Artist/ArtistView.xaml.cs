@@ -3,10 +3,16 @@ using LanguageExt;
 using Microsoft.UI.Xaml.Controls;
 using System;
 using System.Threading.Tasks;
+using Microsoft.UI.Composition;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media.Imaging;
 using Wavee.UI.Infrastructure.Live;
 using Wavee.UI.ViewModels;
+using Microsoft.UI.Xaml.Hosting;
+using CommunityToolkit.WinUI.UI.Animations.Expressions;
+using System.Windows.Controls;
+using ScrollViewer = Microsoft.UI.Xaml.Controls.ScrollViewer;
 
 namespace Wavee.UI.WinUI.Views.Artist;
 
@@ -19,6 +25,7 @@ public sealed partial class ArtistRootView : UserControl, INavigablePage
     }
 
     public ArtistViewModel<WaveeUIRuntime> ViewModel { get; }
+
     private async void Selector_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         await ViewModel.ArtistFetched.Task;
@@ -38,6 +45,7 @@ public sealed partial class ArtistRootView : UserControl, INavigablePage
     }
 
     private bool _wasTransformed;
+
     private async void ScrollViewer_OnViewChanged(object sender, ScrollViewerViewChangedEventArgs e)
     {
         var frac = ((ScrollViewer)sender).VerticalOffset / ImageT.Height;
@@ -50,20 +58,25 @@ public sealed partial class ArtistRootView : UserControl, INavigablePage
 
         //at around 75%, we should start transforming the header into a floating one
         const double threshold = 0.75;
-        if (progress > 0.75)
+        if (progress > 0.75 && !_wasTransformed)
         {
             _wasTransformed = true;
             BaseTrans.Source = MetadataPnale;
             BaseTrans.Target = SecondMetadataPanel;
             await BaseTrans.StartAsync();
         }
-        else if (_wasTransformed)
+        else if (progress <= .75 && _wasTransformed)
         {
             _wasTransformed = false;
             BaseTrans.Source = SecondMetadataPanel;
             BaseTrans.Target = MetadataPnale;
             await BaseTrans.StartAsync();
         }
+    }
+
+    private void ScrollViewer_OnViewChanging(object sender, ScrollViewerViewChangingEventArgs e)
+    {
+        //in case we overscroll up, we cant a bounce effect on the image
     }
 
     Option<INavigableViewModel> INavigablePage.ViewModel => ViewModel;
@@ -99,6 +112,7 @@ public sealed partial class ArtistRootView : UserControl, INavigablePage
             AlternativeArtistImage.Visibility = Visibility.Visible;
             AlternativeArtistImage.ProfilePicture = SecondPersonPicture.ProfilePicture;
         }
+
         //ArtistPage_OnSizeChanged
         this.ArtistPage_OnSizeChanged(this, null);
     }
@@ -132,4 +146,5 @@ public sealed partial class ArtistRootView : UserControl, INavigablePage
         _about?.Clear();
         _about = null;
     }
+
 }

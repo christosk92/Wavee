@@ -10,6 +10,7 @@
              xmlns:models="using:Wavee.UI.Models"
              xmlns:controls="using:Wavee.UI.WinUI.Controls"
              xmlns:viewModels="using:Wavee.UI.ViewModels"
+             xmlns:components="using:Wavee.UI.WinUI.Components"
              mc:Ignorable="d">
     <!-- <UserControl.Resources> -->
     <!--     <panels:HorizontalPanelLayout x:Name="HorizontalPanelLayout" -->
@@ -87,32 +88,11 @@
                                     </ListView.ItemsPanel>
                                     <ListView.ItemTemplate>
                                         <DataTemplate x:DataType="models:SpotifyViewItem">
-                                            <Grid>
-                                                <Grid.RowDefinitions>
-                                                    <RowDefinition />
-                                                    <RowDefinition Height="Auto" />
-                                                </Grid.RowDefinitions>
-
-                                                <Image>
-                                                    <Image.Source>
-                                                        <BitmapImage UriSource="{x:Bind Image}"
-                                                                     DecodePixelHeight="230"
-                                                                     DecodePixelWidth="230" />
-                                                    </Image.Source>
-                                                </Image>
-                                                <StackPanel Margin="0,4,0,0"
-                                                            Grid.Row="1">
-                                                    <TextBlock FontSize="15"
-                                                               FontWeight="SemiBold"
-                                                               Text="{x:Bind Title}"
-                                                               TextWrapping="Wrap"
-                                                               MaxLines="2" />
-                                                    <TextBlock Text="{x:Bind Description}"
-                                                               TextWrapping="Wrap"
-                                                               Opacity=".8"
-                                                               MaxLines="3" />
-                                                </StackPanel>
-                                            </Grid>
+                                            <components:SpotifyView 
+                                                Title="{x:Bind Title}" 
+                                                Description="{x:Bind Description}" 
+                                                Image="{x:Bind Image}"
+                                                />
                                         </DataTemplate>
                                     </ListView.ItemTemplate>
                                 </ListView>

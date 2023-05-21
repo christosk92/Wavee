@@ -5,6 +5,7 @@
     xmlns:local="using:ArtistTest.Components"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:winUi="using:CommunityToolkit.Labs.WinUI"
     mc:Ignorable="d">
 
     <Grid>
@@ -13,14 +14,20 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <Image DataContext="{x:Bind}" Stretch="UniformToFill">
-            <Image.Source>
-                <BitmapImage UriSource="{Binding Image}"
-                             DecodePixelHeight="230"
-                             DecodePixelWidth="230" />
-            </Image.Source>
-        </Image>
+        <Grid>
+            <Image
+                x:Name="LoadingImage"
+                DataContext="{x:Bind}" 
+                Stretch="UniformToFill">
+                <Image.Source>
+                    <BitmapImage UriSource="{Binding Image}"
+                                 DecodePixelHeight="230"
+                                 DecodePixelWidth="230" />
+                </Image.Source>
+            </Image>
+        </Grid>
         <StackPanel Margin="0,4,0,0"
+                    HorizontalAlignment="Left"
                     Grid.Row="1">
             <TextBlock FontSize="15"
                        FontWeight="SemiBold"
