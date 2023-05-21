@@ -5,6 +5,7 @@ using System.Reactive.Concurrency;
 using DynamicData.Binding;
 using Wavee.UI.Models;
 using System.Reactive.Linq;
+using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
 using Wavee.Core.Ids;
 using Wavee.UI.Infrastructure.Sys;
@@ -18,10 +19,13 @@ public sealed class ShellViewModel<R> : ReactiveObject where R : struct, HasFile
     private readonly R _runtime;
     private User _user;
 
-    public ShellViewModel(R runtime, User user)
+    public ShellViewModel(R runtime, User user,
+        Action<Seq<AudioId>> onLibraryItemAdded,
+        Action<Seq<AudioId>> onLibraryItemRemoved)
     {
         Playback = new PlaybackViewModel<R>(runtime);
         PlaylistsVm = new PlaylistsViewModel<R>(runtime);
+        Library = new LibraryViewModel<R>(runtime, onLibraryItemAdded, onLibraryItemRemoved, user.Id);
         User = user;
 
         _runtime = runtime;
@@ -57,4 +61,5 @@ public sealed class ShellViewModel<R> : ReactiveObject where R : struct, HasFile
     public static ShellViewModel<R> Instance { get; private set; }
     public PlaylistsViewModel<R> PlaylistsVm { get; private set; }
     public PlaybackViewModel<R> Playback { get; private set; }
+    public LibraryViewModel<R> Library { get; private set; }
 }

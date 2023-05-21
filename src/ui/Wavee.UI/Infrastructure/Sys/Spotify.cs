@@ -47,7 +47,8 @@ public static class Spotify<R> where R : struct, HasSpotify<R>
 
     public static Eff<R, Option<IObservable<SpotifyRootlistUpdateNotification>>> ObserveRootlist()
         => default(R).SpotifyEff.Map(x => x.ObserveRootlist());
-
+    public static Eff<R, Option<IObservable<SpotifyLibraryUpdateNotification>>> ObserveLibrary()
+        => default(R).SpotifyEff.Map(x => x.ObserveLibrary());
     public static Eff<R, Option<string>> GetOwnDeviceId() =>
         default(R).SpotifyEff.Map(x => x.GetOwnDeviceId());
 
@@ -78,4 +79,5 @@ public static class Spotify<R> where R : struct, HasSpotify<R>
 
     public static Eff<R, MercuryClient> Mercury() =>
         default(R).SpotifyEff.Map(x => x.Mercury());
+
 }

@@ -5,6 +5,7 @@ using System.Threading.Channels;
 using Eum.Spotify.connectstate;
 using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
+using Wavee.Core.Ids;
 using Wavee.Core.Player;
 using Wavee.Spotify.Infrastructure.Remote.Messaging;
 
@@ -15,6 +16,7 @@ internal sealed class SpotifyRemoteConnection
     private Atom<HashMap<Guid, Channel<SpotifyWebsocketMessage>>> Listeners =
         Atom(LanguageExt.HashMap<Guid, Channel<SpotifyWebsocketMessage>>.Empty);
 
+    private readonly Subject<SpotifyLibraryUpdateNotification> _libraryNotifSubj;
     private readonly Subject<SpotifyRootlistUpdateNotification> _rootlistNotifSubj;
     private readonly string _userId;
 
@@ -25,6 +27,7 @@ internal sealed class SpotifyRemoteConnection
     {
         _userId = userId;
         _rootlistNotifSubj = new Subject<SpotifyRootlistUpdateNotification>();
+        _libraryNotifSubj = new Subject<SpotifyLibraryUpdateNotification>();
         var listener = Channel.CreateUnbounded<SpotifyWebsocketMessage>();
         var id = AddListener(listener);
 
@@ -54,6 +57,11 @@ internal sealed class SpotifyRemoteConnection
 
     public IObservable<SpotifyRootlistUpdateNotification> OnRootListNotification => _rootlistNotifSubj.StartWith(
         new SpotifyRootlistUpdateNotification(_userId));
+
+    public IObservable<SpotifyLibraryUpdateNotification> OnLibraryNotification => _libraryNotifSubj
+        .StartWith(new SpotifyLibraryUpdateNotification(
+            true, new AudioId(), true, Option<DateTimeOffset>.None));
+
     public IObservable<Option<Cluster>> OnClusterChange()
         => _latestCluster.OnChange()
             .StartWith(_latestCluster.Value);
@@ -108,6 +116,35 @@ internal sealed class SpotifyRemoteConnection
         else if (message.Uri.Equals($"hm://playlist/v2/user/{_userId}/rootlist"))
         {
             atomic(() => _rootlistNotifSubj.OnNext(new SpotifyRootlistUpdateNotification(_userId)));
+        }
+        else if (message.Uri.StartsWith("hm://collection/") && message.Uri.EndsWith("/json"))
+        {
+            var payload = message.Payload.ValueUnsafe();
+            using var jsonDoc = JsonDocument.Parse(payload);
+            using var rootArr = jsonDoc.RootElement.EnumerateArray();
+            foreach (var rootItemStr in rootArr.Select(c=> c.ToString()))
+            {
+                using var rootItem = JsonDocument.Parse(rootItemStr);
+                using var items = rootItem.RootElement.GetProperty("items").EnumerateArray();
+                foreach (var item in items)
+                {
+                    var type = item.GetProperty("type").GetString();
+                    var removed = item.GetProperty("removed").GetBoolean();
+                    var addedAt = item.GetProperty("addedAt").GetUInt64();
+                    var result = new SpotifyLibraryUpdateNotification(
+                        Initial: false,
+                        Item: AudioId.FromBase62(
+                            base62: item.GetProperty("identifier").GetString(),
+                            itemType: type switch
+                            {
+                                "track" => AudioItemType.Track
+                            }, ServiceType.Spotify),
+                        Removed: removed,
+                        AddedAt: removed ? Option<DateTimeOffset>.None : DateTimeOffset.Now
+                    );
+                    atomic(() => _libraryNotifSubj.OnNext(result));
+                }
+            }
         }
         else if (message.Type is SpotifyWebsocketMessageType.Request)
         {

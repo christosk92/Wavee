@@ -61,7 +61,7 @@
 
             <InfoBadge Grid.Column="2"
                        VerticalAlignment="Center"
-                       Value="{x:Bind Count}" />
+                       Value="{x:Bind Count, Mode=OneWay}" />
         </Grid>
     </DataTemplate>
     <DataTemplate x:Key="HeaderSidebarItem"

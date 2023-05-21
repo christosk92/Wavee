@@ -110,7 +110,7 @@ public sealed class HomeViewModel<R> : ReactiveObject, INavigableViewModel where
                                 x switch
                                 {
                                     < 100 => ArtworkSizeType.Small,
-                                    < 300 => ArtworkSizeType.Default,
+                                    < 400 => ArtworkSizeType.Default,
                                     _ => ArtworkSizeType.Large
                                 }).IfNone(ArtworkSizeType.Default);
 
@@ -143,6 +143,15 @@ public sealed class HomeViewModel<R> : ReactiveObject, INavigableViewModel where
                             Title = item.GetProperty("name").GetString()!,
                             Image = image,
                             Description = $"{item.GetProperty("total_tracks").GetInt32()} tracks"
+                        });
+                        break;
+                    case "artist":
+                        result = result.Add(new SpotifyViewItem
+                        {
+                            Id = AudioId.FromUri(item.GetProperty("uri").GetString()),
+                            Title = item.GetProperty("name").GetString()!,
+                            Image = image,
+                            Description = item.GetProperty("followers").GetProperty("total").GetInt32().ToString()
                         });
                         break;
                     default:

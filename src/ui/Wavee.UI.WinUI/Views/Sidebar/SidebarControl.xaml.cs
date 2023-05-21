@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
 using Microsoft.UI.Xaml;
@@ -89,21 +90,59 @@ namespace Wavee.UI.WinUI.Views.Sidebar
             NavigateTo(args.InvokedItem);
         }
 
+        private static Dictionary<string, Type> _navigationMapping
+         = new Dictionary<string, Type>
+         {
+            { "home", typeof(HomeRootView) },
+         };
         private static void NavigateTo(object item)
         {
-            var pageType = item switch
+            var slug = item switch
             {
-                RegularSidebarItem re => re.Slug switch
-                {
-                    "home" => typeof(HomeRootView),
-                    _ => null
-                },
+                RegularSidebarItem re => re.Slug,
                 _ => null
             };
+            if (slug is null)
+                return;
+
+            if (!_navigationMapping.TryGetValue(slug, out var pageType))
+                return;
+            // var pageType = item switch
+            // {
+            //     RegularSidebarItem re => re.Slug switch
+            //     {
+            //         "home" => typeof(HomeRootView),
+            //         _ => null
+            //     },
+            //     _ => null
+            // };
             if (pageType is not null)
                 ShellView.NavigationService.Navigate(pageType);
         }
-
+        public void SetSelected(Type type)
+        {
+            var slugAssociated = _navigationMapping.SingleOrDefault(x => x.Value == type);
+            if (slugAssociated.Value is not null)
+            {
+                var item = SidebarItems.SingleOrDefault(x =>
+                    x is RegularSidebarItem f && f.Slug == slugAssociated.Key);
+                //TODO: Playlists
+                if (item is not null)
+                {
+                    FixedSidebarItemsListView.SelectedItem = item;
+                }
+                else
+                {
+                    FixedSidebarItemsListView.SelectedIndex = -1;
+                    PlaylistsListView.SelectedItem = -1;
+                }
+            }
+            else
+            {
+                FixedSidebarItemsListView.SelectedIndex = -1;
+                PlaylistsListView.SelectedItem = -1;
+            }
+        }
         private void FixedSidebarItemsListView_OnLoaded(object sender, RoutedEventArgs e)
         {
             foreach (var item in FixedSidebarItemsListView.Items)
@@ -160,5 +199,6 @@ namespace Wavee.UI.WinUI.Views.Sidebar
 
             return null;
         }
+
     }
 }

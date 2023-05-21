@@ -4,7 +4,9 @@ using System.Linq;
 using System.Windows.Forms;
 using CommunityToolkit.WinUI.UI.Controls;
 using Eum.Spotify;
+using LanguageExt;
 using Wavee.Core.Contracts;
+using Wavee.Core.Ids;
 using Wavee.UI.Infrastructure.Live;
 using Wavee.UI.Infrastructure.Sys;
 using Wavee.UI.ViewModels;
@@ -15,11 +17,43 @@ namespace Wavee.UI.WinUI.Views;
 
 public sealed partial class ShellView : UserControl
 {
-    public ShellView(WaveeUIRuntime runtime, User userId)
+    public ShellView(
+        WaveeUIRuntime runtime,
+        User userId)
     {
-        ViewModel = new ShellViewModel<WaveeUIRuntime>(runtime, userId);
         this.InitializeComponent();
-        NavigationService = new NavigationService(NavigationFrame);
+        var songLibraryItem = new CountedSidebarItem
+        {
+            Icon = "\uE00B",
+            IconFontFamily = "Segoe MDL2 Assets",
+            Title = "Songs",
+            Count = 0,
+            Slug = "songs"
+        };
+        var albumLibraryItem = new CountedSidebarItem
+        {
+            Icon = "\uE93C",
+            IconFontFamily = "Segoe MDL2 Assets",
+            Title = "Albums",
+            Count = 0,
+            Slug = "albums"
+        };
+        var artistsLibraryItem = new CountedSidebarItem
+        {
+            Icon = "\uEBDA",
+            IconFontFamily = "Segoe MDL2 Assets",
+            Title = "Artists",
+            Count = 0,
+            Slug = "artists"
+        };
+        var podcastsLibraryItem = new CountedSidebarItem
+        {
+            Icon = "\uEB44",
+            IconFontFamily = "Segoe MDL2 Assets",
+            Title = "Podcasts",
+            Count = 0,
+            Slug = "podcasts"
+        };
         SidebarControl.SidebarItems = new AbsSidebarItemViewModel[]
         {
             new HeaderSidebarItem { Title = "For You" },
@@ -38,40 +72,49 @@ public sealed partial class ShellView : UserControl
                 Slug = "browse"
             },
             new HeaderSidebarItem { Title = "Library" },
-            new CountedSidebarItem
-            {
-                Icon = "\uE00B",
-                IconFontFamily = "Segoe MDL2 Assets",
-                Title = "Songs",
-                Count = 0,
-                Slug = "songs"
-            },
-            new CountedSidebarItem
-            {
-                Icon = "\uE93C",
-                IconFontFamily = "Segoe MDL2 Assets",
-                Title = "Albums",
-                Count = 0,
-                Slug = "albums"
-            },
-            new CountedSidebarItem
-            {
-                Icon = "\uEBDA",
-                IconFontFamily = "Segoe MDL2 Assets",
-                Title = "Artists",
-                Count = 0,
-                Slug = "artists"
-            },
-            new CountedSidebarItem
-            {
-                Icon = "\uEB44",
-                IconFontFamily = "Segoe MDL2 Assets",
-                Title = "Podcasts",
-                Count = 0,
-                Slug = "podcasts"
-            }
+            songLibraryItem,
+            albumLibraryItem,
+            artistsLibraryItem,
+            podcastsLibraryItem
         };
+
+        void OnLibraryItemAdded(Seq<AudioId> id)
+        {
+            //inc count
+            var tracksAdded = id.Where(c => c.Type is AudioItemType.Track).Count;
+            var albumsAdded = id.Where(c => c.Type is AudioItemType.Album).Count;
+            var artistsAdded = id.Where(c => c.Type is AudioItemType.Artist).Count;
+            var podcastsAdded = id.Where(c => c.Type is AudioItemType.PodcastEpisode).Count;
+
+            songLibraryItem.Count += tracksAdded;
+            albumLibraryItem.Count += albumsAdded;
+            artistsLibraryItem.Count += artistsAdded;
+            podcastsLibraryItem.Count += podcastsAdded;
+        }
+        void OnLibraryItemRemoved(Seq<AudioId> id)
+        {
+            //dec count
+            var tracksRemoved = id.Where(c => c.Type is AudioItemType.Track).Count;
+            var albumsRemoved = id.Where(c => c.Type is AudioItemType.Album).Count;
+            var artistsRemoved = id.Where(c => c.Type is AudioItemType.Artist).Count;
+            var podcastsRemoved = id.Where(c => c.Type is AudioItemType.PodcastEpisode).Count;
+
+            songLibraryItem.Count -= tracksRemoved;
+            albumLibraryItem.Count -= albumsRemoved;
+            artistsLibraryItem.Count -= artistsRemoved;
+            podcastsLibraryItem.Count -= podcastsRemoved;
+        }
+
+        ViewModel = new ShellViewModel<WaveeUIRuntime>(runtime, userId, OnLibraryItemAdded, OnLibraryItemRemoved);
+        NavigationService = new NavigationService(NavigationFrame);
+        NavigationService.Navigated += NavigationService_Navigated;
     }
+
+    private void NavigationService_Navigated(object sender, Type e)
+    {
+        SidebarControl.SetSelected(e);
+    }
+
     public static NavigationService NavigationService { get; set; }
     public ShellViewModel<WaveeUIRuntime> ViewModel { get; }
 }

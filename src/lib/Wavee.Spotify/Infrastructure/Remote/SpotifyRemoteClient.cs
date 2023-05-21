@@ -115,6 +115,8 @@ public class SpotifyRemoteClient
         return spotifyLocalDeviceState.SetStateFrom(state);
     }
 
+    public IObservable<SpotifyLibraryUpdateNotification> LibraryChanged =>
+        _connection.OnLibraryNotification;
     public IObservable<SpotifyRootlistUpdateNotification> RootlistChanged =>
         _connection.OnRootListNotification;
     public IObservable<SpotifyRemoteState> StateChanged =>

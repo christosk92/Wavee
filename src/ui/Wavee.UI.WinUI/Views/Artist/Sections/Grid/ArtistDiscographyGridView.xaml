@@ -13,7 +13,7 @@
     <GridView ItemsSource="{x:Bind Items}">
         <GridView.ItemContainerStyle>
             <Style TargetType="GridViewItem" BasedOn="{StaticResource DefaultGridViewItemStyle}">
-                <Setter Property="Margin" Value="0,0,10,10"/>
+                <Setter Property="Margin" Value="0,0,14,24"/>
                 <Setter Property="Padding" Value="2"/>
             </Style>
         </GridView.ItemContainerStyle>

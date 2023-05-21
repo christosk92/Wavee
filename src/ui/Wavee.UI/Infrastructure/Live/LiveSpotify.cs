@@ -91,6 +91,13 @@ internal sealed class LiveSpotify : Traits.SpotifyIO
             .Map(x => x.RemoteClient.RootlistChanged);
     }
 
+    public Option<IObservable<SpotifyLibraryUpdateNotification>> ObserveLibrary()
+    {
+        return _connection
+            .Map(x => x.RemoteClient.LibraryChanged);
+    }
+
+
     public Option<IObservable<SpotifyRemoteState>> ObserveRemoteState()
     {
         return _connection

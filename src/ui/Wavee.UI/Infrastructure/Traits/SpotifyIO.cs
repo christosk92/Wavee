@@ -16,6 +16,7 @@ public interface SpotifyIO
     ValueTask<Unit> Authenticate(LoginCredentials credentials, CancellationToken ct = default);
     Option<APWelcome> WelcomeMessage();
     Option<IObservable<SpotifyRootlistUpdateNotification>> ObserveRootlist();
+    Option<IObservable<SpotifyLibraryUpdateNotification>> ObserveLibrary();
     Option<IObservable<SpotifyRemoteState>> ObserveRemoteState();
     Option<SpotifyCache> Cache();
     Option<string> CountryCode();

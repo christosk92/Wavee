@@ -90,7 +90,7 @@ public sealed class NavigationService
             _cachedPages.Add(pageType, (nextPage, parameter, _backStack.Count));
         }
 
-
+        Navigated?.Invoke(this, pageType);
         // if (_contentControl.Content is INavigablePage currentPage)
         // {
         //     var currentPageType = currentPage.GetType();
@@ -148,6 +148,7 @@ public sealed class NavigationService
 
     public bool CanGoBack => _backStack.Count > 0;
     public bool CanGoForward => false;
+    public event EventHandler<Type>? Navigated;
 
     public void GoBack()
     {

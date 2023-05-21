@@ -13,6 +13,8 @@ using Microsoft.UI.Xaml.Hosting;
 using CommunityToolkit.WinUI.UI.Animations.Expressions;
 using System.Windows.Controls;
 using ScrollViewer = Microsoft.UI.Xaml.Controls.ScrollViewer;
+using SelectionChangedEventArgs = Microsoft.UI.Xaml.Controls.SelectionChangedEventArgs;
+using UserControl = Microsoft.UI.Xaml.Controls.UserControl;
 
 namespace Wavee.UI.WinUI.Views.Artist;
 
