@@ -191,6 +191,11 @@
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
+            <ContentControl Grid.Column="0"
+                            Grid.ColumnSpan="2"
+                            Content="{x:Bind NavigationFrame, Mode=OneWay}"
+                            VerticalContentAlignment="Stretch"
+                            HorizontalContentAlignment="Stretch" />
             <labs:PropertySizer HorizontalAlignment="Left"
                                 x:Name="SidebarResizer"
                                 Binding="{x:Bind CoreSplitView.OpenPaneLength, Mode=TwoWay}"
@@ -258,10 +263,6 @@
                     </Style>
                 </labs:PropertySizer.Style>
             </labs:PropertySizer>
-            <ContentControl Grid.Column="1"
-                            Content="{x:Bind NavigationFrame, Mode=OneWay}"
-                            VerticalContentAlignment="Stretch"
-                            HorizontalContentAlignment="Stretch" />
         </Grid>
     </SplitView>
 </UserControl>

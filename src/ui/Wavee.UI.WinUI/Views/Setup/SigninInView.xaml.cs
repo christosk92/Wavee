@@ -26,7 +26,7 @@ namespace Wavee.UI.WinUI.Views.Setup
 
         private async void SigninInView_OnLoaded(object sender, RoutedEventArgs e)
         {
-            var result = await SignInTask;
+            var result = await Task.Run(async() => await SignInTask);
             //if ok , navigate to main page
             //if not 
             if (result.IsFail)

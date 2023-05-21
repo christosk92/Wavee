@@ -37,6 +37,7 @@ public sealed partial class ArtistRootView : UserControl, INavigablePage
         }
     }
 
+    private bool _wasTransformed;
     private async void ScrollViewer_OnViewChanged(object sender, ScrollViewerViewChangedEventArgs e)
     {
         var frac = ((ScrollViewer)sender).VerticalOffset / ImageT.Height;
@@ -49,14 +50,16 @@ public sealed partial class ArtistRootView : UserControl, INavigablePage
 
         //at around 75%, we should start transforming the header into a floating one
         const double threshold = 0.75;
-        if (progress >= 0.75)
+        if (progress > 0.75)
         {
+            _wasTransformed = true;
             BaseTrans.Source = MetadataPnale;
             BaseTrans.Target = SecondMetadataPanel;
             await BaseTrans.StartAsync();
         }
-        else
+        else if (_wasTransformed)
         {
+            _wasTransformed = false;
             BaseTrans.Source = SecondMetadataPanel;
             BaseTrans.Target = MetadataPnale;
             await BaseTrans.StartAsync();
@@ -87,15 +90,36 @@ public sealed partial class ArtistRootView : UserControl, INavigablePage
         await ViewModel.ArtistFetched.Task;
         this.Bindings.Update();
         MetadataPnale.Visibility = Visibility.Visible;
+        ShowPanelAnim.Start();
         SecondPersonPicture.ProfilePicture = new BitmapImage(new Uri(ViewModel.Artist.ProfilePicture));
+        if (string.IsNullOrEmpty(ViewModel.Artist.HeaderImage))
+        {
+            //show picture
+            Img.Visibility = Visibility.Collapsed;
+            AlternativeArtistImage.Visibility = Visibility.Visible;
+            AlternativeArtistImage.ProfilePicture = SecondPersonPicture.ProfilePicture;
+        }
+        //ArtistPage_OnSizeChanged
+        this.ArtistPage_OnSizeChanged(this, null);
     }
 
     private void ArtistPage_OnSizeChanged(object sender, SizeChangedEventArgs e)
     {
+        var newSize = (sender as FrameworkElement)?.ActualHeight ?? 0;
         //ratio is around 1:1, so 1/2
-        var topHeight = e.NewSize.Height * 0.5;
-        topHeight = Math.Min(topHeight, 550);
-        ImageT.Height = topHeight;
+        if (!string.IsNullOrEmpty(ViewModel.Artist.HeaderImage))
+        {
+            var topHeight = newSize * 0.5;
+            topHeight = Math.Min(topHeight, 550);
+            ImageT.Height = topHeight;
+        }
+        else
+        {
+            //else its only 1/4th
+            var topHeight = newSize * 0.25;
+            topHeight = Math.Min(topHeight, 550);
+            ImageT.Height = topHeight;
+        }
     }
 
     private void ArtistRootView_OnUnloaded(object sender, RoutedEventArgs e)
