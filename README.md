@@ -22,6 +22,10 @@ I will try to post regular updates about what I've done, and what needs to be do
 ### 2023/05/21
 - Revamped the artist page to make it more declarative in code:
  ![image](https://github.com/christosk92/Wavee/assets/13438702/c9d15357-9e7b-48ae-9f6e-18d67d263adf)
+- Started working on library component:
+ 
+ ![image](https://github.com/christosk92/Wavee/assets/13438702/8737eee8-45e1-46e8-a44b-6e4da76f220e)
+
 
 
 ### 2023/05/20
