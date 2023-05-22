@@ -17,7 +17,11 @@ public partial class ArtistDiscographyGroupViewView
 {
     public static readonly DependencyProperty TitleProperty = DependencyProperty.Register(nameof(Title), typeof(string), typeof(ArtistDiscographyGroupViewView), new PropertyMetadata(default(string)));
     public static readonly DependencyProperty CanSwitchTemplatesProperty = DependencyProperty.Register(nameof(CanSwitchTemplates), typeof(bool), typeof(ArtistDiscographyGroupViewView), new PropertyMetadata(default(bool)));
-    public static readonly DependencyProperty ViewsProperty = DependencyProperty.Register(nameof(Views), typeof(Seq<ArtistDiscographyView>), typeof(ArtistDiscographyGroupViewView), new PropertyMetadata(default(Seq<ArtistDiscographyView>)));
+    public static readonly DependencyProperty ViewsProperty = 
+        DependencyProperty.Register(nameof(Views), 
+            typeof(List<ArtistDiscographyView>), 
+            typeof(ArtistDiscographyGroupViewView), 
+            new PropertyMetadata(default(List<ArtistDiscographyView>)));
 
     public ArtistDiscographyGroupViewView()
     {
@@ -36,9 +40,9 @@ public partial class ArtistDiscographyGroupViewView
         set => SetValue(CanSwitchTemplatesProperty, value);
     }
 
-    public Seq<ArtistDiscographyView> Views
+    public List<ArtistDiscographyView> Views
     {
-        get => (Seq<ArtistDiscographyView>)GetValue(ViewsProperty);
+        get => (List<ArtistDiscographyView>)GetValue(ViewsProperty);
         set
         {
             SetValue(ViewsProperty, value);
@@ -102,12 +106,4 @@ public partial class ArtistDiscographyGroupViewView
         }
         _pages.Clear();
     }
-}
-
-public readonly struct ArtistDiscographyViewFake
-{
-    public required bool IsList { get; init; }
-    public required string Image { get; init; }
-    public required string Name { get; init; }
-    public Seq<ArtistDiscographyTrack> Tracks { get; init; }
 }

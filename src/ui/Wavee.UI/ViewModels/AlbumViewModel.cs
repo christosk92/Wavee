@@ -52,9 +52,9 @@ public sealed class AlbumViewModel<R> : ReactiveObject, INavigableViewModel wher
         var copyrights =
             jsonDoc.RootElement.GetProperty("copyrights").EnumerateArray()
                 .Select(x => x.GetString())
-                .ToArr();
+                .ToArray();
 
-        Arr<SpotifyAlbumArtistView> artistsRes = LanguageExt.Arr<SpotifyAlbumArtistView>.Empty;
+        Seq<SpotifyAlbumArtistView> artistsRes = LanguageExt.Seq<SpotifyAlbumArtistView>.Empty;
         using var artists = jsonDoc.RootElement.GetProperty("artists").EnumerateArray();
         foreach (var artist in artists)
         {
@@ -76,7 +76,7 @@ public sealed class AlbumViewModel<R> : ReactiveObject, INavigableViewModel wher
         var type = jsonDoc.RootElement.GetProperty("type").GetString();
 
 
-        Arr<SpotifyViewItem> related = LanguageExt.Arr<SpotifyViewItem>.Empty;
+        Seq<SpotifyViewItem> related = LanguageExt.Seq<SpotifyViewItem>.Empty;
         if (jsonDoc.RootElement
             .TryGetProperty("related", out var rl))
         {
@@ -99,7 +99,7 @@ public sealed class AlbumViewModel<R> : ReactiveObject, INavigableViewModel wher
 
         var numbOfDiscs = jsonDoc.RootElement.GetProperty("discs").GetArrayLength();
         using var discs = jsonDoc.RootElement.GetProperty("discs").EnumerateArray();
-        Arr<SpotifyDiscView> discsRes = LanguageExt.Arr<SpotifyDiscView>.Empty;
+        Seq<SpotifyDiscView> discsRes = LanguageExt.Seq<SpotifyDiscView>.Empty;
         foreach (var disc in discs)
         {
             var number = disc.GetProperty("number").GetUInt16();
@@ -107,18 +107,16 @@ public sealed class AlbumViewModel<R> : ReactiveObject, INavigableViewModel wher
             var resultOfDiscItem = LanguageExt.Seq<ArtistDiscographyTrack>.Empty;
             foreach (var track in tracks)
             {
-                Seq<SpotifyAlbumArtistView> artistsREsult = LanguageExt.Seq<SpotifyAlbumArtistView>.Empty;
-                using var artistssInTrack = track.GetProperty("artists").EnumerateArray();
-                foreach (var artistInTracki in artistssInTrack)
+                var arr = track.GetProperty("artists");
+                using var artistssInTrack = arr.EnumerateArray();
+                var artistsResults = artistssInTrack.Select(artistInTracki => new SpotifyAlbumArtistView
                 {
-                    artistsREsult = artistsREsult.Add(new SpotifyAlbumArtistView
-                    {
-                        Name = artistInTracki.GetProperty("name").GetString(),
-                        Id = AudioId.FromUri(artistInTracki.GetProperty("uri").GetString()),
-                        Image = artistInTracki.TryGetProperty("image", out var img)
-                            ? img.GetProperty("uri").GetString() : null
-                    });
-                }
+                    Name = artistInTracki.GetProperty("name").GetString(),
+                    Id = AudioId.FromUri(artistInTracki.GetProperty("uri").GetString()),
+                    Image = artistInTracki.TryGetProperty("image", out var img)
+                        ? img.GetProperty("uri").GetString()
+                        : null
+                }).ToList();
                 resultOfDiscItem = resultOfDiscItem.Add(new ArtistDiscographyTrack
                 {
                     Title = track.GetProperty("name")
@@ -132,14 +130,14 @@ public sealed class AlbumViewModel<R> : ReactiveObject, INavigableViewModel wher
                     IsExplicit = track.GetProperty("explicit")
                         .GetBoolean(),
                     Playcount = track.GetProperty("playcount") is { ValueKind: JsonValueKind.Number } p ? p.GetUInt64() : Option<ulong>.None,
-                    Artists = artistsREsult
+                    Artists = artistsResults
                 });
             }
 
             discsRes = discsRes.Add(new SpotifyDiscView
             {
                 Number = number,
-                Tracks = resultOfDiscItem,
+                Tracks = resultOfDiscItem.ToArray(),
                 HasMultipleDiscs = numbOfDiscs > 1
             });
         }
@@ -150,9 +148,9 @@ public sealed class AlbumViewModel<R> : ReactiveObject, INavigableViewModel wher
         Month = month;
         Day = day;
         TracksCount = trackCount;
-        Artists = artistsRes;
-        Related = related;
-        Discs = discsRes;
+        Artists = artistsRes.ToArray();
+        Related = related.ToArray();
+        Discs = discsRes.ToArray();
         Type = type;
         Copyrights = copyrights;
         AlbumFetched.SetResult();
@@ -165,11 +163,11 @@ public sealed class AlbumViewModel<R> : ReactiveObject, INavigableViewModel wher
     public Option<ushort> Month { get; set; }
     public Option<ushort> Day { get; set; }
     public ushort TracksCount { get; set; }
-    public Arr<SpotifyAlbumArtistView> Artists { get; set; }
-    public Arr<SpotifyViewItem> Related { get; set; }
-    public Arr<SpotifyDiscView> Discs { get; set; }
+    public SpotifyAlbumArtistView[] Artists { get; set; }
+    public SpotifyViewItem[] Related { get; set; }
+    public SpotifyDiscView[] Discs { get; set; }
     public string Type { get; set; }
-    public Arr<string> Copyrights { get; set; }
+    public string[] Copyrights { get; set; }
 
     public void OnNavigatedFrom()
     {
@@ -177,20 +175,20 @@ public sealed class AlbumViewModel<R> : ReactiveObject, INavigableViewModel wher
     }
 }
 
-public readonly struct SpotifyDiscView
+public class SpotifyDiscView
 {
-    public required ushort Number { get; init; }
-    public required Seq<ArtistDiscographyTrack> Tracks { get; init; }
-    public required bool HasMultipleDiscs { get; init; }
+    public ushort Number { get; set; }
+    public ArtistDiscographyTrack[] Tracks { get; set; }
+    public bool HasMultipleDiscs { get; set; }
 
     public string FormatDiscName(ushort numb)
     {
         return $"Disc {Number}";
     }
 }
-public readonly struct SpotifyAlbumArtistView
+public class SpotifyAlbumArtistView
 {
-    public required string Name { get; init; }
-    public required AudioId Id { get; init; }
-    public required string Image { get; init; }
+    public string Name { get; set; }
+    public AudioId Id { get; set; }
+    public string Image { get; set; }
 }

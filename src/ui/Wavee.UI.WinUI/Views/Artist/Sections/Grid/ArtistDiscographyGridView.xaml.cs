@@ -3,6 +3,7 @@ using LanguageExt;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
+using System.Collections.Generic;
 using Wavee.Core.Ids;
 using Wavee.UI.ViewModels;
 
@@ -10,12 +11,12 @@ namespace Wavee.UI.WinUI.Views.Artist.Sections.Grid
 {
     public sealed partial class ArtistDiscographyGridView : UserControl
     {
-        public ArtistDiscographyGridView(Seq<ArtistDiscographyView> artistDiscographyViews)
+        public ArtistDiscographyGridView(List<ArtistDiscographyView> artistDiscographyViews)
         {
             Items = artistDiscographyViews;
             this.InitializeComponent();
         }
-        public Seq<ArtistDiscographyView> Items { get; }
+        public List<ArtistDiscographyView> Items { get; }
 
         private void SpotifyItemTapped(object sender, TappedRoutedEventArgs e)
         {

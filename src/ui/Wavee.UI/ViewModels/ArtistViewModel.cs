@@ -8,10 +8,10 @@ using Wavee.UI.Infrastructure.Traits;
 
 namespace Wavee.UI.ViewModels;
 
-public sealed class ArtistViewModel<R> : ReactiveObject, INavigableViewModel
+public sealed class ArtistViewModel<R> : INavigableViewModel
     where R : struct, HasSpotify<R>
 {
-    private readonly R _runtime;
+    private R _runtime;
     public TaskCompletionSource ArtistFetched = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
 
     public ArtistViewModel(R runtime)
@@ -52,9 +52,10 @@ public sealed class ArtistViewModel<R> : ReactiveObject, INavigableViewModel
             .GetProperty("listener_count")
             .GetUInt64();
 
-        using var topTracksArr = jsonDoc.RootElement.GetProperty("top_tracks")
-            .GetProperty("tracks").EnumerateArray();
-        var topTracks = LanguageExt.Seq<ArtistTopTrackView>.Empty;
+        var toptr = jsonDoc.RootElement.GetProperty("top_tracks")
+            .GetProperty("tracks");
+        using var topTracksArr = toptr.EnumerateArray();
+        var topTracks = new List<ArtistTopTrackView>(toptr.GetArrayLength());
         foreach (var topTrack in topTracksArr)
         {
             var release = topTrack.GetProperty("release");
@@ -72,7 +73,7 @@ public sealed class ArtistViewModel<R> : ReactiveObject, INavigableViewModel
                 ReleaseImage = releaseImage,
                 Title = topTrack.GetProperty("name").GetString(),
             };
-            topTracks = topTracks.Add(track);
+            topTracks.Add(track);
         }
 
         var releases = jsonDoc.RootElement.GetProperty("releases");
@@ -86,8 +87,9 @@ public sealed class ArtistViewModel<R> : ReactiveObject, INavigableViewModel
             var totalAlbums = albums.GetProperty("total_count").GetInt32();
             if (totalAlbums > 0)
             {
-                using var albumReleases = albums.GetProperty("releases").EnumerateArray();
-                var albumsView = LanguageExt.Seq<ArtistDiscographyView>.Empty;
+                var rl = albums.GetProperty("releases");
+                using var albumReleases = rl.EnumerateArray();
+                var albumsView = new List<ArtistDiscographyView>(rl.GetArrayLength());
 
                 foreach (var release in albumReleases)
                 {
@@ -96,7 +98,7 @@ public sealed class ArtistViewModel<R> : ReactiveObject, INavigableViewModel
                     var releaseImage = release.GetProperty("cover").GetProperty("uri").GetString();
                     var year = release.GetProperty("year").GetUInt16();
 
-                    Seq<ArtistDiscographyTrack> tracks = LanguageExt.Seq<ArtistDiscographyTrack>.Empty;
+                    var tracks = new List<ArtistDiscographyTrack>();
                     if (release.TryGetProperty("discs", out var discs))
                     {
                         using var discsArr = discs.EnumerateArray();
@@ -105,7 +107,7 @@ public sealed class ArtistViewModel<R> : ReactiveObject, INavigableViewModel
                             using var tracksInDisc = disc.GetProperty("tracks").EnumerateArray();
                             foreach (var track in tracksInDisc)
                             {
-                                tracks = tracks.Add(new ArtistDiscographyTrack
+                                tracks.Add(new ArtistDiscographyTrack
                                 {
                                     Playcount = track.GetProperty("playcount")
                                         is
@@ -128,7 +130,7 @@ public sealed class ArtistViewModel<R> : ReactiveObject, INavigableViewModel
                     else
                     {
                         var tracksCount = release.GetProperty("track_count").GetUInt16();
-                        tracks = Enumerable.Range(0, tracksCount)
+                        tracks.AddRange(Enumerable.Range(0, tracksCount)
                             .Select(c => new ArtistDiscographyTrack
                             {
                                 Playcount = Option<ulong>.None,
@@ -137,17 +139,17 @@ public sealed class ArtistViewModel<R> : ReactiveObject, INavigableViewModel
                                 Id = default,
                                 Duration = default,
                                 IsExplicit = false
-                            }).ToSeq();
+                            }));
                     }
 
-                    var pluralModifier = tracks.Length > 1 ? "tracks" : "track";
-                    albumsView = albumsView.Add(new ArtistDiscographyView
+                    var pluralModifier = tracks.Count > 1 ? "tracks" : "track";
+                    albumsView.Add(new ArtistDiscographyView
                     {
                         Id = AudioId.FromUri(releaseUri),
                         Title = releaseName,
                         Image = releaseImage,
                         Tracks = tracks,
-                        ReleaseDateAsStr = $"{year.ToString()} - {tracks.Length} {pluralModifier}"
+                        ReleaseDateAsStr = $"{year.ToString()} - {tracks.Count} {pluralModifier}"
                     });
                 }
 
@@ -174,7 +176,7 @@ public sealed class ArtistViewModel<R> : ReactiveObject, INavigableViewModel
             headerImage: headerImage,
             monthlyListeners: monthlyListeners,
             topTracks: topTracks,
-            res.ToSeq(),
+            res,
             profilePic,
             id: artistId.ToBase62()
         );
@@ -191,19 +193,28 @@ public sealed class ArtistViewModel<R> : ReactiveObject, INavigableViewModel
         ReadOnlySpan<char> sliced = key;
         return $"{char.ToUpper(sliced[0])}{sliced[1..]}";
     }
+
+    public void Clear()
+    {
+        Artist.Clear();
+        _runtime = default;
+        Artist = default;
+        ArtistFetched = null;
+    }
 }
 
-public readonly struct ArtistView
+public class ArtistView
 {
     public string Name { get; }
     public string HeaderImage { get; }
     public ulong MonthlyListeners { get; }
-    public Seq<ArtistTopTrackView> TopTracks { get; }
-    public Seq<ArtistDiscographyGroupView> Discography { get; }
+    public List<ArtistTopTrackView> TopTracks { get; set; }
+    public List<ArtistDiscographyGroupView> Discography { get; set; }
     public string ProfilePicture { get; }
     public string Id { get; }
 
-    public ArtistView(string name, string headerImage, ulong monthlyListeners, Seq<ArtistTopTrackView> topTracks, Seq<ArtistDiscographyGroupView> discography, string profilePicture, string id)
+    public ArtistView(string name, string headerImage, ulong monthlyListeners, List<ArtistTopTrackView>
+        topTracks, List<ArtistDiscographyGroupView> discography, string profilePicture, string id)
     {
         Name = name;
         HeaderImage = headerImage;
@@ -213,31 +224,47 @@ public readonly struct ArtistView
         ProfilePicture = profilePicture;
         Id = id;
     }
+
+    public void Clear()
+    {
+        TopTracks.Clear();
+        foreach (var artistDiscographyGroupView in Discography)
+        {
+            foreach (var artistDiscographyView in artistDiscographyGroupView.Views)
+                artistDiscographyView.Tracks.Clear();
+
+            artistDiscographyGroupView.Views.Clear();
+        }
+
+        Discography.Clear();
+        Discography = null;
+        TopTracks = null;
+    }
 }
-public readonly struct ArtistDiscographyGroupView
+public class ArtistDiscographyGroupView
 {
-    public required string GroupName { get; init; }
-    public required Seq<ArtistDiscographyView> Views { get; init; }
-    public required bool CanSwitchTemplates { get; init; }
+    public required string GroupName { get; set; }
+    public required List<ArtistDiscographyView> Views { get; set; }
+    public required bool CanSwitchTemplates { get; set; }
 }
-public readonly struct ArtistDiscographyView
+public class ArtistDiscographyView
 {
-    public required string Title { get; init; }
-    public required string Image { get; init; }
-    public required AudioId Id { get; init; }
-    public Seq<ArtistDiscographyTrack> Tracks { get; init; }
-    public required string ReleaseDateAsStr { get; init; }
+    public string Title { get; set; }
+    public string Image { get; set; }
+    public AudioId Id { get; set; }
+    public List<ArtistDiscographyTrack> Tracks { get; set; }
+    public string ReleaseDateAsStr { get; set; }
 }
-public readonly struct ArtistDiscographyTrack
+public class ArtistDiscographyTrack
 {
-    public required Option<ulong> Playcount { get; init; }
-    public required string Title { get; init; }
-    public required ushort Number { get; init; }
-    public Seq<SpotifyAlbumArtistView> Artists { get; init; }
+    public Option<ulong> Playcount { get; set; }
+    public string Title { get; set; }
+    public ushort Number { get; set; }
+    public List<SpotifyAlbumArtistView> Artists { get; set; }
     public bool IsLoaded => !string.IsNullOrEmpty(Title);
-    public required AudioId Id { get; init; }
-    public required TimeSpan Duration { get; init; }
-    public required bool IsExplicit { get; init; }
+    public AudioId Id { get; set; }
+    public TimeSpan Duration { get; set; }
+    public bool IsExplicit { get; set; }
 
     public ushort MinusOne(ushort v)
     {
@@ -262,14 +289,14 @@ public readonly struct ArtistDiscographyTrack
     }
 }
 
-public readonly struct ArtistTopTrackView
+public class ArtistTopTrackView
 {
-    public required string Uri { get; init; }
-    public required Option<ulong> Playcount { get; init; }
-    public required string ReleaseImage { get; init; }
-    public required string ReleaseName { get; init; }
-    public required string ReleaseUri { get; init; }
-    public required string Title { get; init; }
+    public required string Uri { get; set; }
+    public required Option<ulong> Playcount { get; set; }
+    public required string ReleaseImage { get; set; }
+    public required string ReleaseName { get; set; }
+    public required string ReleaseUri { get; set; }
+    public required string Title { get; set; }
 
     public string FormatPlaycount(Option<ulong> playcount)
     {

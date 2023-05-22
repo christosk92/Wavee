@@ -11,21 +11,30 @@
              xmlns:winUi="using:CommunityToolkit.Labs.WinUI"
              xmlns:panels="using:Wavee.UI.WinUI.Panels"
              xmlns:models="using:Wavee.UI.Models"
+             xmlns:controls="using:Wavee.UI.WinUI.Controls"
              mc:Ignorable="d">
 
     <ScrollViewer>
         <StackPanel>
-            <Grid Margin="24">
+            <Grid Padding="24">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="250" />
                     <ColumnDefinition />
                 </Grid.ColumnDefinitions>
-                <Image x:Name="MainImage" />
 
+                <controls:ImageTransitionControl Grid.ColumnSpan="2"
+                                                 BlurValue="100"
+                                                 Margin="-24"
+                                                 Source="{x:Bind ViewModel.Image}" />
+
+                <Image x:Name="MainImage" />
                 <StackPanel Grid.Column="1"
                             Spacing="6"
                             Margin="16,0"
                             VerticalAlignment="Bottom">
+                    <TextBlock x:Name="AlbumType"
+                               FontWeight="Bold"
+                               />
                     <TextBlock FontWeight="Bold"
                                FontSize="34"
                                Text="{x:Bind ViewModel.Name}" />
@@ -33,7 +42,7 @@
                     <ItemsRepeater ItemsSource="{x:Bind ViewModel.Artists}">
                         <ItemsRepeater.ItemTemplate>
                             <DataTemplate x:DataType="viewModels:SpotifyAlbumArtistView">
-                                <Button>
+                                <Button DataContext="{x:Bind }">
                                     <StackPanel Spacing="4"
                                                 Orientation="Horizontal">
                                         <PersonPicture Height="28">
@@ -211,8 +220,7 @@
             <TextBlock Text="Related albums"
                        FontSize="18"
                        FontWeight="SemiBold"
-                       Margin="18,24,18,4"
-                       />
+                       Margin="18,24,18,4" />
             <ItemsRepeater Margin="18,4,18,4"
                            ItemsSource="{x:Bind ViewModel.Related}">
                 <ItemsRepeater.Layout>

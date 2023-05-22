@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using LanguageExt;
@@ -14,7 +16,11 @@ public partial class ArtistDiscographyLazyTracksView : UserControl
     public static readonly DependencyProperty TitleProperty = DependencyProperty.Register(nameof(Title), typeof(string), typeof(ArtistDiscographyLazyTracksView), new PropertyMetadata(default(string)));
     public static readonly DependencyProperty ImageProperty = DependencyProperty.Register(nameof(Image), typeof(string), typeof(ArtistDiscographyLazyTracksView), new PropertyMetadata(default(string)));
     public static readonly DependencyProperty TracksCountProperty = DependencyProperty.Register(nameof(TracksCount), typeof(ushort), typeof(ArtistDiscographyLazyTracksView), new PropertyMetadata(default(ushort)));
-    public static readonly DependencyProperty TracksProperty = DependencyProperty.Register(nameof(Tracks), typeof(Seq<ArtistDiscographyTrack>), typeof(ArtistDiscographyLazyTracksView), new PropertyMetadata(default(Seq<ArtistDiscographyTrack>)));
+    public static readonly DependencyProperty TracksProperty =
+        DependencyProperty.Register(nameof
+                (Tracks), typeof(List<ArtistDiscographyTrack>),
+        typeof(ArtistDiscographyLazyTracksView),
+        new PropertyMetadata(default(List<ArtistDiscographyTrack>)));
     public static readonly DependencyProperty IdProperty = DependencyProperty.Register(nameof(Id), typeof(string), typeof(ArtistDiscographyLazyTracksView), new PropertyMetadata(default(string)));
 
     public ArtistDiscographyLazyTracksView()
@@ -40,11 +46,11 @@ public partial class ArtistDiscographyLazyTracksView : UserControl
         set => SetValue(TracksCountProperty, value);
     }
 
-    public Seq<ArtistDiscographyTrack> Tracks
+    public List<ArtistDiscographyTrack> Tracks
     {
         get
         {
-            var tracks = (Seq<ArtistDiscographyTrack>)GetValue(TracksProperty);
+            var tracks = (List<ArtistDiscographyTrack>)GetValue(TracksProperty);
             if (tracks.Any(x => !x.IsLoaded))
             {
                 //setup a loading task
@@ -52,11 +58,7 @@ public partial class ArtistDiscographyLazyTracksView : UserControl
                 var existingTracks = tracks;
                 Task.Run(async () =>
                 {
-                    var tracks = await LoadTracks(id, existingTracks, CancellationToken.None);
-                    this.DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Normal, () =>
-                    {
-                        this.Tracks = tracks;
-                    });
+                    await LoadTracks(id, existingTracks, CancellationToken.None);
                 });
             }
             return tracks;
@@ -64,22 +66,33 @@ public partial class ArtistDiscographyLazyTracksView : UserControl
         set => SetValue(TracksProperty, value);
     }
 
-    private async Task<Seq<ArtistDiscographyTrack>> LoadTracks(string id,
-        Seq<ArtistDiscographyTrack> artistDiscographyTracks,
+    private async Task LoadTracks(string id,
+        List<ArtistDiscographyTrack> artistDiscographyTracks,
         CancellationToken ct)
     {
         await Task.Delay(TimeSpan.FromMilliseconds(80), ct);
-        return artistDiscographyTracks
-            .Select(c => new ArtistDiscographyTrack
+        this.DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Low, () =>
+        {
+            foreach (var track in artistDiscographyTracks)
             {
-                Number = c.Number,
-                Playcount = (ulong)Random.Shared.Next(0,
-                    int.MaxValue - 1),
-                Title = $"Track {c.Number}",
-                Id = default,
-                Duration = default,
-                IsExplicit = false,
-            });
+                //update
+                track.Title = $"Track {track.Number}";
+                track.Playcount = (ulong)Random.Shared.Next(0, int.MaxValue - 1);
+            }
+
+            this.Bindings.Update();
+        });
+        // return artistDiscographyTracks
+        //     .Select(c => new ArtistDiscographyTrack
+        //     {
+        //         Number = c.Number,
+        //         Playcount = (ulong)Random.Shared.Next(0,
+        //             int.MaxValue - 1),
+        //         Title = $"Track {c.Number}",
+        //         Id = default,
+        //         Duration = default,
+        //         IsExplicit = false,
+        //     }).ToList();
     }
 
     public string Id

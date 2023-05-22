@@ -339,7 +339,7 @@ public class ImageOpacityBrush : XamlCompositionBrushBase, IDisposable
         }
 
         //Source = null;
-
+        GC.Collect();
         //GC.Collect();
     }
 

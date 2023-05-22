@@ -54,7 +54,7 @@ public sealed partial class ArtistOverview : UserControl
             return;
         }
         //if we have more than 5 items, and the width >= 800, we make two columns
-        var items = Artist.TopTracks.Length;
+        var items = Artist.TopTracks.Count;
         if (items > 5)
         {
             panel.Orientation = Orientation.Vertical;

@@ -1,5 +1,6 @@
 using System;
 using System.Globalization;
+using System.Linq;
 using System.Windows.Forms;
 using CommunityToolkit.WinUI.UI;
 using LanguageExt;
@@ -32,7 +33,7 @@ public sealed partial class AlbumView : UserControl, INavigablePage
     Option<INavigableViewModel> INavigablePage.ViewModel => ViewModel;
     public void RemovedFromCache()
     {
-        
+
     }
 
     public AlbumViewModel<WaveeUIRuntime> ViewModel { get; }
@@ -53,7 +54,7 @@ public sealed partial class AlbumView : UserControl, INavigablePage
         this.Bindings.Update();
         MainImage.Source = new BitmapImage(new Uri(ViewModel.Image));
         TotalDuration.Text = TotalSum().ToString(@"mm\:ss");
-
+        AlbumType.Text = ViewModel.Type.ToUpper();
         if (ViewModel.Month.IsSome)
         {
             var month = ViewModel.Month.ValueUnsafe();
@@ -83,8 +84,8 @@ public sealed partial class AlbumView : UserControl, INavigablePage
     }
     private TimeSpan TotalSum()
     {
-        var totalSum = ViewModel.Discs.Sum(x =>
-            x.Tracks.Sum(f => f.Duration.TotalMilliseconds));
+        var totalSum = ViewModel.Discs
+            .Sum(x => x.Tracks.Sum(f => f.Duration.TotalMilliseconds));
         return TimeSpan.FromMilliseconds(totalSum);
     }
 

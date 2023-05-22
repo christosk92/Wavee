@@ -98,7 +98,7 @@ public readonly record struct AudioId(BigInteger Id, AudioItemType Type, Service
         {
             int digit = BASE62_CHARS.IndexOf(t);
             if (digit == -1)
-                throw new ArgumentException($"Invalid character '{t}'");
+                return new AudioId();
 
             result = BigInteger.Multiply(result, BASE62_CHARS.Length) + digit;
         }

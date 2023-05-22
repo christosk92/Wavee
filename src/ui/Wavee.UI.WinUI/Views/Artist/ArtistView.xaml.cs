@@ -26,10 +26,12 @@ public sealed partial class ArtistRootView : UserControl, INavigablePage
         ViewModel = new ArtistViewModel<WaveeUIRuntime>(App.Runtime);
         this.InitializeComponent();
     }
-
+    
     public ArtistViewModel<WaveeUIRuntime> ViewModel { get; }
     public void RemovedFromCache()
     {
+        ViewModel.Clear();
+        this.Bindings.Update();
         this.Bindings.StopTracking();
         _overview?.Clear();
         _overview = null;
@@ -37,7 +39,6 @@ public sealed partial class ArtistRootView : UserControl, INavigablePage
         _concerts = null;
         _about?.Clear();
         _about = null;
-        this.Content = new Border();
     }
 
     private async void Selector_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -135,7 +136,7 @@ public sealed partial class ArtistRootView : UserControl, INavigablePage
     {
         var newSize = (sender as FrameworkElement)?.ActualHeight ?? 0;
         //ratio is around 1:1, so 1/2
-        if (!string.IsNullOrEmpty(ViewModel.Artist.HeaderImage))
+        if (!string.IsNullOrEmpty(ViewModel.Artist?.HeaderImage))
         {
             var topHeight = newSize * 0.5;
             topHeight = Math.Min(topHeight, 550);
