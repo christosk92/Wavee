@@ -197,4 +197,13 @@ public sealed partial class BottomPlayerControl : UserControl
     {
         return b ? Visibility.Collapsed : Visibility.Visible;
     }
+
+    private void DisplayTitle_OnTapped(object sender, TappedRoutedEventArgs e)
+    {
+        var currentItemAlbum = Playback.CurrentTrack?.Album?.Id;
+        if (currentItemAlbum.HasValue)
+        {
+            UICommands.NavigateTo.Execute(currentItemAlbum.Value);
+        }
+    }
 }

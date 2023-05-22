@@ -2,6 +2,7 @@
 using ReactiveUI;
 using Wavee.Core.Ids;
 using Wavee.UI.WinUI.Views;
+using Wavee.UI.WinUI.Views.Album;
 using Wavee.UI.WinUI.Views.Artist;
 
 namespace Wavee.UI.WinUI;
@@ -15,6 +16,7 @@ public static class UICommands
             var pageType = id.Type switch
             {
                 AudioItemType.Artist => typeof(ArtistRootView),
+                AudioItemType.Album => typeof(AlbumView),
                 _ => null
             };
             if (pageType is not null)

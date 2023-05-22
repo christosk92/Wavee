@@ -11,6 +11,7 @@
 		<UseWinUI>true</UseWinUI>
 		<EnableMsixTooling>true</EnableMsixTooling>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+		<WindowsPackageType>None</WindowsPackageType>
 	</PropertyGroup>
 	<ItemGroup>
 		<Content Remove="Assets\AlbumPlaceholder.png" />
@@ -22,6 +23,7 @@
 		<None Remove="Controls\BottomPlayerControl.xaml" />
 		<None Remove="Controls\SpotifyViewItemView.xaml" />
 		<None Remove="Styles\ButtonStyles.xaml" />
+		<None Remove="Views\Album\AlbumView.xaml" />
 		<None Remove="Views\Artist\ArtistAbout.xaml" />
 		<None Remove="Views\Artist\ArtistConcerts.xaml" />
 		<None Remove="Views\Artist\ArtistOverview.xaml" />
@@ -94,6 +96,9 @@
 		<None Update="Components\ArtistAboutSection.xaml">
 		  <Generator>MSBuild:Compile</Generator>
 		</None>
+		<Page Update="Views\Album\AlbumView.xaml">
+		  <Generator>MSBuild:Compile</Generator>
+		</Page>
 		<Page Update="Components\SpotifyArtistView.xaml">
 		  <Generator>MSBuild:Compile</Generator>
 		</Page>

@@ -131,16 +131,20 @@
                     <StackPanel x:Name="TextPanel"
                                 Grid.Column="1"
                                 Margin="8,0,0,0"
-                                Spacing="2"
+                                Spacing="0"
                                 VerticalAlignment="Center"
                                 Orientation="Vertical">
-                        <TextBlock x:Name="DisplayTitle"
-                                   FontSize="16"
-                                   FontWeight="SemiBold"
-                                   MaxLines="2"
-                                   Text="{x:Bind Playback.CurrentTrack.Title, Mode=OneWay}"
-                                   TextTrimming="CharacterEllipsis"
-                                   TextWrapping="Wrap" />
+                        <HyperlinkButton 
+                            Padding="0" Tapped="DisplayTitle_OnTapped"
+                            Foreground="{ThemeResource ApplicationForegroundThemeBrush}"
+                            x:Name="DisplayTitle">
+                            <TextBlock FontSize="16"
+                                       FontWeight="SemiBold"
+                                       MaxLines="2"
+                                       Text="{x:Bind Playback.CurrentTrack.Title, Mode=OneWay}"
+                                       TextTrimming="CharacterEllipsis"
+                                       TextWrapping="Wrap" />
+                        </HyperlinkButton>
                         <controls:MetadataControl Items="{x:Bind TransformItemsForMetadata(Playback.CurrentTrack), Mode=OneWay}">
                             <controls:MetadataControl.TextBlockStyle>
                                 <Style TargetType="TextBlock">

@@ -73,8 +73,12 @@ public partial class ArtistDiscographyLazyTracksView : UserControl
             .Select(c => new ArtistDiscographyTrack
             {
                 Number = c.Number,
-                Playcount = (ulong)Random.Shared.Next(0, int.MaxValue - 1),
+                Playcount = (ulong)Random.Shared.Next(0,
+                    int.MaxValue - 1),
                 Title = $"Track {c.Number}",
+                Id = default,
+                Duration = default,
+                IsExplicit = false,
             });
     }
 

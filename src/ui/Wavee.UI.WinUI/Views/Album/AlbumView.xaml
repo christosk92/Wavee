@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl x:Class="Wavee.UI.WinUI.Views.Album.AlbumView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Wavee.UI.WinUI.Views.Album"
+             Loaded="AlbumView_OnLoaded"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:viewModels="using:Wavee.UI.ViewModels"
+             xmlns:components="using:Wavee.UI.WinUI.Components"
+             xmlns:winUi="using:CommunityToolkit.Labs.WinUI"
+             mc:Ignorable="d">
+
+    <ScrollViewer>
+        <StackPanel>
+            <Grid Margin="24">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="250" />
+                    <ColumnDefinition />
+                </Grid.ColumnDefinitions>
+                <Image x:Name="MainImage" />
+
+                <StackPanel Grid.Column="1"
+                            Spacing="6"
+                            Margin="16,0"
+                            VerticalAlignment="Bottom">
+                    <TextBlock FontWeight="Bold"
+                               FontSize="34"
+                               Text="{x:Bind ViewModel.Name}" />
+
+                    <ItemsRepeater ItemsSource="{x:Bind ViewModel.Artists}">
+                        <ItemsRepeater.ItemTemplate>
+                            <DataTemplate x:DataType="viewModels:SpotifyAlbumArtistView">
+                                <Button>
+                                    <StackPanel Spacing="4"
+                                                Orientation="Horizontal">
+                                        <PersonPicture Height="28">
+                                            <PersonPicture.ProfilePicture>
+                                                <BitmapImage UriSource="{x:Bind Image}"
+                                                             DecodePixelHeight="28"
+                                                             DecodePixelWidth="28" />
+                                            </PersonPicture.ProfilePicture>
+                                        </PersonPicture>
+
+                                        <TextBlock VerticalAlignment="Center"
+                                                   Text="{x:Bind Name}" />
+                                    </StackPanel>
+                                </Button>
+                            </DataTemplate>
+                        </ItemsRepeater.ItemTemplate>
+                        <ItemsRepeater.Layout>
+                            <StackLayout Orientation="Horizontal" />
+                        </ItemsRepeater.Layout>
+                    </ItemsRepeater>
+
+                    <StackPanel Spacing="8"
+                                Orientation="Horizontal">
+                        <Button Padding="12"
+                                Margin="0,8"
+                                IsHitTestVisible="False">
+                            <StackPanel Spacing="4"
+                                        Orientation="Horizontal">
+                                <FontIcon FontFamily="Segoe Fluent Icons"
+                                          HorizontalAlignment="Center"
+                                          Glyph="&#xE163;" />
+                                <TextBlock FontWeight="SemiBold"
+                                           HorizontalAlignment="Center"
+                                           Text="{x:Bind ViewModel.Year}" />
+                            </StackPanel>
+                        </Button>
+
+                        <Button Padding="12"
+                                HorizontalContentAlignment="Left"
+                                Margin="0,8"
+                                IsHitTestVisible="False">
+                            <StackPanel Spacing="4"
+                                        Orientation="Horizontal">
+                                <FontIcon FontFamily="Segoe Fluent Icons"
+                                          Glyph="&#xE189;" />
+                                <TextBlock FontWeight="SemiBold"
+                                           HorizontalAlignment="Center"
+                                           Text="{x:Bind ViewModel.TracksCount}" />
+                            </StackPanel>
+                        </Button>
+
+                        <Button Padding="12"
+                                Margin="0,8"
+                                IsHitTestVisible="False">
+                            <StackPanel Spacing="4"
+                                        HorizontalAlignment="Left"
+                                        Orientation="Horizontal">
+                                <FontIcon FontFamily="Segoe Fluent Icons"
+                                          Glyph="&#xE916;" />
+                                <TextBlock FontWeight="SemiBold"
+                                           x:Name="TotalDuration" />
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </StackPanel>
+                <Button Margin="24"
+                        Opacity="0"
+                        Content="Force bind refresh"
+                        Tapped="UIElement_OnTapped" />
+            </Grid>
+
+            <Border Margin="16,-4,12,6"
+                    CornerRadius="6"
+                    Style="{StaticResource EvenBorderStyle}"
+                    Padding="2,0">
+                <Grid ColumnSpacing="8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="28" />
+                        <ColumnDefinition />
+                        <ColumnDefinition Width=".5*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <HyperlinkButton
+                        Padding="8,8,8,8"
+                        HorizontalAlignment="Right"
+                        Content="#" />
+                    <HyperlinkButton Content="Title"
+                                     Padding="0,8,8,8"
+                                     HorizontalContentAlignment="Left"
+                                     HorizontalAlignment="Stretch"
+                                     Grid.Column="1" />
+
+                    <HyperlinkButton Content="Plays"
+                                     HorizontalContentAlignment="Left"
+                                     Padding="0,8,8,8"
+                                     HorizontalAlignment="Stretch"
+                                     Grid.Column="2" />
+
+                    <HyperlinkButton HorizontalAlignment="Stretch"
+                                     HorizontalContentAlignment="Left"
+                                     Grid.Column="3">
+                        <FontIcon FontFamily="Segoe Fluent Icons"
+                                  Glyph="&#xE916;" />
+                    </HyperlinkButton>
+                </Grid>
+            </Border>
+            <ItemsRepeater ItemsSource="{x:Bind ViewModel.Discs}">
+                <ItemsRepeater.ItemTemplate>
+                    <DataTemplate x:DataType="viewModels:SpotifyDiscView">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition />
+                            </Grid.RowDefinitions>
+
+                            <StackPanel x:Name="DiscInfo"
+                                        x:Load="{x:Bind HasMultipleDiscs}"
+                                        Orientation="Horizontal">
+                                <FontIcon FontFamily="Segoe Fluent Icons"
+                                          Margin="24,12,4,12"
+                                          Glyph="&#xE958;" />
+                                <TextBlock Margin="0,12"
+                                           Text="{x:Bind FormatDiscName(Number)}" />
+                            </StackPanel>
+
+                            <ListView ItemsSource="{x:Bind Tracks}"
+                                      ItemContainerStyle="{StaticResource TracksListViewItemStyle}"
+                                      Grid.Row="1">
+                                <ListView.ItemTemplate>
+                                    <DataTemplate x:DataType="viewModels:ArtistDiscographyTrack">
+                                        <Grid Height="38">
+                                            <components:TrackView AlternatingRowColor="True"
+                                                                  Index="{x:Bind MinusOne(Number)}"
+                                                                  ShowImage="False">
+                                                <components:TrackView.View>
+                                                    <Grid Margin="4,0"
+                                                          ColumnSpacing="8">
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition />
+                                                            <ColumnDefinition Width=".5*" />
+                                                            <ColumnDefinition Width="Auto" />
+                                                        </Grid.ColumnDefinitions>
+                                                        <TextBlock x:Name="TrackBox"
+                                                                   Text="{x:Bind Title}" />
+
+                                                        <TextBlock Grid.Column="1"
+                                                                   x:Name="PlaycountBox"
+                                                                   Text="{x:Bind FormatPlaycount(Playcount)}" />
+
+                                                        <TextBlock Grid.Column="2"
+                                                                   Text="{x:Bind FormatTimestamp(Duration)}" />
+                                                    </Grid>
+                                                </components:TrackView.View>
+                                            </components:TrackView>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ListView.ItemTemplate>
+                            </ListView>
+                        </Grid>
+                    </DataTemplate>
+                </ItemsRepeater.ItemTemplate>
+            </ItemsRepeater>
+
+            <Border Height="120" />
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

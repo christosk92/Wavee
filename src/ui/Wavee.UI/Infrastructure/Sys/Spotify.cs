@@ -80,4 +80,6 @@ public static class Spotify<R> where R : struct, HasSpotify<R>
     public static Eff<R, MercuryClient> Mercury() =>
         default(R).SpotifyEff.Map(x => x.Mercury());
 
+    public static Aff<R, Option<string>> CountryCode() =>
+         default(R).SpotifyEff.Map(x => x.CountryCode());
 }

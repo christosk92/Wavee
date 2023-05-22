@@ -110,12 +110,19 @@ public sealed class ArtistViewModel<R> : ReactiveObject, INavigableViewModel
                                 tracks = tracks.Add(new ArtistDiscographyTrack
                                 {
                                     Playcount = track.GetProperty("playcount")
-                                        is { ValueKind: JsonValueKind.Number } e
+                                        is
+                                    {
+                                        ValueKind: JsonValueKind.Number
+                                    } e
                                         ? e.GetUInt64()
                                         : Option<ulong>.None,
-                                    Title = track.GetProperty("name").GetString(),
+                                    Title = track.GetProperty("name")
+                                        .GetString(),
                                     Number = track.GetProperty("number")
-                                        .GetUInt16()
+                                        .GetUInt16(),
+                                    Id = AudioId.FromUri(track.GetProperty("uri").GetString()),
+                                    Duration = TimeSpan.FromMilliseconds(track.GetProperty("duration").GetUInt32()),
+                                    IsExplicit = track.GetProperty("explicit").GetBoolean()
                                 });
                             }
                         }
@@ -128,7 +135,10 @@ public sealed class ArtistViewModel<R> : ReactiveObject, INavigableViewModel
                             {
                                 Playcount = Option<ulong>.None,
                                 Title = null,
-                                Number = (ushort)(c + 1)
+                                Number = (ushort)(c + 1),
+                                Id = default,
+                                Duration = default,
+                                IsExplicit = false
                             }).ToSeq();
                     }
 
@@ -225,7 +235,12 @@ public readonly struct ArtistDiscographyTrack
     public required Option<ulong> Playcount { get; init; }
     public required string Title { get; init; }
     public required ushort Number { get; init; }
+    public Seq<SpotifyAlbumArtistView> Artists { get; init; }
     public bool IsLoaded => !string.IsNullOrEmpty(Title);
+    public required AudioId Id { get; init; }
+    public required TimeSpan Duration { get; init; }
+    public required bool IsExplicit { get; init; }
+
     public ushort MinusOne(ushort v)
     {
         return (ushort)(v - 1);
@@ -241,6 +256,11 @@ public readonly struct ArtistDiscographyTrack
         return playcount.IsSome
             ? playcount.ValueUnsafe().ToString("N0")
             : "< 1,000";
+    }
+
+    public string FormatTimestamp(TimeSpan timeSpan)
+    {
+        return timeSpan.ToString(@"mm\:ss");
     }
 }
 
