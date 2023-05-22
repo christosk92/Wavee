@@ -130,8 +130,6 @@ public partial class App : Application
             Content = content
         };
         MWindow = window;
-
-
         var scaleAdjustment = GetScaleAdjustment();
         var width = (await UiConfig<WaveeUIRuntime>.WindowWidth.Run(Runtime)).IfFail(800) * scaleAdjustment;
         var height = (await UiConfig<WaveeUIRuntime>.WindowHeight.Run(Runtime)).IfFail(600) * scaleAdjustment;
@@ -168,6 +166,15 @@ public partial class App : Application
 
         window.Activate();
     }
+
+
+
+    [DllImport("KERNEL32.DLL", EntryPoint =
+            "SetProcessWorkingSetSize", SetLastError = true,
+        CallingConvention = CallingConvention.StdCall)]
+    internal static extern bool SetProcessWorkingSetSize64Bit
+    (IntPtr pProcess, long dwMinimumWorkingSetSize,
+        long dwMaximumWorkingSetSize);
 
     public static Window MWindow { get; private set; }
 

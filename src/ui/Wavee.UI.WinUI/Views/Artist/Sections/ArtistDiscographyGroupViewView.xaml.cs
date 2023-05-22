@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using CommunityToolkit.Labs.WinUI;
 using LanguageExt;
@@ -101,4 +102,12 @@ public partial class ArtistDiscographyGroupViewView
         }
         _pages.Clear();
     }
+}
+
+public readonly struct ArtistDiscographyViewFake
+{
+    public required bool IsList { get; init; }
+    public required string Image { get; init; }
+    public required string Name { get; init; }
+    public Seq<ArtistDiscographyTrack> Tracks { get; init; }
 }

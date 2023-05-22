@@ -1,4 +1,5 @@
 ﻿using System.Buffers.Binary;
+using System.Diagnostics;
 using System.Threading.Channels;
 using Eum.Spotify;
 using LanguageExt;
@@ -54,7 +55,8 @@ public readonly struct MercuryClient
 
         var reader = _subscribe(packet, p => IsOurPackage(p, nextSequence));
 
-        Seq<ReadOnlyMemory<byte>> partials = Seq<ReadOnlyMemory<byte>>();
+        var partials = new List<ReadOnlyMemory<byte>>();
+        var sw = Stopwatch.StartNew();
         await foreach (var receivedPacket in reader.ReadAllAsync(ct))
         {
             var data = receivedPacket.Data;
@@ -64,8 +66,8 @@ public readonly struct MercuryClient
             var count = Count(ref data);
             for (int i = 0; i < count; i++)
             {
-                var part = ParsePart(ref data);
-                partials = partials.Add(part);
+                var part = ParsePart(ref data); 
+                partials.Add(part);
             }
 
             if (flags != 1)
@@ -81,6 +83,8 @@ public readonly struct MercuryClient
             }
 
             _removePackageListener(reader);
+            sw.Stop();
+            Debug.WriteLine($"MercuryClient.Get {uri} took {sw.ElapsedMilliseconds}ms");
             return new MercuryResponse(header, body);
         }
 

@@ -45,8 +45,8 @@ public static class ApResolve
     private static async Task Populate(CancellationToken ct)
     {
         using var response = await HttpIO.GetAsync(url, None, Empty, ct);
-        await using var stream = await response.Content.ReadAsStreamAsync(ct);
-        using var jsonDocument = await JsonDocument.ParseAsync(stream, cancellationToken: ct);
+        ReadOnlyMemory<byte> stream = await response.Content.ReadAsByteArrayAsync(ct);
+        using var jsonDocument = JsonDocument.Parse(stream);
 
         var accessPoint = jsonDocument.RootElement.GetProperty("accesspoint");
         var dealers = jsonDocument.RootElement.GetProperty("dealer");

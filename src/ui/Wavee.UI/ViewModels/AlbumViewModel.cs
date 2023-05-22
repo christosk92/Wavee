@@ -52,9 +52,9 @@ public sealed class AlbumViewModel<R> : ReactiveObject, INavigableViewModel wher
         var copyrights =
             jsonDoc.RootElement.GetProperty("copyrights").EnumerateArray()
                 .Select(x => x.GetString())
-                .ToSeq();
+                .ToArr();
 
-        Seq<SpotifyAlbumArtistView> artistsRes = LanguageExt.Seq<SpotifyAlbumArtistView>.Empty;
+        Arr<SpotifyAlbumArtistView> artistsRes = LanguageExt.Arr<SpotifyAlbumArtistView>.Empty;
         using var artists = jsonDoc.RootElement.GetProperty("artists").EnumerateArray();
         foreach (var artist in artists)
         {
@@ -76,7 +76,7 @@ public sealed class AlbumViewModel<R> : ReactiveObject, INavigableViewModel wher
         var type = jsonDoc.RootElement.GetProperty("type").GetString();
 
 
-        Seq<SpotifyViewItem> related = LanguageExt.Seq<SpotifyViewItem>.Empty;
+        Arr<SpotifyViewItem> related = LanguageExt.Arr<SpotifyViewItem>.Empty;
         if (jsonDoc.RootElement
             .TryGetProperty("related", out var rl))
         {
@@ -99,7 +99,7 @@ public sealed class AlbumViewModel<R> : ReactiveObject, INavigableViewModel wher
 
         var numbOfDiscs = jsonDoc.RootElement.GetProperty("discs").GetArrayLength();
         using var discs = jsonDoc.RootElement.GetProperty("discs").EnumerateArray();
-        Seq<SpotifyDiscView> discsRes = LanguageExt.Seq<SpotifyDiscView>.Empty;
+        Arr<SpotifyDiscView> discsRes = LanguageExt.Arr<SpotifyDiscView>.Empty;
         foreach (var disc in discs)
         {
             var number = disc.GetProperty("number").GetUInt16();
@@ -165,11 +165,11 @@ public sealed class AlbumViewModel<R> : ReactiveObject, INavigableViewModel wher
     public Option<ushort> Month { get; set; }
     public Option<ushort> Day { get; set; }
     public ushort TracksCount { get; set; }
-    public Seq<SpotifyAlbumArtistView> Artists { get; set; }
-    public Seq<SpotifyViewItem> Related { get; set; }
-    public Seq<SpotifyDiscView> Discs { get; set; }
+    public Arr<SpotifyAlbumArtistView> Artists { get; set; }
+    public Arr<SpotifyViewItem> Related { get; set; }
+    public Arr<SpotifyDiscView> Discs { get; set; }
     public string Type { get; set; }
-    public Seq<string> Copyrights { get; set; }
+    public Arr<string> Copyrights { get; set; }
 
     public void OnNavigatedFrom()
     {

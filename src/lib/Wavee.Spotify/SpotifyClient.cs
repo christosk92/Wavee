@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System.Diagnostics;
+using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Channels;
@@ -313,12 +314,14 @@ public sealed class SpotifyClient
         string deviceId,
         CancellationToken ct = default)
     {
+        var sw = Stopwatch.StartNew();
         var (host, port) = await ApResolve.GetAccessPoint(ct);
         var tcp = SpotifyConnection.Connect(host, port);
         var stream = tcp.GetStream();
         var handshakeResult = SpotifyConnection.Handshake(stream);
         var authenticationResult = Authenticate.PerformAuth(stream, credentials, handshakeResult, deviceId);
-
+        sw.Stop();
+        Debug.WriteLine($"Auth took {sw.ElapsedMilliseconds}ms");
         return (stream, authenticationResult);
     }
 }

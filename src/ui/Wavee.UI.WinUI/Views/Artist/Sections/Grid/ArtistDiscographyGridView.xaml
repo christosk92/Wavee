@@ -1,31 +1,37 @@
 <?xml version="1.0" encoding="utf-8"?>
 <UserControl x:Class="Wavee.UI.WinUI.Views.Artist.Sections.Grid.ArtistDiscographyGridView"
-    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:ArtistTest"
-    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:components="using:ArtistTest.Components"
-    xmlns:viewModels="using:Wavee.UI.ViewModels"
-    xmlns:components1="using:Wavee.UI.WinUI.Components"
-    mc:Ignorable="d">
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:ArtistTest"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:components="using:ArtistTest.Components"
+             xmlns:viewModels="using:Wavee.UI.ViewModels"
+             xmlns:components1="using:Wavee.UI.WinUI.Components"
+             mc:Ignorable="d">
 
-    <GridView ItemsSource="{x:Bind Items}">
-        <GridView.ItemContainerStyle>
-            <Style TargetType="GridViewItem" BasedOn="{StaticResource DefaultGridViewItemStyle}">
-                <Setter Property="Margin" Value="0,0,14,24"/>
-                <Setter Property="Padding" Value="2"/>
-            </Style>
-        </GridView.ItemContainerStyle>
-        <GridView.ItemTemplate>
+    <ItemsRepeater ItemsSource="{x:Bind Items}">
+        <ItemsRepeater.Layout>
+            <UniformGridLayout MinItemWidth="180" ItemsStretch="Uniform"
+                               MinItemHeight="230"
+                               MinRowSpacing="12"
+                               MinColumnSpacing="12" />
+
+        </ItemsRepeater.Layout>
+        <!-- <GridView.ItemContainerStyle> -->
+        <!--     <Style TargetType="GridViewItem" BasedOn="{StaticResource DefaultGridViewItemStyle}"> -->
+        <!--         <Setter Property="Margin" Value="0,0,14,24"/> -->
+        <!--         <Setter Property="Padding" Value="2"/> -->
+        <!--     </Style> -->
+        <!-- </GridView.ItemContainerStyle> -->
+        <ItemsRepeater.ItemTemplate>
             <DataTemplate x:DataType="viewModels:ArtistDiscographyView">
-                <components1:SpotifyView
-                    MaxWidth="200"
-                    Title="{x:Bind Title}"
-                    Image="{x:Bind Image}"
-                    Description="{x:Bind ReleaseDateAsStr}"
-                />
+                <components1:SpotifyView MaxWidth="200"
+                                         Tapped="SpotifyItemTapped"
+                                         Title="{x:Bind Title}"
+                                         Image="{x:Bind Image}"
+                                         Description="{x:Bind ReleaseDateAsStr}" />
             </DataTemplate>
-        </GridView.ItemTemplate>
-    </GridView>
+        </ItemsRepeater.ItemTemplate>
+    </ItemsRepeater>
 </UserControl>
