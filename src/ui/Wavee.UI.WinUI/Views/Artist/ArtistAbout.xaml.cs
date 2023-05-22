@@ -157,7 +157,8 @@ public sealed partial class ArtistAbout : UserControl
     }
     public void Clear()
     {
-
+        this.Bindings.StopTracking();
+        this.Content = new Border();
     }
 
     public ArtistAboutView Info { get; set; }

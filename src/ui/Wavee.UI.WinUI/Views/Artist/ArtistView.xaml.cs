@@ -12,6 +12,7 @@ using Wavee.UI.ViewModels;
 using Microsoft.UI.Xaml.Hosting;
 using CommunityToolkit.WinUI.UI.Animations.Expressions;
 using System.Windows.Controls;
+using Border = Microsoft.UI.Xaml.Controls.Border;
 using ScrollViewer = Microsoft.UI.Xaml.Controls.ScrollViewer;
 using SelectionChangedEventArgs = Microsoft.UI.Xaml.Controls.SelectionChangedEventArgs;
 using UserControl = Microsoft.UI.Xaml.Controls.UserControl;
@@ -37,9 +38,9 @@ public sealed partial class ArtistRootView : UserControl, INavigablePage
             var item = (SegmentedItem)selectedItems[0];
             var content = item.Tag switch
             {
-                "overview" => _overview ??= new ArtistOverview(ref ViewModel._artist),
-                "concerts" => _concerts ??= new ArtistConcerts(ref ViewModel._artist),
-                "about" => (_about ??= new ArtistAbout(ViewModel._artist.Id)) as UIElement,
+                "overview" => _overview ??= new ArtistOverview(ViewModel.Artist),
+                "concerts" => _concerts ??= new ArtistConcerts(ViewModel.Artist),
+                "about" => (_about ??= new ArtistAbout(ViewModel.Artist.Id)) as UIElement,
                 _ => throw new ArgumentOutOfRangeException()
             };
             MainContent.Content = content;
@@ -147,6 +148,7 @@ public sealed partial class ArtistRootView : UserControl, INavigablePage
         _concerts = null;
         _about?.Clear();
         _about = null;
+        this.Content = new Border();
     }
 
 }

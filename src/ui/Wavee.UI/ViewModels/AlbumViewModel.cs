@@ -60,7 +60,9 @@ public sealed class AlbumViewModel<R> : ReactiveObject, INavigableViewModel wher
         {
             var artistName = artist.GetProperty("name").GetString();
             var artistId = artist.GetProperty("uri").GetString();
-            var artistImage = artist.GetProperty("image").GetProperty("uri").GetString();
+            var artistImage = artist.TryGetProperty("image", out var img)
+                ? img.GetProperty("uri").GetString()
+                : null;
             artistsRes = artistsRes.Add(new SpotifyAlbumArtistView
             {
                 Name = artistName,
@@ -69,26 +71,30 @@ public sealed class AlbumViewModel<R> : ReactiveObject, INavigableViewModel wher
             });
         }
 
-        var month = jsonDoc.RootElement.GetProperty("month").GetUInt16();
-        var day = jsonDoc.RootElement.GetProperty("day").GetUInt16();
+        var month = jsonDoc.RootElement.TryGetProperty("month", out var m) ? m.GetUInt16() : Option<ushort>.None;
+        var day = jsonDoc.RootElement.TryGetProperty("day", out var d) ? d.GetUInt16() : Option<ushort>.None;
         var type = jsonDoc.RootElement.GetProperty("type").GetString();
 
 
         Seq<SpotifyViewItem> related = LanguageExt.Seq<SpotifyViewItem>.Empty;
-        using var relatedAlbums = jsonDoc.RootElement.GetProperty("related").GetProperty("releases").EnumerateArray();
-        foreach (var relatedAlbum in relatedAlbums)
+        if (jsonDoc.RootElement
+            .TryGetProperty("related", out var rl))
         {
-            var relatedAlbumName = relatedAlbum.GetProperty("name").GetString();
-            var relatedAlbumUri = relatedAlbum.GetProperty("uri").GetString();
-            var relatedAlbumImage = relatedAlbum.GetProperty("cover").GetProperty("uri").GetString();
-            var year2 = relatedAlbum.GetProperty("year").GetUInt16();
-            related = related.Add(new SpotifyViewItem
+            using var relatedAlbums = rl.GetProperty("releases").EnumerateArray();
+            foreach (var relatedAlbum in relatedAlbums)
             {
-                Id = AudioId.FromUri(relatedAlbumUri),
-                Title = relatedAlbumName,
-                Image = relatedAlbumImage,
-                Description = year2.ToString()
-            });
+                var relatedAlbumName = relatedAlbum.GetProperty("name").GetString();
+                var relatedAlbumUri = relatedAlbum.GetProperty("uri").GetString();
+                var relatedAlbumImage = relatedAlbum.GetProperty("cover").GetProperty("uri").GetString();
+                var year2 = relatedAlbum.GetProperty("year").GetUInt16();
+                related = related.Add(new SpotifyViewItem
+                {
+                    Id = AudioId.FromUri(relatedAlbumUri),
+                    Title = relatedAlbumName,
+                    Image = relatedAlbumImage,
+                    Description = year2.ToString()
+                });
+            }
         }
 
         var numbOfDiscs = jsonDoc.RootElement.GetProperty("discs").GetArrayLength();
@@ -109,7 +115,8 @@ public sealed class AlbumViewModel<R> : ReactiveObject, INavigableViewModel wher
                     {
                         Name = artistInTracki.GetProperty("name").GetString(),
                         Id = AudioId.FromUri(artistInTracki.GetProperty("uri").GetString()),
-                        Image = artistInTracki.GetProperty("image").GetProperty("uri").GetString()
+                        Image = artistInTracki.TryGetProperty("image", out var img)
+                            ? img.GetProperty("uri").GetString() : null
                     });
                 }
                 resultOfDiscItem = resultOfDiscItem.Add(new ArtistDiscographyTrack
@@ -147,7 +154,7 @@ public sealed class AlbumViewModel<R> : ReactiveObject, INavigableViewModel wher
         Related = related;
         Discs = discsRes;
         Type = type;
-
+        Copyrights = copyrights;
         AlbumFetched.SetResult();
         IsBusy = false;
     }
@@ -155,13 +162,15 @@ public sealed class AlbumViewModel<R> : ReactiveObject, INavigableViewModel wher
     public string Name { get; set; }
     public string Image { get; set; }
     public ushort Year { get; set; }
-    public ushort Month { get; set; }
-    public ushort Day { get; set; }
+    public Option<ushort> Month { get; set; }
+    public Option<ushort> Day { get; set; }
     public ushort TracksCount { get; set; }
     public Seq<SpotifyAlbumArtistView> Artists { get; set; }
     public Seq<SpotifyViewItem> Related { get; set; }
     public Seq<SpotifyDiscView> Discs { get; set; }
     public string Type { get; set; }
+    public Seq<string> Copyrights { get; set; }
+
     public void OnNavigatedFrom()
     {
 

@@ -9,13 +9,13 @@ namespace Wavee.UI.WinUI.Views.Artist;
 
 public sealed partial class ArtistOverview : UserControl
 {
-    public ArtistOverview(ref ArtistView artistPage)
+    public ArtistOverview(ArtistView artistPage)
     {
         Artist = artistPage;
         this.InitializeComponent();
         GC.Collect();
     }
-    public ArtistView Artist { get; }
+    public ArtistView Artist { get; set; }
 
     private void TopTracksChoosingItemContainer(ListViewBase sender,
         ChoosingItemContainerEventArgs args)
@@ -43,7 +43,6 @@ public sealed partial class ArtistOverview : UserControl
         var panel = TopTracksGrid.ItemsPanelRoot as ItemsWrapGrid;
         static void SetStretchHorizontalAndNoWrap(ItemsWrapGrid wr, double width)
         {
-
             wr.Orientation = Orientation.Vertical;
             wr.ItemWidth = width;
             wr.MaximumRowsOrColumns = 5;
@@ -80,7 +79,9 @@ public sealed partial class ArtistOverview : UserControl
 
     public void Clear()
     {
+        Artist = default;
         this.Bindings.StopTracking();
         ArtistDiscographyGroupViewView.ClearAll();
+        this.Content = new Border();
     }
 }

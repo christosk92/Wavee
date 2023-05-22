@@ -26,8 +26,7 @@
         </labs:TransitionHelper>
     </UserControl.Resources>
     <Grid>
-        <ScrollViewer 
-            ViewChanged="ScrollViewer_OnViewChanged">
+        <ScrollViewer ViewChanged="ScrollViewer_OnViewChanged">
             <StackPanel>
                 <Grid VerticalAlignment="Top"
                       x:Name="ImageT">
@@ -36,14 +35,13 @@
                                                      VerticalAlignment="Stretch"
                                                      TransitionDuration="00:00:01"
                                                      Source="{x:Bind ViewModel.Artist.HeaderImage}" />
-                    <StackPanel 
-                        Margin="24,0,0,-12"
-                        x:Name="MetadataPnale"
-                        labs:TransitionHelper.Id="background"
-                        Visibility="Collapsed"
-                        ui:VisualExtensions.NormalizedCenterPoint="0.5"
-                        VerticalAlignment="Bottom"
-                        Orientation="Horizontal">
+                    <StackPanel Margin="24,0,0,-12"
+                                x:Name="MetadataPnale"
+                                labs:TransitionHelper.Id="background"
+                                Visibility="Collapsed"
+                                ui:VisualExtensions.NormalizedCenterPoint="0.5"
+                                VerticalAlignment="Bottom"
+                                Orientation="Horizontal">
                         <PersonPicture x:Name="AlternativeArtistImage"
                                        VerticalAlignment="Bottom"
                                        Visibility="Collapsed"
@@ -51,66 +49,66 @@
                                        labs:TransitionHelper.Id="image"
                                        Width="150"
                                        Height="150"
-                                       Grid.Column="0"/>
+                                       Grid.Column="0" />
                         <StackPanel>
                             <animations:Explicit.Animations>
                                 <animations:AnimationSet x:Name="ShowPanelAnim">
                                     <animations:TranslationAnimation Delay="0:0:0.2"
-                                                             Duration="0:0:1"
-                                                             From="0, 50, 0"
-                                                             To="0" />
+                                                                     Duration="0:0:1"
+                                                                     From="0, 50, 0"
+                                                                     To="0" />
                                     <animations:OpacityAnimation Delay="0:0:0.2"
-                                                         Duration="0:0:1"
-                                                         From="0"
-                                                         To="1.0" />
+                                                                 Duration="0:0:1"
+                                                                 From="0"
+                                                                 To="1.0" />
                                 </animations:AnimationSet>
                             </animations:Explicit.Animations>
                             <TextBlock Text="VERIFIED ARTIST"
-                                   FontWeight="Bold"
-                                   FontSize="12"
-                                   Opacity=".8" />
+                                       FontWeight="Bold"
+                                       FontSize="12"
+                                       Opacity=".8" />
                             <TextBlock FontSize="64"
-                                   labs:TransitionHelper.Id="name"
-                                   FontWeight="Bold"
-                                   Text="{x:Bind ViewModel.Artist.Name}" />
+                                       labs:TransitionHelper.Id="name"
+                                       FontWeight="Bold"
+                                       Text="{x:Bind ViewModel.Artist.Name}" />
 
                             <TextBlock FontWeight="SemiBold"
-                                   Text="{x:Bind FormatListeners(ViewModel.Artist.MonthlyListeners)}" />
+                                       Text="{x:Bind FormatListeners(ViewModel.Artist.MonthlyListeners)}" />
 
                             <StackPanel Orientation="Horizontal"
-                                    Spacing="8"
-                                    labs:TransitionHelper.Id="buttonspanel"
-                                    Margin="0,12,0,0">
+                                        Spacing="8"
+                                        labs:TransitionHelper.Id="buttonspanel"
+                                        Margin="0,12,0,0">
                                 <Button CornerRadius="100"
-                                    Padding="9"
-                                    Style="{ThemeResource AccentButtonStyle}">
+                                        Padding="9"
+                                        Style="{ThemeResource AccentButtonStyle}">
                                     <FontIcon FontFamily="Segoe Fluent Icons"
-                                          Glyph="&#xE102;" />
+                                              Glyph="&#xE102;" />
                                 </Button>
 
                                 <Button Padding="8">
                                     <StackPanel Spacing="8"
-                                            Orientation="Horizontal">
+                                                Orientation="Horizontal">
                                         <FontIcon FontFamily="Segoe Fluent Icons"
-                                              Glyph="&#xE8FA;" />
+                                                  Glyph="&#xE8FA;" />
                                         <TextBlock Text="Follow" />
                                     </StackPanel>
                                 </Button>
                                 <Border CornerRadius="4"
-                                    Padding="0"
-                                    Margin="0,4,12,0"
-                                    HorizontalAlignment="Left"
-                                    VerticalAlignment="Top"
-                                    Background="{ThemeResource AcrylicBackgroundFillColorBaseBrush}">
+                                        Padding="0"
+                                        Margin="0,4,12,0"
+                                        HorizontalAlignment="Left"
+                                        VerticalAlignment="Top"
+                                        Background="{ThemeResource AcrylicBackgroundFillColorBaseBrush}">
                                     <labs:Segmented SelectionChanged="Selector_OnSelectionChanged"
-                                                SelectedIndex="0">
+                                                    SelectedIndex="0">
                                         <labs:SegmentedItem Tag="overview"
-                                                        Content="Overview" />
+                                                            Content="Overview" />
                                         <labs:SegmentedItem Tag="about"
-                                                        Content="About" />
+                                                            Content="About" />
                                         <labs:SegmentedItem Tag="concerts"
-                                                        IsEnabled="False"
-                                                        Content="Concerts" />
+                                                            IsEnabled="False"
+                                                            Content="Concerts" />
                                     </labs:Segmented>
                                 </Border>
                             </StackPanel>
@@ -144,7 +142,7 @@
                                Margin="12"
                                Height="70"
                                labs:TransitionHelper.Id="image"
-                               x:Name="SecondPersonPicture"/>
+                               x:Name="SecondPersonPicture" />
                 <TextBlock labs:TransitionHelper.Id="name"
                            VerticalAlignment="Center"
                            FontSize="34"

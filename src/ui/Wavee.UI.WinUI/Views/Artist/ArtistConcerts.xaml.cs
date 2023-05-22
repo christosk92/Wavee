@@ -21,7 +21,7 @@ namespace Wavee.UI.WinUI.Views.Artist
 {
     public sealed partial class ArtistConcerts : UserControl
     {
-        public ArtistConcerts(ref ArtistView viewModelArtist)
+        public ArtistConcerts(ArtistView viewModelArtist)
         {
             this.InitializeComponent();
         }

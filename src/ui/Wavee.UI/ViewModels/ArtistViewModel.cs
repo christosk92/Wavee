@@ -11,8 +11,6 @@ namespace Wavee.UI.ViewModels;
 public sealed class ArtistViewModel<R> : ReactiveObject, INavigableViewModel
     where R : struct, HasSpotify<R>
 {
-    public ArtistView _artist;
-
     private readonly R _runtime;
     public TaskCompletionSource ArtistFetched = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
 
@@ -171,7 +169,7 @@ public sealed class ArtistViewModel<R> : ReactiveObject, INavigableViewModel
         GetView(releases, "compilations", false, res);
 
 
-        _artist = new ArtistView(
+        Artist = new ArtistView(
             name: name,
             headerImage: headerImage,
             monthlyListeners: monthlyListeners,
@@ -183,7 +181,7 @@ public sealed class ArtistViewModel<R> : ReactiveObject, INavigableViewModel
 
         ArtistFetched.SetResult();
     }
-    public ArtistView Artist => _artist;
+    public ArtistView Artist { get; set; }
     public void OnNavigatedFrom()
     {
 

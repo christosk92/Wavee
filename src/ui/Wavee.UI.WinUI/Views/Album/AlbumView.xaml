@@ -9,6 +9,8 @@
              xmlns:viewModels="using:Wavee.UI.ViewModels"
              xmlns:components="using:Wavee.UI.WinUI.Components"
              xmlns:winUi="using:CommunityToolkit.Labs.WinUI"
+             xmlns:panels="using:Wavee.UI.WinUI.Panels"
+             xmlns:models="using:Wavee.UI.Models"
              mc:Ignorable="d">
 
     <ScrollViewer>
@@ -36,7 +38,7 @@
                                                 Orientation="Horizontal">
                                         <PersonPicture Height="28">
                                             <PersonPicture.ProfilePicture>
-                                                <BitmapImage UriSource="{x:Bind Image}"
+                                                <BitmapImage UriSource="{Binding Image}"
                                                              DecodePixelHeight="28"
                                                              DecodePixelWidth="28" />
                                             </PersonPicture.ProfilePicture>
@@ -114,10 +116,9 @@
                         <ColumnDefinition Width=".5*" />
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
-                    <HyperlinkButton
-                        Padding="8,8,8,8"
-                        HorizontalAlignment="Right"
-                        Content="#" />
+                    <HyperlinkButton Padding="8,8,8,8"
+                                     HorizontalAlignment="Right"
+                                     Content="#" />
                     <HyperlinkButton Content="Title"
                                      Padding="0,8,8,8"
                                      HorizontalContentAlignment="Left"
@@ -195,6 +196,46 @@
                 </ItemsRepeater.ItemTemplate>
             </ItemsRepeater>
 
+            <TextBlock Margin="18,12,18,4"
+                       FontWeight="SemiBold"
+                       Opacity=".8"
+                       x:Name="MoreDescription" />
+            <ItemsRepeater Margin="18,0,18,0"
+                           Opacity=".7"
+                           ItemsSource="{x:Bind ViewModel.Copyrights}">
+                <ItemsRepeater.Layout>
+                    <StackLayout Orientation="Vertical" />
+                </ItemsRepeater.Layout>
+            </ItemsRepeater>
+
+            <TextBlock Text="Related albums"
+                       FontSize="18"
+                       FontWeight="SemiBold"
+                       Margin="18,24,18,4"
+                       />
+            <ItemsRepeater Margin="18,4,18,4"
+                           ItemsSource="{x:Bind ViewModel.Related}">
+                <ItemsRepeater.Layout>
+                    <panels:HorizontalAdaptiveLayout DesiredWidth="250" />
+                </ItemsRepeater.Layout>
+                <ItemsRepeater.ItemTemplate>
+                    <DataTemplate x:DataType="models:SpotifyViewItem">
+                        <Button Padding="12"
+                                Margin="0,0,16,0"
+                                CornerRadius="6"
+                                Tag="{x:Bind Id}"
+                                Tapped="RelatedAlbumTapped"
+                                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                BorderThickness="1"
+                                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+                            <components:SpotifyView Title="{x:Bind Title}"
+                                                    Id="{x:Bind Id}"
+                                                    Description="{x:Bind Description}"
+                                                    Image="{x:Bind Image}" />
+                        </Button>
+                    </DataTemplate>
+                </ItemsRepeater.ItemTemplate>
+            </ItemsRepeater>
             <Border Height="120" />
         </StackPanel>
     </ScrollViewer>
