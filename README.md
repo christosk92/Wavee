@@ -19,6 +19,11 @@ I regularly try out different stuff in a scratchpad, so if you seea commit title
 ## Updates
 I will try to post regular updates about what I've done, and what needs to be done. Don't expect too much though :)
 
+### 2023/05/22
+- Start work on album view:
+  ![image](https://github.com/christosk92/Wavee/assets/13438702/82e60e25-abaa-4520-8fdb-488530d2f642)
+
+
 ### 2023/05/21
 - Revamped the artist page to make it more declarative in code:
  ![image](https://github.com/christosk92/Wavee/assets/13438702/c9d15357-9e7b-48ae-9f6e-18d67d263adf)
