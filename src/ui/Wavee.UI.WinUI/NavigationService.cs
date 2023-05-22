@@ -58,7 +58,11 @@ public sealed class NavigationService
                 if (!EqualityComparer<object>.Default.Equals(parameter, cachedPage.WithParameter))
                 {
                     //if the parameter is different, we want to navigate to the page again (new instance) and remove the cached page and add this new one to the cache
-                    _cachedPages.Remove(pageType);
+                    if (_cachedPages.TryGetValue(pageType, out var potentialCachedPage))
+                    {
+                        _cachedPages.Remove(pageType);
+                        potentialCachedPage.Page.RemovedFromCache();
+                    }
                 }
                 else
                 {
@@ -66,6 +70,7 @@ public sealed class NavigationService
                     if (!currentPage.ShouldKeepInCache(_backStack.Count - cachedPage.InsertedAt))
                     {
                         //if the page should not be kept in cache, remove it from the cache
+                        currentPage.RemovedFromCache();
                         _cachedPages.Remove(currentPageType);
                     }
                 }

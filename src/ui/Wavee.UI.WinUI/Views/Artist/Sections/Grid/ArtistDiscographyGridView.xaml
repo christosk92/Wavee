@@ -12,8 +12,9 @@
 
     <ItemsRepeater ItemsSource="{x:Bind Items}">
         <ItemsRepeater.Layout>
-            <UniformGridLayout MinItemWidth="180" ItemsStretch="Uniform"
-                               MinItemHeight="230"
+            <UniformGridLayout MinItemWidth="200"
+                               ItemsStretch="Uniform"
+                               MinItemHeight="240"
                                MinRowSpacing="12"
                                MinColumnSpacing="12" />
 
@@ -26,11 +27,19 @@
         <!-- </GridView.ItemContainerStyle> -->
         <ItemsRepeater.ItemTemplate>
             <DataTemplate x:DataType="viewModels:ArtistDiscographyView">
-                <components1:SpotifyView MaxWidth="200"
-                                         Tapped="SpotifyItemTapped"
-                                         Title="{x:Bind Title}"
-                                         Image="{x:Bind Image}"
-                                         Description="{x:Bind ReleaseDateAsStr}" />
+                <Button Padding="12"
+                        Margin="0,0,16,0"
+                        CornerRadius="6"
+                        Tag="{x:Bind Id}"
+                        Tapped="SpotifyItemTapped"
+                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                        BorderThickness="1"
+                        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+                    <components1:SpotifyView MaxWidth="240"
+                                             Title="{x:Bind Title}"
+                                             Image="{x:Bind Image}"
+                                             Description="{x:Bind ReleaseDateAsStr}" />
+                </Button>
             </DataTemplate>
         </ItemsRepeater.ItemTemplate>
     </ItemsRepeater>

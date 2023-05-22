@@ -26,7 +26,9 @@
         </labs:TransitionHelper>
     </UserControl.Resources>
     <Grid>
-        <ScrollViewer ViewChanged="ScrollViewer_OnViewChanged">
+        <ScrollViewer
+            ui:ScrollViewerExtensions.VerticalScrollBarMargin="0,0,0,110"
+            ViewChanged="ScrollViewer_OnViewChanged">
             <StackPanel>
                 <Grid VerticalAlignment="Top"
                       x:Name="ImageT">

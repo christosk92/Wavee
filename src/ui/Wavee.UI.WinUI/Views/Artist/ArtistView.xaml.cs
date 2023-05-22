@@ -28,6 +28,17 @@ public sealed partial class ArtistRootView : UserControl, INavigablePage
     }
 
     public ArtistViewModel<WaveeUIRuntime> ViewModel { get; }
+    public void RemovedFromCache()
+    {
+        this.Bindings.StopTracking();
+        _overview?.Clear();
+        _overview = null;
+        _concerts?.Clear();
+        _concerts = null;
+        _about?.Clear();
+        _about = null;
+        this.Content = new Border();
+    }
 
     private async void Selector_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
     {
@@ -141,14 +152,5 @@ public sealed partial class ArtistRootView : UserControl, INavigablePage
 
     private void ArtistRootView_OnUnloaded(object sender, RoutedEventArgs e)
     {
-        this.Bindings.StopTracking();
-        _overview?.Clear();
-        _overview = null;
-        _concerts?.Clear();
-        _concerts = null;
-        _about?.Clear();
-        _about = null;
-        this.Content = new Border();
     }
-
 }

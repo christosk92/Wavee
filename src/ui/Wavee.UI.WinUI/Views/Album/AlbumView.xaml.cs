@@ -30,6 +30,10 @@ public sealed partial class AlbumView : UserControl, INavigablePage
     }
 
     Option<INavigableViewModel> INavigablePage.ViewModel => ViewModel;
+    public void RemovedFromCache()
+    {
+        
+    }
 
     public AlbumViewModel<WaveeUIRuntime> ViewModel { get; }
 

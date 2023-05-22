@@ -143,7 +143,7 @@ public sealed class ArtistViewModel<R> : ReactiveObject, INavigableViewModel
                     var pluralModifier = tracks.Length > 1 ? "tracks" : "track";
                     albumsView = albumsView.Add(new ArtistDiscographyView
                     {
-                        Id = releaseUri,
+                        Id = AudioId.FromUri(releaseUri),
                         Title = releaseName,
                         Image = releaseImage,
                         Tracks = tracks,
@@ -224,7 +224,7 @@ public readonly struct ArtistDiscographyView
 {
     public required string Title { get; init; }
     public required string Image { get; init; }
-    public required string Id { get; init; }
+    public required AudioId Id { get; init; }
     public Seq<ArtistDiscographyTrack> Tracks { get; init; }
     public required string ReleaseDateAsStr { get; init; }
 }

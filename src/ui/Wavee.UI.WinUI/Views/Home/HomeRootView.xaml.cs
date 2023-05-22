@@ -24,6 +24,10 @@ namespace Wavee.UI.WinUI.Views.Home
             return depth < 3;
         }
         public HomeViewModel<WaveeUIRuntime> ViewModel { get; }
+        public void RemovedFromCache()
+        {
+            
+        }
 
         Option<INavigableViewModel> INavigablePage.ViewModel => ViewModel;
 
