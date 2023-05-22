@@ -21,7 +21,7 @@ I will try to post regular updates about what I've done, and what needs to be do
 
 ### 2023/05/22
 - Start work on album view:
-  ![image](https://github.com/christosk92/Wavee/assets/13438702/82e60e25-abaa-4520-8fdb-488530d2f642)
+  ![image](https://github.com/christosk92/Wavee/assets/13438702/9223433b-111c-432e-9e1f-dc394cf201e6)
 
 
 ### 2023/05/21
