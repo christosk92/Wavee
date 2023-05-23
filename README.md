@@ -1,5 +1,10 @@
 # Wavee
 
+## Note (2023/05/23)
+
+I am beyond excited to share my app with everyone. I am really proud of the work I've done. 
+I've been testing my own app for a couple of days now, and it's so snappy and quick. I am aiming for a release within 2~3 weeks.
+
 ## Note
 
 I was trying to set-up the project in way that should work for NOT just Spotify, but also Apple Music, Soundcloud etc. 
