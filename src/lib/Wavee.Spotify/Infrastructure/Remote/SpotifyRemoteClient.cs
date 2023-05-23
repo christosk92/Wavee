@@ -3,6 +3,8 @@ using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Eum.Spotify.connectstate;
+using Eum.Spotify.context;
+using Google.Protobuf.Collections;
 using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
 using Wavee.Core.Ids;
@@ -254,6 +256,75 @@ public class SpotifyRemoteClient
         return default;
     }
 
+    public async ValueTask<Unit> PlayContextPaged(
+        AudioId contextId,
+        RepeatedField<ContextPage> pages,
+        int trackIndex,
+        int pageIndex)
+    {
+        var toDeviceId = _connection._latestCluster.Value.Map(x => x.ActiveDeviceId);
+        if (toDeviceId.IsNone)
+        {
+            return default;
+        }
+        // https://gae2-spclient.spotify.com/connect-state/v1/player/command/from/1b5327f43e39a20de0ec1dcafa3466f082e28348/to/342d539fa2bc06a1cfa4d03d67c3d90513b75879
+        /*
+         * {
+     "command": {
+         "context": {
+             "uri": "spotify:artist:1qma7XhwZotCAucL7NHVLY",
+             "metadata": {},
+             "pages": [..]
+         },
+         "options": {
+             "license": "premium",
+             "skip_to": {
+                 "track_index": 4,
+                 "page_index": 0
+             },
+             "player_options_override": {}
+         },
+         "endpoint": "play"
+     }
+ }
+         */
+
+        var command = new
+        {
+            command = new
+            {
+                context = new
+                {
+                    uri = contextId.ToString(),
+                    pages = pages.Select(c => new
+                    {
+                        page_url = c.PageUrl
+                    }),
+                },
+                options = new
+                {
+                    license = "premium",
+                    skip_to = new
+                    {
+                        track_index = trackIndex,
+                        page_index = pageIndex
+                    },
+                    player_options_override = new object()
+                },
+                endpoint = "play"
+            }
+        };
+
+        var sp = await SpClientUrl(CancellationToken.None);
+        await SpotifyRemoteRuntime.InvokeCommandOnRemoteDevice(
+            command,
+            sp,
+            toDeviceId.ValueUnsafe(),
+            _deviceId,
+            _tokenClient,
+            CancellationToken.None);
+        return default;
+    }
     public async ValueTask<Unit> Pause(CancellationToken ct = default)
     {
         var toDeviceId = _connection._latestCluster.Value.Map(x => x.ActiveDeviceId);
@@ -338,5 +409,4 @@ public class SpotifyRemoteClient
         _spClientUrl = spClientUrl;
         return spClientUrl;
     }
-
 }

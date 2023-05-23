@@ -22,12 +22,11 @@
                        x:Name="ShimmerListView">
             <ItemsRepeater.ItemTemplate>
                 <DataTemplate x:DataType="viewModels:ArtistDiscographyTrack">
-                    <ListViewItem
-                        
-                        Style="{StaticResource TracksListViewItemStyle}">
+                    <ListViewItem Style="{StaticResource TracksListViewItemStyle}">
                         <Grid Height="38">
                             <components:TrackView AlternatingRowColor="True"
                                                   x:Phase="1"
+                                                  PlayCommand="{x:Bind PlayCommand}"
                                                   Id="{x:Bind Id}"
                                                   Index="{x:Bind MinusOne(Number)}"
                                                   ShowImage="False">

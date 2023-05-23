@@ -40,6 +40,9 @@
                 <DataTemplate x:DataType="viewModels:ArtistTopTrackView">
                     <components:TrackView VerticalAlignment="Stretch"
                                           ShowImage="True"
+                                          Height="38"
+                                          Index="{x:Bind Index}"
+                                          Id="{x:Bind Id}"
                                           AlternatingRowColor="False"
                                           VerticalContentAlignment="Stretch"
                                           HorizontalAlignment="Stretch"

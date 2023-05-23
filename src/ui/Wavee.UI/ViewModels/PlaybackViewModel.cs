@@ -147,13 +147,21 @@ public sealed class PlaybackViewModel<R> : ReactiveObject where R : struct, HasS
     public ITrack? CurrentTrack
     {
         get => _currentTrack;
-        set => this.RaiseAndSetIfChanged(ref _currentTrack, value);
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _currentTrack, value);
+            CurrentTrackChanged?.Invoke(this, value);
+        }
     }
 
     public bool Paused
     {
         get => _paused;
-        set => this.RaiseAndSetIfChanged(ref _paused, value);
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _paused, value);
+            PauseChanged?.Invoke(this, value);
+        }
     }
 
     public RepeatState RepeatState
@@ -176,6 +184,10 @@ public sealed class PlaybackViewModel<R> : ReactiveObject where R : struct, HasS
     public ICommand ToggleRepeatCommand { get; }
     public ICommand SkipPreviousCommand { get; }
     public ICommand SkipNextCommand { get; }
+    public event EventHandler<bool> PauseChanged;
+
+    public event EventHandler<ITrack?> CurrentTrackChanged;
+
     public async Task SetVolumeAsync(double volumePerc)
     {
         var volumeFrac = volumePerc / 100;
@@ -192,6 +204,32 @@ public sealed class PlaybackViewModel<R> : ReactiveObject where R : struct, HasS
 
         var result = await aff.Run(_runtime);
     }
+
+    public async Task PlayContextAsync(PlayContextStruct context)
+    {
+        if (ActiveOnThisDevice)
+        {
+            //play on this device
+            return;
+        }
+
+        //remote command
+        if (context.NextPages.Any())
+        {
+            var aff =
+                from remoteClient in Spotify<R>.GetRemoteClient()
+                from _ in remoteClient.ValueUnsafe().PlayContextPaged(
+                    contextId: context.ContextId,
+                    pages: context.NextPages,
+                    trackIndex: context.Index,
+                    pageIndex: context.PageIndex
+                ).ToAff()
+                select unit;
+            var result = await aff.Run(_runtime);
+        }
+        return;
+    }
+
     public async Task SeekToAsync(double to)
     {
         _positionMs = GetNewPosition((long)to);
@@ -380,5 +418,6 @@ public sealed class PlaybackViewModel<R> : ReactiveObject where R : struct, HasS
         int MinimumDifference,
         Action<long> PositionCallback,
         Option<long> PreviouslyMeasuredTimestamp);
+
 
 }

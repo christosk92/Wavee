@@ -52,7 +52,7 @@ public sealed partial class ArtistRootView : UserControl, INavigablePage
             {
                 "overview" => _overview ??= new ArtistOverview(ViewModel.Artist),
                 "concerts" => _concerts ??= new ArtistConcerts(ViewModel.Artist),
-                "about" => (_about ??= new ArtistAbout(ViewModel.Artist.Id)) as UIElement,
+                "about" => (_about ??= new ArtistAbout(ViewModel.Artist.Id.ToBase62())) as UIElement,
                 _ => throw new ArgumentOutOfRangeException()
             };
             MainContent.Content = content;

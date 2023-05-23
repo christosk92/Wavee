@@ -21,17 +21,6 @@ public readonly record struct AudioId(BigInteger Id, AudioItemType Type, Service
 
     public string ToBase16()
     {
-        // var base62 = ToBase62();
-        // BigInteger result = new BigInteger();
-        // for (int i = 0; i < base62.Length; i++)
-        // {
-        //     int digit = BASE62_CHARS.IndexOf(base62[i]);
-        //     if (digit == -1)
-        //         throw new ArgumentException($"Invalid character '{base62[i]}'");
-        //
-        //     result = BigInteger.Multiply(result, BASE62_CHARS.Length) + digit;
-        // }
-
         var result = Id;
         var length = (int)Math.Ceiling(BigInteger.Log(result, 256));
         Span<byte> bytes = stackalloc byte[length];

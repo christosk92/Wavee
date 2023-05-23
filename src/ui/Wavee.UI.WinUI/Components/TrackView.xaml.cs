@@ -1,8 +1,12 @@
 using System;
+using System.Windows.Input;
+using AnimatedVisuals;
+using CommunityToolkit.WinUI.UI;
 using Microsoft.UI.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
+using Wavee.Core.Contracts;
 using Wavee.Core.Ids;
 using Wavee.UI.Infrastructure.Live;
 using Wavee.UI.Models;
@@ -23,6 +27,7 @@ public sealed partial class TrackView : UserControl
     public static readonly DependencyProperty AlternatingRowColorProperty = DependencyProperty.Register(nameof(AlternatingRowColor), typeof(bool), typeof(TrackView), new PropertyMetadata(default(bool)));
     public static readonly DependencyProperty PlaybackStateProperty = DependencyProperty.Register(nameof(PlaybackState), typeof(TrackPlaybackState), typeof(TrackView), new PropertyMetadata(default(TrackPlaybackState), PlaybackStateChanged));
     public static readonly DependencyProperty IdProperty = DependencyProperty.Register(nameof(Id), typeof(AudioId), typeof(TrackView), new PropertyMetadata(default(AudioId), IdChanged));
+    public static readonly DependencyProperty PlayCommandProperty = DependencyProperty.Register(nameof(PlayCommand), typeof(ICommand), typeof(TrackView), new PropertyMetadata(default(ICommand)));
 
     private static void IdChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
@@ -87,6 +92,13 @@ public sealed partial class TrackView : UserControl
         get => (AudioId)GetValue(IdProperty);
         set => SetValue(IdProperty, value);
     }
+
+    public ICommand PlayCommand
+    {
+        get => (ICommand)GetValue(PlayCommandProperty);
+        set => SetValue(PlayCommandProperty, value);
+    }
+
     private void HandleIdChange(AudioId id)
     {
         if (ShellViewModel<WaveeUIRuntime>.Instance.Playback.CurrentTrack?.Id.Equals(id) is true)
@@ -109,12 +121,75 @@ public sealed partial class TrackView : UserControl
                 break;
             case TrackPlaybackState.Playing:
                 VisualStateManager.GoToState(this, "PlayingPlayback", true);
+                // PlaybackViewContent.Content = new AnimatedVisualPlayer
+                // {
+                //     Source = new Equaliser(),
+                //     AutoPlay = true,
+                //     PlaybackRate = 2.0
+                // };
                 break;
             case TrackPlaybackState.Paused:
                 VisualStateManager.GoToState(this, "PausedPlayback", true);
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(state), state, null);
+        }
+    }
+
+    private void RegisterPlaybackEvents()
+    {
+        ShellViewModel<WaveeUIRuntime>.Instance.Playback.PauseChanged += PlaybackOnPauseChanged;
+        ShellViewModel<WaveeUIRuntime>.Instance.Playback.CurrentTrackChanged += PlaybackOnCurrentTrackChanged;
+    }
+    private void UnregisterPlaybackEvents()
+    {
+        ShellViewModel<WaveeUIRuntime>.Instance.Playback.PauseChanged -= PlaybackOnPauseChanged;
+        ShellViewModel<WaveeUIRuntime>.Instance.Playback.CurrentTrackChanged -= PlaybackOnCurrentTrackChanged;
+    }
+    private void PlaybackOnCurrentTrackChanged(object sender, ITrack e)
+    {
+        if (e is null)
+        {
+            PlaybackState = TrackPlaybackState.None;
+            return;
+        }
+
+        if (e.Id.Equals(Id))
+        {
+            if (ShellViewModel<WaveeUIRuntime>.Instance.Playback.Paused)
+            {
+
+                PlaybackState = TrackPlaybackState.Paused;
+            }
+            else
+            {
+                PlaybackState = TrackPlaybackState.Playing;
+            }
+        }
+        else
+        {
+            PlaybackState = TrackPlaybackState.None;
+        }
+    }
+    private void PlaybackOnPauseChanged(object sender, bool e)
+    {
+        if (ShellViewModel<WaveeUIRuntime>.Instance.Playback.CurrentTrack is null)
+        {
+            PlaybackState = TrackPlaybackState.None;
+            return;
+        }
+
+        if (ShellViewModel<WaveeUIRuntime>.Instance.Playback.CurrentTrack.Id.Equals(Id))
+        {
+            if (ShellViewModel<WaveeUIRuntime>.Instance.Playback.Paused)
+            {
+
+                PlaybackState = TrackPlaybackState.Paused;
+            }
+            else
+            {
+                PlaybackState = TrackPlaybackState.Playing;
+            }
         }
     }
 
@@ -175,6 +250,12 @@ public sealed partial class TrackView : UserControl
                 VisualStateManager.GoToState(this, "NoPlayback", true);
                 break;
             case TrackPlaybackState.Playing:
+                // PlaybackViewContent.Content = new AnimatedVisualPlayer
+                // {
+                //     Source = new Equaliser(),
+                //     AutoPlay = true,
+                //     PlaybackRate = 2.0
+                // };
                 VisualStateManager.GoToState(this, "PlayingPlayback", true);
                 break;
             case TrackPlaybackState.Paused:
@@ -184,4 +265,35 @@ public sealed partial class TrackView : UserControl
                 throw new ArgumentOutOfRangeException();
         }
     }
+
+    private void TrackView_OnUnloaded(object sender, RoutedEventArgs e)
+    {
+        UnregisterPlaybackEvents();
+    }
+
+    private void AnimatedVisualPlayerUnloaded(object sender, RoutedEventArgs e)
+    {
+        var p = (AnimatedVisualPlayer)sender;
+        p.Stop();
+    }
+
+    private async void FrameworkElement_OnLoaded(object sender, RoutedEventArgs e)
+    {
+        var p = (AnimatedVisualPlayer)sender;
+        if (!p.IsPlaying)
+        {
+            await p.PlayAsync(0, 1, true);
+        }
+    }
+
+    private void TrackView_OnLoaded(object sender, RoutedEventArgs e)
+    {
+        RegisterPlaybackEvents();
+    }
+
+    private void PauseButton_OnTapped(object sender, TappedRoutedEventArgs e)
+    {
+        ShellViewModel<WaveeUIRuntime>.Instance.Playback.ResumePauseCommand.Execute(null);
+    }
+
 }

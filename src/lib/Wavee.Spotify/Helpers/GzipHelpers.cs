@@ -48,12 +48,6 @@ internal static class GzipHelpers
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static int GetGzipUncompressedLength(ReadOnlyMemory<byte> compressedData)
-    {
-        return BitConverter.ToInt32(compressedData.Slice(compressedData.Length - 4, 4).Span);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static int GetGzipUncompressedLength(Stream stream)
     {
         Span<byte> uncompressedLength = stackalloc byte[4];

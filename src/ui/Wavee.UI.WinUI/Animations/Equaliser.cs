@@ -187,8 +187,10 @@ namespace AnimatedVisuals
 
             CompositionColorBrush ColorBrush_AlmostBlack_FF111111()
             {
-                return (_colorBrush_AlmostBlack_FF111111 == null)
-                    ? _colorBrush_AlmostBlack_FF111111 = _c.CreateColorBrush(Color.FromArgb(0xFF, 0x11, 0x11, 0x11))
+                //get accent color
+                var accentColor = (Color)Microsoft.UI.Xaml.Application.Current.Resources["SystemAccentColorLight1"];
+                return (_colorBrush_AlmostBlack_FF111111 == null || _colorBrush_AlmostBlack_FF111111.Color != accentColor)
+                    ? _colorBrush_AlmostBlack_FF111111 = _c.CreateColorBrush(accentColor)
                     : _colorBrush_AlmostBlack_FF111111;
             }
 

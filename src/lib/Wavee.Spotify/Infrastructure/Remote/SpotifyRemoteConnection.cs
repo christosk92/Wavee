@@ -1,4 +1,5 @@
-﻿using System.Reactive.Linq;
+﻿using System.Diagnostics;
+using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Text.Json;
 using System.Threading.Channels;
@@ -107,6 +108,12 @@ internal sealed class SpotifyRemoteConnection
 
     private async Task HandleMessage(SpotifyWebsocketMessage message)
     {
+        if (message.Type is SpotifyWebsocketMessageType.ConnectionId)
+        {
+            //  atomic(() => _connectionId.Swap(_ => ))
+            Debugger.Break();
+            return;
+        }
         if (message.Uri.StartsWith("hm://connect-state/v1/cluster"))
         {
             var clusterUpdate = ClusterUpdate.Parser.ParseFrom(message.Payload.ValueUnsafe().Span);
@@ -122,7 +129,7 @@ internal sealed class SpotifyRemoteConnection
             var payload = message.Payload.ValueUnsafe();
             using var jsonDoc = JsonDocument.Parse(payload);
             using var rootArr = jsonDoc.RootElement.EnumerateArray();
-            foreach (var rootItemStr in rootArr.Select(c=> c.ToString()))
+            foreach (var rootItemStr in rootArr.Select(c => c.ToString()))
             {
                 using var rootItem = JsonDocument.Parse(rootItemStr);
                 using var items = rootItem.RootElement.GetProperty("items").EnumerateArray();

@@ -1,6 +1,9 @@
 ﻿using System.Collections.ObjectModel;
 using System.Text.Json;
+using System.Windows.Input;
 using DynamicData;
+using Eum.Spotify.context;
+using Google.Protobuf.Collections;
 using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
 using ReactiveUI;
@@ -11,11 +14,20 @@ using Wavee.UI.Infrastructure.Traits;
 namespace Wavee.UI.ViewModels;
 
 public sealed class ArtistViewModel<R> : INavigableViewModel
-    where R : struct, HasSpotify<R>
+    where R : struct, HasSpotify<R>, HasFile<R>, HasDirectory<R>, HasLocalPath<R>
 {
     private R _runtime;
     public TaskCompletionSource ArtistFetched = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
 
+
+    static ArtistViewModel()
+    {
+        PlayCommand = ReactiveCommand.CreateFromTask<PlayContextStruct, Unit>(async str =>
+        {
+            await ShellViewModel<R>.Instance.Playback.PlayContextAsync(str);
+            return default(Unit);
+        });
+    }
     public ArtistViewModel(R runtime)
     {
         _runtime = runtime;
@@ -58,6 +70,7 @@ public sealed class ArtistViewModel<R> : INavigableViewModel
             .GetProperty("tracks");
         using var topTracksArr = toptr.EnumerateArray();
         var topTracks = new List<ArtistTopTrackView>(toptr.GetArrayLength());
+        int index = 0;
         foreach (var topTrack in topTracksArr)
         {
             var release = topTrack.GetProperty("release");
@@ -66,14 +79,23 @@ public sealed class ArtistViewModel<R> : INavigableViewModel
             var releaseImage = release.GetProperty("cover").GetProperty("uri").GetString();
             var track = new ArtistTopTrackView
             {
-                Uri = topTrack.GetProperty("uri").GetString(),
+                Uri = topTrack.GetProperty("uri")
+                    .GetString(),
                 Playcount = topTrack.GetProperty("playcount")
-                    is { ValueKind: JsonValueKind.Number } e
-                ? e.GetUInt64() : Option<ulong>.None,
+                    is
+                {
+                    ValueKind: JsonValueKind.Number
+                } e
+                    ? e.GetUInt64()
+                    : Option<ulong>.None,
                 ReleaseName = releaseName,
                 ReleaseUri = releaseUri,
                 ReleaseImage = releaseImage,
-                Title = topTrack.GetProperty("name").GetString(),
+                Title = topTrack.GetProperty("name")
+                    .GetString(),
+                Id = AudioId.FromUri(topTrack.GetProperty("uri")
+                    .GetString()),
+                Index = index++,
             };
             topTracks.Add(track);
         }
@@ -83,7 +105,8 @@ public sealed class ArtistViewModel<R> : INavigableViewModel
         static void GetView(JsonElement releases,
             string key,
             bool canSwitchViews,
-            List<ArtistDiscographyGroupView> output)
+            List<ArtistDiscographyGroupView> output,
+            AudioId artistid)
         {
             var albums = releases.GetProperty(key);
             var totalAlbums = albums.GetProperty("total_count").GetInt32();
@@ -101,6 +124,32 @@ public sealed class ArtistViewModel<R> : INavigableViewModel
                     var year = release.GetProperty("year").GetUInt16();
 
                     var tracks = new List<ArtistDiscographyTrack>();
+                    var playCommandForContext = ReactiveCommand.Create<AudioId, Unit>(x =>
+                    {
+                        //pages are for artists are like:
+                        //hm://artistplaycontext/v1/page/spotify/album/{albumId}/km
+                        var currentId = AudioId.FromUri(releaseUri).ToBase62();
+                        var pageUrl = $"hm://artistplaycontext/v1/page/spotify/album/{currentId}/km";
+                        //next pages:
+                        var nextPages = new RepeatedField<ContextPage>
+                        {
+                            new ContextPage
+                            {
+                                PageUrl = pageUrl
+                            }
+                        };
+                        nextPages.AddRange(
+                            albumsView.Select(albumView =>
+                                $"hm://artistplaycontext/v1/page/spotify/album/{albumView.Id.ToBase62()}/km")
+                                .Select(nextPageUrl => new ContextPage { PageUrl = nextPageUrl }));
+                        var index = tracks.FindIndex(c => c.Id == x);
+                        PlayCommand.Execute(new PlayContextStruct(artistid,
+                            index,
+                            nextPages,
+                            0));
+                        return default;
+                    });
+
                     if (release.TryGetProperty("discs", out var discs))
                     {
                         using var discsArr = discs.EnumerateArray();
@@ -111,6 +160,7 @@ public sealed class ArtistViewModel<R> : INavigableViewModel
                             {
                                 tracks.Add(new ArtistDiscographyTrack
                                 {
+                                    PlayCommand = playCommandForContext,
                                     Playcount = track.GetProperty("playcount")
                                         is
                                     {
@@ -135,6 +185,7 @@ public sealed class ArtistViewModel<R> : INavigableViewModel
                         tracks.AddRange(Enumerable.Range(0, tracksCount)
                             .Select(c => new ArtistDiscographyTrack
                             {
+                                PlayCommand = playCommandForContext,
                                 Playcount = Option<ulong>.None,
                                 Title = null,
                                 Number = (ushort)(c + 1),
@@ -172,9 +223,9 @@ public sealed class ArtistViewModel<R> : INavigableViewModel
 
 
         var res = new List<ArtistDiscographyGroupView>(3);
-        GetView(releases, "albums", true, res);
-        GetView(releases, "singles", true, res);
-        GetView(releases, "compilations", false, res);
+        GetView(releases, "albums", true, res, artistId);
+        GetView(releases, "singles", true, res, artistId);
+        GetView(releases, "compilations", false, res, artistId);
 
 
         Artist = new ArtistView(
@@ -184,11 +235,14 @@ public sealed class ArtistViewModel<R> : INavigableViewModel
             topTracks: topTracks,
             res,
             profilePic,
-            id: artistId.ToBase62()
+            id: artistId
         );
 
         ArtistFetched.SetResult();
     }
+
+    public static ReactiveCommand<PlayContextStruct, Unit> PlayCommand { get; set; }
+
     public ArtistView Artist { get; set; }
     public void OnNavigatedFrom()
     {
@@ -217,10 +271,10 @@ public class ArtistView
     public List<ArtistTopTrackView> TopTracks { get; set; }
     public List<ArtistDiscographyGroupView> Discography { get; set; }
     public string ProfilePicture { get; }
-    public string Id { get; }
+    public AudioId Id { get; }
 
     public ArtistView(string name, string headerImage, ulong monthlyListeners, List<ArtistTopTrackView>
-        topTracks, List<ArtistDiscographyGroupView> discography, string profilePicture, string id)
+        topTracks, List<ArtistDiscographyGroupView> discography, string profilePicture, AudioId id)
     {
         Name = name;
         HeaderImage = headerImage;
@@ -277,6 +331,7 @@ public class ArtistDiscographyTrack
     public AudioId Id { get; set; }
     public TimeSpan Duration { get; set; }
     public bool IsExplicit { get; set; }
+    public ICommand PlayCommand { get; set; }
 
     public ushort MinusOne(ushort v)
     {
@@ -309,6 +364,8 @@ public class ArtistTopTrackView
     public required string ReleaseName { get; set; }
     public required string ReleaseUri { get; set; }
     public required string Title { get; set; }
+    public required AudioId Id { get; set; }
+    public required int Index { get; set; }
 
     public string FormatPlaycount(Option<ulong> playcount)
     {
