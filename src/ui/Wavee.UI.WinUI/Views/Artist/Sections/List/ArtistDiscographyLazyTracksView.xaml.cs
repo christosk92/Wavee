@@ -26,9 +26,9 @@ public partial class ArtistDiscographyLazyTracksView : UserControl
     public static readonly DependencyProperty TracksCountProperty = DependencyProperty.Register(nameof(TracksCount), typeof(ushort), typeof(ArtistDiscographyLazyTracksView), new PropertyMetadata(default(ushort)));
     public static readonly DependencyProperty TracksProperty =
         DependencyProperty.Register(nameof
-                (Tracks), typeof(ObservableCollection<ArtistDiscographyTrack>),
+                (Tracks), typeof(ArtistDiscographyTracksHolder),
         typeof(ArtistDiscographyLazyTracksView),
-        new PropertyMetadata(default(ObservableCollection<ArtistDiscographyTrack>)));
+        new PropertyMetadata(default(ArtistDiscographyTracksHolder)));
     public static readonly DependencyProperty IdProperty = DependencyProperty.Register(nameof(Id), typeof(AudioId), typeof(ArtistDiscographyLazyTracksView), new PropertyMetadata(default(AudioId)));
 
     public ArtistDiscographyLazyTracksView()
@@ -54,19 +54,17 @@ public partial class ArtistDiscographyLazyTracksView : UserControl
         set => SetValue(TracksCountProperty, value);
     }
 
-    public ObservableCollection<ArtistDiscographyTrack> Tracks
+    public ArtistDiscographyTracksHolder Tracks
     {
         get
         {
-            var tracks = (ObservableCollection<ArtistDiscographyTrack>)GetValue(TracksProperty);
-            if (tracks.Any(x => !x.IsLoaded))
+            var tracks = (ArtistDiscographyTracksHolder)GetValue(TracksProperty);
+            if (tracks.Tracks.Any(x => !x.IsLoaded))
             {
                 //setup a loading task
-                var id = Id;
-                var existingTracks = tracks;
                 Task.Run(async () =>
                 {
-                    await LoadTracks(id, existingTracks, CancellationToken.None);
+                    await LoadTracks(tracks, CancellationToken.None);
                 });
             }
             return tracks;
@@ -74,14 +72,13 @@ public partial class ArtistDiscographyLazyTracksView : UserControl
         set => SetValue(TracksProperty, value);
     }
 
-    private async Task LoadTracks(AudioId id,
-        ObservableCollection<ArtistDiscographyTrack> artistDiscographyTracks,
+    private async Task LoadTracks(ArtistDiscographyTracksHolder toFetch,
         CancellationToken ct)
     {
         const string fetch_uri = "hm://album/v1/album-app/album/{0}/android?country={1}";
         var aff =
             from countryCode in Spotify<WaveeUIRuntime>.CountryCode().Map(x => x.ValueUnsafe())
-            let url = string.Format(fetch_uri, id.ToString(), countryCode)
+            let url = string.Format(fetch_uri, toFetch.AlbumId.ToString(), countryCode)
             from mercuryClient in Spotify<WaveeUIRuntime>.Mercury().Map(x => x)
             from response in mercuryClient.Get(url, CancellationToken.None).ToAff()
             select response;
@@ -89,11 +86,6 @@ public partial class ArtistDiscographyLazyTracksView : UserControl
         var r = result.ThrowIfFail();
         using var jsonDoc = JsonDocument.Parse(r.Payload);
         using var discs = jsonDoc.RootElement.GetProperty("discs").EnumerateArray();
-        var uri = jsonDoc.RootElement.GetProperty("uri");
-        if (uri.GetString() != id.ToString())
-        {
-            Debugger.Break();
-        }
         Seq<ArtistDiscographyTrack> discsRes = LanguageExt.Seq<ArtistDiscographyTrack>.Empty;
         foreach (var disc in discs)
         {
@@ -129,10 +121,23 @@ public partial class ArtistDiscographyLazyTracksView : UserControl
         }
 
         //await Task.Delay(TimeSpan.FromMilliseconds(80), ct);
-        this.DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Low, () =>
+         this.DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Low, () =>
         {
-            artistDiscographyTracks.Clear();
-            artistDiscographyTracks.AddRange(discsRes);
+            //artistDiscographyTracks.Clear();
+            //artistDiscographyTracks.AddRange(discsRes);
+            for (var index = 0; index < discsRes.Count; index++)
+            {
+                var track = discsRes[index];
+                var oldTrack = toFetch.Tracks[index];
+
+                oldTrack.Title = track.Title;
+                oldTrack.Id = track.Id;
+                oldTrack.Duration = track.Duration;
+                oldTrack.Number = track.Number;
+                oldTrack.IsExplicit = track.IsExplicit;
+                oldTrack.Playcount = track.Playcount;
+                oldTrack.Artists = track.Artists;
+            }
 
             this.Bindings.Update();
         });

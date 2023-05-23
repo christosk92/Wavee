@@ -100,7 +100,7 @@ public sealed class ArtistViewModel<R> : INavigableViewModel
                     var releaseImage = release.GetProperty("cover").GetProperty("uri").GetString();
                     var year = release.GetProperty("year").GetUInt16();
 
-                    var tracks = new ObservableCollection<ArtistDiscographyTrack>();
+                    var tracks = new List<ArtistDiscographyTrack>();
                     if (release.TryGetProperty("discs", out var discs))
                     {
                         using var discsArr = discs.EnumerateArray();
@@ -150,7 +150,11 @@ public sealed class ArtistViewModel<R> : INavigableViewModel
                         Id = AudioId.FromUri(releaseUri),
                         Title = releaseName,
                         Image = releaseImage,
-                        Tracks = tracks,
+                        Tracks = new ArtistDiscographyTracksHolder
+                        {
+                            Tracks = tracks,
+                            AlbumId = AudioId.FromUri(releaseUri)
+                        },
                         ReleaseDateAsStr = $"{year.ToString()} - {tracks.Count} {pluralModifier}"
                     });
                 }
@@ -233,7 +237,7 @@ public class ArtistView
         foreach (var artistDiscographyGroupView in Discography)
         {
             foreach (var artistDiscographyView in artistDiscographyGroupView.Views)
-                artistDiscographyView.Tracks.Clear();
+                artistDiscographyView.Tracks.Tracks.Clear();
 
             artistDiscographyGroupView.Views.Clear();
         }
@@ -254,8 +258,14 @@ public class ArtistDiscographyView
     public string Title { get; set; }
     public string Image { get; set; }
     public AudioId Id { get; set; }
-    public ObservableCollection<ArtistDiscographyTrack> Tracks { get; set; }
+    public ArtistDiscographyTracksHolder Tracks { get; set; }
     public string ReleaseDateAsStr { get; set; }
+}
+
+public class ArtistDiscographyTracksHolder
+{
+    public List<ArtistDiscographyTrack> Tracks { get; set; }
+    public AudioId AlbumId { get; set; }
 }
 public class ArtistDiscographyTrack
 {
