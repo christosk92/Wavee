@@ -51,7 +51,8 @@ public static class Spotify<R> where R : struct, HasSpotify<R>
         => default(R).SpotifyEff.Map(x => x.ObserveLibrary());
     public static Eff<R, Option<string>> GetOwnDeviceId() =>
         default(R).SpotifyEff.Map(x => x.GetOwnDeviceId());
-
+    public static Eff<R, SpotifyCache> Cache() => default(R).SpotifyEff.Map(x => x.Cache().
+        IfNone(new SpotifyCache(new SpotifyCacheConfig(Option<string>.None, Option<TimeSpan>.None))));
     public static Eff<R, Option<SpotifyRemoteClient>> GetRemoteClient() =>
         default(R).SpotifyEff.Map(x => x.GetRemoteClient());
     public static Aff<R, ITrack> GetTrack(AudioId audioId) =>

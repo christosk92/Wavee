@@ -16,7 +16,7 @@ using Wavee.Core.Ids;
 using Wavee.UI.Infrastructure.Live;
 using Wavee.UI.Infrastructure.Sys;
 using Wavee.UI.ViewModels;
-
+using static LanguageExt.Prelude;
 namespace Wavee.UI.WinUI.Views.Artist.Sections.List;
 
 public partial class ArtistDiscographyLazyTracksView : UserControl
@@ -77,14 +77,24 @@ public partial class ArtistDiscographyLazyTracksView : UserControl
     {
         const string fetch_uri = "hm://album/v1/album-app/album/{0}/android?country={1}";
         var aff =
-            from countryCode in Spotify<WaveeUIRuntime>.CountryCode().Map(x => x.ValueUnsafe())
-            let url = string.Format(fetch_uri, toFetch.AlbumId.ToString(), countryCode)
-            from mercuryClient in Spotify<WaveeUIRuntime>.Mercury().Map(x => x)
-            from response in mercuryClient.Get(url, CancellationToken.None).ToAff()
+            from cached in Spotify<WaveeUIRuntime>.Cache()
+                .Map(x => x.GetRawEntity(toFetch.AlbumId)
+                    .BiMap(Some: r => SuccessAff(r),
+                        None: () => from countryCode in Spotify<WaveeUIRuntime>.CountryCode().Map(x => x.ValueUnsafe())
+                            let url = string.Format(fetch_uri, toFetch.AlbumId.ToString(), countryCode)
+                            from mercuryClient in Spotify<WaveeUIRuntime>.Mercury().Map(x => x)
+                            from response in mercuryClient.Get(url, CancellationToken.None).ToAff()
+                            from _ in Spotify<WaveeUIRuntime>.Cache().Map(x => x.SaveRawEntity(toFetch.AlbumId,
+                                toFetch.AlbumId.ToString(),
+                                response.Payload, DateTimeOffset.UtcNow.AddDays(1)))
+                            select response.Payload
+                    )
+                )
+            from response in cached.ValueUnsafe()
             select response;
         var result = await aff.Run(runtime: App.Runtime);
         var r = result.ThrowIfFail();
-        using var jsonDoc = JsonDocument.Parse(r.Payload);
+        using var jsonDoc = JsonDocument.Parse(r);
         using var discs = jsonDoc.RootElement.GetProperty("discs").EnumerateArray();
         Seq<ArtistDiscographyTrack> discsRes = LanguageExt.Seq<ArtistDiscographyTrack>.Empty;
         foreach (var disc in discs)

@@ -5,6 +5,7 @@ using Wavee.UI.Infrastructure.Sys;
 using Wavee.UI.Infrastructure.Traits;
 using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
+using Wavee.Spotify.Infrastructure.Cache;
 using Wavee.UI.Models;
 
 namespace Wavee.UI.ViewModels;
@@ -35,14 +36,26 @@ public sealed class AlbumViewModel<R> : ReactiveObject, INavigableViewModel wher
         //fetching the mobile version also gives us the artists image
         const string fetch_uri = "hm://album/v1/album-app/album/{0}/android?country={1}";
         var aff =
-            from countryCode in Spotify<R>.CountryCode().Map(x => x.ValueUnsafe())
-            let url = string.Format(fetch_uri, id.ToString(), countryCode)
-            from mercuryClient in Spotify<R>.Mercury().Map(x => x)
-            from response in mercuryClient.Get(url, CancellationToken.None).ToAff()
+            from cached in Spotify<R>.Cache()
+                .Map(x => x.GetRawEntity(id)
+                    .BiMap(Some: r => SuccessAff(r),
+                           None: () => from countryCode in Spotify<R>.CountryCode().Map(x => x.ValueUnsafe())
+                                       let url = string.Format(fetch_uri, id.ToString(), countryCode)
+                                       from mercuryClient in Spotify<R>.Mercury().Map(x => x)
+                                       from response in mercuryClient.Get(url, CancellationToken.None).ToAff()
+                                       from _ in Spotify<R>.Cache().Map(x => x.SaveRawEntity(id,
+                                           id.Id.ToString(),
+                                           response.Payload, DateTimeOffset.UtcNow.AddDays(1)))
+                                       select response.Payload
+                        )
+                )
+            from response in cached.ValueUnsafe()
             select response;
+
+
         var result = await aff.Run(runtime: _runtime);
         var r = result.ThrowIfFail();
-        using var jsonDoc = JsonDocument.Parse(r.Payload);
+        using var jsonDoc = JsonDocument.Parse(r);
 
         var name = jsonDoc.RootElement.GetProperty("name").GetString();
         var cover = jsonDoc.RootElement.GetProperty("cover").GetProperty("uri").ToString();

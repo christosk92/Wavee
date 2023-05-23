@@ -36,11 +36,17 @@ public sealed partial class ArtistAbout : UserControl
             var name = jsonDocument.RootElement.GetProperty("name").GetString();
             var mainimageUrl = jsonDocument.RootElement.GetProperty("mainImageUrl").GetString();
 
-            var autobiography = jsonDocument.RootElement.GetProperty("autobiography");
-            var body = autobiography.TryGetProperty("body", out var b) ? b.GetString() : null;
-            var links = autobiography.TryGetProperty("links", out var lk) ? lk.EnumerateObject()
-                .Map(x => new ArtistLink(x.Name, x.Value.GetString())).ToArr().ToSeq()
+            string body = null;
+            Seq<ArtistLink> links = Seq<ArtistLink>.Empty;
+            if (jsonDocument.RootElement.TryGetProperty("autobiography", out var autoBiography))
+            {
+                body = autoBiography.TryGetProperty("body", out var b) ? b.GetString() : null;
+                links = autoBiography.TryGetProperty("links", out var lk)
+                    ? lk.EnumerateObject()
+                        .Map(x => new ArtistLink(x.Name, x.Value.GetString())).ToArr().ToSeq()
                     : Seq<ArtistLink>.Empty;
+            }
+
             var biography = jsonDocument.RootElement.TryGetProperty("biography", out var bio) ? bio.GetString() : null;
             var images = jsonDocument.RootElement.TryGetProperty("images", out var imgs) ? (imgs.EnumerateArray()
                 .Map(x => new Artwork

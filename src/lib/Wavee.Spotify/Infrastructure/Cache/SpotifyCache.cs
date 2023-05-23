@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+﻿using System.Buffers.Text;
+using System.ComponentModel;
 using Google.Protobuf;
 using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
@@ -37,6 +38,15 @@ public readonly struct SpotifyCache
             catch (SQLiteException)
             {
             }
+
+            try
+            {
+                db.CreateTable<CachedAlbum>();
+            }
+            catch (SQLiteException)
+            {
+
+            }
         }
 
         _initialized = true;
@@ -74,6 +84,48 @@ public readonly struct SpotifyCache
         return default;
     }
 
+    public Unit SaveRawEntity(AudioId Id, string title,
+        ReadOnlyMemory<byte> data,
+        DateTimeOffset expiration)
+    {
+        if (_dbPath.IsNone)
+            return default;
+
+        using var db = new SQLiteConnection(_dbPath.ValueUnsafe());
+
+        switch (Id.Type)
+        {
+            case AudioItemType.Track:
+                db.InsertOrReplace(new CachedTrack
+                {
+                    Id = Id.ToBase62(),
+                    Title = title,
+                    RestData = data.ToArray()
+                });
+                break;
+            case AudioItemType.PodcastEpisode:
+                db.InsertOrReplace(new CachedEpisode
+                {
+                    Id = Id.ToBase62(),
+                    Title = title,
+                    RestData = data.ToArray()
+                });
+                break;
+            case AudioItemType.Album:
+                db.InsertOrReplace(new CachedAlbum
+                {
+                    Id = Id.ToBase62(),
+                    Title = title,
+                    RestData = data.ToArray(),
+                    InsertedAt = DateTimeOffset.UtcNow.Subtract(TimeSpan.FromSeconds(5)),
+                    AbsoluteCacheExpiration = expiration
+                });
+                break;
+        }
+
+        return default;
+    }
+
     public Option<TrackOrEpisode> Get(AudioId id)
     {
         if (_dbPath.IsNone)
@@ -89,6 +141,29 @@ public readonly struct SpotifyCache
             AudioItemType.PodcastEpisode => db.Table<CachedEpisode>().SingleOrDefault(x => x.Id == id.ToBase62())
                 is CachedEpisode episode
                 ? new TrackOrEpisode(Episode.Parser.ParseFrom(episode.RestData))
+                : None,
+        };
+    }
+
+    public Option<ReadOnlyMemory<byte>> GetRawEntity(AudioId id)
+    {
+        if (_dbPath.IsNone)
+            return None;
+
+        using var db = new SQLiteConnection(_dbPath.ValueUnsafe());
+        return id.Type switch
+        {
+            AudioItemType.Track => db.Table<CachedTrack>().SingleOrDefault(x => x.Id == id.ToBase62())
+                is CachedTrack track
+                ? (ReadOnlyMemory<byte>)track.RestData
+                : None,
+            AudioItemType.PodcastEpisode => db.Table<CachedEpisode>().SingleOrDefault(x => x.Id == id.ToBase62())
+                is CachedEpisode episode
+                ? (ReadOnlyMemory<byte>)episode.RestData
+                : None,
+            AudioItemType.Album => db.Table<CachedAlbum>().SingleOrDefault(x => x.Id == id.ToBase62())
+                is CachedAlbum album && album.AbsoluteCacheExpiration > DateTimeOffset.UtcNow
+                ? (ReadOnlyMemory<byte>)album.RestData
                 : None,
         };
     }
@@ -124,7 +199,14 @@ public readonly struct SpotifyCache
 
     #endregion
 
-
+    private class CachedAlbum
+    {
+        [PrimaryKey] public string Id { get; init; }
+        public string Title { get; init; }
+        public byte[] RestData { get; init; }
+        public DateTimeOffset InsertedAt { get; init; }
+        public DateTimeOffset AbsoluteCacheExpiration { get; init; }
+    }
     private class CachedTrack
     {
         [PrimaryKey] public string Id { get; init; }
