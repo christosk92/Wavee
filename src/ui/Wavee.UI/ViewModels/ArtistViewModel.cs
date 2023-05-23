@@ -71,6 +71,18 @@ public sealed class ArtistViewModel<R> : INavigableViewModel
         using var topTracksArr = toptr.EnumerateArray();
         var topTracks = new List<ArtistTopTrackView>(toptr.GetArrayLength());
         int index = 0;
+        var playcommandFortoptracks = ReactiveCommand.Create<AudioId, Unit>(x =>
+        {
+            var ctx = new PlayContextStruct(
+                ContextId: Artist.Id,
+                Index: topTracks.FindIndex(c => c.Id == x),
+                ContextUrl: $"context://{Artist.Id.ToString()}",
+                NextPages: Option<IEnumerable<ContextPage>>.None,
+                PageIndex: Option<int>.None
+            );
+            PlayCommand.Execute(ctx);
+            return default(Unit);
+        });
         foreach (var topTrack in topTracksArr)
         {
             var release = topTrack.GetProperty("release");
@@ -96,6 +108,7 @@ public sealed class ArtistViewModel<R> : INavigableViewModel
                 Id = AudioId.FromUri(topTrack.GetProperty("uri")
                     .GetString()),
                 Index = index++,
+                PlayCommand = playcommandFortoptracks,
             };
             topTracks.Add(track);
         }
@@ -128,25 +141,29 @@ public sealed class ArtistViewModel<R> : INavigableViewModel
                     {
                         //pages are for artists are like:
                         //hm://artistplaycontext/v1/page/spotify/album/{albumId}/km
-                        var currentId = AudioId.FromUri(releaseUri).ToBase62();
-                        var pageUrl = $"hm://artistplaycontext/v1/page/spotify/album/{currentId}/km";
-                        //next pages:
-                        var nextPages = new RepeatedField<ContextPage>
-                        {
-                            new ContextPage
-                            {
-                                PageUrl = pageUrl
-                            }
-                        };
-                        nextPages.AddRange(
-                            albumsView.Select(albumView =>
-                                $"hm://artistplaycontext/v1/page/spotify/album/{albumView.Id.ToBase62()}/km")
-                                .Select(nextPageUrl => new ContextPage { PageUrl = nextPageUrl }));
+                        var currentId = AudioId.FromUri(releaseUri);
+                        // var pageUrl = $"hm://artistplaycontext/v1/page/spotify/album/{currentId}/km";
+                        // //next pages:
+                        // var nextPages = new RepeatedField<ContextPage>
+                        // {
+                        //     new ContextPage
+                        //     {
+                        //         PageUrl = pageUrl
+                        //     }
+                        // };
+                        var nextPages =
+                            output.SelectMany(y => y.Views)
+                                .SkipWhile(z => z.Id != currentId).Select(albumView =>
+                                    $"hm://artistplaycontext/v1/page/spotify/album/{albumView.Id.ToBase62()}/km")
+                                .Select(nextPageUrl => new ContextPage { PageUrl = nextPageUrl });
+
                         var index = tracks.FindIndex(c => c.Id == x);
-                        PlayCommand.Execute(new PlayContextStruct(artistid,
-                            index,
-                            nextPages,
-                            0));
+                        PlayCommand.Execute(new PlayContextStruct(
+                            ContextId: artistid,
+                            Index: index,
+                            ContextUrl: None,
+                            NextPages: Some(nextPages),
+                            PageIndex: 0));
                         return default;
                     });
 
@@ -366,6 +383,7 @@ public class ArtistTopTrackView
     public required string Title { get; set; }
     public required AudioId Id { get; set; }
     public required int Index { get; set; }
+    public required ICommand PlayCommand { get; set; }
 
     public string FormatPlaycount(Option<ulong> playcount)
     {

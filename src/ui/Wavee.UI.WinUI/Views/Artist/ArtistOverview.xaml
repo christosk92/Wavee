@@ -41,6 +41,7 @@
                     <components:TrackView VerticalAlignment="Stretch"
                                           ShowImage="True"
                                           Height="38"
+                                          PlayCommand="{x:Bind PlayCommand}"
                                           Index="{x:Bind Index}"
                                           Id="{x:Bind Id}"
                                           AlternatingRowColor="False"

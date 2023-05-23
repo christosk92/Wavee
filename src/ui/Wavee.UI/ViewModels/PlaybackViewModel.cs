@@ -214,15 +214,27 @@ public sealed class PlaybackViewModel<R> : ReactiveObject where R : struct, HasS
         }
 
         //remote command
-        if (context.NextPages.Any())
+        if (context.NextPages.IsSome)
         {
             var aff =
                 from remoteClient in Spotify<R>.GetRemoteClient()
                 from _ in remoteClient.ValueUnsafe().PlayContextPaged(
                     contextId: context.ContextId,
-                    pages: context.NextPages,
+                    pages: context.NextPages.ValueUnsafe(),
                     trackIndex: context.Index,
-                    pageIndex: context.PageIndex
+                    pageIndex: context.PageIndex.ValueUnsafe()
+                ).ToAff()
+                select unit;
+            var result = await aff.Run(_runtime);
+        }
+        else
+        {
+            var aff =
+                from remoteClient in Spotify<R>.GetRemoteClient()
+                from _ in remoteClient.ValueUnsafe().PlayContextRaw(
+                    contextId: context.ContextId,
+                    contextUrl: context.ContextUrl.ValueUnsafe(),
+                    trackIndex: context.Index
                 ).ToAff()
                 select unit;
             var result = await aff.Run(_runtime);

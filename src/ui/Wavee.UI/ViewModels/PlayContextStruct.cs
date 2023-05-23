@@ -6,7 +6,8 @@ using Wavee.Core.Ids;
 namespace Wavee.UI.ViewModels;
 
 public readonly record struct PlayContextStruct(
-    AudioId ContextId, 
+    AudioId ContextId,
     int Index,
-    RepeatedField<ContextPage> NextPages,
-    int PageIndex);
+    Option<string> ContextUrl,
+    Option<IEnumerable<ContextPage>> NextPages,
+    Option<int> PageIndex);
