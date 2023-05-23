@@ -121,7 +121,7 @@ public readonly record struct SpotifyWebsocketMessage(HashMap<string, string> He
         }
         else
         {
-            throw new Exception("Unknown websocket message content type");
+            return Encoding.UTF8.GetBytes(getProperty.GetRawText());
         }
     }
 }

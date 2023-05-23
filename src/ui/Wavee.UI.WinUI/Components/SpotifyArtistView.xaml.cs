@@ -13,6 +13,7 @@ using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Microsoft.UI.Input;
+using Microsoft.UI.Xaml.Media.Imaging;
 using Wavee.Core.Ids;
 using Wavee.UI.WinUI.Flyouts;
 
@@ -24,7 +25,20 @@ namespace Wavee.UI.WinUI.Components
     public sealed partial class SpotifyArtistView : UserControl
     {
         public static readonly DependencyProperty TitleProperty = DependencyProperty.Register(nameof(Title), typeof(string), typeof(SpotifyArtistView), new PropertyMetadata(default(string)));
-        public static readonly DependencyProperty ImageProperty = DependencyProperty.Register(nameof(Image), typeof(string), typeof(SpotifyArtistView), new PropertyMetadata(default(string)));
+        public static readonly DependencyProperty ImageProperty = DependencyProperty.Register(nameof(Image), typeof(string), typeof(SpotifyArtistView), new PropertyMetadata(default(string), ImageChanged));
+
+        private static void ImageChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            var spart = (SpotifyArtistView)d;
+            if (e.NewValue is string s && !string.IsNullOrEmpty(s))
+            {
+                spart.MainImage.Source = new BitmapImage(new Uri(s));
+            }
+            else
+            {
+            }
+        }
+
         public static readonly DependencyProperty IdProperty = DependencyProperty.Register(nameof(Id), typeof(AudioId), typeof(SpotifyArtistView), new PropertyMetadata(default(AudioId)));
 
         public SpotifyArtistView()

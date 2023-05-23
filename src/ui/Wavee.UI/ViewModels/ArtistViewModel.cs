@@ -1,4 +1,6 @@
-﻿using System.Text.Json;
+﻿using System.Collections.ObjectModel;
+using System.Text.Json;
+using DynamicData;
 using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
 using ReactiveUI;
@@ -98,7 +100,7 @@ public sealed class ArtistViewModel<R> : INavigableViewModel
                     var releaseImage = release.GetProperty("cover").GetProperty("uri").GetString();
                     var year = release.GetProperty("year").GetUInt16();
 
-                    var tracks = new List<ArtistDiscographyTrack>();
+                    var tracks = new ObservableCollection<ArtistDiscographyTrack>();
                     if (release.TryGetProperty("discs", out var discs))
                     {
                         using var discsArr = discs.EnumerateArray();
@@ -252,7 +254,7 @@ public class ArtistDiscographyView
     public string Title { get; set; }
     public string Image { get; set; }
     public AudioId Id { get; set; }
-    public List<ArtistDiscographyTrack> Tracks { get; set; }
+    public ObservableCollection<ArtistDiscographyTrack> Tracks { get; set; }
     public string ReleaseDateAsStr { get; set; }
 }
 public class ArtistDiscographyTrack

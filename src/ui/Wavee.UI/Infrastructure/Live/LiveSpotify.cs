@@ -43,7 +43,7 @@ internal sealed class LiveSpotify : Traits.SpotifyIO
                 await using var stream = await r.Content.ReadAsStreamAsync(ct);
                 return SelectedListContent.Parser.ParseFrom(stream);
             })
-        select result;
+        select result;  
 
     public Aff<JsonDocument> FetchDesktopHome(string types, int limit, int offset,
         int contentLimit, int contentOffset,

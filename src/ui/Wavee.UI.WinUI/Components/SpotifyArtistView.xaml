@@ -19,7 +19,7 @@
         <controls:ConstrainedBox AspectRatio="1:1">
             <Grid>
                 <Border CornerRadius="400">
-                    <Image Source="{x:Bind Image, Mode=OneWay}" />
+                    <Image x:Name="MainImage" />
                 </Border>
                 <StackPanel x:Name="ButtonsPanel"
                             Visibility="Collapsed"
