@@ -144,7 +144,8 @@ internal sealed class SpotifyRemoteConnection
                             base62: item.GetProperty("identifier").GetString(),
                             itemType: type switch
                             {
-                                "track" => AudioItemType.Track
+                                "track" => AudioItemType.Track,
+                                "artist" => AudioItemType.Artist
                             }, ServiceType.Spotify),
                         Removed: removed,
                         AddedAt: removed ? Option<DateTimeOffset>.None : DateTimeOffset.Now

@@ -36,6 +36,7 @@
                         BorderThickness="1"
                         Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
                     <components1:SpotifyView MaxWidth="240"
+                                             Id="{x:Bind Id, Mode=OneWay}"
                                              Title="{x:Bind Title, Mode=OneWay}"
                                              Image="{x:Bind Image, Mode=OneWay}"
                                              Description="{x:Bind ReleaseDateAsStr}" />

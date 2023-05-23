@@ -124,8 +124,14 @@ public partial class ArtistDiscographyLazyTracksView : UserControl
                         .GetUInt16(),
                     IsExplicit = track.GetProperty("explicit")
                         .GetBoolean(),
-                    Playcount = track.GetProperty("playcount") is { ValueKind: JsonValueKind.Number } p ? p.GetUInt64() : Option<ulong>.None,
-                    Artists = artistsResults
+                    Playcount = track.GetProperty("playcount") is
+                    {
+                        ValueKind: JsonValueKind.Number
+                    } p
+                        ? p.GetUInt64()
+                        : Option<ulong>.None,
+                    Artists = artistsResults,
+                    PlayCommand = null
                 });
             }
         }

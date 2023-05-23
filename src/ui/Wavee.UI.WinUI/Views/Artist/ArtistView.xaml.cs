@@ -2,6 +2,7 @@ using CommunityToolkit.Labs.WinUI;
 using LanguageExt;
 using Microsoft.UI.Xaml.Controls;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.UI.Composition;
 using Microsoft.UI.Xaml;
@@ -12,9 +13,16 @@ using Wavee.UI.ViewModels;
 using Microsoft.UI.Xaml.Hosting;
 using CommunityToolkit.WinUI.UI.Animations.Expressions;
 using System.Windows.Controls;
+using Windows.UI;
+using Eum.Spotify.context;
+using Microsoft.UI;
+using Microsoft.UI.Xaml.Media;
 using Border = Microsoft.UI.Xaml.Controls.Border;
+using Orientation = Microsoft.UI.Xaml.Controls.Orientation;
 using ScrollViewer = Microsoft.UI.Xaml.Controls.ScrollViewer;
 using SelectionChangedEventArgs = Microsoft.UI.Xaml.Controls.SelectionChangedEventArgs;
+using StackPanel = Microsoft.UI.Xaml.Controls.StackPanel;
+using TextBlock = Microsoft.UI.Xaml.Controls.TextBlock;
 using UserControl = Microsoft.UI.Xaml.Controls.UserControl;
 
 namespace Wavee.UI.WinUI.Views.Artist;
@@ -26,7 +34,7 @@ public sealed partial class ArtistRootView : UserControl, INavigablePage
         ViewModel = new ArtistViewModel<WaveeUIRuntime>(App.Runtime);
         this.InitializeComponent();
     }
-    
+
     public ArtistViewModel<WaveeUIRuntime> ViewModel { get; }
     public void RemovedFromCache()
     {
@@ -153,5 +161,52 @@ public sealed partial class ArtistRootView : UserControl, INavigablePage
 
     private void ArtistRootView_OnUnloaded(object sender, RoutedEventArgs e)
     {
+    }
+
+    private async void PlayLargeButton_OnTapped(object sender, TappedRoutedEventArgs e)
+    {
+        var context = new PlayContextStruct(
+            ContextId: ViewModel.Artist.Id,
+            ContextUrl: $"context://{ViewModel.Artist.Id}",
+            Index: 0,
+            NextPages: Option<IEnumerable<ContextPage>>.None,
+            PageIndex: Option<int>.None
+        );
+        await ShellViewModel<WaveeUIRuntime>.Instance.Playback.PlayContextAsync(context);
+    }
+
+    public object FollowingToContent(bool b)
+    {
+        var stckp = new StackPanel
+        {
+            Orientation = Orientation.Horizontal,
+            Spacing = 8
+        };
+        if (b)
+        {
+            stckp.Children.Add(new FontIcon
+            {
+                FontFamily = new Microsoft.UI.Xaml.Media.FontFamily("Segoe Fluent Icons"),
+                Glyph = "\uE8F8"
+            });
+            stckp.Children.Add(new TextBlock
+            {
+                Text = "Unfollow"
+            });
+        }
+        else
+        {
+            stckp.Children.Add(new FontIcon { FontFamily = new Microsoft.UI.Xaml.Media.FontFamily("Segoe Fluent Icons"), Glyph = "\uE8FA" });
+            stckp.Children.Add(new TextBlock { Text = "Follow" });
+        }
+
+        return stckp;
+    }
+
+    public Brush GetBrushForFollowing(bool b)
+    {
+        //ApplicationForegroundThemeBrush
+        return b ? (Brush)Application.Current.Resources["ApplicationForegroundThemeBrush"] 
+            : new SolidColorBrush(Colors.Transparent);
     }
 }

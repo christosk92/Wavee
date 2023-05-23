@@ -28,6 +28,7 @@
                             VerticalAlignment="Center">
                     <Button x:Name="PlayButton"
                             Margin="4"
+                            Tapped="PlayButton_OnTapped"
                             CornerRadius="32"
                             Padding="14"
                             Background="{ThemeResource AcrylicBackgroundFillColorDefaultBrush}">

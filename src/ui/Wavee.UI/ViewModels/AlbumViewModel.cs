@@ -1,5 +1,6 @@
 ﻿using ReactiveUI;
 using System.Text.Json;
+using DynamicData;
 using Wavee.Core.Ids;
 using Wavee.UI.Infrastructure.Sys;
 using Wavee.UI.Infrastructure.Traits;
@@ -10,7 +11,7 @@ using Wavee.UI.Models;
 
 namespace Wavee.UI.ViewModels;
 
-public sealed class AlbumViewModel<R> : ReactiveObject, INavigableViewModel where R : struct, HasSpotify<R>
+public sealed class AlbumViewModel<R> : ReactiveObject, INavigableViewModel where R : struct, HasSpotify<R>, HasFile<R>, HasDirectory<R>, HasLocalPath<R>
 {
     private bool _isBusy = true;
     public bool IsBusy
@@ -112,7 +113,27 @@ public sealed class AlbumViewModel<R> : ReactiveObject, INavigableViewModel wher
 
         var numbOfDiscs = jsonDoc.RootElement.GetProperty("discs").GetArrayLength();
         using var discs = jsonDoc.RootElement.GetProperty("discs").EnumerateArray();
-        Seq<SpotifyDiscView> discsRes = LanguageExt.Seq<SpotifyDiscView>.Empty;
+        var discsRes = new List<SpotifyDiscView>();
+
+        var playCommand = ReactiveCommand.CreateFromTask<AudioId, Unit>(async audioId =>
+        {
+            var index = discsRes.SelectMany(c => c.Tracks.Select(f => f.Id))
+                .IndexOf(audioId);
+
+            if (index == -1)
+                return default;
+
+            var context = new PlayContextStruct(
+                ContextId: id,
+                Index: index,
+                ContextUrl: $"context://{id}",
+                NextPages: None,
+                PageIndex: None
+            );
+
+            await ShellViewModel<R>.Instance.Playback.PlayContextAsync(context);
+            return default;
+        });
         foreach (var disc in discs)
         {
             var number = disc.GetProperty("number").GetUInt16();
@@ -142,12 +163,18 @@ public sealed class AlbumViewModel<R> : ReactiveObject, INavigableViewModel wher
                         .GetUInt16(),
                     IsExplicit = track.GetProperty("explicit")
                         .GetBoolean(),
-                    Playcount = track.GetProperty("playcount") is { ValueKind: JsonValueKind.Number } p ? p.GetUInt64() : Option<ulong>.None,
-                    Artists = artistsResults
+                    Playcount = track.GetProperty("playcount") is
+                    {
+                        ValueKind: JsonValueKind.Number
+                    } p
+                        ? p.GetUInt64()
+                        : Option<ulong>.None,
+                    Artists = artistsResults,
+                    PlayCommand = playCommand
                 });
             }
 
-            discsRes = discsRes.Add(new SpotifyDiscView
+            discsRes.Add(new SpotifyDiscView
             {
                 Number = number,
                 Tracks = resultOfDiscItem.ToArray(),

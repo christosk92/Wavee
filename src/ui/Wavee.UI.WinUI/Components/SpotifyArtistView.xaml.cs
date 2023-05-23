@@ -12,9 +12,13 @@ using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Eum.Spotify.context;
+using LanguageExt;
 using Microsoft.UI.Input;
 using Microsoft.UI.Xaml.Media.Imaging;
 using Wavee.Core.Ids;
+using Wavee.UI.Infrastructure.Live;
+using Wavee.UI.ViewModels;
 using Wavee.UI.WinUI.Flyouts;
 
 // To learn more about WinUI, the WinUI project structure,
@@ -98,6 +102,18 @@ namespace Wavee.UI.WinUI.Components
         {
             var properFlyout = Id.ConstructFlyout();
             properFlyout.ShowAt((FrameworkElement)sender);
+        }
+
+        private async void PlayButton_OnTapped(object sender, TappedRoutedEventArgs e)
+        {
+            var playContext = new PlayContextStruct(
+                ContextId: Id,
+                Index: 0,
+                ContextUrl: $"context://{Id.ToString()}",
+                NextPages: Option<IEnumerable<ContextPage>>.None,
+                PageIndex: Option<int>.None);
+
+            await ShellViewModel<WaveeUIRuntime>.Instance.Playback.PlayContextAsync(playContext);
         }
     }
 }

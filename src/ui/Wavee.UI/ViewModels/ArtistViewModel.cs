@@ -1,4 +1,7 @@
 ﻿using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Reactive.Linq;
+using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Windows.Input;
 using DynamicData;
@@ -13,7 +16,7 @@ using Wavee.UI.Infrastructure.Traits;
 
 namespace Wavee.UI.ViewModels;
 
-public sealed class ArtistViewModel<R> : INavigableViewModel
+public sealed class ArtistViewModel<R> : INotifyPropertyChanged, INavigableViewModel
     where R : struct, HasSpotify<R>, HasFile<R>, HasDirectory<R>, HasLocalPath<R>
 {
     private R _runtime;
@@ -28,16 +31,36 @@ public sealed class ArtistViewModel<R> : INavigableViewModel
             return default(Unit);
         });
     }
+
+    private readonly IDisposable _listener;
+    private bool _following;
+
     public ArtistViewModel(R runtime)
     {
         _runtime = runtime;
+        _listener = Spotify<R>.ObserveLibrary()
+            .Run(runtime)
+            .ThrowIfFail()
+            .ValueUnsafe()
+            .Where(c => c is
+            {
+                Initial: false, Item.Type: AudioItemType.Artist
+            })
+            .ObserveOn(RxApp.MainThreadScheduler)
+            .Subscribe(c =>
+            {
+                if (c.Item == Artist?.Id)
+                {
+                    IsFollowing = !c.Removed;
+                }
+            });
     }
 
     public async void OnNavigatedTo(object? parameter)
     {
         if (parameter is not AudioId artistId)
             return;
-
+        IsFollowing = ShellViewModel<R>.Instance.Library.InLibrary(artistId);
         var id = artistId.ToBase62();
         const string fetch_uri = "hm://artist/v1/{0}/desktop?format=json&catalogue=premium&locale={1}&cat=1";
         // const string fetch_uri = "hm://creatorabout/v0/artist-insights/{0}?format=json&locale={1}";
@@ -261,6 +284,13 @@ public sealed class ArtistViewModel<R> : INavigableViewModel
     public static ReactiveCommand<PlayContextStruct, Unit> PlayCommand { get; set; }
 
     public ArtistView Artist { get; set; }
+
+    public bool IsFollowing
+    {
+        get => _following;
+        set => SetField(ref _following, value);
+    }
+
     public void OnNavigatedFrom()
     {
 
@@ -274,9 +304,25 @@ public sealed class ArtistViewModel<R> : INavigableViewModel
     public void Clear()
     {
         Artist.Clear();
+        _listener.Dispose();
         _runtime = default;
         Artist = default;
         ArtistFetched = null;
+    }
+
+    public event PropertyChangedEventHandler? PropertyChanged;
+
+    private void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+    {
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    }
+
+    private bool SetField<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
+    {
+        if (EqualityComparer<T>.Default.Equals(field, value)) return false;
+        field = value;
+        OnPropertyChanged(propertyName);
+        return true;
     }
 }
 
@@ -348,7 +394,7 @@ public class ArtistDiscographyTrack
     public AudioId Id { get; set; }
     public TimeSpan Duration { get; set; }
     public bool IsExplicit { get; set; }
-    public ICommand PlayCommand { get; set; }
+    public required ICommand PlayCommand { get; set; }
 
     public ushort MinusOne(ushort v)
     {

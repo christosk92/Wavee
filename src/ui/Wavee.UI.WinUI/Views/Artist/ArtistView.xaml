@@ -26,9 +26,8 @@
         </labs:TransitionHelper>
     </UserControl.Resources>
     <Grid>
-        <ScrollViewer
-            ui:ScrollViewerExtensions.VerticalScrollBarMargin="0,0,0,110"
-            ViewChanged="ScrollViewer_OnViewChanged">
+        <ScrollViewer ui:ScrollViewerExtensions.VerticalScrollBarMargin="0,0,0,110"
+                      ViewChanged="ScrollViewer_OnViewChanged">
             <StackPanel>
                 <Grid VerticalAlignment="Top"
                       x:Name="ImageT">
@@ -83,19 +82,20 @@
                                         Margin="0,12,0,0">
                                 <Button CornerRadius="100"
                                         Padding="9"
+                                        x:Name="PlayLargeButton"
+                                        Tapped="PlayLargeButton_OnTapped"
                                         Style="{ThemeResource AccentButtonStyle}">
                                     <FontIcon FontFamily="Segoe Fluent Icons"
                                               Glyph="&#xE102;" />
                                 </Button>
 
-                                <Button Padding="8">
-                                    <StackPanel Spacing="8"
-                                                Orientation="Horizontal">
-                                        <FontIcon FontFamily="Segoe Fluent Icons"
-                                                  Glyph="&#xE8FA;" />
-                                        <TextBlock Text="Follow" />
-                                    </StackPanel>
-                                </Button>
+                                <Button Padding="8"
+                                        BorderThickness="1"
+                                        BorderBrush="{x:Bind GetBrushForFollowing(ViewModel.IsFollowing), Mode=OneWay}"
+                                        Content="{x:Bind FollowingToContent(ViewModel.IsFollowing), Mode=OneWay}"
+                                        x:Name="FollowButton" />
+
+
                                 <Border CornerRadius="4"
                                         Padding="0"
                                         Margin="0,4,12,0"
