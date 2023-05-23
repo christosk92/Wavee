@@ -1,5 +1,13 @@
+using System;
+using Microsoft.UI.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Input;
+using Wavee.Core.Ids;
+using Wavee.UI.Infrastructure.Live;
+using Wavee.UI.Models;
+using Wavee.UI.ViewModels;
+
 namespace Wavee.UI.WinUI.Components;
 
 public sealed partial class TrackView : UserControl
@@ -13,6 +21,25 @@ public sealed partial class TrackView : UserControl
             new PropertyMetadata(default(string?)));
 
     public static readonly DependencyProperty AlternatingRowColorProperty = DependencyProperty.Register(nameof(AlternatingRowColor), typeof(bool), typeof(TrackView), new PropertyMetadata(default(bool)));
+    public static readonly DependencyProperty PlaybackStateProperty = DependencyProperty.Register(nameof(PlaybackState), typeof(TrackPlaybackState), typeof(TrackView), new PropertyMetadata(default(TrackPlaybackState), PlaybackStateChanged));
+    public static readonly DependencyProperty IdProperty = DependencyProperty.Register(nameof(Id), typeof(AudioId), typeof(TrackView), new PropertyMetadata(default(AudioId), IdChanged));
+
+    private static void IdChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        var x = (TrackView)d;
+        x.HandleIdChange((AudioId)e.NewValue);
+    }
+
+
+    private static void PlaybackStateChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        var x = (TrackView)d;
+
+        if (e.NewValue is TrackPlaybackState tr && e.NewValue != e.OldValue)
+        {
+            x.ChangePlaybackState(tr);
+        }
+    }
 
     public TrackView()
     {
@@ -49,6 +76,48 @@ public sealed partial class TrackView : UserControl
         set => SetValue(AlternatingRowColorProperty, value);
     }
 
+    public TrackPlaybackState PlaybackState
+    {
+        get => (TrackPlaybackState)GetValue(PlaybackStateProperty);
+        set => SetValue(PlaybackStateProperty, value);
+    }
+
+    public AudioId Id
+    {
+        get => (AudioId)GetValue(IdProperty);
+        set => SetValue(IdProperty, value);
+    }
+    private void HandleIdChange(AudioId id)
+    {
+        if (ShellViewModel<WaveeUIRuntime>.Instance.Playback.CurrentTrack?.Id.Equals(id) is true)
+        {
+            PlaybackState = ShellViewModel<WaveeUIRuntime>.Instance.Playback.Paused
+                ? TrackPlaybackState.Paused
+                : TrackPlaybackState.Playing;
+        }
+        else
+        {
+            PlaybackState = TrackPlaybackState.None;
+        }
+    }
+    private void ChangePlaybackState(TrackPlaybackState state)
+    {
+        switch (state)
+        {
+            case TrackPlaybackState.None:
+                VisualStateManager.GoToState(this, "NoPlayback", true);
+                break;
+            case TrackPlaybackState.Playing:
+                VisualStateManager.GoToState(this, "PlayingPlayback", true);
+                break;
+            case TrackPlaybackState.Paused:
+                VisualStateManager.GoToState(this, "PausedPlayback", true);
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(state), state, null);
+        }
+    }
+
     public string FormatIndex(int i)
     {
         //if we have 1, we want 01.
@@ -70,5 +139,49 @@ public sealed partial class TrackView : UserControl
             !AlternatingRowColor || (i % 2 == 0)
                 ? (Style)Application.Current.Resources["EvenBorderStyle"]
                 : (Style)Application.Current.Resources["OddBorderStyle"];
+    }
+
+    private void TrackView_OnPointerEntered(object sender, PointerRoutedEventArgs e)
+    {
+        if (e.Pointer.PointerDeviceType is PointerDeviceType.Touch)
+        {
+            return;
+        }
+        switch (PlaybackState)
+        {
+            case TrackPlaybackState.None:
+                VisualStateManager.GoToState(this, "NoPlaybackHover", true);
+                break;
+            case TrackPlaybackState.Playing:
+                VisualStateManager.GoToState(this, "PlayingPlaybackHover", true);
+                break;
+            case TrackPlaybackState.Paused:
+                VisualStateManager.GoToState(this, "PausedPlaybackHover", true);
+                break;
+            default:
+                throw new ArgumentOutOfRangeException();
+        }
+    }
+
+    private void TrackView_OnPointerExited(object sender, PointerRoutedEventArgs e)
+    {
+        if (e.Pointer.PointerDeviceType is PointerDeviceType.Touch)
+        {
+            return;
+        }
+        switch (PlaybackState)
+        {
+            case TrackPlaybackState.None:
+                VisualStateManager.GoToState(this, "NoPlayback", true);
+                break;
+            case TrackPlaybackState.Playing:
+                VisualStateManager.GoToState(this, "PlayingPlayback", true);
+                break;
+            case TrackPlaybackState.Paused:
+                VisualStateManager.GoToState(this, "PausedPlayback", true);
+                break;
+            default:
+                throw new ArgumentOutOfRangeException();
+        }
     }
 }

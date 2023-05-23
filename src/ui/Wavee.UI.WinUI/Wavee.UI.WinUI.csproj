@@ -18,6 +18,7 @@
 		<Content Remove="Assets\amb.png" />
 	</ItemGroup>
 	<ItemGroup>
+		<None Remove="Assets\equaliser-green.f8937a92.svg" />
 		<None Remove="Components\SpotifyArtistView.xaml" />
 		<None Remove="Components\TrackView.xaml" />
 		<None Remove="Controls\BottomPlayerControl.xaml" />
@@ -72,6 +73,9 @@
 		<ProjectReference Include="..\Wavee.UI\Wavee.UI.csproj" />
 	</ItemGroup>
 	<ItemGroup>
+		<Content Update="Assets\equaliser-green.f8937a92.svg">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
 		<Content Update="Assets\Fonts\MediaPlayerIcons.ttf">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Content>

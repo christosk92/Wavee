@@ -177,6 +177,7 @@
                                     <DataTemplate x:DataType="viewModels:ArtistDiscographyTrack">
                                         <Grid Height="38">
                                             <components:TrackView AlternatingRowColor="True"
+                                                                  Id="{x:Bind Id}"
                                                                   Index="{x:Bind MinusOne(Number)}"
                                                                   ShowImage="False">
                                                 <components:TrackView.View>

@@ -7,8 +7,60 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:winUi="using:CommunityToolkit.Labs.WinUI"
+    xmlns:animatedVisuals="using:AnimatedVisuals"
+    PointerEntered="TrackView_OnPointerEntered"
+    PointerExited="TrackView_OnPointerExited"
     mc:Ignorable="d">
     <Grid>
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup x:Name="PlaybackStates">
+                <VisualState x:Name="NoPlayback"/>
+                <VisualState x:Name="NoPlaybackHover">
+                    <VisualState.Setters>
+                        <Setter Target="PlaybackViewContent.Content" >
+                            <Setter.Value>
+                                <Button  
+                                    VerticalAlignment="Center">
+                                    <FontIcon
+                                        FontSize="12"
+                                        FontFamily="Segoe Fluent Icons" Glyph="&#xF5B0;" />
+                                </Button>
+                            </Setter.Value>
+                        </Setter>
+                    </VisualState.Setters>
+                </VisualState>
+                <VisualState x:Name="PlayingPlayback">
+                    <VisualState.Setters>
+                        <Setter Target="PlaybackViewContent.Content" >
+                            <Setter.Value>
+                                <AnimatedVisualPlayer AutoPlay="True" 
+                                                      PlaybackRate="2">
+                                    <AnimatedVisualPlayer.Source>
+                                        <animatedVisuals:Equaliser />
+                                    </AnimatedVisualPlayer.Source>
+                                </AnimatedVisualPlayer>
+                            </Setter.Value>
+                        </Setter>
+                    </VisualState.Setters>
+                </VisualState>
+                <VisualState x:Name="PlayingPlaybackHover">
+                    <VisualState.Setters>
+
+                    </VisualState.Setters>
+                </VisualState>
+                <VisualState x:Name="PausedPlayback">
+                    <VisualState.Setters>
+
+                    </VisualState.Setters>
+                </VisualState>
+                <VisualState x:Name="PausedPlaybackHover">
+                    <VisualState.Setters>
+
+                    </VisualState.Setters>
+                </VisualState>
+
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
         <Border Style="{x:Bind GetStyleFor(Index), Mode=OneWay}"
                 VerticalAlignment="Stretch"
                 HorizontalAlignment="Stretch"
@@ -20,10 +72,16 @@
                     <ColumnDefinition />
                 </Grid.ColumnDefinitions>
                 <StackPanel Orientation="Horizontal">
-                    <TextBlock VerticalAlignment="Center"
-                               Width="24"
-                               Text="{x:Bind FormatIndex(Index) ,Mode=OneWay}"
-                               FontWeight="SemiBold" />
+                    <ContentControl x:Name="PlaybackViewContent"
+                                    VerticalContentAlignment="Stretch"
+                                    HorizontalContentAlignment="Stretch">
+                        <ContentControl.Content>
+                            <TextBlock VerticalAlignment="Center"
+                                       Width="24"
+                                       Text="{x:Bind FormatIndex(Index) ,Mode=OneWay}"
+                                       FontWeight="SemiBold" />
+                        </ContentControl.Content>
+                    </ContentControl>
                     <Grid x:Name="ImageShimemrDataGrid"
                           x:Load="{x:Bind ShowImage, Mode=OneWay}"
                           Margin="4,0"

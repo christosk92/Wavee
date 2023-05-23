@@ -28,6 +28,7 @@
                         <Grid Height="38">
                             <components:TrackView AlternatingRowColor="True"
                                                   x:Phase="1"
+                                                  Id="{x:Bind Id}"
                                                   Index="{x:Bind MinusOne(Number)}"
                                                   ShowImage="False">
                                 <components:TrackView.View>

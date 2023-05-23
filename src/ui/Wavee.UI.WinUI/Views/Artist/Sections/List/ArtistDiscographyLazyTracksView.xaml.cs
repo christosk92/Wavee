@@ -131,7 +131,7 @@ public partial class ArtistDiscographyLazyTracksView : UserControl
         }
 
         //await Task.Delay(TimeSpan.FromMilliseconds(80), ct);
-         this.DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Low, () =>
+         this.DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Normal, () =>
         {
             //artistDiscographyTracks.Clear();
             //artistDiscographyTracks.AddRange(discsRes);
