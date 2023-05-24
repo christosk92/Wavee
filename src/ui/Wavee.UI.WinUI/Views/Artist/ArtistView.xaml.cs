@@ -17,6 +17,7 @@ using Windows.UI;
 using Eum.Spotify.context;
 using Microsoft.UI;
 using Microsoft.UI.Xaml.Media;
+using Wavee.Core.Ids;
 using Border = Microsoft.UI.Xaml.Controls.Border;
 using Orientation = Microsoft.UI.Xaml.Controls.Orientation;
 using ScrollViewer = Microsoft.UI.Xaml.Controls.ScrollViewer;
@@ -170,7 +171,8 @@ public sealed partial class ArtistRootView : UserControl, INavigablePage
             ContextUrl: $"context://{ViewModel.Artist.Id}",
             Index: 0,
             NextPages: Option<IEnumerable<ContextPage>>.None,
-            PageIndex: Option<int>.None
+            PageIndex: Option<int>.None,
+            TrackId: Option<AudioId>.None
         );
         await ShellViewModel<WaveeUIRuntime>.Instance.Playback.PlayContextAsync(context);
     }

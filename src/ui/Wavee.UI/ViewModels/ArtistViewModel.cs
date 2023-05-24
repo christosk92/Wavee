@@ -99,6 +99,7 @@ public sealed class ArtistViewModel<R> : INotifyPropertyChanged, INavigableViewM
             var ctx = new PlayContextStruct(
                 ContextId: Artist.Id,
                 Index: topTracks.FindIndex(c => c.Id == x),
+                TrackId: x,
                 ContextUrl: $"context://{Artist.Id.ToString()}",
                 NextPages: Option<IEnumerable<ContextPage>>.None,
                 PageIndex: Option<int>.None
@@ -184,6 +185,7 @@ public sealed class ArtistViewModel<R> : INotifyPropertyChanged, INavigableViewM
                         PlayCommand.Execute(new PlayContextStruct(
                             ContextId: artistid,
                             Index: index,
+                            TrackId: x,
                             ContextUrl: None,
                             NextPages: Some(nextPages),
                             PageIndex: 0));

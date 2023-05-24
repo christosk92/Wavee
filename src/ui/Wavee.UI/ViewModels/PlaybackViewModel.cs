@@ -234,7 +234,8 @@ public sealed class PlaybackViewModel<R> : ReactiveObject where R : struct, HasS
                 from _ in remoteClient.ValueUnsafe().PlayContextRaw(
                     contextId: context.ContextId,
                     contextUrl: context.ContextUrl.ValueUnsafe(),
-                    trackIndex: context.Index
+                    trackIndex: context.Index,
+                    trackId: context.TrackId.ValueUnsafe()
                 ).ToAff()
                 select unit;
             var result = await aff.Run(_runtime);

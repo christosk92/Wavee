@@ -256,7 +256,7 @@ public class SpotifyRemoteClient
         return default;
     }
 
-    public async ValueTask<Unit> PlayContextRaw(AudioId contextId, string contextUrl, int trackIndex)
+    public async ValueTask<Unit> PlayContextRaw(AudioId contextId, string contextUrl, int trackIndex, AudioId trackId)
     {
         var toDeviceId = _connection._latestCluster.Value.Map(x => x.ActiveDeviceId);
         if (toDeviceId.IsNone)
@@ -298,7 +298,8 @@ public class SpotifyRemoteClient
                     license = "premium",
                     skip_to = new
                     {
-                        track_index = trackIndex
+                        track_index = trackIndex,
+                        track_uri = trackId.ToString()
                     },
                     player_options_override = new object()
                 },
