@@ -12,10 +12,13 @@ using Wavee.Spotify.Infrastructure.Remote;
 using Wavee.Spotify.Infrastructure.Remote.Messaging;
 using static LanguageExt.Prelude;
 using System.Threading;
+using Google.Protobuf;
 using Wavee.Spotify.Infrastructure.ApResolver;
 using LanguageExt;
 using LanguageExt.Common;
 using LanguageExt.UnsafeValueAccess;
+using Spotify.Collection.Proto.V2;
+using Wavee.Core.Ids;
 using Wavee.Core.Infrastructure.IO;
 
 namespace Wavee.UI.Infrastructure.Live;
@@ -43,7 +46,7 @@ internal sealed class LiveSpotify : Traits.SpotifyIO
                 await using var stream = await r.Content.ReadAsStreamAsync(ct);
                 return SelectedListContent.Parser.ParseFrom(stream);
             })
-        select result;  
+        select result;
 
     public Aff<JsonDocument> FetchDesktopHome(string types, int limit, int offset,
         int contentLimit, int contentOffset,
@@ -72,6 +75,61 @@ internal sealed class LiveSpotify : Traits.SpotifyIO
                 return result;
             })
         select result;
+
+    public Aff<Unit> AddToPlaylist(AudioId playlistId, AudioId[] audioIds, Option<int> position) =>
+        from client in Eff(() => _connection.ValueUnsafe())
+        let apiurl = $"https://api.spotify.com/v1/playlists/{playlistId.ToBase62()}/tracks"
+        from bearer in client.TokenClient.GetToken(CancellationToken.None).ToAff()
+            .Map(x => new AuthenticationHeaderValue("Bearer", x))
+        from content in Eff(() =>
+        {
+            if (position.IsSome)
+            {
+                var r = new
+                {
+                    uris = audioIds.Select(c => c.ToString()),
+                    position = position.ValueUnsafe()
+                };
+                var str = new StringContent(JsonSerializer.Serialize(r));
+                str.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+                return str;
+            }
+            else
+            {
+                var r = new
+                {
+                    uris = audioIds.Select(c => c.ToString()),
+                };
+                var str = new StringContent(JsonSerializer.Serialize(r));
+                str.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+                return str;
+            }
+        })
+        from posted in HttpIO.Post(apiurl, bearer, content, CancellationToken.None)
+            .ToAff()
+            .Map(x => x.EnsureSuccessStatusCode())
+        select unit;
+
+    public Aff<Unit> WriteLibrary(WriteRequest writeRequest, CancellationToken ct) =>
+        //https://spclient.wg.spotify.com/collection/v2/write
+        from client in Eff(() => _connection.ValueUnsafe())
+        from spclient in ApResolve.GetSpClient(ct).ToAff()
+            .Map(x => $"https://{x.host}:{x.port}")
+            .Map(x =>
+                $"{x}/collection/v2/write")
+        from bearer in client.TokenClient.GetToken(CancellationToken.None).ToAff()
+            .Map(x => new AuthenticationHeaderValue("Bearer", x))
+        from content in Eff(() =>
+        {
+            var byteArrCnt = new ByteArrayContent(writeRequest.ToByteArray());
+            byteArrCnt.Headers.ContentType = new MediaTypeHeaderValue("application/vnd.collection-v2.spotify.proto");
+            return byteArrCnt;
+        })
+        from posted in HttpIO.Post(spclient, bearer, content, CancellationToken.None)
+            .ToAff()
+            .Map(x => x.EnsureSuccessStatusCode())
+        select unit;
+
     public async ValueTask<Unit> Authenticate(LoginCredentials credentials, CancellationToken ct = default)
     {
         var core = await SpotifyClient.CreateAsync(credentials, _config, ct);

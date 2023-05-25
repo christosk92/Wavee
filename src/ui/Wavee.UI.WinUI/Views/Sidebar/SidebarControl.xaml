@@ -134,7 +134,7 @@
 
                 <StackPanel Grid.Row="2"
                             Margin="0,0,6,0">
-                    <Grid Margin="0,6,0,6">
+                    <Grid Margin="0,6,0,0">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="*" />
@@ -144,15 +144,15 @@
                         <NavigationViewItemHeader Padding="0"
                                                   Content="Playlists" />
 
-                        <ComboBox Grid.Column="1"
-                                  x:Name="PlaylistSortComboBox"
-                                  CornerRadius="4,0,0,4"
-                                  VerticalAlignment="Center"
-                                  Margin="0,0,0,0"
-                                  HorizontalAlignment="Stretch">
-                        </ComboBox>
+                        <!-- <ComboBox Grid.Column="1" -->
+                        <!--           x:Name="PlaylistSortComboBox" -->
+                        <!--           CornerRadius="4,0,0,4" -->
+                        <!--           VerticalAlignment="Center" -->
+                        <!--           Margin="0,0,0,0" -->
+                        <!--           HorizontalAlignment="Stretch"> -->
+                        <!-- </ComboBox> -->
 
-                        <Button CornerRadius="0,4,4,0"
+                        <Button CornerRadius="4,4,4,4"
                                 VerticalAlignment="Center"
                                 x:Name="AddPlaylistButton"
                                 Tapped="AddPlaylistButton_OnTapped"
@@ -162,11 +162,6 @@
                                       Glyph="&#xE109;" />
                         </Button>
                     </Grid>
-                    <labs:TokenView Margin="8,4,0,4"
-                                    x:FieldModifier="public"
-                                    IsItemClickEnabled="True"
-                                    x:Name="PlaylistFilterTokenView"
-                                    SelectionMode="Multiple" />
                 </StackPanel>
 
                 <TreeView Grid.Row="3"

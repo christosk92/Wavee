@@ -7,7 +7,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:controls="using:CommunityToolkit.WinUI.UI.Controls"
              PointerEntered="SpotifyView_OnPointerEntered"
-             PointerExited="SpotifyView_OnPointerExited"
+             PointerExited="SpotifyView_OnPointerExited" PointerCaptureLost="SpotifyView_OnPointerCaptureLost"
              ContextRequested="SpotifyView_OnContextRequested"
              mc:Ignorable="d">
     <Grid>
@@ -17,7 +17,7 @@
         </Grid.RowDefinitions>
 
         <Grid>
-            <controls:ConstrainedBox AspectRatio="1:1">
+            <controls:ConstrainedBox  AspectRatio="1:1">
                 <Image x:Name="LoadingImage"
                        DataContext="{x:Bind}"
                        Stretch="UniformToFill">
@@ -31,6 +31,8 @@
 
             <StackPanel x:Name="ButtonsPanel"
                         Visibility="Collapsed"
+                        PointerExited="ButtonsPanel_OnPointerExited"
+                        PointerEntered="ButtonsPanel_OnPointerEntered"
                         Orientation="Horizontal"
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center">

@@ -52,6 +52,8 @@
 		<PackageReference Include="CommunityToolkit.Labs.WinUI.TokenView" Version="0.0.6" />
 		<PackageReference Include="CommunityToolkit.Labs.WinUI.TransitionHelper" Version="0.0.1" />
 		<PackageReference Include="CommunityToolkit.WinUI.Lottie" Version="7.1.2" />
+		<PackageReference Include="CommunityToolkit.WinUI.UI.Controls.Media" Version="7.1.2" />
+		<PackageReference Include="CommunityToolkit.WinUI.UI.Media" Version="7.1.2" />
 		<PackageReference Include="FontAwesome6.Svg.WinUI" Version="2.5.1" />
 		<PackageReference Include="LanguageExt.Rx" Version="4.4.3" />
 		<PackageReference Include="Microsoft.WindowsAppSDK" Version="1.4.230518007-experimental1" />

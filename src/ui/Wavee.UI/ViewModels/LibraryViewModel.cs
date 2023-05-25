@@ -11,13 +11,16 @@ using Wavee.UI.Infrastructure.Traits;
 using DynamicData;
 using System.Collections.ObjectModel;
 using System.Text.Json;
+using System.Windows.Input;
 using LanguageExt;
 using Wavee.Core.Ids;
 using Wavee.UI.Models;
 using Eum.Spotify.playlist4;
+using Spotify.Collection.Proto.V2;
 
 namespace Wavee.UI.ViewModels;
 
+public readonly record struct ModifyLibraryCommand(Seq<AudioId> Ids, bool Add);
 public sealed class LibraryViewModel<R> : ReactiveObject where R : struct, HasSpotify<R>
 {
     //private readonly ReadOnlyObservableCollection<SpotifyLibaryItem> _libraryItemsView;
@@ -28,6 +31,40 @@ public sealed class LibraryViewModel<R> : ReactiveObject where R : struct, HasSp
         Action<Seq<AudioId>> onLibraryItemRemoved, string userId)
     {
         _userId = userId;
+        SaveCommand = ReactiveCommand.CreateFromTask<ModifyLibraryCommand>(async cmd =>
+        {
+            var groups = cmd.Ids.GroupBy(c => c.Type);
+            foreach (var group in groups)
+            {
+                var writeRequest = new WriteRequest
+                {
+                    Username = _userId,
+                    Set = group.Key switch
+                    {
+                        AudioItemType.Artist => "artist",
+                        AudioItemType.Album => "album",
+                        AudioItemType.Track => "track",
+                    }
+                };
+
+                var addedAt = cmd.Add ? DateTimeOffset.UtcNow.ToUnixTimeSeconds() : 0;
+                var removed = !cmd.Add;
+                foreach (var id in group)
+                {
+                    writeRequest.Items.Add(new CollectionItem
+                    {
+                        AddedAt = (int)addedAt,
+                        IsRemoved = removed,
+                        Uri = id.ToString()
+                    });
+                }
+
+                var writeResponse = (await Spotify<R>.WriteLibrary(writeRequest)
+                    .Run(runtime));
+            }
+
+        });
+
         var libraryObservable = Spotify<R>.ObserveLibrary()
             .Run(runtime)
             .ThrowIfFail()
@@ -77,6 +114,8 @@ public sealed class LibraryViewModel<R> : ReactiveObject where R : struct, HasSp
                 });
             });
     }
+
+    public ICommand SaveCommand { get; }
 
     private static async Task<Seq<SpotifyLibaryItem>> FetchLibraryInitial(R runtime,
         string userId,

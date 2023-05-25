@@ -26,7 +26,7 @@ using StackPanel = Microsoft.UI.Xaml.Controls.StackPanel;
 using TextBlock = Microsoft.UI.Xaml.Controls.TextBlock;
 using UserControl = Microsoft.UI.Xaml.Controls.UserControl;
 using Wavee.UI.ViewModels.Artist;
-
+using static LanguageExt.Prelude;
 namespace Wavee.UI.WinUI.Views.Artist;
 
 public sealed partial class ArtistRootView : UserControl, INavigablePage
@@ -47,7 +47,7 @@ public sealed partial class ArtistRootView : UserControl, INavigablePage
         _concerts = null;
         _about?.Clear();
         _about = null;
-        GC.Collect(); 
+        GC.Collect();
     }
 
     private async void Selector_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -223,7 +223,12 @@ public sealed partial class ArtistRootView : UserControl, INavigablePage
     public Brush GetBrushForFollowing(bool b)
     {
         //ApplicationForegroundThemeBrush
-        return b ? (Brush)Application.Current.Resources["ApplicationForegroundThemeBrush"] 
+        return b ? (Brush)Application.Current.Resources["ApplicationForegroundThemeBrush"]
             : new SolidColorBrush(Colors.Transparent);
+    }
+
+    private void FollowButton_OnTapped(object sender, TappedRoutedEventArgs e)
+    {
+        ViewModel.FollowCommand.Execute(new ModifyLibraryCommand(Seq1(ViewModel.Artist.Id), !ViewModel.IsFollowing));
     }
 }

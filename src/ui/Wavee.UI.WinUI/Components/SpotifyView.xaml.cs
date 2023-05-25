@@ -11,6 +11,7 @@ using Wavee.Core.Ids;
 using Wavee.UI.Infrastructure.Live;
 using Wavee.UI.ViewModels;
 using Wavee.UI.WinUI.Flyouts;
+using Wavee.UI.WinUI.Helpers;
 
 namespace Wavee.UI.WinUI.Components
 {
@@ -56,6 +57,7 @@ namespace Wavee.UI.WinUI.Components
             {
                 ButtonsPanel.Visibility = Visibility.Visible;
             }
+            (sender as UIElement).ChangeCursor(InputSystemCursor.Create(InputSystemCursorShape.Hand));
         }
 
         private void SpotifyView_OnPointerExited(object sender, PointerRoutedEventArgs e)
@@ -64,6 +66,7 @@ namespace Wavee.UI.WinUI.Components
             {
                 ButtonsPanel.Visibility = Visibility.Collapsed;
             }
+            (sender as UIElement).ChangeCursor(InputSystemCursor.Create(InputSystemCursorShape.Arrow));
         }
 
         private void SpotifyView_OnContextRequested(UIElement sender, ContextRequestedEventArgs args)
@@ -97,6 +100,21 @@ namespace Wavee.UI.WinUI.Components
                 PageIndex: Option<int>.None);
 
             await ShellViewModel<WaveeUIRuntime>.Instance.Playback.PlayContextAsync(playContext);
+        }
+
+        private void ButtonsPanel_OnPointerEntered(object sender, PointerRoutedEventArgs e)
+        {
+            (sender as UIElement).ChangeCursor(InputSystemCursor.Create(InputSystemCursorShape.Arrow));
+        }
+
+        private void ButtonsPanel_OnPointerExited(object sender, PointerRoutedEventArgs e)
+        {
+            (sender as UIElement).ChangeCursor(InputSystemCursor.Create(InputSystemCursorShape.Hand));
+        }
+
+        private void SpotifyView_OnPointerCaptureLost(object sender, PointerRoutedEventArgs e)
+        {
+            
         }
     }
 }

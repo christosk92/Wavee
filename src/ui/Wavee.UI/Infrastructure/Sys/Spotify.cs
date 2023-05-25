@@ -16,6 +16,7 @@ using Wavee.UI.Infrastructure.Traits;
 using System;
 using System.Text.Json;
 using Eum.Spotify.playlist4;
+using Spotify.Collection.Proto.V2;
 
 namespace Wavee.UI.Infrastructure.Sys;
 
@@ -35,6 +36,10 @@ public static class Spotify<R> where R : struct, HasSpotify<R>
         from result in mainAff
         select result;
 
+    public static Aff<R, Unit> WriteLibrary(WriteRequest writeRequest, CancellationToken ct = default) =>
+        from aff in default(R).SpotifyEff.Map(x => x.WriteLibrary(writeRequest, ct))
+        from result in aff
+        select unit;
     public static Aff<R, JsonDocument> FetchDesktopHome(string types, CancellationToken ct = default) =>
         from aff in default(R).SpotifyEff.Map(x => x.FetchDesktopHome(types, 20, 0,
             10, 0,
@@ -83,4 +88,9 @@ public static class Spotify<R> where R : struct, HasSpotify<R>
 
     public static Aff<R, Option<string>> CountryCode() =>
          default(R).SpotifyEff.Map(x => x.CountryCode());
+
+    public static Aff<R, Unit> AddToPlaylist(AudioId playlistId, AudioId[] audioIds, Option<int> position) =>
+        from aff in default(R).SpotifyEff.Map(x => x.AddToPlaylist(playlistId, audioIds, position))
+        from result in aff
+        select result;
 }

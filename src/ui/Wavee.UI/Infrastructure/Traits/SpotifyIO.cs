@@ -4,6 +4,8 @@ using Eum.Spotify.playlist4;
 using LanguageExt;
 using LanguageExt.Attributes;
 using LanguageExt.Effects.Traits;
+using Spotify.Collection.Proto.V2;
+using Wavee.Core.Ids;
 using Wavee.Spotify.Infrastructure.Cache;
 using Wavee.Spotify.Infrastructure.Mercury;
 using Wavee.Spotify.Infrastructure.Remote;
@@ -31,6 +33,8 @@ public interface SpotifyIO
         CancellationToken ct);
 
     Aff<T> GetFromPublicApi<T>(string endpoint, CancellationToken cancellation);
+    Aff<Unit> AddToPlaylist(AudioId playlistId, AudioId[] audioIds, Option<int> position);
+    Aff<Unit> WriteLibrary(WriteRequest writeRequest, CancellationToken ct);
 }
 
 /// <summary>

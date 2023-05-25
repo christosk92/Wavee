@@ -38,6 +38,8 @@ public sealed class ArtistViewModel<R> : INotifyPropertyChanged, INavigableViewM
     public ArtistViewModel(R runtime)
     {
         _runtime = runtime;
+        FollowCommand = ShellViewModel<R>.Instance.Library.SaveCommand;
+
         _listener = Spotify<R>.ObserveLibrary()
             .Run(runtime)
             .ThrowIfFail()
@@ -297,6 +299,8 @@ public sealed class ArtistViewModel<R> : INotifyPropertyChanged, INavigableViewM
         get => _following;
         set => SetField(ref _following, value);
     }
+
+    public ICommand FollowCommand { get; }
 
     public void OnNavigatedFrom()
     {

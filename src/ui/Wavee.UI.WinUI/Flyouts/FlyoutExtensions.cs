@@ -1,18 +1,89 @@
 ﻿using System;
 using System.Linq;
+using System.Threading.Tasks;
+using System.Windows.Input;
 using DynamicData;
+using LanguageExt;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.VisualBasic.Devices;
+using ReactiveUI;
 using Wavee.Core.Ids;
+using Wavee.Spotify.Infrastructure.Mercury;
 using Wavee.UI.Infrastructure.Live;
+using Wavee.UI.Infrastructure.Sys;
 using Wavee.UI.Models;
 using Wavee.UI.ViewModels;
 
 namespace Wavee.UI.WinUI.Flyouts;
 
+public readonly record struct AddToPlaylistRequest(AudioId PlaylistId, AudioId[] Ids);
 public static class FlyoutExtensions
 {
+    static FlyoutExtensions()
+    {
+        static async Task<AudioId[]> ContextResolve(AudioId id)
+        {
+            var contextResolve =
+                from mercury in Spotify<WaveeUIRuntime>.Mercury()
+                from ctx in mercury.ContextResolve(id.ToString()).ToAff()
+                select ctx;
+
+            var result = (await contextResolve.Run(App.Runtime)).ThrowIfFail();
+
+            return result.Pages.SelectMany(x => x.Tracks.Select(f => AudioId.FromUri(f.Uri))).ToArray();
+        }
+
+        AddToPlaylistCommand = ReactiveCommand.CreateFromTask<AddToPlaylistRequest>(async (req, ct) =>
+        {
+            var groups = req.Ids.GroupBy(x => x.Type);
+
+            foreach (var group in groups)
+            {
+                switch (group.Key)
+                {
+                    case AudioItemType.Artist:
+                        break;
+                    case AudioItemType.Playlist:
+                    case AudioItemType.Album:
+                        {
+                            //do a context-resolve
+                            var tracks = await ContextResolve(req.Ids[0]);
+
+                            //max of 100 per request
+                            //limit to 6 concurrent requests
+                            var batches = tracks
+                                .Chunk(100)
+                                .Chunk(6);
+                            foreach (var batch in batches)
+                            {
+                                var concurrentRequests = batch.Select(async c =>
+                                {
+                                    var result = await Spotify<WaveeUIRuntime>
+                                        .AddToPlaylist(req.PlaylistId, c, Option<int>.None)
+                                        .Run(App.Runtime);
+                                    if (result.IsFail)
+                                    {
+
+                                    }
+
+                                    return result;
+                                });
+
+                                var results = await Task.WhenAll(concurrentRequests);
+                            }
+                            break;
+                        }
+                    case AudioItemType.Track:
+                        {
+                            var result = await Spotify<WaveeUIRuntime>.AddToPlaylist(req.PlaylistId, req.Ids, Option<int>.None)
+                                .Run(App.Runtime);
+                            break;
+                        }
+                }
+            }
+        });
+    }
     public static MenuFlyout ConstructFlyout(this AudioId id)
     {
         return id.Type switch
@@ -133,7 +204,12 @@ public static class FlyoutExtensions
             {
                 var item = new MenuFlyoutItem
                 {
-                    Text = playlist.Name
+                    Text = playlist.Name,
+                    Command = AddToPlaylistCommand,
+                    CommandParameter = new AddToPlaylistRequest(AudioId.FromUri(playlist.Id), new AudioId[]
+                    {
+                        id
+                    })
                 };
 
                 into.Items.Add(item);
@@ -146,6 +222,8 @@ public static class FlyoutExtensions
 
         return subItem;
     }
+
+    public static ICommand AddToPlaylistCommand { get; }
 
     private static MenuFlyoutItem Library(AudioId id)
     {

@@ -10,8 +10,13 @@ using System.Threading.Tasks;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml.Media.Imaging;
 using System.Threading;
+using Windows.UI.Core;
+using Microsoft.UI.Input;
+using Microsoft.UI.Xaml.Input;
+using Microsoft.UI.Xaml.Media;
 using Wavee.UI.Infrastructure.Live;
 using Wavee.UI.Infrastructure.Sys;
+using Wavee.UI.WinUI.Helpers;
 
 namespace Wavee.UI.WinUI.Views.Artist;
 
@@ -96,13 +101,22 @@ public sealed partial class ArtistAbout : UserControl
                 //(2)|(1/1), so we need 3 images
                 if (info.Images.Count > 2)
                 {
-                    LeftImage.Source = new BitmapImage(new Uri(info.Images[0].Uri));
+                    LeftImage.Background = new ImageBrush
+                    {
+                        ImageSource = new BitmapImage(new Uri(info.Images[0].Uri)),
+                        Stretch = Stretch.UniformToFill
+                    };
                     TopRightImage.Source = new BitmapImage(new Uri(info.Images[1].Uri));
                     BottomRightImage.Source = new BitmapImage(new Uri(info.Images[2].Uri));
                 }
                 else if (info.Images.Count > 1)
                 {
-                    LeftImage.Source = new BitmapImage(new Uri(info.Images[0].Uri));
+                    LeftImage.Background = new ImageBrush
+                    {
+                        ImageSource = new BitmapImage(new Uri(info.Images[0].Uri)),
+
+                        Stretch = Stretch.UniformToFill
+                    };
                     TopRightImage.Source = new BitmapImage(new Uri(info.Images[1].Uri));
                     //set rowspan to 2 and hide bottom right image
                     //also set the ratio of columns to 1:1
@@ -114,7 +128,11 @@ public sealed partial class ArtistAbout : UserControl
                 }
                 else if (info.Images.Count > 0)
                 {
-                    LeftImage.Source = new BitmapImage(new Uri(info.Images[0].Uri));
+                    LeftImage.Background = new ImageBrush
+                    {
+                        ImageSource = new BitmapImage(new Uri(info.Images[0].Uri)),
+                        Stretch = Stretch.UniformToFill
+                    };
                     //hide top right and bottom right images
                     //also set the ratio of columns to 1 (fulL), so hide the right grid
                     TopRightImage.Visibility = Visibility.Collapsed;
@@ -188,6 +206,16 @@ public sealed partial class ArtistAbout : UserControl
     public string FormatMonthlyListeners(ulong val)
     {
         return val.ToString("N0");
+    }
+
+    private void GalleryGrid_OnPointerEntered(object sender, PointerRoutedEventArgs e)
+    {
+        (sender as UIElement).ChangeCursor(InputSystemCursor.Create(InputSystemCursorShape.Hand));
+    }
+
+    private void GalleryGrid_OnPointerExited(object sender, PointerRoutedEventArgs e)
+    {
+        (sender as UIElement).ChangeCursor(InputSystemCursor.Create(InputSystemCursorShape.Arrow));
     }
 }
 

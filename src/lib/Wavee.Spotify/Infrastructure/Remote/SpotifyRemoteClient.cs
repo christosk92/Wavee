@@ -256,7 +256,7 @@ public class SpotifyRemoteClient
         return default;
     }
 
-    public async ValueTask<Unit> PlayContextRaw(AudioId contextId, string contextUrl, int trackIndex, AudioId trackId)
+    public async ValueTask<Unit> PlayContextRaw(AudioId contextId, string contextUrl, int trackIndex, Option<AudioId> trackId)
     {
         var toDeviceId = _connection._latestCluster.Value.Map(x => x.ActiveDeviceId);
         if (toDeviceId.IsNone)
@@ -284,28 +284,56 @@ public class SpotifyRemoteClient
  }
          */
 
-        var command = new
+        object command;
+        if (trackId.IsSome)
         {
             command = new
             {
-                context = new
+                command = new
                 {
-                    uri = contextId.ToString(),
-                    url = contextUrl
-                },
-                options = new
-                {
-                    license = "premium",
-                    skip_to = new
+                    context = new
                     {
-                        track_index = trackIndex,
-                        track_uri = trackId.ToString()
+                        uri = contextId.ToString(),
+                        url = contextUrl
                     },
-                    player_options_override = new object()
-                },
-                endpoint = "play"
-            }
-        };
+                    options = new
+                    {
+                        license = "premium",
+                        skip_to = new
+                        {
+                            track_index = trackIndex,
+                            track_uri = trackId.ValueUnsafe().ToString()
+                        },
+                        player_options_override = new object()
+                    },
+                    endpoint = "play"
+                }
+            };
+        }
+        else
+        {
+            command = new
+            {
+                command = new
+                {
+                    context = new
+                    {
+                        uri = contextId.ToString(),
+                        url = contextUrl
+                    },
+                    options = new
+                    {
+                        license = "premium",
+                        skip_to = new
+                        {
+                            track_index = trackIndex
+                        },
+                        player_options_override = new object()
+                    },
+                    endpoint = "play"
+                }
+            };
+        }
 
         var sp = await SpClientUrl(CancellationToken.None);
         await SpotifyRemoteRuntime.InvokeCommandOnRemoteDevice(
