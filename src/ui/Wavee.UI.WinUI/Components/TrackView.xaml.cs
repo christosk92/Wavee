@@ -296,4 +296,11 @@ public sealed partial class TrackView : UserControl
         ShellViewModel<WaveeUIRuntime>.Instance.Playback.ResumePauseCommand.Execute(null);
     }
 
+    private void TrackView_OnTapped(object sender, TappedRoutedEventArgs e)
+    {
+        if (e.PointerDeviceType is PointerDeviceType.Touch or PointerDeviceType.Pen)
+        {
+            PlayCommand.Execute(Id);
+        }
+    }
 }

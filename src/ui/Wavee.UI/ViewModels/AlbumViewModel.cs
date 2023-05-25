@@ -127,6 +127,7 @@ public sealed class AlbumViewModel<R> : ReactiveObject, INavigableViewModel wher
             var context = new PlayContextStruct(
                 ContextId: id,
                 Index: index,
+                TrackId: audioId,
                 ContextUrl: $"context://{id}",
                 NextPages: None,
                 PageIndex: None

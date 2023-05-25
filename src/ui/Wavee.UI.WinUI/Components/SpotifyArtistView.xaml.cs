@@ -109,6 +109,7 @@ namespace Wavee.UI.WinUI.Components
             var playContext = new PlayContextStruct(
                 ContextId: Id,
                 Index: 0,
+                TrackId: Option<AudioId>.None, 
                 ContextUrl: $"context://{Id.ToString()}",
                 NextPages: Option<IEnumerable<ContextPage>>.None,
                 PageIndex: Option<int>.None);
