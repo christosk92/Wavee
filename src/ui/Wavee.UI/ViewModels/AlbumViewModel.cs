@@ -1,5 +1,7 @@
-﻿using ReactiveUI;
+﻿using System.Reactive.Linq;
+using ReactiveUI;
 using System.Text.Json;
+using System.Windows.Input;
 using DynamicData;
 using Wavee.Core.Ids;
 using Wavee.UI.Infrastructure.Sys;
@@ -20,13 +22,33 @@ public sealed class AlbumViewModel<R> : ReactiveObject, INavigableViewModel wher
         get => _isBusy;
         set => this.RaiseAndSetIfChanged(ref _isBusy, value);
     }
+
+    private readonly IDisposable _listener;
     private readonly R _runtime;
     public AlbumViewModel(R runtime)
     {
         _runtime = runtime;
+
+        _listener = Spotify<R>.ObserveLibrary()
+            .Run(runtime)
+            .ThrowIfFail()
+            .ValueUnsafe()
+            .Where(c => c is
+            {
+                Initial: false, Item.Type: AudioItemType.Album
+            })
+            .ObserveOn(RxApp.MainThreadScheduler)
+            .Subscribe(c =>
+            {
+                if (c.Item == Id)
+                {
+                    IsSaved = !c.Removed;
+                }
+            });
     }
 
     public TaskCompletionSource AlbumFetched = new TaskCompletionSource();
+    private bool _isSaved;
 
     public async void OnNavigatedTo(object? parameter)
     {
@@ -35,6 +57,8 @@ public sealed class AlbumViewModel<R> : ReactiveObject, INavigableViewModel wher
             return;
         }
 
+        Id = id;
+        IsSaved = ShellViewModel<R>.Instance.Library.InLibrary(id);
         //fetching the mobile version also gives us the artists image
         const string fetch_uri = "hm://album/v1/album-app/album/{0}/android?country={1}";
         var aff =
@@ -199,6 +223,7 @@ public sealed class AlbumViewModel<R> : ReactiveObject, INavigableViewModel wher
         IsBusy = false;
     }
 
+    public AudioId Id { get; set; }
     public string Name { get; set; }
     public string Image { get; set; }
     public ushort Year { get; set; }
@@ -210,10 +235,22 @@ public sealed class AlbumViewModel<R> : ReactiveObject, INavigableViewModel wher
     public SpotifyDiscView[] Discs { get; set; }
     public string Type { get; set; }
     public string[] Copyrights { get; set; }
+    public bool IsSaved
+    {
+        get => _isSaved;
+        set => this.RaiseAndSetIfChanged(ref _isSaved, value);
+    }
+
+    public ICommand SaveCommand => ShellViewModel<R>.Instance.Library.SaveCommand;
 
     public void OnNavigatedFrom()
     {
 
+    }
+
+    public void Clear()
+    {
+        _listener.Dispose();
     }
 }
 

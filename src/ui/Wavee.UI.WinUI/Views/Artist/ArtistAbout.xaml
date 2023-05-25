@@ -23,7 +23,7 @@
                               FontFamily="Segoe Fluent Icons"
                               Glyph="&#xE158;" />
                 </components:ArtistAboutSection.Icon>
-                <Grid MaxHeight="500"
+                <Grid Height="500"
                       Margin="12,0,0,0"
                       ColumnSpacing="8"
                       PointerExited="GalleryGrid_OnPointerExited"

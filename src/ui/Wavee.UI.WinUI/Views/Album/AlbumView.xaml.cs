@@ -12,6 +12,7 @@ using Microsoft.UI.Xaml.Media.Imaging;
 using Wavee.Core.Ids;
 using Wavee.UI.Infrastructure.Live;
 using Wavee.UI.ViewModels;
+using Orientation = Microsoft.UI.Xaml.Controls.Orientation;
 using UserControl = Microsoft.UI.Xaml.Controls.UserControl;
 
 namespace Wavee.UI.WinUI.Views.Album;
@@ -33,7 +34,7 @@ public sealed partial class AlbumView : UserControl, INavigablePage
     Option<INavigableViewModel> INavigablePage.ViewModel => ViewModel;
     public void RemovedFromCache()
     {
-
+        ViewModel.Clear();
     }
 
     public AlbumViewModel<WaveeUIRuntime> ViewModel { get; }
@@ -105,5 +106,44 @@ public sealed partial class AlbumView : UserControl, INavigablePage
         }
 
         UICommands.NavigateTo.Execute(id);
+    }
+
+    /*
+     *                <StackPanel Spacing="4" Orientation="Horizontal">
+                                <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xEB52;" />
+                                <TextBlock Text="Save"/>
+                            </StackPanel>
+     */
+    private void SaveButton_OnTapped(object sender, TappedRoutedEventArgs e)
+    {
+        ViewModel.SaveCommand.Execute(new ModifyLibraryCommand(Seq1(ViewModel.Id), !ViewModel.IsSaved));
+    }
+
+    public object SavedToContent(bool b)
+    {
+        var stckp = new StackPanel
+        {
+            Orientation = Orientation.Horizontal,
+            Spacing = 8
+        };
+        if (b)
+        {
+            stckp.Children.Add(new FontIcon
+            {
+                FontFamily = new Microsoft.UI.Xaml.Media.FontFamily("Segoe Fluent Icons"),
+                Glyph = "\uEB52"
+            });
+            stckp.Children.Add(new TextBlock
+            {
+                Text = "Remove"
+            });
+        }
+        else
+        {
+            stckp.Children.Add(new FontIcon { FontFamily = new Microsoft.UI.Xaml.Media.FontFamily("Segoe Fluent Icons"), Glyph = "\uE006" });
+            stckp.Children.Add(new TextBlock { Text = "Save" });
+        }
+
+        return stckp;
     }
 }

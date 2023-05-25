@@ -75,6 +75,14 @@ public sealed class NavigationService
                     }
                 }
             }
+            else
+            {
+                if (!currentPage.ShouldKeepInCache(_backStack.Count))
+                {
+                    _cachedPages.Remove(currentPageType);
+                    currentPage.RemovedFromCache();
+                }
+            }
 
             currentPage.ViewModel.IfSome(x => x.OnNavigatedFrom());
         }

@@ -45,7 +45,7 @@ namespace Wavee.UI.WinUI.Views.Setup
                     IsDefault = true,
                     DisplayName = Option<string>.None,
                     ImageId = Option<string>.None,
-                    Metadata = HashMap<string, string>.Empty
+                    Metadata = LanguageExt.HashMap<string, string>.Empty
                 };
                 _ = await UserManagment<WaveeUIRuntime>.CreateOrOverwriteUser(user).Run(runtime: App.Runtime);
 

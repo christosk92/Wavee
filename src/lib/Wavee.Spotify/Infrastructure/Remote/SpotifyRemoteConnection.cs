@@ -145,7 +145,8 @@ internal sealed class SpotifyRemoteConnection
                             itemType: type switch
                             {
                                 "track" => AudioItemType.Track,
-                                "artist" => AudioItemType.Artist
+                                "artist" => AudioItemType.Artist,
+                                "album" => AudioItemType.Album
                             }, ServiceType.Spotify),
                         Removed: removed,
                         AddedAt: removed ? Option<DateTimeOffset>.None : DateTimeOffset.Now

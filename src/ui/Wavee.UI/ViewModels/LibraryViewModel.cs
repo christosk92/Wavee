@@ -42,8 +42,7 @@ public sealed class LibraryViewModel<R> : ReactiveObject where R : struct, HasSp
                     Set = group.Key switch
                     {
                         AudioItemType.Artist => "artist",
-                        AudioItemType.Album => "album",
-                        AudioItemType.Track => "track",
+                        AudioItemType.Album or AudioItemType.Track => "collection",
                     }
                 };
 

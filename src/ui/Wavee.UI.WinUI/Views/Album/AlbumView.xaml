@@ -22,22 +22,22 @@
                     <ColumnDefinition Width="250" />
                     <ColumnDefinition />
                 </Grid.ColumnDefinitions>
-
-                <controls:ImageTransitionControl Grid.ColumnSpan="2"
-                                                 BlurValue="100"
-                                                 Margin="-24"
-                                                 Source="{x:Bind ViewModel.Image}" />
+                <!-- -->
+                <!-- <controls:ImageTransitionControl Grid.ColumnSpan="2" -->
+                <!--                                  BlurValue="5" -->
+                <!--                                  Margin="-24" -->
+                <!--                                  Source="{x:Bind ViewModel.Image}" /> -->
 
                 <Image x:Name="MainImage" />
                 <StackPanel Grid.Column="1"
-                            Spacing="6"
                             Margin="16,0"
                             VerticalAlignment="Bottom">
                     <TextBlock x:Name="AlbumType"
                                FontWeight="Bold"
                                />
                     <TextBlock FontWeight="Bold"
-                               FontSize="34"
+                               FontSize="48"
+                               Margin="0,0,0,8"
                                Text="{x:Bind ViewModel.Name}" />
 
                     <ItemsRepeater ItemsSource="{x:Bind ViewModel.Artists}">
@@ -110,6 +110,20 @@
                                            x:Name="TotalDuration" />
                             </StackPanel>
                         </Button>
+                    </StackPanel>
+
+                    <StackPanel Spacing="8" Orientation="Horizontal">
+                        <Button Style="{ThemeResource AccentButtonStyle}">
+                            <StackPanel Spacing="4" Orientation="Horizontal">
+                                <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xF5B0;" />
+                                <TextBlock Text="Play"/>
+                            </StackPanel>
+                        </Button>
+
+                        <Button             
+                            x:Name="SaveButton"
+                            Tapped="SaveButton_OnTapped"
+                            Content="{x:Bind SavedToContent(ViewModel.IsSaved), Mode=OneWay}"/>
                     </StackPanel>
                 </StackPanel>
                 <Button Margin="24"

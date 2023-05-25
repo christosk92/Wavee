@@ -26,7 +26,7 @@ using StackPanel = Microsoft.UI.Xaml.Controls.StackPanel;
 using TextBlock = Microsoft.UI.Xaml.Controls.TextBlock;
 using UserControl = Microsoft.UI.Xaml.Controls.UserControl;
 using Wavee.UI.ViewModels.Artist;
-using static LanguageExt.Prelude;
+
 namespace Wavee.UI.WinUI.Views.Artist;
 
 public sealed partial class ArtistRootView : UserControl, INavigablePage

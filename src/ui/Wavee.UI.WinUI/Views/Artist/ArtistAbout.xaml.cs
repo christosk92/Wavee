@@ -42,14 +42,14 @@ public sealed partial class ArtistAbout : UserControl
             var mainimageUrl = jsonDocument.RootElement.GetProperty("mainImageUrl").GetString();
 
             string body = null;
-            Seq<ArtistLink> links = Seq<ArtistLink>.Empty;
+            Seq<ArtistLink> links = LanguageExt.Seq<ArtistLink>.Empty;
             if (jsonDocument.RootElement.TryGetProperty("autobiography", out var autoBiography))
             {
                 body = autoBiography.TryGetProperty("body", out var b) ? b.GetString() : null;
                 links = autoBiography.TryGetProperty("links", out var lk)
                     ? lk.EnumerateObject()
                         .Map(x => new ArtistLink(x.Name, x.Value.GetString())).ToArr().ToSeq()
-                    : Seq<ArtistLink>.Empty;
+                    : LanguageExt.Seq<ArtistLink>.Empty;
             }
 
             var biography = jsonDocument.RootElement.TryGetProperty("biography", out var bio) ? bio.GetString() : null;
@@ -59,7 +59,7 @@ public sealed partial class ArtistAbout : UserControl
                     Uri = x.GetProperty("uri").GetString(),
                     Width = x.GetProperty("width").GetInt32(),
                     Height = x.GetProperty("height").GetInt32()
-                }).ToArr().ToSeq()) : Seq<Artwork>.Empty;
+                }).ToArr().ToSeq()) : LanguageExt.Seq<Artwork>.Empty;
             var globalChartPosition = jsonDocument.RootElement.GetProperty("globalChartPosition").GetInt32();
             var monthlyListeners = jsonDocument.RootElement.GetProperty("monthlyListeners").GetUInt64();
             var monthlyListenersDelta = jsonDocument.RootElement.GetProperty("monthlyListenersDelta").GetInt64();
