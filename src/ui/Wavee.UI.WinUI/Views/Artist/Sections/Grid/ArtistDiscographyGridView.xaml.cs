@@ -5,7 +5,7 @@ using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using System.Collections.Generic;
 using Wavee.Core.Ids;
-using Wavee.UI.ViewModels;
+using Wavee.UI.ViewModels.Artist;
 
 namespace Wavee.UI.WinUI.Views.Artist.Sections.Grid
 {

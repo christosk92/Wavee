@@ -14,7 +14,7 @@ using Wavee.Core.Ids;
 using Wavee.UI.Infrastructure.Sys;
 using Wavee.UI.Infrastructure.Traits;
 
-namespace Wavee.UI.ViewModels;
+namespace Wavee.UI.ViewModels.Artist;
 
 public sealed class ArtistViewModel<R> : INotifyPropertyChanged, INavigableViewModel
     where R : struct, HasSpotify<R>, HasFile<R>, HasDirectory<R>, HasLocalPath<R>
@@ -28,7 +28,7 @@ public sealed class ArtistViewModel<R> : INotifyPropertyChanged, INavigableViewM
         PlayCommand = ReactiveCommand.CreateFromTask<PlayContextStruct, Unit>(async str =>
         {
             await ShellViewModel<R>.Instance.Playback.PlayContextAsync(str);
-            return default(Unit);
+            return default;
         });
     }
 
@@ -81,59 +81,64 @@ public sealed class ArtistViewModel<R> : INotifyPropertyChanged, INavigableViewM
                 .GetString()
             : null;
 
-        using var profilePics = info.GetProperty("portraits")
-            .EnumerateArray();
-        var profilePic = profilePics.First().GetProperty("uri").GetString();
-
-        var monthlyListeners = jsonDoc.RootElement.GetProperty("monthly_listeners")
-            .GetProperty("listener_count")
-            .GetUInt64();
-
-        var toptr = jsonDoc.RootElement.GetProperty("top_tracks")
-            .GetProperty("tracks");
-        using var topTracksArr = toptr.EnumerateArray();
-        var topTracks = new List<ArtistTopTrackView>(toptr.GetArrayLength());
-        int index = 0;
-        var playcommandFortoptracks = ReactiveCommand.Create<AudioId, Unit>(x =>
+        string profilePic = null;
+        if (info.TryGetProperty("portraits", out var profil))
         {
-            var ctx = new PlayContextStruct(
-                ContextId: Artist.Id,
-                Index: topTracks.FindIndex(c => c.Id == x),
-                ContextUrl: $"context://{Artist.Id.ToString()}",
-                NextPages: Option<IEnumerable<ContextPage>>.None,
-                PageIndex: Option<int>.None
-            );
-            PlayCommand.Execute(ctx);
-            return default(Unit);
-        });
-        foreach (var topTrack in topTracksArr)
+            using var profilePics = profil.EnumerateArray();
+            profilePic = profilePics.First().GetProperty("uri").GetString();
+        }
+
+        var monthlyListeners = jsonDoc.RootElement.TryGetProperty("monthly_listeners", out var mnl)
+            ?
+            (mnl.TryGetProperty("listener_count", out var lc) ? lc.GetUInt64() : 0) : 0;
+
+        var topTracks = new List<ArtistTopTrackView>();
+        if (jsonDoc.RootElement.GetProperty("top_tracks")
+            .TryGetProperty("tracks", out var toptr))
         {
-            var release = topTrack.GetProperty("release");
-            var releaseName = release.GetProperty("name").GetString();
-            var releaseUri = release.GetProperty("uri").GetString();
-            var releaseImage = release.GetProperty("cover").GetProperty("uri").GetString();
-            var track = new ArtistTopTrackView
+            using var topTracksArr = toptr.EnumerateArray();
+            int index = 0;
+            var playcommandFortoptracks = ReactiveCommand.Create<AudioId, Unit>(x =>
             {
-                Uri = topTrack.GetProperty("uri")
-                    .GetString(),
-                Playcount = topTrack.GetProperty("playcount")
-                    is
+                var ctx = new PlayContextStruct(
+                    ContextId: Artist.Id,
+                    Index: topTracks.FindIndex(c => c.Id == x),
+                    ContextUrl: $"context://{Artist.Id.ToString()}",
+                    NextPages: Option<IEnumerable<ContextPage>>.None,
+                    PageIndex: Option<int>.None
+                );
+                PlayCommand.Execute(ctx);
+                return default;
+            });
+            foreach (var topTrack in topTracksArr)
+            {
+                var release = topTrack.GetProperty("release");
+                var releaseName = release.GetProperty("name").GetString();
+                var releaseUri = release.GetProperty("uri").GetString();
+                var releaseImage = release.GetProperty("cover").GetProperty("uri").GetString();
+                var track = new ArtistTopTrackView
                 {
-                    ValueKind: JsonValueKind.Number
-                } e
-                    ? e.GetUInt64()
-                    : Option<ulong>.None,
-                ReleaseName = releaseName,
-                ReleaseUri = releaseUri,
-                ReleaseImage = releaseImage,
-                Title = topTrack.GetProperty("name")
-                    .GetString(),
-                Id = AudioId.FromUri(topTrack.GetProperty("uri")
-                    .GetString()),
-                Index = index++,
-                PlayCommand = playcommandFortoptracks,
-            };
-            topTracks.Add(track);
+                    Uri = topTrack.GetProperty("uri")
+                        .GetString(),
+                    Playcount = topTrack.GetProperty("playcount")
+                        is
+                        {
+                            ValueKind: JsonValueKind.Number
+                        } e
+                        ? e.GetUInt64()
+                        : Option<ulong>.None,
+                    ReleaseName = releaseName,
+                    ReleaseUri = releaseUri,
+                    ReleaseImage = releaseImage,
+                    Title = topTrack.GetProperty("name")
+                        .GetString(),
+                    Id = AudioId.FromUri(topTrack.GetProperty("uri")
+                        .GetString()),
+                    Index = index++,
+                    PlayCommand = playcommandFortoptracks,
+                };
+                topTracks.Add(track);
+            }
         }
 
         var releases = jsonDoc.RootElement.GetProperty("releases");
@@ -326,44 +331,6 @@ public sealed class ArtistViewModel<R> : INotifyPropertyChanged, INavigableViewM
     }
 }
 
-public class ArtistView
-{
-    public string Name { get; }
-    public string HeaderImage { get; }
-    public ulong MonthlyListeners { get; }
-    public List<ArtistTopTrackView> TopTracks { get; set; }
-    public List<ArtistDiscographyGroupView> Discography { get; set; }
-    public string ProfilePicture { get; }
-    public AudioId Id { get; }
-
-    public ArtistView(string name, string headerImage, ulong monthlyListeners, List<ArtistTopTrackView>
-        topTracks, List<ArtistDiscographyGroupView> discography, string profilePicture, AudioId id)
-    {
-        Name = name;
-        HeaderImage = headerImage;
-        MonthlyListeners = monthlyListeners;
-        TopTracks = topTracks;
-        Discography = discography;
-        ProfilePicture = profilePicture;
-        Id = id;
-    }
-
-    public void Clear()
-    {
-        TopTracks.Clear();
-        foreach (var artistDiscographyGroupView in Discography)
-        {
-            foreach (var artistDiscographyView in artistDiscographyGroupView.Views)
-                artistDiscographyView.Tracks.Tracks.Clear();
-
-            artistDiscographyGroupView.Views.Clear();
-        }
-
-        Discography.Clear();
-        Discography = null;
-        TopTracks = null;
-    }
-}
 public class ArtistDiscographyGroupView
 {
     public required string GroupName { get; set; }

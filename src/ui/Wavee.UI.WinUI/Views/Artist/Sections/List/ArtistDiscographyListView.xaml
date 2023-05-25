@@ -7,12 +7,13 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:viewModels="using:Wavee.UI.ViewModels"
     xmlns:list="using:Wavee.UI.WinUI.Views.Artist.Sections.List"
+    xmlns:artist="using:Wavee.UI.ViewModels.Artist"
     mc:Ignorable="d">
 
     <Grid>
         <ItemsRepeater ItemsSource="{x:Bind Items}">
             <ItemsRepeater.ItemTemplate>
-                <DataTemplate x:DataType="viewModels:ArtistDiscographyView">
+                <DataTemplate x:DataType="artist:ArtistDiscographyView">
                     <list:ArtistDiscographyLazyTracksView
                         Title="{x:Bind Title}" 
                         Image="{x:Bind Image}"

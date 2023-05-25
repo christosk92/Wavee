@@ -7,7 +7,7 @@ using CommunityToolkit.Labs.WinUI;
 using LanguageExt;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Wavee.UI.ViewModels;
+using Wavee.UI.ViewModels.Artist;
 using Wavee.UI.WinUI.Views.Artist.Sections.Grid;
 using Wavee.UI.WinUI.Views.Artist.Sections.List;
 

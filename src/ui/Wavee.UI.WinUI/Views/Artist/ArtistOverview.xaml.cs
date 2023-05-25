@@ -1,7 +1,7 @@
 using System;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Wavee.UI.ViewModels;
+using Wavee.UI.ViewModels.Artist;
 using Wavee.UI.WinUI.Components;
 using Wavee.UI.WinUI.Views.Artist.Sections;
 
@@ -79,9 +79,7 @@ public sealed partial class ArtistOverview : UserControl
 
     public void Clear()
     {
-        Artist = default;
-        this.Bindings.StopTracking();
+        Artist = null;
         ArtistDiscographyGroupViewView.ClearAll();
-        this.Content = new Border();
     }
 }

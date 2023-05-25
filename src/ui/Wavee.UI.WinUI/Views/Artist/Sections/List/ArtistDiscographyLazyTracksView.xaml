@@ -3,7 +3,8 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:winUi="using:CommunityToolkit.Labs.WinUI"
              xmlns:components="using:Wavee.UI.WinUI.Components"
-             xmlns:viewModels="using:Wavee.UI.ViewModels">
+             xmlns:viewModels="using:Wavee.UI.ViewModels"
+             xmlns:artist="using:Wavee.UI.ViewModels.Artist">
     <Grid Margin="0,0,0,24"
           ColumnSpacing="8">
         <Grid.ColumnDefinitions>
@@ -21,7 +22,7 @@
                        ItemsSource="{x:Bind Tracks.Tracks, Mode=OneWay}"
                        x:Name="ShimmerListView">
             <ItemsRepeater.ItemTemplate>
-                <DataTemplate x:DataType="viewModels:ArtistDiscographyTrack">
+                <DataTemplate x:DataType="artist:ArtistDiscographyTrack">
                     <ListViewItem Style="{StaticResource TracksListViewItemStyle}">
                         <Grid Height="38">
                             <components:TrackView AlternatingRowColor="True"

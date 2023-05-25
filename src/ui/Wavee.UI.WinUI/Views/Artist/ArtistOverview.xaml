@@ -8,6 +8,7 @@
              xmlns:viewModels="using:Wavee.UI.ViewModels"
              xmlns:components="using:Wavee.UI.WinUI.Components"
              xmlns:sections="using:Wavee.UI.WinUI.Views.Artist.Sections"
+             xmlns:artist="using:Wavee.UI.ViewModels.Artist"
              mc:Ignorable="d">
 
     <StackPanel Margin="24">
@@ -37,7 +38,7 @@
                 </ItemsPanelTemplate>
             </ListView.ItemsPanel>
             <ListView.ItemTemplate>
-                <DataTemplate x:DataType="viewModels:ArtistTopTrackView">
+                <DataTemplate x:DataType="artist:ArtistTopTrackView">
                     <components:TrackView VerticalAlignment="Stretch"
                                           ShowImage="True"
                                           Height="38"
@@ -75,8 +76,9 @@
 
         <ItemsRepeater ItemsSource="{x:Bind Artist.Discography, Mode=OneWay}">
             <ItemsRepeater.ItemTemplate>
-                <DataTemplate x:DataType="viewModels:ArtistDiscographyGroupView">
+                <DataTemplate x:DataType="artist:ArtistDiscographyGroupView">
                     <sections:ArtistDiscographyGroupViewView Margin="0,24"
+                                                             VerticalAlignment="Top"
                                                              Title="{x:Bind GroupName}"
                                                              CanSwitchTemplates="{x:Bind CanSwitchTemplates}"
                                                              Views="{x:Bind Views}" />
@@ -84,6 +86,6 @@
             </ItemsRepeater.ItemTemplate>
         </ItemsRepeater>
 
-        <Border Height="80"/>
+        <Border Height="80" />
     </StackPanel>
 </UserControl>

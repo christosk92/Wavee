@@ -1,7 +1,7 @@
 using LanguageExt;
 using Microsoft.UI.Xaml.Controls;
 using System.Collections.Generic;
-using Wavee.UI.ViewModels;
+using Wavee.UI.ViewModels.Artist;
 
 namespace Wavee.UI.WinUI.Views.Artist.Sections.List;
 

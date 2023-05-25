@@ -12,6 +12,7 @@
              xmlns:panels="using:Wavee.UI.WinUI.Panels"
              xmlns:models="using:Wavee.UI.Models"
              xmlns:controls="using:Wavee.UI.WinUI.Controls"
+             xmlns:artist="using:Wavee.UI.ViewModels.Artist"
              mc:Ignorable="d">
 
     <ScrollViewer>
@@ -174,7 +175,7 @@
                                       ItemContainerStyle="{StaticResource TracksListViewItemStyle}"
                                       Grid.Row="1">
                                 <ListView.ItemTemplate>
-                                    <DataTemplate x:DataType="viewModels:ArtistDiscographyTrack">
+                                    <DataTemplate x:DataType="artist:ArtistDiscographyTrack">
                                         <Grid Height="38">
                                             <components:TrackView AlternatingRowColor="True"
                                                                   Id="{x:Bind Id}"

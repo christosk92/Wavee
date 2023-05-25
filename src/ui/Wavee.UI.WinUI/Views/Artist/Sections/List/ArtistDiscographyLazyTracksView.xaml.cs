@@ -16,6 +16,7 @@ using Wavee.Core.Ids;
 using Wavee.UI.Infrastructure.Live;
 using Wavee.UI.Infrastructure.Sys;
 using Wavee.UI.ViewModels;
+using Wavee.UI.ViewModels.Artist;
 using static LanguageExt.Prelude;
 namespace Wavee.UI.WinUI.Views.Artist.Sections.List;
 

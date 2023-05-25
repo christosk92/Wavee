@@ -5,8 +5,9 @@
              xmlns:local="using:ArtistTest.Components"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:controls="using:CommunityToolkit.WinUI.UI.Controls"
              PointerEntered="SpotifyView_OnPointerEntered"
-             PointerExited="SpotifyView_OnPointerExited" 
+             PointerExited="SpotifyView_OnPointerExited"
              ContextRequested="SpotifyView_OnContextRequested"
              mc:Ignorable="d">
     <Grid>
@@ -16,15 +17,17 @@
         </Grid.RowDefinitions>
 
         <Grid>
-            <Image x:Name="LoadingImage"
-                   DataContext="{x:Bind}"
-                   Stretch="UniformToFill">
-                <Image.Source>
-                    <BitmapImage UriSource="{Binding Image}"
-                                 DecodePixelHeight="230"
-                                 DecodePixelWidth="230" />
-                </Image.Source>
-            </Image>
+            <controls:ConstrainedBox AspectRatio="1:1">
+                <Image x:Name="LoadingImage"
+                       DataContext="{x:Bind}"
+                       Stretch="UniformToFill">
+                    <Image.Source>
+                        <BitmapImage UriSource="{Binding Image}"
+                                     DecodePixelHeight="230"
+                                     DecodePixelWidth="230" />
+                    </Image.Source>
+                </Image>
+            </controls:ConstrainedBox>
 
             <StackPanel x:Name="ButtonsPanel"
                         Visibility="Collapsed"

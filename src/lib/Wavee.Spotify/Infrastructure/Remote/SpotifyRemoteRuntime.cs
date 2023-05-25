@@ -28,6 +28,7 @@ internal static class SpotifyRemoteRuntime
         {
             var dealer = await ApResolve.GetDealer(CancellationToken.None);
             var token = await tokenClient.GetToken();
+            
             var wsUrl = $"wss://{dealer.host}:{dealer.port}?access_token={token}";
             var ws = await WebsocketIO.Connect(wsUrl, CancellationToken.None);
             var connId = await ReadConnectionId(ws);

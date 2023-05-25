@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.InteropServices;
 using Windows.Foundation;
 using CommunityToolkit.WinUI.UI;
 using Microsoft.UI.Xaml;
@@ -7,7 +9,7 @@ using Microsoft.UI.Xaml.Controls;
 
 namespace Wavee.UI.WinUI.Panels;
 
-internal sealed class HorizontalAdaptiveLayout : VirtualizingLayout
+internal sealed class HorizontalAdaptiveLayout : NonVirtualizingLayout
 {
     public static readonly DependencyProperty DesiredWidthProperty = DependencyProperty.Register(nameof(DesiredWidth),
         typeof(double), typeof(HorizontalAdaptiveLayout),
@@ -23,10 +25,10 @@ internal sealed class HorizontalAdaptiveLayout : VirtualizingLayout
         panel.InvalidateMeasure();
     }
 
-    protected override void InitializeForContextCore(VirtualizingLayoutContext context)
+    protected override void InitializeForContextCore(NonVirtualizingLayoutContext context)
     {
         base.InitializeForContextCore(context);
-
+    
         var state = context.LayoutState as ActivityFeedLayoutState;
         if (state == null)
         {
@@ -36,22 +38,22 @@ internal sealed class HorizontalAdaptiveLayout : VirtualizingLayout
             context.LayoutState = new ActivityFeedLayoutState();
         }
     }
-    protected override void UninitializeForContextCore(VirtualizingLayoutContext context)
+    protected override void UninitializeForContextCore(NonVirtualizingLayoutContext context)
     {
         base.UninitializeForContextCore(context);
-
+    
         // clear any state
         context.LayoutState = null;
     }
 
 
-    protected override Size MeasureOverride(VirtualizingLayoutContext context, Size availableSize)
+    protected override Size MeasureOverride(NonVirtualizingLayoutContext context, Size availableSize)
     {
         // Determine which items will appear on those rows and what the rect will be for each item
         var state = context.LayoutState as ActivityFeedLayoutState;
         state.LayoutRects.Clear();
         
-        var items = context.ItemCount;
+        var items = context.Children.Count;
         if (items == 0)
             return new Size(0, 0);
         
@@ -75,34 +77,50 @@ internal sealed class HorizontalAdaptiveLayout : VirtualizingLayout
         double totalWidth = 0;
         double totalHeight = 0;
         var count = Math.Min(fitItems, items);
-        
+
 
         for (var i = 0; i < count; i++)
         {
-            var item = context.GetOrCreateElementAt(i);
-            var additionalWidth = DesiredWidth + resizePerItem;
+            try
+            {
+                var item = context.Children[i];
+                if (item is null)
+                    break;
+                var additionalWidth = DesiredWidth + resizePerItem;
 
-            item.Measure(new Size(additionalWidth, double.PositiveInfinity));
-            var additionalHeight = item.DesiredSize.Height;
-            state.LayoutRects.Add(new Rect(totalWidth, 0, additionalWidth, additionalHeight));
-            totalWidth += additionalWidth;
-            totalHeight = Math.Max(additionalHeight, totalHeight);
+                item.Measure(new Size(additionalWidth, double.PositiveInfinity));
+                var additionalHeight = item.DesiredSize.Height;
+                state.LayoutRects.Add(new Rect(totalWidth, 0, additionalWidth, additionalHeight));
+                totalWidth += additionalWidth;
+                totalHeight = Math.Max(additionalHeight, totalHeight);
+            }
+            catch (COMException)
+            {
+
+            }
         }
         
         return new Size(totalWidth, totalHeight);
     }
-    protected override Size ArrangeOverride(VirtualizingLayoutContext context, Size finalSize)
+    protected override Size ArrangeOverride(NonVirtualizingLayoutContext context, Size finalSize)
     {
         // walk through the cache of containers and arrange
         var state = context.LayoutState as ActivityFeedLayoutState;
-        var virtualContext = context as VirtualizingLayoutContext;
+        var virtualContext = context as NonVirtualizingLayoutContext;
         int currentIndex = state.FirstRealizedIndex;
 
         foreach (var arrangeRect in state.LayoutRects)
         {
-            var container = virtualContext.GetOrCreateElementAt(currentIndex);
-            container.Arrange(arrangeRect);
-            currentIndex++;
+            try
+            {
+                var container = virtualContext.Children.ElementAt(currentIndex);
+                container.Arrange(arrangeRect);
+                currentIndex++;
+            }
+            catch (COMException)
+            {
+
+            }
         }
 
         return finalSize;

@@ -24,6 +24,7 @@ using SelectionChangedEventArgs = Microsoft.UI.Xaml.Controls.SelectionChangedEve
 using StackPanel = Microsoft.UI.Xaml.Controls.StackPanel;
 using TextBlock = Microsoft.UI.Xaml.Controls.TextBlock;
 using UserControl = Microsoft.UI.Xaml.Controls.UserControl;
+using Wavee.UI.ViewModels.Artist;
 
 namespace Wavee.UI.WinUI.Views.Artist;
 
@@ -39,14 +40,13 @@ public sealed partial class ArtistRootView : UserControl, INavigablePage
     public void RemovedFromCache()
     {
         ViewModel.Clear();
-        this.Bindings.Update();
-        this.Bindings.StopTracking();
         _overview?.Clear();
         _overview = null;
         _concerts?.Clear();
         _concerts = null;
         _about?.Clear();
         _about = null;
+        GC.Collect(); 
     }
 
     private async void Selector_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -127,13 +127,28 @@ public sealed partial class ArtistRootView : UserControl, INavigablePage
         this.Bindings.Update();
         MetadataPnale.Visibility = Visibility.Visible;
         ShowPanelAnim.Start();
-        SecondPersonPicture.ProfilePicture = new BitmapImage(new Uri(ViewModel.Artist.ProfilePicture));
+        if (!string.IsNullOrEmpty(ViewModel.Artist.ProfilePicture))
+        {
+            SecondPersonPicture.ProfilePicture = new BitmapImage(new Uri(ViewModel.Artist.ProfilePicture));
+        }
+        else
+        {
+            SecondPersonPicture.DisplayName = ViewModel.Artist.Name;
+        }
+
         if (string.IsNullOrEmpty(ViewModel.Artist.HeaderImage))
         {
             //show picture
             Img.Visibility = Visibility.Collapsed;
             AlternativeArtistImage.Visibility = Visibility.Visible;
-            AlternativeArtistImage.ProfilePicture = SecondPersonPicture.ProfilePicture;
+            if (!string.IsNullOrEmpty(ViewModel.Artist.ProfilePicture))
+            {
+                AlternativeArtistImage.ProfilePicture = SecondPersonPicture.ProfilePicture;
+            }
+            else
+            {
+                AlternativeArtistImage.DisplayName = SecondPersonPicture.DisplayName;
+            }
         }
 
         //ArtistPage_OnSizeChanged

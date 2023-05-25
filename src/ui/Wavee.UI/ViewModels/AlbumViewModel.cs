@@ -8,6 +8,7 @@ using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
 using Wavee.Spotify.Infrastructure.Cache;
 using Wavee.UI.Models;
+using Wavee.UI.ViewModels.Artist;
 
 namespace Wavee.UI.ViewModels;
 

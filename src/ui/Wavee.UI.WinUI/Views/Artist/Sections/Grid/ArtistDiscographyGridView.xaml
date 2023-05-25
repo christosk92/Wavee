@@ -8,15 +8,17 @@
              xmlns:components="using:ArtistTest.Components"
              xmlns:viewModels="using:Wavee.UI.ViewModels"
              xmlns:components1="using:Wavee.UI.WinUI.Components"
+             xmlns:artist="using:Wavee.UI.ViewModels.Artist"
              mc:Ignorable="d">
 
     <ItemsRepeater ItemsSource="{x:Bind Items}">
         <ItemsRepeater.Layout>
-            <UniformGridLayout MinItemWidth="200"
+            <UniformGridLayout MinItemWidth="220"
                                ItemsStretch="Uniform"
-                               MinItemHeight="240"
+                               MinItemHeight="260"
                                MinRowSpacing="12"
-                               MinColumnSpacing="12" />
+                               ItemsJustification="Start"
+                               MinColumnSpacing="6" />
 
         </ItemsRepeater.Layout>
         <!-- <GridView.ItemContainerStyle> -->
@@ -26,8 +28,9 @@
         <!--     </Style> -->
         <!-- </GridView.ItemContainerStyle> -->
         <ItemsRepeater.ItemTemplate>
-            <DataTemplate x:DataType="viewModels:ArtistDiscographyView">
+            <DataTemplate x:DataType="artist:ArtistDiscographyView">
                 <Button Padding="12"
+                        VerticalAlignment="Top"
                         Margin="0,0,16,0"
                         CornerRadius="6"
                         Tag="{x:Bind Id}"

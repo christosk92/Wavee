@@ -21,7 +21,7 @@ public readonly struct TokenClient
     public async ValueTask<string> GetToken(CancellationToken ct = default)
     {
         var potentialToken = _tokenCache.Find(_connectionId)
-            .Bind(x => !x.IsExpired ? None : Some(x.AccessToken));
+            .Bind(x => x.IsExpired ? None : Some(x.AccessToken));
         if (potentialToken.IsSome)
         {
             return potentialToken.ValueUnsafe();
