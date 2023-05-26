@@ -21,7 +21,7 @@ namespace Wavee.UI.WinUI.Views.Home
 
         public bool ShouldKeepInCache(int depth)
         {
-            return depth < 3;
+            return depth < 10;
         }
         public HomeViewModel<WaveeUIRuntime> ViewModel { get; }
         public void RemovedFromCache()

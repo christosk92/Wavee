@@ -15,7 +15,7 @@ using Wavee.UI.Infrastructure.Traits;
 using static LanguageExt.Prelude;
 namespace Wavee.UI.ViewModels;
 
-public sealed class PlaybackViewModel<R> : ReactiveObject where R : struct, HasSpotify<R>
+public sealed class PlaybackViewModel<R> : ReactiveObject where R : struct, HasSpotify<R>, HasFile<R>, HasDirectory<R>, HasLocalPath<R>
 {
     private readonly object _positionLock = new();
     private readonly string _ownDeviceId;
@@ -102,11 +102,13 @@ public sealed class PlaybackViewModel<R> : ReactiveObject where R : struct, HasS
                                     .Run(runtime))
                                 .ThrowIfFail();
 
+                            CurrentTrackSaved = ShellViewModel<R>.Instance.Library.InLibrary(x);
                             CurrentTrack = track;
                             return unit;
                         },
                         () =>
                         {
+                            CurrentTrackSaved = false;
                             CurrentTrack = null;
                             _positionTimer.Change(Timeout.Infinite, Timeout.Infinite);
                             return unit;
@@ -176,6 +178,13 @@ public sealed class PlaybackViewModel<R> : ReactiveObject where R : struct, HasS
         set => this.RaiseAndSetIfChanged(ref _shuffling, value);
     }
 
+    public bool CurrentTrackSaved
+    {
+        get => _currentTrackSaved;
+        set => this.RaiseAndSetIfChanged(ref _currentTrackSaved, value);
+    }
+
+
     public bool ActiveOnThisDevice => ActiveDevice == default
                                       || string.Equals(ActiveDevice.DeviceId, _ownDeviceId);
     public ICommand ResumePauseCommand { get; }
@@ -184,6 +193,7 @@ public sealed class PlaybackViewModel<R> : ReactiveObject where R : struct, HasS
     public ICommand ToggleRepeatCommand { get; }
     public ICommand SkipPreviousCommand { get; }
     public ICommand SkipNextCommand { get; }
+
     public event EventHandler<bool> PauseChanged;
 
     public event EventHandler<ITrack?> CurrentTrackChanged;
@@ -262,6 +272,7 @@ public sealed class PlaybackViewModel<R> : ReactiveObject where R : struct, HasS
     }
 
     private Option<double> previousVolumeAsPerc = Option<double>.None;
+    private bool _currentTrackSaved;
 
     private async Task SkipNext(CancellationToken ct)
     {

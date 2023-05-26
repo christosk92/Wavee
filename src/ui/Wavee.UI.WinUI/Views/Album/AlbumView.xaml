@@ -17,7 +17,7 @@
 
     <ScrollViewer>
         <StackPanel>
-            <Grid Padding="24">
+            <Grid Background="Transparent" ContextRequested="ALbumHeaderContextRequested" Padding="24">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="250" />
                     <ColumnDefinition />

@@ -6,6 +6,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:controls="using:CommunityToolkit.WinUI.UI.Controls"
+             xmlns:components="using:Wavee.UI.WinUI.Components"
              mc:Ignorable="d">
     <UserControl.Resources>
         <ResourceDictionary>
@@ -55,11 +56,11 @@
             </Grid.RenderTransform>
 
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="300" />
+                <ColumnDefinition Width="450" />
                 <ColumnDefinition x:Name="PrimaryBarColumn"
                                   Width="1*" />
                 <ColumnDefinition x:Name="SecondaryBarColumn"
-                                  Width="300" />
+                                  Width="450" />
             </Grid.ColumnDefinitions>
 
             <Grid.RowDefinitions>
@@ -108,7 +109,10 @@
                         <ColumnDefinition x:Name="ImageDefinition"
                                           Width="80" />
                         <ColumnDefinition x:Name="TextDefinition"
-                                          MaxWidth="420" />
+                                          MaxWidth="550"
+                                          Width="Auto" />
+                        <ColumnDefinition x:Name="HeartDefinition"
+                                          Width="Auto" />
                     </Grid.ColumnDefinitions>
 
                     <Border x:Name="ImageBorder"
@@ -159,6 +163,13 @@
                             <TranslateTransform x:Name="TextPanelTranslate" />
                         </StackPanel.RenderTransform>
                     </StackPanel>
+
+                    <components:StarButton
+                        FontSize="24" 
+                        Margin="12,0"
+                        x:Name="StarButton"
+                        IsChecked="{x:Bind Playback.CurrentTrackSaved, Mode=OneWay}"
+                        Grid.Column="2"/>
                 </Grid>
             </Border>
 
@@ -353,7 +364,7 @@
                          MaxWidth="200"
                          Grid.Column="2"
                          IsEnabled="{x:Bind Playback.CanControlVolume, Mode=OneWay}"
-                         Margin="100,0,12,4">
+                         Margin="100,0,-100,4">
                 <Grid x:Name="VolumeMuteButton"
                       ColumnSpacing="6">
                     <Grid.ColumnDefinitions>

@@ -99,7 +99,6 @@ public sealed class LibraryViewModel<R> : ReactiveObject where R : struct, HasSp
             {
                 _items.Edit(innerList =>
                 {
-                    innerList.Clear();
                     if (itemsToAddOrRemove.Item2)
                     {
                         innerList.AddOrUpdate(itemsToAddOrRemove.Item1);

@@ -30,6 +30,7 @@
                       ViewChanged="ScrollViewer_OnViewChanged">
             <StackPanel>
                 <Grid VerticalAlignment="Top"
+                      ContextRequested="ImageT_OnContextRequested"
                       x:Name="ImageT">
                     <controls:ImageTransitionControl x:Name="Img"
                                                      Grid.ColumnSpan="2"

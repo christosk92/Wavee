@@ -111,6 +111,15 @@ public sealed partial class TrackView : UserControl
         {
             PlaybackState = TrackPlaybackState.None;
         }
+
+        if (ShellViewModel<WaveeUIRuntime>.Instance.Library.InLibrary(id))
+        {
+            SavedButton.IsChecked = true;
+        }
+        else
+        {
+            SavedButton.IsChecked = false;
+        }
     }
     private void ChangePlaybackState(TrackPlaybackState state)
     {
@@ -301,6 +310,25 @@ public sealed partial class TrackView : UserControl
         if (e.PointerDeviceType is PointerDeviceType.Touch or PointerDeviceType.Pen)
         {
             PlayCommand.Execute(Id);
+        }
+    }
+
+    private void SavedButton_OnTapped(object sender, TappedRoutedEventArgs e)
+    {
+        var isChecked = SavedButton.IsChecked ?? false;
+        if (isChecked)
+        {
+            ShellViewModel<WaveeUIRuntime>.Instance.Library.SaveCommand.Execute(new ModifyLibraryCommand(
+                Ids: Seq1(Id),
+                Add: true
+                ));
+        }
+        else
+        {
+            ShellViewModel<WaveeUIRuntime>.Instance.Library.SaveCommand.Execute(new ModifyLibraryCommand(
+                Ids: Seq1(Id),
+                Add: false
+            ));
         }
     }
 }

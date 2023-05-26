@@ -2,6 +2,7 @@ using System;
 using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
+using Windows.Foundation;
 using CommunityToolkit.WinUI.UI;
 using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
@@ -12,6 +13,7 @@ using Microsoft.UI.Xaml.Media.Imaging;
 using Wavee.Core.Ids;
 using Wavee.UI.Infrastructure.Live;
 using Wavee.UI.ViewModels;
+using Wavee.UI.WinUI.Flyouts;
 using Orientation = Microsoft.UI.Xaml.Controls.Orientation;
 using UserControl = Microsoft.UI.Xaml.Controls.UserControl;
 
@@ -145,5 +147,19 @@ public sealed partial class AlbumView : UserControl, INavigablePage
         }
 
         return stckp;
+    }
+
+    private void ALbumHeaderContextRequested(UIElement sender, ContextRequestedEventArgs args)
+    {
+        Point point = new Point(0, 0);
+        var properFlyout = ViewModel.Id.ConstructFlyout();
+        if (args.TryGetPosition(sender, out point))
+        {
+            properFlyout.ShowAt(sender, point);
+        }
+        else
+        {
+            properFlyout.ShowAt((FrameworkElement)sender);
+        }
     }
 }

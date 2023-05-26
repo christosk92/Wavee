@@ -13,6 +13,7 @@ using Wavee.UI.ViewModels;
 using Microsoft.UI.Xaml.Hosting;
 using CommunityToolkit.WinUI.UI.Animations.Expressions;
 using System.Windows.Controls;
+using Windows.Foundation;
 using Windows.UI;
 using Eum.Spotify.context;
 using Microsoft.UI;
@@ -26,6 +27,7 @@ using StackPanel = Microsoft.UI.Xaml.Controls.StackPanel;
 using TextBlock = Microsoft.UI.Xaml.Controls.TextBlock;
 using UserControl = Microsoft.UI.Xaml.Controls.UserControl;
 using Wavee.UI.ViewModels.Artist;
+using Wavee.UI.WinUI.Flyouts;
 
 namespace Wavee.UI.WinUI.Views.Artist;
 
@@ -230,5 +232,19 @@ public sealed partial class ArtistRootView : UserControl, INavigablePage
     private void FollowButton_OnTapped(object sender, TappedRoutedEventArgs e)
     {
         ViewModel.FollowCommand.Execute(new ModifyLibraryCommand(Seq1(ViewModel.Artist.Id), !ViewModel.IsFollowing));
+    }
+
+    private void ImageT_OnContextRequested(UIElement sender, ContextRequestedEventArgs args)
+    {
+        Point point = new Point(0, 0);
+        var properFlyout = ViewModel.Artist.Id.ConstructFlyout();
+        if (args.TryGetPosition(sender, out point))
+        {
+            properFlyout.ShowAt(sender, point);
+        }
+        else
+        {
+            properFlyout.ShowAt((FrameworkElement)sender);
+        }
     }
 }

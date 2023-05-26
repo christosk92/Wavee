@@ -128,6 +128,12 @@
                                        FontWeight="SemiBold" />
                         </ContentControl.Content>
                     </ContentControl>
+
+                    <local:StarButton FontSize="18"
+                                      Tapped="SavedButton_OnTapped"
+                                      x:Name="SavedButton"
+                                      Margin="6,0" />
+
                     <Grid x:Name="ImageShimemrDataGrid"
                           x:Load="{x:Bind ShowImage, Mode=OneWay}"
                           Margin="4,0"

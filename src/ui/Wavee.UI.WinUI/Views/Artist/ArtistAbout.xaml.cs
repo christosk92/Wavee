@@ -17,6 +17,7 @@ using Microsoft.UI.Xaml.Media;
 using Wavee.UI.Infrastructure.Live;
 using Wavee.UI.Infrastructure.Sys;
 using Wavee.UI.WinUI.Helpers;
+using System.Web;
 
 namespace Wavee.UI.WinUI.Views.Artist;
 
@@ -193,12 +194,16 @@ public sealed partial class ArtistAbout : UserControl
         var item = (SegmentedItem)e.AddedItems[0];
         if (item.Tag is "auto")
         {
-            BiographyContent.Text = Info.Autobiography;
+            var html = new HtmlAgilityPack.HtmlDocument();
+            html.LoadHtml(Info.Autobiography);
+            BiographyContent.Text = HttpUtility.HtmlDecode(html.DocumentNode.InnerText);
             PostedByArtist.Visibility = Visibility.Visible;
         }
         else if (item.Tag is "biography")
         {
-            BiographyContent.Text = Info.Biography;
+            var html = new HtmlAgilityPack.HtmlDocument();
+            html.LoadHtml(Info.Biography);
+            BiographyContent.Text = HttpUtility.HtmlDecode(html.DocumentNode.InnerText);
             PostedByArtist.Visibility = Visibility.Collapsed;
         }
     }

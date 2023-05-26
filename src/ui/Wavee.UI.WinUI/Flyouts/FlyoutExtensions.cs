@@ -202,17 +202,20 @@ public static class FlyoutExtensions
 
             else
             {
-                var item = new MenuFlyoutItem
+                if (playlist.OwnerId == ShellViewModel<WaveeUIRuntime>.Instance.User.Id)
                 {
-                    Text = playlist.Name,
-                    Command = AddToPlaylistCommand,
-                    CommandParameter = new AddToPlaylistRequest(AudioId.FromUri(playlist.Id), new AudioId[]
+                    var item = new MenuFlyoutItem
                     {
-                        id
-                    })
-                };
+                        Text = playlist.Name,
+                        Command = AddToPlaylistCommand,
+                        CommandParameter = new AddToPlaylistRequest(AudioId.FromUri(playlist.Id), new AudioId[]
+                        {
+                            id
+                        })
+                    };
 
-                into.Items.Add(item);
+                    into.Items.Add(item);
+                }
             }
         }
         foreach (var playlist in playlists)
