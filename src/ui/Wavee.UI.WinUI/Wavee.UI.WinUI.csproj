@@ -29,6 +29,10 @@
 		<None Remove="Views\Artist\ArtistOverview.xaml" />
 		<None Remove="Views\Artist\ArtistView.xaml" />
 		<None Remove="Views\Home\HomeRootView.xaml" />
+		<None Remove="Views\Library\LibraryAlbumsView.xaml" />
+		<None Remove="Views\Library\LibraryArtistsView.xaml" />
+		<None Remove="Views\Library\LibraryRootView.xaml" />
+		<None Remove="Views\Library\LibrarySongsView.xaml" />
 		<None Remove="Views\Playlist\CreatePlaylistView.xaml" />
 		<None Remove="Views\Setup\SetupPageContent.xaml" />
 		<None Remove="Views\Setup\SetupView.xaml" />
@@ -102,6 +106,18 @@
 		<None Update="Components\ArtistAboutSection.xaml">
 		  <Generator>MSBuild:Compile</Generator>
 		</None>
+		<Page Update="Views\Library\LibraryArtistsView.xaml">
+		  <Generator>MSBuild:Compile</Generator>
+		</Page>
+		<Page Update="Views\Library\LibraryAlbumsView.xaml">
+		  <Generator>MSBuild:Compile</Generator>
+		</Page>
+		<Page Update="Views\Library\LibrarySongsView.xaml">
+		  <Generator>MSBuild:Compile</Generator>
+		</Page>
+		<Page Update="Views\Library\LibraryRootView.xaml">
+		  <Generator>MSBuild:Compile</Generator>
+		</Page>
 		<Page Update="Views\Album\AlbumView.xaml">
 		  <Generator>MSBuild:Compile</Generator>
 		</Page>

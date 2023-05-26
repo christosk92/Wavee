@@ -13,6 +13,7 @@ using ReactiveUI;
 using Wavee.UI.Infrastructure.Sys;
 using Wavee.UI.Models;
 using Wavee.UI.WinUI.Views.Home;
+using Wavee.UI.WinUI.Views.Library;
 using Wavee.UI.WinUI.Views.Playlist;
 using Wavee.UI.WinUI.Views.Sidebar.Items;
 
@@ -90,10 +91,13 @@ namespace Wavee.UI.WinUI.Views.Sidebar
             NavigateTo(args.InvokedItem);
         }
 
-        private static Dictionary<string, Type> _navigationMapping
-         = new Dictionary<string, Type>
+        private static Dictionary<string, (Type, object)> _navigationMapping
+         = new()
          {
-            { "home", typeof(HomeRootView) },
+            { "home",(typeof(HomeRootView), null)},
+            {"songs", (typeof(LibraryRootView), "songs")},
+            {"albums", (typeof(LibraryRootView), "albums")},
+            {"artists", (typeof(LibraryRootView), "artists")},
          };
         private static void NavigateTo(object item)
         {
@@ -116,13 +120,14 @@ namespace Wavee.UI.WinUI.Views.Sidebar
             //     },
             //     _ => null
             // };
-            if (pageType is not null)
-                ShellView.NavigationService.Navigate(pageType);
+            if (pageType.Item1 is not null)
+                ShellView.NavigationService.Navigate(pageType.Item1, pageType.Item2);
         }
-        public void SetSelected(Type type)
+        public void SetSelected(Type type, object param)
         {
-            var slugAssociated = _navigationMapping.SingleOrDefault(x => x.Value == type);
-            if (slugAssociated.Value is not null)
+            var slugAssociated = _navigationMapping.SingleOrDefault(x => x.Value.Item1 == type
+                                                                         && (x.Value.Item2 == param || x.Value.Item2?.ToString() == param?.ToString()));
+            if (slugAssociated.Value.Item1 is not null)
             {
                 var item = SidebarItems.SingleOrDefault(x =>
                     x is RegularSidebarItem f && f.Slug == slugAssociated.Key);
@@ -151,6 +156,11 @@ namespace Wavee.UI.WinUI.Views.Sidebar
                 //if item is header, set it to not selectable
                 if (item is HeaderSidebarItem)
                 {
+                    container.IsHitTestVisible = false;
+                }
+                else if (item is RegularSidebarItem r && r.Slug is "podcasts")
+                {
+                    container.IsEnabled = false;
                     container.IsHitTestVisible = false;
                 }
             }

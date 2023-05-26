@@ -20,6 +20,11 @@ namespace Wavee.UI.WinUI.Views.Playlist
         }
 
         public Option<INavigableViewModel> ViewModel => Option<INavigableViewModel>.None;
+        public void NavigatedTo(object parameter)
+        {
+            
+        }
+
         public void RemovedFromCache()
         {
             

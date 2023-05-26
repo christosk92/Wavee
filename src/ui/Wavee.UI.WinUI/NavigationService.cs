@@ -77,10 +77,13 @@ public sealed class NavigationService
             }
             else
             {
-                if (!currentPage.ShouldKeepInCache(_backStack.Count))
+                if (_cachedPages.TryGetValue(currentPageType, out var cached))
                 {
-                    _cachedPages.Remove(currentPageType);
-                    currentPage.RemovedFromCache();
+                    if (!cached.Page.ShouldKeepInCache(_backStack.Count - cached.InsertedAt))
+                    {
+                        _cachedPages.Remove(currentPageType);
+                        currentPage.RemovedFromCache();
+                    }
                 }
             }
 
@@ -99,11 +102,12 @@ public sealed class NavigationService
             //if the page is not cached, we want to create a new instance of the page
             var nextPage = (INavigablePage)Activator.CreateInstance(pageType);
             nextPage.ViewModel.IfSome(x => x.OnNavigatedTo(parameter));
+            nextPage.NavigatedTo(parameter);
             _contentControl.Content = nextPage;
             _cachedPages.Add(pageType, (nextPage, parameter, _backStack.Count));
         }
 
-        Navigated?.Invoke(this, pageType);
+        Navigated?.Invoke(this, (pageType, parameter));
         // if (_contentControl.Content is INavigablePage currentPage)
         // {
         //     var currentPageType = currentPage.GetType();
@@ -161,7 +165,7 @@ public sealed class NavigationService
 
     public bool CanGoBack => _backStack.Count > 0;
     public bool CanGoForward => false;
-    public event EventHandler<Type>? Navigated;
+    public event EventHandler<(Type Tp, object Prm)>? Navigated;
 
     public void GoBack()
     {

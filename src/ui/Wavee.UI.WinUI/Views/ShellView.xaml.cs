@@ -21,6 +21,7 @@ public sealed partial class ShellView : UserControl
         WaveeUIRuntime runtime,
         User userId)
     {
+        Instance = this;
         this.InitializeComponent();
         var songLibraryItem = new CountedSidebarItem
         {
@@ -110,11 +111,12 @@ public sealed partial class ShellView : UserControl
         NavigationService.Navigated += NavigationService_Navigated;
     }
 
-    private void NavigationService_Navigated(object sender, Type e)
+    public void NavigationService_Navigated(object sender, (Type tp, object prm) e)
     {
-        SidebarControl.SetSelected(e);
+        SidebarControl.SetSelected(e.tp, e.prm);
     }
 
     public static NavigationService NavigationService { get; set; }
     public ShellViewModel<WaveeUIRuntime> ViewModel { get; }
+    public static ShellView Instance { get; private set; }
 }

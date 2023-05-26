@@ -1,5 +1,6 @@
 using System;
 using System.Windows.Input;
+using Windows.Foundation;
 using AnimatedVisuals;
 using CommunityToolkit.WinUI.UI;
 using Microsoft.UI.Input;
@@ -11,6 +12,7 @@ using Wavee.Core.Ids;
 using Wavee.UI.Infrastructure.Live;
 using Wavee.UI.Models;
 using Wavee.UI.ViewModels;
+using Wavee.UI.WinUI.Flyouts;
 
 namespace Wavee.UI.WinUI.Components;
 
@@ -335,5 +337,19 @@ public sealed partial class TrackView : UserControl
     private void TrackView_OnDoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
     {
         PlayCommand.Execute(Id);
+    }
+
+    private void TrackView_OnContextRequested(UIElement sender, ContextRequestedEventArgs args)
+    {
+        Point point = new Point(0, 0);
+        var properFlyout = Id.ConstructFlyout();
+        if (args.TryGetPosition(sender, out point))
+        {
+            properFlyout.ShowAt(sender, point);
+        }
+        else
+        {
+            properFlyout.ShowAt((FrameworkElement)sender);
+        }
     }
 }

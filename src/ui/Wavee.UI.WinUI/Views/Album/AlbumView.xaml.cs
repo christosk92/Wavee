@@ -46,9 +46,17 @@ public sealed partial class AlbumView : UserControl, INavigablePage
     }
 
     Option<INavigableViewModel> INavigablePage.ViewModel => ViewModel;
+    public void NavigatedTo(object parameter)
+    {
+        
+    }
+
     public void RemovedFromCache()
     {
         ViewModel.Clear();
+        _props.Dispose();
+        _scrollerPropertySet.Dispose();
+        _compositor = null;
     }
 
     public AlbumViewModel<WaveeUIRuntime> ViewModel { get; }
@@ -64,7 +72,6 @@ public sealed partial class AlbumView : UserControl, INavigablePage
 
         //MainScroller
         var headerPresenter = (UIElement)VisualTreeHelper.GetParent((UIElement)MainHeader);
-        var headerContainer = (UIElement)VisualTreeHelper.GetParent(headerPresenter);
         Canvas.SetZIndex((UIElement)MainHeader, 1);
         Canvas.SetZIndex(MainScroller, 2);
         // Get the PropertySet that contains the scroll values from the ScrollViewer

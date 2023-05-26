@@ -3,29 +3,14 @@ using LanguageExt;
 using Microsoft.UI.Xaml.Controls;
 using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
-using Microsoft.UI.Composition;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media.Imaging;
 using Wavee.UI.Infrastructure.Live;
 using Wavee.UI.ViewModels;
-using Microsoft.UI.Xaml.Hosting;
-using CommunityToolkit.WinUI.UI.Animations.Expressions;
-using System.Windows.Controls;
 using Windows.Foundation;
-using Windows.UI;
 using Eum.Spotify.context;
-using Microsoft.UI;
-using Microsoft.UI.Xaml.Media;
-using Wavee.Core.Ids;
-using Border = Microsoft.UI.Xaml.Controls.Border;
-using Orientation = Microsoft.UI.Xaml.Controls.Orientation;
-using ScrollViewer = Microsoft.UI.Xaml.Controls.ScrollViewer;
-using SelectionChangedEventArgs = Microsoft.UI.Xaml.Controls.SelectionChangedEventArgs;
-using StackPanel = Microsoft.UI.Xaml.Controls.StackPanel;
-using TextBlock = Microsoft.UI.Xaml.Controls.TextBlock;
-using UserControl = Microsoft.UI.Xaml.Controls.UserControl;
+using Wavee.Core.Ids;   
 using Wavee.UI.ViewModels.Artist;
 using Wavee.UI.WinUI.Flyouts;
 
@@ -40,6 +25,10 @@ public sealed partial class ArtistRootView : UserControl, INavigablePage
     }
 
     public ArtistViewModel<WaveeUIRuntime> ViewModel { get; }
+    public void NavigatedTo(object parameter)
+    {
+    }
+
     public void RemovedFromCache()
     {
         ViewModel.Clear();

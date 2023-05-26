@@ -10,6 +10,7 @@
              Unloaded="TrackView_OnUnloaded"
              Loaded="TrackView_OnLoaded"
              IsDoubleTapEnabled="True"
+             ContextRequested="TrackView_OnContextRequested"
              DoubleTapped="TrackView_OnDoubleTapped"
              Tapped="TrackView_OnTapped"
              PointerEntered="TrackView_OnPointerEntered"
