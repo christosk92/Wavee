@@ -9,6 +9,8 @@
              xmlns:animatedVisuals="using:AnimatedVisuals"
              Unloaded="TrackView_OnUnloaded"
              Loaded="TrackView_OnLoaded"
+             IsDoubleTapEnabled="True"
+             DoubleTapped="TrackView_OnDoubleTapped"
              Tapped="TrackView_OnTapped"
              PointerEntered="TrackView_OnPointerEntered"
              PointerExited="TrackView_OnPointerExited"

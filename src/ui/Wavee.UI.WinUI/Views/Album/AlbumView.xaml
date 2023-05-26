@@ -8,20 +8,43 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:viewModels="using:Wavee.UI.ViewModels"
              xmlns:components="using:Wavee.UI.WinUI.Components"
-             xmlns:winUi="using:CommunityToolkit.Labs.WinUI"
              xmlns:panels="using:Wavee.UI.WinUI.Panels"
              xmlns:models="using:Wavee.UI.Models"
-             xmlns:controls="using:Wavee.UI.WinUI.Controls"
              xmlns:artist="using:Wavee.UI.ViewModels.Artist"
              mc:Ignorable="d">
 
-    <ScrollViewer>
+    <ScrollViewer Canvas.ZIndex="100"
+                  ViewChanged="MainScroller_OnViewChanged"
+                  x:Name="MainScroller">
         <StackPanel>
-            <Grid Background="Transparent" ContextRequested="ALbumHeaderContextRequested" Padding="24">
+            <Grid x:Name="MainHeader"
+                  HorizontalAlignment="Stretch"
+                  Background="Transparent"
+                  Padding="24,24,24,24"
+                  ContextRequested="ALbumHeaderContextRequested">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="250" />
                     <ColumnDefinition />
                 </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <Border Grid.ColumnSpan="2"
+                        Grid.RowSpan="2"
+                        Opacity="0"
+                        Margin="-24"
+                        Background="{ThemeResource SolidBackgroundFillColorQuarternaryBrush}"
+                        x:Name="OverlayRectangle"
+                        HorizontalAlignment="Stretch"
+                        VerticalAlignment="Stretch"
+                        CornerRadius="0"
+                        BorderThickness="1"
+                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
+                    <Border.OpacityTransition>
+                        <ScalarTransition Duration="00:00:00.10" />
+                    </Border.OpacityTransition>
+                </Border>
                 <!-- -->
                 <!-- <controls:ImageTransitionControl Grid.ColumnSpan="2" -->
                 <!--                                  BlurValue="5" -->
@@ -33,20 +56,21 @@
                             Margin="16,0"
                             VerticalAlignment="Bottom">
                     <TextBlock x:Name="AlbumType"
-                               FontWeight="Bold"
-                               />
+                               FontWeight="Bold" />
                     <TextBlock FontWeight="Bold"
                                FontSize="48"
+                               x:Name="AlbumTitle"
                                Margin="0,0,0,8"
                                Text="{x:Bind ViewModel.Name}" />
 
-                    <ItemsRepeater ItemsSource="{x:Bind ViewModel.Artists}">
+                    <ItemsRepeater x:Name="Artists"
+                                   ItemsSource="{x:Bind ViewModel.Artists}">
                         <ItemsRepeater.ItemTemplate>
                             <DataTemplate x:DataType="viewModels:SpotifyAlbumArtistView">
-                                <Button
-                                    Tapped="RelatedAlbumTapped"
-                                    Tag="{x:Bind Id}"
-                                    Margin="0,0,8,0" DataContext="{x:Bind }">
+                                <Button Tapped="RelatedAlbumTapped"
+                                        Tag="{x:Bind Id}"
+                                        Margin="0,0,8,0"
+                                        DataContext="{x:Bind }">
                                     <StackPanel Spacing="4"
                                                 Orientation="Horizontal">
                                         <PersonPicture Height="28">
@@ -69,6 +93,7 @@
                     </ItemsRepeater>
 
                     <StackPanel Spacing="8"
+                                x:Name="Metadata"
                                 Orientation="Horizontal">
                         <Button Padding="12"
                                 Margin="0,8"
@@ -112,60 +137,64 @@
                         </Button>
                     </StackPanel>
 
-                    <StackPanel Spacing="8" Orientation="Horizontal">
-                        <Button Style="{ThemeResource AccentButtonStyle}">
-                            <StackPanel Spacing="4" Orientation="Horizontal">
-                                <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xF5B0;" />
-                                <TextBlock Text="Play"/>
+                    <StackPanel Spacing="8"
+                                x:Name="ButtonsPanel"
+                                Orientation="Horizontal">
+                        <Button
+                            Tapped="PlayEntireAlbumTappped"
+                            Style="{ThemeResource AccentButtonStyle}">
+                            <StackPanel Spacing="4"
+                                        Orientation="Horizontal">
+                                <FontIcon FontFamily="Segoe Fluent Icons"
+                                          Glyph="&#xF5B0;" />
+                                <TextBlock Text="Play" />
                             </StackPanel>
                         </Button>
 
-                        <Button             
-                            x:Name="SaveButton"
-                            Tapped="SaveButton_OnTapped"
-                            Content="{x:Bind SavedToContent(ViewModel.IsSaved), Mode=OneWay}"/>
+                        <Button x:Name="SaveButton"
+                                Tapped="SaveButton_OnTapped"
+                                Content="{x:Bind SavedToContent(ViewModel.IsSaved), Mode=OneWay}" />
                     </StackPanel>
                 </StackPanel>
-                <Button Margin="24"
-                        Opacity="0"
-                        Content="Force bind refresh"
-                        Tapped="UIElement_OnTapped" />
+                <Border Margin="-8,12,-12,-12"
+                        CornerRadius="6"
+                        Grid.Row="1"
+                        Grid.ColumnSpan="2"
+                        Style="{StaticResource EvenBorderStyle}"
+                        Padding="2,0">
+                    <Grid ColumnSpacing="8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="28" />
+                            <ColumnDefinition Width="20" />
+                            <ColumnDefinition />
+                            <ColumnDefinition Width=".5*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <HyperlinkButton Padding="8,8,8,8"
+                                         HorizontalAlignment="Right"
+                                         Content="#" />
+                        <HyperlinkButton Content="Title"
+                                         Padding="0,8,8,8"
+                                         HorizontalContentAlignment="Left"
+                                         HorizontalAlignment="Stretch"
+                                         Grid.Column="2" />
+
+                        <HyperlinkButton Content="Plays"
+                                         HorizontalContentAlignment="Left"
+                                         Padding="0,8,8,8"
+                                         HorizontalAlignment="Stretch"
+                                         Grid.Column="3" />
+
+                        <HyperlinkButton HorizontalAlignment="Stretch"
+                                         HorizontalContentAlignment="Left"
+                                         Grid.Column="4">
+                            <FontIcon FontFamily="Segoe Fluent Icons"
+                                      Glyph="&#xE916;" />
+                        </HyperlinkButton>
+                    </Grid>
+                </Border>
             </Grid>
 
-            <Border Margin="16,-4,12,6"
-                    CornerRadius="6"
-                    Style="{StaticResource EvenBorderStyle}"
-                    Padding="2,0">
-                <Grid ColumnSpacing="8">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="28" />
-                        <ColumnDefinition />
-                        <ColumnDefinition Width=".5*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-                    <HyperlinkButton Padding="8,8,8,8"
-                                     HorizontalAlignment="Right"
-                                     Content="#" />
-                    <HyperlinkButton Content="Title"
-                                     Padding="0,8,8,8"
-                                     HorizontalContentAlignment="Left"
-                                     HorizontalAlignment="Stretch"
-                                     Grid.Column="1" />
-
-                    <HyperlinkButton Content="Plays"
-                                     HorizontalContentAlignment="Left"
-                                     Padding="0,8,8,8"
-                                     HorizontalAlignment="Stretch"
-                                     Grid.Column="2" />
-
-                    <HyperlinkButton HorizontalAlignment="Stretch"
-                                     HorizontalContentAlignment="Left"
-                                     Grid.Column="3">
-                        <FontIcon FontFamily="Segoe Fluent Icons"
-                                  Glyph="&#xE916;" />
-                    </HyperlinkButton>
-                </Grid>
-            </Border>
             <ItemsRepeater ItemsSource="{x:Bind ViewModel.Discs}">
                 <ItemsRepeater.ItemTemplate>
                     <DataTemplate x:DataType="viewModels:SpotifyDiscView">
@@ -186,6 +215,7 @@
                             </StackPanel>
 
                             <ListView ItemsSource="{x:Bind Tracks}"
+                                      SelectionMode="Extended"
                                       ItemContainerStyle="{StaticResource TracksListViewItemStyle}"
                                       Grid.Row="1">
                                 <ListView.ItemTemplate>

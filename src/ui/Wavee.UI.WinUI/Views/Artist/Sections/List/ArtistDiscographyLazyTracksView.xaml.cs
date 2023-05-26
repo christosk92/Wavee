@@ -1,14 +1,11 @@
+
 using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.Linq;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using DynamicData;
-using LanguageExt;
-using LanguageExt.UnsafeValueAccess;
+using Windows.ApplicationModel.DataTransfer;
+using CommunityToolkit.WinUI.UI;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -17,6 +14,9 @@ using Wavee.UI.Infrastructure.Live;
 using Wavee.UI.Infrastructure.Sys;
 using Wavee.UI.ViewModels;
 using Wavee.UI.ViewModels.Artist;
+using static LanguageExt.Prelude;
+using LanguageExt;
+using LanguageExt.UnsafeValueAccess;
 
 namespace Wavee.UI.WinUI.Views.Artist.Sections.List;
 
@@ -82,13 +82,13 @@ public partial class ArtistDiscographyLazyTracksView : UserControl
                 .Map(x => x.GetRawEntity(toFetch.AlbumId)
                     .BiMap(Some: r => SuccessAff(r),
                         None: () => from countryCode in Spotify<WaveeUIRuntime>.CountryCode().Map(x => x.ValueUnsafe())
-                            let url = string.Format(fetch_uri, toFetch.AlbumId.ToString(), countryCode)
-                            from mercuryClient in Spotify<WaveeUIRuntime>.Mercury().Map(x => x)
-                            from response in mercuryClient.Get(url, CancellationToken.None).ToAff()
-                            from _ in Spotify<WaveeUIRuntime>.Cache().Map(x => x.SaveRawEntity(toFetch.AlbumId,
-                                toFetch.AlbumId.ToString(),
-                                response.Payload, DateTimeOffset.UtcNow.AddDays(1)))
-                            select response.Payload
+                                    let url = string.Format(fetch_uri, toFetch.AlbumId.ToString(), countryCode)
+                                    from mercuryClient in Spotify<WaveeUIRuntime>.Mercury().Map(x => x)
+                                    from response in mercuryClient.Get(url, CancellationToken.None).ToAff()
+                                    from _ in Spotify<WaveeUIRuntime>.Cache().Map(x => x.SaveRawEntity(toFetch.AlbumId,
+                                        toFetch.AlbumId.ToString(),
+                                        response.Payload, DateTimeOffset.UtcNow.AddDays(1)))
+                                    select response.Payload
                     )
                 )
             from response in cached.ValueUnsafe()
@@ -97,7 +97,7 @@ public partial class ArtistDiscographyLazyTracksView : UserControl
         var r = result.ThrowIfFail();
         using var jsonDoc = JsonDocument.Parse(r);
         using var discs = jsonDoc.RootElement.GetProperty("discs").EnumerateArray();
-        Seq<ArtistDiscographyTrack> discsRes = LanguageExt.Seq<ArtistDiscographyTrack>.Empty;
+        LanguageExt.Seq<ArtistDiscographyTrack> discsRes = LanguageExt.Seq<ArtistDiscographyTrack>.Empty;
         foreach (var disc in discs)
         {
             using var tracks = disc.GetProperty("tracks").EnumerateArray();
@@ -130,7 +130,7 @@ public partial class ArtistDiscographyLazyTracksView : UserControl
                         ValueKind: JsonValueKind.Number
                     } p
                         ? p.GetUInt64()
-                        : Option<ulong>.None,
+                        : LanguageExt.Option<ulong>.None,
                     Artists = artistsResults,
                     PlayCommand = null
                 });
@@ -138,26 +138,26 @@ public partial class ArtistDiscographyLazyTracksView : UserControl
         }
 
         //await Task.Delay(TimeSpan.FromMilliseconds(80), ct);
-         this.DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Normal, () =>
-        {
-            //artistDiscographyTracks.Clear();
-            //artistDiscographyTracks.AddRange(discsRes);
-            for (var index = 0; index < discsRes.Count; index++)
-            {
-                var track = discsRes[index];
-                var oldTrack = toFetch.Tracks[index];
+        this.DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Normal, () =>
+       {
+           //artistDiscographyTracks.Clear();
+           //artistDiscographyTracks.AddRange(discsRes);
+           for (var index = 0; index < discsRes.Count; index++)
+           {
+               var track = discsRes[index];
+               var oldTrack = toFetch.Tracks[index];
 
-                oldTrack.Title = track.Title;
-                oldTrack.Id = track.Id;
-                oldTrack.Duration = track.Duration;
-                oldTrack.Number = track.Number;
-                oldTrack.IsExplicit = track.IsExplicit;
-                oldTrack.Playcount = track.Playcount;
-                oldTrack.Artists = track.Artists;
-            }
+               oldTrack.Title = track.Title;
+               oldTrack.Id = track.Id;
+               oldTrack.Duration = track.Duration;
+               oldTrack.Number = track.Number;
+               oldTrack.IsExplicit = track.IsExplicit;
+               oldTrack.Playcount = track.Playcount;
+               oldTrack.Artists = track.Artists;
+           }
 
-            this.Bindings.Update();
-        });
+           this.Bindings.Update();
+       });
         // return artistDiscographyTracks
         //     .Select(c => new ArtistDiscographyTrack
         //     {
@@ -186,5 +186,29 @@ public partial class ArtistDiscographyLazyTracksView : UserControl
     private void ShimmerListView_OnContainerContentChanging(ListViewBase sender, ContainerContentChangingEventArgs args)
     {
 
+    }
+
+    private async void Track_DragStarted(UIElement sender, DragStartingEventArgs args)
+    {
+        var itemsRepeater = sender.FindAscendant<ItemsView>();
+
+        var selecteditems = 
+            itemsRepeater.SelectionModel.SelectedItems.Cast<ArtistDiscographyTrack>();
+
+        var deferral = args.GetDeferral();
+        args.Data.SetData(Windows.ApplicationModel.DataTransfer.StandardDataFormats.Text,
+            JsonSerializer.Serialize(selecteditems.Select(c => c.Id)));
+        args.Data.Properties.Title = "Tracks";
+        args.Data.Properties.Description = "Tracks";
+        args.Data.Properties.ApplicationName = "Wavee";
+        var v = args.Data.GetView();
+
+        args.Data.RequestedOperation = DataPackageOperation.Copy;
+        //  args.Data.SetText("Add tracks");
+
+        //var bitmap = this.Img.Source as BitmapImage;
+        args.DragUI.SetContentFromDataPackage();
+        //args.DragUI.SetContentFromBitmapImage(bitmap);
+        deferral.Complete();
     }
 }

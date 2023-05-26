@@ -56,11 +56,11 @@
             </Grid.RenderTransform>
 
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="450" />
+                <ColumnDefinition MaxWidth="350" />
                 <ColumnDefinition x:Name="PrimaryBarColumn"
                                   Width="1*" />
                 <ColumnDefinition x:Name="SecondaryBarColumn"
-                                  Width="450" />
+                                  MaxWidth="350" />
             </Grid.ColumnDefinitions>
 
             <Grid.RowDefinitions>
@@ -168,6 +168,7 @@
                         FontSize="24" 
                         Margin="12,0"
                         x:Name="StarButton"
+                        Tapped="StarButton_OnTapped"
                         IsChecked="{x:Bind Playback.CurrentTrackSaved, Mode=OneWay}"
                         Grid.Column="2"/>
                 </Grid>
@@ -364,7 +365,7 @@
                          MaxWidth="200"
                          Grid.Column="2"
                          IsEnabled="{x:Bind Playback.CanControlVolume, Mode=OneWay}"
-                         Margin="100,0,-100,4">
+                         Margin="100,0,12,4">
                 <Grid x:Name="VolumeMuteButton"
                       ColumnSpacing="6">
                     <Grid.ColumnDefinitions>

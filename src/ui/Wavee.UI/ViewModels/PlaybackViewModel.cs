@@ -8,6 +8,7 @@ using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
 using ReactiveUI;
 using Wavee.Core.Contracts;
+using Wavee.Core.Ids;
 using Wavee.Core.Playback;
 using Wavee.Spotify.Infrastructure.Remote.Messaging;
 using Wavee.UI.Infrastructure.Sys;
@@ -43,6 +44,22 @@ public sealed class PlaybackViewModel<R> : ReactiveObject where R : struct, HasS
         SkipPreviousCommand = ReactiveCommand.CreateFromTask(SkipPrevious);
         ToggleRepeatCommand = ReactiveCommand.CreateFromTask(Repeat);
         ToggleShuffleCommand = ReactiveCommand.CreateFromTask(Shuffle);
+
+        var __ = Spotify<R>.ObserveLibrary()
+            .Run(runtime)
+            .ThrowIfFail()
+            .ValueUnsafe()
+            .Where(c => c.Item.Type is AudioItemType.PodcastEpisode or AudioItemType.Track)
+            .ObserveOn(RxApp.MainThreadScheduler)
+            .Subscribe(c =>
+            {
+                if (c.Item != CurrentTrack?.Id)
+                {
+                    return;
+                }
+
+                CurrentTrackSaved = !c.Removed;
+            });
 
         _ownDeviceId = Spotify<R>.GetOwnDeviceId().Run(runtime).ThrowIfFail().ValueUnsafe();
         var remoteStateObservable = Spotify<R>.ObserveRemoteState()
@@ -98,11 +115,12 @@ public sealed class PlaybackViewModel<R> : ReactiveObject where R : struct, HasS
                     _ = await c.TrackUri.MatchAsync(
                         async x =>
                         {
+                            CurrentTrackSaved = ShellViewModel<R>.Instance.Library.InLibrary(x);
+
                             var track = (await Spotify<R>.GetTrack(x)
                                     .Run(runtime))
                                 .ThrowIfFail();
 
-                            CurrentTrackSaved = ShellViewModel<R>.Instance.Library.InLibrary(x);
                             CurrentTrack = track;
                             return unit;
                         },

@@ -93,7 +93,6 @@
                                 <Button Padding="8"
                                         Tapped="FollowButton_OnTapped"
                                         BorderThickness="1"
-                                        BorderBrush="{x:Bind GetBrushForFollowing(ViewModel.IsFollowing), Mode=OneWay}"
                                         Content="{x:Bind FollowingToContent(ViewModel.IsFollowing), Mode=OneWay}"
                                         x:Name="FollowButton" />
 

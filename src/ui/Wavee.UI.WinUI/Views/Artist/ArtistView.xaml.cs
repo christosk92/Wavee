@@ -222,12 +222,12 @@ public sealed partial class ArtistRootView : UserControl, INavigablePage
         return stckp;
     }
 
-    public Brush GetBrushForFollowing(bool b)
-    {
-        //ApplicationForegroundThemeBrush
-        return b ? (Brush)Application.Current.Resources["ApplicationForegroundThemeBrush"]
-            : new SolidColorBrush(Colors.Transparent);
-    }
+    // public Brush GetBrushForFollowing(bool b)
+    // {
+    //     //ApplicationForegroundThemeBrush
+    //     return b ? (Brush)Application.Current.Resources["ApplicationForegroundThemeBrush"]
+    //         : new SolidColorBrush(Colors.Transparent);
+    // }
 
     private void FollowButton_OnTapped(object sender, TappedRoutedEventArgs e)
     {

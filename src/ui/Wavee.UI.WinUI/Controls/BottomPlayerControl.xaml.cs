@@ -12,6 +12,7 @@ using Wavee.Core.Contracts;
 using Wavee.Core.Playback;
 using Wavee.UI.Infrastructure.Live;
 using Wavee.UI.ViewModels;
+using Wavee.UI.WinUI.Components;
 
 namespace Wavee.UI.WinUI.Controls;
 
@@ -204,6 +205,27 @@ public sealed partial class BottomPlayerControl : UserControl
         if (currentItemAlbum.HasValue)
         {
             UICommands.NavigateTo.Execute(currentItemAlbum.Value);
+        }
+    }
+
+    private void StarButton_OnTapped(object sender, TappedRoutedEventArgs e)
+    {
+        if (Playback.CurrentTrack?.Id is null)
+            return;
+        var isChecked = (sender as StarButton).IsChecked ?? false;
+        if (isChecked)
+        {
+            ShellViewModel<WaveeUIRuntime>.Instance.Library.SaveCommand.Execute(new ModifyLibraryCommand(
+                Ids: Seq1(Playback.CurrentTrack.Id),
+                Add: true
+            ));
+        }
+        else
+        {
+            ShellViewModel<WaveeUIRuntime>.Instance.Library.SaveCommand.Execute(new ModifyLibraryCommand(
+                Ids: Seq1(Playback.CurrentTrack.Id),
+                Add: false
+            ));
         }
     }
 }

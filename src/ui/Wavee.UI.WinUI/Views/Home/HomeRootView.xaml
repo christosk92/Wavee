@@ -68,7 +68,8 @@
                        FontWeight="SemiBold"
                        FontSize="30" />
 
-            <labs:TokenView SelectionChanged="Selector_OnSelectionChanged">
+            <labs:TokenView SelectedIndex="0"
+                            SelectionChanged="Selector_OnSelectionChanged">
                 <labs:TokenView.ItemsPanel>
                     <ItemsPanelTemplate>
                         <StackPanel Spacing="4"

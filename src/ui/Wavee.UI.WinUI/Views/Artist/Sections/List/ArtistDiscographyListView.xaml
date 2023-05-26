@@ -11,7 +11,9 @@
     mc:Ignorable="d">
 
     <Grid>
-        <ItemsRepeater ItemsSource="{x:Bind Items}">
+        <ItemsRepeater 
+            x:Name="ArtistTracksRepeater"
+            ItemsSource="{x:Bind Items}">
             <ItemsRepeater.ItemTemplate>
                 <DataTemplate x:DataType="artist:ArtistDiscographyView">
                     <list:ArtistDiscographyLazyTracksView

@@ -287,7 +287,7 @@ public sealed class ArtistViewModel<R> : INotifyPropertyChanged, INavigableViewM
             id: artistId
         );
 
-        ArtistFetched.SetResult();
+        ArtistFetched?.SetResult();
     }
 
     public static ReactiveCommand<PlayContextStruct, Unit> PlayCommand { get; set; }
@@ -314,7 +314,7 @@ public sealed class ArtistViewModel<R> : INotifyPropertyChanged, INavigableViewM
 
     public void Clear()
     {
-        Artist.Clear();
+        Artist?.Clear();
         _listener.Dispose();
         _runtime = default;
         Artist = default;
