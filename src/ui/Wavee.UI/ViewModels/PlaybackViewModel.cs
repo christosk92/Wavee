@@ -265,6 +265,7 @@ public sealed class PlaybackViewModel<R> : ReactiveObject where R : struct, HasS
                     contextUrl: context.ContextUrl.ValueUnsafe(),
                     trackIndex: context.Index,
                     trackId: context.TrackId,
+                    pageIndex: context.PageIndex.IfNone(0),
                     metadata: context.Metadata
                 ).ToAff()
                 select unit;

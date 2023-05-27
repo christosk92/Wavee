@@ -29,7 +29,7 @@ public sealed class LibrarySongsViewModel<R> :
 
     public LibrarySongsViewModel(R runtime)
     {
-        SortParameters = TrackSortType.OriginalIndex_Desc;
+        SortParameters = TrackSortType.OriginalIndex_Asc;
         SortCommand = ReactiveCommand.Create<TrackSortType>(x =>
         {
             SortParameters = x;
@@ -104,16 +104,20 @@ public sealed class LibrarySongsViewModel<R> :
             case TrackSortType.Album_Asc:
             case TrackSortType.Artist_Asc:
             case TrackSortType.Duration_Asc:
-            case TrackSortType.OriginalIndex_Asc:
+            case TrackSortType.OriginalIndex_Desc:
             case TrackSortType.Title_Asc:
                 lookup = lookup.OrderBy(SortBy(prm));
                 break;
+            case TrackSortType.OriginalIndex_Asc:
             default:
                 lookup = lookup.OrderByDescending(SortBy(prm));
                 break;
         }
 
         var index = lookup.Select(c => c.Track.Id).IndexOf(id);
+        //pages are divided by 150 tracks
+        //so if index = 150, page = 1
+        var pageIndex = (index / 149) % (149);
 
         //spotify:user:7ucghdgquf6byqusqkliltwc2:collection
         var userId = ShellViewModel<R>.Instance.User.Id;
@@ -124,7 +128,7 @@ public sealed class LibrarySongsViewModel<R> :
             TrackId: id,
             ContextUrl: $"context://{ctxId}",
             NextPages: None,
-            PageIndex: None,
+            PageIndex: pageIndex,
             Metadata: GetMetadataForSorting(prm)
         );
 

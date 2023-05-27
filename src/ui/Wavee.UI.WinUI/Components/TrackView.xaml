@@ -36,6 +36,7 @@
                         <Setter Target="PlaybackViewContent.Content">
                             <Setter.Value>
                                 <Button x:Name="PlaButton"
+                                        Margin="-8,0,5,0"
                                         CommandParameter="{x:Bind Id, Mode=OneWay}"
                                         Command="{x:Bind PlayCommand, Mode=OneWay}"
                                         Padding="6,8"
@@ -54,9 +55,10 @@
                             <Setter.Value>
                                 <UserControl>
                                     <AnimatedVisualPlayer  AutoPlay="True"
-                                                           Width="38"
+                                                           Width="34"
+                                                           Margin="-8,0,-1,0"
                                                            Loaded="FrameworkElement_OnLoaded"
-                                                           Height="38"
+                                                           Height="34"
                                                            PlaybackRate="2">
                                         <AnimatedVisualPlayer.Source>
                                             <animatedVisuals:Equaliser />
@@ -75,6 +77,7 @@
                             <Setter.Value>
                                 <Button Padding="6,8"
                                         x:Name="PauseButton"
+                                        Margin="-8,0,5,0"
                                         Tapped="PauseButton_OnTapped"
                                         VerticalAlignment="Center">
                                     <FontIcon FontSize="12"
