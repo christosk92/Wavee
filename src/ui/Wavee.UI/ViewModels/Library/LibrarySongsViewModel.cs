@@ -24,13 +24,13 @@ public sealed class LibrarySongsViewModel<R> :
 {
     private readonly IDisposable _cleanup;
     private string? _searchText;
-    private TrackSortType _sortParameters;
+    private LibraryTrackSortType _sortParameters;
     private readonly ReadOnlyObservableCollection<LibraryTrack> _data;
 
     public LibrarySongsViewModel(R runtime)
     {
-        SortParameters = TrackSortType.OriginalIndex_Asc;
-        SortCommand = ReactiveCommand.Create<TrackSortType>(x =>
+        SortParameters = LibraryTrackSortType.Added_Desc;
+        SortCommand = ReactiveCommand.Create<LibraryTrackSortType>(x =>
         {
             SortParameters = x;
         });
@@ -44,34 +44,40 @@ public sealed class LibrarySongsViewModel<R> :
             this.WhenValueChanged(t => t.SortParameters)
                 .Select(c => c switch
                 {
-                    TrackSortType.OriginalIndex_Desc or TrackSortType.Added_Asc =>
-                        SortExpressionComparer<LibraryTrack>.Ascending(x => x.Added)
-                            .ThenByDescending(x => x.Track.Album.Name.Length)
-                            .ThenByAscending(x => x.Track.Album.ArtistName)
-                            .ThenByAscending(x => x.Track.Album.DiscNumber)
-                            .ThenByAscending(x => x.Track.TrackNumber),
-                    TrackSortType.OriginalIndex_Asc or TrackSortType.Added_Desc =>
+                    LibraryTrackSortType.Added_Asc =>
+                       SortExpressionComparer<LibraryTrack>.Ascending(x => x.Added)
+                           .ThenByDescending(x => x.Track.Album.Name.Length)
+                           .ThenByAscending(x => x.Track.Album.ArtistName)
+                           .ThenByAscending(x => x.Track.Album.DiscNumber)
+                           .ThenByAscending(x => x.Track.TrackNumber),
+                    LibraryTrackSortType.Added_Desc =>
                         SortExpressionComparer<LibraryTrack>.Descending(x => x.Added)
                             .ThenByDescending(x => x.Track.Album.Name.Length)
                             .ThenByAscending(x => x.Track.Album.ArtistName)
                             .ThenByAscending(x => x.Track.Album.DiscNumber)
                             .ThenByAscending(x => x.Track.TrackNumber),
-                    TrackSortType.Title_Asc =>
+                    LibraryTrackSortType.Title_Asc =>
                         SortExpressionComparer<LibraryTrack>.Ascending(x => x.Track.Title),
-                    TrackSortType.Title_Desc =>
+                    LibraryTrackSortType.Title_Desc =>
                         SortExpressionComparer<LibraryTrack>.Descending(x => x.Track.Title),
-                    TrackSortType.Artist_Asc =>
-                        SortExpressionComparer<LibraryTrack>.Ascending(x => x.Track.Artists.First().Name),
-                    TrackSortType.Artist_Desc =>
-                        SortExpressionComparer<LibraryTrack>.Descending(x => x.Track.Artists.First().Name),
-                    TrackSortType.Album_Asc =>
-                        SortExpressionComparer<LibraryTrack>.Ascending(x => x.Track.Album.Name.Length),
-                    TrackSortType.Album_Desc =>
-                        SortExpressionComparer<LibraryTrack>.Descending(x => x.Track.Album.Name.Length),
-                    TrackSortType.Duration_Asc =>
-                        SortExpressionComparer<LibraryTrack>.Ascending(x => x.Track.Duration),
-                    TrackSortType.Duration_Desc =>
-                            SortExpressionComparer<LibraryTrack>.Descending(x => x.Track.Duration),
+                    LibraryTrackSortType.Artist_Asc =>
+                        SortExpressionComparer<LibraryTrack>.Ascending(x => x.Track.Artists.First().Name)
+                            .ThenByDescending(x => x.Track.Album.Name.Length)
+                            .ThenByAscending(x => x.Track.Album.DiscNumber)
+                            .ThenByAscending(x => x.Track.TrackNumber),
+                    LibraryTrackSortType.Artist_Desc =>
+                        SortExpressionComparer<LibraryTrack>.Descending(x => x.Track.Artists.First().Name)
+                        .ThenByDescending(x => x.Track.Album.Name.Length)
+                        .ThenByAscending(x => x.Track.Album.DiscNumber)
+                        .ThenByAscending(x => x.Track.TrackNumber),
+                    LibraryTrackSortType.Album_Asc =>
+                        SortExpressionComparer<LibraryTrack>.Ascending(x => x.Track.Album.Name)
+                            .ThenByAscending(x => x.Track.Album.DiscNumber)
+                            .ThenByAscending(x => x.Track.TrackNumber),
+                    LibraryTrackSortType.Album_Desc =>
+                        SortExpressionComparer<LibraryTrack>.Descending(x => x.Track.Album.Name)
+                            .ThenByDescending(x => x.Track.Album.DiscNumber)
+                            .ThenByDescending(x => x.Track.TrackNumber),
                     _ => throw new ArgumentOutOfRangeException()
                 })
                 .ObserveOn(RxApp.TaskpoolScheduler);
@@ -108,19 +114,15 @@ public sealed class LibrarySongsViewModel<R> :
         var lookup = _data.AsEnumerable();
         switch (prm)
         {
-            case TrackSortType.Added_Asc:
-            case TrackSortType.Album_Asc:
-            case TrackSortType.Artist_Asc:
-            case TrackSortType.Duration_Asc:
-            case TrackSortType.OriginalIndex_Desc:
-            case TrackSortType.Title_Asc:
+            case LibraryTrackSortType.Added_Asc:
+            case LibraryTrackSortType.Album_Asc:
+            case LibraryTrackSortType.Artist_Asc:
+            case LibraryTrackSortType.Duration_Asc:
+            case LibraryTrackSortType.Title_Asc:
                 lookup = BuildSort(lookup, prm, true);
-                //lookup = lookup.OrderBy(SortBy(prm));
                 break;
-            case TrackSortType.OriginalIndex_Asc:
             default:
                 lookup = BuildSort(lookup, prm, false);
-                // lookup = lookup.OrderByDescending(SortBy(prm));
                 break;
         }
 
@@ -145,7 +147,7 @@ public sealed class LibrarySongsViewModel<R> :
         await ShellViewModel<R>.Instance.Playback.PlayContextAsync(context);
     }
 
-    private IEnumerable<LibraryTrack> BuildSort(IEnumerable<LibraryTrack> currentEnumerable, TrackSortType param, bool descending)
+    private IEnumerable<LibraryTrack> BuildSort(IEnumerable<LibraryTrack> currentEnumerable, LibraryTrackSortType param, bool descending)
     {
         var prm = SortBy(param);
         var based = descending ?
@@ -154,69 +156,79 @@ public sealed class LibrarySongsViewModel<R> :
 
         switch (param)
         {
-            case TrackSortType.OriginalIndex_Asc:
-            case TrackSortType.Added_Desc:
-            case TrackSortType.OriginalIndex_Desc:
-            case TrackSortType.Added_Asc:
+            case LibraryTrackSortType.Added_Desc:
+            case LibraryTrackSortType.Added_Asc:
                 //we need to sort by album, artist, disc, track
                 return based
+                    .ThenByDescending(x => x.Track.Album.Name.Length)
+                    .ThenBy(x => x.Track.Album.ArtistName)
+                    .ThenBy(x => x.Track.Album.DiscNumber)
+                    .ThenBy(x => x.Track.TrackNumber);
+                break;
+            case LibraryTrackSortType.Title_Asc or LibraryTrackSortType.Title_Desc:
+                return based;
+            case LibraryTrackSortType.Artist_Asc or LibraryTrackSortType.Artist_Asc:
+                return based
                     .ThenBy(x => x.Track.Album.Name.Length)
-                    .ThenBy(x => x.Track.Artists[0].Name)
+                    .ThenBy(x => x.Track.Album.DiscNumber)
+                    .ThenBy(x => x.Track.TrackNumber);
+                break;
+            case LibraryTrackSortType.Album_Asc or LibraryTrackSortType.Album_Desc:
+                return based
+                    .ThenBy(x => x.Track.Album.ArtistName)
                     .ThenBy(x => x.Track.Album.DiscNumber)
                     .ThenBy(x => x.Track.TrackNumber);
                 break;
             default:
-                //TODO:
                 return based;
-                break;
         }
     }
 
-    private static Func<LibraryTrack, object> SortBy(TrackSortType prm)
+    private static Func<LibraryTrack, object> SortBy(LibraryTrackSortType prm)
     {
         return prm switch
         {
-            TrackSortType.OriginalIndex_Desc or TrackSortType.Added_Asc => x => x.Added,
-            TrackSortType.OriginalIndex_Asc or TrackSortType.Added_Desc => x => x.Added,
-            TrackSortType.Title_Asc or TrackSortType.Title_Desc => x => x.Track.Title,
-            TrackSortType.Artist_Asc or TrackSortType.Artist_Desc => x => x.Track.Artists[0].Name,
-            TrackSortType.Album_Asc or TrackSortType.Album_Desc => x => x.Track.Album.Name.Length,
-            TrackSortType.Duration_Asc or TrackSortType.Duration_Desc => x => x.Track.Duration,
+            LibraryTrackSortType.Added_Asc => x => x.Added,
+            LibraryTrackSortType.Added_Desc => x => x.Added,
+            LibraryTrackSortType.Title_Asc or LibraryTrackSortType.Title_Desc => x => x.Track.Title,
+            LibraryTrackSortType.Artist_Asc or LibraryTrackSortType.Artist_Desc => x => x.Track.Artists[0].Name,
+            LibraryTrackSortType.Album_Asc or LibraryTrackSortType.Album_Desc => x => x.Track.Album.Name.Length,
+            LibraryTrackSortType.Duration_Asc or LibraryTrackSortType.Duration_Desc => x => x.Track.Duration,
             _ => throw new ArgumentOutOfRangeException(nameof(prm), prm, null)
         };
     }
 
-    private static HashMap<string, string> GetMetadataForSorting(TrackSortType sort) =>
+    private static HashMap<string, string> GetMetadataForSorting(LibraryTrackSortType sort) =>
         sort switch
         {
-            TrackSortType.OriginalIndex_Asc or TrackSortType.Added_Desc => new HashMap<string, string>()
-                .Add("list_util_sort", "addTime DESC,album.name,album.artist.name,discNumber,trackNumber")
-                .Add("sorting.criteria", "added_at DESC,album_title,album_artist_name,album_disc_number,album_track_number"),
-            TrackSortType.OriginalIndex_Desc or TrackSortType.Added_Asc => new HashMap<string, string>()
-                .Add("list_util_sort", "addTime ASC,album.name,album.artist.name,discNumber,trackNumber")
-                .Add("sorting.criteria", "added_at,album_title,album_artist_name,album_disc_number,album_track_number"),
-            TrackSortType.Title_Asc => new HashMap<string, string>()
+            LibraryTrackSortType.Added_Desc => new HashMap<string, string>()
+               .Add("list_util_sort", "addTime DESC,album.name,album.artist.name,discNumber,trackNumber")
+               .Add("sorting.criteria", "added_at DESC,album_title,album_artist_name,album_disc_number,album_track_number"),
+            LibraryTrackSortType.Added_Asc => new HashMap<string, string>()
+               .Add("list_util_sort", "addTime ASC,album.name,album.artist.name,discNumber,trackNumber")
+               .Add("sorting.criteria", "added_at,album_title,album_artist_name,album_disc_number,album_track_number"),
+            LibraryTrackSortType.Title_Asc => new HashMap<string, string>()
                 .Add("list_util_sort", "name ASC")
                 .Add("sorting.criteria", "title"),
-            TrackSortType.Title_Desc => new HashMap<string, string>()
+            LibraryTrackSortType.Title_Desc => new HashMap<string, string>()
                 .Add("list_util_sort", "name DESC")
                 .Add("sorting.criteria", "title DESC"),
-            TrackSortType.Artist_Asc => new HashMap<string, string>()
+            LibraryTrackSortType.Artist_Asc => new HashMap<string, string>()
                 .Add("list_util_sort", "artist.name ASC,album.name,discNumber,trackNumber")
                 .Add("sorting.criteria", "artist_name,album_title,album_disc_number,album_track_number"),
-            TrackSortType.Artist_Desc => new HashMap<string, string>()
+            LibraryTrackSortType.Artist_Desc => new HashMap<string, string>()
                 .Add("list_util_sort", "artist.name DESC,album.name,discNumber,trackNumber")
                 .Add("sorting.criteria", "artist_name DESC,album_title,album_disc_number,album_track_number"),
-            TrackSortType.Album_Asc => new HashMap<string, string>()
-                .Add("list_util_sort", "artist.name DESC,album.name,discNumber,trackNumber")
-                .Add("sorting.criteria", "artist_name DESC,album_title,album_disc_number,album_track_number"),
-            TrackSortType.Album_Desc => new HashMap<string, string>()
+            LibraryTrackSortType.Album_Asc => new HashMap<string, string>()
                 .Add("list_util_sort", "album.name ASC,discNumber,trackNumber")
                 .Add("sorting.criteria", "album_title,album_disc_number,album_track_number"),
-            TrackSortType.Duration_Asc => new HashMap<string, string>()
+            LibraryTrackSortType.Album_Desc => new HashMap<string, string>()
+                .Add("list_util_sort", "album.name DESC,discNumber,trackNumber")
+                .Add("sorting.criteria", "album_title,album_disc_number,album_track_number"),
+            LibraryTrackSortType.Duration_Asc => new HashMap<string, string>()
                 .Add("list_util_sort", "album.name ASC,discNumber,trackNumber")
                 .Add("sorting.criteria", "album_title,album_disc_number,album_track_number"),
-            TrackSortType.Duration_Desc => new HashMap<string, string>()
+            LibraryTrackSortType.Duration_Desc => new HashMap<string, string>()
                 .Add("list_util_sort", "album.name ASC,discNumber,trackNumber")
                 .Add("sorting.criteria", "album_title,album_disc_number,album_track_number"),
             _ => throw new ArgumentOutOfRangeException(nameof(sort), sort, null)
@@ -228,7 +240,7 @@ public sealed class LibrarySongsViewModel<R> :
         set => this.RaiseAndSetIfChanged(ref _searchText, value);
     }
 
-    public TrackSortType SortParameters
+    public LibraryTrackSortType SortParameters
     {
         get => _sortParameters;
         set => this.RaiseAndSetIfChanged(ref _sortParameters, value);
@@ -297,10 +309,9 @@ public class LibraryTrack : INotifyPropertyChanged
     }
 }
 
-public enum TrackSortType
+public enum LibraryTrackSortType
 {
-    OriginalIndex_Asc,
-    OriginalIndex_Desc,
+
     Title_Asc,
     Title_Desc,
     Artist_Asc,

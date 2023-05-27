@@ -51,7 +51,7 @@ public sealed partial class LibrarySongsView : UserControl
         ViewModel.SearchText = sender.Text;
     }
 
-    public TrackSortType NextSortType(TrackSortType currentTrackSortType, string buttonType)
+    public LibraryTrackSortType NextSortType(LibraryTrackSortType currentLibraryTrackSortType, string buttonType)
     {
         //sorting goes from asc -> desc -> default (date)
         switch (buttonType)
@@ -60,40 +60,40 @@ public sealed partial class LibrarySongsView : UserControl
                 //if currentTrack is title asc -> title desc.
                 //if title desc -> default
                 //if somethin else, -> title asc
-                return currentTrackSortType switch
+                return currentLibraryTrackSortType switch
                 {
-                    TrackSortType.Title_Asc => TrackSortType.Title_Desc,
-                    TrackSortType.Title_Desc => TrackSortType.OriginalIndex_Asc,
-                    _ => TrackSortType.Title_Asc,
+                    LibraryTrackSortType.Title_Asc => LibraryTrackSortType.Title_Desc,
+                    LibraryTrackSortType.Title_Desc => LibraryTrackSortType.Added_Desc,
+                    _ => LibraryTrackSortType.Title_Asc,
                 };
                 break;
             case "artists":
-                return currentTrackSortType switch
+                return currentLibraryTrackSortType switch
                 {
-                    TrackSortType.Artist_Asc => TrackSortType.Artist_Desc,
-                    TrackSortType.Artist_Desc => TrackSortType.OriginalIndex_Asc,
-                    _ => TrackSortType.Artist_Asc,
+                    LibraryTrackSortType.Artist_Asc => LibraryTrackSortType.Artist_Desc,
+                    LibraryTrackSortType.Artist_Desc => LibraryTrackSortType.Added_Desc,
+                    _ => LibraryTrackSortType.Artist_Asc,
                 };
                 break;
             case "album":
-                return currentTrackSortType switch
+                return currentLibraryTrackSortType switch
                 {
-                    TrackSortType.Album_Asc => TrackSortType.Album_Desc,
-                    TrackSortType.Album_Desc => TrackSortType.OriginalIndex_Asc,
-                    _ => TrackSortType.Album_Asc,
+                    LibraryTrackSortType.Album_Asc => LibraryTrackSortType.Album_Desc,
+                    LibraryTrackSortType.Album_Desc => LibraryTrackSortType.Added_Desc,
+                    _ => LibraryTrackSortType.Album_Asc,
                 };
                 break;
             case "date":
                 //BAM! Default sort
-                return currentTrackSortType switch
+                return currentLibraryTrackSortType switch
                 {
-                    TrackSortType.OriginalIndex_Asc => TrackSortType.OriginalIndex_Desc,
-                    TrackSortType.OriginalIndex_Desc => TrackSortType.OriginalIndex_Asc,
-                    _ => TrackSortType.OriginalIndex_Asc,
+                    LibraryTrackSortType.Added_Asc => LibraryTrackSortType.Added_Desc,
+                    LibraryTrackSortType.Added_Desc => LibraryTrackSortType.Added_Asc,
+                    _ => LibraryTrackSortType.Added_Desc,
                 };
                 break;
         }
 
-        return TrackSortType.OriginalIndex_Asc;
+        return LibraryTrackSortType.Added_Desc;
     }
 }
