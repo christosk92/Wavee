@@ -152,8 +152,8 @@
                                        x:Load="{x:Bind HasImage(ImageUrl, x:True), Mode=OneWay}">
                                     <Image.Source>
                                         <BitmapImage UriSource="{Binding ImageUrl, Mode=OneWay}"
-                                                     DecodePixelHeight="28"
-                                                     DecodePixelWidth="28" />
+                                                     DecodePixelHeight="40"
+                                                     DecodePixelWidth="40" />
                                     </Image.Source>
                                 </Image>
                             </Grid>
