@@ -11,4 +11,5 @@ public readonly record struct PlayContextStruct(
     Option<AudioId> TrackId,
     Option<string> ContextUrl,
     Option<IEnumerable<ContextPage>> NextPages,
-    Option<int> PageIndex);
+    Option<int> PageIndex,
+    HashMap<string, string> Metadata);

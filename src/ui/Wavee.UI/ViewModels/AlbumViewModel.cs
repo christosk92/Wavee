@@ -154,7 +154,8 @@ public sealed class AlbumViewModel<R> : ReactiveObject, INavigableViewModel wher
                 TrackId: audioId,
                 ContextUrl: $"context://{id}",
                 NextPages: None,
-                PageIndex: None
+                PageIndex: None,
+                Metadata: LanguageExt.HashMap<string, string>.Empty
             );
 
             await ShellViewModel<R>.Instance.Playback.PlayContextAsync(context);

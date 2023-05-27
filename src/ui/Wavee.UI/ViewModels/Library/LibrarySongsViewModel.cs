@@ -2,9 +2,11 @@
 using System.ComponentModel;
 using System.Reactive.Linq;
 using System.Runtime.CompilerServices;
+using System.Runtime.ConstrainedExecution;
 using System.Windows.Input;
 using DynamicData;
 using DynamicData.Binding;
+using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
 using ReactiveUI;
 using Wavee.Core.Contracts;
@@ -28,6 +30,10 @@ public sealed class LibrarySongsViewModel<R> :
     public LibrarySongsViewModel(R runtime)
     {
         SortParameters = TrackSortType.OriginalIndex_Desc;
+        SortCommand = ReactiveCommand.Create<TrackSortType>(x =>
+        {
+            SortParameters = x;
+        });
         var filterApplier =
             this.WhenValueChanged(t => t.SearchText)
                 .Throttle(TimeSpan.FromMilliseconds(250))
@@ -38,9 +44,9 @@ public sealed class LibrarySongsViewModel<R> :
             this.WhenValueChanged(t => t.SortParameters)
                 .Select(c => c switch
                 {
-                    TrackSortType.OriginalIndex_Asc or TrackSortType.Added_Asc =>
+                    TrackSortType.OriginalIndex_Desc or TrackSortType.Added_Asc =>
                         SortExpressionComparer<LibraryTrack>.Ascending(x => x.Added),
-                    TrackSortType.OriginalIndex_Desc or TrackSortType.Added_Desc =>
+                    TrackSortType.OriginalIndex_Asc or TrackSortType.Added_Desc =>
                         SortExpressionComparer<LibraryTrack>.Descending(x => x.Added),
                     TrackSortType.Title_Asc =>
                         SortExpressionComparer<LibraryTrack>.Ascending(x => x.Track.Title),
@@ -90,8 +96,24 @@ public sealed class LibrarySongsViewModel<R> :
 
     private async Task Execute(AudioId id)
     {
-        var index = Library.GetLibraryItems().OrderByDescending(x=> x.AddedAt)
-            .Select(c => c.Id).IndexOf(id);
+        var prm = SortParameters;
+        var lookup = _data.AsEnumerable();
+        switch (prm)
+        {
+            case TrackSortType.Added_Asc:
+            case TrackSortType.Album_Asc:
+            case TrackSortType.Artist_Asc:
+            case TrackSortType.Duration_Asc:
+            case TrackSortType.OriginalIndex_Asc:
+            case TrackSortType.Title_Asc:
+                lookup = lookup.OrderBy(SortBy(prm));
+                break;
+            default:
+                lookup = lookup.OrderByDescending(SortBy(prm));
+                break;
+        }
+
+        var index = lookup.Select(c => c.Track.Id).IndexOf(id);
 
         //spotify:user:7ucghdgquf6byqusqkliltwc2:collection
         var userId = ShellViewModel<R>.Instance.User.Id;
@@ -102,12 +124,62 @@ public sealed class LibrarySongsViewModel<R> :
             TrackId: id,
             ContextUrl: $"context://{ctxId}",
             NextPages: None,
-            PageIndex: None
+            PageIndex: None,
+            Metadata: GetMetadataForSorting(prm)
         );
 
         await ShellViewModel<R>.Instance.Playback.PlayContextAsync(context);
     }
 
+    private static Func<LibraryTrack, object> SortBy(TrackSortType prm)
+    {
+        return prm switch
+        {
+            TrackSortType.OriginalIndex_Desc or TrackSortType.Added_Asc => x => x.Added,
+            TrackSortType.OriginalIndex_Asc or TrackSortType.Added_Desc => x => x.Added,
+            TrackSortType.Title_Asc or TrackSortType.Title_Desc => x => x.Track.Title,
+            TrackSortType.Artist_Asc or TrackSortType.Artist_Desc => x => x.Track.Artists[0].Name,
+            TrackSortType.Album_Asc or TrackSortType.Album_Desc => x => x.Track.Album.Name,
+            TrackSortType.Duration_Asc or TrackSortType.Duration_Desc => x => x.Track.Duration,
+            _ => throw new ArgumentOutOfRangeException(nameof(prm), prm, null)
+        };
+    }
+
+    private static HashMap<string, string> GetMetadataForSorting(TrackSortType sort) =>
+        sort switch
+        {
+            TrackSortType.OriginalIndex_Asc or TrackSortType.Added_Desc => new HashMap<string, string>()
+                .Add("list_util_sort", "addTime DESC,album.name,album.artist.name,discNumber,trackNumber")
+                .Add("sorting.criteria", "added_at DESC,album_title,album_artist_name,album_disc_number,album_track_number"),
+            TrackSortType.OriginalIndex_Desc or TrackSortType.Added_Asc => new HashMap<string, string>()
+                .Add("list_util_sort", "addTime ASC,album.name,album.artist.name,discNumber,trackNumber")
+                .Add("sorting.criteria", "added_at,album_title,album_artist_name,album_disc_number,album_track_number"),
+            TrackSortType.Title_Asc => new HashMap<string, string>()
+                .Add("list_util_sort", "name ASC")
+                .Add("sorting.criteria", "title"),
+            TrackSortType.Title_Desc => new HashMap<string, string>()
+                .Add("list_util_sort", "name DESC")
+                .Add("sorting.criteria", "title DESC"),
+            TrackSortType.Artist_Asc => new HashMap<string, string>()
+                .Add("list_util_sort", "artist.name ASC,album.name,discNumber,trackNumber")
+                .Add("sorting.criteria", "artist_name,album_title,album_disc_number,album_track_number"),
+            TrackSortType.Artist_Desc => new HashMap<string, string>()
+                .Add("list_util_sort", "artist.name DESC,album.name,discNumber,trackNumber")
+                .Add("sorting.criteria", "artist_name DESC,album_title,album_disc_number,album_track_number"),
+            TrackSortType.Album_Asc => new HashMap<string, string>()
+                .Add("list_util_sort", "artist.name DESC,album.name,discNumber,trackNumber")
+                .Add("sorting.criteria", "artist_name DESC,album_title,album_disc_number,album_track_number"),
+            TrackSortType.Album_Desc => new HashMap<string, string>()
+                .Add("list_util_sort", "album.name ASC,discNumber,trackNumber")
+                .Add("sorting.criteria", "album_title,album_disc_number,album_track_number"),
+            TrackSortType.Duration_Asc => new HashMap<string, string>()
+                .Add("list_util_sort", "album.name ASC,discNumber,trackNumber")
+                .Add("sorting.criteria", "album_title,album_disc_number,album_track_number"),
+            TrackSortType.Duration_Desc => new HashMap<string, string>()
+                .Add("list_util_sort", "album.name ASC,discNumber,trackNumber")
+                .Add("sorting.criteria", "album_title,album_disc_number,album_track_number"),
+            _ => throw new ArgumentOutOfRangeException(nameof(sort), sort, null)
+        };
     public ReadOnlyObservableCollection<LibraryTrack> Data => _data;
     public string? SearchText
     {
@@ -122,6 +194,9 @@ public sealed class LibrarySongsViewModel<R> :
     }
     public LibraryViewModel<R> Library => ShellViewModel<R>
         .Instance.Library;
+
+    public ICommand SortCommand { get; }
+
     private static Func<LibraryTrack, bool> BuildFilter(string? searchText)
     {
         if (string.IsNullOrEmpty(searchText)) return _ => true;

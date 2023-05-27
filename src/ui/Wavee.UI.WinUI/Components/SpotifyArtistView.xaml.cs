@@ -20,6 +20,7 @@ using Wavee.Core.Ids;
 using Wavee.UI.Infrastructure.Live;
 using Wavee.UI.ViewModels;
 using Wavee.UI.WinUI.Flyouts;
+using HashMap = LanguageExt.HashMap;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -112,7 +113,8 @@ namespace Wavee.UI.WinUI.Components
                 TrackId: Option<AudioId>.None, 
                 ContextUrl: $"context://{Id.ToString()}",
                 NextPages: Option<IEnumerable<ContextPage>>.None,
-                PageIndex: Option<int>.None);
+                PageIndex: Option<int>.None,
+                Metadata: HashMap.empty<string, string>());
 
             await ShellViewModel<WaveeUIRuntime>.Instance.Playback.PlayContextAsync(playContext);
         }

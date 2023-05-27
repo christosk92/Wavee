@@ -26,6 +26,7 @@ using CommunityToolkit.WinUI.UI.Animations.Expressions;
 using Eum.Spotify.context;
 using Wavee.UI.ViewModels.Library;
 using Button = Microsoft.UI.Xaml.Controls.Button;
+using HashMap = LanguageExt.HashMap;
 
 namespace Wavee.UI.WinUI.Views.Album;
 
@@ -49,7 +50,7 @@ public sealed partial class AlbumView : UserControl, INavigablePage
     Option<INavigableViewModel> INavigablePage.ViewModel => ViewModel;
     public void NavigatedTo(object parameter)
     {
-        
+
     }
 
     public void RemovedFromCache()
@@ -284,11 +285,12 @@ public sealed partial class AlbumView : UserControl, INavigablePage
     {
         var context = new PlayContextStruct(
             ContextId: ViewModel.Id.ToString(),
+             Index: 0,
+            TrackId: Option<AudioId>.None,
             ContextUrl: $"context://{ViewModel.Id}",
-            Index: 0,
             NextPages: Option<IEnumerable<ContextPage>>.None,
             PageIndex: Option<int>.None,
-            TrackId: Option<AudioId>.None
+            Metadata: HashMap.empty<string, string>()
         );
         await ShellViewModel<WaveeUIRuntime>.Instance.Playback.PlayContextAsync(context);
     }

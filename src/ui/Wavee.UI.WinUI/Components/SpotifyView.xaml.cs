@@ -12,6 +12,7 @@ using Wavee.UI.Infrastructure.Live;
 using Wavee.UI.ViewModels;
 using Wavee.UI.WinUI.Flyouts;
 using Wavee.UI.WinUI.Helpers;
+using HashMap = LanguageExt.HashMap;
 
 namespace Wavee.UI.WinUI.Components
 {
@@ -97,7 +98,8 @@ namespace Wavee.UI.WinUI.Components
                 TrackId: Option<AudioId>.None,
                 ContextUrl: $"context://{Id.ToString()}",
                 NextPages: Option<IEnumerable<ContextPage>>.None,
-                PageIndex: Option<int>.None);
+                PageIndex: Option<int>.None,
+                Metadata: HashMap.empty<string, string>());
 
             await ShellViewModel<WaveeUIRuntime>.Instance.Playback.PlayContextAsync(playContext);
         }

@@ -250,7 +250,8 @@ public sealed class PlaybackViewModel<R> : ReactiveObject where R : struct, HasS
                     contextId: context.ContextId,
                     pages: context.NextPages.ValueUnsafe(),
                     trackIndex: context.Index,
-                    pageIndex: context.PageIndex.ValueUnsafe()
+                    pageIndex: context.PageIndex.ValueUnsafe(),
+                    metadata: context.Metadata
                 ).ToAff()
                 select unit;
             var result = await aff.Run(_runtime);
@@ -263,7 +264,8 @@ public sealed class PlaybackViewModel<R> : ReactiveObject where R : struct, HasS
                     contextId: context.ContextId,
                     contextUrl: context.ContextUrl.ValueUnsafe(),
                     trackIndex: context.Index,
-                    trackId: context.TrackId
+                    trackId: context.TrackId,
+                    metadata: context.Metadata
                 ).ToAff()
                 select unit;
             var result = await aff.Run(_runtime);

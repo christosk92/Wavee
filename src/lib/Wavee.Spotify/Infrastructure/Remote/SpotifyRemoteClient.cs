@@ -256,7 +256,8 @@ public class SpotifyRemoteClient
         return default;
     }
 
-    public async ValueTask<Unit> PlayContextRaw(string contextId, string contextUrl, int trackIndex, Option<AudioId> trackId)
+    public async ValueTask<Unit> PlayContextRaw(string contextId, string contextUrl, int trackIndex,
+        Option<AudioId> trackId, HashMap<string, string> metadata)
     {
         var toDeviceId = _connection._latestCluster.Value.Map(x => x.ActiveDeviceId);
         if (toDeviceId.IsNone)
@@ -294,7 +295,8 @@ public class SpotifyRemoteClient
                     context = new
                     {
                         uri = contextId.ToString(),
-                        url = contextUrl
+                        url = contextUrl,
+                        metadata = metadata.ToDictionary(c=> c.Key, c=> c.Value)
                     },
                     options = new
                     {
@@ -319,7 +321,8 @@ public class SpotifyRemoteClient
                     context = new
                     {
                         uri = contextId.ToString(),
-                        url = contextUrl
+                        url = contextUrl,
+                        metadata = metadata.ToDictionary(c => c.Key, c => c.Value)
                     },
                     options = new
                     {
@@ -345,11 +348,10 @@ public class SpotifyRemoteClient
             CancellationToken.None);
         return default;
     }
-    public async ValueTask<Unit> PlayContextPaged(
-        string contextId,
+    public async ValueTask<Unit> PlayContextPaged(string contextId,
         IEnumerable<ContextPage> pages,
         int trackIndex,
-        int pageIndex)
+        int pageIndex, HashMap<string, string> metadata)
     {
         var toDeviceId = _connection._latestCluster.Value.Map(x => x.ActiveDeviceId);
         if (toDeviceId.IsNone)
@@ -389,6 +391,7 @@ public class SpotifyRemoteClient
                     {
                         page_url = c.PageUrl
                     }),
+                    metadata = metadata.ToDictionary(c => c.Key, c => c.Value)
                 },
                 options = new
                 {

@@ -11,16 +11,18 @@
              xmlns:components="using:Wavee.UI.WinUI.Components"
              xmlns:contracts="using:Wavee.Core.Contracts"
              xmlns:system="using:System"
+             xmlns:ui="using:CommunityToolkit.WinUI.UI"
              mc:Ignorable="d">
 
     <UserControl.Resources>
-        <StackLayout
-            x:Key="ArtistLayout"
-            Spacing="4" DisableVirtualization="True" Orientation="Horizontal"/>
-        <DataTemplate
-            x:Key="HorizontalArtistTemplate"
-            x:DataType="contracts:ITrackArtist">
-            <TextBlock VerticalAlignment="Center" Text="{x:Bind Name}"/>
+        <ItemsPanelTemplate x:Key="ArtistLayout">
+            <StackPanel Orientation="Horizontal"
+                        Spacing="4" />
+        </ItemsPanelTemplate>
+        <DataTemplate x:Key="HorizontalArtistTemplate"
+                      x:DataType="contracts:ITrackArtist">
+            <TextBlock VerticalAlignment="Center"
+                       Text="{x:Bind Name}" />
         </DataTemplate>
     </UserControl.Resources>
     <Grid Padding="12,12">
@@ -31,19 +33,17 @@
         <StackPanel Orientation="Vertical">
             <TextBlock Text="{x:Bind FormatTrackCountStr(ViewModel.Data.Count), Mode=OneWay}"
                        FontSize="28"
-                       FontWeight="SemiBold"/>
-            <TextBlock Text="{x:Bind FormatTrackDuration(ViewModel.Data), Mode=OneWay}"/>
-            <Grid 
-                HorizontalAlignment="Stretch">
+                       FontWeight="SemiBold" />
+            <TextBlock Text="{x:Bind FormatTrackDuration(ViewModel.Data), Mode=OneWay}" />
+            <Grid HorizontalAlignment="Stretch">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition MaxWidth="400"/>
-                    <ColumnDefinition/>
+                    <ColumnDefinition MaxWidth="400" />
+                    <ColumnDefinition />
                 </Grid.ColumnDefinitions>
-                <AutoSuggestBox
-                    TextChanged="AutoSuggestBox_OnTextChanged"
-                    PlaceholderText="Look for a track"
-                    Margin="0,12,0,0"
-                    QueryIcon="Find"/>
+                <AutoSuggestBox TextChanged="AutoSuggestBox_OnTextChanged"
+                                PlaceholderText="Look for a track"
+                                Margin="0,12,0,0"
+                                QueryIcon="Find" />
             </Grid>
 
             <Border Margin="0,12,0,12"
@@ -64,8 +64,12 @@
                     </Grid.ColumnDefinitions>
                     <HyperlinkButton Padding="8,8,8,8"
                                      HorizontalAlignment="Right"
+                                     Command="{x:Bind ViewModel.SortCommand}"
+                                     CommandParameter="{x:Bind NextSortType(ViewModel.SortParameters, 'date'),Mode=OneWay}"
                                      Content="#" />
                     <HyperlinkButton Content="Title"
+                                     Command="{x:Bind ViewModel.SortCommand}"
+                                     CommandParameter="{x:Bind NextSortType(ViewModel.SortParameters, 'title'),Mode=OneWay}"
                                      Padding="0,8,8,8"
                                      HorizontalContentAlignment="Left"
                                      HorizontalAlignment="Stretch"
@@ -73,6 +77,8 @@
 
 
                     <HyperlinkButton Content="Artists"
+                                     Command="{x:Bind ViewModel.SortCommand}"
+                                     CommandParameter="{x:Bind NextSortType(ViewModel.SortParameters, 'artists'),Mode=OneWay}"
                                      HorizontalContentAlignment="Left"
                                      Padding="0,8,8,8"
                                      HorizontalAlignment="Stretch"
@@ -80,18 +86,24 @@
 
 
                     <HyperlinkButton Content="Album"
+                                     x:Name="AlbumSortButton"
+                                     Command="{x:Bind ViewModel.SortCommand}"
+                                     CommandParameter="{x:Bind NextSortType(ViewModel.SortParameters, 'album'),Mode=OneWay}"
                                      HorizontalContentAlignment="Left"
                                      Padding="0,8,8,8"
                                      HorizontalAlignment="Stretch"
                                      Grid.Column="4" />
 
                     <HyperlinkButton Content="Date added"
+                                     Command="{x:Bind ViewModel.SortCommand}"
+                                     CommandParameter="{x:Bind NextSortType(ViewModel.SortParameters, 'date'),Mode=OneWay}"
                                      HorizontalContentAlignment="Left"
                                      Padding="0,8,8,8"
                                      HorizontalAlignment="Stretch"
                                      Grid.Column="5" />
 
                     <HyperlinkButton HorizontalAlignment="Stretch"
+                                     IsHitTestVisible="False"
                                      HorizontalContentAlignment="Left"
                                      Grid.Column="6">
                         <FontIcon FontFamily="Segoe Fluent Icons"
@@ -103,11 +115,18 @@
 
         <ListView Grid.Row="1"
                   Margin="-18,0"
+                  ui:ScrollViewerExtensions.VerticalScrollBarMargin="0,0,-18,70"
                   ChoosingItemContainer="MainLv_OnChoosingItemContainer"
                   SelectionMode="Extended"
                   x:Name="MainLv"
                   ItemContainerStyle="{StaticResource TracksListViewItemStyle}"
                   ItemsSource="{Binding Data, Mode=OneWay}">
+            <ListView.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <ItemsStackPanel Orientation="Vertical"
+                                     ItemsUpdatingScrollMode="KeepScrollOffset" />
+                </ItemsPanelTemplate>
+            </ListView.ItemsPanel>
             <ListView.ItemTemplate>
                 <DataTemplate x:DataType="library:LibraryTrack">
                     <components:TrackView AlternatingRowColor="True"
@@ -120,30 +139,32 @@
                         <components:TrackView.View>
                             <Grid VerticalAlignment="Center">
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="10"/>
+                                    <ColumnDefinition Width="10" />
                                     <ColumnDefinition />
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width=".5*" />
                                     <ColumnDefinition Width="44 " />
                                 </Grid.ColumnDefinitions>
-                                <TextBlock VerticalAlignment="Center" Grid.Column="1" Text="{x:Bind Track.Title, Mode=OneWay}"/>
+                                <TextBlock VerticalAlignment="Center"
+                                           Grid.Column="1"
+                                           Text="{x:Bind Track.Title, Mode=OneWay}" />
 
-                                <ItemsRepeater
-                                    VerticalAlignment="Center"
-                                    Layout="{StaticResource ArtistLayout}"
-                                    ItemTemplate="{StaticResource HorizontalArtistTemplate}"
-                                    ItemsSource="{x:Bind Track.Artists, Mode=OneWay}" Grid.Column="2"/>
+                                <ItemsControl VerticalAlignment="Center"
+                                              ItemsPanel="{StaticResource ArtistLayout}"
+                                              ItemTemplate="{StaticResource HorizontalArtistTemplate}"
+                                              ItemsSource="{x:Bind Track.Artists, Mode=OneWay}"
+                                              Grid.Column="2" />
 
-                                <TextBlock
-                                    VerticalAlignment="Center"
-                                    Grid.Column="3" Text="{x:Bind Track.Album.Name, Mode=OneWay}"/>
-                                <TextBlock 
-                                    VerticalAlignment="Center"
-                                    Grid.Column="4" Text="{x:Bind FormatToRelativeDate(Added), Mode=OneWay}"/>
-                                <TextBlock 
-                                    VerticalAlignment="Center"
-                                    Grid.Column="5" Text="{x:Bind FormatToShorterTimestamp(Track.Duration), Mode=OneWay}"/>
+                                <TextBlock VerticalAlignment="Center"
+                                           Grid.Column="3"
+                                           Text="{x:Bind Track.Album.Name, Mode=OneWay}" />
+                                <TextBlock VerticalAlignment="Center"
+                                           Grid.Column="4"
+                                           Text="{x:Bind FormatToRelativeDate(Added), Mode=OneWay}" />
+                                <TextBlock VerticalAlignment="Center"
+                                           Grid.Column="5"
+                                           Text="{x:Bind FormatToShorterTimestamp(Track.Duration), Mode=OneWay}" />
                             </Grid>
                         </components:TrackView.View>
                     </components:TrackView>

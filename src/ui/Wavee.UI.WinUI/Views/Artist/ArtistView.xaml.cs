@@ -179,7 +179,8 @@ public sealed partial class ArtistRootView : UserControl, INavigablePage
             Index: 0,
             NextPages: Option<IEnumerable<ContextPage>>.None,
             PageIndex: Option<int>.None,
-            TrackId: Option<AudioId>.None
+            TrackId: Option<AudioId>.None,
+            Metadata: LanguageExt.HashMap<string, string>.Empty
         );
         await ShellViewModel<WaveeUIRuntime>.Instance.Playback.PlayContextAsync(context);
     }

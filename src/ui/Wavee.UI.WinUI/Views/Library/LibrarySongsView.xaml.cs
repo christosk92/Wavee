@@ -50,4 +50,50 @@ public sealed partial class LibrarySongsView : UserControl
     {
         ViewModel.SearchText = sender.Text;
     }
+
+    public TrackSortType NextSortType(TrackSortType currentTrackSortType, string buttonType)
+    {
+        //sorting goes from asc -> desc -> default (date)
+        switch (buttonType)
+        {
+            case "title":
+                //if currentTrack is title asc -> title desc.
+                //if title desc -> default
+                //if somethin else, -> title asc
+                return currentTrackSortType switch
+                {
+                    TrackSortType.Title_Asc => TrackSortType.Title_Desc,
+                    TrackSortType.Title_Desc => TrackSortType.OriginalIndex_Asc,
+                    _ => TrackSortType.Title_Asc,
+                };
+                break;
+            case "artists":
+                return currentTrackSortType switch
+                {
+                    TrackSortType.Artist_Asc => TrackSortType.Artist_Desc,
+                    TrackSortType.Artist_Desc => TrackSortType.OriginalIndex_Asc,
+                    _ => TrackSortType.Artist_Asc,
+                };
+                break;
+            case "album":
+                return currentTrackSortType switch
+                {
+                    TrackSortType.Album_Asc => TrackSortType.Album_Desc,
+                    TrackSortType.Album_Desc => TrackSortType.OriginalIndex_Asc,
+                    _ => TrackSortType.Album_Asc,
+                };
+                break;
+            case "date":
+                //BAM! Default sort
+                return currentTrackSortType switch
+                {
+                    TrackSortType.OriginalIndex_Asc => TrackSortType.OriginalIndex_Desc,
+                    TrackSortType.OriginalIndex_Desc => TrackSortType.OriginalIndex_Asc,
+                    _ => TrackSortType.OriginalIndex_Asc,
+                };
+                break;
+        }
+
+        return TrackSortType.OriginalIndex_Asc;
+    }
 }

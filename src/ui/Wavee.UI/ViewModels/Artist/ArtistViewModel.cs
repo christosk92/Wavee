@@ -13,6 +13,7 @@ using ReactiveUI;
 using Wavee.Core.Ids;
 using Wavee.UI.Infrastructure.Sys;
 using Wavee.UI.Infrastructure.Traits;
+using HashMap = LanguageExt.HashMap;
 
 namespace Wavee.UI.ViewModels.Artist;
 
@@ -108,7 +109,8 @@ public sealed class ArtistViewModel<R> : INotifyPropertyChanged, INavigableViewM
                     ContextUrl: $"context://{Artist.Id.ToString()}",
                     TrackId: x,
                     NextPages: Option<IEnumerable<ContextPage>>.None,
-                    PageIndex: Option<int>.None
+                    PageIndex: Option<int>.None,
+                    Metadata: LanguageExt.HashMap<string, string>.Empty
                 );
                 PlayCommand.Execute(ctx);
                 return default;
@@ -125,9 +127,9 @@ public sealed class ArtistViewModel<R> : INotifyPropertyChanged, INavigableViewM
                         .GetString(),
                     Playcount = topTrack.GetProperty("playcount")
                         is
-                        {
-                            ValueKind: JsonValueKind.Number
-                        } e
+                    {
+                        ValueKind: JsonValueKind.Number
+                    } e
                         ? e.GetUInt64()
                         : Option<ulong>.None,
                     ReleaseName = releaseName,
@@ -195,7 +197,8 @@ public sealed class ArtistViewModel<R> : INotifyPropertyChanged, INavigableViewM
                             TrackId: x,
                             ContextUrl: None,
                             NextPages: Some(nextPages),
-                            PageIndex: 0));
+                            PageIndex: 0,
+                            Metadata: HashMap.empty<string, string>()));
                         return default;
                     });
 
