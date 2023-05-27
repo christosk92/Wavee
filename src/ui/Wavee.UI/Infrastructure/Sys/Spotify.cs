@@ -93,4 +93,21 @@ public static class Spotify<R> where R : struct, HasSpotify<R>
         from aff in default(R).SpotifyEff.Map(x => x.AddToPlaylist(playlistId, audioIds, position))
         from result in aff
         select result;
+
+    public static Aff<R, Seq<TrackOrEpisode>> FetchBatchOfTracks(Seq<AudioId> request, CancellationToken ct = default) =>
+        from cache in default(R).SpotifyEff
+            .Map(x => x.Cache().IfNone(new SpotifyCache(new SpotifyCacheConfig(Option<string>.None, Option<TimeSpan>.None))))
+        //check which tracks are already cached
+        let cachedTracks = cache.GetBulk(request).Somes()
+        //fetch the rest
+        from aff in default(R).SpotifyEff.Map(x => x.FetchBatchOfTracks(request.Filter(y => !cachedTracks.Any(z=> z.Id == y)), ct))
+        from result in aff
+        //save the fetched tracks
+        from _ in Eff(() => cache.SaveBulk(result.Distinct(x=> x.Id)))
+        //combine the cached and fetched tracks
+        select cachedTracks.Append(result);
+
+    public static Eff<R, Option<string>> CdnUrl() =>
+        from aff in default(R).SpotifyEff.Map(x => x.CdnUrl())
+        select aff;
 }

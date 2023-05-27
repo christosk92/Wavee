@@ -99,8 +99,13 @@ namespace Wavee.UI.WinUI.Views.Sidebar
             {"albums", (typeof(LibraryRootView), "albums")},
             {"artists", (typeof(LibraryRootView), "artists")},
          };
-        private static void NavigateTo(object item)
+        private void NavigateTo(object item)
         {
+            if (IgnoreSelection)
+            {
+                IgnoreSelection = false;
+                return;
+            }
             var slug = item switch
             {
                 RegularSidebarItem re => re.Slug,
@@ -123,6 +128,8 @@ namespace Wavee.UI.WinUI.Views.Sidebar
             if (pageType.Item1 is not null)
                 ShellView.NavigationService.Navigate(pageType.Item1, pageType.Item2);
         }
+
+        public bool IgnoreSelection { get; set; }
         public void SetSelected(Type type, object param)
         {
             var slugAssociated = _navigationMapping.SingleOrDefault(x => x.Value.Item1 == type

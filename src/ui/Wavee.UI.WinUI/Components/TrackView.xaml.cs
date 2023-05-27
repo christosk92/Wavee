@@ -12,6 +12,7 @@ using Wavee.Core.Ids;
 using Wavee.UI.Infrastructure.Live;
 using Wavee.UI.Models;
 using Wavee.UI.ViewModels;
+using Wavee.UI.ViewModels.Library;
 using Wavee.UI.WinUI.Flyouts;
 
 namespace Wavee.UI.WinUI.Components;

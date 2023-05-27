@@ -18,8 +18,12 @@ using LanguageExt;
 using LanguageExt.Common;
 using LanguageExt.UnsafeValueAccess;
 using Spotify.Collection.Proto.V2;
+using Wavee.Core.Contracts;
 using Wavee.Core.Ids;
 using Wavee.Core.Infrastructure.IO;
+using Eum.Spotify.extendedmetadata;
+using Spotify.Metadata;
+using Wavee.Spotify.Infrastructure.Playback;
 
 namespace Wavee.UI.Infrastructure.Live;
 
@@ -129,6 +133,75 @@ internal sealed class LiveSpotify : Traits.SpotifyIO
             .ToAff()
             .Map(x => x.EnsureSuccessStatusCode())
         select unit;
+
+    public Aff<Seq<TrackOrEpisode>> FetchBatchOfTracks(Seq<AudioId> items, CancellationToken ct = default)
+    {
+        if (items.IsEmpty)
+            return SuccessAff(LanguageExt.Seq<TrackOrEpisode>.Empty);
+        return from client in Eff(() => _connection.ValueUnsafe())
+               from spclient in ApResolve.GetSpClient(ct).ToAff()
+                   .Map(x => $"https://{x.host}:{x.port}")
+                   .Map(x =>
+                       $"{x}/extended-metadata/v0/extended-metadata")
+               from bearer in client.TokenClient.GetToken(CancellationToken.None).ToAff()
+                   .Map(x => new AuthenticationHeaderValue("Bearer", x))
+               from content in Eff(() =>
+               {
+                   var request = new BatchedEntityRequest();
+                   request.EntityRequest.AddRange(items.Select(a => new EntityRequest
+                   {
+                       EntityUri = a.ToString(),
+                       Query =
+                       {
+                        new ExtensionQuery
+                        {
+                            ExtensionKind = a.Type switch
+                            {
+                                AudioItemType.Track => ExtensionKind.TrackV4,
+                                AudioItemType.PodcastEpisode => ExtensionKind.EpisodeV4,
+                                _ => ExtensionKind.UnknownExtension
+                            }
+                        }
+                       }
+                   }));
+                   request.Header = new BatchedEntityRequestHeader
+                   {
+                       Catalogue = "premium",
+                       Country = client.CountryCode.ValueUnsafe()
+                   };
+                   var byteArrCnt = new ByteArrayContent(request.ToByteArray());
+                   //byteArrCnt.Headers.ContentType = new MediaTypeHeaderValue("application/vnd.collection-v2.spotify.proto");
+                   return byteArrCnt;
+               })
+               from posted in HttpIO.Post(spclient, bearer, content, CancellationToken.None)
+                   .ToAff()
+                   .MapAsync(async x =>
+                   {
+                       x.EnsureSuccessStatusCode();
+                       await using var stream = await x.Content.ReadAsStreamAsync(ct);
+                       var response = BatchedExtensionResponse.Parser.ParseFrom(stream);
+                       var allData = response
+                           .ExtendedMetadata
+                           .SelectMany(c =>
+                           {
+                               return c.ExtensionKind switch
+                               {
+                                   ExtensionKind.EpisodeV4 => c.ExtensionData
+                                       .Select(e => new TrackOrEpisode(
+                                           Either<Episode, Track>.Left(Episode.Parser.ParseFrom(e.ExtensionData.Value))
+                                       )),
+                                   ExtensionKind.TrackV4 => c.ExtensionData
+                                       .Select(e => new TrackOrEpisode(
+                                           Either<Episode, Track>.Right(Track.Parser.ParseFrom(e.ExtensionData.Value))
+                                       )),
+                               };
+                           });
+
+                       return allData.ToSeq();
+                   })
+               select posted;
+    }
+
 
     public async ValueTask<Unit> Authenticate(LoginCredentials credentials, CancellationToken ct = default)
     {

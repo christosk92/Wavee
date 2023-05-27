@@ -24,6 +24,7 @@ using Canvas = Microsoft.UI.Xaml.Controls.Canvas;
 using Microsoft.UI.Xaml.Hosting;
 using CommunityToolkit.WinUI.UI.Animations.Expressions;
 using Eum.Spotify.context;
+using Wavee.UI.ViewModels.Library;
 using Button = Microsoft.UI.Xaml.Controls.Button;
 
 namespace Wavee.UI.WinUI.Views.Album;

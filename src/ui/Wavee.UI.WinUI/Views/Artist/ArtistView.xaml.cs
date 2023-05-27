@@ -12,6 +12,7 @@ using Windows.Foundation;
 using Eum.Spotify.context;
 using Wavee.Core.Ids;   
 using Wavee.UI.ViewModels.Artist;
+using Wavee.UI.ViewModels.Library;
 using Wavee.UI.WinUI.Flyouts;
 
 namespace Wavee.UI.WinUI.Views.Artist;

@@ -19,6 +19,7 @@ using Microsoft.UI.Windowing;
 using Spotify.Collection.Proto.V2;
 using Wavee.Spotify;
 using Wavee.Spotify.Infrastructure.Playback;
+using Wavee.UI.Services;
 using Wavee.UI.ViewModels;
 using Wavee.UI.WinUI.Views.Setup;
 using WinRT.Interop;
@@ -77,7 +78,7 @@ public partial class App : Application
         // var bs =
         //     "Chk3dWNnaGRncXVmNmJ5cXVzcWtsaWx0d2MyEgpjb2xsZWN0aW9uGiwKJHNwb3RpZnk6YWxidW06MXRqRTZjdVVkbnNjZ3d4VHQ0OW91SBDRmL6jBiIQY2VlMTJiMDhjMDBhYzBhNQ==";
         // var res = WriteRequest.Parser.ParseFrom(ByteString.FromBase64(bs));
-
+        TrackEnqueueService<WaveeUIRuntime>.Runtime = Runtime;
         _ = await UiConfig<WaveeUIRuntime>.CreateDefaultIfNotExists.Run(Runtime);
         var settings = new SettingsViewModel<WaveeUIRuntime>(Runtime);
         var defaultUserMaybe = (await UserManagment<WaveeUIRuntime>.GetDefaultUser().Run(Runtime)).ThrowIfFail();

@@ -54,6 +54,39 @@ public readonly struct SpotifyCache
 
     #region Metadata
 
+    public Seq<Option<TrackOrEpisode>> GetBulk(Seq<AudioId> request)
+    {
+        if(request.Length == 0) return LanguageExt.Seq<Option<TrackOrEpisode>>.Empty;
+        if (_dbPath.IsNone)
+            return new Seq<Option<TrackOrEpisode>>(Enumerable.Repeat(Option<TrackOrEpisode>.None, request.Count));
+        using var db = new SQLiteConnection(_dbPath.ValueUnsafe());
+        // var result = new List<Option<TrackOrEpisode>>(request.Count);
+
+        var base62IdsMap = request
+            .ToDictionary(c => c.ToBase62(), c => c.Type)
+            .ToHashMap();
+        var base62Ids = base62IdsMap.Keys;
+        var tracks = db.Table<CachedTrack>()
+            .Where(x => base62Ids.Contains(x.Id))
+            .ToArray();
+        var episodes = db.Table<CachedEpisode>()
+            .Where(x => base62Ids.Contains(x.Id))
+            .ToArray();
+
+        var result = base62IdsMap.Map(x =>
+            {
+                var trackOrEpisode = x.Value switch
+                {
+                    AudioItemType.PodcastEpisode => episodes.Find(y => y.Id == x.Key)
+                        .Map(y => new TrackOrEpisode(Episode.Parser.ParseFrom(y.RestData))),
+                    AudioItemType.Track => tracks.Find(y => y.Id == x.Key)
+                        .Map(y => new TrackOrEpisode(Track.Parser.ParseFrom(y.RestData)))
+                };
+                return trackOrEpisode;
+            });
+        return result.ToSeq();
+    }
+
     public Unit Save(TrackOrEpisode metadata)
     {
         if (_dbPath.IsNone)
@@ -144,6 +177,30 @@ public readonly struct SpotifyCache
                 : None,
         };
     }
+    public Unit SaveBulk(Seq<TrackOrEpisode> result)
+    {
+        if (_dbPath.IsNone)
+            return default;
+        if(result.IsEmpty) return default;
+        using var db = new SQLiteConnection(_dbPath.ValueUnsafe());
+        var tracks = result.Where(x => x.Value.IsRight).Select(x => new CachedTrack
+        {
+            Id = x.Id.ToBase62(),
+            Title = x.Value.Match(Left: _ => throw new InvalidOperationException(), Right: x => x.Name),
+            RestData = x.Value.Match(Left: _ => throw new InvalidOperationException(), Right: x => x.ToByteArray())
+        });
+
+        var episodes = result.Where(x => x.Value.IsLeft).Select(x => new CachedEpisode
+        {
+            Id = x.Id.ToBase62(),
+            Title = x.Value.Match(Right: _ => throw new InvalidOperationException(), Left: x => x.Name),
+            RestData = x.Value.Match(Right: _ => throw new InvalidOperationException(), Left: x => x.ToByteArray())
+        });
+
+        db.InsertAll(tracks);
+        db.InsertAll(episodes);
+        return unit;
+    }
 
     public Option<ReadOnlyMemory<byte>> GetRawEntity(AudioId id)
     {
@@ -167,6 +224,7 @@ public readonly struct SpotifyCache
                 : None,
         };
     }
+
 
     #endregion
 
@@ -220,4 +278,5 @@ public readonly struct SpotifyCache
         public string Title { get; init; }
         public byte[] RestData { get; init; }
     }
+
 }

@@ -35,24 +35,31 @@ public sealed partial class LibraryRootView : UserControl, INavigablePage
                 TopNav.SelectedItem = TopNav.Items[2];
                 break;
         }
+
+        TopNav_OnItemClick(null, null);
     }
 
     public void RemovedFromCache()
     {
+        _librarySongsView?.ViewModel?.Dispose();
         _librarySongsView = null;
+
+        _libaryArtistsView = null;
+        _libraryAlbumsView = null;
     }
 
     private LibrarySongsView? _librarySongsView;
     private LibraryAlbumsView _libraryAlbumsView;
     private LibraryArtistsView _libaryArtistsView;
 
-    private async void TopNav_OnItemClick(object sender, ItemClickEventArgs e)
+    private async void TopNav_OnItemClick(object sender, ItemClickEventArgs _)
     {
         await Task.Delay(50);
 
         var index = TopNav.SelectedIndex;
         var container = (FrameworkElement)TopNav.Items[index];
         var tg = (container).Tag.ToString();
+        ShellView.Instance.SidebarControl.IgnoreSelection = true;
         ShellView.Instance.NavigationService_Navigated(null, (typeof(LibraryRootView), tg));
         MainContent.Content = tg switch
         {

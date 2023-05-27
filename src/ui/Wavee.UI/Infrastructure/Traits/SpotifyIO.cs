@@ -5,9 +5,11 @@ using LanguageExt;
 using LanguageExt.Attributes;
 using LanguageExt.Effects.Traits;
 using Spotify.Collection.Proto.V2;
+using Wavee.Core.Contracts;
 using Wavee.Core.Ids;
 using Wavee.Spotify.Infrastructure.Cache;
 using Wavee.Spotify.Infrastructure.Mercury;
+using Wavee.Spotify.Infrastructure.Playback;
 using Wavee.Spotify.Infrastructure.Remote;
 using Wavee.Spotify.Infrastructure.Remote.Messaging;
 
@@ -35,6 +37,7 @@ public interface SpotifyIO
     Aff<T> GetFromPublicApi<T>(string endpoint, CancellationToken cancellation);
     Aff<Unit> AddToPlaylist(AudioId playlistId, AudioId[] audioIds, Option<int> position);
     Aff<Unit> WriteLibrary(WriteRequest writeRequest, CancellationToken ct);
+    Aff<Seq<TrackOrEpisode>> FetchBatchOfTracks(Seq<AudioId> request, CancellationToken ct = default);
 }
 
 /// <summary>

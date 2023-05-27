@@ -12,6 +12,7 @@
 
     <Grid>
         <sidebar:SidebarControl User="{x:Bind ViewModel.User, Mode=OneWay}"
+                                x:FieldModifier="public"
                                 Playlists="{x:Bind ViewModel.PlaylistsVm.Playlists}"
                                 x:Name="SidebarControl">
             <sidebar:SidebarControl.NavigationFrame>

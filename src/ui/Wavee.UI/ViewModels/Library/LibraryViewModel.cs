@@ -1,24 +1,16 @@
 ﻿using ReactiveUI;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reactive.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using LanguageExt.UnsafeValueAccess;
 using Wavee.UI.Infrastructure.Sys;
 using Wavee.UI.Infrastructure.Traits;
 using DynamicData;
-using System.Collections.ObjectModel;
 using System.Text.Json;
 using System.Windows.Input;
 using LanguageExt;
 using Wavee.Core.Ids;
-using Wavee.UI.Models;
-using Eum.Spotify.playlist4;
 using Spotify.Collection.Proto.V2;
 
-namespace Wavee.UI.ViewModels;
+namespace Wavee.UI.ViewModels.Library;
 
 public readonly record struct ModifyLibraryCommand(Seq<AudioId> Ids, bool Add);
 public sealed class LibraryViewModel<R> : ReactiveObject where R : struct, HasSpotify<R>
@@ -58,8 +50,8 @@ public sealed class LibraryViewModel<R> : ReactiveObject where R : struct, HasSp
                     });
                 }
 
-                var writeResponse = (await Spotify<R>.WriteLibrary(writeRequest)
-                    .Run(runtime));
+                var writeResponse = await Spotify<R>.WriteLibrary(writeRequest)
+                    .Run(runtime);
             }
 
         });
@@ -113,6 +105,7 @@ public sealed class LibraryViewModel<R> : ReactiveObject where R : struct, HasSp
             });
     }
 
+    public IObservable<IChangeSet<SpotifyLibaryItem, AudioId>> Items => _items.Connect();
     public ICommand SaveCommand { get; }
 
     private static async Task<Seq<SpotifyLibaryItem>> FetchLibraryInitial(R runtime,
@@ -139,18 +132,6 @@ public sealed class LibraryViewModel<R> : ReactiveObject where R : struct, HasSp
 
         var response = await aff.Run(runtime: runtime);
         var k = response.ThrowIfFail();
-        /*
-         * {
-  "item": [{
-    "type": "TRACK",
-    "identifier": "AI+JEIUXSo+5Kt1X/ht3ow==",
-    "added_at": 1672030273
-  }, {
-    "type": "TRACK",
-    "identifier": "ARTcvj+fR+iFonI/WRYiEA==",
-    "added_at": 1655035551
-  }, {
-         */
         using var doc = JsonDocument.Parse(k.Payload);
         using var items = doc.RootElement.GetProperty("item").EnumerateArray();
         var res = LanguageExt.Seq<SpotifyLibaryItem>.Empty;

@@ -11,6 +11,7 @@ using Wavee.Core.Ids;
 using Wavee.UI.Infrastructure.Sys;
 using Wavee.UI.Infrastructure.Traits;
 using Wavee.UI.Models.Response;
+using Wavee.UI.ViewModels.Library;
 
 namespace Wavee.UI.ViewModels;
 

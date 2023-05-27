@@ -12,6 +12,7 @@ using Wavee.Core.Contracts;
 using Wavee.Core.Playback;
 using Wavee.UI.Infrastructure.Live;
 using Wavee.UI.ViewModels;
+using Wavee.UI.ViewModels.Library;
 using Wavee.UI.WinUI.Components;
 
 namespace Wavee.UI.WinUI.Controls;
