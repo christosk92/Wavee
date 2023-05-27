@@ -39,4 +39,6 @@ public interface ITrack
     /// if the country of the user is allowed to play the track and/or the track is live.
     /// </summary>
     bool CanPlay { get; }
+
+    int TrackNumber { get; }
 }

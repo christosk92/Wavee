@@ -35,6 +35,9 @@ public interface ITrackAlbum
     /// If the precision is <see cref="ReleaseDatePrecisionType.Year"/>, the release date will only contain the year and the month and day will be set to 1.
     /// </summary>
     ReleaseDatePrecisionType ReleaseDatePrecision { get; }
+
+    int DiscNumber { get; }
+    string ArtistName { get; }
 }
 
 /// <summary>

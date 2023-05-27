@@ -9,17 +9,21 @@ using Wavee.Core.Ids;
 namespace Wavee.Spotify.Models.Response;
 
 internal readonly record struct SpotifyTrackAlbum(AudioId Id, string Name, Seq<Artwork> Artwork,
-    DateOnly ReleaseDate, ReleaseDatePrecisionType ReleaseDatePrecision) : ITrackAlbum
+    DateOnly ReleaseDate, ReleaseDatePrecisionType ReleaseDatePrecision, int DiscNumber, string ArtistName) : ITrackAlbum
 {
-    public static SpotifyTrackAlbum From(string cdnUrl, Album album)
+    public static SpotifyTrackAlbum From(string cdnUrl, Album album, int discNumber)
     {
         var (releaseDate, precision) = ParseReleaseDate(album.Date);
+
+
         return new SpotifyTrackAlbum(
             Id: AudioId.FromRaw(album.Gid.Span, AudioItemType.Album, ServiceType.Spotify),
             Name: album.Name,
             Artwork: album.CoverGroup.Image.Select(x => ToArtwork(cdnUrl, x)).ToSeq(),
             ReleaseDate: releaseDate,
-            ReleaseDatePrecision: precision
+            ReleaseDatePrecision: precision,
+            DiscNumber: discNumber,
+            ArtistName: album.Artist[0].Name
         );
     }
 
