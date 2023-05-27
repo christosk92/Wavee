@@ -128,6 +128,7 @@
                   ChoosingItemContainer="MainLv_OnChoosingItemContainer"
                   SelectionMode="Extended"
                   x:Name="MainLv"
+                  ShowsScrollingPlaceholders="True"
                   ItemContainerStyle="{StaticResource TracksListViewItemStyle}"
                   ItemsSource="{Binding Data, Mode=OneWay}">
             <ListView.ItemsPanel>
@@ -140,6 +141,7 @@
                 <DataTemplate x:DataType="library:LibraryTrack">
                     <components:TrackView AlternatingRowColor="True"
                                           Height="38"
+                                          x:Phase="2"
                                           PlayCommand="{x:Bind PlayCommand ,Mode=OneWay}"
                                           Index="{x:Bind OriginalIndex, Mode=OneWay}"
                                           ImageUrl="{x:Bind GetSmallestImage(Track), Mode=OneWay}"
@@ -157,9 +159,11 @@
                                 </Grid.ColumnDefinitions>
                                 <TextBlock VerticalAlignment="Center"
                                            Grid.Column="1"
+                                           x:Phase="1"
                                            Text="{x:Bind Track.Title, Mode=OneWay}" />
 
                                 <ItemsControl VerticalAlignment="Center"
+                                              x:Phase="3"
                                               ItemsPanel="{StaticResource ArtistLayout}"
                                               ItemTemplate="{StaticResource HorizontalArtistTemplate}"
                                               ItemsSource="{x:Bind Track.Artists, Mode=OneWay}"
@@ -167,6 +171,7 @@
 
                                 <HyperlinkButton VerticalAlignment="Center"
                                                  Grid.Column="3"
+                                                 x:Phase="4"
                                                  Padding="0,8,8,8"
                                                  Tag="{x:Bind Track.Album.Id}"
                                                  Tapped="NavigateToMetadata"
@@ -174,9 +179,11 @@
                                                  Content="{x:Bind Track.Album.Name, Mode=OneWay}" />
                                 <TextBlock VerticalAlignment="Center"
                                            Grid.Column="4"
+                                           x:Phase="5"
                                            Text="{x:Bind FormatToRelativeDate(Added), Mode=OneWay}" />
                                 <TextBlock VerticalAlignment="Center"
                                            Grid.Column="5"
+                                           x:Phase="5"
                                            Text="{x:Bind FormatToShorterTimestamp(Track.Duration), Mode=OneWay}" />
                             </Grid>
                         </components:TrackView.View>

@@ -12,6 +12,7 @@ public static class TrackEnqueueService<R> where R : struct, HasSpotify<R>
 {
     private static readonly ConcurrentQueue<TrackQueueItem> _queue = new();
     public static R Runtime { get; set; }
+    private static ManualResetEvent _waitForAnything = new ManualResetEvent(false);
     static TrackEnqueueService()
     {
         //fetch as many tracks as possible
@@ -24,6 +25,7 @@ public static class TrackEnqueueService<R> where R : struct, HasSpotify<R>
             {
                 try
                 {
+                    _waitForAnything.WaitOne();
                     await Task.Delay(50);
                     var currentCount = _queue.Count;
                     if (currentCount == 0 && currentBuffer.Count > 0)
@@ -70,6 +72,10 @@ public static class TrackEnqueueService<R> where R : struct, HasSpotify<R>
                         }
 
                         currentBuffer.Clear();
+                        if (_queue.Count == 0)
+                        {
+                            _waitForAnything.Reset();
+                        }
                     }
                     else
                     {
@@ -92,6 +98,7 @@ public static class TrackEnqueueService<R> where R : struct, HasSpotify<R>
     {
         var tcs = new TaskCompletionSource<TrackOrEpisode>();
         _queue.Enqueue(new TrackQueueItem(id, tcs));
+        _waitForAnything.Set();
         return await tcs.Task;
     }
 }
