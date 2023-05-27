@@ -13,7 +13,7 @@ public sealed partial class ArtistOverview : UserControl
     {
         Artist = artistPage;
         this.InitializeComponent();
-        GC.Collect();
+        //GC.Collect();
     }
     public ArtistView Artist { get; set; }
 

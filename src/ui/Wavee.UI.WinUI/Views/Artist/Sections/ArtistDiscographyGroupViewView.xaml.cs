@@ -93,7 +93,7 @@ public partial class ArtistDiscographyGroupViewView
             }
         }
 
-        GC.Collect();
+        //GC.Collect();
     }
 
     private static readonly ConcurrentDictionary<string, Dictionary<string, object>> _pages = new();

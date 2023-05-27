@@ -21,8 +21,12 @@
         </ItemsPanelTemplate>
         <DataTemplate x:Key="HorizontalArtistTemplate"
                       x:DataType="contracts:ITrackArtist">
-            <TextBlock VerticalAlignment="Center"
-                       Text="{x:Bind Name}" />
+            <HyperlinkButton VerticalAlignment="Center"
+                             Padding="0,8,8,8"
+                             Tag="{x:Bind Id}"
+                             Tapped="NavigateToMetadata"
+                             Foreground="{ThemeResource ApplicationForegroundThemeBrush}"
+                             Content="{x:Bind Name}" />
         </DataTemplate>
     </UserControl.Resources>
     <Grid Padding="12,12">
@@ -64,10 +68,12 @@
                     </Grid.ColumnDefinitions>
                     <HyperlinkButton Padding="8,8,8,8"
                                      HorizontalAlignment="Right"
+                                     Tapped="SortButtonTapp"
                                      Command="{x:Bind ViewModel.SortCommand}"
                                      CommandParameter="{x:Bind NextSortType(ViewModel.SortParameters, 'date'),Mode=OneWay}"
                                      Content="#" />
                     <HyperlinkButton Content="Title"
+                                     Tapped="SortButtonTapp"
                                      Command="{x:Bind ViewModel.SortCommand}"
                                      CommandParameter="{x:Bind NextSortType(ViewModel.SortParameters, 'title'),Mode=OneWay}"
                                      Padding="0,8,8,8"
@@ -77,6 +83,7 @@
 
 
                     <HyperlinkButton Content="Artists"
+                                     Tapped="SortButtonTapp"
                                      Command="{x:Bind ViewModel.SortCommand}"
                                      CommandParameter="{x:Bind NextSortType(ViewModel.SortParameters, 'artists'),Mode=OneWay}"
                                      HorizontalContentAlignment="Left"
@@ -86,6 +93,7 @@
 
 
                     <HyperlinkButton Content="Album"
+                                     Tapped="SortButtonTapp"
                                      x:Name="AlbumSortButton"
                                      Command="{x:Bind ViewModel.SortCommand}"
                                      CommandParameter="{x:Bind NextSortType(ViewModel.SortParameters, 'album'),Mode=OneWay}"
@@ -95,6 +103,7 @@
                                      Grid.Column="4" />
 
                     <HyperlinkButton Content="Date added"
+                                     Tapped="SortButtonTapp"
                                      Command="{x:Bind ViewModel.SortCommand}"
                                      CommandParameter="{x:Bind NextSortType(ViewModel.SortParameters, 'date'),Mode=OneWay}"
                                      HorizontalContentAlignment="Left"
@@ -156,9 +165,13 @@
                                               ItemsSource="{x:Bind Track.Artists, Mode=OneWay}"
                                               Grid.Column="2" />
 
-                                <TextBlock VerticalAlignment="Center"
-                                           Grid.Column="3"
-                                           Text="{x:Bind Track.Album.Name, Mode=OneWay}" />
+                                <HyperlinkButton VerticalAlignment="Center"
+                                                 Grid.Column="3"
+                                                 Padding="0,8,8,8"
+                                                 Tag="{x:Bind Track.Album.Id}"
+                                                 Tapped="NavigateToMetadata"
+                                                 Foreground="{ThemeResource ApplicationForegroundThemeBrush}"
+                                                 Content="{x:Bind Track.Album.Name, Mode=OneWay}" />
                                 <TextBlock VerticalAlignment="Center"
                                            Grid.Column="4"
                                            Text="{x:Bind FormatToRelativeDate(Added), Mode=OneWay}" />

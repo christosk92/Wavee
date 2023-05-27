@@ -17,7 +17,7 @@ public sealed partial class LibraryRootView : UserControl, INavigablePage
 
     public bool ShouldKeepInCache(int depth)
     {
-        return depth <= 2;
+        return depth <= 5;
     }
 
     public Option<INavigableViewModel> ViewModel => Option<INavigableViewModel>.None;

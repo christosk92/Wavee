@@ -1,7 +1,10 @@
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Input;
+using Wavee.Core.Ids;
 using Wavee.UI.Infrastructure.Live;
 using Wavee.UI.ViewModels.Library;
 
@@ -95,5 +98,20 @@ public sealed partial class LibrarySongsView : UserControl
         }
 
         return LibraryTrackSortType.Added_Desc;
+    }
+
+    private async void SortButtonTapp(object sender, TappedRoutedEventArgs e)
+    {
+        //set scrollviewer to top
+        await Task.Delay(5);
+        MainLv.ScrollIntoView(MainLv.Items[0]);
+    }
+
+    private void NavigateToMetadata(object sender, TappedRoutedEventArgs e)
+    {
+        var hyperlnk = (HyperlinkButton) sender;
+        var tg = (AudioId) hyperlnk.Tag;
+
+        UICommands.NavigateTo.Execute(tg);
     }
 }

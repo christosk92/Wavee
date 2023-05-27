@@ -109,7 +109,7 @@
                         <ColumnDefinition x:Name="ImageDefinition"
                                           Width="80" />
                         <ColumnDefinition x:Name="TextDefinition"
-                                          MaxWidth="550"
+                                          MaxWidth="500"
                                           Width="Auto" />
                         <ColumnDefinition x:Name="HeartDefinition"
                                           Width="Auto" />
@@ -121,7 +121,10 @@
                         <Border.Background>
                             <ImageBrush Stretch="Uniform">
                                 <ImageBrush.ImageSource>
-                                    <BitmapImage UriSource="{x:Bind GetImageFor(Playback.CurrentTrack),Mode=OneWay}" />
+                                    <BitmapImage
+                                        DecodePixelWidth="100"
+                                        DecodePixelHeight="100"
+                                        UriSource="{x:Bind GetImageFor(Playback.CurrentTrack),Mode=OneWay}" />
                                 </ImageBrush.ImageSource>
                             </ImageBrush>
                         </Border.Background>
