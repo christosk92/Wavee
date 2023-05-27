@@ -79,11 +79,16 @@ namespace Wavee.UI.WinUI.Views.Sidebar
         private void FixedSidebarItemsListView_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             PlaylistsListView.SelectedItem = null;
-            if (e.AddedItems.Count > 0)
-            {
-                var item = e.AddedItems[0];
-                NavigateTo(item);
-            }
+            // if (e.AddedItems.Count > 0)
+            // {
+            //     var item = e.AddedItems[0];
+            //     NavigateTo(item);
+            // }
+        }
+        private async void FixedSidebarItemsListView_OnItemClick(object sender, ItemClickEventArgs e)
+        {
+            var c = e.ClickedItem;
+            NavigateTo(c);
         }
         private void PlaylistsListView_OnItemInvoked(TreeView sender, TreeViewItemInvokedEventArgs args)
         {
@@ -101,11 +106,6 @@ namespace Wavee.UI.WinUI.Views.Sidebar
          };
         private void NavigateTo(object item)
         {
-            if (IgnoreSelection)
-            {
-                IgnoreSelection = false;
-                return;
-            }
             var slug = item switch
             {
                 RegularSidebarItem re => re.Slug,
@@ -129,7 +129,6 @@ namespace Wavee.UI.WinUI.Views.Sidebar
                 ShellView.NavigationService.Navigate(pageType.Item1, pageType.Item2);
         }
 
-        public bool IgnoreSelection { get; set; }
         public void SetSelected(Type type, object param)
         {
             var slugAssociated = _navigationMapping.SingleOrDefault(x => x.Value.Item1 == type

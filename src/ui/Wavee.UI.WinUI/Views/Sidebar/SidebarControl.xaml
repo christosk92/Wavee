@@ -122,6 +122,8 @@
                           SelectedIndex="1"
                           ItemsSource="{x:Bind SidebarItems}"
                           ItemTemplateSelector="{StaticResource SidebarItemTemplateSelector}"
+                          IsItemClickEnabled="True"
+                          ItemClick="FixedSidebarItemsListView_OnItemClick"
                           SelectionChanged="FixedSidebarItemsListView_OnSelectionChanged"
                           Loaded="FixedSidebarItemsListView_OnLoaded"
                           x:Name="FixedSidebarItemsListView">

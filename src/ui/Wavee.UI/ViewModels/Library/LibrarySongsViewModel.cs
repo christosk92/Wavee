@@ -111,22 +111,8 @@ public sealed class LibrarySongsViewModel<R> :
     private async Task Execute(AudioId id)
     {
         var prm = SortParameters;
-        var lookup = _data.AsEnumerable();
-        switch (prm)
-        {
-            case LibraryTrackSortType.Added_Asc:
-            case LibraryTrackSortType.Album_Asc:
-            case LibraryTrackSortType.Artist_Asc:
-            case LibraryTrackSortType.Duration_Asc:
-            case LibraryTrackSortType.Title_Asc:
-                lookup = BuildSort(lookup, prm, true);
-                break;
-            default:
-                lookup = BuildSort(lookup, prm, false);
-                break;
-        }
-
-        var index = lookup.Select(c => c.Track.Id).IndexOf(id);
+        var index = _data.Select(c => c.Track.Id)
+            .IndexOf(id);
         //pages are divided by 150 tracks
         //so if index = 150, page = 1
         var pageIndex = (index / 149) % (149);
@@ -134,6 +120,16 @@ public sealed class LibrarySongsViewModel<R> :
         //spotify:user:7ucghdgquf6byqusqkliltwc2:collection
         var userId = ShellViewModel<R>.Instance.User.Id;
         var ctxId = $"spotify:user:{userId}:collection";
+
+        var sortMetadata = GetMetadataForSorting(prm);
+        var txt = SearchText;
+        if (!string.IsNullOrEmpty(txt))
+        {
+            //filtering.predicate
+            //list_util_filter
+            sortMetadata = sortMetadata.Add("filtering.predicate", $"text =^# \\\"{txt}\\\"");
+            sortMetadata = sortMetadata.Add("list_util_filter", $"text contains {txt}");
+        }
         var context = new PlayContextStruct(
             ContextId: ctxId,
             Index: index,
@@ -141,48 +137,48 @@ public sealed class LibrarySongsViewModel<R> :
             ContextUrl: $"context://{ctxId}",
             NextPages: None,
             PageIndex: pageIndex,
-            Metadata: GetMetadataForSorting(prm)
+            Metadata: sortMetadata
         );
 
         await ShellViewModel<R>.Instance.Playback.PlayContextAsync(context);
     }
 
-    private IEnumerable<LibraryTrack> BuildSort(IEnumerable<LibraryTrack> currentEnumerable, LibraryTrackSortType param, bool descending)
-    {
-        var prm = SortBy(param);
-        var based = descending ?
-            currentEnumerable.OrderByDescending(prm)
-            : currentEnumerable.OrderBy(prm);
-
-        switch (param)
-        {
-            case LibraryTrackSortType.Added_Desc:
-            case LibraryTrackSortType.Added_Asc:
-                //we need to sort by album, artist, disc, track
-                return based
-                    .ThenByDescending(x => x.Track.Album.Name.Length)
-                    .ThenBy(x => x.Track.Album.ArtistName)
-                    .ThenBy(x => x.Track.Album.DiscNumber)
-                    .ThenBy(x => x.Track.TrackNumber);
-                break;
-            case LibraryTrackSortType.Title_Asc or LibraryTrackSortType.Title_Desc:
-                return based;
-            case LibraryTrackSortType.Artist_Asc or LibraryTrackSortType.Artist_Asc:
-                return based
-                    .ThenBy(x => x.Track.Album.Name.Length)
-                    .ThenBy(x => x.Track.Album.DiscNumber)
-                    .ThenBy(x => x.Track.TrackNumber);
-                break;
-            case LibraryTrackSortType.Album_Asc or LibraryTrackSortType.Album_Desc:
-                return based
-                    .ThenBy(x => x.Track.Album.ArtistName)
-                    .ThenBy(x => x.Track.Album.DiscNumber)
-                    .ThenBy(x => x.Track.TrackNumber);
-                break;
-            default:
-                return based;
-        }
-    }
+    // private IEnumerable<LibraryTrack> BuildSort(IEnumerable<LibraryTrack> currentEnumerable, LibraryTrackSortType param, bool descending)
+    // {
+    //     var prm = SortBy(param);
+    //     var based = descending ?
+    //         currentEnumerable.OrderByDescending(prm)
+    //         : currentEnumerable.OrderBy(prm);
+    //
+    //     switch (param)
+    //     {
+    //         case LibraryTrackSortType.Added_Desc:
+    //         case LibraryTrackSortType.Added_Asc:
+    //             //we need to sort by album, artist, disc, track
+    //             return based
+    //                 .ThenByDescending(x => x.Track.Album.Name.Length)
+    //                 .ThenBy(x => x.Track.Album.ArtistName)
+    //                 .ThenBy(x => x.Track.Album.DiscNumber)
+    //                 .ThenBy(x => x.Track.TrackNumber);
+    //             break;
+    //         case LibraryTrackSortType.Title_Asc or LibraryTrackSortType.Title_Desc:
+    //             return based;
+    //         case LibraryTrackSortType.Artist_Asc or LibraryTrackSortType.Artist_Asc:
+    //             return based
+    //                 .ThenBy(x => x.Track.Album.Name.Length)
+    //                 .ThenBy(x => x.Track.Album.DiscNumber)
+    //                 .ThenBy(x => x.Track.TrackNumber);
+    //             break;
+    //         case LibraryTrackSortType.Album_Asc or LibraryTrackSortType.Album_Desc:
+    //             return based
+    //                 .ThenBy(x => x.Track.Album.ArtistName)
+    //                 .ThenBy(x => x.Track.Album.DiscNumber)
+    //                 .ThenBy(x => x.Track.TrackNumber);
+    //             break;
+    //         default:
+    //             return based;
+    //     }
+    // }
 
     private static Func<LibraryTrack, object> SortBy(LibraryTrackSortType prm)
     {

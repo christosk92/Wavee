@@ -59,7 +59,6 @@ public sealed partial class LibraryRootView : UserControl, INavigablePage
         var index = TopNav.SelectedIndex;
         var container = (FrameworkElement)TopNav.Items[index];
         var tg = (container).Tag.ToString();
-        ShellView.Instance.SidebarControl.IgnoreSelection = true;
         ShellView.Instance.NavigationService_Navigated(null, (typeof(LibraryRootView), tg));
         MainContent.Content = tg switch
         {
