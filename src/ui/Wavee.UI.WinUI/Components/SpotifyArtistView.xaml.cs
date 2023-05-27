@@ -107,7 +107,7 @@ namespace Wavee.UI.WinUI.Components
         private async void PlayButton_OnTapped(object sender, TappedRoutedEventArgs e)
         {
             var playContext = new PlayContextStruct(
-                ContextId: Id,
+                ContextId: Id.ToString(),
                 Index: 0,
                 TrackId: Option<AudioId>.None, 
                 ContextUrl: $"context://{Id.ToString()}",

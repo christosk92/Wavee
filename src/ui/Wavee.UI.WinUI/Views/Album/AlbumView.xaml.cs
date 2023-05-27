@@ -283,7 +283,7 @@ public sealed partial class AlbumView : UserControl, INavigablePage
     private async void PlayEntireAlbumTappped(object sender, TappedRoutedEventArgs e)
     {
         var context = new PlayContextStruct(
-            ContextId: ViewModel.Id,
+            ContextId: ViewModel.Id.ToString(),
             ContextUrl: $"context://{ViewModel.Id}",
             Index: 0,
             NextPages: Option<IEnumerable<ContextPage>>.None,

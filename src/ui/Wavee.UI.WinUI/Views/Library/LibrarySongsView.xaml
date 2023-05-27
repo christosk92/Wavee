@@ -112,6 +112,7 @@
                 <DataTemplate x:DataType="library:LibraryTrack">
                     <components:TrackView AlternatingRowColor="True"
                                           Height="38"
+                                          PlayCommand="{x:Bind PlayCommand ,Mode=OneWay}"
                                           Index="{x:Bind OriginalIndex, Mode=OneWay}"
                                           ImageUrl="{x:Bind GetSmallestImage(Track), Mode=OneWay}"
                                           Id="{x:Bind Track.Id, Mode=OneWay}"

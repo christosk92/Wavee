@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using System.Reactive.Linq;
 using System.Runtime.CompilerServices;
+using System.Windows.Input;
 using DynamicData;
 using DynamicData.Binding;
 using LanguageExt.UnsafeValueAccess;
@@ -62,6 +63,8 @@ public sealed class LibrarySongsViewModel<R> :
                 .ObserveOn(RxApp.TaskpoolScheduler);
         var country = Spotify<R>.CountryCode().Run(runtime).Result.ThrowIfFail().ValueUnsafe();
         var cdnUrl = Spotify<R>.CdnUrl().Run(runtime).ThrowIfFail().ValueUnsafe();
+        var playCommand = ReactiveCommand.CreateFromTask<AudioId>(Execute);
+
         _cleanup = Library.Items
              .Filter(c => c.Id.Type is AudioItemType.Track)
              .TransformAsync(async item =>
@@ -73,7 +76,8 @@ public sealed class LibrarySongsViewModel<R> :
                  return new LibraryTrack
                  {
                      Track = tr,
-                     Added = item.AddedAt
+                     Added = item.AddedAt,
+                     PlayCommand = playCommand
                  };
              })
              .Filter(filterApplier)
@@ -83,6 +87,27 @@ public sealed class LibrarySongsViewModel<R> :
              .DisposeMany()   //dispose when no longer required
              .Subscribe();
     }
+
+    private async Task Execute(AudioId id)
+    {
+        var index = Library.GetLibraryItems().OrderByDescending(x=> x.AddedAt)
+            .Select(c => c.Id).IndexOf(id);
+
+        //spotify:user:7ucghdgquf6byqusqkliltwc2:collection
+        var userId = ShellViewModel<R>.Instance.User.Id;
+        var ctxId = $"spotify:user:{userId}:collection";
+        var context = new PlayContextStruct(
+            ContextId: ctxId,
+            Index: index,
+            TrackId: id,
+            ContextUrl: $"context://{ctxId}",
+            NextPages: None,
+            PageIndex: None
+        );
+
+        await ShellViewModel<R>.Instance.Playback.PlayContextAsync(context);
+    }
+
     public ReadOnlyObservableCollection<LibraryTrack> Data => _data;
     public string? SearchText
     {
@@ -121,6 +146,8 @@ public class LibraryTrack : INotifyPropertyChanged
         get => _index;
         set => this.SetField(ref _index, value);
     }
+
+    public required ICommand PlayCommand { get; init; }
 
     public string GetSmallestImage(ITrack track)
     {

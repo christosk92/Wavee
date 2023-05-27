@@ -174,7 +174,7 @@ public sealed partial class ArtistRootView : UserControl, INavigablePage
     private async void PlayLargeButton_OnTapped(object sender, TappedRoutedEventArgs e)
     {
         var context = new PlayContextStruct(
-            ContextId: ViewModel.Artist.Id,
+            ContextId: ViewModel.Artist.Id.ToString(),
             ContextUrl: $"context://{ViewModel.Artist.Id}",
             Index: 0,
             NextPages: Option<IEnumerable<ContextPage>>.None,

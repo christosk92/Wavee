@@ -103,7 +103,7 @@ public sealed class ArtistViewModel<R> : INotifyPropertyChanged, INavigableViewM
             var playcommandFortoptracks = ReactiveCommand.Create<AudioId, Unit>(x =>
             {
                 var ctx = new PlayContextStruct(
-                    ContextId: Artist.Id,
+                    ContextId: Artist.Id.ToString(),
                     Index: topTracks.FindIndex(c => c.Id == x),
                     ContextUrl: $"context://{Artist.Id.ToString()}",
                     TrackId: x,
@@ -190,7 +190,7 @@ public sealed class ArtistViewModel<R> : INotifyPropertyChanged, INavigableViewM
 
                         var index = tracks.FindIndex(c => c.Id == x);
                         PlayCommand.Execute(new PlayContextStruct(
-                            ContextId: artistid,
+                            ContextId: artistid.ToString(),
                             Index: index,
                             TrackId: x,
                             ContextUrl: None,

@@ -256,7 +256,7 @@ public class SpotifyRemoteClient
         return default;
     }
 
-    public async ValueTask<Unit> PlayContextRaw(AudioId contextId, string contextUrl, int trackIndex, Option<AudioId> trackId)
+    public async ValueTask<Unit> PlayContextRaw(string contextId, string contextUrl, int trackIndex, Option<AudioId> trackId)
     {
         var toDeviceId = _connection._latestCluster.Value.Map(x => x.ActiveDeviceId);
         if (toDeviceId.IsNone)
@@ -346,7 +346,7 @@ public class SpotifyRemoteClient
         return default;
     }
     public async ValueTask<Unit> PlayContextPaged(
-        AudioId contextId,
+        string contextId,
         IEnumerable<ContextPage> pages,
         int trackIndex,
         int pageIndex)
