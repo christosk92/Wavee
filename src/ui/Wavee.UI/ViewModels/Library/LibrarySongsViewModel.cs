@@ -1,5 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Globalization;
 using System.Reactive.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.ConstrainedExecution;
@@ -9,6 +10,7 @@ using DynamicData.Binding;
 using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
 using ReactiveUI;
+using SQLitePCL;
 using Wavee.Core.Contracts;
 using Wavee.Core.Ids;
 using Wavee.Spotify.Infrastructure.Remote.Messaging;
@@ -71,11 +73,12 @@ public sealed class LibrarySongsViewModel<R> :
                         .ThenByAscending(x => x.Track.Album.DiscNumber)
                         .ThenByAscending(x => x.Track.TrackNumber),
                     LibraryTrackSortType.Album_Asc =>
-                        SortExpressionComparer<LibraryTrack>.Ascending(x => x.Track.Album.Name)
+                        SortExpressionComparer<LibraryTrack>
+                            .Ascending(x=> x.Track.Album)
                             .ThenByAscending(x => x.Track.Album.DiscNumber)
                             .ThenByAscending(x => x.Track.TrackNumber),
                     LibraryTrackSortType.Album_Desc =>
-                        SortExpressionComparer<LibraryTrack>.Descending(x => x.Track.Album.Name)
+                        SortExpressionComparer<LibraryTrack>.Descending(x => x.Track.Album.Name[0])
                             .ThenByDescending(x => x.Track.Album.DiscNumber)
                             .ThenByDescending(x => x.Track.TrackNumber),
                     _ => throw new ArgumentOutOfRangeException()
@@ -107,6 +110,7 @@ public sealed class LibrarySongsViewModel<R> :
              .DisposeMany()   //dispose when no longer required
              .Subscribe();
     }
+
 
     private async Task Execute(AudioId id)
     {
@@ -180,19 +184,19 @@ public sealed class LibrarySongsViewModel<R> :
     //     }
     // }
 
-    private static Func<LibraryTrack, object> SortBy(LibraryTrackSortType prm)
-    {
-        return prm switch
-        {
-            LibraryTrackSortType.Added_Asc => x => x.Added,
-            LibraryTrackSortType.Added_Desc => x => x.Added,
-            LibraryTrackSortType.Title_Asc or LibraryTrackSortType.Title_Desc => x => x.Track.Title,
-            LibraryTrackSortType.Artist_Asc or LibraryTrackSortType.Artist_Desc => x => x.Track.Artists[0].Name,
-            LibraryTrackSortType.Album_Asc or LibraryTrackSortType.Album_Desc => x => x.Track.Album.Name.Length,
-            LibraryTrackSortType.Duration_Asc or LibraryTrackSortType.Duration_Desc => x => x.Track.Duration,
-            _ => throw new ArgumentOutOfRangeException(nameof(prm), prm, null)
-        };
-    }
+    // private static Func<LibraryTrack, object> SortBy(LibraryTrackSortType prm)
+    // {
+    //     return prm switch
+    //     {
+    //         LibraryTrackSortType.Added_Asc => x => x.Added,
+    //         LibraryTrackSortType.Added_Desc => x => x.Added,
+    //         LibraryTrackSortType.Title_Asc or LibraryTrackSortType.Title_Desc => x => x.Track.Title,
+    //         LibraryTrackSortType.Artist_Asc or LibraryTrackSortType.Artist_Desc => x => x.Track.Artists[0].Name,
+    //         LibraryTrackSortType.Album_Asc or LibraryTrackSortType.Album_Desc => x => x.Track.Album.Name.Length,
+    //         LibraryTrackSortType.Duration_Asc or LibraryTrackSortType.Duration_Desc => x => x.Track.Duration,
+    //         _ => throw new ArgumentOutOfRangeException(nameof(prm), prm, null)
+    //     };
+    // }
 
     private static HashMap<string, string> GetMetadataForSorting(LibraryTrackSortType sort) =>
         sort switch

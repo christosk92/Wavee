@@ -7,7 +7,7 @@ namespace Wavee.Core.Contracts;
 /// The contract representing an album for a track across all sources.
 /// This is different from <see cref="IAlbum"/> in the sense that this contract only represents an album for a track and does not represent the album as a whole.
 /// </summary>
-public interface ITrackAlbum
+public interface ITrackAlbum : IComparable<ITrackAlbum>, IComparable
 {
     /// <summary>
     /// The unique identifier for the album.
