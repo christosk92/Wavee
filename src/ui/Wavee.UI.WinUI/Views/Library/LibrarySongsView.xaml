@@ -5,16 +5,149 @@
              xmlns:local="using:Wavee.UI.WinUI.Views.Library"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              DataContext="{x:Bind ViewModel}"
+             x:Name="Root"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:library="using:Wavee.UI.ViewModels.Library"
+             xmlns:components="using:Wavee.UI.WinUI.Components"
+             xmlns:contracts="using:Wavee.Core.Contracts"
+             xmlns:system="using:System"
              mc:Ignorable="d">
 
-    <Grid>
+    <UserControl.Resources>
+        <StackLayout
+            x:Key="ArtistLayout"
+            Spacing="4" DisableVirtualization="True" Orientation="Horizontal"/>
+        <DataTemplate
+            x:Key="HorizontalArtistTemplate"
+            x:DataType="contracts:ITrackArtist">
+            <TextBlock VerticalAlignment="Center" Text="{x:Bind Name}"/>
+        </DataTemplate>
+    </UserControl.Resources>
+    <Grid Padding="12,12">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
+        <StackPanel Orientation="Vertical">
+            <TextBlock Text="{x:Bind FormatTrackCountStr(ViewModel.Data.Count), Mode=OneWay}"
+                       FontSize="28"
+                       FontWeight="SemiBold"/>
+            <TextBlock Text="{x:Bind FormatTrackDuration(ViewModel.Data), Mode=OneWay}"/>
+            <Grid 
+                HorizontalAlignment="Stretch">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition MaxWidth="400"/>
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+                <AutoSuggestBox
+                    TextChanged="AutoSuggestBox_OnTextChanged"
+                    PlaceholderText="Look for a track"
+                    Margin="0,12,0,0"
+                    QueryIcon="Find"/>
+            </Grid>
+
+            <Border Margin="0,12,0,12"
+                    CornerRadius="6"
+                    Grid.Row="1"
+                    Grid.ColumnSpan="2"
+                    Style="{StaticResource EvenBorderStyle}"
+                    Padding="2,0">
+                <Grid ColumnSpacing="8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="28" />
+                        <ColumnDefinition Width="60" />
+                        <ColumnDefinition />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width=".5*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <HyperlinkButton Padding="8,8,8,8"
+                                     HorizontalAlignment="Right"
+                                     Content="#" />
+                    <HyperlinkButton Content="Title"
+                                     Padding="0,8,8,8"
+                                     HorizontalContentAlignment="Left"
+                                     HorizontalAlignment="Stretch"
+                                     Grid.Column="2" />
+
+
+                    <HyperlinkButton Content="Artists"
+                                     HorizontalContentAlignment="Left"
+                                     Padding="0,8,8,8"
+                                     HorizontalAlignment="Stretch"
+                                     Grid.Column="3" />
+
+
+                    <HyperlinkButton Content="Album"
+                                     HorizontalContentAlignment="Left"
+                                     Padding="0,8,8,8"
+                                     HorizontalAlignment="Stretch"
+                                     Grid.Column="4" />
+
+                    <HyperlinkButton Content="Date added"
+                                     HorizontalContentAlignment="Left"
+                                     Padding="0,8,8,8"
+                                     HorizontalAlignment="Stretch"
+                                     Grid.Column="5" />
+
+                    <HyperlinkButton HorizontalAlignment="Stretch"
+                                     HorizontalContentAlignment="Left"
+                                     Grid.Column="6">
+                        <FontIcon FontFamily="Segoe Fluent Icons"
+                                  Glyph="&#xE916;" />
+                    </HyperlinkButton>
+                </Grid>
+            </Border>
+        </StackPanel>
+
         <ListView Grid.Row="1"
+                  Margin="-18,0"
+                  ChoosingItemContainer="MainLv_OnChoosingItemContainer"
                   SelectionMode="Extended"
-                  ItemsSource="{Binding Data, Mode=OneWay}" />
+                  x:Name="MainLv"
+                  ItemContainerStyle="{StaticResource TracksListViewItemStyle}"
+                  ItemsSource="{Binding Data, Mode=OneWay}">
+            <ListView.ItemTemplate>
+                <DataTemplate x:DataType="library:LibraryTrack">
+                    <components:TrackView AlternatingRowColor="True"
+                                          Height="38"
+                                          Index="{x:Bind OriginalIndex, Mode=OneWay}"
+                                          ImageUrl="{x:Bind GetSmallestImage(Track), Mode=OneWay}"
+                                          Id="{x:Bind Track.Id, Mode=OneWay}"
+                                          ShowImage="True">
+                        <components:TrackView.View>
+                            <Grid VerticalAlignment="Center">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="10"/>
+                                    <ColumnDefinition />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width=".5*" />
+                                    <ColumnDefinition Width="44 " />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock VerticalAlignment="Center" Grid.Column="1" Text="{x:Bind Track.Title, Mode=OneWay}"/>
+
+                                <ItemsRepeater
+                                    VerticalAlignment="Center"
+                                    Layout="{StaticResource ArtistLayout}"
+                                    ItemTemplate="{StaticResource HorizontalArtistTemplate}"
+                                    ItemsSource="{x:Bind Track.Artists, Mode=OneWay}" Grid.Column="2"/>
+
+                                <TextBlock
+                                    VerticalAlignment="Center"
+                                    Grid.Column="3" Text="{x:Bind Track.Album.Name, Mode=OneWay}"/>
+                                <TextBlock 
+                                    VerticalAlignment="Center"
+                                    Grid.Column="4" Text="{x:Bind FormatToRelativeDate(Added), Mode=OneWay}"/>
+                                <TextBlock 
+                                    VerticalAlignment="Center"
+                                    Grid.Column="5" Text="{x:Bind FormatToShorterTimestamp(Track.Duration), Mode=OneWay}"/>
+                            </Grid>
+                        </components:TrackView.View>
+                    </components:TrackView>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
     </Grid>
 </UserControl>

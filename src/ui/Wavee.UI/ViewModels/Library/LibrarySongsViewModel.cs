@@ -1,5 +1,7 @@
 ﻿using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Reactive.Linq;
+using System.Runtime.CompilerServices;
 using DynamicData;
 using DynamicData.Binding;
 using LanguageExt.UnsafeValueAccess;
@@ -24,7 +26,7 @@ public sealed class LibrarySongsViewModel<R> :
 
     public LibrarySongsViewModel(R runtime)
     {
-
+        SortParameters = TrackSortType.OriginalIndex_Desc;
         var filterApplier =
             this.WhenValueChanged(t => t.SearchText)
                 .Throttle(TimeSpan.FromMilliseconds(250))
@@ -74,12 +76,8 @@ public sealed class LibrarySongsViewModel<R> :
                      Added = item.AddedAt
                  };
              })
-             .Select(x=>
-             {
-                 return x;
-             })
-             .Sort(sortChange)
              .Filter(filterApplier)
+             .Sort(sortChange)
              .ObserveOn(RxApp.MainThreadScheduler)
              .Bind(out _data)     // update observable collection bindings
              .DisposeMany()   //dispose when no longer required
@@ -112,10 +110,48 @@ public sealed class LibrarySongsViewModel<R> :
     }
 }
 
-public class LibraryTrack
+public class LibraryTrack : INotifyPropertyChanged
 {
+    private int _index;
     public required ITrack Track { get; init; }
     public required DateTimeOffset Added { get; init; }
+
+    public int OriginalIndex
+    {
+        get => _index;
+        set => this.SetField(ref _index, value);
+    }
+
+    public string GetSmallestImage(ITrack track)
+    {
+        return track.Album.Artwork.OrderBy(i => i.Width).First().Url;
+    }
+
+    public event PropertyChangedEventHandler? PropertyChanged;
+
+    protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+    {
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    }
+
+    protected bool SetField<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
+    {
+        if (EqualityComparer<T>.Default.Equals(field, value)) return false;
+        field = value;
+        OnPropertyChanged(propertyName);
+        return true;
+    }
+
+    public string FormatToRelativeDate(DateTimeOffset dateTimeOffset)
+    {
+        return dateTimeOffset.ToString("g");
+    }
+
+    public string FormatToShorterTimestamp(TimeSpan timeSpan)
+    {
+        //only show minutes and seconds
+        return timeSpan.ToString(@"mm\:ss");
+    }
 }
 
 public enum TrackSortType

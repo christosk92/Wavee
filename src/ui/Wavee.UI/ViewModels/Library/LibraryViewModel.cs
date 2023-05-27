@@ -105,6 +105,10 @@ public sealed class LibraryViewModel<R> : ReactiveObject where R : struct, HasSp
             });
     }
 
+    public IEnumerable<SpotifyLibaryItem> GetLibraryItems()
+    {
+        return _items.Items;
+    }
     public IObservable<IChangeSet<SpotifyLibaryItem, AudioId>> Items => _items.Connect();
     public ICommand SaveCommand { get; }
 

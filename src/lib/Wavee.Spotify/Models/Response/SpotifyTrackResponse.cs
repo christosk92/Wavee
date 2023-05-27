@@ -10,6 +10,7 @@ public readonly record struct SpotifyTrackResponse(AudioId Id, string Title, Seq
 {
     public static SpotifyTrackResponse From(string country, string cdnUrl, Track track)
     {
+        cdnUrl ??= "https://i.scdn.co/image/{file_id}";
         return new SpotifyTrackResponse(
             Id: AudioId.FromRaw(track.Gid.Span, AudioItemType.Track, ServiceType.Spotify),
             Title: track.Name,
