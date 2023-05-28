@@ -14,6 +14,18 @@ internal readonly partial record struct SpotifyTrackAlbum(AudioId Id, string Nam
     DateOnly ReleaseDate, ReleaseDatePrecisionType ReleaseDatePrecision, int DiscNumber,
     string ArtistName) : ITrackAlbum, IComparable<SpotifyTrackAlbum>
 {
+    public static SpotifyTrackAlbum From(string cdnUrl, Show show)
+    {
+        return new SpotifyTrackAlbum(
+            Id: AudioId.FromRaw(show.Gid.Span, AudioItemType.PodcastShow, ServiceType.Spotify),
+            Name: show.Name,
+            Artwork: show.CoverImage.Image.Select(x => ToArtwork(cdnUrl, x)).ToSeq(),
+            ReleaseDate: new DateOnly(1, 1, 1),
+            ReleaseDatePrecision: ReleaseDatePrecisionType.Unknown,
+            DiscNumber: 0,
+            ArtistName: show.Publisher
+        );
+    }
     public static SpotifyTrackAlbum From(string cdnUrl, Album album, int discNumber)
     {
         if (album is null) return default;
@@ -23,7 +35,7 @@ internal readonly partial record struct SpotifyTrackAlbum(AudioId Id, string Nam
         return new SpotifyTrackAlbum(
             Id: AudioId.FromRaw(album.Gid.Span, AudioItemType.Album, ServiceType.Spotify),
             Name: album.Name,
-            Artwork: album.CoverGroup.Image.Select(x => ToArtwork(cdnUrl, x)).ToSeq(),
+            Artwork: album.CoverGroup?.Image?.Select(x => ToArtwork(cdnUrl, x))?.ToSeq() ?? LanguageExt.Seq<Artwork>.Empty,
             ReleaseDate: releaseDate,
             ReleaseDatePrecision: precision,
             DiscNumber: discNumber,
@@ -56,6 +68,7 @@ internal readonly partial record struct SpotifyTrackAlbum(AudioId Id, string Nam
 
     private static Artwork ToArtwork(string cdnUrl, Image image)
     {
+        cdnUrl ??= "https://i.scdn.co/image/{file_id}";
         var imageId = ToBase16(image.FileId.Span);
         return new Artwork(
             Url: cdnUrl.Replace("{file_id}", imageId),

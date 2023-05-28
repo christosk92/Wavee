@@ -13,8 +13,24 @@
     xmlns:ui="using:CommunityToolkit.WinUI.UI"
     xmlns:viewModels="using:Wavee.UI.ViewModels"
     xmlns:components="using:Wavee.UI.WinUI.Components"
+    xmlns:contracts="using:Wavee.Core.Contracts"
     SizeChanged="PlaylistView_OnSizeChanged"
     mc:Ignorable="d">
+    <UserControl.Resources>
+        <ItemsPanelTemplate x:Key="ArtistLayout">
+            <StackPanel Orientation="Horizontal"
+                        Spacing="4" />
+        </ItemsPanelTemplate>
+        <DataTemplate x:Key="HorizontalArtistTemplate"
+                      x:DataType="viewModels:PlaylistShortItem">
+            <HyperlinkButton VerticalAlignment="Center"
+                             Padding="0,8,8,8"
+                             Tag="{x:Bind Id}"
+                             Tapped="NavigateToMetadata"
+                             Foreground="{ThemeResource ApplicationForegroundThemeBrush}"
+                             Content="{x:Bind Name}" />
+        </DataTemplate>
+    </UserControl.Resources>
     <Grid>
         <ScrollViewer>
             <StackPanel>
@@ -47,17 +63,20 @@
                                                                  To="1.0" />
                                 </animations:AnimationSet>
                             </animations:Explicit.Animations>
-                            <TextBlock Text="A curated playlist by Spotify"
+                            <TextBlock Text="A CURATED PLAYLIST BY SPOTIFY"
                                    HorizontalAlignment="Center"
-                                       FontWeight="Bold"
-                                       FontSize="18"
-                                       Opacity=".8" />
+                                       FontWeight="ExtraBold"
+                                       FontSize="14"
+                                       Opacity=".7" />
                             <TextBlock FontSize="64"
                                        labs:TransitionHelper.Id="name"
                                        FontWeight="Bold"
                                        Text="{x:Bind ViewModel.Playlist.Name, Mode=OneWay}" />
                             <TextBlock FontWeight="SemiBold"
-                                   Text="{x:Bind ViewModel.Playlist.Description, Mode=OneWay}"
+                                       TextWrapping="Wrap"
+                                       MaxWidth="350"
+                                       TextAlignment="Center"
+                                       Text="{x:Bind ViewModel.Playlist.Description, Mode=OneWay}"
                                    />
 
                             <StackPanel Orientation="Horizontal"
@@ -80,22 +99,141 @@
                         </StackPanel>
                     </StackPanel>
                 </Grid>
+                <Border Margin="24,12,24,12"
+                    CornerRadius="6"
+                    Grid.Row="1"
+                    Grid.ColumnSpan="2"
+                    Style="{StaticResource EvenBorderStyle}"
+                    Padding="2,0">
+                    <Grid ColumnSpacing="8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="28" />
+                            <ColumnDefinition Width="60" />
+                            <ColumnDefinition />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width=".5*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <HyperlinkButton Padding="8,8,8,8"
+                                     HorizontalAlignment="Right"
+                                     Tapped="SortButtonTapp"
+                                     Command="{x:Bind ViewModel.SortCommand}"
+                                     CommandParameter="{x:Bind NextSortType(ViewModel.SortParameters, 'index'),Mode=OneWay}"
+                                     Content="#" />
+                        <HyperlinkButton Content="Title"
+                                     Tapped="SortButtonTapp"
+                                     Command="{x:Bind ViewModel.SortCommand}"
+                                     CommandParameter="{x:Bind NextSortType(ViewModel.SortParameters, 'title'),Mode=OneWay}"
+                                     Padding="0,8,8,8"
+                                     HorizontalContentAlignment="Left"
+                                     HorizontalAlignment="Stretch"
+                                     Grid.Column="2" />
 
 
-                <ItemsView ItemsSource="{x:Bind ViewModel.Data}">
+                        <HyperlinkButton Content="Artists"
+                                     Tapped="SortButtonTapp"
+                                     Command="{x:Bind ViewModel.SortCommand}"
+                                     CommandParameter="{x:Bind NextSortType(ViewModel.SortParameters, 'artists'),Mode=OneWay}"
+                                     HorizontalContentAlignment="Left"
+                                     Padding="0,8,8,8"
+                                     HorizontalAlignment="Stretch"
+                                     Grid.Column="3" />
+
+
+                        <HyperlinkButton Content="Album"
+                                     Tapped="SortButtonTapp"
+                                     x:Name="AlbumSortButton"
+                                     Command="{x:Bind ViewModel.SortCommand}"
+                                     CommandParameter="{x:Bind NextSortType(ViewModel.SortParameters, 'album'),Mode=OneWay}"
+                                     HorizontalContentAlignment="Left"
+                                     Padding="0,8,8,8"
+                                     HorizontalAlignment="Stretch"
+                                     Grid.Column="4" />
+
+                        <HyperlinkButton Content="Date added"
+                                     Tapped="SortButtonTapp"
+                                     Command="{x:Bind ViewModel.SortCommand}"
+                                     CommandParameter="{x:Bind NextSortType(ViewModel.SortParameters, 'date'),Mode=OneWay}"
+                                     HorizontalContentAlignment="Left"
+                                     Padding="0,8,8,8"
+                                     HorizontalAlignment="Stretch"
+                                     Grid.Column="5" />
+
+                        <HyperlinkButton HorizontalAlignment="Stretch"
+                                         Tapped="SortButtonTapp"
+                                         Command="{x:Bind ViewModel.SortCommand}"
+                                         CommandParameter="{x:Bind NextSortType(ViewModel.SortParameters, 'date'),Mode=OneWay}"
+                                         HorizontalContentAlignment="Left"
+                                        Grid.Column="6">
+                            <FontIcon FontFamily="Segoe Fluent Icons"
+                                  Glyph="&#xE916;" />
+                        </HyperlinkButton>
+                    </Grid>
+                </Border>
+
+                <ItemsView Margin="24,0" 
+                           SelectionMode="Extended"
+                           ItemsSource="{x:Bind ViewModel.Data}">
                     <ItemsView.ItemTemplate>
                         <DataTemplate x:DataType="viewModels:PlaylistTrackVm">
-                            <components:TrackView AlternatingRowColor="True"
-                                                  Height="42"
-                                                  x:Phase="2"
-                                                  Index="{x:Bind OriginalIndex, Mode=OneWay}"
-                                                  ImageUrl="{x:Bind GetSmallestImage(Track), Mode=OneWay}"
-                                                  Id="{x:Bind Track.Id, Mode=OneWay}"
-                                                  ShowImage="True">
-                                <components:TrackView.View>
-                                    <Grid/>
-                                </components:TrackView.View>
-                            </components:TrackView>
+                            <ItemContainer
+                                IsSelected="False"
+                                MultiSelectMode="Extended"
+                                CanDrag="True"
+                                Height="42"
+                                CanUserSelect="UserCanSelect">
+                                <components:TrackView AlternatingRowColor="True"
+                                                      x:Phase="2"
+                                                      Index="{x:Bind OriginalIndex, Mode=OneWay}"
+                                                      ImageUrl="{x:Bind SmallestImage, Mode=OneWay}"
+                                                      Id="{x:Bind Id, Mode=OneWay}"
+                                                      ShowImage="True">
+                                    <components:TrackView.View>
+                                        <Grid VerticalAlignment="Center">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="10" />
+                                                <ColumnDefinition />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width=".5*" />
+                                                <ColumnDefinition Width="44 " />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock VerticalAlignment="Center"
+                                           Grid.Column="1"
+                                           TextTrimming="CharacterEllipsis"
+                                           x:Phase="1"
+                                           Text="{x:Bind Name, Mode=OneWay}" />
+
+                                            <ItemsControl VerticalAlignment="Center"
+                                              x:Phase="3"
+                                              ItemsPanel="{StaticResource ArtistLayout}"
+                                              ItemTemplate="{StaticResource HorizontalArtistTemplate}"
+                                              ItemsSource="{x:Bind Artists, Mode=OneWay}"
+                                              Grid.Column="2" />
+
+                                            <HyperlinkButton VerticalAlignment="Center"
+                                                 Grid.Column="3"
+                                                 x:Phase="4"
+                                                 Padding="0,8,8,8"
+                                                 Tag="{x:Bind Album.Id}"
+                                                 Tapped="NavigateToMetadata"
+                                                 Foreground="{ThemeResource ApplicationForegroundThemeBrush}"
+                                                 Content="{x:Bind Album.Name, Mode=OneWay}" />
+                                            <TextBlock VerticalAlignment="Center"
+                                                 Grid.Column="4"
+                                                 x:Phase="5"
+                                                 x:Name="AddedAtBlock"
+                                                 x:Load="{x:Bind HasAddedAt}"
+                                                 Text="{x:Bind FormatToRelativeDate(AddedAt), Mode=OneWay}" />
+                                            <TextBlock VerticalAlignment="Center"
+                                           Grid.Column="5"
+                                           x:Phase="5"
+                                           Text="{x:Bind FormatToShorterTimestamp(Duration), Mode=OneWay}" />
+                                        </Grid>
+                                    </components:TrackView.View>
+                                </components:TrackView>
+                            </ItemContainer>
                         </DataTemplate>
                     </ItemsView.ItemTemplate>
                 </ItemsView>

@@ -1,6 +1,8 @@
-﻿using System.Collections.ObjectModel;
+﻿using System;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Reactive.Linq;
+using System.Windows.Input;
 using DynamicData;
 using DynamicData.Binding;
 using Eum.Spotify.playlist4;
@@ -12,6 +14,7 @@ using Spotify.Metadata;
 using Wavee.Core.Contracts;
 using Wavee.Core.Ids;
 using Wavee.Spotify.Infrastructure.Playback;
+using Wavee.Spotify.Models.Response;
 using Wavee.UI.Infrastructure.Sys;
 using Wavee.UI.Infrastructure.Traits;
 using Wavee.UI.Models;
@@ -34,7 +37,12 @@ public sealed class PlaylistViewModel<R> : ReactiveObject, INavigableViewModel
 
     public PlaylistViewModel(R runtime)
     {
+        SortParameters = PlaylistTrackSortType.IndexAsc;
         this.runtime = runtime;
+        SortCommand = ReactiveCommand.Create<PlaylistTrackSortType>(x =>
+        {
+            SortParameters = x;
+        });
     }
 
     public PlaylistViewData Playlist
@@ -107,27 +115,23 @@ public sealed class PlaylistViewModel<R> : ReactiveObject, INavigableViewModel
                         return Enumerable.Empty<PlaylistTrackInfo>();
                     }
 
-                    var tracks =
-                        tracksToQueue.Select(static async c => await TrackEnqueueService<R>.GetTrack(c));
-                    var results = await Task.WhenAll(tracks);
-
+                    var tracks = await TrackEnqueueService<R>.GetTracks(tracksToQueue);
                     var toReturn = new List<PlaylistTrackInfo>(playlist.Playlist
                         .Contents.Items.Count);
                     int index = 0;
                     foreach (var request in playlist.Playlist
                                  .Contents.Items)
                     {
-                        var track = results
-                            .FirstOrDefault(c => c.Id == AudioId.FromUri(request.Uri));
-                        if (track.Id.Id.IsZero)
+                        var id = AudioId.FromUri(request.Uri);
+                        if (tracks.TryGetValue(id, out var track) && track.IsSome)
                         {
-                            toReturn.Add(new PlaylistTrackInfo(track, DateTimeOffset.MinValue, false, index));
+                            toReturn.Add(new PlaylistTrackInfo(track.ValueUnsafe(), request.Attributes.HasTimestamp
+                                ? DateTimeOffset.FromUnixTimeMilliseconds(request.Attributes.Timestamp)
+                                : DateTimeOffset.MinValue, request.Attributes.HasTimestamp, index));
                         }
                         else
                         {
-                            toReturn.Add(new PlaylistTrackInfo(track, request.Attributes.HasTimestamp
-                                ? DateTimeOffset.FromUnixTimeMilliseconds(request.Attributes.Timestamp)
-                                : DateTimeOffset.MinValue, request.Attributes.HasTimestamp, index));
+                            Debugger.Break();
                         }
 
                         index++;
@@ -176,12 +180,32 @@ public sealed class PlaylistViewModel<R> : ReactiveObject, INavigableViewModel
         _cleanup = _items
             .Connect()
             //.Filter(c => c.Data.Id.Type is AudioItemType.Track)
-            .Transform(x => new PlaylistTrackVm
+            .Transform(x =>
             {
-                AddedAt = x.AddedAt,
-                HasAddedAt = x.HasAddedAt,
-                Track = x.Data,
-                OriginalIndex = x.Index,
+                return x.Data.Value
+                    .Match(Left: episode => new PlaylistTrackVm(), Right: track =>
+                    {
+                        return new PlaylistTrackVm
+                        {
+                            AddedAt = x.AddedAt,
+                            HasAddedAt = x.HasAddedAt,
+                            OriginalIndex = x.Index,
+                            Id = x.Data.Id,
+                            Album = new PlaylistShortItem
+                            {
+                                Id = AudioId.FromRaw(track.Album.Gid.Span, AudioItemType.Album, ServiceType.Spotify),
+                                Name = track.Album.Name
+                            },
+                            Artists = track.Artist.Select(c => new PlaylistShortItem
+                            {
+                                Id = AudioId.FromRaw(c.Gid.Span, AudioItemType.Artist, ServiceType.Spotify),
+                                Name = c.Name
+                            }).ToArray(),
+                            Name = track.Name,
+                            SmallestImage = x.Data.GetImage(Image.Types.Size.Small),
+                            Duration = TimeSpan.FromMilliseconds(track.Duration)
+                        };
+                    });
             })
             .Filter(filterApplier)
             .Sort(sortChange)
@@ -209,6 +233,8 @@ public sealed class PlaylistViewModel<R> : ReactiveObject, INavigableViewModel
         set => this.RaiseAndSetIfChanged(ref _isSaved, value);
     }
 
+    public ICommand SortCommand { get; }
+
     public TaskCompletionSource PlaylistFetched = new TaskCompletionSource();
     private bool _isSaved;
 
@@ -219,7 +245,7 @@ public sealed class PlaylistViewModel<R> : ReactiveObject, INavigableViewModel
     private static Func<PlaylistTrackVm, bool> BuildFilter(string? searchText)
     {
         if (string.IsNullOrEmpty(searchText)) return _ => true;
-        return t => t.Track.Name.Contains(searchText, StringComparison.OrdinalIgnoreCase);
+        return t => t.Name.Contains(searchText, StringComparison.OrdinalIgnoreCase);
     }
     public void Clear()
     {
@@ -229,6 +255,7 @@ public sealed class PlaylistViewModel<R> : ReactiveObject, INavigableViewModel
 
 public enum PlaylistTrackSortType
 {
+    IndexAsc
 }
 
 public class PlaylistViewData
@@ -244,18 +271,69 @@ public class PlaylistViewData
 public readonly record struct PlaylistTrackInfo(
     TrackOrEpisode Data, DateTimeOffset AddedAt, bool HasAddedAt, int Index);
 
+public class PlaylistShortItem
+{
+    public string Name { get; set; }
+    public AudioId Id { get; set; }
+}
 public class PlaylistTrackVm
 {
     public int OriginalIndex { get; init; }
-    public TrackOrEpisode Track { get; init; }
     public DateTimeOffset AddedAt { get; init; }
     public bool HasAddedAt { get; init; }
 
-    public string GetSmallestImage(TrackOrEpisode trackOrEpisode)
+    public string SmallestImage
     {
-        return Track.Value.Match(
-            Left: ep => "",
-            Right: tr => tr.Album.Artwork.OrderBy(i => i.Width).First().Url
-        );
+        get;
+        init;
+    }
+    public PlaylistShortItem Album { get; init; }
+    public PlaylistShortItem[] Artists { get; init; }
+    public AudioId Id { get; init; }
+    public string Name { get; set; }
+    public TimeSpan Duration { get; set; }
+
+    public string FormatToRelativeDate(DateTimeOffset dateTimeOffset)
+    {
+
+        //less than 10 seconds: "Just now"
+        //less than 1 minute: "X seconds ago"
+        //less than 1 hour: "X minutes ago" OR // "1 minute ago"
+        //less than 1 day: "X hours ago" OR // "1 hour ago"
+        //less than 1 week: "X days ago" OR // "1 day ago"
+        //Exact date
+
+        var totalSeconds = (int)DateTimeOffset.Now.Subtract(dateTimeOffset).TotalSeconds;
+        var totalMinutes = totalSeconds / 60;
+        var totalHours = totalMinutes / 60;
+        var totalDays = totalHours / 24;
+        var totalWeeks = totalDays / 7;
+        return dateTimeOffset switch
+        {
+            _ when dateTimeOffset > DateTimeOffset.Now.AddSeconds(-10) => "Just now",
+            _ when dateTimeOffset > DateTimeOffset.Now.AddMinutes(-1) =>
+                $"{totalSeconds} second{(totalSeconds > 1 ? "s" : "")} ago",
+            _ when dateTimeOffset > DateTimeOffset.Now.AddHours(-1) =>
+                $"{totalMinutes} minute{(totalMinutes > 1 ? "s" : "")} ago",
+            _ when dateTimeOffset > DateTimeOffset.Now.AddDays(-1) =>
+                $"{totalHours} hour{(totalHours > 1 ? "s" : "")} ago",
+            _ when dateTimeOffset > DateTimeOffset.Now.AddDays(-7) =>
+                $"{totalDays} day{(totalDays > 1 ? "s" : "")} ago",
+            _ when dateTimeOffset > DateTimeOffset.Now.AddMonths(-1) =>
+                $"{totalWeeks} week{(totalWeeks > 1 ? "s" : "")} ago",
+            _ => GetFullMonthStr(dateTimeOffset)
+        };
+
+        static string GetFullMonthStr(DateTimeOffset d)
+        {
+            string fullMonthName =
+                d.ToString("MMMM");
+            return $"{fullMonthName} {d.Day}, {d.Year}";
+        }
+    }
+
+    public string FormatToShorterTimestamp(TimeSpan timeSpan)
+    {
+        return timeSpan.ToString(@"mm\:ss");
     }
 }

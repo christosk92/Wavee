@@ -2,6 +2,9 @@ using LanguageExt;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using System;
+using System.Threading.Tasks;
+using Microsoft.UI.Xaml.Input;
+using Wavee.Core.Ids;
 using Wavee.UI.Infrastructure.Live;
 using Wavee.UI.ViewModels;
 
@@ -13,6 +16,7 @@ namespace Wavee.UI.WinUI.Views.Playlist
         {
             ViewModel = new PlaylistViewModel<WaveeUIRuntime>(App.Runtime);
             this.InitializeComponent();
+
         }
 
         public bool ShouldKeepInCache(int depth)
@@ -59,6 +63,8 @@ namespace Wavee.UI.WinUI.Views.Playlist
         {
             await ViewModel.PlaylistFetched.Task;
             MetadataPnale.Visibility = Visibility.Visible;
+            ShowPanelAnim.Start();
+            PlaylistView_OnSizeChanged(this, null);
         }
 
         public object SavedToContent(bool b)
@@ -87,6 +93,25 @@ namespace Wavee.UI.WinUI.Views.Playlist
             }
 
             return stckp;
+        }
+
+        private void SortButtonTapp(object sender, TappedRoutedEventArgs e)
+        {
+
+        }
+
+        public PlaylistTrackSortType NextSortType(PlaylistTrackSortType playlistTrackSortType, string forWhat)
+        {
+            return PlaylistTrackSortType.IndexAsc;
+        }
+
+        private void NavigateToMetadata(object sender, TappedRoutedEventArgs e)
+        {
+            var hp = (sender as HyperlinkButton).Tag;
+            if (hp is AudioId id)
+            {
+                UICommands.NavigateTo.Execute(id);
+            }
         }
     }
 }

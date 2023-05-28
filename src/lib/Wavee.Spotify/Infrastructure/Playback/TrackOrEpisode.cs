@@ -3,7 +3,9 @@ using System.Text;
 using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
 using Spotify.Metadata;
+using Wavee.Core.Contracts;
 using Wavee.Core.Ids;
+using Wavee.Spotify.Models.Response;
 
 namespace Wavee.Spotify.Infrastructure.Playback;
 
@@ -119,6 +121,21 @@ public readonly record struct TrackOrEpisode(Either<Episode, Track> Value)
         Right: track => AudioId.FromRaw(track.Gid.Span, AudioItemType.Track, ServiceType.Spotify)
     );
 
+    public TimeSpan Duration => Value.Match(
+               Left: e => TimeSpan.FromMilliseconds(e.Duration),
+               Right: t => TimeSpan.FromMilliseconds(t.Duration)
+        );
+
+    public Seq<ITrackArtist> Artists => Value.Match(
+        Left: e => LanguageExt.Seq<ITrackArtist>.Empty,
+        Right: t => t.ArtistWithRole.Select(SpotifyTrackArtist.From).Cast<ITrackArtist>().ToSeq()
+    );
+
+    public ITrackAlbum Group => Value.Match(
+        Left: e => SpotifyTrackAlbum.From(null, e.Show),
+        Right: t => SpotifyTrackAlbum.From(null, t.Album, t.DiscNumber)
+    );
+
     private const string BASE62_CHARS = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
     private static string Encode(ReadOnlySpan<byte> raw)
@@ -149,6 +166,7 @@ public readonly record struct TrackOrEpisode(Either<Episode, Track> Value)
                 },
                 Right: t =>
                 {
+                    if (t.Album.CoverGroup?.Image is null) return None;
                     var r = t.Album.CoverGroup.Image.SingleOrDefault(c => c.Size == size);
                     if (r is not null)
                         return Some(r);

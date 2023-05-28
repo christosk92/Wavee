@@ -1,5 +1,6 @@
 ﻿using System.Buffers.Text;
 using System.ComponentModel;
+using System.Linq;
 using Eum.Spotify.playlist4;
 using Google.Protobuf;
 using LanguageExt;
@@ -68,37 +69,69 @@ public readonly struct SpotifyCache
 
     #region Metadata
 
-    public Seq<Option<TrackOrEpisode>> GetBulk(Seq<AudioId> request)
+    public HashMap<AudioId, Option<TrackOrEpisode>> GetBulk(Seq<AudioId> request)
     {
-        if (request.Length == 0) return LanguageExt.Seq<Option<TrackOrEpisode>>.Empty;
+        if (request.Length == 0) return Empty;
         if (_dbPath.IsNone)
-            return new Seq<Option<TrackOrEpisode>>(Enumerable.Repeat(Option<TrackOrEpisode>.None, request.Count));
+            return LanguageExt.HashMap<AudioId, Option<TrackOrEpisode>>.Empty;
+        // return new Seq<Option<TrackOrEpisode>>(Enumerable.Repeat(Option<TrackOrEpisode>.None, request.Count));
         using var db = new SQLiteConnection(_dbPath.ValueUnsafe());
         // var result = new List<Option<TrackOrEpisode>>(request.Count);
 
         var base62IdsMap = request
-            .ToDictionary(c => c.ToBase62(), c => c.Type)
-            .ToHashMap();
+            .DistinctBy(x => x.Id)
+            .ToDictionary(c => c.ToBase62(), c => c.Type);
         var base62Ids = base62IdsMap.Keys;
         var tracks = db.Table<CachedTrack>()
             .Where(x => base62Ids.Contains(x.Id))
-            .ToArray();
+            .ToDictionary(x => x.Id, x => x.RestData);
         var episodes = db.Table<CachedEpisode>()
             .Where(x => base62Ids.Contains(x.Id))
-            .ToArray();
+            .ToDictionary(x => x.Id, x => x.RestData);
 
-        var result = base62IdsMap.Map(x =>
+        var output = new Dictionary<AudioId, Option<TrackOrEpisode>>();
+        foreach (var req in base62IdsMap)
+        {
+            var originalId = AudioId.FromBase62(req.Key, req.Value, ServiceType.Spotify);
+            switch (req.Value)
             {
-                var trackOrEpisode = x.Value switch
-                {
-                    AudioItemType.PodcastEpisode => episodes.Find(y => y.Id == x.Key)
-                        .Map(y => new TrackOrEpisode(Episode.Parser.ParseFrom(y.RestData))),
-                    AudioItemType.Track => tracks.Find(y => y.Id == x.Key)
-                        .Map(y => new TrackOrEpisode(Track.Parser.ParseFrom(y.RestData)))
-                };
-                return trackOrEpisode;
-            });
-        return result.ToSeq();
+                case AudioItemType.Track:
+                    if (tracks.TryGetValue(req.Key, out var track))
+                    {
+                        output.Add(originalId, new TrackOrEpisode(Track.Parser.ParseFrom(track)));
+                    }
+                    else
+                    {
+                        output.Add(originalId, None);
+                    }
+                    break;
+                case AudioItemType.PodcastEpisode:
+                    if (episodes.TryGetValue(req.Key, out var episode))
+                    {
+                        output.Add(originalId, new TrackOrEpisode(Episode.Parser.ParseFrom(episode)));
+                    }
+                    else
+                    {
+                        output.Add(originalId, None);
+                    }
+                    break;
+            }
+        }
+
+        return output.ToHashMap();
+
+        // var result = base62IdsMap.Map(x =>
+        // {
+        //     var trackOrEpisode = x.Value switch
+        //     {
+        //         AudioItemType.PodcastEpisode => episodes.Find(y => y.Id == x.Key)
+        //             .Map(y => new TrackOrEpisode(Episode.Parser.ParseFrom(y.RestData))),
+        //         AudioItemType.Track => tracks.Find(y => y.Id == x.Key)
+        //             .Map(y => new TrackOrEpisode(Track.Parser.ParseFrom(y.RestData)))
+        //     };
+        //     return trackOrEpisode;
+        // });
+        // return result.ToSeq();
     }
 
     public Unit Save(TrackOrEpisode metadata)

@@ -26,5 +26,6 @@ public enum AudioItemType
     /// The audio item is an episode from a podcast.
     /// </summary>
     PodcastEpisode,
-    Unknown
+    Unknown,
+    PodcastShow
 }

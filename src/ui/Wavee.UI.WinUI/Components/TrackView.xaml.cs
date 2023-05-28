@@ -341,7 +341,7 @@ public sealed partial class TrackView : UserControl
 
     private void TrackView_OnDoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
     {
-        PlayCommand.Execute(Id);
+        PlayCommand?.Execute(Id);
     }
 
     private void TrackView_OnContextRequested(UIElement sender, ContextRequestedEventArgs args)

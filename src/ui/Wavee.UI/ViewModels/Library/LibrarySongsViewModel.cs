@@ -7,12 +7,14 @@ using System.Runtime.ConstrainedExecution;
 using System.Windows.Input;
 using DynamicData;
 using DynamicData.Binding;
+using Eum.Spotify.playlist4;
 using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
 using ReactiveUI;
 using SQLitePCL;
 using Wavee.Core.Contracts;
 using Wavee.Core.Ids;
+using Wavee.Spotify.Infrastructure.Playback;
 using Wavee.Spotify.Infrastructure.Remote.Messaging;
 using Wavee.Spotify.Models.Response;
 using Wavee.UI.Infrastructure.Sys;
@@ -88,14 +90,19 @@ public sealed class LibrarySongsViewModel<R> :
         var cdnUrl = Spotify<R>.CdnUrl().Run(runtime).ThrowIfFail().ValueUnsafe();
         var playCommand = ReactiveCommand.CreateFromTask<AudioId>(Execute);
 
+
+        var itemsTemp = new Dictionary<AudioId, Option<TrackOrEpisode>>();
         _cleanup = Library.Items
              .Filter(c => c.Id.Type is AudioItemType.Track)
-             .TransformAsync(async item =>
+             .SelectMany(async s =>
              {
-                 var response = await TrackEnqueueService<R>.GetTrack(item.Id);
-                 var tr = SpotifyTrackResponse.From(country, cdnUrl,
-                     response.Value.Match(Left: _ => throw new NotSupportedException(), Right: r => r));
-
+                 var items = s.Select(f => f.Key).ToSeq();
+                 itemsTemp = await TrackEnqueueService<R>.GetTracks(items);
+                 return s;
+             })
+             .Transform(item =>
+             {
+                 var tr = SpotifyTrackResponse.From(country, cdnUrl, itemsTemp[item.Id].ValueUnsafe().Value.Match(Left: _ => throw new NotSupportedException(), Right: r => r));
                  return new LibraryTrack
                  {
                      Track = tr,
@@ -331,7 +338,7 @@ public class LibraryTrack : INotifyPropertyChanged
         {
             string fullMonthName =
                 d.ToString("MMMM");
-            return$"{fullMonthName} {d.Day}, {d.Year}";
+            return $"{fullMonthName} {d.Day}, {d.Year}";
         }
     }
 
