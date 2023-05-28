@@ -11,6 +11,7 @@
     <Grid>
         <NavigationView
             x:Name="NavVi"
+            IsSettingsVisible="False"
             ItemInvoked="NavVi_OnItemInvoked"
             PaneDisplayMode="Top"
             IsBackButtonVisible="Collapsed"

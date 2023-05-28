@@ -73,6 +73,18 @@ public static class UiConfig<RT> where RT : struct, HasFile<RT>, HasDirectory<RT
         from config in Deserialize(configPath)
         select (DeviceType)config.Remote.DeviceType;
 
+    public static Eff<RT, string?> MetadataCachePath =>
+        from configPath in ConfigPath
+        from config in Deserialize(configPath)
+        select config.Cache.MetadataBasePath;
+
+
+    public static Eff<RT, string?> AudioFilesCachePath =>
+        from configPath in ConfigPath
+        from config in Deserialize(configPath)
+        select config.Cache.AudioFilesPath;
+
+
 
     public static Aff<RT, Unit> SetWindowWidth(uint width) =>
         from configPath in ConfigPath
@@ -118,6 +130,22 @@ public static class UiConfig<RT> where RT : struct, HasFile<RT>, HasDirectory<RT
         select unit;
 
 
+    public static Aff<RT, Unit> SetMetadataCachePath(string path) =>
+        from configPath in ConfigPath
+        from config in Deserialize(configPath)
+        from newConfig in SuccessEff(config.SetMetadataBasePath(path))
+        from serialized in SerializeAndWrite(configPath, newConfig)
+        select unit;
+
+
+    public static Aff<RT, Unit> SetAudioCachePath(string path) =>
+        from configPath in ConfigPath
+        from config in Deserialize(configPath)
+        from newConfig in SuccessEff(config.SetAudioFilesPath(path))
+        from serialized in SerializeAndWrite(configPath, newConfig)
+        select unit;
+
+
     // public static Aff<RT, Unit> SetSetupCompleted(bool setupCompleted) =>
     //     from configPath in ConfigPath
     //     from config in Deserialize(configPath)
@@ -151,9 +179,12 @@ public static class UiConfig<RT> where RT : struct, HasFile<RT>, HasDirectory<RT
     private static UiConfigStruct CreateDefaultConfig() =>
         new(new WindowConfig(800, 600),
             new Personalization(0, null),
-            new Remote((int)Eum.Spotify.connectstate.DeviceType.Computer, "Wavee"));
+            new Remote((int)Eum.Spotify.connectstate.DeviceType.Computer, "Wavee"),
+            new Cache(null, null));
 
-    private readonly record struct UiConfigStruct(WindowConfig Window, Personalization Personalization, Remote Remote)
+    private readonly record struct UiConfigStruct(WindowConfig Window,
+        Personalization Personalization, Remote Remote,
+        Cache Cache)
     {
         public UiConfigStruct SetWindowWidth(uint width)
         {
@@ -212,7 +243,7 @@ public static class UiConfig<RT> where RT : struct, HasFile<RT>, HasDirectory<RT
 
         public UiConfigStruct SetDeviceName(string deviceName)
         {
-            if(string.IsNullOrEmpty(deviceName))
+            if (string.IsNullOrEmpty(deviceName))
                 deviceName = "Wavee";
             return this with
             {
@@ -222,8 +253,31 @@ public static class UiConfig<RT> where RT : struct, HasFile<RT>, HasDirectory<RT
                 }
             };
         }
+
+        public UiConfigStruct SetMetadataBasePath(string metadataBasePath)
+        {
+            return this with
+            {
+                Cache = Cache with
+                {
+                    MetadataBasePath = metadataBasePath
+                }
+            };
+        }
+
+        public UiConfigStruct SetAudioFilesPath(string audioFilesPath)
+        {
+            return this with
+            {
+                Cache = Cache with
+                {
+                    AudioFilesPath = audioFilesPath
+                }
+            };
+        }
     }
 
+    private readonly record struct Cache(string MetadataBasePath, string AudioFilesPath);
     private readonly record struct Remote(int DeviceType, string DeviceName);
     private readonly record struct Personalization(int Theme, string? Locale);
     private readonly record struct WindowConfig(uint Width, uint Height);

@@ -96,7 +96,7 @@ public sealed class SpotifyClient
             mercuryClient: MercuryClient
         );
     public SpotifyCache Cache =>
-        new SpotifyCache(_config.Cache);
+        new SpotifyCache(_config.Cache, _config.Locale);
     public SpotifyRemoteClient RemoteClient { get; }
     public SpotifyPlaybackClient PlaybackClient { get; }
     public Option<string> CountryCode => _country.Value;

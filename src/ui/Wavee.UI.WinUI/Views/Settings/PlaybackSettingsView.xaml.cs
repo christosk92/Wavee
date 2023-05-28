@@ -10,6 +10,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
+using Wavee.UI.Infrastructure.Live;
+using Wavee.UI.ViewModels;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 
@@ -27,5 +29,6 @@ namespace Wavee.UI.WinUI.Views.Settings
         {
             this.InitializeComponent();
         }
+        public SettingsViewModel<WaveeUIRuntime> ViewModel => SettingsViewModel<WaveeUIRuntime>.Instance;
     }
 }

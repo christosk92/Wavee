@@ -16,10 +16,10 @@ public readonly struct SpotifyCache
     private readonly Option<string> _storagePath;
     private readonly Option<string> _dbPath;
 
-    public SpotifyCache(SpotifyCacheConfig cacheConfig)
+    public SpotifyCache(SpotifyCacheConfig cacheConfig, string locale)
     {
-        _storagePath = cacheConfig.CachePath.Map(x => Path.Combine(x, "Storage"));
-        _dbPath = cacheConfig.CachePath.Map(x => Path.Combine(x, "cache.db"));
+        _storagePath = cacheConfig.AudioCachePath;
+        _dbPath = cacheConfig.CachePath.Map(x => Path.Combine(x, $"cache_{locale}.db"));
         if (_dbPath.IsSome && !_initialized)
         {
             using var db = new SQLiteConnection(_dbPath.ValueUnsafe());
@@ -49,6 +49,10 @@ public readonly struct SpotifyCache
             }
         }
 
+        if (_storagePath.IsSome && !_initialized)
+        {
+            Directory.CreateDirectory(_storagePath.ValueUnsafe());
+        }
         _initialized = true;
     }
 

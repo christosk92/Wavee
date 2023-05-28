@@ -19,6 +19,9 @@ public sealed class SettingsViewModel<R> : ReactiveObject, INavigableViewModel w
     private AppLocale _currentLocale;
     private DeviceType _deviceType;
     private string _deviceName;
+    private string _audioFilesCachePath;
+    private string _metadataCachePath;
+    private string _metadataCachePathBase;
 
     public SettingsViewModel(R runtime)
     {
@@ -101,6 +104,22 @@ public sealed class SettingsViewModel<R> : ReactiveObject, INavigableViewModel w
 
                 var run = await aff.Run(runtime);
             }).Subscribe();
+
+        this.WhenAnyValue(x=> x.MetadataCachePathBase, x=> x.AudioFilesCachePath)
+            .Skip(1)
+            .ObserveOn(RxApp.TaskpoolScheduler)
+            .Select(async (d,t) =>
+            {
+                Config.Cache.AudioCachePath = d.Item2;
+                Config.Cache.CachePath = d.Item1;
+
+                var aff =
+                    from _ in UiConfig<R>.SetMetadataCachePath(MetadataCachePathBase)
+                    from __ in UiConfig<R>.SetAudioCachePath(AudioFilesCachePath)
+                    select Unit.Default;
+
+                var run = await aff.Run(runtime);
+            }).Subscribe();
     }
     public static SettingsViewModel<R> Instance { get; private set; }
 
@@ -142,7 +161,10 @@ public sealed class SettingsViewModel<R> : ReactiveObject, INavigableViewModel w
     public AppLocale CurrentLocale
     {
         get => _currentLocale;
-        set => this.RaiseAndSetIfChanged(ref _currentLocale, value);
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _currentLocale, value);
+        }
     }
 
     public DeviceType DeviceType
@@ -156,6 +178,29 @@ public sealed class SettingsViewModel<R> : ReactiveObject, INavigableViewModel w
         get => _deviceName;
         set => this.RaiseAndSetIfChanged(ref _deviceName, value);
     }
+
+    public string MetadataCachePathBase
+    {
+        get => _metadataCachePathBase;
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _metadataCachePathBase, value);
+            this.RaisePropertyChanged(nameof(MetadataCachePath));
+        }
+    }
+
+    public string MetadataCachePath
+    {
+        get => _metadataCachePath;
+        set => this.RaiseAndSetIfChanged(ref _metadataCachePath, value);
+    }
+
+    public string AudioFilesCachePath
+    {
+        get => _audioFilesCachePath;
+        set => this.RaiseAndSetIfChanged(ref _audioFilesCachePath, value);
+    }
+
     public Seq<AppLocale> AvailableLocales { get; }
     public SpotifyConfig Config { get; set; }
 

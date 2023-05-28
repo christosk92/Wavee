@@ -65,14 +65,18 @@ public static class Spotify<R> where R : struct, HasSpotify<R>
     public static Eff<R, Option<string>> GetOwnDeviceId() =>
         default(R).SpotifyEff.Map(x => x.GetOwnDeviceId());
     public static Eff<R, SpotifyCache> Cache() => default(R).SpotifyEff.Map(x => x.Cache().
-        IfNone(new SpotifyCache(new SpotifyCacheConfig(Option<string>.None, Option<TimeSpan>.None))));
+        IfNone(new SpotifyCache(new SpotifyCacheConfig(Option<string>.None,
+            Option<string>.None, 
+            Option<TimeSpan>.None), "en")));
     public static Eff<R, Option<SpotifyRemoteClient>> GetRemoteClient() =>
         default(R).SpotifyEff.Map(x => x.GetRemoteClient());
     public static Aff<R, ITrack> GetTrack(AudioId audioId) =>
         from countryCode in default(R).SpotifyEff.Map(x => x.CountryCode().IfNone("US"))
         from cdnUrl in default(R).SpotifyEff.Map(x => x.CdnUrl().IfNone("https://i.scdn.co/image/{file_id}"))
         from cache in default(R).SpotifyEff
-            .Map(x => x.Cache().IfNone(new SpotifyCache(new SpotifyCacheConfig(Option<string>.None, Option<TimeSpan>.None))))
+            .Map(x => x.Cache().IfNone(new SpotifyCache(new SpotifyCacheConfig(Option<string>.None, 
+                Option<string>.None,
+                Option<TimeSpan>.None), "en")))
         from trackOrEpisode in cache.Get(audioId).Map(x => SuccessAff<R, TrackOrEpisode>(x))
             .IfNone(() =>
             {
@@ -108,7 +112,9 @@ public static class Spotify<R> where R : struct, HasSpotify<R>
 
     public static Aff<R, Seq<TrackOrEpisode>> FetchBatchOfTracks(Seq<AudioId> request, CancellationToken ct = default) =>
         from cache in default(R).SpotifyEff
-            .Map(x => x.Cache().IfNone(new SpotifyCache(new SpotifyCacheConfig(Option<string>.None, Option<TimeSpan>.None))))
+            .Map(x => x.Cache().IfNone(new SpotifyCache(new SpotifyCacheConfig(Option<string>.None,
+                Option<string>.None, 
+                Option<TimeSpan>.None), "en")))
             //check which tracks are already cached
         let cachedTracks = cache.GetBulk(request).Somes()
         //fetch the rest

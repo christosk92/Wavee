@@ -6,37 +6,48 @@
     xmlns:local="using:Wavee.UI.WinUI.Views.Settings"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:viewModels="using:Wavee.UI.ViewModels"
     mc:Ignorable="d">
 
     <StackPanel
         Spacing="24"
         Margin="0,24">
         <StackPanel Spacing="0">
-            <TextBlock 
+
+            <StackPanel Spacing="12" Orientation="Horizontal">
+                <TextBlock 
+                    VerticalAlignment="Center"
                 FontSize="21"
                 FontWeight="SemiBold"
                 Text="Metadata"/>
-
-            <TextBlock Margin="0,8,0,-2" Text="Locale:"/>
-            <ComboBox 
+                <ComboBox 
+                SelectionChanged="LanguageBox_OnSelectionChanged"
+                SelectedItem="{x:Bind ViewModel.CurrentLocale, Mode=OneWay}"
+                ItemsSource="{x:Bind ViewModel.AvailableLocales, Mode=OneWay}"
                 x:Name="LanguageBox"
                 Margin="0,8">
-                <ComboBoxItem Content="English (United States)"/>
-                <ComboBoxItem Content="한국어 (Korean)"/>
-                <ComboBoxItem Content="日本語 (Japanese)"/>
-                <ComboBoxItem Content="Nederlands (Dutch)"/>
-            </ComboBox>
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate x:DataType="viewModels:AppLocale">
+                            <TextBlock>
+                            <Run Text="{x:Bind NativeName}"/> (<Run Text="{x:Bind EnglishName}"/>)
+                            </TextBlock>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+            </StackPanel>
 
             <StackPanel Margin="0,6,0,0">
                 <StackPanel Spacing="4" Orientation="Horizontal">
                     <TextBlock VerticalAlignment="Center" Text="Cache path:"/>
-                    <TextBlock VerticalAlignment="Center" Text="C:/" FontWeight="Bold"/>
+                    <TextBlock VerticalAlignment="Center" 
+                               Text="{x:Bind ViewModel.MetadataCachePath,Mode=OneWay}"
+                               FontWeight="Bold"/>
                 </StackPanel>
                 <Button Margin="0,6,0,12" Content="Browse..."/>
 
                 <StackPanel Spacing="8" Orientation="Horizontal">
                     <TextBlock VerticalAlignment="Center" Text="Cache size:"/>
-                    <TextBlock VerticalAlignment="Center" Text="0.0 MB" FontWeight="Bold"/>
+                    <TextBlock VerticalAlignment="Center" Text="{x:Bind CalculateSizeAndHumanize(ViewModel.MetadataCachePath),Mode=OneWay}" FontWeight="Bold"/>
                 </StackPanel>
                 <Button Margin="0,6,0,0" Content="Clear"/>
             </StackPanel>
@@ -51,13 +62,13 @@
             <StackPanel Margin="0,6,0,0">
                 <StackPanel Spacing="4" Orientation="Horizontal">
                     <TextBlock VerticalAlignment="Center" Text="Cache path:"/>
-                    <TextBlock VerticalAlignment="Center" Text="C:/" FontWeight="Bold"/>
+                    <TextBlock VerticalAlignment="Center" Text="{x:Bind ViewModel.AudioFilesCachePath}" FontWeight="Bold"/>
                 </StackPanel>
                 <Button Margin="0,6,0,12" Content="Browse..."/>
 
                 <StackPanel Spacing="8" Orientation="Horizontal">
                     <TextBlock VerticalAlignment="Center" Text="Cache size:"/>
-                    <TextBlock VerticalAlignment="Center" Text="0.0 MB" FontWeight="Bold"/>
+                    <TextBlock VerticalAlignment="Center" Text="{x:Bind CalculateSizeAndHumanize(ViewModel.AudioFilesCachePath), Mode=OneWay}" FontWeight="Bold"/>
                 </StackPanel>
                 <Button Margin="0,6,0,0" Content="Clear"/>
             </StackPanel>
