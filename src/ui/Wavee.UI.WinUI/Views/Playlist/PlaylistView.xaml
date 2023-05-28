@@ -15,23 +15,21 @@
     mc:Ignorable="d">
     <Grid>
         <ScrollViewer>
-            <StackPanel>
-                <Grid VerticalAlignment="Top"
+            <Grid VerticalAlignment="Top"
                   x:Name="LargeImage">
-                    <controls:ImageTransitionControl x:Name="Img"
+                <controls:ImageTransitionControl x:Name="Img"
                                              Grid.ColumnSpan="2"
                                              VerticalAlignment="Stretch"
                                              TransitionDuration="00:00:01"
                                              Source="{x:Bind ViewModel.Playlist.LargeImage}" />
-                </Grid>
 
-                <StackPanel Margin="24,0,0,0"
+                <StackPanel Margin="24,0,0,28"
                                 x:Name="MetadataPnale"
                                 labs:TransitionHelper.Id="background"
                                 Visibility="Collapsed"
                                 HorizontalAlignment="Center"
                                 ui:VisualExtensions.NormalizedCenterPoint="0.5"
-                                VerticalAlignment="Center"
+                                VerticalAlignment="Bottom"
                                 Orientation="Horizontal">
                     <StackPanel Margin="0,0,0,0">
                         <animations:Explicit.Animations>
@@ -58,9 +56,25 @@
                         <TextBlock FontWeight="SemiBold"
                                    Text="{x:Bind ViewModel.Playlist.Description, Mode=OneWay}"
                                    />
+
+                        <StackPanel Orientation="Horizontal"
+                                        Margin="0,12,0,0">
+                            <Button x:Name="PlayButton"
+                                    Style="{ThemeResource AccentButtonStyle}"
+                                    BorderThickness="0">
+                                <StackPanel Spacing="8" Orientation="Horizontal">
+                                    <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE14B;" />
+                                    <TextBlock Text="Shuffle"/>
+                                </StackPanel>
+                            </Button>
+
+
+                            <Button x:Name="SaveButton"
+                                    Content="{x:Bind SavedToContent(ViewModel.IsSaved), Mode=OneWay}" />
+                        </StackPanel>
                     </StackPanel>
                 </StackPanel>
-            </StackPanel>
+            </Grid>
         </ScrollViewer>
     </Grid>
 </UserControl>

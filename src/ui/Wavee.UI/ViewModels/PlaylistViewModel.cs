@@ -201,7 +201,15 @@ public sealed class PlaylistViewModel<R> : ReactiveObject, INavigableViewModel
         set => this.RaiseAndSetIfChanged(ref _sortParameters, value);
     }
     public ReadOnlyObservableCollection<PlaylistTrackVm> Data => _data;
+
+    public bool IsSaved
+    {
+        get => _isSaved;
+        set => this.RaiseAndSetIfChanged(ref _isSaved, value);
+    }
+
     public TaskCompletionSource PlaylistFetched = new TaskCompletionSource();
+    private bool _isSaved;
 
     public void OnNavigatedFrom()
     {
