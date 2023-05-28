@@ -30,6 +30,9 @@ I will try to post regular updates about what I've done, and what needs to be do
 - Implemented library view and all associated commands, such as saving tracks and real-time updates.
 - Implemented settings page and configuration of Spotify Client
 
+![image](https://github.com/christosk92/Wavee/assets/13438702/ac8e842e-8856-432e-9a3a-86ac7d53c3d4)
+
+
 Todo:
 - Browse page (as seen in the **old** spotify app).
 - Playlists view.
