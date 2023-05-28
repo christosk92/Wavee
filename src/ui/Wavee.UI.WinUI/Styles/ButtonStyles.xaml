@@ -11,6 +11,14 @@
                 Value="0" />
     </Style>
 
+    <Style x:Key="WarningCriticalButtonStyle" 
+           BasedOn="{StaticResource DefaultButtonStyle}"
+           TargetType="Button">
+        <Setter Property="CornerRadius" Value="4"/>
+        <Setter Property="Foreground" Value="Black"/>
+        <Setter Property="Background" Value="{ThemeResource SystemFillColorCriticalBrush}"/>
+    </Style>
+
     <Style x:Key="AppBarCompactButtonStyle"
            BasedOn="{StaticResource DefaultAppBarButtonStyle}"
            TargetType="AppBarButton">

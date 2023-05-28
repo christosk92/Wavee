@@ -12,7 +12,7 @@ namespace Wavee.Spotify.Infrastructure.Cache;
 
 public readonly struct SpotifyCache
 {
-    private static bool _initialized = false;
+    public static bool Initialized = false;
     private readonly Option<string> _storagePath;
     private readonly Option<string> _dbPath;
 
@@ -20,7 +20,7 @@ public readonly struct SpotifyCache
     {
         _storagePath = cacheConfig.AudioCachePath;
         _dbPath = cacheConfig.CachePath.Map(x => Path.Combine(x, $"cache_{locale}.db"));
-        if (_dbPath.IsSome && !_initialized)
+        if (_dbPath.IsSome && !Initialized)
         {
             using var db = new SQLiteConnection(_dbPath.ValueUnsafe());
             try
@@ -49,11 +49,11 @@ public readonly struct SpotifyCache
             }
         }
 
-        if (_storagePath.IsSome && !_initialized)
+        if (_storagePath.IsSome && !Initialized)
         {
             Directory.CreateDirectory(_storagePath.ValueUnsafe());
         }
-        _initialized = true;
+        Initialized = true;
     }
 
     #region Metadata

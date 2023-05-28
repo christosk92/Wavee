@@ -43,13 +43,15 @@
                                Text="{x:Bind ViewModel.MetadataCachePath,Mode=OneWay}"
                                FontWeight="Bold"/>
                 </StackPanel>
-                <Button Margin="0,6,0,12" Content="Browse..."/>
+                <Button Margin="0,6,0,12" IsEnabled="False" Content="Browse..."/>
 
                 <StackPanel Spacing="8" Orientation="Horizontal">
                     <TextBlock VerticalAlignment="Center" Text="Cache size:"/>
                     <TextBlock VerticalAlignment="Center" Text="{x:Bind CalculateSizeAndHumanize(ViewModel.MetadataCachePath),Mode=OneWay}" FontWeight="Bold"/>
                 </StackPanel>
-                <Button Margin="0,6,0,0" Content="Clear"/>
+                <Button Margin="0,6,0,0" 
+                        Tapped="ClearMetadata"
+                        Content="Clear"/>
             </StackPanel>
         </StackPanel>
 
@@ -64,13 +66,15 @@
                     <TextBlock VerticalAlignment="Center" Text="Cache path:"/>
                     <TextBlock VerticalAlignment="Center" Text="{x:Bind ViewModel.AudioFilesCachePath}" FontWeight="Bold"/>
                 </StackPanel>
-                <Button Margin="0,6,0,12" Content="Browse..."/>
+                <Button Margin="0,6,0,12" IsEnabled="False" Content="Browse..."/>
 
                 <StackPanel Spacing="8" Orientation="Horizontal">
                     <TextBlock VerticalAlignment="Center" Text="Cache size:"/>
                     <TextBlock VerticalAlignment="Center" Text="{x:Bind CalculateSizeAndHumanize(ViewModel.AudioFilesCachePath), Mode=OneWay}" FontWeight="Bold"/>
                 </StackPanel>
-                <Button Margin="0,6,0,0" Content="Clear"/>
+                <Button
+                    Tapped="ClearAudioFiles"
+                    Margin="0,6,0,0" Content="Clear"/>
             </StackPanel>
         </StackPanel>
     </StackPanel>

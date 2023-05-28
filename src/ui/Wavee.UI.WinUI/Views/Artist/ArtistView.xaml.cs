@@ -39,7 +39,7 @@ public sealed partial class ArtistRootView : UserControl, INavigablePage
         _concerts = null;
         _about?.Clear();
         _about = null;
-        //GC.Collect();
+        GC.Collect();
     }
 
     private async void Selector_OnSelectionChanged(object sender, SelectionChangedEventArgs e)

@@ -25,7 +25,9 @@
                 Opacity=".7"
                 FontSize="13"
                 Text="Note: This is a device specific property, and does not translate to other devices. You can toggle autoplay on other devices in the Spotify app."/>
-                <ToggleSwitch x:Name="AutoplaySwitch"/>
+                <ToggleSwitch
+                    IsOn="{x:Bind ViewModel.Autoplay, Mode=TwoWay}"
+                    x:Name="AutoplaySwitch"/>
             </StackPanel>
 
             <StackPanel>
@@ -42,7 +44,7 @@
                 FontSize="13"
                 Text="Note: This is a device specific property, and does not translate to other devices."/>
 
-                <RadioButtons x:Name="AudioQualityRadioButtons">
+                <RadioButtons SelectedIndex="{x:Bind ViewModel.AudioQuality, Mode=TwoWay}" x:Name="AudioQualityRadioButtons">
                     <RadioButton
                     Content="Normal (96 kbps)"
                     Tag="Normal"
@@ -71,24 +73,28 @@
                     Text="Note: This is a device specific property, and does not translate to other devices."/>
                 <Slider Width="300"
                         HorizontalAlignment="Left"
+                        Value="{x:Bind ViewModel.CrossfadeSeconds, Mode=TwoWay}"
                         TickPlacement="BottomRight"  TickFrequency="1" Maximum="12"/>
                 <TextBlock Text="0 seconds (off)"/>
             </StackPanel>
-            <StackPanel>
-                <TextBlock 
-                FontSize="21"
-                FontWeight="SemiBold"
-                Text="Volume normalisation"/>
-                <TextBlock 
-                Opacity="1"
-                TextWrapping="Wrap"
-                Text="Wavee will make sure all tracks have the same loudness."/>
-                <TextBlock 
-                Opacity=".7"
-                FontSize="13"
-                Text="Note: This is a device specific property, and does not translate to other devices."/>
-                <ToggleSwitch/>
-            </StackPanel>
+         
+            <UserControl IsEnabled="False">
+                <StackPanel>
+                    <TextBlock 
+                        FontSize="21"
+                        FontWeight="SemiBold"
+                        Text="Volume normalisation"/>
+                    <TextBlock 
+                        Opacity="1"
+                        TextWrapping="Wrap"
+                        Text="Wavee will make sure all tracks have the same loudness."/>
+                    <TextBlock 
+                        Opacity=".7"
+                        FontSize="13"
+                        Text="Note: This is a device specific property, and does not translate to other devices."/>
+                    <ToggleSwitch/>
+                </StackPanel>
+            </UserControl>
 
             <Border Height="50"/>
         </StackPanel >

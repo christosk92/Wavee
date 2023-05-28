@@ -4,6 +4,7 @@ using Eum.Spotify.connectstate;
 using ReactiveUI;
 using LanguageExt;
 using Wavee.Spotify;
+using Wavee.Spotify.Infrastructure.Playback;
 using Wavee.UI.Infrastructure.Sys;
 using Wavee.UI.Infrastructure.Traits;
 
@@ -22,6 +23,9 @@ public sealed class SettingsViewModel<R> : ReactiveObject, INavigableViewModel w
     private string _audioFilesCachePath;
     private string _metadataCachePath;
     private string _metadataCachePathBase;
+    private bool _autoplay;
+    private int _crossfadeSeconds;
+    private int _audioQuality;
 
     public SettingsViewModel(R runtime)
     {
@@ -105,10 +109,10 @@ public sealed class SettingsViewModel<R> : ReactiveObject, INavigableViewModel w
                 var run = await aff.Run(runtime);
             }).Subscribe();
 
-        this.WhenAnyValue(x=> x.MetadataCachePathBase, x=> x.AudioFilesCachePath)
+        this.WhenAnyValue(x => x.MetadataCachePathBase, x => x.AudioFilesCachePath)
             .Skip(1)
             .ObserveOn(RxApp.TaskpoolScheduler)
-            .Select(async (d,t) =>
+            .Select(async (d, t) =>
             {
                 Config.Cache.AudioCachePath = d.Item2;
                 Config.Cache.CachePath = d.Item1;
@@ -116,6 +120,30 @@ public sealed class SettingsViewModel<R> : ReactiveObject, INavigableViewModel w
                 var aff =
                     from _ in UiConfig<R>.SetMetadataCachePath(MetadataCachePathBase)
                     from __ in UiConfig<R>.SetAudioCachePath(AudioFilesCachePath)
+                    select Unit.Default;
+
+                var run = await aff.Run(runtime);
+            }).Subscribe();
+
+        this.WhenAnyValue(
+                x => x.Autoplay,
+                x => x.CrossfadeSeconds,
+                x => x.AudioQuality)
+            .Skip(1)
+            .ObserveOn(RxApp.TaskpoolScheduler)
+            .Select(async (d) =>
+            {
+                Config.Playback.Autoplay = d.Item1;
+                Config.Playback.CrossfadeDuration = d.Item2 > 0 ? TimeSpan.FromSeconds(d.Item2) : None;
+                Config.Playback.PreferredQualityType = d.Item3 switch
+                {
+                    0 => PreferredQualityType.Low,
+                    1 => PreferredQualityType.Normal,
+                    2 => PreferredQualityType.High,
+                    _ => PreferredQualityType.Normal
+                };
+                var aff =
+                    from _ in UiConfig<R>.SetPlaybackConfig(Autoplay, CrossfadeSeconds, AudioQuality)
                     select Unit.Default;
 
                 var run = await aff.Run(runtime);
@@ -201,6 +229,24 @@ public sealed class SettingsViewModel<R> : ReactiveObject, INavigableViewModel w
         set => this.RaiseAndSetIfChanged(ref _audioFilesCachePath, value);
     }
 
+    public bool Autoplay
+    {
+        get => _autoplay;
+        set => this.RaiseAndSetIfChanged(ref _autoplay, value);
+    }
+
+    public int CrossfadeSeconds
+    {
+        get => _crossfadeSeconds;
+        set => this.RaiseAndSetIfChanged(ref _crossfadeSeconds, value);
+    }
+
+    public int AudioQuality
+    {
+        get => _audioQuality;
+        set => this.RaiseAndSetIfChanged(ref _audioQuality, value);
+
+    }
     public Seq<AppLocale> AvailableLocales { get; }
     public SpotifyConfig Config { get; set; }
 

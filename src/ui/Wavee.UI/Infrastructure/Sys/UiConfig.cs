@@ -1,4 +1,5 @@
 ﻿using System.Drawing;
+using System.IO;
 using System.Text;
 using System.Text.Json;
 using Eum.Spotify.connectstate;
@@ -84,6 +85,10 @@ public static class UiConfig<RT> where RT : struct, HasFile<RT>, HasDirectory<RT
         from config in Deserialize(configPath)
         select config.Cache.AudioFilesPath;
 
+    public static Eff<RT, Playback> GetPlaybackConfig =>
+        from configPath in ConfigPath
+        from config in Deserialize(configPath)
+        select config.Playback;
 
 
     public static Aff<RT, Unit> SetWindowWidth(uint width) =>
@@ -145,6 +150,12 @@ public static class UiConfig<RT> where RT : struct, HasFile<RT>, HasDirectory<RT
         from serialized in SerializeAndWrite(configPath, newConfig)
         select unit;
 
+    public static Aff<RT, Unit> SetPlaybackConfig(bool autoplay, int crossfadeSeconds, int audioQuality) =>
+        from configPath in ConfigPath
+        from config in Deserialize(configPath)
+        from newConfig in SuccessEff(config.SetPlaybackConfig(autoplay, audioQuality, crossfadeSeconds))
+        from serialized in SerializeAndWrite(configPath, newConfig)
+        select unit;
 
     // public static Aff<RT, Unit> SetSetupCompleted(bool setupCompleted) =>
     //     from configPath in ConfigPath
@@ -180,11 +191,12 @@ public static class UiConfig<RT> where RT : struct, HasFile<RT>, HasDirectory<RT
         new(new WindowConfig(800, 600),
             new Personalization(0, null),
             new Remote((int)Eum.Spotify.connectstate.DeviceType.Computer, "Wavee"),
-            new Cache(null, null));
+            new Cache(null, null),
+            new Playback(true, 0, 0));
 
     private readonly record struct UiConfigStruct(WindowConfig Window,
         Personalization Personalization, Remote Remote,
-        Cache Cache)
+        Cache Cache, Playback Playback)
     {
         public UiConfigStruct SetWindowWidth(uint width)
         {
@@ -275,8 +287,17 @@ public static class UiConfig<RT> where RT : struct, HasFile<RT>, HasDirectory<RT
                 }
             };
         }
+
+        public UiConfigStruct SetPlaybackConfig(bool autoplay, int quality, int crossFadeSec)
+        {
+            return this with
+            {
+                Playback = new Playback(autoplay, quality, crossFadeSec)
+            };
+        }
     }
 
+    public readonly record struct Playback(bool Autoplay, int Quality, int CrossfadeSeconds);
     private readonly record struct Cache(string MetadataBasePath, string AudioFilesPath);
     private readonly record struct Remote(int DeviceType, string DeviceName);
     private readonly record struct Personalization(int Theme, string? Locale);

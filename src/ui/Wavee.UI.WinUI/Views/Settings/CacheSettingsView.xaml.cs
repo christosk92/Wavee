@@ -12,6 +12,8 @@ using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using ReactiveUI;
+using Wavee.Spotify.Infrastructure.Cache;
 using Wavee.UI.Infrastructure.Live;
 using Wavee.UI.ViewModels;
 
@@ -89,6 +91,63 @@ namespace Wavee.UI.WinUI.Views.Settings
                 return new FileInfo(path).Length;
             }
             return 0;
+        }
+
+        private void ClearMetadata(object sender, TappedRoutedEventArgs e)
+        {
+            //low impact.. just clear it
+            var pt = ViewModel.MetadataCachePath;
+            if (File.Exists(pt))
+            {
+                try
+                {
+                    File.Delete(pt);
+                }
+                catch (Exception ex)
+                {
+                    //log
+                }
+
+                SpotifyCache.Initialized = false;
+            }
+
+            //update size
+            ViewModel.RaisePropertyChanged(nameof(ViewModel.MetadataCachePath));
+        }
+
+        private async void ClearAudioFiles(object sender, TappedRoutedEventArgs e)
+        {
+            //make sure user wants to do this
+            var dialog = new ContentDialog
+            {
+                Title = "Clear Audio Files",
+                Content = "Are you sure you want to clear all audio files from the cache?",
+                PrimaryButtonText = "Yes",
+                CloseButtonText = "No",
+                PrimaryButtonStyle = (Style)Application.Current.Resources["WarningCriticalButtonStyle"]
+            };
+            dialog.XamlRoot = this.XamlRoot;
+            var result = await dialog.ShowAsync();
+            if (result == ContentDialogResult.Primary)
+            {
+                //clear audio files
+                //ViewModel.ClearAudioFiles();
+                //enumerate all files in cache folder
+                var files = Directory.GetFiles(ViewModel.AudioFilesCachePath, "*.*", SearchOption.AllDirectories);
+                foreach (var file in files)
+                {
+                    try
+                    {
+                        File.Delete(file);
+                    }
+                    catch (Exception ex)
+                    {
+                        //log
+                    }
+                }
+
+                ViewModel.RaisePropertyChanged(nameof(ViewModel.AudioFilesCachePath));
+            }
         }
     }
 }

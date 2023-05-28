@@ -99,6 +99,22 @@ public partial class App : Application
         Config.Remote.DeviceName = deviceName;
         Config.Remote.DeviceType = deviceType;
 
+
+        var pb = (UiConfig<WaveeUIRuntime>.GetPlaybackConfig.Run(Runtime)).IfFail(new UiConfig<WaveeUIRuntime>.Playback(true, 1, 0));
+        Config.Playback.CrossfadeDuration = pb.CrossfadeSeconds > 0 ? TimeSpan.FromSeconds(pb.CrossfadeSeconds)
+                : Option<TimeSpan>.None;
+        Config.Playback.Autoplay = pb.Autoplay;
+        Config.Playback.PreferredQualityType = pb.Quality switch
+        {
+            0 => PreferredQualityType.Low,
+            1 => PreferredQualityType.Normal,
+            2 => PreferredQualityType.High,
+            _ => PreferredQualityType.Normal
+        };
+        settings.Autoplay = pb.Autoplay;
+        settings.CrossfadeSeconds = pb.CrossfadeSeconds;
+        settings.AudioQuality = pb.Quality;
+
         var metadataCachePath = (UiConfig<WaveeUIRuntime>.MetadataCachePath.Run(Runtime)).IfFail(string.Empty);
         if (metadataCachePath != string.Empty)
         {

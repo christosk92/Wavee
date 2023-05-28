@@ -85,10 +85,28 @@ public class SpotifyCacheConfig
     }
 }
 
-public record SpotifyPlaybackConfig(
-    PreferredQualityType PreferredQualityType,
-    Option<TimeSpan> CrossfadeDuration,
-    bool Autoplay);
+public class SpotifyPlaybackConfig
+{
+    public SpotifyPlaybackConfig(PreferredQualityType PreferredQualityType,
+        Option<TimeSpan> CrossfadeDuration,
+        bool Autoplay)
+    {
+        this.PreferredQualityType = PreferredQualityType;
+        this.CrossfadeDuration = CrossfadeDuration;
+        this.Autoplay = Autoplay;
+    }
+
+    public PreferredQualityType PreferredQualityType { get; set; }
+    public Option<TimeSpan> CrossfadeDuration { get; set; }
+    public bool Autoplay { get; set; }
+
+    public void Deconstruct(out PreferredQualityType PreferredQualityType, out Option<TimeSpan> CrossfadeDuration, out bool Autoplay)
+    {
+        PreferredQualityType = this.PreferredQualityType;
+        CrossfadeDuration = this.CrossfadeDuration;
+        Autoplay = this.Autoplay;
+    }
+}
 
 public record SpotifyRemoteConfig(string DeviceName,
     DeviceType DeviceType)

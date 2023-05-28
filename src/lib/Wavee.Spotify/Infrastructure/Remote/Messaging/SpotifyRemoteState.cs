@@ -16,7 +16,7 @@ public readonly record struct SpotifyRemoteState(
     bool IsBuffering,
     bool IsShuffling,
     RepeatState RepeatState,
-    Option<AudioId> ContextUri,
+    Option<string> ContextUri,
     TimeSpan Position,
     HashMap<string, SpotifyRemoteDeviceInfo> Devices)
 {
@@ -42,8 +42,7 @@ public readonly record struct SpotifyRemoteState(
 
         var contextUri =
             playerState
-                .Bind(t => !string.IsNullOrEmpty(t.ContextUri) ? Some(t.ContextUri) : Option<string>.None)
-                .Map(x => AudioId.FromUri(x));
+                .Bind(t => !string.IsNullOrEmpty(t.ContextUri) ? Some(t.ContextUri) : Option<string>.None);
 
         var activeDeviceId = cluster.Bind(c => !string.IsNullOrEmpty(c.ActiveDeviceId)
             ? Some(c.ActiveDeviceId)
