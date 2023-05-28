@@ -11,19 +11,22 @@
     xmlns:labs="using:CommunityToolkit.Labs.WinUI"
     Loaded="PlaylistView_OnLoaded"
     xmlns:ui="using:CommunityToolkit.WinUI.UI"
+    xmlns:viewModels="using:Wavee.UI.ViewModels"
+    xmlns:components="using:Wavee.UI.WinUI.Components"
     SizeChanged="PlaylistView_OnSizeChanged"
     mc:Ignorable="d">
     <Grid>
         <ScrollViewer>
-            <Grid VerticalAlignment="Top"
+            <StackPanel>
+                <Grid VerticalAlignment="Top"
                   x:Name="LargeImage">
-                <controls:ImageTransitionControl x:Name="Img"
+                    <controls:ImageTransitionControl x:Name="Img"
                                              Grid.ColumnSpan="2"
                                              VerticalAlignment="Stretch"
                                              TransitionDuration="00:00:01"
                                              Source="{x:Bind ViewModel.Playlist.LargeImage}" />
 
-                <StackPanel Margin="24,0,0,28"
+                    <StackPanel Margin="24,0,0,28"
                                 x:Name="MetadataPnale"
                                 labs:TransitionHelper.Id="background"
                                 Visibility="Collapsed"
@@ -31,50 +34,72 @@
                                 ui:VisualExtensions.NormalizedCenterPoint="0.5"
                                 VerticalAlignment="Bottom"
                                 Orientation="Horizontal">
-                    <StackPanel Margin="0,0,0,0">
-                        <animations:Explicit.Animations>
-                            <animations:AnimationSet x:Name="ShowPanelAnim">
-                                <animations:TranslationAnimation Delay="0:0:0.2"
+                        <StackPanel Margin="0,0,0,0">
+                            <animations:Explicit.Animations>
+                                <animations:AnimationSet x:Name="ShowPanelAnim">
+                                    <animations:TranslationAnimation Delay="0:0:0.2"
                                                                      Duration="0:0:1"
                                                                      From="0, 50, 0"
                                                                      To="0" />
-                                <animations:OpacityAnimation Delay="0:0:0.2"
+                                    <animations:OpacityAnimation Delay="0:0:0.2"
                                                                  Duration="0:0:1"
                                                                  From="0"
                                                                  To="1.0" />
-                            </animations:AnimationSet>
-                        </animations:Explicit.Animations>
-                        <TextBlock Text="A curated playlist by Spotify"
+                                </animations:AnimationSet>
+                            </animations:Explicit.Animations>
+                            <TextBlock Text="A curated playlist by Spotify"
                                    HorizontalAlignment="Center"
                                        FontWeight="Bold"
-                                       FontSize="12"
+                                       FontSize="18"
                                        Opacity=".8" />
-                        <TextBlock FontSize="64"
+                            <TextBlock FontSize="64"
                                        labs:TransitionHelper.Id="name"
                                        FontWeight="Bold"
                                        Text="{x:Bind ViewModel.Playlist.Name, Mode=OneWay}" />
-                        <TextBlock FontWeight="SemiBold"
+                            <TextBlock FontWeight="SemiBold"
                                    Text="{x:Bind ViewModel.Playlist.Description, Mode=OneWay}"
                                    />
 
-                        <StackPanel Orientation="Horizontal"
+                            <StackPanel Orientation="Horizontal"
+                                    Spacing="16"
+                                    HorizontalAlignment="Center"
                                         Margin="0,12,0,0">
-                            <Button x:Name="PlayButton"
+                                <Button x:Name="PlayButton"
                                     Style="{ThemeResource AccentButtonStyle}"
                                     BorderThickness="0">
-                                <StackPanel Spacing="8" Orientation="Horizontal">
-                                    <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE14B;" />
-                                    <TextBlock Text="Shuffle"/>
-                                </StackPanel>
-                            </Button>
+                                    <StackPanel Spacing="8" Orientation="Horizontal">
+                                        <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE14B;" />
+                                        <TextBlock Text="Shuffle"/>
+                                    </StackPanel>
+                                </Button>
 
 
-                            <Button x:Name="SaveButton"
+                                <Button x:Name="SaveButton"
                                     Content="{x:Bind SavedToContent(ViewModel.IsSaved), Mode=OneWay}" />
+                            </StackPanel>
                         </StackPanel>
                     </StackPanel>
-                </StackPanel>
-            </Grid>
+                </Grid>
+
+
+                <ItemsView ItemsSource="{x:Bind ViewModel.Data}">
+                    <ItemsView.ItemTemplate>
+                        <DataTemplate x:DataType="viewModels:PlaylistTrackVm">
+                            <components:TrackView AlternatingRowColor="True"
+                                                  Height="42"
+                                                  x:Phase="2"
+                                                  Index="{x:Bind OriginalIndex, Mode=OneWay}"
+                                                  ImageUrl="{x:Bind GetSmallestImage(Track), Mode=OneWay}"
+                                                  Id="{x:Bind Track.Id, Mode=OneWay}"
+                                                  ShowImage="True">
+                                <components:TrackView.View>
+                                    <Grid/>
+                                </components:TrackView.View>
+                            </components:TrackView>
+                        </DataTemplate>
+                    </ItemsView.ItemTemplate>
+                </ItemsView>
+            </StackPanel>
         </ScrollViewer>
     </Grid>
 </UserControl>

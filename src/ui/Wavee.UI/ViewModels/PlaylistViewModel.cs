@@ -8,6 +8,7 @@ using Google.Protobuf;
 using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
 using ReactiveUI;
+using Spotify.Metadata;
 using Wavee.Core.Contracts;
 using Wavee.Core.Ids;
 using Wavee.Spotify.Infrastructure.Playback;
@@ -249,4 +250,12 @@ public class PlaylistTrackVm
     public TrackOrEpisode Track { get; init; }
     public DateTimeOffset AddedAt { get; init; }
     public bool HasAddedAt { get; init; }
+
+    public string GetSmallestImage(TrackOrEpisode trackOrEpisode)
+    {
+        return Track.Value.Match(
+            Left: ep => "",
+            Right: tr => tr.Album.Artwork.OrderBy(i => i.Width).First().Url
+        );
+    }
 }
