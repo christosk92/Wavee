@@ -38,6 +38,7 @@
             <ComboBox
                 ItemsSource="{x:Bind AvailableDeviceTypes, Mode=OneWay}"
                 x:Name="DeviceTypeComboBox"
+                SelectedItem="{x:Bind GetItemFrom(ViewModel.DeviceType),Mode=OneWay}"
                 SelectionChanged="DeviceTypeComboBox_OnSelectionChanged"
                 Margin="0,8">
                 <ComboBox.ItemTemplate>

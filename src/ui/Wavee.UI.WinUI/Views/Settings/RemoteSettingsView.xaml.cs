@@ -45,6 +45,17 @@ namespace Wavee.UI.WinUI.Views.Settings
         {
             ViewModel.DeviceType = ((RemoteDeviceRecord)DeviceTypeComboBox.SelectedItem).DeviceType;
         }
+
+        public object GetItemFrom(DeviceType deviceType)
+        {
+            return deviceType switch
+            {
+                DeviceType.Computer => RemoteDeviceRecord.Computer,
+                DeviceType.Tablet => RemoteDeviceRecord.Tablet,
+                DeviceType.Smartphone => RemoteDeviceRecord.Smartphone,
+                DeviceType.Tv => RemoteDeviceRecord.TV,
+            };
+        }
     }
 
     public record RemoteDeviceRecord(DeviceType DeviceType, string Name, FontIcon Icon)
