@@ -24,24 +24,19 @@ I regularly try out different stuff in a scratchpad, so if you seea commit title
 ## Updates
 I will try to post regular updates about what I've done, and what needs to be done. Don't expect too much though :)
 
-### 2023/05/22
-- Start work on album view:
-  ![image](https://github.com/christosk92/Wavee/assets/13438702/9223433b-111c-432e-9e1f-dc394cf201e6)
+### 2023/05/28
+- Implemented album view.
+- Implemented artist view.
+- Implemented library view and all associated commands, such as saving tracks and real-time updates.
+- Implemented settings page and configuration of Spotify Client
 
-
-### 2023/05/21
-- Revamped the artist page to make it more declarative in code:
- ![image](https://github.com/christosk92/Wavee/assets/13438702/c9d15357-9e7b-48ae-9f6e-18d67d263adf)
- ![image](https://github.com/christosk92/Wavee/assets/13438702/9e65e8cd-e93c-45b8-8e61-8e1aad40b2a2)
-
-- Started working on library component:
- 
- ![image](https://github.com/christosk92/Wavee/assets/13438702/8737eee8-45e1-46e8-a44b-6e4da76f220e)
-
-- Started on context menus:
-
-![image](https://github.com/christosk92/Wavee/assets/13438702/4c27ac96-78da-4c21-a88c-62907572e914)
-
+Todo:
+- Browse page (as seen in the **old** spotify app).
+- Playlists view.
+- Better playlist managment (reordering).
+- Queue managment.
+- Double check local playback.
+ETA: 2 weeks
 
 
 ### 2023/05/20
