@@ -42,7 +42,7 @@ namespace Wavee.UI.WinUI.Views.Playlist
             //ratio is around 1:1, so 1/2
             if (!string.IsNullOrEmpty(ViewModel.Playlist?.LargeImage))
             {
-                var topHeight = newSize * 0.5;
+                var topHeight = newSize * 0.4;
                 topHeight = Math.Min(topHeight, 550);
                 LargeImage.Height = topHeight;
             }

@@ -25,14 +25,15 @@
                                              Source="{x:Bind ViewModel.Playlist.LargeImage}" />
                 </Grid>
 
-                <StackPanel Margin="24,0,0,-12"
+                <StackPanel Margin="24,0,0,0"
                                 x:Name="MetadataPnale"
                                 labs:TransitionHelper.Id="background"
                                 Visibility="Collapsed"
+                                HorizontalAlignment="Center"
                                 ui:VisualExtensions.NormalizedCenterPoint="0.5"
-                                VerticalAlignment="Bottom"
+                                VerticalAlignment="Center"
                                 Orientation="Horizontal">
-                    <StackPanel>
+                    <StackPanel Margin="0,0,0,0">
                         <animations:Explicit.Animations>
                             <animations:AnimationSet x:Name="ShowPanelAnim">
                                 <animations:TranslationAnimation Delay="0:0:0.2"
@@ -45,16 +46,18 @@
                                                                  To="1.0" />
                             </animations:AnimationSet>
                         </animations:Explicit.Animations>
-                        <TextBlock Text="VERIFIED ARTIST"
+                        <TextBlock Text="A curated playlist by Spotify"
+                                   HorizontalAlignment="Center"
                                        FontWeight="Bold"
                                        FontSize="12"
                                        Opacity=".8" />
                         <TextBlock FontSize="64"
                                        labs:TransitionHelper.Id="name"
                                        FontWeight="Bold"
-                                       Text="{x:Bind ViewModel.Playlist.Name}" />
-
-                        <TextBlock FontWeight="SemiBold"/>
+                                       Text="{x:Bind ViewModel.Playlist.Name, Mode=OneWay}" />
+                        <TextBlock FontWeight="SemiBold"
+                                   Text="{x:Bind ViewModel.Playlist.Description, Mode=OneWay}"
+                                   />
                     </StackPanel>
                 </StackPanel>
             </StackPanel>
