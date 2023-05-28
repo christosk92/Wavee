@@ -1,9 +1,12 @@
 ﻿using System.Drawing;
 using System.Text;
 using System.Text.Json;
+using Eum.Spotify.connectstate;
 using LanguageExt;
+using LanguageExt.Common;
 using Wavee.UI.Infrastructure.Sys.IO;
 using Wavee.UI.Infrastructure.Traits;
+using Wavee.UI.ViewModels;
 
 namespace Wavee.UI.Infrastructure.Sys;
 
@@ -50,6 +53,27 @@ public static class UiConfig<RT> where RT : struct, HasFile<RT>, HasDirectory<RT
         from config in Deserialize(configPath)
         select config.Window.Height;
 
+    public static Eff<RT, AppTheme> Theme =>
+        from configPath in ConfigPath
+        from config in Deserialize(configPath)
+        select (AppTheme)config.Personalization.Theme;
+
+    public static Eff<RT, string> Locale =>
+        from configPath in ConfigPath
+        from config in Deserialize(configPath)
+        select config.Personalization.Locale;
+
+    public static Eff<RT, string> DeviceName =>
+        from configPath in ConfigPath
+        from config in Deserialize(configPath)
+        select config.Remote.DeviceName;
+
+    public static Eff<RT, DeviceType> DeviceType =>
+        from configPath in ConfigPath
+        from config in Deserialize(configPath)
+        select (DeviceType)config.Remote.DeviceType;
+
+
     public static Aff<RT, Unit> SetWindowWidth(uint width) =>
         from configPath in ConfigPath
         from config in Deserialize(configPath)
@@ -63,6 +87,36 @@ public static class UiConfig<RT> where RT : struct, HasFile<RT>, HasDirectory<RT
         from newConfig in SuccessEff(config.SetWindowHeight(height))
         from serialized in SerializeAndWrite(configPath, newConfig)
         select unit;
+
+    public static Aff<RT, Unit> SetTheme(AppTheme currentTheme) =>
+        from configPath in ConfigPath
+        from config in Deserialize(configPath)
+        from newConfig in SuccessEff(config.SetTheme(currentTheme))
+        from serialized in SerializeAndWrite(configPath, newConfig)
+        select unit;
+
+    public static Aff<RT, Unit> SetLocale(string cultureName) =>
+        from configPath in ConfigPath
+        from config in Deserialize(configPath)
+        from newConfig in SuccessEff(config.SetLocale(cultureName))
+        from serialized in SerializeAndWrite(configPath, newConfig)
+        select unit;
+
+    public static Aff<RT, Unit> SetDeviceType(DeviceType deviceType) =>
+        from configPath in ConfigPath
+        from config in Deserialize(configPath)
+        from newConfig in SuccessEff(config.SetDeviceType(deviceType))
+        from serialized in SerializeAndWrite(configPath, newConfig)
+        select unit;
+
+    //device name
+    public static Aff<RT, Unit> SetDeviceName(string deviceName) =>
+        from configPath in ConfigPath
+        from config in Deserialize(configPath)
+        from newConfig in SuccessEff(config.SetDeviceName(deviceName))
+        from serialized in SerializeAndWrite(configPath, newConfig)
+        select unit;
+
 
     // public static Aff<RT, Unit> SetSetupCompleted(bool setupCompleted) =>
     //     from configPath in ConfigPath
@@ -95,9 +149,11 @@ public static class UiConfig<RT> where RT : struct, HasFile<RT>, HasDirectory<RT
         select JsonSerializer.Deserialize<UiConfigStruct>(bytes.Span);
 
     private static UiConfigStruct CreateDefaultConfig() =>
-        new(new WindowConfig(800, 600));
+        new(new WindowConfig(800, 600),
+            new Personalization(0, null),
+            new Remote((int)Eum.Spotify.connectstate.DeviceType.Computer, "Wavee"));
 
-    private readonly record struct UiConfigStruct(WindowConfig Window)
+    private readonly record struct UiConfigStruct(WindowConfig Window, Personalization Personalization, Remote Remote)
     {
         public UiConfigStruct SetWindowWidth(uint width)
         {
@@ -121,29 +177,55 @@ public static class UiConfig<RT> where RT : struct, HasFile<RT>, HasDirectory<RT
             };
         }
 
-        // public UiConfigStruct SetSetupCompleted(bool setupCompleted)
-        // {
-        //     return this with
-        //     {
-        //         Setup = Setup with
-        //         {
-        //             SetupCompleted = setupCompleted
-        //         }
-        //     };
-        // }
-        //
-        // public UiConfigStruct SetSetupProgress(int setupProgress)
-        // {
-        //     return this with
-        //     {
-        //         Setup = Setup with
-        //         {
-        //             SetupProgress = setupProgress
-        //         }
-        //     };
-        // }
+        public UiConfigStruct SetTheme(AppTheme currentTheme)
+        {
+            return this with
+            {
+                Personalization = Personalization with
+                {
+                    Theme = (int)currentTheme
+                }
+            };
+        }
+
+        public UiConfigStruct SetLocale(string cultureName)
+        {
+            return this with
+            {
+                Personalization = Personalization with
+                {
+                    Locale = cultureName
+                }
+            };
+        }
+
+        public UiConfigStruct SetDeviceType(DeviceType deviceType)
+        {
+            return this with
+            {
+                Remote = Remote with
+                {
+                    DeviceType = (int)deviceType
+                }
+            };
+        }
+
+        public UiConfigStruct SetDeviceName(string deviceName)
+        {
+            if(string.IsNullOrEmpty(deviceName))
+                deviceName = "Wavee";
+            return this with
+            {
+                Remote = Remote with
+                {
+                    DeviceName = deviceName
+                }
+            };
+        }
     }
 
+    private readonly record struct Remote(int DeviceType, string DeviceName);
+    private readonly record struct Personalization(int Theme, string? Locale);
     private readonly record struct WindowConfig(uint Width, uint Height);
     // private readonly record struct SetupConfig(bool SetupCompleted, int SetupProgress);
 }

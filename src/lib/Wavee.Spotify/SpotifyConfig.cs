@@ -4,11 +4,28 @@ using Wavee.Spotify.Infrastructure.Playback;
 
 namespace Wavee.Spotify;
 
-public record SpotifyConfig(
-    SpotifyRemoteConfig Remote,
-    SpotifyPlaybackConfig Playback,
-    SpotifyCacheConfig Cache
-);
+public class SpotifyConfig
+{
+    public SpotifyConfig(SpotifyRemoteConfig Remote,
+        SpotifyPlaybackConfig Playback,
+        SpotifyCacheConfig Cache)
+    {
+        this.Remote = Remote;
+        this.Playback = Playback;
+        this.Cache = Cache;
+    }
+
+    public SpotifyRemoteConfig Remote { get; init; }
+    public SpotifyPlaybackConfig Playback { get; init; }
+    public SpotifyCacheConfig Cache { get; init; }
+
+    public void Deconstruct(out SpotifyRemoteConfig Remote, out SpotifyPlaybackConfig Playback, out SpotifyCacheConfig Cache)
+    {
+        Remote = this.Remote;
+        Playback = this.Playback;
+        Cache = this.Cache;
+    }
+}
 
 /// <summary>
 /// A config for the Spotify cache.
@@ -35,7 +52,15 @@ public record SpotifyPlaybackConfig(
     Option<TimeSpan> CrossfadeDuration,
     bool Autoplay);
 
-public readonly record struct SpotifyRemoteConfig(
-    string DeviceName,
-    DeviceType DeviceType
-);
+public record SpotifyRemoteConfig(string DeviceName,
+    DeviceType DeviceType)
+{
+    public string DeviceName { get; set; } = DeviceName;
+    public DeviceType DeviceType { get; set; } = DeviceType;
+
+    public void Deconstruct(out string DeviceName, out DeviceType DeviceType)
+    {
+        DeviceName = this.DeviceName;
+        DeviceType = this.DeviceType;
+    }
+}

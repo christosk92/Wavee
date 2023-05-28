@@ -7,6 +7,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:labs="using:CommunityToolkit.Labs.WinUI"
+    xmlns:viewModels="using:Wavee.UI.ViewModels"
     mc:Ignorable="d">
     <StackPanel
         Spacing="24"
@@ -15,12 +16,21 @@
             <TextBlock 
                 FontSize="21"
                 FontWeight="SemiBold"
-                x:Name="ThemeSegment"
                 Text="Theme"/>
-            <labs:Segmented>
-                <labs:SegmentedItem Content="System"/>
-                <labs:SegmentedItem Content="Light"/>
-                <labs:SegmentedItem Content="Dark"/>
+            <labs:Segmented
+                IsItemClickEnabled="True"
+                ItemClick="ThemeSegment_OnItemClick"
+                SelectedIndex="{x:Bind ToInt(ViewModel.CurrentTheme), Mode=OneWay}"
+                x:Name="ThemeSegment">
+                <labs:SegmentedItem 
+                    Tag="system"
+                    Content="System"/>
+                <labs:SegmentedItem 
+                    Tag="light"
+                    Content="Light"/>
+                <labs:SegmentedItem 
+                    Tag="dark"
+                    Content="Dark"/>
             </labs:Segmented>
         </StackPanel>
 
@@ -42,12 +52,18 @@
                 <Run Text="To manage this cache, "/><Hyperlink Click="GoToCache" UnderlineStyle="None">tap here</Hyperlink>
             </TextBlock>
             <ComboBox 
+                SelectionChanged="LanguageBox_OnSelectionChanged"
+                SelectedItem="{x:Bind ViewModel.CurrentLocale, Mode=OneWay}"
+                ItemsSource="{x:Bind ViewModel.AvailableLocales, Mode=OneWay}"
                 x:Name="LanguageBox"
                 Margin="0,8">
-                <ComboBoxItem Content="English (United States)"/>
-                <ComboBoxItem Content="한국어 (Korean)"/>
-                <ComboBoxItem Content="日本語 (Japanese)"/>
-                <ComboBoxItem Content="Nederlands (Dutch)"/>
+                <ComboBox.ItemTemplate>
+                    <DataTemplate x:DataType="viewModels:AppLocale">
+                        <TextBlock>
+                            <Run Text="{x:Bind NativeName}"/> (<Run Text="{x:Bind EnglishName}"/>)
+                        </TextBlock>
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
             </ComboBox>
         </StackPanel>
     </StackPanel>

@@ -22,6 +22,7 @@
                 Margin="0,8"
                 HorizontalAlignment="Left"
                 Width="200"
+                Text="{x:Bind ViewModel.DeviceName, Mode=TwoWay}"
                 PlaceholderText="Wavee Desktop"
                 x:Name="DeviceNameBox"/>
         </StackPanel>
@@ -35,40 +36,19 @@
                 Opacity=".8"
                 Text="Spotify will use this to display the correct icon in the devices panel."/>
             <ComboBox
+                ItemsSource="{x:Bind AvailableDeviceTypes, Mode=OneWay}"
                 x:Name="DeviceTypeComboBox"
+                SelectionChanged="DeviceTypeComboBox_OnSelectionChanged"
                 Margin="0,8">
-                <ComboBoxItem >
-                    <ComboBoxItem.Content>
+                <ComboBox.ItemTemplate>
+                    <DataTemplate x:DataType="local:RemoteDeviceRecord">
                         <StackPanel Spacing="8" Orientation="Horizontal">
-                            <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE7F8;" />
-                            <TextBlock Text="Computer"/>
+                            <ContentPresenter VerticalContentAlignment="Stretch" HorizontalContentAlignment="Stretch"
+                                              Content="{x:Bind Icon}"/>
+                            <TextBlock Text="{x:Bind Name}"/>
                         </StackPanel>
-                    </ComboBoxItem.Content>
-                </ComboBoxItem>
-                <ComboBoxItem >
-                    <ComboBoxItem.Content>
-                        <StackPanel Spacing="8" Orientation="Horizontal">
-                            <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE1C9;" />
-                            <TextBlock Text="Phone"/>
-                        </StackPanel>
-                    </ComboBoxItem.Content>
-                </ComboBoxItem>
-                <ComboBoxItem >
-                    <ComboBoxItem.Content>
-                        <StackPanel Spacing="8" Orientation="Horizontal">
-                            <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE70A;" />
-                            <TextBlock Text="Tablet"/>
-                        </StackPanel>
-                    </ComboBoxItem.Content>
-                </ComboBoxItem>
-                <ComboBoxItem >
-                    <ComboBoxItem.Content>
-                        <StackPanel Spacing="8" Orientation="Horizontal">
-                            <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE7F4;" />
-                            <TextBlock Text="TV"/>
-                        </StackPanel>
-                    </ComboBoxItem.Content>
-                </ComboBoxItem>
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
             </ComboBox>
         </StackPanel>
     </StackPanel>

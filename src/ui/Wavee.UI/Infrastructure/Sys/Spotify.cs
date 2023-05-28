@@ -16,6 +16,7 @@ using Wavee.UI.Infrastructure.Traits;
 using System;
 using System.Text.Json;
 using Eum.Spotify.playlist4;
+using LanguageExt.Common;
 using Spotify.Collection.Proto.V2;
 
 namespace Wavee.UI.Infrastructure.Sys;
@@ -26,6 +27,13 @@ public static class Spotify<R> where R : struct, HasSpotify<R>
         from aff in default(R).SpotifyEff.MapAsync(x => x.Authenticate(credentials, ct))
         from apwelcome in default(R).SpotifyEff.Map(x => x.WelcomeMessage())
         select apwelcome.ValueUnsafe();
+
+    public static Aff<R, Unit> RefreshRemoteState() =>
+        from aff in default(R).SpotifyEff.Map(x => x.GetRemoteClient())
+        from result in aff.Match(
+            Some: x => x.RefreshState().ToAff(),
+            None: () => SuccessAff(unit))
+        select unit;
 
     public static Aff<R, T> GetFromPublicApi<T>(string endpoint, CancellationToken cancellation) =>
         from aff in default(R).SpotifyEff.Map(x => x.GetFromPublicApi<T>(endpoint, cancellation))
@@ -114,4 +122,5 @@ public static class Spotify<R> where R : struct, HasSpotify<R>
     public static Eff<R, Option<string>> CdnUrl() =>
         from aff in default(R).SpotifyEff.Map(x => x.CdnUrl())
         select aff;
+
 }

@@ -6,6 +6,7 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Wavee.UI.Infrastructure.Live;
 using Wavee.UI.Infrastructure.Sys;
+using Wavee.UI.ViewModels;
 using Windows.Security.Credentials;
 
 namespace Wavee.UI.WinUI.Views.Setup
@@ -33,7 +34,16 @@ namespace Wavee.UI.WinUI.Views.Setup
             {
                 if (_naivgateToSetupView)
                 {
-                    this.Content = new SetupView(App.Runtime);
+                    this.Content = new SetupView(App.Runtime)
+                    {
+                        RequestedTheme = SettingsViewModel<WaveeUIRuntime>.Instance.CurrentTheme switch
+                        {
+                            AppTheme.System => ElementTheme.Default,
+                            AppTheme.Light => ElementTheme.Light,
+                            AppTheme.Dark => ElementTheme.Dark,
+                            _ => throw new ArgumentOutOfRangeException()
+                        }
+                    };
                 }
             }
             else
@@ -53,7 +63,16 @@ namespace Wavee.UI.WinUI.Views.Setup
                 vault.Add(new PasswordCredential(VAULT_KEY, welcomeMessage.CanonicalUsername,
                     $"{welcomeMessage.ReusableAuthCredentials.ToBase64()}-{(int)welcomeMessage.ReusableAuthCredentialsType}"));
 
-                App.MWindow.Content = new ShellView(App.Runtime, user);
+                App.MWindow.Content = new ShellView(App.Runtime, user)
+                {
+                    RequestedTheme = SettingsViewModel<WaveeUIRuntime>.Instance.CurrentTheme switch
+                    {
+                        AppTheme.System => ElementTheme.Default,
+                        AppTheme.Light => ElementTheme.Light,
+                        AppTheme.Dark => ElementTheme.Dark,
+                        _ => throw new ArgumentOutOfRangeException()
+                    }
+                };
             }
         }
     }

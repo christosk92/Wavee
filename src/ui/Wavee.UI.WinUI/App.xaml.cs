@@ -28,7 +28,7 @@ namespace Wavee.UI.WinUI;
 
 public partial class App : Application
 {
-    public static readonly SpotifyConfig _config;
+    public static readonly SpotifyConfig Config;
 
     static App()
     {
@@ -39,7 +39,7 @@ public partial class App : Application
 
         var cachePath = Path.Combine(localCache.ValueUnsafe(), "WaveeUI", "Cache");
         Directory.CreateDirectory(cachePath);
-        _config = new SpotifyConfig(
+        Config = new SpotifyConfig(
             Cache: new SpotifyCacheConfig(
                 CachePath: cachePath,
                 CacheNoTouchExpiration: Option<TimeSpan>.None
@@ -54,7 +54,7 @@ public partial class App : Application
                 Autoplay: true
             )
         );
-        Runtime = WaveeUIRuntime.New(string.Empty, _config);
+        Runtime = WaveeUIRuntime.New(string.Empty, Config);
         var home = Environment<WaveeUIRuntime>.getEnvironmentVariable("APPDATA").Run(Runtime)
             .ThrowIfFail();
         if (home.IsNone)
@@ -81,6 +81,19 @@ public partial class App : Application
         TrackEnqueueService<WaveeUIRuntime>.Runtime = Runtime;
         _ = await UiConfig<WaveeUIRuntime>.CreateDefaultIfNotExists.Run(Runtime);
         var settings = new SettingsViewModel<WaveeUIRuntime>(Runtime);
+        settings.Config = Config;
+        var theme = (UiConfig<WaveeUIRuntime>.Theme.Run(Runtime)).IfFail(AppTheme.System);
+        var locale = (UiConfig<WaveeUIRuntime>.Locale.Run(Runtime)).IfFail("en-US");
+        settings.CurrentTheme = theme;
+        settings.CurrentLocale = AppLocale.Find(locale);
+
+        var deviceType = (UiConfig<WaveeUIRuntime>.DeviceType.Run(Runtime)).IfFail(DeviceType.Computer);
+        var deviceName = (UiConfig<WaveeUIRuntime>.DeviceName.Run(Runtime)).IfFail("Wavee");
+        settings.DeviceType = deviceType;
+        settings.DeviceName = deviceName;
+        Config.Remote.DeviceName = deviceName;
+        Config.Remote.DeviceType = deviceType;
+
         var defaultUserMaybe = (await UserManagment<WaveeUIRuntime>.GetDefaultUser().Run(Runtime)).ThrowIfFail();
         var content = await defaultUserMaybe.MatchAsync(
             Some: async f =>
@@ -121,12 +134,30 @@ public partial class App : Application
                 var signinTask =
                     Spotify<WaveeUIRuntime>.Authenticate(c, CancellationToken.None)
                         .Run(Runtime);
-                var shellView = new SigninInView(signinTask, true);
+                var shellView = new SigninInView(signinTask, true)
+                {
+                    RequestedTheme = settings.CurrentTheme switch
+                    {
+                        AppTheme.System => ElementTheme.Default,
+                        AppTheme.Light => ElementTheme.Light,
+                        AppTheme.Dark => ElementTheme.Dark,
+                        _ => throw new ArgumentOutOfRangeException()
+                    }
+                };
                 return (UIElement)shellView;
             },
             None: () =>
             {
-                var setupView = new SetupView(Runtime);
+                var setupView = new SetupView(Runtime)
+                {
+                    RequestedTheme = settings.CurrentTheme switch
+                    {
+                        AppTheme.System => ElementTheme.Default,
+                        AppTheme.Light => ElementTheme.Light,
+                        AppTheme.Dark => ElementTheme.Dark,
+                        _ => throw new ArgumentOutOfRangeException()
+                    }
+                };
                 return setupView;
             });
         var window = new Window
@@ -139,7 +170,6 @@ public partial class App : Application
         var scaleAdjustment = GetScaleAdjustment();
         var width = (await UiConfig<WaveeUIRuntime>.WindowWidth.Run(Runtime)).IfFail(800) * scaleAdjustment;
         var height = (await UiConfig<WaveeUIRuntime>.WindowHeight.Run(Runtime)).IfFail(600) * scaleAdjustment;
-
         var hWnd = WindowNative.GetWindowHandle(MWindow);
         var windowId = Win32Interop.GetWindowIdFromWindow(hWnd);
         var appWindow = AppWindow.GetFromWindowId(windowId);

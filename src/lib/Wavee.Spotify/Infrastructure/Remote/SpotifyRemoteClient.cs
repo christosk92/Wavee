@@ -47,7 +47,7 @@ public class SpotifyRemoteClient
             mn.Set();
         });
 
-        SpotifyLocalDeviceState localState = SpotifyLocalDeviceState.New(
+        _localState = SpotifyLocalDeviceState.New(
             deviceId: deviceId,
             deviceName: config.DeviceName,
             deviceType: config.DeviceType
@@ -62,10 +62,10 @@ public class SpotifyRemoteClient
                 mn.WaitOne();
                 return cm;
             })
-            .Select(c => MutateFromPlayer(c, localState, wasActive))
+            .Select(c => MutateFromPlayer(c, _localState, wasActive))
             .Select(async localDeviceState =>
             {
-                localState = localDeviceState;
+                _localState = localDeviceState;
                 wasActive = localDeviceState.IsActive;
                 //send the state to spotify
                 var putState = localDeviceState.BuildPutState(
@@ -115,6 +115,25 @@ public class SpotifyRemoteClient
         }
 
         return spotifyLocalDeviceState.SetStateFrom(state);
+    }
+
+    public async ValueTask<Unit> RefreshState()
+    {
+        //usually called when device name/type changes
+        var spClient = await ApResolve.GetSpClient(CancellationToken.None);
+        var spClientUrl = $"https://{spClient.host}:{spClient.port}";
+        _localState = _localState with
+        {
+            DeviceName = _config.DeviceName,
+            DeviceType = _config.DeviceType
+        };
+        var cluster = await SpotifyRemoteRuntime.PutState(
+            _deviceId, spClientUrl,
+            _localState.BuildPutState(PutStateReason.PlayerStateChanged, WaveePlayer.Position),
+            _connection.ConnectionId.ValueUnsafe(),
+            _tokenClient,
+            CancellationToken.None);
+        return default;
     }
 
     public IObservable<SpotifyLibraryUpdateNotification> LibraryChanged =>
@@ -296,7 +315,7 @@ public class SpotifyRemoteClient
                     {
                         uri = contextId.ToString(),
                         url = contextUrl,
-                        metadata = metadata.ToDictionary(c=> c.Key, c=> c.Value)
+                        metadata = metadata.ToDictionary(c => c.Key, c => c.Value)
                     },
                     options = new
                     {
@@ -494,6 +513,8 @@ public class SpotifyRemoteClient
         return unit;
     }
     private static string _spClientUrl;
+    private SpotifyLocalDeviceState _localState;
+
     private static async ValueTask<string> SpClientUrl(CancellationToken ct)
     {
         if (!string.IsNullOrEmpty(_spClientUrl))
@@ -503,4 +524,5 @@ public class SpotifyRemoteClient
         _spClientUrl = spClientUrl;
         return spClientUrl;
     }
+
 }
