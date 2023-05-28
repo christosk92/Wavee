@@ -1,5 +1,6 @@
 ﻿using System.Buffers.Text;
 using System.ComponentModel;
+using Eum.Spotify.playlist4;
 using Google.Protobuf;
 using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
@@ -47,6 +48,15 @@ public readonly struct SpotifyCache
             {
 
             }
+
+            try
+            {
+                db.CreateTable<CachedPlaylist>();
+            }
+            catch (SQLiteException)
+            {
+
+            }
         }
 
         if (_storagePath.IsSome && !Initialized)
@@ -60,7 +70,7 @@ public readonly struct SpotifyCache
 
     public Seq<Option<TrackOrEpisode>> GetBulk(Seq<AudioId> request)
     {
-        if(request.Length == 0) return LanguageExt.Seq<Option<TrackOrEpisode>>.Empty;
+        if (request.Length == 0) return LanguageExt.Seq<Option<TrackOrEpisode>>.Empty;
         if (_dbPath.IsNone)
             return new Seq<Option<TrackOrEpisode>>(Enumerable.Repeat(Option<TrackOrEpisode>.None, request.Count));
         using var db = new SQLiteConnection(_dbPath.ValueUnsafe());
@@ -185,7 +195,7 @@ public readonly struct SpotifyCache
     {
         if (_dbPath.IsNone)
             return default;
-        if(result.IsEmpty) return default;
+        if (result.IsEmpty) return default;
         using var db = new SQLiteConnection(_dbPath.ValueUnsafe());
         var tracks = result.Where(x => x.Value.IsRight).Select(x => new CachedTrack
         {
@@ -261,6 +271,42 @@ public readonly struct SpotifyCache
 
     #endregion
 
+    #region Playlists
+
+    public Unit SavePlaylist(AudioId id, SelectedListContent content)
+    {
+        if (_dbPath.IsNone)
+            return default;
+
+        using var db = new SQLiteConnection(_dbPath.ValueUnsafe());
+
+        db.InsertOrReplace(new CachedPlaylist
+        {
+            Id = id.ToString(),
+            Revision = content.Revision.ToBase64(),
+            Title = content.Attributes.HasName ? content.Attributes.Name
+                : "Playlist",
+            RestData = content.ToByteArray()
+        });
+
+        return default;
+    }
+
+    public Option<SelectedListContent> GetPlaylist(AudioId id)
+    {
+        if (_dbPath.IsNone)
+            return None;
+
+        using var db = new SQLiteConnection(_dbPath.ValueUnsafe());
+
+        return db.Table<CachedPlaylist>().SingleOrDefault(x => x.Id == id.ToString())
+            is CachedPlaylist playlist
+            ? SelectedListContent.Parser.ParseFrom(playlist.RestData)
+            : None;
+    }
+
+    #endregion
+
     private class CachedAlbum
     {
         [PrimaryKey] public string Id { get; init; }
@@ -269,6 +315,15 @@ public readonly struct SpotifyCache
         public DateTimeOffset InsertedAt { get; init; }
         public DateTimeOffset AbsoluteCacheExpiration { get; init; }
     }
+
+    private class CachedPlaylist
+    {
+        [PrimaryKey] public string Id { get; init; }
+        public string Revision { get; init; }
+        public string Title { get; init; }
+        public byte[] RestData { get; init; }
+    }
+
     private class CachedTrack
     {
         [PrimaryKey] public string Id { get; init; }

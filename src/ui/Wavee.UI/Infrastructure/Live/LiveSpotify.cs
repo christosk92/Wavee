@@ -162,6 +162,23 @@ internal sealed class LiveSpotify : Traits.SpotifyIO
             .Map(x => x.EnsureSuccessStatusCode())
         select unit;
 
+    public Aff<SelectedListContent> FetchPlaylist(AudioId playlistId) =>
+        from client in Eff(() => _connection.ValueUnsafe())
+        from spclient in ApResolve.GetSpClient(CancellationToken.None).ToAff()
+            .Map(x => $"https://{x.host}:{x.port}")
+            .Map(x =>
+                $"{x}/playlist/v2/playlist/{playlistId.ToBase62()}")
+        from bearer in client.TokenClient.GetToken(CancellationToken.None).ToAff()
+            .Map(x => new AuthenticationHeaderValue("Bearer", x))
+        from result in HttpIO
+            .GetAsync(spclient, bearer, LanguageExt.HashMap<string, string>.Empty, CancellationToken.None)
+            .MapAsync(async x =>
+            {
+                x.EnsureSuccessStatusCode();
+                await using var str = await x.Content.ReadAsStreamAsync();
+                return SelectedListContent.Parser.ParseFrom(str);
+            }).ToAff()
+        select result;
     public Aff<Seq<TrackOrEpisode>> FetchBatchOfTracks(Seq<AudioId> items, CancellationToken ct = default)
     {
         if (items.IsEmpty)
@@ -262,6 +279,9 @@ internal sealed class LiveSpotify : Traits.SpotifyIO
         return _connection
             .Map(x => x.RemoteClient.StateChanged);
     }
+    public Option<IObservable<Diff>> ObservePlaylist(AudioId id) =>
+        _connection
+            .Map(x => x.RemoteClient.ObservePlaylist(id));
 
     public Option<SpotifyCache> Cache()
     {

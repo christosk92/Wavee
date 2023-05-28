@@ -19,4 +19,8 @@
         <Protobuf Include="*.proto" GrpcServices="Client" />
     </ItemGroup>
 
+    <ItemGroup>
+      <None Remove="playlist_permission.proto" />
+    </ItemGroup>
+
 </Project>

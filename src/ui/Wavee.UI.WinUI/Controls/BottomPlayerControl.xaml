@@ -349,19 +349,6 @@
                         <FontIcon Glyph="&#xE772;" />
                     </AppBarButton.Icon>
                 </AppBarButton>
-                <CommandBar.SecondaryCommands>
-                    <AppBarButton x:Name="AddToPlaylistMenu">
-                        <AppBarButton.Icon>
-                            <FontIcon Glyph="&#xECC8;" />
-                        </AppBarButton.Icon>
-
-                        <AppBarButton.Flyout>
-                            <MenuFlyout x:Name="AddToPlaylistFlyout" />
-                        </AppBarButton.Flyout>
-                    </AppBarButton>
-
-                    <AppBarSeparator />
-                </CommandBar.SecondaryCommands>
             </CommandBar>
 
             <UserControl Grid.Row="2"

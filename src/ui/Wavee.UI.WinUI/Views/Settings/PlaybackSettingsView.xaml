@@ -50,7 +50,7 @@
                     Tag="Normal"
                     IsChecked="True"/>
                     <RadioButton
-                    Content="High (128 kbps)"
+                    Content="High (160 kbps)"
                     Tag="High"/>
                     <RadioButton
                     Content="Very high (320 kbps)"
@@ -75,7 +75,7 @@
                         HorizontalAlignment="Left"
                         Value="{x:Bind ViewModel.CrossfadeSeconds, Mode=TwoWay}"
                         TickPlacement="BottomRight"  TickFrequency="1" Maximum="12"/>
-                <TextBlock Text="0 seconds (off)"/>
+                <TextBlock Text="{x:Bind GetCrossfadeStr(ViewModel.CrossfadeSeconds),Mode=OneWay}"/>
             </StackPanel>
          
             <UserControl IsEnabled="False">

@@ -34,6 +34,7 @@
 		<None Remove="Views\Library\LibraryRootView.xaml" />
 		<None Remove="Views\Library\LibrarySongsView.xaml" />
 		<None Remove="Views\Playlist\CreatePlaylistView.xaml" />
+		<None Remove="Views\Playlist\PlaylistView.xaml" />
 		<None Remove="Views\Settings\CacheSettingsView.xaml" />
 		<None Remove="Views\Settings\EqualizerSettingsView.xaml" />
 		<None Remove="Views\Settings\GeneralSettingsView.xaml" />
@@ -113,6 +114,9 @@
 		<None Update="Components\ArtistAboutSection.xaml">
 		  <Generator>MSBuild:Compile</Generator>
 		</None>
+		<Page Update="Views\Playlist\PlaylistView.xaml">
+		  <Generator>MSBuild:Compile</Generator>
+		</Page>
 		<Page Update="Views\Settings\EqualizerSettingsView.xaml">
 		  <Generator>MSBuild:Compile</Generator>
 		</Page>

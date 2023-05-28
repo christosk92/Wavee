@@ -2,8 +2,8 @@ syntax = "proto2";
 
 package spotify.playlist4.proto;
 
+import "playlist_permission.proto";
 option optimize_for = CODE_SIZE;
-option java_outer_classname = "Playlist4ApiProto";
 option csharp_namespace = "Eum.Spotify.playlist4";
 
 message Item {
@@ -186,6 +186,7 @@ message SelectedListContent {
     optional int64 timestamp = 15;
     optional string owner_username = 16;
     optional bool abuse_reporting_enabled = 17;
+    optional Capabilities capabilities = 18;
     repeated GeoblockBlockingType geoblock = 19;
 }
 

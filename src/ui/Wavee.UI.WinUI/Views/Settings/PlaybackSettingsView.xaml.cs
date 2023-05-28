@@ -30,5 +30,16 @@ namespace Wavee.UI.WinUI.Views.Settings
             this.InitializeComponent();
         }
         public SettingsViewModel<WaveeUIRuntime> ViewModel => SettingsViewModel<WaveeUIRuntime>.Instance;
+
+        public string GetCrossfadeStr(int i)
+        {
+            //0 seconds (off)
+            return i switch
+            {
+                0 => "off",
+                1 => "1 second",
+                _ => $"{i} seconds",
+            };
+        }
     }
 }

@@ -22,6 +22,8 @@ public interface SpotifyIO
     Option<IObservable<SpotifyRootlistUpdateNotification>> ObserveRootlist();
     Option<IObservable<SpotifyLibraryUpdateNotification>> ObserveLibrary();
     Option<IObservable<SpotifyRemoteState>> ObserveRemoteState();
+    Option<IObservable<Diff>> ObservePlaylist(AudioId id);
+
     Option<SpotifyCache> Cache();
     Option<string> CountryCode();
     Option<string> CdnUrl();
@@ -40,6 +42,7 @@ public interface SpotifyIO
         Seq<AudioId> audioIds, Option<int> position);
     Aff<Unit> WriteLibrary(WriteRequest writeRequest, CancellationToken ct);
     Aff<Seq<TrackOrEpisode>> FetchBatchOfTracks(Seq<AudioId> request, CancellationToken ct = default);
+    Aff<SelectedListContent> FetchPlaylist(AudioId playlistId);
 }
 
 /// <summary>

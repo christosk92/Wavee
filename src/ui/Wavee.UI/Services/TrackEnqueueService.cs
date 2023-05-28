@@ -26,7 +26,7 @@ public static class TrackEnqueueService<R> where R : struct, HasSpotify<R>
                 try
                 {
                     _waitForAnything.WaitOne();
-                    await Task.Delay(50);
+                    await Task.Delay(5);
                     var currentCount = _queue.Count;
                     if (currentCount == 0 && currentBuffer.Count > 0)
                     {

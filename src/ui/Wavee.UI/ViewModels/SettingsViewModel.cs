@@ -111,6 +111,7 @@ public sealed class SettingsViewModel<R> : ReactiveObject, INavigableViewModel w
 
         this.WhenAnyValue(x => x.MetadataCachePathBase, x => x.AudioFilesCachePath)
             .Skip(1)
+            .Throttle(TimeSpan.FromMilliseconds(100))
             .ObserveOn(RxApp.TaskpoolScheduler)
             .Select(async (d, t) =>
             {

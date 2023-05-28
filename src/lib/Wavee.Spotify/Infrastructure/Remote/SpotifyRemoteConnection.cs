@@ -20,6 +20,7 @@ internal sealed class SpotifyRemoteConnection
     private readonly Subject<SpotifyLibraryUpdateNotification> _libraryNotifSubj;
     private readonly Subject<SpotifyRootlistUpdateNotification> _rootlistNotifSubj;
     private readonly string _userId;
+    private readonly Subject<SpotifyPlaylistUpdateNotification> _playlistNotifSubj;
 
     private Ref<Option<string>> _connectionId { get; }
     internal Ref<Option<Cluster>> _latestCluster { get; }
@@ -27,6 +28,7 @@ internal sealed class SpotifyRemoteConnection
     public SpotifyRemoteConnection(string userId)
     {
         _userId = userId;
+        _playlistNotifSubj = new Subject<SpotifyPlaylistUpdateNotification>();
         _rootlistNotifSubj = new Subject<SpotifyRootlistUpdateNotification>();
         _libraryNotifSubj = new Subject<SpotifyLibraryUpdateNotification>();
         var listener = Channel.CreateUnbounded<SpotifyWebsocketMessage>();
@@ -55,7 +57,7 @@ internal sealed class SpotifyRemoteConnection
     public Option<string> LastCommandSentBy { get; private set; }
     public Option<uint> LastCommandId { get; private set; }
     public Option<string> ConnectionId => _connectionId.Value;
-
+    public IObservable<SpotifyPlaylistUpdateNotification> OnPlaylistNotification => _playlistNotifSubj;
     public IObservable<SpotifyRootlistUpdateNotification> OnRootListNotification => _rootlistNotifSubj.StartWith(
         new SpotifyRootlistUpdateNotification(_userId));
 

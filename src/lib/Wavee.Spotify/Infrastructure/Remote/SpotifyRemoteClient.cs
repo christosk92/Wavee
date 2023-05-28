@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Eum.Spotify.connectstate;
 using Eum.Spotify.context;
+using Eum.Spotify.playlist4;
 using Google.Protobuf.Collections;
 using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
@@ -135,7 +136,8 @@ public class SpotifyRemoteClient
             CancellationToken.None);
         return default;
     }
-
+    public IObservable<Diff> ObservePlaylist(AudioId id) =>
+        _connection.OnPlaylistNotification.Where(x => x.Id == id).Select(x => x.Delta);
     public IObservable<SpotifyLibraryUpdateNotification> LibraryChanged =>
         _connection.OnLibraryNotification;
     public IObservable<SpotifyRootlistUpdateNotification> RootlistChanged =>
