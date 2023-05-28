@@ -25,6 +25,55 @@ public readonly record struct SpotifyTrackResponse(AudioId Id, string Title, Seq
 
     private static bool CheckCanPlay(string country, Track track)
     {
-        return false;
+        if (!track.File.Any())
+        {
+            var alternative = track.Alternative.FirstOrDefault();
+            if (alternative is null) 
+                return false;
+            track = alternative;
+        }
+        foreach (var restriction in track.Restriction)
+        {
+            if (restriction.HasCountriesAllowed)
+            {
+                // A restriction will specify either a whitelast *or* a blacklist,
+                // but not both. So restrict availability if there is a whitelist
+                // and the country isn't on it.
+                ReadOnlySpan<string> splitted = restriction.CountriesAllowed.Split(",");
+                if (!splitted.Contains(country))
+                {
+                    return false;
+                }
+            }
+
+            if (restriction.HasCountriesForbidden)
+            {
+                // A restriction will specify either a whitelast *or* a blacklist,
+                // but not both. So restrict availability if there is a blacklist
+                // and the country is on it.
+                ReadOnlySpan<string> splitted = restriction.CountriesForbidden.Split(",");
+                if (splitted.Contains(country))
+                {
+                    return false;
+                }
+            }
+        }
+
+        if (track.Availability.Count == 0) return true;
+        foreach (var availability in track.Availability)
+        {
+            if (DateTimeOffset.UtcNow >= new DateTimeOffset(new DateTime(
+                year: availability.Start.Year,
+                month: availability.Start.Month,
+                day: availability.Start.Day,
+                hour: availability.Start.Hour,
+                minute: availability.Start.Minute,
+                second: 59)))
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

@@ -126,6 +126,7 @@
                   Margin="-18,0"
                   ui:ScrollViewerExtensions.VerticalScrollBarMargin="0,0,-18,70"
                   ChoosingItemContainer="MainLv_OnChoosingItemContainer"
+                  ContainerContentChanging="MainLv_OnContainerContentChanging"
                   SelectionMode="Extended"
                   x:Name="MainLv"
                   ShowsScrollingPlaceholders="True"
@@ -140,7 +141,7 @@
             <ListView.ItemTemplate>
                 <DataTemplate x:DataType="library:LibraryTrack">
                     <components:TrackView AlternatingRowColor="True"
-                                          Height="38"
+                                          Height="42"
                                           x:Phase="2"
                                           PlayCommand="{x:Bind PlayCommand ,Mode=OneWay}"
                                           Index="{x:Bind OriginalIndex, Mode=OneWay}"
@@ -159,11 +160,13 @@
                                 </Grid.ColumnDefinitions>
                                 <TextBlock VerticalAlignment="Center"
                                            Grid.Column="1"
+                                           TextTrimming="CharacterEllipsis"
                                            x:Phase="1"
                                            Text="{x:Bind Track.Title, Mode=OneWay}" />
 
                                 <ItemsControl VerticalAlignment="Center"
                                               x:Phase="3"
+
                                               ItemsPanel="{StaticResource ArtistLayout}"
                                               ItemTemplate="{StaticResource HorizontalArtistTemplate}"
                                               ItemsSource="{x:Bind Track.Artists, Mode=OneWay}"
@@ -190,6 +193,9 @@
                     </components:TrackView>
                 </DataTemplate>
             </ListView.ItemTemplate>
+            <ListView.Footer>
+                <Border Height="80"/>
+            </ListView.Footer>
         </ListView>
     </Grid>
 </UserControl>

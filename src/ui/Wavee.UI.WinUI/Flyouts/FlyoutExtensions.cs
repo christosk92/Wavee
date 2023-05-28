@@ -17,7 +17,10 @@ using Wavee.UI.ViewModels;
 
 namespace Wavee.UI.WinUI.Flyouts;
 
-public readonly record struct AddToPlaylistRequest(AudioId PlaylistId, AudioId[] Ids);
+public readonly record struct AddToPlaylistRequest(AudioId PlaylistId, 
+    string PlaylistRevision,
+    Seq<AudioId> Ids);
+
 public static class FlyoutExtensions
 {
     static FlyoutExtensions()
@@ -53,36 +56,45 @@ public static class FlyoutExtensions
                             //max of 100 per request
                             //limit to 6 concurrent requests
                             var batches = tracks
-                                .Chunk(100)
-                                .Chunk(6);
+                                .Chunk(4000);
                             foreach (var batch in batches)
                             {
-                                var concurrentRequests = batch.Select(async c =>
+                                var result = await Spotify<WaveeUIRuntime>
+                                    .AddToPlaylist(req.PlaylistId,
+                                        req.PlaylistRevision,
+                                        batch.ToSeq(), Option<int>.None)
+                                    .Run(App.Runtime);
+                                if (result.IsFail)
                                 {
-                                    var result = await Spotify<WaveeUIRuntime>
-                                        .AddToPlaylist(req.PlaylistId, c, Option<int>.None)
-                                        .Run(App.Runtime);
-                                    if (result.IsFail)
-                                    {
 
-                                    }
-
-                                    return result;
-                                });
-
-                                var results = await Task.WhenAll(concurrentRequests);
+                                }
                             }
                             break;
                         }
                     case AudioItemType.Track:
                         {
-                            var result = await Spotify<WaveeUIRuntime>.AddToPlaylist(req.PlaylistId, req.Ids, Option<int>.None)
+                            var result = await Spotify<WaveeUIRuntime>.AddToPlaylist(req.PlaylistId,
+                                    req.PlaylistRevision,
+                                    req.Ids, Option<int>.None)
                                 .Run(App.Runtime);
                             break;
                         }
                 }
             }
         });
+    }
+
+    public static MenuFlyout ConstructFlyout(this Seq<AudioId> ids)
+    {
+        if (ids.Length == 1)
+            return ids.Head().ConstructFlyout();
+
+        var baseFlout = new MenuFlyout();
+        baseFlout.Items.Add(AddToQueue(ids));
+        baseFlout.Items.Add(Library(ids));
+        baseFlout.Items.Add(AddToPlaylist(ids));
+
+        return baseFlout;
     }
     public static MenuFlyout ConstructFlyout(this AudioId id)
     {
@@ -99,12 +111,12 @@ public static class FlyoutExtensions
     private static MenuFlyout CreateAlbumFlyout(AudioId id)
     {
         var baseFlout = new MenuFlyout();
-        baseFlout.Items.Add(AddToQueue(id));
+        baseFlout.Items.Add(AddToQueue(Seq1(id)));
         baseFlout.Items.Add(GoToRadio(id));
         baseFlout.Items.Add(new MenuFlyoutSeparator());
 
-        baseFlout.Items.Add(Library(id));
-        baseFlout.Items.Add(AddToPlaylist(id));
+        baseFlout.Items.Add(Library(Seq1(id)));
+        baseFlout.Items.Add(AddToPlaylist(Seq1(id)));
         baseFlout.Items.Add(new MenuFlyoutSeparator());
 
         baseFlout.Items.Add(Share(id));
@@ -113,12 +125,12 @@ public static class FlyoutExtensions
     private static MenuFlyout CreateArtistFlyout(AudioId id)
     {
         var baseFlout = new MenuFlyout();
-        baseFlout.Items.Add(AddToQueue(id));
+        baseFlout.Items.Add(AddToQueue(Seq1(id)));
         baseFlout.Items.Add(GoToRadio(id));
         baseFlout.Items.Add(new MenuFlyoutSeparator());
 
-        baseFlout.Items.Add(Library(id));
-        baseFlout.Items.Add(AddToPlaylist(id));
+        baseFlout.Items.Add(Library(Seq1(id)));
+        baseFlout.Items.Add(AddToPlaylist(Seq1(id)));
         baseFlout.Items.Add(new MenuFlyoutSeparator());
 
         baseFlout.Items.Add(Share(id));
@@ -127,12 +139,12 @@ public static class FlyoutExtensions
     private static MenuFlyout CreatePlaylistFlyout(AudioId id)
     {
         var baseFlout = new MenuFlyout();
-        baseFlout.Items.Add(AddToQueue(id));
+        baseFlout.Items.Add(AddToQueue(Seq1(id)));
         baseFlout.Items.Add(GoToRadio(id));
         baseFlout.Items.Add(new MenuFlyoutSeparator());
 
-        baseFlout.Items.Add(Library(id));
-        baseFlout.Items.Add(AddToPlaylist(id, "Copy to other playlist"));
+        baseFlout.Items.Add(Library(Seq1(id)));
+        baseFlout.Items.Add(AddToPlaylist(Seq1(id), "Copy to other playlist"));
         baseFlout.Items.Add(new MenuFlyoutSeparator());
 
         baseFlout.Items.Add(Share(id));
@@ -141,12 +153,13 @@ public static class FlyoutExtensions
     private static MenuFlyout CreateTrackFlyout(AudioId id)
     {
         var baseFlout = new MenuFlyout();
-        baseFlout.Items.Add(AddToQueue(id));
+        baseFlout.Items.Add(AddToQueue(Seq1(id)));
         baseFlout.Items.Add(GoToRadio(id));
         baseFlout.Items.Add(new MenuFlyoutSeparator());
 
-        baseFlout.Items.Add(Library(id));
-        baseFlout.Items.Add(AddToPlaylist(id));
+        baseFlout.Items.Add(Library(Seq1(id
+            )));
+        baseFlout.Items.Add(AddToPlaylist(Seq1(id)));
         baseFlout.Items.Add(new MenuFlyoutSeparator());
 
         baseFlout.Items.Add(Share(id));
@@ -164,7 +177,7 @@ public static class FlyoutExtensions
         return item;
     }
 
-    private static MenuFlyoutSubItem AddToPlaylist(AudioId id, string title = "Add to playlist")
+    private static MenuFlyoutSubItem AddToPlaylist(Seq<AudioId> ids, string title = "Add to playlist")
     {
         var playlists = ShellViewModel<WaveeUIRuntime>.Instance
             .PlaylistsVm
@@ -208,10 +221,9 @@ public static class FlyoutExtensions
                     {
                         Text = playlist.Name,
                         Command = AddToPlaylistCommand,
-                        CommandParameter = new AddToPlaylistRequest(AudioId.FromUri(playlist.Id), new AudioId[]
-                        {
-                            id
-                        })
+                        CommandParameter = new AddToPlaylistRequest(AudioId.FromUri(playlist.Id),
+                            playlist.RevisionId,
+                            ids)
                     };
 
                     into.Items.Add(item);
@@ -228,10 +240,10 @@ public static class FlyoutExtensions
 
     public static ICommand AddToPlaylistCommand { get; }
 
-    private static MenuFlyoutItem Library(AudioId id)
+    private static MenuFlyoutItem Library(Seq<AudioId> ids)
     {
-        var saved = ShellViewModel<WaveeUIRuntime>.Instance
-            .Library.InLibrary(id);
+        var saved = ids.All(x=> ShellViewModel<WaveeUIRuntime>.Instance
+            .Library.InLibrary(x));
 
         var item = new MenuFlyoutItem
         {
@@ -253,7 +265,7 @@ public static class FlyoutExtensions
         return item;
     }
 
-    private static MenuFlyoutItem AddToQueue(AudioId id) => new MenuFlyoutItem
+    private static MenuFlyoutItem AddToQueue(Seq<AudioId> ids) => new MenuFlyoutItem
     {
         Icon = new FontIcon { FontFamily = new Microsoft.UI.Xaml.Media.FontFamily("/Assets/Fonts/MediaPlayerIcons.ttf#Media Player Fluent Icons"), Glyph = "\uE93F" },
         Text = "Add to queue"

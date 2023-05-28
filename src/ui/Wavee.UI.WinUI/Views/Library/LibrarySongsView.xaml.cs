@@ -25,6 +25,21 @@ public sealed partial class LibrarySongsView : UserControl
         if (args.Item is LibraryTrack lt)
         {
             lt.OriginalIndex = args.ItemIndex;
+            if (args.IsContainerPrepared)
+            {
+                args.ItemContainer.IsEnabled = lt.Track.CanPlay;
+            }
+        }
+    }
+    private void MainLv_OnContainerContentChanging(ListViewBase sender, ContainerContentChangingEventArgs args)
+    {
+        if (args.Item is LibraryTrack lt)
+        {
+            lt.OriginalIndex = args.ItemIndex;
+            if (args.ItemContainer is not null)
+            {
+                args.ItemContainer.IsEnabled = lt.Track.CanPlay;
+            }
         }
     }
 
@@ -103,15 +118,16 @@ public sealed partial class LibrarySongsView : UserControl
     private async void SortButtonTapp(object sender, TappedRoutedEventArgs e)
     {
         //set scrollviewer to top
-        await Task.Delay(5);
+        await Task.Delay(10);
         MainLv.ScrollIntoView(MainLv.Items[0]);
     }
 
     private void NavigateToMetadata(object sender, TappedRoutedEventArgs e)
     {
-        var hyperlnk = (HyperlinkButton) sender;
-        var tg = (AudioId) hyperlnk.Tag;
+        var hyperlnk = (HyperlinkButton)sender;
+        var tg = (AudioId)hyperlnk.Tag;
 
         UICommands.NavigateTo.Execute(tg);
     }
+
 }

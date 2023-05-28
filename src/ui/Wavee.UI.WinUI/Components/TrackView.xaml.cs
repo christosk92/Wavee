@@ -1,8 +1,11 @@
 using System;
+using System.Linq;
 using System.Windows.Input;
 using Windows.Foundation;
 using AnimatedVisuals;
 using CommunityToolkit.WinUI.UI;
+using LanguageExt;
+using LanguageExt.UnsafeValueAccess;
 using Microsoft.UI.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -12,6 +15,7 @@ using Wavee.Core.Ids;
 using Wavee.UI.Infrastructure.Live;
 using Wavee.UI.Models;
 using Wavee.UI.ViewModels;
+using Wavee.UI.ViewModels.Artist;
 using Wavee.UI.ViewModels.Library;
 using Wavee.UI.WinUI.Flyouts;
 
@@ -342,8 +346,26 @@ public sealed partial class TrackView : UserControl
 
     private void TrackView_OnContextRequested(UIElement sender, ContextRequestedEventArgs args)
     {
+        //check if multiple items are selected.
+        //ascend the tree until we find the listview or ItemsView.
+        //
+        // var ids = FindListView(sender)
+        //     .Bind(x => FindSelectedItems(x))
+        //     .Match(
+        //         Some: x => x,
+        //         None: () => FindItemsView(sender)
+        //             .Bind(y => FindSelectedItems(y))
+        //     );
+        var ids = FindListView(sender)
+            .BiBind(
+                Some: r => FindSelectedItems(r),
+                None: () => FindItemsView(sender)
+                    .Map(FindSelectedItems)
+            ).IfNone(Seq1(Id));
+
+
         Point point = new Point(0, 0);
-        var properFlyout = Id.ConstructFlyout();
+        var properFlyout = ids.ConstructFlyout();
         if (args.TryGetPosition(sender, out point))
         {
             properFlyout.ShowAt(sender, point);
@@ -353,4 +375,55 @@ public sealed partial class TrackView : UserControl
             properFlyout.ShowAt((FrameworkElement)sender);
         }
     }
+
+    private static Option<ListView> FindListView(UIElement sender)
+    {
+        var exists = sender.FindAscendant<ListView>();
+        if (exists is not null) return exists;
+        return Option<ListView>.None;
+    }
+    private static Seq<AudioId> FindSelectedItems(ListView listView)
+    {
+        var selectedItems = listView.SelectedItems;
+        if (selectedItems.Count == 0)
+        {
+            return LanguageExt.Seq<AudioId>.Empty;
+        }
+
+        var ids = selectedItems.Select(static c => FindIdProperty(c)).ToSeq();
+
+        return ids;
+    }
+
+    private static Option<ItemsView> FindItemsView(UIElement sender)
+    {
+        var exists = sender.FindAscendant<ItemsView>();
+        if (exists is not null) return exists;
+        return Option<ItemsView>.None;
+    }
+
+    private static Seq<AudioId> FindSelectedItems(ItemsView itemsView)
+    {
+        var selectedItems = itemsView.SelectionModel.SelectedItems;
+        if (selectedItems.Count == 0)
+        {
+            return LanguageExt.Seq<AudioId>.Empty;
+        }
+
+        var ids = selectedItems.Select(static c => FindIdProperty(c)).ToSeq();
+
+        return ids;
+    }
+
+    private static AudioId FindIdProperty(object o)
+    {
+        return o switch
+        {
+            LibraryTrack lb => lb.Track.Id,
+            ArtistDiscographyTrack dt => dt.Id,
+            ArtistTopTrackView x => x.Id,
+            _ => default
+        };
+    }
+
 }

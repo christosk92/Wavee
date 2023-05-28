@@ -35,7 +35,9 @@ public interface SpotifyIO
         CancellationToken ct);
 
     Aff<T> GetFromPublicApi<T>(string endpoint, CancellationToken cancellation);
-    Aff<Unit> AddToPlaylist(AudioId playlistId, AudioId[] audioIds, Option<int> position);
+    Aff<Unit> AddToPlaylist(AudioId playlistId,
+        string baseRevision,
+        Seq<AudioId> audioIds, Option<int> position);
     Aff<Unit> WriteLibrary(WriteRequest writeRequest, CancellationToken ct);
     Aff<Seq<TrackOrEpisode>> FetchBatchOfTracks(Seq<AudioId> request, CancellationToken ct = default);
 }

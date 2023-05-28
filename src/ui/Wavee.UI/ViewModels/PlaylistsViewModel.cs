@@ -76,7 +76,8 @@ public sealed class PlaylistsViewModel<R> : ReactiveObject where R : struct, Has
                             IsFolder: true,
                             SubItems: LanguageExt.Seq<PlaylistInfo>.Empty,
                             Timestamp: DateTimeOffset.MinValue,
-                            isInFolder: false
+                            isInFolder: false,
+                            revisionId: playlists.Contents.MetaItems[index].Revision.ToBase64()
                             );
                         continue;
                     }
@@ -106,7 +107,8 @@ public sealed class PlaylistsViewModel<R> : ReactiveObject where R : struct, Has
                             IsFolder: false,
                             SubItems: LanguageExt.Seq<PlaylistInfo>.Empty,
                             Timestamp: timestampAsDatetime,
-                            isInFolder: true
+                            isInFolder: true,
+                            revisionId: playlists.Contents.MetaItems[index].Revision.ToBase64()
                         ));
                     }
                     else
@@ -119,8 +121,9 @@ public sealed class PlaylistsViewModel<R> : ReactiveObject where R : struct, Has
                             IsFolder: false,
                             SubItems: LanguageExt.Seq<PlaylistInfo>.Empty,
                             Timestamp: timestampAsDatetime,
-                            isInFolder: false
-                            ));
+                            isInFolder: false,
+                            revisionId: playlists.Contents.MetaItems[index].Revision.ToBase64()
+                        ));
                     }
                 }
                 return result;

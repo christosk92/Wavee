@@ -11,7 +11,7 @@ public record PlaylistInfo
         string OwnerId,
         bool IsFolder,
         Seq<PlaylistInfo> SubItems,
-        DateTimeOffset Timestamp, bool isInFolder)
+        DateTimeOffset Timestamp, bool isInFolder, string revisionId)
     {
         this.Id = Id;
         this.Index = Index;
@@ -21,6 +21,7 @@ public record PlaylistInfo
         this.SubItems = SubItems;
         this.Timestamp = Timestamp;
         IsInFolder = isInFolder;
+        RevisionId = revisionId;
     }
 
     public string Id { get; }
@@ -31,11 +32,14 @@ public record PlaylistInfo
     public Seq<PlaylistInfo> SubItems { get; }
     public DateTimeOffset Timestamp { get; }
     public bool IsInFolder { get; }
+    public string RevisionId { get; }
 
 
     public PlaylistInfo AddSubitem(PlaylistInfo playlistInfo)
     {
         var newSubitems = SubItems.Add(playlistInfo);
-        return new PlaylistInfo(Id, Index, Name, OwnerId, IsFolder, newSubitems, Timestamp, false);
+        return new PlaylistInfo(Id, Index, Name, OwnerId,
+            IsFolder, newSubitems, Timestamp, false,
+            playlistInfo.RevisionId);
     }
 }

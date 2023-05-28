@@ -23,6 +23,7 @@ using Wavee.Core.Ids;
 using Wavee.Core.Infrastructure.IO;
 using Eum.Spotify.extendedmetadata;
 using Spotify.Metadata;
+using Wavee.Spotify.Helpers;
 using Wavee.Spotify.Infrastructure.Playback;
 
 namespace Wavee.UI.Infrastructure.Live;
@@ -80,36 +81,63 @@ internal sealed class LiveSpotify : Traits.SpotifyIO
             })
         select result;
 
-    public Aff<Unit> AddToPlaylist(AudioId playlistId, AudioId[] audioIds, Option<int> position) =>
+    public Aff<Unit> AddToPlaylist(AudioId playlistId,
+        string lastRevision,
+        Seq<AudioId> audioIds, Option<int> position) =>
         from client in Eff(() => _connection.ValueUnsafe())
-        let apiurl = $"https://api.spotify.com/v1/playlists/{playlistId.ToBase62()}/tracks"
+        from spclient in ApResolve.GetSpClient(CancellationToken.None).ToAff()
+            .Map(x => $"https://{x.host}:{x.port}")
+            .Map(x =>
+                $"{x}/playlist/v2/playlist/{playlistId.ToBase62()}/changes")
         from bearer in client.TokenClient.GetToken(CancellationToken.None).ToAff()
             .Map(x => new AuthenticationHeaderValue("Bearer", x))
         from content in Eff(() =>
         {
+            ReadOnlyMemory<byte> baseBytes = ReadOnlyMemory<byte>.Empty;
+
+            var lst = new ListChanges
+            {
+                BaseRevision = ByteString.FromBase64(lastRevision),
+            };
+            var baseDelta = new Delta();
+            baseDelta.Info = new Eum.Spotify.playlist4.ChangeInfo();
+            baseDelta.Info.Source = new Eum.Spotify.playlist4.SourceInfo();
+            baseDelta.Info.Source.Client = Eum.Spotify.playlist4.SourceInfo.Types.Client.Client;
+            var baseOp = new Op();
+            baseOp.Kind = Op.Types.Kind.Add;
+            baseOp.Add = new Eum.Spotify.playlist4.Add();
             if (position.IsSome)
             {
-                var r = new
-                {
-                    uris = audioIds.Select(c => c.ToString()),
-                    position = position.ValueUnsafe()
-                };
-                var str = new StringContent(JsonSerializer.Serialize(r));
-                str.Headers.ContentType = new MediaTypeHeaderValue("application/json");
-                return str;
+                baseOp.Add.FromIndex = position.ValueUnsafe();
             }
             else
             {
-                var r = new
-                {
-                    uris = audioIds.Select(c => c.ToString()),
-                };
-                var str = new StringContent(JsonSerializer.Serialize(r));
-                str.Headers.ContentType = new MediaTypeHeaderValue("application/json");
-                return str;
+                baseOp.Add.AddLast = true;
             }
+
+            foreach (var item in audioIds)
+            {
+                var time = DateTimeOffset.UtcNow;
+                //in milliseconds
+                var now = (long)time.ToUnixTimeMilliseconds();
+                baseOp.Add.Items.Add(new Item
+                {
+                    Attributes = new ItemAttributes
+                    {
+                        Timestamp = now,
+                    },
+                    Uri = item.ToString(),
+                });
+            }
+            baseDelta.Ops.Add(baseOp);
+            lst.Deltas.Add(baseDelta);
+            baseBytes = lst.ToByteArray();
+            //gzip
+            var gzip = GzipHelpers.GzipCompress(baseBytes);
+            return (HttpContent)gzip;
         })
-        from posted in HttpIO.Post(apiurl, bearer, content, CancellationToken.None)
+
+        from posted in HttpIO.Post(spclient, bearer, content, CancellationToken.None)
             .ToAff()
             .Map(x => x.EnsureSuccessStatusCode())
         select unit;

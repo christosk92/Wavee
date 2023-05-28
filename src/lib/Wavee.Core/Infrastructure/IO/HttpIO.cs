@@ -67,7 +67,7 @@ public static class HttpIO
 
     public static async Task<HttpResponseMessage> Post(string url,
         AuthenticationHeaderValue bearer, 
-        ByteArrayContent content, CancellationToken ct)
+        HttpContent content, CancellationToken ct)
     {
         using var request = new HttpRequestMessage(HttpMethod.Post, url);
         request.Headers.Authorization = bearer;

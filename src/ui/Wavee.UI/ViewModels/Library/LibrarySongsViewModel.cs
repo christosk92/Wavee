@@ -74,7 +74,7 @@ public sealed class LibrarySongsViewModel<R> :
                         .ThenByAscending(x => x.Track.TrackNumber),
                     LibraryTrackSortType.Album_Asc =>
                         SortExpressionComparer<LibraryTrack>
-                            .Ascending(x=> x.Track.Album)
+                            .Ascending(x => x.Track.Album)
                             .ThenByAscending(x => x.Track.Album.DiscNumber)
                             .ThenByAscending(x => x.Track.TrackNumber),
                     LibraryTrackSortType.Album_Desc =>
@@ -299,7 +299,40 @@ public class LibraryTrack : INotifyPropertyChanged
 
     public string FormatToRelativeDate(DateTimeOffset dateTimeOffset)
     {
-        return dateTimeOffset.ToString("g");
+        //less than 10 seconds: "Just now"
+        //less than 1 minute: "X seconds ago"
+        //less than 1 hour: "X minutes ago" OR // "1 minute ago"
+        //less than 1 day: "X hours ago" OR // "1 hour ago"
+        //less than 1 week: "X days ago" OR // "1 day ago"
+        //Exact date
+
+        var totalSeconds = (int)DateTimeOffset.Now.Subtract(dateTimeOffset).TotalSeconds;
+        var totalMinutes = totalSeconds / 60;
+        var totalHours = totalMinutes / 60;
+        var totalDays = totalHours / 24;
+        var totalWeeks = totalDays / 7;
+        return dateTimeOffset switch
+        {
+            _ when dateTimeOffset > DateTimeOffset.Now.AddSeconds(-10) => "Just now",
+            _ when dateTimeOffset > DateTimeOffset.Now.AddMinutes(-1) =>
+                $"{totalSeconds} second{(totalSeconds > 1 ? "s" : "")} ago",
+            _ when dateTimeOffset > DateTimeOffset.Now.AddHours(-1) =>
+                $"{totalMinutes} minute{(totalMinutes > 1 ? "s" : "")} ago",
+            _ when dateTimeOffset > DateTimeOffset.Now.AddDays(-1) =>
+                $"{totalHours} hour{(totalHours > 1 ? "s" : "")} ago",
+            _ when dateTimeOffset > DateTimeOffset.Now.AddDays(-7) =>
+                $"{totalDays} day{(totalDays > 1 ? "s" : "")} ago",
+            _ when dateTimeOffset > DateTimeOffset.Now.AddMonths(-1) =>
+                $"{totalWeeks} week{(totalWeeks > 1 ? "s" : "")} ago",
+            _ => GetFullMonthStr(dateTimeOffset)
+        };
+
+        static string GetFullMonthStr(DateTimeOffset d)
+        {
+            string fullMonthName =
+                d.ToString("MMMM");
+            return$"{fullMonthName} {d.Day}, {d.Year}";
+        }
     }
 
     public string FormatToShorterTimestamp(TimeSpan timeSpan)

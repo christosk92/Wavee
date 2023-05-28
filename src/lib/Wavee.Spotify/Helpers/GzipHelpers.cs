@@ -6,9 +6,9 @@ using LanguageExt;
 
 namespace Wavee.Spotify.Helpers;
 
-internal static class GzipHelpers
+public static class GzipHelpers
 {
-    internal static StreamContent GzipCompress(ReadOnlyMemory<byte> data)
+    public static StreamContent GzipCompress(ReadOnlyMemory<byte> data)
     {
         using var inputStream = data.AsStream();
         if (inputStream.Position == inputStream.Length)
@@ -32,7 +32,7 @@ internal static class GzipHelpers
         return strContent;
     }
 
-    internal static MemoryStream GzipDecompress(Stream compressedStream)
+    public static MemoryStream GzipDecompress(Stream compressedStream)
     {
         if (compressedStream.Position == compressedStream.Length)
         {
