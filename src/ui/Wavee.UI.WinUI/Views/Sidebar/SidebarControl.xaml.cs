@@ -15,6 +15,7 @@ using Wavee.UI.Models;
 using Wavee.UI.WinUI.Views.Home;
 using Wavee.UI.WinUI.Views.Library;
 using Wavee.UI.WinUI.Views.Playlist;
+using Wavee.UI.WinUI.Views.Settings;
 using Wavee.UI.WinUI.Views.Sidebar.Items;
 
 namespace Wavee.UI.WinUI.Views.Sidebar
@@ -216,5 +217,9 @@ namespace Wavee.UI.WinUI.Views.Sidebar
             return null;
         }
 
+        private void Settings_Tapped(object sender, TappedRoutedEventArgs e)
+        {
+            ShellView.NavigationService.Navigate(typeof(SettingsView));
+        }
     }
 }

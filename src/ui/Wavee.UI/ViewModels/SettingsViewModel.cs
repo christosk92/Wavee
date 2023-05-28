@@ -6,7 +6,7 @@ using Wavee.UI.Infrastructure.Traits;
 
 namespace Wavee.UI.ViewModels;
 
-public sealed class SettingsViewModel<R> : ReactiveObject where R : struct, HasFile<R>, HasDirectory<R>, HasLocalPath<R>
+public sealed class SettingsViewModel<R> : ReactiveObject, INavigableViewModel where R : struct, HasFile<R>, HasDirectory<R>, HasLocalPath<R>
 {
     private bool _setupCompleted;
     private int _setupProgress;
@@ -81,4 +81,13 @@ public sealed class SettingsViewModel<R> : ReactiveObject where R : struct, HasF
     }
 
     #endregion
+
+    public void OnNavigatedTo(object? parameter)
+    {
+        
+    }
+
+    public void OnNavigatedFrom()
+    {
+    }
 }

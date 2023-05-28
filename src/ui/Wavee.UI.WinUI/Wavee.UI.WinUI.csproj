@@ -34,6 +34,12 @@
 		<None Remove="Views\Library\LibraryRootView.xaml" />
 		<None Remove="Views\Library\LibrarySongsView.xaml" />
 		<None Remove="Views\Playlist\CreatePlaylistView.xaml" />
+		<None Remove="Views\Settings\CacheSettingsView.xaml" />
+		<None Remove="Views\Settings\EqualizerSettingsView.xaml" />
+		<None Remove="Views\Settings\GeneralSettingsView.xaml" />
+		<None Remove="Views\Settings\PlaybackSettingsView.xaml" />
+		<None Remove="Views\Settings\RemoteSettingsView.xaml" />
+		<None Remove="Views\Settings\SettingsView.xaml" />
 		<None Remove="Views\Setup\SetupPageContent.xaml" />
 		<None Remove="Views\Setup\SetupView.xaml" />
 		<None Remove="Views\Setup\SigninInView.xaml" />
@@ -107,6 +113,24 @@
 		<None Update="Components\ArtistAboutSection.xaml">
 		  <Generator>MSBuild:Compile</Generator>
 		</None>
+		<Page Update="Views\Settings\EqualizerSettingsView.xaml">
+		  <Generator>MSBuild:Compile</Generator>
+		</Page>
+		<Page Update="Views\Settings\PlaybackSettingsView.xaml">
+		  <Generator>MSBuild:Compile</Generator>
+		</Page>
+		<Page Update="Views\Settings\CacheSettingsView.xaml">
+		  <Generator>MSBuild:Compile</Generator>
+		</Page>
+		<Page Update="Views\Settings\RemoteSettingsView.xaml">
+		  <Generator>MSBuild:Compile</Generator>
+		</Page>
+		<Page Update="Views\Settings\GeneralSettingsView.xaml">
+		  <Generator>MSBuild:Compile</Generator>
+		</Page>
+		<Page Update="Views\Settings\SettingsView.xaml">
+		  <Generator>MSBuild:Compile</Generator>
+		</Page>
 		<Page Update="Views\Library\LibraryArtistsView.xaml">
 		  <Generator>MSBuild:Compile</Generator>
 		</Page>

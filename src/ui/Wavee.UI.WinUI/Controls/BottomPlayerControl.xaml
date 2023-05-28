@@ -110,7 +110,7 @@
                                           Width="80" />
                         <ColumnDefinition x:Name="TextDefinition"
                                           MaxWidth="500"
-                                          Width="Auto" />
+                                          Width="*" />
                         <ColumnDefinition x:Name="HeartDefinition"
                                           Width="Auto" />
                     </Grid.ColumnDefinitions>

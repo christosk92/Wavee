@@ -362,7 +362,8 @@ public sealed partial class TrackView : UserControl
                 None: () => FindItemsView(sender)
                     .Map(FindSelectedItems)
             ).IfNone(Seq1(Id));
-
+        if(ids.Length == 0)
+            ids = Seq1(Id);
 
         Point point = new Point(0, 0);
         var properFlyout = ids.ConstructFlyout();

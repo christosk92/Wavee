@@ -82,12 +82,34 @@
                 </Grid.RowDefinitions>
 
                 <StackPanel>
-                    <Border Background="{ThemeResource LayerFillColorDefaultBrush}"
+                    <Button Background="{ThemeResource LayerFillColorDefaultBrush}"
                             CornerRadius="0"
+                            HorizontalContentAlignment="Stretch"
+                            HorizontalAlignment="Stretch"
                             Margin="-1,0"
                             Padding="12,12"
                             BorderThickness="0,1"
                             BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
+                        <Button.Flyout>
+                            <MenuFlyout Placement="BottomEdgeAlignedLeft">
+                                <MenuFlyout.Items>
+                                    <MenuFlyoutItem 
+                                        Tapped="Settings_Tapped"
+                                        Text="Settings">
+                                        <MenuFlyoutItem.Icon>
+                                            <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE115;" />
+                                        </MenuFlyoutItem.Icon>
+                                    </MenuFlyoutItem>
+
+                                    <MenuFlyoutSeparator/>
+                                    <MenuFlyoutItem Text="Sign Out" Foreground="Red">
+                                        <MenuFlyoutItem.Icon>
+                                            <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xF3B1;" />
+                                        </MenuFlyoutItem.Icon>
+                                    </MenuFlyoutItem>
+                                </MenuFlyout.Items>
+                            </MenuFlyout>
+                        </Button.Flyout>
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto" />
@@ -113,7 +135,7 @@
                                            FontSize="9" />
                             </StackPanel>
                         </Grid>
-                    </Border>
+                    </Button>
                     <AutoSuggestBox Margin="8,8,8,8"
                                     QueryIcon="Find"
                                     PlaceholderText="Find..." />
