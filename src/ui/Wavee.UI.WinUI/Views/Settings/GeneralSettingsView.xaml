@@ -30,8 +30,17 @@
                 FontWeight="SemiBold"
                 Text="Language"/>
             <TextBlock 
-                Opacity=".8"
+                Opacity="1"
+                FontSize="14"
                 Text="While in beta, localization is still largely unfinished and may contain inconsistencies."/>
+            <TextBlock 
+                FontSize="13"
+                Text="Note: Changing the language may require all cached tracks to be fetched again to get their title in the appropriate language. "/>
+            <TextBlock
+                FontSize="13"
+                Opacity=".9">
+                <Run Text="To manage this cache, "/><Hyperlink Click="GoToCache" UnderlineStyle="None">tap here</Hyperlink>
+            </TextBlock>
             <ComboBox 
                 x:Name="LanguageBox"
                 Margin="0,8">

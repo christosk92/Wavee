@@ -66,6 +66,7 @@
                 </StackPanel>
 
                 <Frame Grid.Row="1"
+                       Navigating="MainSettingsFrame_OnNavigating"
                        x:Name="MainSettingsFrame"
                 />
             </Grid>
