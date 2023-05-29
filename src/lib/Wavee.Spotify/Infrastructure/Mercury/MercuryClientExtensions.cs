@@ -42,7 +42,7 @@ public static class MercuryClientExtensions
         return itemId.Type switch
         {
             AudioItemType.PodcastEpisode => new TrackOrEpisode(Episode.Parser.ParseFrom(response.Payload.Span)),
-            AudioItemType.Track => new TrackOrEpisode(Track.Parser.ParseFrom(response.Payload.Span)),
+            AudioItemType.Track => new TrackOrEpisode(Right(new Lazy<Track>(Track.Parser.ParseFrom(response.Payload.Span)))),
         };
     }
 

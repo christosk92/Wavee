@@ -44,7 +44,7 @@
                 <ComboBox.ItemTemplate>
                     <DataTemplate x:DataType="local:RemoteDeviceRecord">
                         <StackPanel Spacing="8" Orientation="Horizontal">
-                            <ContentPresenter VerticalContentAlignment="Stretch" HorizontalContentAlignment="Stretch"
+                            <ContentControl VerticalContentAlignment="Stretch" HorizontalContentAlignment="Stretch"
                                               Content="{x:Bind Icon}"/>
                             <TextBlock Text="{x:Bind Name}"/>
                         </StackPanel>

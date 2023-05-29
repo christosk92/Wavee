@@ -102,7 +102,7 @@ public sealed class LibrarySongsViewModel<R> :
              })
              .Transform(item =>
              {
-                 var tr = SpotifyTrackResponse.From(country, cdnUrl, itemsTemp[item.Id].ValueUnsafe().Value.Match(Left: _ => throw new NotSupportedException(), Right: r => r));
+                 var tr = SpotifyTrackResponse.From(country, cdnUrl, itemsTemp[item.Id].ValueUnsafe().Value.Match(Left: _ => throw new NotSupportedException(), Right: r => r.Value));
                  return new LibraryTrack
                  {
                      Track = tr,

@@ -34,7 +34,17 @@ public static class TrackEnqueueService<R> where R : struct, HasSpotify<R>
                         _queue.TryDequeue(out var item);
 
                         var output = new Dictionary<AudioId, Option<TrackOrEpisode>>();
-                        var batches = item.Request.Chunk(4000).Select(c=> c.ToSeq());
+                        //check for items cached
+                        var cachedItems = Spotify<R>
+                            .GetFromCache(item.Request)
+                            .Run(Runtime)
+                            .ThrowIfFail();
+                        foreach (var maybe in cachedItems.Where(x=> x.Value.IsSome))
+                        {
+                            output[maybe.Key] = maybe.Value.ValueUnsafe();
+                        }
+                        var toFetchItems = item.Request.Where(x => cachedItems[x].IsNone);
+                        var batches = toFetchItems.Chunk(4000).Select(c => c.ToSeq());
                         foreach (var batch in batches)
                         {
                             var fetchedTracksResut = await Spotify<R>
@@ -53,7 +63,7 @@ public static class TrackEnqueueService<R> where R : struct, HasSpotify<R>
 
                             foreach (var originalTrack in batch)
                             {
-                                output[originalTrack] = fetchedTracks.Find(originalTrack);
+                                output[originalTrack] = fetchedTracks[originalTrack];
                             }
                             // foreach (var (originalRequest, fetchedTrack) in batch.Zip(fetchedTracks))
                             // {
@@ -81,7 +91,7 @@ public static class TrackEnqueueService<R> where R : struct, HasSpotify<R>
         var tcs = new TaskCompletionSource<Dictionary<AudioId, Option<TrackOrEpisode>>>();
         _queue.Enqueue(new FetchItemsInBulk
         {
-            Request = ids, 
+            Request = ids,
             Result = tcs
         });
         _waitForAnything.Set();

@@ -9,7 +9,7 @@ using Wavee.Spotify.Models.Response;
 
 namespace Wavee.Spotify.Infrastructure.Playback;
 
-public readonly record struct TrackOrEpisode(Either<Episode, Track> Value)
+public readonly record struct TrackOrEpisode(Either<Episode, Lazy<Track>> Value)
 {
     static TrackOrEpisode()
     {
@@ -67,7 +67,7 @@ public readonly record struct TrackOrEpisode(Either<Episode, Track> Value)
             },
             Right: t =>
             {
-                return t.File
+                return t.Value.File
                     .Find(f =>
                     {
                         var r = FormatsMap.Find(quality).Map(x => x.Contains(f.Format));
@@ -86,7 +86,7 @@ public readonly record struct TrackOrEpisode(Either<Episode, Track> Value)
             Left: episode => None,
             Right: track =>
             {
-                var alt = track.Alternative
+                var alt = track.Value.Alternative
                     .Fold(Option<AudioFile>.None, (files, track1) =>
                     {
                         return track1.File.Find(f =>
@@ -112,28 +112,28 @@ public readonly record struct TrackOrEpisode(Either<Episode, Track> Value)
 
     public string Name => Value.Match(
         Left: e => e.Name,
-        Right: t => t.Name
+        Right: t => t.Value.Name
     );
 
 
     public AudioId Id => Value.Match(
         Left: episode => AudioId.FromRaw(episode.Gid.Span, AudioItemType.PodcastEpisode, ServiceType.Spotify),
-        Right: track => AudioId.FromRaw(track.Gid.Span, AudioItemType.Track, ServiceType.Spotify)
+        Right: track => AudioId.FromRaw(track.Value.Gid.Span, AudioItemType.Track, ServiceType.Spotify)
     );
 
     public TimeSpan Duration => Value.Match(
                Left: e => TimeSpan.FromMilliseconds(e.Duration),
-               Right: t => TimeSpan.FromMilliseconds(t.Duration)
+               Right: t => TimeSpan.FromMilliseconds(t.Value.Duration)
         );
 
     public Seq<ITrackArtist> Artists => Value.Match(
         Left: e => LanguageExt.Seq<ITrackArtist>.Empty,
-        Right: t => t.ArtistWithRole.Select(SpotifyTrackArtist.From).Cast<ITrackArtist>().ToSeq()
+        Right: t => t.Value.ArtistWithRole.Select(SpotifyTrackArtist.From).Cast<ITrackArtist>().ToSeq()
     );
 
     public ITrackAlbum Group => Value.Match(
         Left: e => SpotifyTrackAlbum.From(null, e.Show),
-        Right: t => SpotifyTrackAlbum.From(null, t.Album, t.DiscNumber)
+        Right: t => SpotifyTrackAlbum.From(null, t.Value.Album, t.Value.DiscNumber)
     );
 
     private const string BASE62_CHARS = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -166,11 +166,11 @@ public readonly record struct TrackOrEpisode(Either<Episode, Track> Value)
                 },
                 Right: t =>
                 {
-                    if (t.Album.CoverGroup?.Image is null) return None;
-                    var r = t.Album.CoverGroup.Image.SingleOrDefault(c => c.Size == size);
+                    if (t.Value.Album.CoverGroup?.Image is null) return None;
+                    var r = t.Value.Album.CoverGroup.Image.SingleOrDefault(c => c.Size == size);
                     if (r is not null)
                         return Some(r);
-                    return Some(t.Album.CoverGroup.Image.First());
+                    return Some(t.Value.Album.CoverGroup.Image.First());
                 })
             .Bind(img =>
             {

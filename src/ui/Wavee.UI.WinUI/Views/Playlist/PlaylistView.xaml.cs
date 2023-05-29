@@ -62,8 +62,21 @@ namespace Wavee.UI.WinUI.Views.Playlist
         private async void PlaylistView_OnLoaded(object sender, RoutedEventArgs e)
         {
             await ViewModel.PlaylistFetched.Task;
+            this.Bindings.Update();
+
             MetadataPnale.Visibility = Visibility.Visible;
-            ShowPanelAnim.Start();
+            if (!string.IsNullOrEmpty(ViewModel.Playlist.LargeImage))
+            {
+                ShowPanelAnim.Start();
+                LargeImage.Visibility = Visibility.Visible;
+                SmallPlaylist.Visibility = Visibility.Collapsed;
+            }
+            else
+            {
+                LargeImage.Visibility = Visibility.Collapsed;
+                SmallPlaylist.Visibility = Visibility.Visible;
+            }
+
             PlaylistView_OnSizeChanged(this, null);
         }
 

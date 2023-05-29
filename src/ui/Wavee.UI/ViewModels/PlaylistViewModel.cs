@@ -5,8 +5,10 @@ using System.Reactive.Linq;
 using System.Windows.Input;
 using DynamicData;
 using DynamicData.Binding;
+using DynamicData.PLinq;
 using Eum.Spotify.playlist4;
 using Google.Protobuf;
+using Google.Protobuf.WellKnownTypes;
 using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
 using ReactiveUI;
@@ -28,13 +30,17 @@ public sealed class PlaylistViewModel<R> : ReactiveObject, INavigableViewModel
 {
     private readonly R runtime;
     private PlaylistViewData _playlist;
-    private readonly SourceCache<PlaylistTrackInfo, AudioId> _items = new(s => s.Data.Id);
+    private readonly SourceCache<PlaylistTrackVm, AudioId> _items = new(s => s.Id);
     private IDisposable _listener;
     private IDisposable _cleanup;
     private ReadOnlyObservableCollection<PlaylistTrackVm> _data;
     private string? _searchText;
     private PlaylistTrackSortType _sortParameters;
 
+    public PlaylistViewModel()
+    {
+
+    }
     public PlaylistViewModel(R runtime)
     {
         SortParameters = PlaylistTrackSortType.IndexAsc;
@@ -43,6 +49,32 @@ public sealed class PlaylistViewModel<R> : ReactiveObject, INavigableViewModel
         {
             SortParameters = x;
         });
+
+        var filterApplier =
+            this.WhenValueChanged(t => t.SearchText)
+                .Throttle(TimeSpan.FromMilliseconds(250))
+                .Select(propargs => BuildFilter(propargs))
+                .ObserveOn(RxApp.TaskpoolScheduler);
+
+        var sortChange =
+            this.WhenValueChanged(t => t.SortParameters)
+                .Select(c => c switch
+                {
+                    _ => SortExpressionComparer<PlaylistTrackVm>
+                        .Ascending(x => x.OriginalIndex)
+                })
+                .ObserveOn(RxApp.TaskpoolScheduler);
+
+
+        _cleanup = _items
+            .Connect()
+            //.Filter(c => c.Data.Id.Type is AudioItemType.Track)
+            .Filter(filterApplier)
+            .Sort(sortChange)
+            .ObserveOn(RxApp.MainThreadScheduler)
+            .Bind(out _data)     // update observable collection bindings
+            .DisposeMany()   //dispose when no longer required
+            .Subscribe();
     }
 
     public PlaylistViewData Playlist
@@ -98,6 +130,8 @@ public sealed class PlaylistViewModel<R> : ReactiveObject, INavigableViewModel
             ToRevision = ByteString.Empty
         };
 
+        PlaylistFetched.TrySetResult();
+
         _listener = Spotify<R>
             .ObservePlaylist(playlistId)
             .Run(runtime)
@@ -112,44 +146,67 @@ public sealed class PlaylistViewModel<R> : ReactiveObject, INavigableViewModel
                         .Contents.Items.Select(c => AudioId.FromUri(c.Uri)).ToSeq();
                     if (tracksToQueue.IsEmpty)
                     {
-                        return Enumerable.Empty<PlaylistTrackInfo>();
+                        return Enumerable.Empty<PlaylistTrackVm>();
                     }
 
                     var tracks = await TrackEnqueueService<R>.GetTracks(tracksToQueue);
-                    var toReturn = new List<PlaylistTrackInfo>(playlist.Playlist
+                    var toReturn = new List<PlaylistTrackVm>(playlist.Playlist
                         .Contents.Items.Count);
-                    int index = 0;
-                    foreach (var request in playlist.Playlist
-                                 .Contents.Items)
-                    {
-                        var id = AudioId.FromUri(request.Uri);
-                        if (tracks.TryGetValue(id, out var track) && track.IsSome)
+                    Parallel.ForEach(playlist.Playlist
+                        .Contents.Items.Select((y, i) => (y, i)), new ParallelOptions
                         {
-                            toReturn.Add(new PlaylistTrackInfo(track.ValueUnsafe(), request.Attributes.HasTimestamp
-                                ? DateTimeOffset.FromUnixTimeMilliseconds(request.Attributes.Timestamp)
-                                : DateTimeOffset.MinValue, request.Attributes.HasTimestamp, index));
-                        }
-                        else
+                            MaxDegreeOfParallelism = playlist.Playlist
+                                .Contents.Items.Count
+                        }, (d) =>
                         {
-                            Debugger.Break();
-                        }
-
-                        index++;
-                    }
+                            var (request, index) = d;
+                            var id = AudioId.FromUri(request.Uri);
+                            if (tracks.TryGetValue(id, out var track) && track.IsSome)
+                            {
+                                var trcKpr = new TrackOrEpisode(track.ValueUnsafe().Value);
+                                var item = new PlaylistTrackVm
+                                {
+                                    AddedAt = request.Attributes.HasTimestamp
+                                        ? DateTimeOffset.FromUnixTimeMilliseconds(request.Attributes.Timestamp)
+                                        : DateTimeOffset.MinValue,
+                                    HasAddedAt = request.Attributes.HasTimestamp,
+                                    OriginalIndex = index,
+                                    Id = id,
+                                    Album = new PlaylistShortItem
+                                    {
+                                        Id = trcKpr.Group.Id,
+                                        Name = trcKpr.Group.Name
+                                    },
+                                    Artists = trcKpr.Artists.Select(c => new PlaylistShortItem
+                                    {
+                                        Id = c.Id,
+                                        Name = c.Name
+                                    }).ToArray(),
+                                    Name = trcKpr.Name,
+                                    SmallestImage = trcKpr.GetImage(Image.Types.Size.Small),
+                                    Duration = trcKpr.Duration
+                                };
+                                toReturn.Add(item);
+                            }
+                            else
+                            {
+                                Debugger.Break();
+                            }
+                        });
 
                     return toReturn;
                     //return results.Select(c=> new PlaylistTrackInfo(c, ));
                 }
                 else
                 {
-                    return Enumerable.Empty<PlaylistTrackInfo>();
+                    return Enumerable.Empty<PlaylistTrackVm>();
                 }
             })
             //.Throttle(TimeSpan.FromMilliseconds(50))
             .ObserveOn(RxApp.TaskpoolScheduler)
             .Subscribe(tracks =>
             {
-                //TODO
+                GC.Collect();
                 _items.Edit(innerList =>
                 {
                     innerList.Clear();
@@ -159,60 +216,6 @@ public sealed class PlaylistViewModel<R> : ReactiveObject, INavigableViewModel
                     }
                 });
             });
-
-        PlaylistFetched.TrySetResult();
-
-        var filterApplier =
-          this.WhenValueChanged(t => t.SearchText)
-              .Throttle(TimeSpan.FromMilliseconds(250))
-              .Select(propargs => BuildFilter(propargs))
-              .ObserveOn(RxApp.TaskpoolScheduler);
-
-        var sortChange =
-            this.WhenValueChanged(t => t.SortParameters)
-                .Select(c => c switch
-                {
-                    _ => SortExpressionComparer<PlaylistTrackVm>
-                        .Ascending(x => x.OriginalIndex)
-                })
-                .ObserveOn(RxApp.TaskpoolScheduler);
-
-        _cleanup = _items
-            .Connect()
-            //.Filter(c => c.Data.Id.Type is AudioItemType.Track)
-            .Transform(x =>
-            {
-                return x.Data.Value
-                    .Match(Left: episode => new PlaylistTrackVm(), Right: track =>
-                    {
-                        return new PlaylistTrackVm
-                        {
-                            AddedAt = x.AddedAt,
-                            HasAddedAt = x.HasAddedAt,
-                            OriginalIndex = x.Index,
-                            Id = x.Data.Id,
-                            Album = new PlaylistShortItem
-                            {
-                                Id = AudioId.FromRaw(track.Album.Gid.Span, AudioItemType.Album, ServiceType.Spotify),
-                                Name = track.Album.Name
-                            },
-                            Artists = track.Artist.Select(c => new PlaylistShortItem
-                            {
-                                Id = AudioId.FromRaw(c.Gid.Span, AudioItemType.Artist, ServiceType.Spotify),
-                                Name = c.Name
-                            }).ToArray(),
-                            Name = track.Name,
-                            SmallestImage = x.Data.GetImage(Image.Types.Size.Small),
-                            Duration = TimeSpan.FromMilliseconds(track.Duration)
-                        };
-                    });
-            })
-            .Filter(filterApplier)
-            .Sort(sortChange)
-            .ObserveOn(RxApp.MainThreadScheduler)
-            .Bind(out _data)     // update observable collection bindings
-            .DisposeMany()   //dispose when no longer required
-            .Subscribe();
     }
     public string? SearchText
     {
@@ -250,6 +253,9 @@ public sealed class PlaylistViewModel<R> : ReactiveObject, INavigableViewModel
     public void Clear()
     {
         _listener?.Dispose();
+        _items?.Clear();
+        _items?.Dispose();
+        _cleanup?.Dispose();
     }
 }
 
@@ -269,7 +275,7 @@ public class PlaylistViewData
     public required uint TotalTracks { get; init; }
 }
 public readonly record struct PlaylistTrackInfo(
-    TrackOrEpisode Data, DateTimeOffset AddedAt, bool HasAddedAt, int Index);
+    PlaylistTrackVm Data, DateTimeOffset AddedAt, bool HasAddedAt, int Index);
 
 public class PlaylistShortItem
 {

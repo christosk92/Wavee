@@ -15,6 +15,7 @@ namespace Wavee.UI.WinUI.Views.Settings
         {
             this.InitializeComponent();
             Instance = this;
+            MainSettingsFrame.Navigate(typeof(GeneralSettingsView));
         }
 
         public bool ShouldKeepInCache(int depth)

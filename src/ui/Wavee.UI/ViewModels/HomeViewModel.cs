@@ -81,7 +81,8 @@ public sealed class HomeViewModel<R> : ReactiveObject, INavigableViewModel where
 
         Seq<HomeGroupView> groupResults = LanguageExt.Seq<HomeGroupView>.Empty;
         using var home = aff.Match(Succ: x => x, Fail: _ => throw new InvalidOperationException());
-        if (home.RootElement.GetProperty("content").TryGetProperty("items", out var items))
+        if (home.RootElement.TryGetProperty("content",out var ct)
+            && ct.TryGetProperty("items", out var items))
         {
             using var itemsArr = items.EnumerateArray();
             foreach (var group in itemsArr)

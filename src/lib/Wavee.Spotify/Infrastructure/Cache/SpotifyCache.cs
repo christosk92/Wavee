@@ -69,11 +69,11 @@ public readonly struct SpotifyCache
 
     #region Metadata
 
-    public HashMap<AudioId, Option<TrackOrEpisode>> GetBulk(Seq<AudioId> request)
+    public Dictionary<AudioId, Option<TrackOrEpisode>> GetBulk(Seq<AudioId> request)
     {
-        if (request.Length == 0) return Empty;
+        if (request.Length == 0) return EmptyDictionary;
         if (_dbPath.IsNone)
-            return LanguageExt.HashMap<AudioId, Option<TrackOrEpisode>>.Empty;
+            return EmptyDictionary;
         // return new Seq<Option<TrackOrEpisode>>(Enumerable.Repeat(Option<TrackOrEpisode>.None, request.Count));
         using var db = new SQLiteConnection(_dbPath.ValueUnsafe());
         // var result = new List<Option<TrackOrEpisode>>(request.Count);
@@ -82,14 +82,17 @@ public readonly struct SpotifyCache
             .DistinctBy(x => x.Id)
             .ToDictionary(c => c.ToBase62(), c => c.Type);
         var base62Ids = base62IdsMap.Keys;
+
         var tracks = db.Table<CachedTrack>()
             .Where(x => base62Ids.Contains(x.Id))
-            .ToDictionary(x => x.Id, x => x.RestData);
+            .ToDictionary(x => x.Id, x => (ReadOnlyMemory<byte>)x.RestData);
+
         var episodes = db.Table<CachedEpisode>()
             .Where(x => base62Ids.Contains(x.Id))
             .ToDictionary(x => x.Id, x => x.RestData);
 
         var output = new Dictionary<AudioId, Option<TrackOrEpisode>>();
+
         foreach (var req in base62IdsMap)
         {
             var originalId = AudioId.FromBase62(req.Key, req.Value, ServiceType.Spotify);
@@ -98,27 +101,28 @@ public readonly struct SpotifyCache
                 case AudioItemType.Track:
                     if (tracks.TryGetValue(req.Key, out var track))
                     {
-                        output.Add(originalId, new TrackOrEpisode(Track.Parser.ParseFrom(track)));
+                        var value = track;
+                        output[originalId] = new TrackOrEpisode(Right(new Lazy<Track>(() => Track.Parser.ParseFrom(value.Span))));
                     }
                     else
                     {
-                        output.Add(originalId, None);
+                        output[originalId] = None;
                     }
                     break;
                 case AudioItemType.PodcastEpisode:
                     if (episodes.TryGetValue(req.Key, out var episode))
                     {
-                        output.Add(originalId, new TrackOrEpisode(Episode.Parser.ParseFrom(episode)));
+                        output[originalId] = new TrackOrEpisode(Episode.Parser.ParseFrom(episode));
                     }
                     else
                     {
-                        output.Add(originalId, None);
+                        output[originalId] = None;
                     }
                     break;
             }
         }
 
-        return output.ToHashMap();
+        return output;
 
         // var result = base62IdsMap.Map(x =>
         // {
@@ -134,6 +138,8 @@ public readonly struct SpotifyCache
         // return result.ToSeq();
     }
 
+    public static Dictionary<AudioId, Option<TrackOrEpisode>> EmptyDictionary = new();
+
     public Unit Save(TrackOrEpisode metadata)
     {
         if (_dbPath.IsNone)
@@ -146,8 +152,8 @@ public readonly struct SpotifyCache
             db.InsertOrReplace(new CachedTrack
             {
                 Id = metadata.Id.ToBase62(),
-                Title = track.Name,
-                RestData = track.ToByteArray()
+                Title = track.Value.Name,
+                RestData = track.Value.ToByteArray()
             });
         }
         else if (metadata.Value.IsLeft)
@@ -216,7 +222,7 @@ public readonly struct SpotifyCache
         {
             AudioItemType.Track => db.Table<CachedTrack>().SingleOrDefault(x => x.Id == id.ToBase62())
                 is CachedTrack track
-                ? new TrackOrEpisode(Track.Parser.ParseFrom(track.RestData))
+                ? new TrackOrEpisode(Right(new Lazy<Track>(() => Track.Parser.ParseFrom(track.RestData))))
                 : None,
             AudioItemType.PodcastEpisode => db.Table<CachedEpisode>().SingleOrDefault(x => x.Id == id.ToBase62())
                 is CachedEpisode episode
@@ -233,8 +239,8 @@ public readonly struct SpotifyCache
         var tracks = result.Where(x => x.Value.IsRight).Select(x => new CachedTrack
         {
             Id = x.Id.ToBase62(),
-            Title = x.Value.Match(Left: _ => throw new InvalidOperationException(), Right: x => x.Name),
-            RestData = x.Value.Match(Left: _ => throw new InvalidOperationException(), Right: x => x.ToByteArray())
+            Title = x.Value.Match(Left: _ => throw new InvalidOperationException(), Right: x => x.Value.Name),
+            RestData = x.Value.Match(Left: _ => throw new InvalidOperationException(), Right: x => x.Value.ToByteArray())
         });
 
         var episodes = result.Where(x => x.Value.IsLeft).Select(x => new CachedEpisode

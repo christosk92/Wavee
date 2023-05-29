@@ -233,11 +233,11 @@ internal sealed class LiveSpotify : Traits.SpotifyIO
                                {
                                    ExtensionKind.EpisodeV4 => c.ExtensionData
                                        .Select(e => new TrackOrEpisode(
-                                           Either<Episode, Track>.Left(Episode.Parser.ParseFrom(e.ExtensionData.Value))
+                                           Either<Episode, Lazy<Track>>.Left(Episode.Parser.ParseFrom(e.ExtensionData.Value))
                                        )),
                                    ExtensionKind.TrackV4 => c.ExtensionData
                                        .Select(e => new TrackOrEpisode(
-                                           Either<Episode, Track>.Right(Track.Parser.ParseFrom(e.ExtensionData.Value))
+                                           Either<Episode, Lazy<Track>>.Right(new Lazy<Track>(() => Track.Parser.ParseFrom(e.ExtensionData.Value)))
                                        )),
                                };
                            });

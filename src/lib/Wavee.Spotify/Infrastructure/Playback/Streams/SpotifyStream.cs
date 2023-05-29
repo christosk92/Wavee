@@ -31,7 +31,7 @@ public sealed class SpotifyStream : Stream, IAudioStream
         Track = track.Value
             .Match(
                 Left: x => FromEpisode(x),
-                Right: x => FromTrack(x)
+                Right: x => FromTrack(x.Value)
             );
         Position = 0;
     }

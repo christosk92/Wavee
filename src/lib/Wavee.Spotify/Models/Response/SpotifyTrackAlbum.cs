@@ -46,6 +46,7 @@ internal readonly partial record struct SpotifyTrackAlbum(AudioId Id, string Nam
     private static (DateOnly ParseReleaseDate, ReleaseDatePrecisionType Precision)
         ParseReleaseDate(Date albumDate)
     {
+        if (albumDate is null) return (new DateOnly(1, 1, 1), ReleaseDatePrecisionType.Unknown);
         if (albumDate.HasDay)
         {
             //it is safe to assume that if the album has a day, it also has a month and a year

@@ -24,7 +24,7 @@
                         <Setter Target="PlaybackViewContent.Content">
                             <Setter.Value>
                                 <TextBlock VerticalAlignment="Center"
-                                           Width="24"
+                                           MinWidth="24"
                                            Text="{x:Bind FormatIndex(Index) ,Mode=OneWay}"
                                            FontWeight="SemiBold" />
                             </Setter.Value>
@@ -129,7 +129,7 @@
                                     HorizontalContentAlignment="Stretch">
                         <ContentControl.Content>
                             <TextBlock VerticalAlignment="Center"
-                                       Width="24"
+                                       MinWidth="24"
                                        Text="{x:Bind FormatIndex(Index) ,Mode=OneWay}"
                                        FontWeight="SemiBold" />
                         </ContentControl.Content>

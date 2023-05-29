@@ -90,7 +90,7 @@ public static class Spotify<R> where R : struct, HasSpotify<R>
             })
         let trackResponse = trackOrEpisode.Value.Match(
             Left: episode => default(ITrack),
-            Right: track => SpotifyTrackResponse.From(countryCode, cdnUrl, track))
+            Right: track => SpotifyTrackResponse.From(countryCode, cdnUrl, track.Value))
         select trackResponse;
 
     private static Aff<R, TrackOrEpisode> FetchTrack(AudioId id, string country) =>
@@ -113,20 +113,29 @@ public static class Spotify<R> where R : struct, HasSpotify<R>
         from result in aff
         select result;
 
-    public static Aff<R, HashMap<AudioId, TrackOrEpisode>> FetchBatchOfTracks(Seq<AudioId> request, CancellationToken ct = default) =>
+
+    public static Eff<R, Dictionary<AudioId, Option<TrackOrEpisode>>> GetFromCache(Seq<AudioId> request,
+        CancellationToken ct = default) =>
         from cache in default(R).SpotifyEff
             .Map(x => x.Cache().IfNone(new SpotifyCache(new SpotifyCacheConfig(Option<string>.None,
                 Option<string>.None,
                 Option<TimeSpan>.None), "en")))
             //check which tracks are already cached
         let cachedTracksMaybe = cache.GetBulk(request)
-        //fetch the rest
-        from aff in default(R).SpotifyEff.Map(x => x.FetchBatchOfTracks(request.Filter(y => cachedTracksMaybe[y].IsNone), ct))
+        select cachedTracksMaybe;
+
+    public static Aff<R, Dictionary<AudioId, TrackOrEpisode>> FetchBatchOfTracks(Seq<AudioId> request,
+        CancellationToken ct = default) =>
+        from cache in default(R).SpotifyEff
+            .Map(x => x.Cache().IfNone(new SpotifyCache(new SpotifyCacheConfig(Option<string>.None,
+                Option<string>.None,
+                Option<TimeSpan>.None), "en")))
+        from aff in default(R).SpotifyEff.Map(x => x.FetchBatchOfTracks(request, ct))
         from result in aff
-            //save the fetched tracks
+        //save the fetched tracks
         from _ in Eff(() => cache.SaveBulk(result.Distinct(x => x.Id)))
-            //combine the cached and fetched tracks
-        select cachedTracksMaybe.Values.Somes().Concat(result).ToDictionary(x=> x.Id).ToHashMap();
+        //combine the cached and fetched tracks
+        select result.ToDictionary(x => x.Id, x => x);
 
     public static Eff<R, Option<string>> CdnUrl() =>
         from aff in default(R).SpotifyEff.Map(x => x.CdnUrl())

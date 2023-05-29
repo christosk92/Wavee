@@ -54,6 +54,7 @@ namespace Wavee.UI.WinUI.Views.Settings
                 DeviceType.Tablet => RemoteDeviceRecord.Tablet,
                 DeviceType.Smartphone => RemoteDeviceRecord.Smartphone,
                 DeviceType.Tv => RemoteDeviceRecord.TV,
+                _ => RemoteDeviceRecord.Computer
             };
         }
     }
