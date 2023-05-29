@@ -102,7 +102,7 @@ public sealed class PlaylistViewModel<R> : ReactiveObject, INavigableViewModel
                     OriginalIndex = _items.Items.IndexOf(x)
                 };
                 return res;
-            })
+            }, parallelisationOptions: new ParallelisationOptions(ParallelType.Ordered, 100, _inmemoryCache.Count))
             //.Filter(c => c.Data.Id.Type is AudioItemType.Track)
             .Filter(filterApplier)
             .Sort(sortChange)
