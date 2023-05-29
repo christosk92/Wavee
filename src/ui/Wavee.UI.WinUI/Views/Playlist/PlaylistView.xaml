@@ -18,7 +18,7 @@
              mc:Ignorable="d">
     <UserControl.Transitions>
         <TransitionCollection>
-            <EntranceThemeTransition IsStaggeringEnabled="True" />
+            <EntranceThemeTransition />
         </TransitionCollection>
     </UserControl.Transitions>
     <UserControl.Resources>
@@ -40,74 +40,60 @@
     <Grid>
         <TextBlock Text="{x:Bind ViewModel.Name}" />
 
-        <ScrollViewer ui:ScrollViewerExtensions.VerticalScrollBarMargin="0,0,0,110">
-            <StackPanel>
-                <ItemsView Margin="24,0"
-                           ItemsSource="{Binding View, Mode=OneWay}"
-                           SelectionMode="Extended">
-                    <ItemsView.ItemTemplate>
-                        <DataTemplate x:DataType="viewModels:PlaylistTrackViewModel">
-                            <ItemContainer Height="42"
-                                           CanDrag="True"
-                                           CanUserSelect="UserCanSelect"
-                                           IsSelected="False"
-                                           MultiSelectMode="Extended">
-                                <components:TrackView AlternatingRowColor="True"
-                                                      Id="{x:Bind Id, Mode=OneWay}"
-                                                      ImageUrl="{x:Bind SmallestImage, Mode=OneWay}"
-                                                      Index="{x:Bind Index, Mode=OneWay}"
-                                                      ShowImage="False">
-                                    <components:TrackView.View>
-                                        <Grid VerticalAlignment="Center">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="10" />
-                                                <ColumnDefinition />
-                                                <ColumnDefinition Width="*" />
-                                                <ColumnDefinition Width="*" />
-                                                <ColumnDefinition Width=".5*" />
-                                                <ColumnDefinition Width="44 " />
-                                            </Grid.ColumnDefinitions>
-                                            <TextBlock Grid.Column="1"
-                                                       VerticalAlignment="Center"
-                                                       x:Phase="1"
-                                                       Text="{x:Bind Name, Mode=OneWay}"
-                                                       TextTrimming="CharacterEllipsis" />
 
-                                            <ItemsControl Grid.Column="2"
-                                                          VerticalAlignment="Center"
-                                                          x:Phase="2"
-                                                          ItemTemplate="{StaticResource HorizontalArtistTemplate}"
-                                                          ItemsPanel="{StaticResource ArtistLayout}"
-                                                          ItemsSource="{x:Bind Artists, Mode=OneWay}" />
+        <ListView Margin="24,0"
+                  ItemsSource="{x:Bind ViewModel.View, Mode=OneWay}">
+            <ListView.ItemTemplate>
+                <DataTemplate x:DataType="viewModels:PlaylistTrackViewModel">
+                    <components:TrackView AlternatingRowColor="True"
+                                          Id="{x:Bind Id, Mode=OneWay}"
+                                          ImageUrl="{x:Bind SmallestImage, Mode=OneWay}"
+                                          Index="{x:Bind Index, Mode=OneWay}"
+                                          ShowImage="True">
+                        <components:TrackView.View>
+                            <Grid VerticalAlignment="Center">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="10" />
+                                    <ColumnDefinition />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width=".5*" />
+                                    <ColumnDefinition Width="44 " />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="1"
+                                           VerticalAlignment="Center"
+                                           Text="{x:Bind Name, Mode=OneWay}"
+                                           TextTrimming="CharacterEllipsis" />
 
-                                            <TextBlock Grid.Column="3"
-                                                       Padding="0,8,8,8"
-                                                       VerticalAlignment="Center"
-                                                       x:Phase="3"
-                                                       Text="{x:Bind Album.Name, Mode=OneWay}"
-                                                       Foreground="{ThemeResource ApplicationForegroundThemeBrush}"
-                                                       Tag="{x:Bind Album.Id}"
-                                                       Tapped="NavigateToMetadata" />
-                                            <TextBlock x:Name="AddedAtBlock"
-                                                       Grid.Column="4"
-                                                       VerticalAlignment="Center"
-                                                       x:Load="{x:Bind HasAddedAt}"
-                                                       x:Phase="4"
-                                                       Text="{x:Bind FormatToRelativeDate(AddedAt), Mode=OneWay}" />
-                                            <TextBlock Grid.Column="5"
-                                                       VerticalAlignment="Center"
-                                                       x:Phase="5"
-                                                       Text="{x:Bind FormatToShorterTimestamp(Duration), Mode=OneWay}" />
-                                        </Grid>
-                                    </components:TrackView.View>
-                                </components:TrackView>
-                            </ItemContainer>
-                        </DataTemplate>
-                    </ItemsView.ItemTemplate>
-                </ItemsView>
+                                <ItemsControl Grid.Column="2"
+                                              VerticalAlignment="Center"
+                                              ItemTemplate="{StaticResource HorizontalArtistTemplate}"
+                                              ItemsPanel="{StaticResource ArtistLayout}"
+                                              ItemsSource="{x:Bind Artists, Mode=OneWay}" />
 
-            </StackPanel>
-        </ScrollViewer>
+                                <TextBlock Grid.Column="3"
+                                           Padding="0,8,8,8"
+                                           VerticalAlignment="Center"
+                                           Text="{x:Bind Album.Name, Mode=OneWay}"
+                                           Foreground="{ThemeResource ApplicationForegroundThemeBrush}"
+                                           Tag="{x:Bind Album.Id}"
+                                           Tapped="NavigateToMetadata" />
+                                <TextBlock x:Name="AddedAtBlock"
+                                           Grid.Column="4"
+                                           VerticalAlignment="Center"
+                                           x:Load="{x:Bind HasAddedAt}"
+                                           Text="{x:Bind FormatToRelativeDate(AddedAt), Mode=OneWay}" />
+                                <TextBlock Grid.Column="5"
+                                           VerticalAlignment="Center"
+                                           Text="{x:Bind FormatToShorterTimestamp(Duration), Mode=OneWay}" />
+                            </Grid>
+                        </components:TrackView.View>
+                    </components:TrackView>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+        <Border Height="100" />
+
         <!--         <Grid> -->
         <!--             <Grid x:Name="LargeImage" VerticalAlignment="Top"> -->
         <!--                 <controls:ImageTransitionControl -->

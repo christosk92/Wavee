@@ -1,12 +1,14 @@
 ﻿using DynamicData;
 using ReactiveUI;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Reactive.Linq;
 using DynamicData.Binding;
 using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
 using Wavee.Core.Ids;
 using Wavee.Spotify;
+using Wavee.UI.Infrastructure.Live;
 using Wavee.UI.Infrastructure.Sys;
 using Wavee.UI.Infrastructure.Traits;
 using Wavee.UI.Models;
@@ -60,73 +62,84 @@ public sealed class PlaylistsViewModel<R> : ReactiveObject where R : struct, Has
                 int index = -1;
                 foreach (var playlist in playlists.Contents.Items)
                 {
-                    index++;
-                    if (playlist.Uri.StartsWith("spotify:start-group"))
+                    try
                     {
-                        //folder
-                        //spotify:start-group:a19bead8a80b545b:New+Folder
-                        var split = playlist.Uri.Split(':');
-                        var folderName = split[^1];
-                        var folderId = split[^2];
-                        currentFolder = new PlaylistViewModel<R>(folderId, runtime, true)
+                        index++;
+                        if (playlist.Uri.StartsWith("spotify:start-group"))
                         {
-                            IsInFolder = false,
-                            IsFolder = true,
-                            Id = folderId,
-                            OwnerId = c.Username,
-                            SubItems = LanguageExt.Seq<IPlaylistViewModel>.Empty,
-                            Revision = playlists.Contents.MetaItems[index].Revision,
-                            Timestamp = DateTimeOffset.MinValue,
-                            Name = folderName,
-                            Index = index
-                        };
-                        continue;
-                    }
-                    if (playlist.Uri.StartsWith("spotify:end-group"))
-                    {
-                        //end of folder
-                        //commit folder
-                        result = result.Add(currentFolder.ValueUnsafe());
-                        currentFolder = Option<IPlaylistViewModel>.None;
-                        continue;
-                    }
+                            //folder
+                            //spotify:start-group:a19bead8a80b545b:New+Folder
+                            var split = playlist.Uri.Split(':');
+                            var folderName = split[^1];
+                            var folderId = split[^2];
+                            currentFolder = new PlaylistViewModel(folderId, runtime is WaveeUIRuntime wv ? wv : default,
+                                true)
+                            {
+                                IsInFolder = false,
+                                IsFolder = true,
+                                Id = folderId,
+                                OwnerId = c.Username,
+                                SubItems = LanguageExt.Seq<IPlaylistViewModel>.Empty,
+                                Revision = playlists.Contents.MetaItems[index].Revision,
+                                Timestamp = DateTimeOffset.MinValue,
+                                Name = folderName,
+                                Index = index
+                            };
+                            continue;
+                        }
 
-                    var name = playlists.Contents.MetaItems[index].Attributes
-                        .Name;
-                    var owner = playlists.Contents.MetaItems[index].OwnerUsername;
-                    var timestamp = playlists.Contents.MetaItems[index].Timestamp;
-                    var timestampAsDatetime = DateTimeOffset.FromUnixTimeMilliseconds(timestamp / 1000);
-                    if (currentFolder.IsSome)
-                    {
-                        var currentFolderValue = currentFolder.ValueUnsafe();
+                        if (playlist.Uri.StartsWith("spotify:end-group"))
+                        {
+                            //end of folder
+                            //commit folder
+                            result = result.Add(currentFolder.ValueUnsafe());
+                            currentFolder = Option<IPlaylistViewModel>.None;
+                            continue;
+                        }
 
-                        currentFolderValue.AddSubitem(new PlaylistViewModel<R>(playlist.Uri, runtime)
+                        var name = playlists.Contents.MetaItems[index].Attributes
+                            .Name;
+                        var owner = playlists.Contents.MetaItems[index].OwnerUsername;
+                        var timestamp = playlists.Contents.MetaItems[index].Timestamp;
+                        var timestampAsDatetime = DateTimeOffset.FromUnixTimeMilliseconds(timestamp / 1000);
+                        if (currentFolder.IsSome)
                         {
-                            IsInFolder = true,
-                            IsFolder = false,
-                            Id = playlist.Uri,
-                            OwnerId = owner,
-                            SubItems = LanguageExt.Seq<IPlaylistViewModel>.Empty,
-                            Revision = playlists.Contents.MetaItems[index].Revision,
-                            Timestamp = timestampAsDatetime,
-                            Index = currentFolderValue.SubItems.Count,
-                            Name = name,
-                        });
+                            var currentFolderValue = currentFolder.ValueUnsafe();
+
+                            currentFolderValue.AddSubitem(
+                                new PlaylistViewModel(playlist.Uri, runtime is WaveeUIRuntime wv ? wv : default)
+                                {
+                                    IsInFolder = true,
+                                    IsFolder = false,
+                                    Id = playlist.Uri,
+                                    OwnerId = owner,
+                                    SubItems = LanguageExt.Seq<IPlaylistViewModel>.Empty,
+                                    Revision = playlists.Contents.MetaItems[index].Revision,
+                                    Timestamp = timestampAsDatetime,
+                                    Index = currentFolderValue.SubItems.Count,
+                                    Name = name,
+                                });
+                        }
+                        else
+                        {
+                            result = result.Add(
+                                new PlaylistViewModel(playlist.Uri, runtime is WaveeUIRuntime wv ? wv : default)
+                                {
+                                    IsInFolder = false,
+                                    IsFolder = false,
+                                    Id = playlist.Uri,
+                                    OwnerId = owner,
+                                    SubItems = LanguageExt.Seq<IPlaylistViewModel>.Empty,
+                                    Revision = playlists.Contents.MetaItems[index].Revision,
+                                    Timestamp = timestampAsDatetime,
+                                    Index = index,
+                                    Name = name,
+                                });
+                        }
                     }
-                    else
+                    catch (Exception x)
                     {
-                        result = result.Add(new PlaylistViewModel<R>(playlist.Uri, runtime)
-                        {
-                            IsInFolder = false,
-                            IsFolder = false,
-                            Id = playlist.Uri,
-                            OwnerId = owner,
-                            SubItems = LanguageExt.Seq<IPlaylistViewModel>.Empty,
-                            Revision = playlists.Contents.MetaItems[index].Revision,
-                            Timestamp = timestampAsDatetime,
-                            Index = index,
-                            Name = name,
-                        });
+                        Debug.WriteLine(x);
                     }
                 }
                 return result;

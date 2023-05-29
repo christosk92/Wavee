@@ -28,10 +28,11 @@ namespace Wavee.UI.WinUI.Views.Playlist
         public async void NavigatedTo(object parameter)
         {
             //ok, so what?
-            if (parameter is PlaylistViewModel<WaveeUIRuntime> vr)
+            if (parameter is PlaylistViewModel vr)
             {
                 ViewModel = vr;
-                _ = Task.Run(async() => await vr.SetupForUI());
+                await ViewModel.SetupForUI();
+                //await Task.Delay(10);
                 this.Bindings.Update();
             }
             else if (parameter is AudioId id)
@@ -46,7 +47,7 @@ namespace Wavee.UI.WinUI.Views.Playlist
             ViewModel.DestroyForUI();
         }
 
-        public PlaylistViewModel<WaveeUIRuntime> ViewModel { get; set; }
+        public PlaylistViewModel ViewModel { get; set; }
 
         private void PlaylistView_OnSizeChanged(object sender, SizeChangedEventArgs e)
         {
@@ -134,6 +135,13 @@ namespace Wavee.UI.WinUI.Views.Playlist
             {
                 UICommands.NavigateTo.Execute(id);
             }
+        }
+
+        private void ScrollViewer_OnViewChanged(object sender, ScrollViewerViewChangedEventArgs e)
+        {
+            //calculate next page
+            var sv = sender as ScrollViewer;
+
         }
     }
 

@@ -2,19 +2,19 @@
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using DynamicData;
+using DynamicData.Binding;
 using DynamicData.PLinq;
 using Eum.Spotify.playlist4;
 using Google.Protobuf;
 using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
-using ReactiveUI;
 using Spotify.Metadata;
 using Wavee.Core.Ids;
 using Wavee.Spotify.Infrastructure.Playback;
+using Wavee.UI.Infrastructure.Live;
 using Wavee.UI.Infrastructure.Sys;
-using Wavee.UI.Infrastructure.Traits;
-using Wavee.UI.Models;
 using Wavee.UI.Services;
+using ReactiveUI;
 
 namespace Wavee.UI.ViewModels;
 
@@ -33,14 +33,14 @@ public interface IPlaylistViewModel : INavigableViewModel
 
     void Destroy();
 }
-public sealed class PlaylistViewModel<R> : ReactiveObject, IPlaylistViewModel where R : struct, HasSpotify<R>
+public sealed class PlaylistViewModel : ReactiveObject, IPlaylistViewModel
 {
     private readonly IDisposable _listener;
 
     private readonly Subject<Diff> _dummySubj = new();
     private readonly SourceCache<(Item Item, int Index), ByteString> _items = new(s => s.Item.Attributes.ItemId);
-    private readonly R _runtime;
-    public PlaylistViewModel(string id, R runtime, bool isFolder = false)
+    private readonly WaveeUIRuntime _runtime;
+    public PlaylistViewModel(string id, WaveeUIRuntime runtime, bool isFolder = false)
     {
         Id = id;
         _runtime = runtime;
@@ -48,7 +48,7 @@ public sealed class PlaylistViewModel<R> : ReactiveObject, IPlaylistViewModel wh
         IsFolder = isFolder;
         if (!isFolder)
         {
-            var a = Spotify<R>
+            var a = Spotify<WaveeUIRuntime>
                 .ObservePlaylist(AudioId.FromUri(id))
                 .Run(runtime)
                 .ThrowIfFail()
@@ -69,7 +69,7 @@ public sealed class PlaylistViewModel<R> : ReactiveObject, IPlaylistViewModel wh
                         .ToSeq();
                     if (tracksToFetch.Count > 0)
                     {
-                        var tracks = await TrackEnqueueService<R>.GetTracks(tracksToFetch);
+                        var tracks = await TrackEnqueueService<WaveeUIRuntime>.GetTracks(tracksToFetch);
                         foreach (var track in tracks)
                         {
                             Cache[track.Key] = track.Value;
@@ -124,7 +124,7 @@ public sealed class PlaylistViewModel<R> : ReactiveObject, IPlaylistViewModel wh
                         }
                         updater.Load(oldList);
                     });
-                    GC.Collect();
+                    // GC.Collect();
                     return unit;
                 })
                 .ObserveOn(RxApp.TaskpoolScheduler)
@@ -139,64 +139,86 @@ public sealed class PlaylistViewModel<R> : ReactiveObject, IPlaylistViewModel wh
     public ReadOnlyObservableCollection<PlaylistTrackViewModel> View => _view;
     public async Task SetupForUI()
     {
-        uiListener = _items
-            .Connect()
-            //.ObserveOn(RxApp.TaskpoolScheduler)
-            .Transform(yx =>
-            {
-                var (x, i) = yx;
-                var id = AudioId.FromUri(x.Uri);
-                var track = Cache[id];
-                //by now, we should have it in cache
-                var trck = track.ValueUnsafe();
-                return new PlaylistTrackViewModel
-                {
-                    Index = i,
-                    Id = id,
-                    Name = trck
-                        .Name,
-                    Artists = trck.Artists.Select(c => new PlaylistShortItem
-                    {
-                        Id = c.Id,
-                        Name = c.Name
-                    }).ToArray(),
-                    Album = new PlaylistShortItem
-                    {
-                        Id = trck.Group.Id,
-                        Name = trck.Group.Name
-                    },
-                    Duration = trck.Duration,
-                    AddedAt = x.Attributes.HasTimestamp ? DateTimeOffset.FromUnixTimeMilliseconds(x.Attributes.Timestamp) :
-                     DateTimeOffset.MinValue,
-                    HasAddedAt = x.Attributes.HasTimestamp,
-                    SmallestImage = trck.GetImage(Image.Types.Size.Small)
-                };
-            }, new ParallelisationOptions(ParallelType.Ordered, 50, 100))
-            .ObserveOn(RxApp.MainThreadScheduler)
-            .Bind(out _view)
-            .DisposeMany()
-            .Subscribe();
+        //build observable sort comparer
+        var sort = SortParameters.WhenValueChanged(t => t.SelectedItem)
+            .Select(prop => prop.Comparer)
+            .ObserveOn(RxApp.TaskpoolScheduler);
 
-        var latestPlaylist = (await Spotify<R>
-            .GetPlaylistMaybeCached(AudioId.FromUri(Id))
-            .Run(runtime: _runtime))
+        // var pager =
+        //     PageParameters
+        //         .WhenChanged(vm => vm.PageSize, vm => vm.CurrentPage,
+        //             (_, size, pge) => new PageRequest(pge, size))
+        //         .StartWith(new PageRequest(1, 25));
+        var latestPlaylist = (await Spotify<WaveeUIRuntime>
+                .GetPlaylistMaybeCached(AudioId.FromUri(Id))
+                .Run(runtime: _runtime))
             .ThrowIfFail();
         if (latestPlaylist.FromCache)
         {
             //diff
         }
 
-        var op = new Op
+        var newItems = latestPlaylist.Playlist.Contents.Items
+            .Select(x => AudioId.FromUri(x.Uri))
+            .Where(c => !Cache.ContainsKey(c))
+            .ToSeq();
+        if (newItems.Count > 0)
         {
-            Add = new Add
+            var tracks = await TrackEnqueueService<WaveeUIRuntime>.GetTracks(newItems);
+            foreach (var track in tracks)
             {
-                Items = { latestPlaylist.Playlist.Contents.Items },
-                AddFirst = true
-            },
-            Kind = Op.Types.Kind.Add
-        };
-        _dummySubj.OnNext(new Diff { Ops = { op } });
+                Cache[track.Key] = track.Value;
+            }
+        }
+
+        _view = new ReadOnlyObservableCollection<PlaylistTrackViewModel>(
+            new ObservableCollection<PlaylistTrackViewModel>(latestPlaylist.Playlist.Contents.Items.Select(
+                GetFrom)));
+
+        static PlaylistTrackViewModel GetFrom(Item x, int i)
+        {
+            var id = AudioId.FromUri(x.Uri);
+            var track = Cache[id];
+            //by now, we should have it in cache
+            var trck = track.ValueUnsafe();
+            return new PlaylistTrackViewModel
+            {
+                Index = i,
+                Id = id,
+                Name = trck
+                    .Name,
+                Artists = trck.Artists.Select(c => new PlaylistShortItem
+                {
+                    Id = c.Id,
+                    Name = c.Name
+                }).ToArray(),
+                Album = new PlaylistShortItem
+                {
+                    Id = trck.Group.Id,
+                    Name = trck.Group.Name
+                },
+                Duration = trck.Duration,
+                AddedAt = x.Attributes.HasTimestamp ? DateTimeOffset.FromUnixTimeMilliseconds(x.Attributes.Timestamp) :
+                    DateTimeOffset.MinValue,
+                HasAddedAt = x.Attributes.HasTimestamp,
+                SmallestImage = trck.GetImage(Image.Types.Size.Small)
+            };
+        }
+        //
+        // uiListener = _items
+        //     .Connect()
+        //     //.ObserveOn(RxApp.TaskpoolScheduler)
+        //     .Transform(static yx => GetFrom(yx.Item, yx.Index), new ParallelisationOptions(ParallelType.Ordered, 5))
+        //     .Sort(sort)
+        //     .ObserveOn(RxApp.MainThreadScheduler)
+        //     // .Do(changes => PageParameters.Update(changes.Response))
+        //     .Bind(out _view)
+        //     .DisposeMany()
+        //     .Subscribe();
     }
+
+    public PageParameterData PageParameters { get; } = new PageParameterData(1, 25);
+    public SortParameterData SortParameters { get; } = new SortParameterData();
 
     public void DestroyForUI()
     {
@@ -236,13 +258,13 @@ public sealed class PlaylistViewModel<R> : ReactiveObject, IPlaylistViewModel wh
     }
 }
 
-public record PlaylistShortItem
+public readonly record struct PlaylistShortItem
 {
     public required AudioId Id { get; init; }
     public required string Name { get; init; }
 }
 
-public sealed class PlaylistTrackViewModel
+public class PlaylistTrackViewModel
 {
     public required int Index { get; init; }
     public required AudioId Id { get; init; }
