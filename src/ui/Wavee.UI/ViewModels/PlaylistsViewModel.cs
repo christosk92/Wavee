@@ -15,8 +15,8 @@ namespace Wavee.UI.ViewModels;
 
 public sealed class PlaylistsViewModel<R> : ReactiveObject where R : struct, HasSpotify<R>
 {
-    private readonly ReadOnlyObservableCollection<PlaylistInfo> _playlistItemsView;
-    private readonly SourceCache<PlaylistInfo, string> _items = new(s => s.Id);
+    private readonly ReadOnlyObservableCollection<IPlaylistViewModel> _playlistItemsView;
+    private readonly SourceCache<IPlaylistViewModel, string> _items = new(s => s.Id);
     private PlaylistSortProperty _playlistSort = PlaylistSortProperty.CustomIndex;
     public PlaylistsViewModel(R runtime)
     {
@@ -27,9 +27,9 @@ public sealed class PlaylistsViewModel<R> : ReactiveObject where R : struct, Has
                     switch (sortProperty)
                     {
                         case PlaylistSortProperty.CustomIndex:
-                            return SortExpressionComparer<PlaylistInfo>.Ascending(t => t.Index);
+                            return SortExpressionComparer<IPlaylistViewModel>.Ascending(t => t.Index);
                         case PlaylistSortProperty.Alphabetical:
-                            return SortExpressionComparer<PlaylistInfo>.Ascending(t => t.Name);
+                            return SortExpressionComparer<IPlaylistViewModel>.Ascending(t => t.Name);
                         default:
                             throw new ArgumentOutOfRangeException(nameof(sortProperty), sortProperty, null);
                     }
@@ -55,8 +55,8 @@ public sealed class PlaylistsViewModel<R> : ReactiveObject where R : struct, Has
                     .Run(runtime))
                     .ThrowIfFail();
 
-                Seq<PlaylistInfo> result = LanguageExt.Seq<PlaylistInfo>.Empty;
-                Option<PlaylistInfo> currentFolder = Option<PlaylistInfo>.None;
+                Seq<IPlaylistViewModel> result = LanguageExt.Seq<IPlaylistViewModel>.Empty;
+                Option<IPlaylistViewModel> currentFolder = Option<IPlaylistViewModel>.None;
                 int index = -1;
                 foreach (var playlist in playlists.Contents.Items)
                 {
@@ -68,17 +68,18 @@ public sealed class PlaylistsViewModel<R> : ReactiveObject where R : struct, Has
                         var split = playlist.Uri.Split(':');
                         var folderName = split[^1];
                         var folderId = split[^2];
-                        currentFolder = new PlaylistInfo(
-                            Id: folderId,
-                            Index: index,
-                            Name: folderName,
-                            OwnerId: c.Username,
-                            IsFolder: true,
-                            SubItems: LanguageExt.Seq<PlaylistInfo>.Empty,
-                            Timestamp: DateTimeOffset.MinValue,
-                            isInFolder: false,
-                            revisionId: playlists.Contents.MetaItems[index].Revision.ToBase64()
-                            );
+                        currentFolder = new PlaylistViewModel<R>(folderId, runtime, true)
+                        {
+                            IsInFolder = false,
+                            IsFolder = true,
+                            Id = folderId,
+                            OwnerId = c.Username,
+                            SubItems = LanguageExt.Seq<IPlaylistViewModel>.Empty,
+                            Revision = playlists.Contents.MetaItems[index].Revision,
+                            Timestamp = DateTimeOffset.MinValue,
+                            Name = folderName,
+                            Index = index
+                        };
                         continue;
                     }
                     if (playlist.Uri.StartsWith("spotify:end-group"))
@@ -86,7 +87,7 @@ public sealed class PlaylistsViewModel<R> : ReactiveObject where R : struct, Has
                         //end of folder
                         //commit folder
                         result = result.Add(currentFolder.ValueUnsafe());
-                        currentFolder = Option<PlaylistInfo>.None;
+                        currentFolder = Option<IPlaylistViewModel>.None;
                         continue;
                     }
 
@@ -99,31 +100,33 @@ public sealed class PlaylistsViewModel<R> : ReactiveObject where R : struct, Has
                     {
                         var currentFolderValue = currentFolder.ValueUnsafe();
 
-                        currentFolder = currentFolderValue.AddSubitem(new PlaylistInfo(
-                            Id: playlist.Uri,
-                            Index: currentFolderValue.SubItems.Count,
-                            Name: name,
-                            OwnerId: owner,
-                            IsFolder: false,
-                            SubItems: LanguageExt.Seq<PlaylistInfo>.Empty,
-                            Timestamp: timestampAsDatetime,
-                            isInFolder: true,
-                            revisionId: playlists.Contents.MetaItems[index].Revision.ToBase64()
-                        ));
+                        currentFolderValue.AddSubitem(new PlaylistViewModel<R>(playlist.Uri, runtime)
+                        {
+                            IsInFolder = true,
+                            IsFolder = false,
+                            Id = playlist.Uri,
+                            OwnerId = owner,
+                            SubItems = LanguageExt.Seq<IPlaylistViewModel>.Empty,
+                            Revision = playlists.Contents.MetaItems[index].Revision,
+                            Timestamp = timestampAsDatetime,
+                            Index = currentFolderValue.SubItems.Count,
+                            Name = name,
+                        });
                     }
                     else
                     {
-                        result = result.Add(new PlaylistInfo(
-                            Id: playlist.Uri,
-                            Index: index,
-                            Name: name,
-                            OwnerId: owner,
-                            IsFolder: false,
-                            SubItems: LanguageExt.Seq<PlaylistInfo>.Empty,
-                            Timestamp: timestampAsDatetime,
-                            isInFolder: false,
-                            revisionId: playlists.Contents.MetaItems[index].Revision.ToBase64()
-                        ));
+                        result = result.Add(new PlaylistViewModel<R>(playlist.Uri, runtime)
+                        {
+                            IsInFolder = false,
+                            IsFolder = false,
+                            Id = playlist.Uri,
+                            OwnerId = owner,
+                            SubItems = LanguageExt.Seq<IPlaylistViewModel>.Empty,
+                            Revision = playlists.Contents.MetaItems[index].Revision,
+                            Timestamp = timestampAsDatetime,
+                            Index = index,
+                            Name = name,
+                        });
                     }
                 }
                 return result;
@@ -142,5 +145,5 @@ public sealed class PlaylistsViewModel<R> : ReactiveObject where R : struct, Has
         get => _playlistSort;
         set => this.RaiseAndSetIfChanged(ref _playlistSort, value);
     }
-    public ReadOnlyObservableCollection<PlaylistInfo> Playlists => _playlistItemsView;
+    public ReadOnlyObservableCollection<IPlaylistViewModel> Playlists => _playlistItemsView;
 }

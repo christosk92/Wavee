@@ -14,9 +14,7 @@ namespace Wavee.UI.WinUI.Views.Playlist
     {
         public PlaylistView()
         {
-            ViewModel = new PlaylistViewModel<WaveeUIRuntime>(App.Runtime);
             this.InitializeComponent();
-
         }
 
         public bool ShouldKeepInCache(int depth)
@@ -27,58 +25,68 @@ namespace Wavee.UI.WinUI.Views.Playlist
 
         Option<INavigableViewModel> INavigablePage.ViewModel => ViewModel;
 
-        public void NavigatedTo(object parameter)
+        public async void NavigatedTo(object parameter)
         {
             //ok, so what?
+            if (parameter is PlaylistViewModel<WaveeUIRuntime> vr)
+            {
+                ViewModel = vr;
+                _ = Task.Run(async() => await vr.SetupForUI());
+                this.Bindings.Update();
+            }
+            else if (parameter is AudioId id)
+            {
+                //TODO: fetch the playlist
+            }
         }
 
         public void RemovedFromCache()
         {
             //cleanup
-            ViewModel.Clear();
+            ViewModel.DestroyForUI();
         }
 
-        public PlaylistViewModel<WaveeUIRuntime> ViewModel { get; }
+        public PlaylistViewModel<WaveeUIRuntime> ViewModel { get; set; }
 
         private void PlaylistView_OnSizeChanged(object sender, SizeChangedEventArgs e)
         {
             var newSize = (sender as FrameworkElement)?.ActualHeight ?? 0;
-            //ratio is around 1:1, so 1/2
-            if (!string.IsNullOrEmpty(ViewModel.Playlist?.LargeImage))
-            {
-                var topHeight = newSize * 0.5;
-                topHeight = Math.Min(topHeight, 550);
-                LargeImage.Height = topHeight;
-            }
-            else
-            {
-                //else its only 1/4th
-                var topHeight = newSize * 0.25;
-                topHeight = Math.Min(topHeight, 550);
-                LargeImage.Height = topHeight;
-            }
+            // //ratio is around 1:1, so 1/2
+            // if (!string.IsNullOrEmpty(ViewModel.Playlist?.LargeImage))
+            // {
+            //     var topHeight = newSize * 0.5;
+            //     topHeight = Math.Min(topHeight, 550);
+            //     LargeImage.Height = topHeight;
+            // }
+            // else
+            // {
+            //     //else its only 1/4th
+            //     var topHeight = newSize * 0.25;
+            //     topHeight = Math.Min(topHeight, 550);
+            //     LargeImage.Height = topHeight;
+            // }
         }
 
         private async void PlaylistView_OnLoaded(object sender, RoutedEventArgs e)
         {
-            await ViewModel.PlaylistFetched.Task;
-            this.Bindings.Update();
-
-            RegularCaption.Text = "Playlist";
-            MetadataPnale.Visibility = Visibility.Visible;
-            if (!string.IsNullOrEmpty(ViewModel.Playlist.LargeImage))
-            {
-                ShowPanelAnim.Start();
-                LargeImage.Visibility = Visibility.Visible;
-                SmallPlaylist.Visibility = Visibility.Collapsed;
-            }
-            else
-            {
-                LargeImage.Visibility = Visibility.Collapsed;
-                SmallPlaylist.Visibility = Visibility.Visible;
-            }
-
-            PlaylistView_OnSizeChanged(this, null);
+            //     await ViewModel.PlaylistFetched.Task;
+            //     this.Bindings.Update();
+            //
+            //     RegularCaption.Text = "Playlist";
+            //     MetadataPnale.Visibility = Visibility.Visible;
+            //     if (!string.IsNullOrEmpty(ViewModel.Playlist.LargeImage))
+            //     {
+            //         ShowPanelAnim.Start();
+            //         LargeImage.Visibility = Visibility.Visible;
+            //         SmallPlaylist.Visibility = Visibility.Collapsed;
+            //     }
+            //     else
+            //     {
+            //         LargeImage.Visibility = Visibility.Collapsed;
+            //         SmallPlaylist.Visibility = Visibility.Visible;
+            //     }
+            //
+            //     PlaylistView_OnSizeChanged(this, null);
         }
 
         public object SavedToContent(bool b)
@@ -127,5 +135,10 @@ namespace Wavee.UI.WinUI.Views.Playlist
                 UICommands.NavigateTo.Execute(id);
             }
         }
+    }
+
+    public enum PlaylistTrackSortType
+    {
+        IndexAsc
     }
 }

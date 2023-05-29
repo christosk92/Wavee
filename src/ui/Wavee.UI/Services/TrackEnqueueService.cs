@@ -44,7 +44,7 @@ public static class TrackEnqueueService<R> where R : struct, HasSpotify<R>
                             output[maybe.Key] = maybe.Value.ValueUnsafe();
                         }
                         var toFetchItems = item.Request.Where(x => cachedItems[x].IsNone);
-                        var batches = toFetchItems.Chunk(4000).Select(c => c.ToSeq());
+                        var batches = toFetchItems.Chunk(2000).Select(c => c.ToSeq());
                         foreach (var batch in batches)
                         {
                             var fetchedTracksResut = await Spotify<R>

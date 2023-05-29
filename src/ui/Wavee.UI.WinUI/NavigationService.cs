@@ -2,12 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Navigation;
 
 namespace Wavee.UI.WinUI;
 
 public record CachedPage(INavigablePage Page, object? WithParameter, int InsertedAt);
 
-public sealed class NavigationService
+public sealed class OLD_NavigationService
 {
     private ContentControl _contentControl;
 
@@ -20,13 +21,13 @@ public sealed class NavigationService
     // private readonly Dictionary<Type, (INavigablePage Page, object? WithParameter, int InsertedAt)>
     //     _cachedPages = new();
 
-    public NavigationService(ContentControl frame)
+    public OLD_NavigationService(ContentControl frame)
     {
         _contentControl = frame;
         Instance = this;
     }
 
-    public static NavigationService Instance { get; private set; } = null!;
+    public static OLD_NavigationService Instance { get; private set; } = null!;
 
     public void Navigate(Type pageType,
         object? parameter = null,
@@ -44,7 +45,7 @@ public sealed class NavigationService
         if (currentPage is not null)
         {
             _backStack.Push((currentPage.GetType(), _lastParameter));
-            currentPage.ViewModel.IfSome(x => x.OnNavigatedFrom());
+            //            currentPage.ViewModel.IfSome(x => x.OnNavigatedFrom());
         }
 
         //re-evaluate the cache
@@ -85,6 +86,7 @@ public sealed class NavigationService
             var newEntry = new CachedPage(newPage, parameter, _backStack.Count);
             _cachedPages.Add(newEntry);
             newPage.ViewModel.IfSome(x => x.OnNavigatedTo(parameter));
+            newPage.NavigatedTo(parameter);
             _contentControl.Content = newPage;
             _lastParameter = parameter;
         }
@@ -115,3 +117,63 @@ public sealed class NavigationService
         _lastParameter = null;
     }
 }
+
+public sealed class NavigationService
+{
+    private Frame _contentControl;
+
+    // private object? _lastParameter;
+    // private readonly Stack<(Type Type, object? Parameter)> _backStack = new();
+
+    // private readonly HashSet<CachedPage> _cachedPages = new();
+
+    // private readonly Dictionary<Type, (INavigablePage Page, object? WithParameter, int InsertedAt)>
+    //     _cachedPages = new();
+
+    public NavigationService(Frame frame)
+    {
+        _contentControl = frame;
+        Instance = this;
+        frame.Navigated += FrameOnNavigated;
+    }
+
+    private void FrameOnNavigated(object sender, NavigationEventArgs e)
+    {
+        Navigated?.Invoke(this, (e.SourcePageType, e.Parameter));
+    }
+
+    public static NavigationService Instance { get; private set; } = null!;
+
+    public void Navigate(Type pageType,
+        object? parameter = null,
+        bool addToStack = true)
+    {
+        if (!typeof(INavigablePage).IsAssignableFrom(pageType))
+        {
+            throw new ArgumentException("Page type must implement INavigablePage.", nameof(pageType));
+        }
+
+        //every navigation: the cache should be re-evaluated
+        //if a cached page is accessed again, it should be put at the top again
+
+
+
+        Navigated?.Invoke(this, (pageType, parameter));
+    }
+
+
+    public bool CanGoBack => _contentControl.CanGoBack;
+    public bool CanGoForward => false;
+    public event EventHandler<(Type Tp, object Prm)>? Navigated;
+
+    public void GoBack()
+    {
+
+    }
+
+    public void Clear()
+    {
+        _contentControl = null;
+    }
+}
+

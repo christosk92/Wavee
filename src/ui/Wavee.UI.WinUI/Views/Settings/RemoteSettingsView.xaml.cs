@@ -59,11 +59,29 @@ namespace Wavee.UI.WinUI.Views.Settings
         }
     }
 
-    public record RemoteDeviceRecord(DeviceType DeviceType, string Name, FontIcon Icon)
+    public class RemoteDeviceRecord
     {
         public static RemoteDeviceRecord Computer = new(DeviceType.Computer, "Computer", new FontIcon { FontFamily = new Microsoft.UI.Xaml.Media.FontFamily("Segoe Fluent Icons"), Glyph = "\uE7F8" });
         public static RemoteDeviceRecord Tablet = new(DeviceType.Tablet, "Tablet", new FontIcon { FontFamily = new Microsoft.UI.Xaml.Media.FontFamily("Segoe Fluent Icons"), Glyph = "\uE70A" });
         public static RemoteDeviceRecord Smartphone = new(DeviceType.Smartphone, "Phone", new FontIcon { FontFamily = new Microsoft.UI.Xaml.Media.FontFamily("Segoe Fluent Icons"), Glyph = "\uE1C9" });
         public static RemoteDeviceRecord TV = new(DeviceType.Tv, "TV", new FontIcon { FontFamily = new Microsoft.UI.Xaml.Media.FontFamily("Segoe Fluent Icons"), Glyph = "\uE7F4" });
+
+        public RemoteDeviceRecord(DeviceType DeviceType, string Name, FontIcon Icon)
+        {
+            this.DeviceType = DeviceType;
+            this.Name = Name;
+            this.Icon = Icon;
+        }
+
+        public DeviceType DeviceType { get; init; }
+        public string Name { get; init; }
+        public FontIcon Icon { get; init; }
+
+        public void Deconstruct(out DeviceType DeviceType, out string Name, out FontIcon Icon)
+        {
+            DeviceType = this.DeviceType;
+            Name = this.Name;
+            Icon = this.Icon;
+        }
     }
 }

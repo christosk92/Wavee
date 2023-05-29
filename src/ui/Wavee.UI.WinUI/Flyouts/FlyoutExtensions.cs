@@ -195,7 +195,7 @@ public static class FlyoutExtensions
             },
         };
 
-        void constructSubItems(MenuFlyoutSubItem into, PlaylistInfo playlist)
+        void constructSubItems(MenuFlyoutSubItem into, IPlaylistViewModel playlist)
         {
             if (playlist.IsFolder)
             {
@@ -222,7 +222,7 @@ public static class FlyoutExtensions
                         Text = playlist.Name,
                         Command = AddToPlaylistCommand,
                         CommandParameter = new AddToPlaylistRequest(AudioId.FromUri(playlist.Id),
-                            playlist.RevisionId,
+                            playlist.Revision.ToBase64(),
                             ids)
                     };
 

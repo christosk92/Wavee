@@ -9,7 +9,7 @@ using Wavee.Spotify.Models.Response;
 
 namespace Wavee.Spotify.Infrastructure.Playback;
 
-public readonly record struct TrackOrEpisode(Either<Episode, Lazy<Track>> Value)
+public class TrackOrEpisode
 {
     static TrackOrEpisode()
     {
@@ -48,6 +48,11 @@ public readonly record struct TrackOrEpisode(Either<Episode, Lazy<Track>> Value)
                 AudioFile.Types.Format.Aac48,
             })
         });
+    }
+
+    public TrackOrEpisode(Either<Episode, Lazy<Track>> Value)
+    {
+        this.Value = Value;
     }
 
     public Option<AudioFile> FindFile(PreferredQualityType quality)
@@ -136,6 +141,8 @@ public readonly record struct TrackOrEpisode(Either<Episode, Lazy<Track>> Value)
         Right: t => SpotifyTrackAlbum.From(null, t.Value.Album, t.Value.DiscNumber)
     );
 
+    public Either<Episode, Lazy<Track>> Value { get; init; }
+
     private const string BASE62_CHARS = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
     private static string Encode(ReadOnlySpan<byte> raw)
@@ -190,5 +197,10 @@ public readonly record struct TrackOrEpisode(Either<Episode, Lazy<Track>> Value)
         }
 
         return hex.ToString();
+    }
+
+    public void Deconstruct(out Either<Episode, Lazy<Track>> Value)
+    {
+        Value = this.Value;
     }
 }
