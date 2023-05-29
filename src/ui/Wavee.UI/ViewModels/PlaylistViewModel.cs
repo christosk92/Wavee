@@ -41,7 +41,7 @@ public sealed class PlaylistViewModel<R> : ReactiveObject, INavigableViewModel
     private string? _searchText;
     private PlaylistTrackSortType _sortParameters;
 
-    private static ConcurrentDictionary<AudioId, TrackOrEpisode> _inmemoryCache
+    private static Dictionary<AudioId, TrackOrEpisode> _inmemoryCache
      = new();
 
     public PlaylistViewModel() { }
@@ -78,6 +78,7 @@ public sealed class PlaylistViewModel<R> : ReactiveObject, INavigableViewModel
             {
                 //get track from cache
                 // var track = Spotify<R>.GetFromCache(Seq1(x.Id)).Run(runtime).ThrowIfFail()[x.Id].ValueUnsafe();
+                var sw = Stopwatch.StartNew();
                 var track = _inmemoryCache[x.Id];
                 var res = new PlaylistTrackVm
                 {
@@ -101,8 +102,9 @@ public sealed class PlaylistViewModel<R> : ReactiveObject, INavigableViewModel
                     SmallestImage = track.GetImage(Image.Types.Size.Small),
                     OriginalIndex = _items.Items.IndexOf(x)
                 };
+                sw.Stop();
                 return res;
-            }, parallelisationOptions: new ParallelisationOptions(ParallelType.Ordered, 100, _inmemoryCache.Count))
+            }, parallelisationOptions: new ParallelisationOptions(ParallelType.Parallelise, 100, 1000))
             //.Filter(c => c.Data.Id.Type is AudioItemType.Track)
             .Filter(filterApplier)
             .Sort(sortChange)
