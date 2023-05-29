@@ -10,6 +10,7 @@ using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Imaging;
 using ReactiveUI;
+using Wavee.Core.Ids;
 using Wavee.UI.Infrastructure.Sys;
 using Wavee.UI.Models;
 using Wavee.UI.WinUI.Views.Home;
@@ -107,6 +108,17 @@ namespace Wavee.UI.WinUI.Views.Sidebar
          };
         private void NavigateTo(object item)
         {
+            if (item is PlaylistInfo { IsFolder: false } pls)
+            {
+                ShellView.NavigationService.Navigate(typeof(PlaylistView),
+                    AudioId.FromUri(pls.Id));
+                return;
+            }
+            else if (item is PlaylistInfo { IsFolder: true } folder)
+            {
+                //go to folder? or just expand
+                return;
+            }
             var slug = item switch
             {
                 RegularSidebarItem re => re.Slug,

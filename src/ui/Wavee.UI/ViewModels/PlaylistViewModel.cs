@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Reactive.Concurrency;
 using System.Reactive.Linq;
+using System.Text.Json.Serialization;
 using System.Windows.Input;
 using DynamicData;
 using DynamicData.Binding;
@@ -77,6 +79,11 @@ public sealed class PlaylistViewModel<R> : ReactiveObject, INavigableViewModel
             .Subscribe();
     }
 
+    public string ImageUrl
+    {
+        get => _image;
+        set => this.RaiseAndSetIfChanged(ref _image, value);
+    }
     public PlaylistViewData Playlist
     {
         get => _playlist;
@@ -97,6 +104,18 @@ public sealed class PlaylistViewModel<R> : ReactiveObject, INavigableViewModel
 
         //or we dont have the playlist in cache and we need to fetch it the first time
         //and then we need to keep it in cache
+
+        Task.Run(async () =>
+        {
+            var imagesRes = await Spotify<R>.GetFromPublicApi<PotentialArtwork[]>($"/playlists/{playlistId.ToBase62()}/images", CancellationToken.None)
+                .Run(runtime);
+            var images = imagesRes.ThrowIfFail();
+
+            RxApp.MainThreadScheduler.Schedule(() =>
+            {
+                ImageUrl = images.FirstOrDefault().Uri;
+            });
+        });
 
         var playlistMaybe = await Spotify<R>.GetPlaylistMaybeCached(playlistId)
             .Run(runtime);
@@ -240,6 +259,7 @@ public sealed class PlaylistViewModel<R> : ReactiveObject, INavigableViewModel
 
     public TaskCompletionSource PlaylistFetched = new TaskCompletionSource();
     private bool _isSaved;
+    private string _image;
 
     public void OnNavigatedFrom()
     {
@@ -257,6 +277,16 @@ public sealed class PlaylistViewModel<R> : ReactiveObject, INavigableViewModel
         _items?.Dispose();
         _cleanup?.Dispose();
     }
+}
+
+public readonly struct PotentialArtwork
+{
+    [JsonPropertyName("url")]
+    public required string Uri { get; init; }
+    [JsonPropertyName("width")]
+    public required int? Width { get; init; }
+    [JsonPropertyName("height")]
+    public required int? Height { get; init; }
 }
 
 public enum PlaylistTrackSortType

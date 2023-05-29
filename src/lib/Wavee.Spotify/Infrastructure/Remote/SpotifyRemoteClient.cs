@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Reactive.Linq;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using Eum.Spotify.connectstate;
@@ -30,6 +32,7 @@ public class SpotifyRemoteClient
     private readonly Option<string> _lastCommandSentBy = Option<string>.None;
 
     private readonly string _deviceId;
+
     internal SpotifyRemoteClient(MercuryClient mercuryClient, TokenClient tokenClient, SpotifyRemoteConfig config,
         string deviceId,
         string userId)
@@ -136,18 +139,23 @@ public class SpotifyRemoteClient
             CancellationToken.None);
         return default;
     }
+
     public IObservable<Diff> ObservePlaylist(AudioId id) =>
         _connection.OnPlaylistNotification.Where(x => x.Id == id).Select(x => x.Delta);
+
     public IObservable<SpotifyLibraryUpdateNotification> LibraryChanged =>
         _connection.OnLibraryNotification;
+
     public IObservable<SpotifyRootlistUpdateNotification> RootlistChanged =>
         _connection.OnRootListNotification;
+
     public IObservable<SpotifyRemoteState> StateChanged =>
         _connection
             .OnClusterChange()
             .Throttle(TimeSpan.FromMilliseconds(50))
             .Select(c => SpotifyRemoteState.From(_deviceId, c));
 
+    public Option<Cluster> LatestCluster => _connection._latestCluster;
 
     public async ValueTask<Unit> SkipNext(CancellationToken ct)
     {
@@ -156,6 +164,7 @@ public class SpotifyRemoteClient
         {
             return default;
         }
+
         var command = new
         {
             command = new
@@ -181,6 +190,7 @@ public class SpotifyRemoteClient
         {
             return default;
         }
+
         var command = new
         {
             command = new
@@ -206,6 +216,7 @@ public class SpotifyRemoteClient
         {
             return default;
         }
+
         var command = new
         {
             command = new
@@ -217,12 +228,12 @@ public class SpotifyRemoteClient
         };
         var sp = await SpClientUrl(ct);
         await SpotifyRemoteRuntime.InvokeCommandOnRemoteDevice(
-                       command,
-                                  sp,
-                                  toDeviceId.ValueUnsafe(),
-                                  _deviceId,
-                                  _tokenClient,
-                                  ct);
+            command,
+            sp,
+            toDeviceId.ValueUnsafe(),
+            _deviceId,
+            _tokenClient,
+            ct);
         return default;
     }
 
@@ -233,6 +244,7 @@ public class SpotifyRemoteClient
         {
             return default;
         }
+
         var command = new
         {
             command = new
@@ -251,6 +263,7 @@ public class SpotifyRemoteClient
             ct);
         return default;
     }
+
     public async ValueTask<Unit> Resume(CancellationToken ct = default)
     {
         var toDeviceId = _connection._latestCluster.Value.Map(x => x.ActiveDeviceId);
@@ -258,6 +271,7 @@ public class SpotifyRemoteClient
         {
             return default;
         }
+
         // https://gae2-spclient.spotify.com/connect-state/v1/player/command/from/1b5327f43e39a20de0ec1dcafa3466f082e28348/to/342d539fa2bc06a1cfa4d03d67c3d90513b75879
         var command = new
         {
@@ -371,6 +385,7 @@ public class SpotifyRemoteClient
             CancellationToken.None);
         return default;
     }
+
     public async ValueTask<Unit> PlayContextPaged(string contextId,
         IEnumerable<ContextPage> pages,
         int trackIndex,
@@ -440,6 +455,7 @@ public class SpotifyRemoteClient
             CancellationToken.None);
         return default;
     }
+
     public async ValueTask<Unit> Pause(CancellationToken ct = default)
     {
         var toDeviceId = _connection._latestCluster.Value.Map(x => x.ActiveDeviceId);
@@ -447,6 +463,7 @@ public class SpotifyRemoteClient
         {
             return default;
         }
+
         // https://gae2-spclient.spotify.com/connect-state/v1/player/command/from/1b5327f43e39a20de0ec1dcafa3466f082e28348/to/342d539fa2bc06a1cfa4d03d67c3d90513b75879
         var command = new
         {
@@ -465,6 +482,40 @@ public class SpotifyRemoteClient
             ct);
         return default;
     }
+
+    public async ValueTask<Unit>
+        SetQueue(RepeatedField<ProvidedTrack> nextTracks, CancellationToken ct)
+    {
+        var toDeviceId = _connection._latestCluster.Value.Map(x => x.ActiveDeviceId);
+        if (toDeviceId.IsNone)
+        {
+            return default;
+        }
+
+        var itemsStr = nextTracks.ToString();
+        var items = JsonSerializer.Deserialize<List<object>>(itemsStr);
+        var command = new
+        {
+            command = new
+            {
+                endpoint = "set_queue",
+                prev_tracks = System.Array.Empty<object>(),
+                next_tracks = items
+            }
+        };
+
+        var sp = await SpClientUrl(ct);
+        await SpotifyRemoteRuntime.InvokeCommandOnRemoteDevice(
+            command,
+            sp,
+            toDeviceId.ValueUnsafe(),
+            _deviceId,
+            _tokenClient,
+            ct);
+
+        return default;
+    }
+
     public async ValueTask<Unit> SeekTo(double to, CancellationToken ct = default)
     {
         var toDeviceId = _connection._latestCluster.Value.Map(x => x.ActiveDeviceId);
@@ -526,5 +577,4 @@ public class SpotifyRemoteClient
         _spClientUrl = spClientUrl;
         return spClientUrl;
     }
-
 }

@@ -64,6 +64,7 @@ namespace Wavee.UI.WinUI.Views.Playlist
             await ViewModel.PlaylistFetched.Task;
             this.Bindings.Update();
 
+            RegularCaption.Text = "Playlist";
             MetadataPnale.Visibility = Visibility.Visible;
             if (!string.IsNullOrEmpty(ViewModel.Playlist.LargeImage))
             {

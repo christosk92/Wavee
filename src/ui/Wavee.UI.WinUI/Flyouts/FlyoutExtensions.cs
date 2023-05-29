@@ -268,8 +268,11 @@ public static class FlyoutExtensions
     private static MenuFlyoutItem AddToQueue(Seq<AudioId> ids) => new MenuFlyoutItem
     {
         Icon = new FontIcon { FontFamily = new Microsoft.UI.Xaml.Media.FontFamily("/Assets/Fonts/MediaPlayerIcons.ttf#Media Player Fluent Icons"), Glyph = "\uE93F" },
-        Text = "Add to queue"
+        Text = "Add to queue",
+        Command = ShellViewModel<WaveeUIRuntime>.Instance.Playback.AddToQueueCommand,
+        CommandParameter = new AddToQueueRequest(ids, AddToQueuePositionType.AfterTrackButAfterQueued)
     };
+
 
     private static MenuFlyoutItem GoToRadio(AudioId id) => new MenuFlyoutItem
     {

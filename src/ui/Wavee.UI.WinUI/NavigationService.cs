@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.UI.Xaml.Controls;
 
 namespace Wavee.UI.WinUI;
+
+public record CachedPage(INavigablePage Page, object? WithParameter, int InsertedAt);
 
 public sealed class NavigationService
 {
@@ -11,8 +14,11 @@ public sealed class NavigationService
     private object? _lastParameter;
     private readonly Stack<(Type Type, object? Parameter)> _backStack = new();
 
-    private readonly Dictionary<Type, (INavigablePage Page, object? WithParameter, int InsertedAt)>
-        _cachedPages = new();
+
+    private readonly HashSet<CachedPage> _cachedPages = new();
+
+    // private readonly Dictionary<Type, (INavigablePage Page, object? WithParameter, int InsertedAt)>
+    //     _cachedPages = new();
 
     public NavigationService(ContentControl frame)
     {
@@ -31,135 +37,60 @@ public sealed class NavigationService
             throw new ArgumentException("Page type must implement INavigablePage.", nameof(pageType));
         }
 
-        //couple of considerations:
-        //1) Pages can be cached
-        //2) Pages can also refused to be cached
-        //3) Pages can be cached with a parameter
-        //4) In teh case of a cached page, we need to check if the parameter is the same
-        //5) If the parameter is the same, we don't want to navigate to the page again
-        //6) If the parameter is different, we want to navigate to the page again (new instance) and remove the cached page and add this new one to the cache
+        //every navigation: the cache should be re-evaluated
+        //if a cached page is accessed again, it should be put at the top again
 
-        //check the current page
-        if (_contentControl.Content is INavigablePage currentPage)
+        var currentPage = _contentControl.Content as INavigablePage;
+        if (currentPage is not null)
         {
-            var currentPageType = currentPage.GetType();
-            if (currentPageType == pageType && _lastParameter == parameter)
-            {
-                return;
-            }
-
-            if (addToStack)
-                _backStack.Push((currentPageType, parameter));
-
-            //clear caches
-            if (_cachedPages.TryGetValue(pageType, out var cachedPage))
-            {
-                //if the current page is cached, check if the parameter is the same
-                if (!EqualityComparer<object>.Default.Equals(parameter, cachedPage.WithParameter))
-                {
-                    //if the parameter is different, we want to navigate to the page again (new instance) and remove the cached page and add this new one to the cache
-                    if (_cachedPages.TryGetValue(pageType, out var potentialCachedPage))
-                    {
-                        _cachedPages.Remove(pageType);
-                        potentialCachedPage.Page.RemovedFromCache();
-                    }
-                }
-                else
-                {
-                    //check if the page should be kept in cache
-                    if (!currentPage.ShouldKeepInCache(_backStack.Count - cachedPage.InsertedAt))
-                    {
-                        //if the page should not be kept in cache, remove it from the cache
-                        currentPage.RemovedFromCache();
-                        _cachedPages.Remove(currentPageType);
-                    }
-                }
-            }
-            else
-            {
-                if (_cachedPages.TryGetValue(currentPageType, out var cached))
-                {
-                    if (!cached.Page.ShouldKeepInCache(_backStack.Count - cached.InsertedAt))
-                    {
-                        _cachedPages.Remove(currentPageType);
-                        currentPage.RemovedFromCache();
-                    }
-                }
-            }
-
+            _backStack.Push((currentPage.GetType(), _lastParameter));
             currentPage.ViewModel.IfSome(x => x.OnNavigatedFrom());
         }
 
-        _lastParameter = parameter;
-        //now that our cache is up to date, we can check if the page is cached
-        if (_cachedPages.TryGetValue(pageType, out var cachedPage2))
+        //re-evaluate the cache
+        foreach (var cachedPage in _cachedPages.ToArray())
         {
-            //if the page is cached, we want to navigate to the cached page
-            _contentControl.Content = cachedPage2.Page;
+            var currentDepth = _backStack.Count - cachedPage.InsertedAt - 1;
+            if (!cachedPage.Page.ShouldKeepInCache(currentDepth))
+            {
+                _cachedPages.Remove(cachedPage);
+                cachedPage.Page.RemovedFromCache();
+            }
+        }
+
+
+
+        //1) Check if cached page exists
+        if (_cachedPages.SingleOrDefault(x =>
+                x.Page.GetType() == pageType
+                && (x.WithParameter is null || (
+                    x.WithParameter is not null
+                    && parameter is not null
+                    && x.WithParameter.Equals(parameter)))) is { } potentialCache)
+        {
+            //if the id is the same, just navigate to it
+            _contentControl.Content = potentialCache.Page;
+            _lastParameter = parameter;
+            //remove the old entry and add it again
+            _cachedPages.Remove(potentialCache);
+            _cachedPages.Add(potentialCache with
+            {
+                InsertedAt = _backStack.Count
+            });
         }
         else
         {
-            //if the page is not cached, we want to create a new instance of the page
-            var nextPage = (INavigablePage)Activator.CreateInstance(pageType);
-            nextPage.ViewModel.IfSome(x => x.OnNavigatedTo(parameter));
-            nextPage.NavigatedTo(parameter);
-            _contentControl.Content = nextPage;
-            _cachedPages.Add(pageType, (nextPage, parameter, _backStack.Count));
+            //if not, create a new one
+            var newPage = (INavigablePage)Activator.CreateInstance(pageType)!;
+            var newEntry = new CachedPage(newPage, parameter, _backStack.Count);
+            _cachedPages.Add(newEntry);
+            newPage.ViewModel.IfSome(x => x.OnNavigatedTo(parameter));
+            _contentControl.Content = newPage;
+            _lastParameter = parameter;
         }
 
+
         Navigated?.Invoke(this, (pageType, parameter));
-        // if (_contentControl.Content is INavigablePage currentPage)
-        // {
-        //     var currentPageType = currentPage.GetType();
-        //     if (currentPageType == pageType && _lastParameter == parameter)
-        //     {
-        //         return;
-        //     }
-        //
-        //     if (addToStack)
-        //         _backStack.Push((currentPageType, parameter));
-        //
-        //     if (_cachedPages.TryGetValue(currentPageType,
-        //             out var cached)
-        //         && cached.WithParameter == parameter)
-        //     {
-        //         if (!cached.Page.ShouldKeepInCache(_backStack.Count - cached.InsertedAt))
-        //         {
-        //             _cachedPages.Remove(cached.Page.GetType());
-        //         }
-        //     }
-        //     else
-        //     {
-        //         if (currentPageType == pageType && _lastParameter != parameter)
-        //         {
-        //             _cachedPages.Remove(currentPageType);
-        //         }
-        //         else
-        //         {
-        //             if (currentPage.ShouldKeepInCache(0))
-        //             {
-        //                 _cachedPages[currentPageType] = (currentPage, parameter, _backStack.Count);
-        //             }
-        //         }
-        //     }
-        //
-        //     currentPage.ViewModel.IfSome(x => x.OnNavigatedFrom());
-        // }
-        //
-        // _lastParameter = parameter;
-        // INavigablePage nextPage;
-        // if (_cachedPages.TryGetValue(pageType, out var cachedPage))
-        // {
-        //     nextPage = cachedPage.Page;
-        // }
-        // else
-        // {
-        //     nextPage = (INavigablePage)Activator.CreateInstance(pageType);
-        //     //nextPage = (INavigablePage)Ioc.Default.GetService(pageType);
-        //     nextPage.ViewModel.IfSome(x => x.OnNavigatedTo(parameter));
-        // }
-        //
-        // _contentControl.Content = nextPage;
     }
 
 

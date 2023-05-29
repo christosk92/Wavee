@@ -6,6 +6,7 @@ using LanguageExt;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml.Media.Imaging;
@@ -122,7 +123,7 @@ public sealed partial class ArtistAbout : UserControl
                     //set rowspan to 2 and hide bottom right image
                     //also set the ratio of columns to 1:1
                     BottomRightImage.Visibility = Visibility.Collapsed;
-                    Grid.SetRowSpan(TopRightImage, 2);
+                    Grid.SetRowSpan(TopRightImageGr, 2);
 
                     LeftGrid.Width = new GridLength(1, GridUnitType.Star);
                     RightGrid.Width = new GridLength(1, GridUnitType.Star);
