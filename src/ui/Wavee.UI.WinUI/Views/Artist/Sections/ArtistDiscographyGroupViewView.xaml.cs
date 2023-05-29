@@ -88,7 +88,14 @@ public partial class ArtistDiscographyGroupViewView
                 }
                 else
                 {
-                    ItemsView.Content = page;
+                    try
+                    {
+                        ItemsView.Content = page;
+                    }
+                    catch (Exception exception)
+                    {
+                        Console.WriteLine(exception);
+                    }
                 }
             }
         }

@@ -1,6 +1,7 @@
 ﻿using System.Text.Json;
 using Eum.Spotify;
 using Eum.Spotify.playlist4;
+using Google.Protobuf;
 using LanguageExt;
 using LanguageExt.Attributes;
 using LanguageExt.Effects.Traits;
@@ -43,6 +44,7 @@ public interface SpotifyIO
     Aff<Unit> WriteLibrary(WriteRequest writeRequest, CancellationToken ct);
     Aff<Seq<TrackOrEpisode>> FetchBatchOfTracks(Seq<AudioId> request, CancellationToken ct = default);
     Aff<SelectedListContent> FetchPlaylist(AudioId playlistId);
+    Aff<Diff> DiffRevision(AudioId playlistId, ByteString currentRevision);
 }
 
 /// <summary>

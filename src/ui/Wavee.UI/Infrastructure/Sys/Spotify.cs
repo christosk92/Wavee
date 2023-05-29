@@ -16,6 +16,7 @@ using Wavee.UI.Infrastructure.Traits;
 using System;
 using System.Text.Json;
 using Eum.Spotify.playlist4;
+using Google.Protobuf;
 using LanguageExt.Common;
 using Spotify.Collection.Proto.V2;
 
@@ -161,4 +162,8 @@ public static class Spotify<R> where R : struct, HasSpotify<R>
         from result in affR
         select result;
 
+    public static Aff<R, Diff> DiffRevision(AudioId playlistId, ByteString currentRevision) =>
+        from affR in default(R).SpotifyEff.Map(x => x.DiffRevision(playlistId, currentRevision))
+        from result in affR
+        select result;
 }

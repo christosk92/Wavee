@@ -19,7 +19,7 @@ internal readonly partial record struct SpotifyTrackAlbum(AudioId Id, string Nam
         return new SpotifyTrackAlbum(
             Id: AudioId.FromRaw(show.Gid.Span, AudioItemType.PodcastShow, ServiceType.Spotify),
             Name: show.Name,
-            Artwork: show.CoverImage.Image.Select(x => ToArtwork(cdnUrl, x)).ToSeq(),
+            Artwork: show.CoverImage?.Image?.Select(x => ToArtwork(cdnUrl, x))?.ToSeq() ?? LanguageExt.Seq<Artwork>.Empty,
             ReleaseDate: new DateOnly(1, 1, 1),
             ReleaseDatePrecision: ReleaseDatePrecisionType.Unknown,
             DiscNumber: 0,

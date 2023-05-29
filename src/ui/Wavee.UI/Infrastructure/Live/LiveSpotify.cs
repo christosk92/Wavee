@@ -1,8 +1,10 @@
 ﻿using Eum.Spotify;
 using LanguageExt;
 using System;
+using System.Buffers.Binary;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Numerics;
 using System.Text.Json;
 using Eum.Spotify.playlist4;
 using Wavee.Spotify;
@@ -12,6 +14,7 @@ using Wavee.Spotify.Infrastructure.Remote;
 using Wavee.Spotify.Infrastructure.Remote.Messaging;
 using static LanguageExt.Prelude;
 using System.Threading;
+using System.Web;
 using Google.Protobuf;
 using Wavee.Spotify.Infrastructure.ApResolver;
 using LanguageExt;
@@ -25,6 +28,7 @@ using Eum.Spotify.extendedmetadata;
 using Spotify.Metadata;
 using Wavee.Spotify.Helpers;
 using Wavee.Spotify.Infrastructure.Playback;
+using System.Text;
 
 namespace Wavee.UI.Infrastructure.Live;
 
@@ -179,6 +183,62 @@ internal sealed class LiveSpotify : Traits.SpotifyIO
                 return SelectedListContent.Parser.ParseFrom(str);
             }).ToAff()
         select result;
+
+    //https://spclient.wg.spotify.com/playlist/v2/playlist/4vDMxOIZDqN1TYXPQX9Wns/diff?revision=137%2C97279b18dcc66ece843bcd2a724c2549dbbe0ec5&handlesContent=
+    public Aff<Diff> DiffRevision(AudioId playlistId, ByteString currentRevision) =>
+        from client in Eff(() => _connection.ValueUnsafe())
+        let revisionString = CalculateRevisionStr(currentRevision)
+        from spclient in ApResolve.GetSpClient(CancellationToken.None).ToAff()
+            .Map(x => $"https://{x.host}:{x.port}")
+            .Map(x =>
+                $"{x}/playlist/v2/playlist/{playlistId.ToBase62()}/diff?revision={HttpUtility.UrlEncode(revisionString)}&handlesContent=")
+        from bearer in client.TokenClient.GetToken(CancellationToken.None).ToAff()
+            .Map(x => new AuthenticationHeaderValue("Bearer", x))
+        from result in HttpIO
+            .GetAsync(spclient, bearer, LanguageExt.HashMap<string, string>.Empty, CancellationToken.None)
+            .MapAsync(async x =>
+            {
+                x.EnsureSuccessStatusCode();
+                await using var str = await x.Content.ReadAsStreamAsync();
+                return SelectedListContent.Parser.ParseFrom(str).Diff;
+            }).ToAff()
+        select result;
+
+    private static string CalculateRevisionStr(ByteString revision)
+    {
+        //for some reason, (yet unknown)
+        //revisions in string form are like this:
+        //converting it to plain string, gives for example:
+        //0000008997279b18dcc66ece843bcd2a724c2549dbbe0ec5
+        //but upon inspection , spotify actually sends this:
+        //137,97279b18dcc66ece843bcd2a724c2549dbbe0ec5
+
+        //if you look, yo ucan see the correct string like: 
+        //97279b18dcc66ece843bcd2a724c2549dbbe0ec5
+        //with some trailing numbers: 00000089
+        //if you convert 00000089 to decimal, you get 137
+        //so we need to remove the first 8 characters, and prepend it with the decimal value of the first 8 characters
+
+        ReadOnlySpan<byte> str = revision.Span;
+        //UINT16 - Big Endian (AB)
+        var number = BinaryPrimitives.ReadUInt32BigEndian(str.Slice(0, 4));
+        //var number = str[0];
+        var rest = ToBase16(str.Slice(4));
+
+        // ReadOnlySpan<char> str = revision.ToStringUtf8();
+        // var number = Convert.ToInt32(str.Slice(0, 8).ToString(), 16);
+
+        return $"{number},{rest}";
+
+        static string ToBase16(ReadOnlySpan<byte> input)
+        {
+            var hex = new StringBuilder(input.Length * 2);
+            foreach (byte b in input)
+                hex.AppendFormat("{0:x2}", b);
+            return hex.ToString();
+        }
+    }
+
     public Aff<Seq<TrackOrEpisode>> FetchBatchOfTracks(Seq<AudioId> items, CancellationToken ct = default)
     {
         if (items.IsEmpty)

@@ -3,6 +3,7 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using System.Text.Json.Serialization;
 using System.Windows.Input;
 using DynamicData;
@@ -32,7 +33,7 @@ public sealed class PlaylistViewModel<R> : ReactiveObject, INavigableViewModel
 {
     private readonly R runtime;
     private PlaylistViewData _playlist;
-    private readonly SourceCache<PlaylistTrackVm, AudioId> _items = new(s => s.Id);
+    private readonly SourceCache<PlaylistTrackVm, string> _items = new(s => s.Uid);
     private IDisposable _listener;
     private IDisposable _cleanup;
     private ReadOnlyObservableCollection<PlaylistTrackVm> _data;
@@ -70,6 +71,11 @@ public sealed class PlaylistViewModel<R> : ReactiveObject, INavigableViewModel
 
         _cleanup = _items
             .Connect()
+            .Transform(x =>
+            {
+                x.OriginalIndex = _items.Items.IndexOf(x);
+                return x;
+            })
             //.Filter(c => c.Data.Id.Type is AudioItemType.Track)
             .Filter(filterApplier)
             .Sort(sortChange)
@@ -107,14 +113,13 @@ public sealed class PlaylistViewModel<R> : ReactiveObject, INavigableViewModel
 
         Task.Run(async () =>
         {
-            var imagesRes = await Spotify<R>.GetFromPublicApi<PotentialArtwork[]>($"/playlists/{playlistId.ToBase62()}/images", CancellationToken.None)
+            var imagesRes = await Spotify<R>
+                .GetFromPublicApi<PotentialArtwork[]>($"/playlists/{playlistId.ToBase62()}/images",
+                    CancellationToken.None)
                 .Run(runtime);
             var images = imagesRes.ThrowIfFail();
 
-            RxApp.MainThreadScheduler.Schedule(() =>
-            {
-                ImageUrl = images.FirstOrDefault().Uri;
-            });
+            RxApp.MainThreadScheduler.Schedule(() => { ImageUrl = images.FirstOrDefault().Uri; });
         });
 
         var playlistMaybe = await Spotify<R>.GetPlaylistMaybeCached(playlistId)
@@ -148,16 +153,23 @@ public sealed class PlaylistViewModel<R> : ReactiveObject, INavigableViewModel
             FromRevision = ByteString.Empty,
             ToRevision = ByteString.Empty
         };
+        //we need to somehow find a way to diff this revision based on the previous revision
+        //https://spclient.wg.spotify.com/playlist/v2/playlist/3NmbmRX47JvWbQoa1rDS6Y/diff?revision=88%2Cff138db18d31270a0b07a2642f6d232cb9b9849e&handlesContent=
+        //from this we get a list of OPS needed to update the playlist
 
         PlaylistFetched.TrySetResult();
 
-        _listener = Spotify<R>
+        var baseObservable = Spotify<R>
             .ObservePlaylist(playlistId)
             .Run(runtime)
             .ThrowIfFail()
-            .ValueUnsafe()
+            .ValueUnsafe();
+        var looseSubject = new Subject<Diff>();
+        var mergedObservables = baseObservable.Merge(looseSubject);
+
+        _listener = mergedObservables
             .StartWith(firstDelta)
-            .SelectMany(async x =>
+            .Select(async x =>
             {
                 if (ReferenceEquals(x, firstDelta))
                 {
@@ -165,7 +177,20 @@ public sealed class PlaylistViewModel<R> : ReactiveObject, INavigableViewModel
                         .Contents.Items.Select(c => AudioId.FromUri(c.Uri)).ToSeq();
                     if (tracksToQueue.IsEmpty)
                     {
-                        return Enumerable.Empty<PlaylistTrackVm>();
+                        return new InnerDiff(new Diff
+                        {
+                            Ops =
+                            {
+                                new Op
+                                {
+                                    Add = new Add
+                                    {
+                                        AddFirst = true
+                                    },
+                                    Kind = Op.Types.Kind.Add
+                                }
+                            }
+                        }, new List<PlaylistTrackVm>(0));
                     }
 
                     var tracks = await TrackEnqueueService<R>.GetTracks(tracksToQueue);
@@ -175,7 +200,7 @@ public sealed class PlaylistViewModel<R> : ReactiveObject, INavigableViewModel
                         .Contents.Items.Select((y, i) => (y, i)), new ParallelOptions
                         {
                             MaxDegreeOfParallelism = playlist.Playlist
-                                .Contents.Items.Count
+                            .Contents.Items.Count
                         }, (d) =>
                         {
                             var (request, index) = d;
@@ -185,6 +210,96 @@ public sealed class PlaylistViewModel<R> : ReactiveObject, INavigableViewModel
                                 var trcKpr = new TrackOrEpisode(track.ValueUnsafe().Value);
                                 var item = new PlaylistTrackVm
                                 {
+                                    AddedAt = request.Attributes.HasTimestamp
+                                        ? DateTimeOffset.FromUnixTimeMilliseconds(request.Attributes.Timestamp)
+                                        : DateTimeOffset.MinValue,
+                                    HasAddedAt = request.Attributes.HasTimestamp,
+                                    OriginalIndex = index,
+                                    Id = id,
+                                    Album = new PlaylistShortItem
+                                    {
+                                        Id = trcKpr.Group.Id,
+                                        Name = trcKpr.Group.Name
+                                    },
+                                    Artists = trcKpr.Artists.Select(c => new PlaylistShortItem
+                                        {
+                                            Id = c.Id,
+                                            Name = c.Name
+                                        })
+                                        .ToArray(),
+                                    Name = trcKpr.Name,
+                                    SmallestImage = trcKpr.GetImage(Image.Types.Size.Small),
+                                    Duration = trcKpr.Duration,
+                                    Uid = request.Attributes.ItemId.ToBase64()
+                                };
+                                toReturn.Add(item);
+                            }
+                            else
+                            {
+                                Debugger.Break();
+                            }
+                        });
+
+                    Task.Run(async () =>
+                    {
+                        var diff = (await Spotify<R>
+                            .DiffRevision(playlistId, playlist.Playlist.Revision)
+                            .Run(runtime))
+                            .ThrowIfFail();
+                        //invoke 
+                        if (diff.FromRevision != diff.ToRevision)
+                        {
+                            looseSubject.OnNext(diff);
+                        }
+                    });
+
+                    return new InnerDiff(new Diff
+                    {
+                        Ops =
+                        {
+                            new Op
+                            {
+                                Add = new Add
+                                {
+                                    AddFirst = true,
+                                    Items =
+                                    {
+                                        toReturn.Select(c => new Item
+                                        {
+                                            Uri = c.Id.ToString()
+                                        })
+                                    }
+                                },
+                                Kind = Op.Types.Kind.Add
+                            }
+                        }
+                    }, Tracks: toReturn);
+                    //return results.Select(c=> new PlaylistTrackInfo(c, ));
+                }
+                else
+                {
+                    var itemsToAdd = x.Ops.Where(c => c.Kind == Op.Types.Kind.Add)
+                        .SelectMany(c => c.Add.Items.Select(y=> AudioId.FromUri(y.Uri))).ToSeq();
+
+                    if (itemsToAdd.IsEmpty) return new InnerDiff(x, new List<PlaylistTrackVm>(0));
+
+                    var tracks = await TrackEnqueueService<R>.GetTracks(itemsToAdd);
+                    var toReturn = new List<PlaylistTrackVm>(playlist.Playlist
+                        .Contents.Items.Count);
+                    Parallel.ForEach(x.Ops.Where(c => c.Kind == Op.Types.Kind.Add)
+                        .SelectMany(c => c.Add.Items).Select((y, i) => (y, i)), new ParallelOptions
+                        {
+                            MaxDegreeOfParallelism = 5
+                        }, (d) =>
+                        {
+                            var (request, index) = d;
+                            var id = AudioId.FromUri(request.Uri);
+                            if (tracks.TryGetValue(id, out var track) && track.IsSome)
+                            {
+                                var trcKpr = new TrackOrEpisode(track.ValueUnsafe().Value);
+                                var item = new PlaylistTrackVm
+                                {
+                                    Uid = request.Attributes.ItemId.ToBase64(),
                                     AddedAt = request.Attributes.HasTimestamp
                                         ? DateTimeOffset.FromUnixTimeMilliseconds(request.Attributes.Timestamp)
                                         : DateTimeOffset.MinValue,
@@ -212,30 +327,66 @@ public sealed class PlaylistViewModel<R> : ReactiveObject, INavigableViewModel
                                 Debugger.Break();
                             }
                         });
-
-                    return toReturn;
-                    //return results.Select(c=> new PlaylistTrackInfo(c, ));
-                }
-                else
-                {
-                    return Enumerable.Empty<PlaylistTrackVm>();
+                    return new InnerDiff(x, toReturn);
+                    // return Enumerable.Empty<PlaylistTrackVm>();
                 }
             })
+            .SelectMany(c => c)
             //.Throttle(TimeSpan.FromMilliseconds(50))
             .ObserveOn(RxApp.TaskpoolScheduler)
             .Subscribe(tracks =>
             {
-                GC.Collect();
+                // _items.Edit(innerList =>
+                // {
+                //     innerList.Clear();
+                //     foreach (var track in tracks)
+                //     {
+                //         innerList.AddOrUpdate(track);
+                //     }
+                // });
                 _items.Edit(innerList =>
                 {
+                    var oldList = innerList.Items.ToList();
                     innerList.Clear();
-                    foreach (var track in tracks)
+                    foreach (var op in tracks.Original.Ops)
                     {
-                        innerList.AddOrUpdate(track);
+                        switch (op.Kind)
+                        {
+                            case Op.Types.Kind.Add:
+                                var itemsToAddIds = op.Add.Items.Select(c => AudioId.FromUri(c.Uri));
+                                var itemsToAdd = tracks.Tracks.Where(c => itemsToAddIds.Contains(c.Id));
+                                if (op.Add.AddFirst)
+                                {
+                                    //add to the front
+                                    oldList.AddRange(itemsToAdd);
+                                }
+                                else
+                                {
+                                    var fromIndex = op.Add.FromIndex;
+                                    oldList.InsertRange(fromIndex, itemsToAdd);
+                                    //add other items first
+                                }
+                                break;
+                            case Op.Types.Kind.Rem:
+                                break;
+                            case Op.Types.Kind.Mov:
+                                break;
+                            case Op.Types.Kind.UpdateItemAttributes:
+                                break;
+                            case Op.Types.Kind.UpdateListAttributes:
+                                break;
+                            default:
+                                throw new ArgumentOutOfRangeException();
+                        }
                     }
+                    innerList.Load(oldList);
                 });
+                GC.Collect();
             });
+
     }
+
+    private record InnerDiff(Diff Original, List<PlaylistTrackVm> Tracks);
     public string? SearchText
     {
         get => _searchText;
@@ -314,7 +465,7 @@ public class PlaylistShortItem
 }
 public class PlaylistTrackVm
 {
-    public int OriginalIndex { get; init; }
+    public int OriginalIndex { get; set; }
     public DateTimeOffset AddedAt { get; init; }
     public bool HasAddedAt { get; init; }
 
@@ -326,6 +477,7 @@ public class PlaylistTrackVm
     public PlaylistShortItem Album { get; init; }
     public PlaylistShortItem[] Artists { get; init; }
     public AudioId Id { get; init; }
+    public required string Uid { get; init; }
     public string Name { get; set; }
     public TimeSpan Duration { get; set; }
 
