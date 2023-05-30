@@ -15,6 +15,7 @@
     <Content Remove="Assets\Logo-Test.png" />
   </ItemGroup>
   <ItemGroup>
+    <None Remove="Views\Home\HomeView.xaml" />
     <None Remove="Views\MainContentView.xaml" />
     <None Remove="Views\ShellView.xaml" />
     <None Remove="Views\Sidebar\SidebarControl.xaml" />
@@ -69,6 +70,9 @@
     <None Update="Assets\Logo-Test.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <Page Update="Views\Home\HomeView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <None Update="Views\Sidebar\Resources.xaml">
       <Generator>MSBuild:Compile</Generator>
     </None>

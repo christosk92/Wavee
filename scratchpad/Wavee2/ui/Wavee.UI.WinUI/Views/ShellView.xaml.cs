@@ -2,6 +2,7 @@ using LanguageExt;
 using Microsoft.UI.Xaml.Controls;
 using Wavee.Core.Ids;
 using Wavee.UI.ViewModels;
+using Wavee.UI.WinUI.Views.Home;
 using Wavee.UI.WinUI.Views.Sidebar.Items;
 
 namespace Wavee.UI.WinUI.Views;
@@ -17,6 +18,7 @@ public sealed partial class ShellView : UserControl
             IconFontFamily = "Segoe MDL2 Assets",
             Title = "Songs",
             Count = 0,
+            ViewType = null,
         };
         var albumLibraryItem = new CountedSidebarItem
         {
@@ -24,6 +26,7 @@ public sealed partial class ShellView : UserControl
             IconFontFamily = "Segoe MDL2 Assets",
             Title = "Albums",
             Count = 0,
+            ViewType = null,
         };
         var artistsLibraryItem = new CountedSidebarItem
         {
@@ -31,6 +34,7 @@ public sealed partial class ShellView : UserControl
             IconFontFamily = "Segoe MDL2 Assets",
             Title = "Artists",
             Count = 0,
+            ViewType = null,
         };
         var podcastsLibraryItem = new CountedSidebarItem
         {
@@ -38,7 +42,8 @@ public sealed partial class ShellView : UserControl
             IconFontFamily = "Segoe MDL2 Assets",
             Title = "Podcasts",
             Count = 0,
-            ForceDisable = true
+            ForceDisable = true,
+            ViewType = null
         };
         this.SidebarControl.SidebarItems = new AbsSidebarItemViewModel[]
         {
@@ -47,13 +52,15 @@ public sealed partial class ShellView : UserControl
             {
                 Icon = "\uE10F",
                 IconFontFamily = "Segoe MDL2 Assets",
-                Title = "Home"
+                Title = "Home",
+                ViewType = typeof(HomeView)
             },
             new RegularSidebarItem
             {
                 Icon = "\uE794",
                 IconFontFamily = "/Assets/Fonts/MediaPlayerIcons.ttf#Media Player Fluent Icons",
-                Title = "Browse"
+                Title = "Browse",
+                ViewType = null
             },
             new HeaderSidebarItem { Title = "Library" },
             songLibraryItem,

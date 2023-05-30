@@ -1,6 +1,7 @@
 using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
 using Microsoft.UI.Xaml.Controls;
+using System;
 using Wavee.UI.ViewModels;
 
 namespace Wavee.UI.WinUI.Views;
@@ -18,6 +19,7 @@ public sealed partial class MainContentView : UserControl
         if (user.IsSome)
         {
             this.Content = new ShellView(user.ValueUnsafe());
+            GC.Collect();
         }
     }
 }

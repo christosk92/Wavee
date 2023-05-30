@@ -10,10 +10,10 @@ using Windows.Media.Playlists;
 using DynamicData.Binding;
 using Wavee.UI.ViewModels;
 using Microsoft.UI.Xaml.Input;
-using System.Windows.Navigation;
 using LanguageExt.UnsafeValueAccess;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Imaging;
+using Wavee.UI.WinUI.Navigation;
 
 namespace Wavee.UI.WinUI.Views.Sidebar
 {
@@ -23,14 +23,12 @@ namespace Wavee.UI.WinUI.Views.Sidebar
         public static readonly DependencyProperty SidebarItemsProperty = DependencyProperty.Register(nameof(SidebarItems), typeof(IReadOnlyCollection<AbsSidebarItemViewModel>), typeof(SidebarControl), new PropertyMetadata(default(IReadOnlyCollection<AbsSidebarItemViewModel>)));
         public static readonly DependencyProperty PlaylistsProperty = DependencyProperty.Register(nameof(Playlists),
             typeof(ObservableCollectionExtended<PlaylistViewModel>), typeof(SidebarControl), new PropertyMetadata(default(ObservableCollectionExtended<PlaylistViewModel>)));
-        public static readonly DependencyProperty NavigationFrameProperty = DependencyProperty.Register(nameof(NavigationFrame), typeof(object),
-        typeof(SidebarControl), new PropertyMetadata(default(object)));
-
         public static readonly DependencyProperty UserProperty = DependencyProperty.Register(nameof(User), typeof(User), typeof(SidebarControl), new PropertyMetadata(default(User)));
 
         public SidebarControl()
         {
             this.InitializeComponent();
+            Navigation.NavigationService.ContentPresenter = this.NavigationFrame;
         }
         public IReadOnlyCollection<AbsSidebarItemViewModel> SidebarItems
         {
@@ -43,11 +41,6 @@ namespace Wavee.UI.WinUI.Views.Sidebar
             get => (double)GetValue(SidebarWidthProperty);
             set => SetValue(SidebarWidthProperty, value);
         }
-        public object NavigationFrame
-        {
-            get => (object)GetValue(NavigationFrameProperty);
-            set => SetValue(NavigationFrameProperty, value);
-        }
         public User User
         {
             get => (User)GetValue(UserProperty);
@@ -59,7 +52,16 @@ namespace Wavee.UI.WinUI.Views.Sidebar
             get => (ObservableCollectionExtended<PlaylistViewModel>)GetValue(PlaylistsProperty);
             set => SetValue(PlaylistsProperty, value);
         }
-
+        private void NavigateTo(object o)
+        {
+            switch (o)
+            {
+                case RegularSidebarItem regular:
+                    if (regular.ViewType is not null)
+                        NavigationService.Navigate(regular.ViewType, null);
+                    break;
+            }
+        }
         private void SplitViewPaneContent_SizeChanged(object sender, SizeChangedEventArgs e)
         {
             SidebarWidth = e.NewSize.Width;
@@ -72,8 +74,9 @@ namespace Wavee.UI.WinUI.Views.Sidebar
         private void FixedSidebarItemsListView_OnItemClick(object sender, ItemClickEventArgs e)
         {
             var c = e.ClickedItem;
-            //NavigateTo(c);
+            NavigateTo(c);
         }
+
         private void PlaylistsListView_OnItemInvoked(TreeView sender, TreeViewItemInvokedEventArgs args)
         {
             FixedSidebarItemsListView.SelectedIndex = -1;

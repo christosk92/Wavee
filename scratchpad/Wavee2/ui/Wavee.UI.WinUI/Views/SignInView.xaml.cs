@@ -30,7 +30,7 @@ public sealed partial class SignInView : UserControl, INotifyPropertyChanged
     private bool _isSigningIn;
     private string? _errorMessage;
     private readonly IObservable<bool> _canExecuteSignInCommand;
-    private readonly Action<Option<User>> _onSignInAction;
+    private Action<Option<User>> _onSignInAction;
     private Option<AuthenticationType> _authenticationType;
     public SignInView(Action<Option<User>> onSignInAction)
     {
@@ -140,6 +140,7 @@ public sealed partial class SignInView : UserControl, INotifyPropertyChanged
 
 
             _onSignInAction(Option<User>.Some(finalUser));
+            _onSignInAction = null;
         }
     }
 
