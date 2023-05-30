@@ -10,21 +10,35 @@
     mc:Ignorable="d">
 
     <Grid>
-        <ItemsRepeater ItemsSource="{x:Bind ViewModel.Groups}">
-            <ItemsRepeater.ItemTemplate>
-                <DataTemplate x:DataType="viewModels:HomeGrouping">
-                    <StackPanel Orientation="Vertical">
-                        <TextBlock Text="{x:Bind Key.Title}" />
-                        <TextBlock Text="{x:Bind Key.TagLine}" />
+        <ScrollViewer>
+            <ItemsRepeater ItemsSource="{x:Bind ViewModel.Groups}">
+                <ItemsRepeater.ItemTemplate>
+                    <DataTemplate x:DataType="viewModels:HomeGroup">
+                        <StackPanel Orientation="Vertical">
+                            <TextBlock Text="{x:Bind Title}" />
+                            <TextBlock Text="{x:Bind TagLine}" />
 
-                        <ItemsRepeater ItemsSource="{x:Bind}">
-                            <ItemsRepeater.Layout>
-                                <StackLayout Orientation="Horizontal" />
-                            </ItemsRepeater.Layout>
-                        </ItemsRepeater>
-                    </StackPanel>
-                </DataTemplate>
-            </ItemsRepeater.ItemTemplate>
-        </ItemsRepeater>
+                            <ItemsRepeater ItemsSource="{x:Bind Items}">
+                                <ItemsRepeater.ItemTemplate>
+                                    <DataTemplate x:DataType="viewModels:HomeItem">
+                                        <StackPanel Orientation="Vertical">
+                                            <Image
+                                                Width="180"
+                                                Height="180"
+                                                Source="{x:Bind ImageUrl}" />
+                                            <TextBlock Width="180" Text="{x:Bind Title}" />
+                                            <TextBlock Width="180" Text="{x:Bind Subtitle}" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ItemsRepeater.ItemTemplate>
+                                <ItemsRepeater.Layout>
+                                    <StackLayout Orientation="Horizontal" />
+                                </ItemsRepeater.Layout>
+                            </ItemsRepeater>
+                        </StackPanel>
+                    </DataTemplate>
+                </ItemsRepeater.ItemTemplate>
+            </ItemsRepeater>
+        </ScrollViewer>
     </Grid>
 </UserControl>

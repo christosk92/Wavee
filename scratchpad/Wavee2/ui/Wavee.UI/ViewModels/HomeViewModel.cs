@@ -1,7 +1,9 @@
 ﻿using System.Collections.ObjectModel;
+using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using DynamicData;
 using DynamicData.Binding;
 using ReactiveUI;
@@ -13,40 +15,81 @@ namespace Wavee.UI.ViewModels;
 
 public sealed class HomeViewModel : ReactiveObject, IDisposable
 {
-    private readonly SourceList<HomeItem> _items = new();
     private readonly IDisposable _cleanup;
+
     public HomeViewModel()
     {
-        var main = _items
-            .Connect()
-            .GroupOn(x => x.Group)
-            .Transform(x => new HomeGrouping(x))
-            .ObserveOn(RxApp.MainThreadScheduler)
-            .DisposeMany()
-            .Bind(this.Groups)
-            .Subscribe();
-
         //periodically fetch new items (every 5 minutes)
-        var second = Observable
-            .Timer(DateTimeOffset.UtcNow, TimeSpan.FromMinutes(5))
+        _cleanup = Observable
+            .Timer(DateTimeOffset.UtcNow, TimeSpan.FromMinutes(3))
             .SelectMany(_ => FetchItems())
             .Subscribe(items =>
             {
-                _items.Edit(f =>
+                RxApp.MainThreadScheduler.Schedule(() =>
                 {
-                    f.Clear();
-                    f.AddRange(items);
+                    foreach (var newGroup in items)
+                    {
+                        var existingGroup = Groups.FirstOrDefault(g => g.Id == newGroup.Id);
+                        if (existingGroup == null)
+                        {
+                            // Group doesn't exist yet, add it.
+                            Groups.Add(newGroup);
+                        }
+                        else
+                        {
+                            // Group already exists, update its items.
+                            UpdateGroupItems(existingGroup, newGroup);
+                        }
+
+                        // Remove groups that no longer exist.
+                        for (int i = Groups.Count - 1; i >= 0; i--)
+                        {
+                            if (!items.Any(ng => ng.Id == Groups[i].Id))
+                            {
+                                Groups.RemoveAt(i);
+                            }
+                        }
+                    }
                 });
             });
-
-        _cleanup = Disposable.Create(() =>
-        {
-            main.Dispose();
-            second.Dispose();
-        });
     }
 
-    private async Task<IEnumerable<HomeItem>> FetchItems()
+    private void UpdateGroupItems(HomeGroup existingGroup, HomeGroup newGroup)
+    {
+        // Remove items that no longer exist in the new group.
+        // Remove items that no longer exist in the new group.
+        for (int i = existingGroup.Items.Count - 1; i >= 0; i--)
+        {
+            if (!newGroup.Items.Any(ni => ni.Id == existingGroup.Items[i].Id))
+            {
+                existingGroup.Items.RemoveAt(i);
+            }
+        }
+
+        // Add or replace items that exist in the new group.
+        foreach (var newItem in newGroup.Items)
+        {
+            var existingItem = existingGroup.Items.FirstOrDefault(ii => ii.Id == newItem.Id);
+            if (existingItem != null)
+            {
+                // Item already exists, remove it.
+                existingGroup.Items.Remove(existingItem);
+            }
+
+            // Add the item at the correct position.
+            var newItemIndex = newGroup.Items.IndexOf(newItem);
+            if (newItemIndex < existingGroup.Items.Count)
+            {
+                existingGroup.Items.Insert(newItemIndex, newItem);
+            }
+            else
+            {
+                existingGroup.Items.Add(newItem);
+            }
+        }
+    }
+
+    private static async Task<List<HomeGroup>> FetchItems()
     {
         var response = await SpotifyState.Instance
             .GetHttpJsonDocument(SpotifyEndpoints.PublicApi.DesktopHome_20_10, CancellationToken.None)
@@ -57,8 +100,7 @@ public sealed class HomeViewModel : ReactiveObject, IDisposable
         }
 
         using var home = response.Match(Succ: js => js, Fail: _ => throw new NotSupportedException());
-        var groupResults = new List<HomeItem>();
-        HomeGroup? currentGroup = null;
+        var groupResults = new List<HomeGroup>();
         if (home.RootElement.TryGetProperty("content", out var ct)
             && ct.TryGetProperty("items", out var items))
         {
@@ -67,7 +109,7 @@ public sealed class HomeViewModel : ReactiveObject, IDisposable
             {
                 var title = group.GetProperty("name").GetString();
                 var tagline = group.TryGetProperty("tag_line", out var t) ? t.GetString() : null;
-                currentGroup = new HomeGroup(group.GetProperty("id").GetString(), title, tagline);
+                var currentGroup = new HomeGroup(group.GetProperty("id").GetString(), title, tagline);
 
                 var content = group.GetProperty("content");
                 using var itemsInGroup = content.GetProperty("items").EnumerateArray();
@@ -116,75 +158,75 @@ public sealed class HomeViewModel : ReactiveObject, IDisposable
                     switch (type)
                     {
                         case "playlist":
-                            groupResults.Add(new HomeItem(
+                            currentGroup.Items.Add(new HomeItem(
                                 Id: AudioId.FromUri(item.GetProperty("uri").GetString()),
                                 Title: item.GetProperty("name").GetString()!,
                                 ImageUrl: image,
-                                Subtitle: item.GetProperty("description").GetString(),
-                                Group: currentGroup
+                                Subtitle: item.GetProperty("description").GetString()
                             ));
                             break;
                         case "album":
-                            groupResults.Add(new HomeItem(
+                            currentGroup.Items.Add(new HomeItem(
                                 Id: AudioId.FromUri(item.GetProperty("uri").GetString()),
                                 Title: item.GetProperty("name").GetString()!,
                                 ImageUrl: image,
-                                Subtitle: $"{item.GetProperty("total_tracks").GetInt32()} tracks",
-                                Group: currentGroup));
+                                Subtitle: $"{item.GetProperty("total_tracks").GetInt32()} tracks"));
                             break;
                         case "artist":
-                            groupResults.Add(new HomeItem(
+                            currentGroup.Items.Add(new HomeItem(
                                 Id: AudioId.FromUri(item.GetProperty("uri").GetString()),
                                 Title: item.GetProperty("name").GetString()!,
                                 ImageUrl: image,
-                                Subtitle: item.GetProperty("followers").GetProperty("total").GetInt32().ToString(),
-                                Group: currentGroup
+                                Subtitle: item.GetProperty("followers").GetProperty("total").GetInt32().ToString()
                             ));
                             break;
                         default:
                             break;
                     }
                 }
+                groupResults.Add(currentGroup);
             }
         }
 
         return groupResults;
     }
 
-    public ObservableCollectionExtended<HomeGrouping> Groups { get; } = new();
+    public ObservableCollectionExtended<HomeGroup> Groups { get; } = new();
 
     public void Dispose()
     {
-        _items.Dispose();
         _cleanup.Dispose();
+        Groups.Clear();
     }
 }
 
-public sealed record HomeItem(AudioId Id, HomeGroup Group, string Title, string Subtitle, string? ImageUrl)
+public sealed class HomeItem
 {
-    public string IdGroupKeyComposite => $"{Id}-{Group.Id}";
+    public HomeItem(AudioId Id, string Title, string Subtitle, string? ImageUrl)
+    {
+        this.Id = Id;
+        this.Title = Title;
+        this.Subtitle = Subtitle;
+        this.ImageUrl = ImageUrl;
+    }
+
+    public AudioId Id { get; init; }
+    public string Title { get; init; }
+    public string Subtitle { get; init; }
+    public string? ImageUrl { get; init; }
 }
 
-public sealed record HomeGroup(string Id, string Title, string? TagLine);
-
-public class HomeGrouping : ObservableCollectionExtended<HomeItem>, IGrouping<HomeGroup, HomeItem>, IDisposable
+public sealed class HomeGroup
 {
-    private readonly IDisposable _cleanUp;
-    public HomeGrouping(IGroup<HomeItem, HomeGroup> group)
+    public HomeGroup(string Id, string Title, string? TagLine)
     {
-        if (group == null)
-        {
-            throw new ArgumentNullException(nameof(group));
-        }
-
-        Key = group.GroupKey;
-        _cleanUp = group.List.Connect().Bind(this).Subscribe();
+        this.Id = Id;
+        this.Title = Title;
+        this.TagLine = TagLine;
     }
 
-    public HomeGroup Key { get; private set; }
-
-    public void Dispose()
-    {
-        _cleanUp.Dispose();
-    }
+    public string Id { get; init; }
+    public string Title { get; init; }
+    public string? TagLine { get; init; }
+    public ObservableCollection<HomeItem> Items { get; } = new();
 }
