@@ -1,5 +1,6 @@
 ﻿using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Text.Json;
 using ReactiveUI;
 using Wavee.Spotify;
 using Wavee.Spotify.Infrastructure.Playback;
@@ -61,6 +62,25 @@ public class SpotifyState : ReactiveObject
 #pragma warning disable CS8603
             return await response.Content.ReadFromJsonAsync<T>(JsonConverters.SystemText.JsonSerializationOptions.Default.Settings, ct);
 #pragma warning restore CS8603
+        });
+    }
+    public Either<NotConnectedResult, TryAsync<JsonDocument>> GetHttpJsonDocument(string endpoint, CancellationToken ct = default)
+    {
+        if (Client is null)
+        {
+            return new NotConnectedResult();
+        }
+
+        return TryAsync<JsonDocument>(async () =>
+        {
+            var token = await Client.TokenClient.GetToken(ct);
+            var authHeader = new AuthenticationHeaderValue("Bearer", token);
+            using var request = new HttpRequestMessage(HttpMethod.Get, endpoint);
+            request.Headers.Authorization = authHeader;
+            using var response = await _httpClient.SendAsync(request, ct);
+            response.EnsureSuccessStatusCode();
+            await using var stream = await response.Content.ReadAsStreamAsync(ct);
+            return await JsonDocument.ParseAsync(stream, default, ct);
         });
     }
 }
