@@ -44,7 +44,7 @@ namespace Wavee.UI.WinUI.Views.Playlist
         public void RemovedFromCache()
         {
             //cleanup
-            ViewModel.DestroyForUI();
+            ViewModel?.DestroyForUI();
         }
 
         public PlaylistViewModel ViewModel { get; set; }
