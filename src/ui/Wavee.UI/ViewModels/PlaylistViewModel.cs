@@ -133,10 +133,10 @@ public sealed class PlaylistViewModel : ReactiveObject, IPlaylistViewModel
     }
 
     private static readonly Dictionary<AudioId, Option<TrackOrEpisode>> Cache = new();
-    private ReadOnlyObservableCollection<PlaylistTrackViewModel> _view;
+    private List<PlaylistTrackViewModel> _view;
 
     private IDisposable uiListener;
-    public ReadOnlyObservableCollection<PlaylistTrackViewModel> View => _view;
+    public List<PlaylistTrackViewModel> View => _view;
     public async Task SetupForUI()
     {
         //build observable sort comparer
@@ -171,9 +171,8 @@ public sealed class PlaylistViewModel : ReactiveObject, IPlaylistViewModel
             }
         }
 
-        _view = new ReadOnlyObservableCollection<PlaylistTrackViewModel>(
-            new ObservableCollection<PlaylistTrackViewModel>(latestPlaylist.Playlist.Contents.Items.Select(
-                GetFrom)));
+        _view = latestPlaylist.Playlist.Contents.Items.Select(
+            GetFrom).ToList();
 
         static PlaylistTrackViewModel GetFrom(Item x, int i)
         {
