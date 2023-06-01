@@ -86,9 +86,8 @@ public sealed class NavigationService
         
         //every navigation: the cache should be re-evaluated
         //if a cached page is accessed again, it should be put at the top again
-        
-        var currentPage = _contentControl.Content as INavigablePage;
-        if (currentPage is not null)
+
+        if (_contentControl.Content is INavigablePage currentPage)
         {
             _backStack.Push((currentPage.GetType(), null));
             //            currentPage.ViewModel.IfSome(x => x.OnNavigatedFrom());

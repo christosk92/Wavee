@@ -142,7 +142,7 @@
                                 VerticalAlignment="Center"
                                 Orientation="Vertical">
                         <HyperlinkButton 
-                            Padding="0" Tapped="DisplayTitle_OnTapped"
+                            Padding="-2,0" Tapped="DisplayTitle_OnTapped"
                             Foreground="{ThemeResource ApplicationForegroundThemeBrush}"
                             x:Name="DisplayTitle">
                             <TextBlock FontSize="16"
@@ -157,7 +157,7 @@
                                 <Style TargetType="TextBlock">
                                     <Style.Setters>
                                         <Setter Property="Opacity"
-                                                Value=".8" />
+                                                Value=".6" />
                                     </Style.Setters>
                                 </Style>
                             </controls:MetadataControl.TextBlockStyle>
