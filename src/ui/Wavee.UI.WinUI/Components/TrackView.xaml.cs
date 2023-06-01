@@ -396,24 +396,25 @@ public sealed partial class TrackView : UserControl
         return ids;
     }
 
-    private static Option<ItemsView> FindItemsView(UIElement sender)
+    private static Option<ItemsRepeater> FindItemsView(UIElement sender)
     {
-        var exists = sender.FindAscendant<ItemsView>();
+        var exists = sender.FindAscendant<ItemsRepeater>();
         if (exists is not null) return exists;
-        return Option<ItemsView>.None;
+        return Option<ItemsRepeater>.None;
     }
 
-    private static Seq<AudioId> FindSelectedItems(ItemsView itemsView)
+    private static Seq<AudioId> FindSelectedItems(ItemsRepeater itemsView)
     {
-        var selectedItems = itemsView.SelectionModel.SelectedItems;
-        if (selectedItems.Count == 0)
-        {
-            return LanguageExt.Seq<AudioId>.Empty;
-        }
-
-        var ids = selectedItems.Select(static c => FindIdProperty(c)).ToSeq();
-
-        return ids;
+        return LanguageExt.Seq<AudioId>.Empty;
+        // var selectedItems = itemsView.SelectionModel.SelectedItems;
+        // if (selectedItems.Count == 0)
+        // {
+        //     return LanguageExt.Seq<AudioId>.Empty;
+        // }
+        //
+        // var ids = selectedItems.Select(static c => FindIdProperty(c)).ToSeq();
+        //
+        // return ids;
     }
 
     private static AudioId FindIdProperty(object o)

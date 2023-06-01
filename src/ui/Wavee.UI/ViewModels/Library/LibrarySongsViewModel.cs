@@ -20,6 +20,7 @@ using Wavee.Spotify.Models.Response;
 using Wavee.UI.Infrastructure.Sys;
 using Wavee.UI.Infrastructure.Traits;
 using Wavee.UI.Services;
+using Wavee.UI.ViewModels.Playback;
 
 namespace Wavee.UI.ViewModels.Library;
 

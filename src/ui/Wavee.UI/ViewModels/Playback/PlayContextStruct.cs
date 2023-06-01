@@ -3,7 +3,7 @@ using Google.Protobuf.Collections;
 using LanguageExt;
 using Wavee.Core.Ids;
 
-namespace Wavee.UI.ViewModels;
+namespace Wavee.UI.ViewModels.Playback;
 
 public readonly record struct PlayContextStruct(
     string ContextId,

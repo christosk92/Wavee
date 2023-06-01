@@ -14,6 +14,8 @@ using Wavee.UI.Infrastructure.Live;
 using Wavee.UI.Infrastructure.Sys;
 using Wavee.UI.Models;
 using Wavee.UI.ViewModels;
+using Wavee.UI.ViewModels.Playback;
+using Wavee.UI.ViewModels.Playlists;
 
 namespace Wavee.UI.WinUI.Flyouts;
 
@@ -195,7 +197,7 @@ public static class FlyoutExtensions
             },
         };
 
-        void constructSubItems(MenuFlyoutSubItem into, IPlaylistViewModel playlist)
+        void constructSubItems(MenuFlyoutSubItem into, PlaylistSubscription playlist)
         {
             if (playlist.IsFolder)
             {

@@ -10,6 +10,7 @@ using LanguageExt;
 using Wavee.Core.Ids;
 using Wavee.UI.Infrastructure.Live;
 using Wavee.UI.ViewModels;
+using Wavee.UI.ViewModels.Playback;
 using Wavee.UI.WinUI.Flyouts;
 using Wavee.UI.WinUI.Helpers;
 using HashMap = LanguageExt.HashMap;

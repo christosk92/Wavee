@@ -2,8 +2,16 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Linq.Expressions;
+using LanguageExt;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
+using Wavee.UI.WinUI.Views.Album;
+using Wavee.UI.WinUI.Views.Artist;
+using Wavee.UI.WinUI.Views.Home;
+using Wavee.UI.WinUI.Views.Library;
+using Wavee.UI.WinUI.Views.Playlist;
+using Wavee.UI.WinUI.Views.Settings;
 
 namespace Wavee.UI.WinUI;
 
@@ -17,11 +25,46 @@ public sealed class NavigationService
     private readonly Stack<(Type Type, object? Parameter)> _backStack = new();
 
 
-    private readonly HashSet<CachedPage> _cachedPages = new();
+    private readonly System.Collections.Generic.HashSet<CachedPage> _cachedPages = new();
 
     // private readonly Dictionary<Type, (INavigablePage Page, object? WithParameter, int InsertedAt)>
     //     _cachedPages = new();
+    static NavigationService()
+    {
+        var types = new[]
+        {
+            typeof(HomeRootView),
+            typeof(PlaylistView),
+            typeof(AlbumView),
+            typeof(ArtistRootView),
+            typeof(LibraryRootView),
+            typeof(SettingsView)
+        };
 
+        static void RegisterConstructor(Type type)
+        {
+            // // Make a NewExpression that calls the ctor with the args we just created
+            // var ctor = pageType.GetConstructor(Type.EmptyTypes);
+            // var argsExp = Expression.NewArrayInit(typeof(object), Expression.Constant(parameter));
+            // NewExpression newExp = Expression.New(ctor, argsExp);
+
+            var emptyConstructorExp = Expression.New(type);
+
+            // Create a lambda with the New expression as body and our param object[] as arg
+            // LambdaExpression lambda = Expression.Lambda(pageType, newExp, param);
+            var lambda = Expression.Lambda(emptyConstructorExp);
+
+
+            // Compile it
+            var func = lambda.Compile();
+            _constructors.Add(type, func);
+        }
+
+        foreach (var type in types)
+        {
+            RegisterConstructor(type);
+        }
+    }
     public NavigationService(ContentControl frame)
     {
         _contentControl = frame;
@@ -29,6 +72,8 @@ public sealed class NavigationService
     }
 
     public static NavigationService Instance { get; private set; } = null!;
+
+    private static Dictionary<Type, Delegate> _constructors = new();
 
     public void Navigate(Type pageType,
         object? parameter = null,
@@ -38,17 +83,17 @@ public sealed class NavigationService
         {
             throw new ArgumentException("Page type must implement INavigablePage.", nameof(pageType));
         }
-
+        
         //every navigation: the cache should be re-evaluated
         //if a cached page is accessed again, it should be put at the top again
-
+        
         var currentPage = _contentControl.Content as INavigablePage;
         if (currentPage is not null)
         {
             _backStack.Push((currentPage.GetType(), null));
             //            currentPage.ViewModel.IfSome(x => x.OnNavigatedFrom());
         }
-
+        
         //re-evaluate the cache
         foreach (var cachedPage in _cachedPages.ToArray())
         {
@@ -59,9 +104,9 @@ public sealed class NavigationService
                 cachedPage.Page.RemovedFromCache();
             }
         }
-
-
-
+        
+        
+        
         //1) Check if cached page exists
         if (_cachedPages.SingleOrDefault(x =>
                 x.Page.GetType() == pageType
@@ -85,7 +130,8 @@ public sealed class NavigationService
         else
         {
             //if not, create a new one
-            var newPage = (INavigablePage)Activator.CreateInstance(pageType)!;
+            var func = _constructors[pageType];
+            var newPage = (INavigablePage) func.DynamicInvoke();
             var newEntry = new CachedPage(newPage, parameter, _backStack.Count);
             _cachedPages.Add(newEntry);
             newPage.ViewModel.IfSome(x => x.OnNavigatedTo(parameter));
@@ -93,8 +139,6 @@ public sealed class NavigationService
             _contentControl.Content = newPage;
             _lastParameter = parameter;
         }
-
-
         Navigated?.Invoke(this, (pageType, parameter));
     }
 

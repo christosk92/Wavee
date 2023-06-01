@@ -9,6 +9,7 @@
              xmlns:templateSelectors="using:Wavee.UI.WinUI.TemplateSelectors"
              xmlns:models="using:Wavee.UI.Models"
              xmlns:viewModels="using:Wavee.UI.ViewModels"
+             xmlns:playlists="using:Wavee.UI.ViewModels.Playlists"
              mc:Ignorable="d">
     <UserControl.Resources>
         <ResourceDictionary>
@@ -18,7 +19,7 @@
             </ResourceDictionary.MergedDictionaries>
 
             <DataTemplate x:Key="FolderTemplate"
-                          x:DataType="viewModels:IPlaylistViewModel">
+                          x:DataType="playlists:PlaylistSubscription">
                 <TreeViewItem AutomationProperties.Name="{x:Bind Name}"
                               ItemsSource="{x:Bind SubItems}"
                               IsExpanded="True">
@@ -32,7 +33,7 @@
             </DataTemplate>
 
             <DataTemplate x:Key="PlaylistTemplate"
-                          x:DataType="viewModels:IPlaylistViewModel">
+                          x:DataType="playlists:PlaylistSubscription">
                 <TreeViewItem Padding="-24,0,0,0"
                               AutomationProperties.Name="{x:Bind Name}">
                     <StackPanel Orientation="Horizontal">
@@ -42,7 +43,7 @@
                 </TreeViewItem>
             </DataTemplate>
             <DataTemplate x:Key="PlaylistTemplateWithMargin"
-                          x:DataType="viewModels:IPlaylistViewModel">
+                          x:DataType="playlists:PlaylistSubscription">
                 <TreeViewItem Padding="-34,0,0,0"
                               AutomationProperties.Name="{x:Bind Name}">
                     <StackPanel Orientation="Horizontal">

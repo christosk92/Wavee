@@ -12,6 +12,8 @@ using Wavee.UI.Infrastructure.Sys;
 using Wavee.UI.Infrastructure.Traits;
 using Wavee.UI.Models.Response;
 using Wavee.UI.ViewModels.Library;
+using Wavee.UI.ViewModels.Playlists;
+using Wavee.UI.ViewModels.Playback;
 
 namespace Wavee.UI.ViewModels;
 

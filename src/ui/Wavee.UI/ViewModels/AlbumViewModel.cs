@@ -11,6 +11,7 @@ using LanguageExt.UnsafeValueAccess;
 using Wavee.Spotify.Infrastructure.Cache;
 using Wavee.UI.Models;
 using Wavee.UI.ViewModels.Artist;
+using Wavee.UI.ViewModels.Playback;
 
 namespace Wavee.UI.ViewModels;
 

@@ -190,24 +190,24 @@ public partial class ArtistDiscographyLazyTracksView : UserControl
 
     private async void Track_DragStarted(UIElement sender, DragStartingEventArgs args)
     {
-        var itemsRepeater = sender.FindAscendant<ItemsView>();
+        var itemsRepeater = sender.FindAscendant<ItemsRepeater>();
 
-        var selecteditems = 
-            itemsRepeater.SelectionModel.SelectedItems.Cast<ArtistDiscographyTrack>();
+        var selecteditems =
+            itemsRepeater.FindDescendant<ListViewItem>(x => x.IsSelected);
 
         var deferral = args.GetDeferral();
-        args.Data.SetData(Windows.ApplicationModel.DataTransfer.StandardDataFormats.Text,
-            JsonSerializer.Serialize(selecteditems.Select(c => c.Id)));
-        args.Data.Properties.Title = "Tracks";
-        args.Data.Properties.Description = "Tracks";
-        args.Data.Properties.ApplicationName = "Wavee";
-        var v = args.Data.GetView();
-
-        args.Data.RequestedOperation = DataPackageOperation.Copy;
-        //  args.Data.SetText("Add tracks");
-
-        //var bitmap = this.Img.Source as BitmapImage;
-        args.DragUI.SetContentFromDataPackage();
+        // args.Data.SetData(Windows.ApplicationModel.DataTransfer.StandardDataFormats.Text,
+        //     JsonSerializer.Serialize(selecteditems.Select(c => c.Id)));
+        // args.Data.Properties.Title = "Tracks";
+        // args.Data.Properties.Description = "Tracks";
+        // args.Data.Properties.ApplicationName = "Wavee";
+        // var v = args.Data.GetView();
+        //
+        // args.Data.RequestedOperation = DataPackageOperation.Copy;
+        // //  args.Data.SetText("Add tracks");
+        //
+        // //var bitmap = this.Img.Source as BitmapImage;
+        // args.DragUI.SetContentFromDataPackage();
         //args.DragUI.SetContentFromBitmapImage(bitmap);
         deferral.Complete();
     }

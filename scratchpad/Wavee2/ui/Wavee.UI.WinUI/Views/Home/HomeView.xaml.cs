@@ -27,4 +27,9 @@ public sealed partial class HomeView : INavigationAwareView, ICacheablePage
     {
         ViewModel.Dispose();
     }
+
+    private void Selector_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        
+    }
 }

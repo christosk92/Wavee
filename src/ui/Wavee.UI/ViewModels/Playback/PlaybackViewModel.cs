@@ -16,7 +16,7 @@ using Wavee.Spotify.Infrastructure.Remote.Messaging;
 using Wavee.UI.Infrastructure.Sys;
 using Wavee.UI.Infrastructure.Traits;
 using static LanguageExt.Prelude;
-namespace Wavee.UI.ViewModels;
+namespace Wavee.UI.ViewModels.Playback;
 
 public sealed class PlaybackViewModel<R> : ReactiveObject where R : struct, HasSpotify<R>, HasFile<R>, HasDirectory<R>, HasLocalPath<R>
 {
@@ -159,13 +159,13 @@ public sealed class PlaybackViewModel<R> : ReactiveObject where R : struct, HasS
     }
     public ObservableCollection<SpotifyRemoteDeviceInfo> Devices { get; } = new();
 
-    public double VolumePerc => (ActiveDevice == default
-                                 || string.Equals(ActiveDevice.DeviceId, _ownDeviceId))
+    public double VolumePerc => ActiveDevice == default
+                                 || string.Equals(ActiveDevice.DeviceId, _ownDeviceId)
         ? _volumePerc
         : ActiveDevice.Volume.Map(x => x * 100).IfNone(100);
 
-    public bool CanControlVolume => (ActiveDevice == default
-                                     || string.Equals(ActiveDevice.DeviceId, _ownDeviceId))
+    public bool CanControlVolume => ActiveDevice == default
+                                     || string.Equals(ActiveDevice.DeviceId, _ownDeviceId)
                                     || ActiveDevice.Volume.IsSome;
 
     public ITrack? CurrentTrack

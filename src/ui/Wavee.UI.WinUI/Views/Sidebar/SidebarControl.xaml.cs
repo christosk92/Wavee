@@ -14,6 +14,7 @@ using Wavee.Core.Ids;
 using Wavee.UI.Infrastructure.Sys;
 using Wavee.UI.Models;
 using Wavee.UI.ViewModels;
+using Wavee.UI.ViewModels.Playlists;
 using Wavee.UI.WinUI.Views.Home;
 using Wavee.UI.WinUI.Views.Library;
 using Wavee.UI.WinUI.Views.Playlist;
@@ -26,7 +27,7 @@ namespace Wavee.UI.WinUI.Views.Sidebar
     {
         public static readonly DependencyProperty SidebarWidthProperty = DependencyProperty.Register(nameof(SidebarWidth), typeof(double), typeof(SidebarControl), new PropertyMetadata(Constants.DefaultSidebarWidth));
         public static readonly DependencyProperty SidebarItemsProperty = DependencyProperty.Register(nameof(SidebarItems), typeof(IReadOnlyCollection<AbsSidebarItemViewModel>), typeof(SidebarControl), new PropertyMetadata(default(IReadOnlyCollection<AbsSidebarItemViewModel>)));
-        public static readonly DependencyProperty PlaylistsProperty = DependencyProperty.Register(nameof(Playlists), typeof(ReadOnlyObservableCollection<IPlaylistViewModel>), typeof(SidebarControl), new PropertyMetadata(default(ReadOnlyObservableCollection<IPlaylistViewModel>)));
+        public static readonly DependencyProperty PlaylistsProperty = DependencyProperty.Register(nameof(Playlists), typeof(ReadOnlyObservableCollection<PlaylistSubscription>), typeof(SidebarControl), new PropertyMetadata(default(ReadOnlyObservableCollection<PlaylistSubscription>)));
         public static readonly DependencyProperty NavigationFrameProperty = DependencyProperty.Register(nameof(NavigationFrame), typeof(object),
             typeof(SidebarControl), new PropertyMetadata(default(object)));
 
@@ -51,9 +52,9 @@ namespace Wavee.UI.WinUI.Views.Sidebar
             set => SetValue(SidebarItemsProperty, value);
         }
 
-        public ReadOnlyObservableCollection<IPlaylistViewModel> Playlists
+        public ReadOnlyObservableCollection<PlaylistSubscription> Playlists
         {
-            get => (ReadOnlyObservableCollection<IPlaylistViewModel>)GetValue(PlaylistsProperty);
+            get => (ReadOnlyObservableCollection<PlaylistSubscription>)GetValue(PlaylistsProperty);
             set => SetValue(PlaylistsProperty, value);
         }
 
@@ -109,12 +110,12 @@ namespace Wavee.UI.WinUI.Views.Sidebar
          };
         private void NavigateTo(object item)
         {
-            if (item is IPlaylistViewModel { IsFolder: false } pls)
+            if (item is PlaylistSubscription { IsFolder: false } pls)
             {
                 ShellView.NavigationService.Navigate(typeof(PlaylistView), pls);
                 return;
             }
-            else if (item is IPlaylistViewModel { IsFolder: true } folder)
+            else if (item is PlaylistSubscription { IsFolder: true } folder)
             {
                 //go to folder? or just expand
                 return;

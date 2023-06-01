@@ -1,5 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 using DynamicData.Binding;
+using Wavee.UI.ViewModels.Playlists;
 
 namespace Wavee.UI.ViewModels;
 

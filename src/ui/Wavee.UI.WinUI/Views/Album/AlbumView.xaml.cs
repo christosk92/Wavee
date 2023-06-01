@@ -25,6 +25,7 @@ using Microsoft.UI.Xaml.Hosting;
 using CommunityToolkit.WinUI.UI.Animations.Expressions;
 using Eum.Spotify.context;
 using Wavee.UI.ViewModels.Library;
+using Wavee.UI.ViewModels.Playback;
 using Button = Microsoft.UI.Xaml.Controls.Button;
 using HashMap = LanguageExt.HashMap;
 

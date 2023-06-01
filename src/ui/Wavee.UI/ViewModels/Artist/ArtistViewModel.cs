@@ -13,6 +13,7 @@ using ReactiveUI;
 using Wavee.Core.Ids;
 using Wavee.UI.Infrastructure.Sys;
 using Wavee.UI.Infrastructure.Traits;
+using Wavee.UI.ViewModels.Playback;
 using HashMap = LanguageExt.HashMap;
 
 namespace Wavee.UI.ViewModels.Artist;

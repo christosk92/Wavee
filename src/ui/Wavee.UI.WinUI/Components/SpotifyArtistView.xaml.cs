@@ -19,6 +19,7 @@ using Microsoft.UI.Xaml.Media.Imaging;
 using Wavee.Core.Ids;
 using Wavee.UI.Infrastructure.Live;
 using Wavee.UI.ViewModels;
+using Wavee.UI.ViewModels.Playback;
 using Wavee.UI.WinUI.Flyouts;
 using HashMap = LanguageExt.HashMap;
 
