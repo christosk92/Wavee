@@ -1,0 +1,74 @@
+syntax = "proto2";
+
+package spotify.spirc.proto;
+option optimize_for = CODE_SIZE;
+option csharp_namespace = "Eum.Spotify.spircs";
+
+    enum MessageType {
+      kMessageTypeHello = 1;
+      kMessageTypeGoodbye = 2;
+      kMessageTypeNotify = 10;
+      kMessageTypeLoad = 20;
+      kMessageTypePlay = 21;
+      kMessageTypePause = 22;
+      kMessageTypePlayPause = 23;
+      kMessageTypeSeek = 24;
+      kMessageTypePrev = 25;
+      kMessageTypeNext = 26;
+      kMessageTypeVolume = 27;
+      kMessageTypeShuffle = 28;
+      kMessageTypeRepeat = 29;
+      kMessageTypeQueue = 30;
+      kMessageTypeVolumeDown = 31;
+      kMessageTypeVolumeUp = 32;
+    }
+
+    enum PlayStatus {
+      kPlayStatusStop = 0;
+      kPlayStatusPlay = 1;
+      kPlayStatusPause = 2;
+      kPlayStatusLoading = 3;
+      kPlayStatusError = 4;
+    }
+
+    message Goodbye {
+      optional string reason = 1;
+    }
+
+    message State {
+      optional string trackURI = 1;
+      optional string contextURI = 2;
+      optional uint32 index = 3;
+      optional uint32 position = 4;
+      optional PlayStatus status = 5;
+      optional uint32 errorCode = 6;
+      optional uint32 volume = 8;
+      optional uint32 duration = 9;
+
+      repeated string history = 10;
+      repeated string queued = 11;
+      repeated string future = 12;
+
+      optional bool shuffle = 13;
+      optional bool repeat = 14;
+
+      optional uint32 volumeCaps = 15;
+    }
+
+    message Frame {
+      optional uint32 version = 1;
+      optional string ident = 2;
+      optional string name = 3;
+      optional uint32 msgid = 4;
+
+      optional MessageType type = 5;
+
+      optional Goodbye goodbye = 11;
+      optional State state = 12;
+      optional uint32 position = 13;
+      optional uint32 volume = 14;
+      repeated string toQueue = 15;
+    }
+
+    message VoidReply {
+    }
