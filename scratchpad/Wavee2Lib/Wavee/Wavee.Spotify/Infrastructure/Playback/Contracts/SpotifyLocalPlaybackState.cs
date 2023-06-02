@@ -1,6 +1,7 @@
 ﻿using Eum.Spotify.connectstate;
 using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
+using Wavee.Player;
 
 namespace Wavee.Spotify.Infrastructure.Playback.Contracts;
 
@@ -8,7 +9,9 @@ public readonly record struct SpotifyLocalPlaybackState(
     SpotifyRemoteConfig Config,
     string DeviceId,
     PlayerState State,
-    bool IsActive)
+    bool IsActive,
+    Option<uint> LastCommandId,
+    Option<string> LastCommandSentBy)
 {
     public static SpotifyLocalPlaybackState Empty(SpotifyRemoteConfig config, string deviceId)
     {
@@ -16,7 +19,9 @@ public readonly record struct SpotifyLocalPlaybackState(
             Config: config,
             DeviceId: deviceId,
             State: BuildFreshPlayerState(),
-            IsActive: false
+            IsActive: false,
+            Option<uint>.None,
+            Option<string>.None
         );
     }
 
@@ -99,4 +104,59 @@ public readonly record struct SpotifyLocalPlaybackState(
             IsPlaying = false
         };
     }
+
+    public SpotifyLocalPlaybackState FromPlayer(WaveePlayerState waveePlayerState, bool isActive, bool activeChanged)
+    {
+        var state = this.State;
+
+        state.Options = new ContextPlayerOptions
+        {
+            RepeatingContext = waveePlayerState.RepeatState is RepeatState.Context,
+            RepeatingTrack = waveePlayerState.RepeatState is RepeatState.Track,
+            ShufflingContext = waveePlayerState.IsShuffling
+        };  
+        if (waveePlayerState.Context.IsSome)
+        {
+            var ctx = waveePlayerState.Context.ValueUnsafe();
+            var id = ctx.Id;
+            State.ContextUri = id;
+            State.ContextUrl = $"context://{id}";
+            State.ContextMetadata.Clear();
+            State.ContextRestrictions = new Restrictions();
+        }
+
+        if (waveePlayerState.TrackId.IsSome)
+        {
+            State.IsBuffering = false;
+            State.IsPlaying = true;
+            State.IsPaused = waveePlayerState.IsPaused;
+            State.Track ??= new ProvidedTrack
+            {
+                Uri = waveePlayerState.TrackId.ValueUnsafe().ToString()
+            };
+            State.Duration = (long)waveePlayerState.TrackDetails.ValueUnsafe().Duration.TotalMilliseconds;
+
+            if (waveePlayerState.TrackUid.IsSome)
+            {
+                State.Track.Uid = waveePlayerState.TrackUid.ValueUnsafe();
+            }
+            
+            
+            State.Track.Metadata.Clear();
+            foreach (var (key, value) in waveePlayerState.TrackDetails.ValueUnsafe().Metadata)
+            {
+                State.Track.Metadata[key] = value;
+            }
+        }
+        
+        
+        return this with
+        {
+            IsActive = isActive,
+            PlayingSince = (isActive && activeChanged) ? DateTimeOffset.UtcNow : PlayingSince,
+            State = state
+        };
+    }
+
+    public DateTimeOffset PlayingSince { get; init; }
 }

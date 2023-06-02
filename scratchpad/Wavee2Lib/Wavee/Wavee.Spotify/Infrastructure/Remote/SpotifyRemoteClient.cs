@@ -27,6 +27,7 @@ internal sealed class SpotifyRemoteClient : ISpotifyRemoteClient, IDisposable
     private readonly Channel<SpotifyWebsocketMessage> _messageChannel =
         Channel.CreateUnbounded<SpotifyWebsocketMessage>();
 
+    public TaskCompletionSource<Unit> Ready { get; } = new TaskCompletionSource<Unit>();
 
     public SpotifyRemoteClient(Func<CancellationToken, Task<string>> tokenFactory,
         Func<RemoteSpotifyPlaybackEvent, Task> playbackEvent, SpotifyRemoteConfig config, string deviceId,
@@ -51,7 +52,7 @@ internal sealed class SpotifyRemoteClient : ISpotifyRemoteClient, IDisposable
     {
         if (ConnectionId.Value.IsNone)
             return;
-        
+
         await Put(state, PutStateReason.PlayerStateChanged);
     }
 
@@ -91,6 +92,7 @@ internal sealed class SpotifyRemoteClient : ISpotifyRemoteClient, IDisposable
 
             atomic(() => State.Swap(_ => SpotifyRemoteState.From(cluster, _deviceId)));
 
+            Ready.SetResult(Unit.Default);
             //Start the loop
             while (true)
             {

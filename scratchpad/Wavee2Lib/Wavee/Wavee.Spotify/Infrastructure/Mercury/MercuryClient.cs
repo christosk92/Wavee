@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Text.Json;
 using System.Threading.Channels;
 using Eum.Spotify;
+using Eum.Spotify.context;
 using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
 using NeoSmart.AsyncLock;
@@ -18,7 +19,7 @@ internal readonly struct MercuryClient : ISpotifyMercuryClient
 
     private record AccessTokenLockComposite(AccessToken Token, AsyncLock Lock);
 
-    private static readonly Atom<HashMap<string, ulong>> SendSequences = Atom(LanguageExt.HashMap<string, ulong>.Empty);
+    private static readonly Dictionary<string, ulong> SendSequences = new Dictionary<string, ulong>();
     private static readonly Dictionary<string, AccessTokenLockComposite> AccessTokenLocks = new();
 
     private readonly string _username;
@@ -38,6 +39,11 @@ internal readonly struct MercuryClient : ISpotifyMercuryClient
         if (!AccessTokenLocks.ContainsKey(username))
             AccessTokenLocks.Add(username,
                 new AccessTokenLockComposite(new AccessToken(string.Empty, DateTimeOffset.MinValue), new AsyncLock()));
+
+        lock (SendSequences)
+        {
+            SendSequences.TryAdd(username, 0);
+        }
     }
 
     public async Task<string> GetAccessToken(CancellationToken ct = default)
@@ -62,6 +68,67 @@ internal readonly struct MercuryClient : ISpotifyMercuryClient
         }
     }
 
+    public async Task<SpotifyContext> ContextResolve(string contextUri,
+        CancellationToken ct = default)
+    {
+        const string query = "hm://context-resolve/v1/{0}";
+        var url = string.Format(query, contextUri);
+        var tcs = new TaskCompletionSource<MercuryPacket>(TaskCreationOptions.RunContinuationsAsynchronously);
+        CreateListener(url, MercuryMethod.Get, null, tcs, ct);
+        var finalData = await tcs.Task;
+
+        using var jsonDocument = JsonDocument.Parse(finalData.Payload);
+        var parsed = Parse(jsonDocument);
+        return parsed;
+    }
+
+    public async Task<SpotifyContext> ContextResolveRaw(string pageUrl, CancellationToken ct = default)
+    {
+        var tcs = new TaskCompletionSource<MercuryPacket>(TaskCreationOptions.RunContinuationsAsynchronously);
+        CreateListener(pageUrl, MercuryMethod.Get, null, tcs, ct);
+        var finalData = await tcs.Task;
+
+        using var jsonDocument = JsonDocument.Parse(finalData.Payload);
+        var parsed = Parse(jsonDocument);
+        return parsed;
+    }
+
+    private static SpotifyContext Parse(JsonDocument jsonDocument)
+    {
+        var metadata = jsonDocument.RootElement.TryGetProperty("metadata", out var metadataElement)
+            ? metadataElement.EnumerateObject().Fold(new HashMap<string, string>(),
+                (acc, x) => acc.Add(x.Name, x.Value.GetString()))
+            : Empty;
+
+
+        var pages = jsonDocument.RootElement.TryGetProperty("pages", out var pagesElement)
+            ? pagesElement.Clone().EnumerateArray().Select(ContextHelper.ParsePage).ToSeq()
+            : Empty;
+        var url = jsonDocument.RootElement.TryGetProperty("url", out var urlElement)
+            ? urlElement.GetString()
+            : null;
+
+        var tracks = jsonDocument.RootElement.TryGetProperty("tracks", out var tracksElement)
+            ? tracksElement.Clone().EnumerateArray().Select(ContextHelper.ParseTrack).ToSeq()
+            : Empty;
+        //if(pages is empty, add tracks to pages)
+        if (pages.IsEmpty && !tracks.IsEmpty)
+        {
+            pages = Seq1(new ContextPage
+            {
+                Tracks = { tracks }
+            });
+        }
+
+        var restrictions = jsonDocument.RootElement.TryGetProperty("restrictions", out var restrictionsElement)
+            ? restrictionsElement.EnumerateObject().Fold(new HashMap<string, Seq<string>>(),
+                (acc, x) => acc.Add(x.Name, x.Value.Clone().EnumerateArray().Select(y => y.GetString()).ToSeq()!))
+            : Empty;
+        return new SpotifyContext(url, metadata, pages, restrictions);
+    }
+
+    private readonly object _sendLock = new();
+
     private Unit CreateListener(
         string uri,
         MercuryMethod method,
@@ -70,14 +137,21 @@ internal readonly struct MercuryClient : ISpotifyMercuryClient
         CancellationToken ct)
     {
         string username = _username;
-        var seq = SendSequences.Swap(x => x.AddOrUpdate(username,
-            None: () => 0,
-            Some: y => y + 1
-        )).ValueUnsafe()[username];
-
+        ulong seq = 0;
+        lock (_sendLock)
+        {
+            seq = SendSequences[username];
+            SendSequences[username] = seq + 1;
+        }
+        // var seq = SendSequences.Swap(x => x.AddOrUpdate(username,
+        //     None: () => 0,
+        //     Some: y => y + 1
+        // )).ValueUnsafe()[username];
+        Debug.WriteLine($"Sending seq {seq} for {uri}");
         var reader = _onPackageReceive((ref SpotifyUnencryptedPackage check) => Condition(ref check, seq));
         SendInternal(seq, uri, method, contentType);
 
+        Debug.WriteLine($"Waiting for seq {seq} for {uri}");
         var partials = new List<ReadOnlyMemory<byte>>();
         var sw = Stopwatch.StartNew();
 

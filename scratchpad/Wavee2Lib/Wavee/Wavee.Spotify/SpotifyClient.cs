@@ -27,7 +27,7 @@ public sealed class SpotifyClient : IDisposable
         string deviceId)
     {
         _connection = connection;
-
+        _deviceId = deviceId;
         Remote = new SpotifyRemoteClient(
             tokenFactory: (ct) => Mercury.GetAccessToken(ct),
             playbackEvent: (ev) => (Playback as SpotifyPlaybackClient)!.OnPlaybackEvent(ev),
@@ -39,8 +39,10 @@ public sealed class SpotifyClient : IDisposable
             mercuryFactory: () => Mercury,
             remoteUpdates: (state) => (Remote as SpotifyRemoteClient)!.OnPlaybackUpdate(state),
             config: config.Playback,
-            deviceId: _deviceId,
-            remoteConfig: config.Remote);
+            deviceId: deviceId,
+            remoteConfig: config.Remote,
+            countryCode: _connection.LastCountryCode,
+            ready: (Remote as SpotifyRemoteClient)!.Ready);
     }
 
     public static async Task<SpotifyClient> CreateAsync(

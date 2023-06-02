@@ -1,6 +1,15 @@
-﻿namespace Wavee.Player;
+﻿using System.Collections;
+using LanguageExt;
 
-public interface IWaveeContext : IEnumerable<FutureWaveeTrack>
+namespace Wavee.Player;
+
+public readonly record struct WaveeContext(
+    string Id,
+    string Name,
+    IEnumerable<FutureWaveeTrack> FutureTracks,
+    Option<IShuffleProvider> ShuffleProvider
+);
+public interface IShuffleProvider
 {
-    int IndexFromUid(string uid);
+    int GetNextIndex(int currentIndex, int maxIndex);
 }

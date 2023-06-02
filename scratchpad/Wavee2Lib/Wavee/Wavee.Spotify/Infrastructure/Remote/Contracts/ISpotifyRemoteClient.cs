@@ -5,6 +5,5 @@ namespace Wavee.Spotify.Infrastructure.Remote.Contracts;
 
 public interface ISpotifyRemoteClient
 {
-    
     IObservable<Option<SpotifyRemoteState>> StateUpdates { get; }
 }

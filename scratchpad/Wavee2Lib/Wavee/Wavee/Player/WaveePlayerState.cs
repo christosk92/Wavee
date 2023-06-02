@@ -9,7 +9,7 @@ public readonly record struct WaveePlayerState(
     bool IsPaused,
     bool IsShuffling,
     RepeatState RepeatState,
-    Option<IWaveeContext> Context,
+    Option<WaveeContext> Context,
     Option<WaveeTrack> TrackDetails)
 {
     public static WaveePlayerState Empty()
@@ -20,7 +20,7 @@ public readonly record struct WaveePlayerState(
             IsPaused: false,
             IsShuffling: false,
             RepeatState: RepeatState.None,
-            Context: Option<IWaveeContext>.None,
+            Context: Option<WaveeContext>.None,
             TrackDetails: Option<WaveeTrack>.None
         );
     }

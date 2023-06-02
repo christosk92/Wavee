@@ -75,12 +75,17 @@ internal sealed class SpotifyTcpConnection : IDisposable
                                 if (callback.condition(ref package))
                                 {
                                     wasInteresting = true;
-                                    callback.Writer.TryWrite(new BoxedSpotifyPacket(
-                                        Type: package.Type,
-                                        Data: package.Payload.ToArray()
-                                    ));
+                                    if (!callback.Writer.TryWrite(new BoxedSpotifyPacket(
+                                            Type: package.Type,
+                                            Data: package.Payload.ToArray()
+                                        )))
+                                    {
+                                        Debugger.Break();
+                                        _callbacks.Remove(callback);
+                                    }
                                 }
                             }
+
                             if (!wasInteresting)
                             {
                                 Debug.WriteLine($"Received unhandled package: {package.Type}");
@@ -104,26 +109,26 @@ internal sealed class SpotifyTcpConnection : IDisposable
     //Thread safe
     public Unit Send(SpotifyUnencryptedPackage package)
     {
-        int seq;
         lock (_receiveSequenceLock)
         {
+            int seq;
             seq = _sendSequence;
             _sendSequence++;
-        }
+            Debug.WriteLine($"Sending {package.Type} with seq {seq}");
+            try
+            {
+                _stream.Send(package, _sendKey.Span, seq);
+                return default;
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine(e);
 
-        try
-        {
-            _stream.Send(package, _sendKey.Span, seq);
-            return default;
-        }
-        catch (Exception e)
-        {
-            Debug.WriteLine(e);
+                AttemptReconnect();
+                Send(package);
 
-            AttemptReconnect();
-            Send(package);
-
-            return default;
+                return default;
+            }
         }
     }
 

@@ -12,9 +12,9 @@ public sealed class WaveePlayer
     private readonly Ref<WaveePlayerState> _state = Ref(WaveePlayerState.Empty());
     public static WaveePlayer Instance => _instance ??= new WaveePlayer();
 
-    public async Task Play(IWaveeContext context, Option<int> indexInContext)
+    public async Task Play(WaveeContext context, Option<int> indexInContext)
     {
-        var track = context.ElementAtOrDefault(indexInContext.IfNone(0));
+        var track = context.FutureTracks.ElementAtOrDefault(indexInContext.IfNone(0));
         if (track is null)
         {
             return;
