@@ -47,6 +47,31 @@ public readonly record struct SpotifyLocalPlaybackState(
             putState.HasBeenPlayingForMs = 0;
         }
 
+        if (PlayingSince.IsSome)
+        {
+            putState.StartedPlayingAt = (ulong)PlayingSince.ValueUnsafe().ToUnixTimeMilliseconds();
+        }
+        else
+        {
+            putState.StartedPlayingAt = 0;
+        }
+        if (LastCommandId.IsSome)
+        {
+            putState.LastCommandMessageId = LastCommandId.ValueUnsafe();
+        }
+        else
+        {
+            putState.LastCommandMessageId = 0;
+        }
+
+        if (LastCommandSentBy.IsSome)
+        {
+            putState.LastCommandSentByDeviceId = LastCommandSentBy.ValueUnsafe();
+        }
+        else
+        {
+            putState.LastCommandSentByDeviceId = string.Empty;
+        }
         putState.ClientSideTimestamp = (ulong)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         return putState;
     }
@@ -130,7 +155,7 @@ public readonly record struct SpotifyLocalPlaybackState(
             State.IsBuffering = false;
             State.IsPlaying = true;
             State.IsPaused = waveePlayerState.IsPaused;
-            State.Track ??= new ProvidedTrack
+            State.Track = new ProvidedTrack
             {
                 Uri = waveePlayerState.TrackId.ValueUnsafe().ToString()
             };
@@ -158,5 +183,5 @@ public readonly record struct SpotifyLocalPlaybackState(
         };
     }
 
-    public DateTimeOffset PlayingSince { get; init; }
+    public Option<DateTimeOffset> PlayingSince { get; init; }
 }
