@@ -29,6 +29,11 @@ public class SpotifyCacheConfig
 
 public class SpotifyPlaybackConfig
 {
+    public SpotifyPlaybackConfig(PreferredQualityType preferedQuality)
+    {
+        PreferedQuality = preferedQuality;
+    }
+
     public PreferredQualityType PreferedQuality { get; set; }
 }
 

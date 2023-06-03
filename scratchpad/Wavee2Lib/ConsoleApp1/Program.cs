@@ -22,7 +22,7 @@ var c = new LoginCredentials
 
 var config = new SpotifyConfig(
     remote: new SpotifyRemoteConfig(deviceName: "Wavee", deviceType: DeviceType.Computer),
-    playback: new SpotifyPlaybackConfig(),
+    playback: new SpotifyPlaybackConfig(preferedQuality: PreferredQualityType.VeryHigh),
     cache: new SpotifyCacheConfig(cacheRoot: Option<string>.None)
 );
 
@@ -30,8 +30,10 @@ var spotifyClient = await SpotifyClient.CreateAsync(config, c);
 
 if (spotifyClient.Playback is SpotifyPlaybackClient pc)
 {
+    //https://open.spotify.com/track/7n2FZQsaLb7ZRfRPfEeIvr?si=0af0a2b5b57a45e7
+    //https://open.spotify.com/track/26hOm7dTtBi0TdpDGl141t?si=0dda9dfed86b4e6b
     //https://open.spotify.com/track/0Oq4WhNwjjLcntxZl4zzr0?si=1c2aa4698713438e
-    var trackUri = "spotify:track:0Oq4WhNwjjLcntxZl4zzr0";
+    var trackUri = "spotify:track:7n2FZQsaLb7ZRfRPfEeIvr";
     var trackId = AudioId.FromUri(trackUri);
     var mercury = spotifyClient.Mercury;
     var audioKeyProvider = spotifyClient.AudioKeyProvder;
