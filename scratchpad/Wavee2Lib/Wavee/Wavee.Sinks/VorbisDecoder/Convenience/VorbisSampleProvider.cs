@@ -80,18 +80,19 @@ namespace NAudio.Vorbis
         /// </summary>
         public event EventHandler StreamChange;
 
-        private bool ProcessNewStream(IPacketProvider packetProvider)
+        private bool ProcessNewStream(IPacketProvider packetProvider, TimeSpan duration)
         {
             IStreamDecoder decoder;
             try
             {
-                decoder = new NVorbis.StreamDecoder(packetProvider);
+                decoder = new NVorbis.StreamDecoder(packetProvider, duration);
             }
 #pragma warning disable CA1031 // Do not catch general exception types
             catch (Exception ex)
             {
                 // an exception here probably means the packet provider returned non-Vorbis data, so warn and reject the stream
-                System.Diagnostics.Trace.TraceWarning($"Could not load stream {packetProvider.StreamSerial} due to error: {ex.Message}");
+                System.Diagnostics.Trace.TraceWarning(
+                    $"Could not load stream {packetProvider.StreamSerial} due to error: {ex.Message}");
                 return false;
             }
 #pragma warning restore CA1031 // Do not catch general exception types
@@ -135,6 +136,7 @@ namespace NAudio.Vorbis
             {
                 return SwitchToDecoder(node.Value);
             }
+
             return null;
         }
 
@@ -147,7 +149,8 @@ namespace NAudio.Vorbis
             var sampleRate = WaveFormat?.SampleRate;
             WaveFormat = WaveFormat.CreateIeeeFloatWaveFormat(_streamDecoder.SampleRate, _streamDecoder.Channels);
 
-            if ((channels ?? WaveFormat.Channels) != WaveFormat.Channels || (sampleRate ?? WaveFormat.SampleRate) != WaveFormat.SampleRate)
+            if ((channels ?? WaveFormat.Channels) != WaveFormat.Channels ||
+                (sampleRate ?? WaveFormat.SampleRate) != WaveFormat.SampleRate)
             {
                 WaveFormatChange?.Invoke(this, EventArgs.Empty);
                 return true;
@@ -161,7 +164,9 @@ namespace NAudio.Vorbis
 
         private T FindStreamNode<T>(int index, NodeFoundAction<T> action)
         {
-            if (_containerReader == null) throw new InvalidOperationException("Cannot operate on more than the current stream if not loaded from stream!");
+            if (_containerReader == null)
+                throw new InvalidOperationException(
+                    "Cannot operate on more than the current stream if not loaded from stream!");
             if (index < 0) throw new ArgumentOutOfRangeException(nameof(index));
 
             var node = _streamDecoders.First;
@@ -175,6 +180,7 @@ namespace NAudio.Vorbis
 
                 node = node.Next;
             }
+
             return action(node);
         }
 
@@ -201,8 +207,10 @@ namespace NAudio.Vorbis
                 {
                     break;
                 }
+
                 node = node.Next;
             }
+
             return cnt;
         }
 
@@ -222,6 +230,7 @@ namespace NAudio.Vorbis
                     break;
                 }
             }
+
             if (node != null)
             {
                 // if we have a node, that means we have at least one known stream after the current one
@@ -251,11 +260,13 @@ namespace NAudio.Vorbis
         /// Creates a new instance of <see cref="VorbisSampleProvider"/>.
         /// </summary>
         /// <param name="sourceStream">The stream to read for data.</param>
-        public VorbisSampleProvider(System.IO.Stream sourceStream, bool closeOnDispose = false)
+        public VorbisSampleProvider(System.IO.Stream sourceStream,
+            TimeSpan duration,
+            bool closeOnDispose = false)
         {
             _containerReader = new NVorbis.Ogg.ContainerReader(sourceStream, closeOnDispose)
             {
-                NewStreamCallback = ProcessNewStream
+                NewStreamCallback = provider => ProcessNewStream(provider, duration)
             };
             CanSeek = _containerReader.CanSeek;
             if (!_containerReader.TryInit()) throw new ArgumentException("Could not initialize container!");
@@ -270,8 +281,8 @@ namespace NAudio.Vorbis
         /// Creates a new instance of <see cref="VorbisSampleProvider"/> that will attempt to use the specified <see cref="IPacketProvider"/> to decode audio.
         /// </summary>
         /// <param name="packetProvider"></param>
-        public VorbisSampleProvider(IPacketProvider packetProvider)
-            : this(new NVorbis.StreamDecoder(packetProvider), packetProvider.CanSeek)
+        public VorbisSampleProvider(IPacketProvider packetProvider, TimeSpan duration)
+            : this(new NVorbis.StreamDecoder(packetProvider, duration), packetProvider.CanSeek)
         {
         }
 
@@ -329,7 +340,8 @@ namespace NAudio.Vorbis
         public long Seek(long samplePosition)
         {
             if (!CanSeek) throw new InvalidOperationException("Cannot seek underlying stream!");
-            if (samplePosition < 0 || samplePosition > _streamDecoder.TotalSamples) throw new ArgumentOutOfRangeException(nameof(samplePosition));
+            if (samplePosition < 0 || samplePosition > _streamDecoder.TotalSamples)
+                throw new ArgumentOutOfRangeException(nameof(samplePosition));
 
             _streamDecoder.SeekTo(samplePosition);
 
@@ -357,7 +369,8 @@ namespace NAudio.Vorbis
             if (!CanSeek)
             {
                 if (_containerReader == null) throw new InvalidOperationException("No container loaded!");
-                throw new InvalidOperationException("Cannot seek container!  Will discover streams as they are encountered.");
+                throw new InvalidOperationException(
+                    "Cannot seek container!  Will discover streams as they are encountered.");
             }
 
             while (_containerReader.FindNextStream())
@@ -377,8 +390,10 @@ namespace NAudio.Vorbis
                 while (_containerReader.FindNextStream() && lastStream == _streamDecoders.Last.Value)
                 {
                 }
+
                 return _streamDecoders.Last != null && lastStream != _streamDecoders.Last.Value;
             }
+
             return false;
         }
 
@@ -393,6 +408,7 @@ namespace NAudio.Vorbis
                 foundCurrent |= decoder == _streamDecoder;
                 decoder.Dispose();
             }
+
             _streamDecoders.Clear();
             if (!foundCurrent)
             {

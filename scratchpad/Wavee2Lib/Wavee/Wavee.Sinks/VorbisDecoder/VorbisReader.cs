@@ -11,8 +11,11 @@ namespace NVorbis
     /// </summary>
     public sealed class VorbisReader : IVorbisReader
     {
-        internal static Func<Stream, bool, Contracts.IContainerReader> CreateContainerReader { get; set; } = (s, cod) => new Ogg.ContainerReader(s, cod);
-        internal static Func<Contracts.IPacketProvider, IStreamDecoder> CreateStreamDecoder { get; set; } = pp => new StreamDecoder(pp, new Factory());
+        internal static Func<Stream, bool, Contracts.IContainerReader> CreateContainerReader { get; set; } =
+            (s, cod) => new Ogg.ContainerReader(s, cod);
+
+        internal static Func<Contracts.IPacketProvider, TimeSpan, IStreamDecoder> CreateStreamDecoder { get; set; } =
+            (pp, d) => new StreamDecoder(pp, new Factory(), d);
 
         private readonly List<IStreamDecoder> _decoders;
         private readonly Contracts.IContainerReader _containerReader;
@@ -30,7 +33,8 @@ namespace NVorbis
         /// </summary>
         /// <param name="fileName">The file to read from.</param>
         public VorbisReader(string fileName)
-            : this(File.OpenRead(fileName), true)
+            : this(File.OpenRead(fileName),
+                TimeSpan.Zero, false)
         {
         }
 
@@ -39,12 +43,12 @@ namespace NVorbis
         /// </summary>
         /// <param name="stream">The <see cref="Stream"/> to read from.</param>
         /// <param name="closeOnDispose"><see langword="true"/> to take ownership and clean up the instance when disposed, otherwise <see langword="false"/>.</param>
-        public VorbisReader(Stream stream, bool closeOnDispose = true)
+        public VorbisReader(Stream stream, TimeSpan dur, bool closeOnDispose = true)
         {
             _decoders = new List<IStreamDecoder>();
 
             var containerReader = CreateContainerReader(stream, closeOnDispose);
-            containerReader.NewStreamCallback = ProcessNewStream;
+            containerReader.NewStreamCallback = (pp) => ProcessNewStream(pp, dur);
 
             if (!containerReader.TryInit() || _decoders.Count == 0)
             {
@@ -58,22 +62,25 @@ namespace NVorbis
 
                 throw new ArgumentException("Could not load the specified container!", nameof(containerReader));
             }
+
             _closeOnDispose = closeOnDispose;
             _containerReader = containerReader;
             _streamDecoder = _decoders[0];
         }
 
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
-        [Obsolete("Use \"new StreamDecoder(Contracts.IPacketProvider)\" and the container's NewStreamCallback or Streams property instead.", true)]
+        [Obsolete(
+            "Use \"new StreamDecoder(Contracts.IPacketProvider)\" and the container's NewStreamCallback or Streams property instead.",
+            true)]
         public VorbisReader(Contracts.IContainerReader containerReader) => throw new NotSupportedException();
 
         [Obsolete("Use \"new StreamDecoder(Contracts.IPacketProvider)\" instead.", true)]
         public VorbisReader(Contracts.IPacketProvider packetProvider) => throw new NotSupportedException();
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 
-        private bool ProcessNewStream(Contracts.IPacketProvider packetProvider)
+        private bool ProcessNewStream(Contracts.IPacketProvider packetProvider, TimeSpan dur)
         {
-            var decoder = CreateStreamDecoder(packetProvider);
+            var decoder = CreateStreamDecoder(packetProvider, dur);
             decoder.ClipSamples = true;
 
             var ea = new NewStreamEventArgs(decoder);
@@ -83,6 +90,7 @@ namespace NVorbis
                 _decoders.Add(decoder);
                 return true;
             }
+
             return false;
         }
 
@@ -97,6 +105,7 @@ namespace NVorbis
                 {
                     decoder.Dispose();
                 }
+
                 _decoders.Clear();
             }
 
@@ -160,7 +169,8 @@ namespace NVorbis
         /// Gets the comments in the current selected Vorbis stream
         /// </summary>
         [Obsolete("Use .Tags.All instead.")]
-        public string[] Comments => _streamDecoder.Tags.All.SelectMany(k => k.Value, (kvp, Item) => $"{kvp.Key}={Item}").ToArray();
+        public string[] Comments => _streamDecoder.Tags.All.SelectMany(k => k.Value, (kvp, Item) => $"{kvp.Key}={Item}")
+            .ToArray();
 
         /// <summary>
         /// Gets whether the previous short sample count was due to a parameter change in the stream.
@@ -225,10 +235,7 @@ namespace NVorbis
         public TimeSpan TimePosition
         {
             get => _streamDecoder.TimePosition;
-            set
-            {
-                _streamDecoder.TimePosition = value;
-            }
+            set { _streamDecoder.TimePosition = value; }
         }
 
         /// <summary>
@@ -237,10 +244,7 @@ namespace NVorbis
         public long SamplePosition
         {
             get => _streamDecoder.SamplePosition;
-            set
-            {
-                _streamDecoder.SamplePosition = value;
-            }
+            set { _streamDecoder.SamplePosition = value; }
         }
 
         /// <summary>
@@ -341,6 +345,7 @@ namespace NVorbis
             {
                 return _streamDecoder.Read(buffer, offset, count);
             }
+
             return 0;
         }
 
@@ -359,6 +364,7 @@ namespace NVorbis
             {
                 return _streamDecoder.Read(buffer, 0, count);
             }
+
             return 0;
         }
 

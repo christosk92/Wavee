@@ -115,7 +115,7 @@ public sealed class WaveePlayer
                 //TODO: check other formats
                 stream.Position = 0;
 
-                var decoder = new VorbisWaveReader(stream);
+                var decoder = new VorbisWaveReader(stream, duration);
                 //var decoder = new Mp3FileReader(stream);
                 //var wave32 = new WaveChannel32(decoder);
 

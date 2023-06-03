@@ -135,10 +135,9 @@ spotifyClient.Remote.StateUpdates.Subscribe(state =>
         Console.WriteLine(state);
     }
 });
-
 //https://open.spotify.com/track/26hOm7dTtBi0TdpDGl141t?si=63327ca800964207
-const string ctxUri = "spotify:track:26hOm7dTtBi0TdpDGl141t";
+const string ctxUri = "spotify:artist:6HvZYsbFfjnjFrWF950C9d";
 const int ctxIndex = 0;
 //await spotifyClient.Remote.Takeover();
-await spotifyClient.Playback.Play(ctxUri, ctxIndex, TimeSpan.FromMinutes(3).Add(TimeSpan.FromSeconds(10)));
+await spotifyClient.Playback.Play(ctxUri, 3, Option<TimeSpan>.None);
 Console.ReadLine();

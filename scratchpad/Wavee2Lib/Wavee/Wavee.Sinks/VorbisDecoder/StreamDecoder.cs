@@ -42,15 +42,16 @@ namespace NVorbis
         /// Creates a new instance of <see cref="StreamDecoder"/>.
         /// </summary>
         /// <param name="packetProvider">A <see cref="Contracts.IPacketProvider"/> instance for the decoder to read from.</param>
-        public StreamDecoder(Contracts.IPacketProvider packetProvider)
-            : this(packetProvider, new Factory())
+        public StreamDecoder(Contracts.IPacketProvider packetProvider, TimeSpan totalTime)
+            : this(packetProvider, new Factory(), totalTime)
         {
         }
 
-        internal StreamDecoder(Contracts.IPacketProvider packetProvider, IFactory factory)
+        internal StreamDecoder(Contracts.IPacketProvider packetProvider, IFactory factory, TimeSpan totalTime)
         {
             _packetProvider = packetProvider ?? throw new ArgumentNullException(nameof(packetProvider));
             _factory = factory ?? throw new ArgumentNullException(nameof(factory));
+            TotalTime = totalTime;
 
             _stats = new StreamStats();
 
@@ -692,12 +693,13 @@ namespace NVorbis
         /// <summary>
         /// Gets the total duration of the decoded stream.
         /// </summary>
-        public TimeSpan TotalTime => TimeSpan.FromSeconds((double)TotalSamples / _sampleRate);
+        public TimeSpan TotalTime { get; }
 
         /// <summary>
         /// Gets the total number of samples in the decoded stream.
         /// </summary>
-        public long TotalSamples => _packetProvider?.GetGranuleCount() ?? throw new ObjectDisposedException(nameof(StreamDecoder));
+        public long TotalSamples => TotalTime.Ticks / TimeSpan.TicksPerSecond * SampleRate;
+        //=> _packetProvider?.GetGranuleCount() ?? throw new ObjectDisposedException(nameof(StreamDecoder));
 
         /// <summary>
         /// Gets or sets the current time position of the stream.

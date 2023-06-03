@@ -94,11 +94,14 @@ public sealed class SpotifyDecryptedStream : Stream
         if (!_decryptedChunks.TryGetValue(chunkIndex, out var chunk))
         {
             chunk = _getChunkFunc(chunkIndex).Result;
+            //preload ahead 2 chunks
+            Task.Run(async () => { await _getChunkFunc(chunkIndex + 1); });
+            Task.Run(async () => { await _getChunkFunc(chunkIndex + 2); });
             _decryptor.Decrypt(chunkIndex, chunk);
             _decryptedChunks.Add(chunkIndex, chunk);
         }
 
-        var bytesToRead = Math.Max(0,Math.Min(count, chunk.Length - chunkOffset));
+        var bytesToRead = Math.Max(0, Math.Min(count, chunk.Length - chunkOffset));
         Array.Copy(chunk, chunkOffset, buffer, offset, bytesToRead);
         _position += bytesToRead;
         return bytesToRead;
@@ -114,9 +117,9 @@ public sealed class SpotifyDecryptedStream : Stream
             _ => throw new ArgumentOutOfRangeException(nameof(origin), origin, null)
         };
 
-        if(origin is SeekOrigin.End)
+        if (origin is SeekOrigin.End)
             return _position;
-        return Math.Max(0,_position - _offset);
+        return Math.Max(0, _position - _offset);
     }
 
     public override void SetLength(long value)

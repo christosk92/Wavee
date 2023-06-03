@@ -362,23 +362,37 @@ internal sealed class SpotifyPlaybackClient : ISpotifyPlaybackClient, IDisposabl
             Option<AuthenticationHeaderValue>.None,
             HashMap<string, string>.Empty, ct);
         var firstChunkBytes = await firstChunk.Content.ReadAsByteArrayAsync(ct);
+        var numberOfChunks = (int)Math.Ceiling((double)firstChunk.Content.Headers.ContentRange?.Length / chunkSize);
 
+
+        var requested = new TaskCompletionSource<byte[]>[numberOfChunks];
+        requested[0] = new TaskCompletionSource<byte[]>();
+        requested[0].SetResult(firstChunkBytes);
         ValueTask<byte[]> GetChunkFunc(int index)
         {
-            if (index == 0)
+            if (requested[index] is { Task.IsCompleted: true })
             {
-                return new ValueTask<byte[]>(firstChunkBytes);
+                return new ValueTask<byte[]>(requested[index].Task.Result);
             }
 
-            var start = index * chunkSize;
-            var end = start + chunkSize - 1;
-            return new ValueTask<byte[]>(HttpIO.GetWithContentRange(
-                    cdnUrl,
-                    start,
-                    end,
-                    Option<AuthenticationHeaderValue>.None,
-                    HashMap<string, string>.Empty, ct)
-                .MapAsync(x => x.Content.ReadAsByteArrayAsync(ct)));
+            if (requested[index] is null)
+            {
+                var start = index * chunkSize;
+                var end = start + chunkSize - 1;
+                requested[index] = new TaskCompletionSource<byte[]>();
+                return new ValueTask<byte[]>(HttpIO.GetWithContentRange(
+                        cdnUrl,
+                        start,
+                        end,
+                        Option<AuthenticationHeaderValue>.None,
+                        HashMap<string, string>.Empty, ct)
+                    .MapAsync(x => x.Content.ReadAsByteArrayAsync(ct))
+                    .ContinueWith(x=> {
+                        requested[index].SetResult(x.Result);
+                        return x.Result;
+                    }, ct));
+            }
+            return new ValueTask<byte[]>(requested[index].Task);
         }
 
         return new SpotifyDecryptedStream(GetChunkFunc,
