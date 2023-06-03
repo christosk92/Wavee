@@ -323,7 +323,7 @@ public sealed class WaveePlayer
         {
             Debug.WriteLine(e);
             //try again, 100ms back
-            SeekTo(decoder, valueUnsafe - TimeSpan.FromMilliseconds(100));
+            SeekTo(decoder, valueUnsafe - TimeSpan.FromSeconds(1));
         }
     }
 

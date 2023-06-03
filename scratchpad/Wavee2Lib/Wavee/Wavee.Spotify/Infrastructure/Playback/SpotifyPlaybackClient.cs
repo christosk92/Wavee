@@ -514,7 +514,33 @@ internal sealed class SpotifyPlaybackClient : ISpotifyPlaybackClient, IDisposabl
         );
 
         var stream = await cache.AudioFile(format)
-            .IfNoneAsync(() => StreamFromWeb(format, audoioKey, mercury, ct));
+            .Map(x =>
+            {
+                async ValueTask<byte[]> GetChunkFunc(int index)
+                {
+                    //since x is a filestream, we can just seek to the correct position and read the bytes
+                    const int chunkSize = SpotifyDecryptedStream.ChunkSize;
+                    int start = index * chunkSize;
+                    x.Seek(start, SeekOrigin.Begin);
+                    Memory<byte> chunk = new byte[chunkSize];
+                    var readAsync = await x.ReadAsync(chunk, ct);
+                    //return subarray
+                    return chunk.Slice(0, readAsync).ToArray();
+                }
+
+                return (Stream)new SpotifyDecryptedStream(GetChunkFunc,
+                    length: x.Length,
+                    audoioKey,
+                    format,
+                    () =>
+                    {
+                        x.Dispose();
+                    });
+            })
+            .IfNoneAsync(() =>
+            {
+                return StreamFromWeb(format, audoioKey, mercury, cache, ct);
+            });
 
         return new WaveeTrack(
             audioStream: stream,
@@ -529,6 +555,7 @@ internal sealed class SpotifyPlaybackClient : ISpotifyPlaybackClient, IDisposabl
         AudioFile format,
         ReadOnlyMemory<byte> audioKey,
         ISpotifyMercuryClient mercuryClient,
+        ISpotifyCache cache,
         CancellationToken ct)
     {
         //storage-resolve/files/audio/interactive/{fileId}?alt=json
@@ -594,7 +621,20 @@ internal sealed class SpotifyPlaybackClient : ISpotifyPlaybackClient, IDisposabl
             length: firstChunk.Content.Headers.ContentRange?.Length ?? 0,
             audioKey,
             format,
-            () => Array.Clear(requested));
+            () =>
+            {
+                //check if we have all chunks.
+                if (requested.Any(x => x is null || x.Task.IsCompleted == false))
+                {
+                    Array.Clear(requested);
+                    return;
+                }
+
+                //save to cache
+                cache.SaveAudioFile(format, requested.SelectMany(x => x.Task.Result).ToArray());
+
+                Array.Clear(requested);
+            });
     }
 
     private static async Task<StorageResolveResponse> StorageResolve(ByteString file, string jwt, CancellationToken ct)

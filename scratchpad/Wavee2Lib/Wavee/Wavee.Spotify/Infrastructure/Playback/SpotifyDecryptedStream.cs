@@ -106,7 +106,7 @@ public sealed class SpotifyDecryptedStream : Stream
 
         if (!_decryptedChunks.TryGetValue(chunkIndex, out var chunk))
         {
-            chunk = _getChunkFunc(chunkIndex).Result;
+            chunk = _getChunkFunc(chunkIndex).Result.ToArray(); //create a copy
             //preload ahead 4 chunks
             for (var i = 1; i < 4; i++)
             {
