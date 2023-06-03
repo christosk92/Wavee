@@ -32,6 +32,7 @@ internal sealed class SpotifyPlaybackClient : ISpotifyPlaybackClient, IDisposabl
     private readonly Ref<Option<string>> _countryCode;
     private readonly TaskCompletionSource<Unit> _ready;
     private SpotifyLocalPlaybackState previousState;
+    private readonly bool _isPremium;
     public SpotifyPlaybackClient(
         Func<ISpotifyMercuryClient> mercuryFactory,
         Func<IAudioKeyProvider> audioKeyProviderFactory,

@@ -41,6 +41,7 @@ public readonly record struct WaveePlayerState(
             return this with
             {
                 PermanentEnd = setPermanentEndIfNothing,
+                StartFrom = new Option<TimeSpan>()
             };
         }
 
@@ -51,7 +52,8 @@ public readonly record struct WaveePlayerState(
             TrackUid = nextTrack.TrackUid,
             TrackIndex = nextIndex,
             TrackDetails = nextTrackData,
-            PermanentEnd = false
+            PermanentEnd = false,
+            StartFrom = Option<TimeSpan>.None
         };
     }
 }

@@ -2,6 +2,7 @@
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Channels;
+using System.Xml;
 using Eum.Spotify;
 using Google.Protobuf;
 using LanguageExt;
@@ -67,6 +68,35 @@ internal sealed class SpotifyTcpConnection : IDisposable
                             atomic(() => LastCountryCode.Value = countryCode);
                             break;
                         case SpotifyPacketType.ProductInfo:
+                            var productInfo = Encoding.UTF8.GetString(package.Payload);
+                            var xml = new XmlDocument();
+                            xml.LoadXml(productInfo);
+
+                            var products = xml.SelectNodes("products");
+                            var dc = new HashMap<string, string>();
+                            if (products != null && products.Count > 0)
+                            {
+                                var firstItemAsProducts = products[0];
+
+                                var product = firstItemAsProducts.ChildNodes[0];
+
+                                var properties = product.ChildNodes;
+                                for (var i = 0; i < properties.Count; i++)
+                                {
+                                    var node = properties.Item(i);
+                                    dc = dc.Add(node.Name, node.InnerText);
+                                }
+                            }
+                            
+                            //check if product is premium
+                            var isPremium = dc["catalogue"] == "premium";
+                            if (!isPremium)
+                            {
+                                Debug.WriteLine("Sorry, this account is not premium. Goodbye");
+                                Console.WriteLine("Sorry, this account is not premium. Goodbye");
+                                Environment.Exit(0);
+                                throw new Exception("Sorry, this account is not premium. Goodbye");
+                            }
                             break;
                         default:
                             bool wasInteresting = false;

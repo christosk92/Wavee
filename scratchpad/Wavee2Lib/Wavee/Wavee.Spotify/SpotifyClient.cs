@@ -54,8 +54,7 @@ public sealed class SpotifyClient : IDisposable
             config.Remote,
             countryCode:
             _connection.LastCountryCode,
-            ready:
-            (Remote as SpotifyRemoteClient)!.Ready);
+            ready: (Remote as SpotifyRemoteClient)!.Ready);
     }
 
     public static async Task<SpotifyClient> CreateAsync(
