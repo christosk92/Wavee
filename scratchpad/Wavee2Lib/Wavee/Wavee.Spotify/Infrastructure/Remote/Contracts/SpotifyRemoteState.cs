@@ -3,6 +3,7 @@ using Eum.Spotify.context;
 using Google.Protobuf;
 using Google.Protobuf.Collections;
 using LanguageExt;
+using LanguageExt.SomeHelp;
 using Wavee.Core.Ids;
 using static LanguageExt.Prelude;
 
@@ -12,6 +13,8 @@ public readonly record struct SpotifyRemoteState(Option<string> ActiveDeviceId,
     Option<AudioId> TrackUri,
     Option<string> TrackUid,
     Option<int> TrackIndex,
+    Option<ProvidedTrack> PlayingFromQueue,
+    Option<ProvidedTrack> TrackForQueueHint,
     bool IsPlaying,
     bool IsPaused,
     bool IsBuffering,
@@ -36,9 +39,18 @@ public readonly record struct SpotifyRemoteState(Option<string> ActiveDeviceId,
             playerState
                 .Bind(t => t.Index is not null ? Some(t.Index.Track) : Option<uint>.None);
 
+
         var trackUid =
             playerState
                 .Bind(t => !string.IsNullOrEmpty(t.Track?.Uid) ? Some(t.Track.Uid) : Option<string>.None);
+
+        var trackFromQueue =
+            playerState.Bind(x => x.Track is not null && x.Track.Provider is "queue" ? Some(x.Track) : None);
+
+        var firstRealTrackAfterQueueForHint = playerState.Bind(x => x.NextTracks.SkipWhile(y => y.Provider is "queue"))
+            .FirstOrDefault() is { } track
+            ? Some(track)
+            : None;
 
         var repeatState = playerState.Map(x => x.Options.RepeatingTrack
                 ? RepeatState.Track
@@ -72,6 +84,8 @@ public readonly record struct SpotifyRemoteState(Option<string> ActiveDeviceId,
             TrackUri: uri,
             TrackUid: trackUid,
             TrackIndex: trackidx.Map(x => (int)x),
+            PlayingFromQueue: trackFromQueue,
+            TrackForQueueHint: firstRealTrackAfterQueueForHint,
             IsPlaying: playerState.Map(t => t.IsPlaying).IfNone(false),
             IsPaused: playerState.Map(t => t.IsPaused).IfNone(false),
             IsBuffering: playerState.Map(t => t.IsBuffering).IfNone(false),

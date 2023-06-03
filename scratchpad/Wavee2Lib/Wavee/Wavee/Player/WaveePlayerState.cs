@@ -33,17 +33,18 @@ public readonly record struct WaveePlayerState(
         );
     }
 
-    public async Task<WaveePlayerState> SkipNext(bool setPermanentEndIfNothing, bool overrideRepeatState = false)
+    public async Task<(WaveePlayerState NewState, bool ChangedSomething)> SkipNext(bool setPermanentEndIfNothing,
+        bool overrideRepeatState = false)
     {
         //repeat state (=track) beats queue
         if (!overrideRepeatState && RepeatState is RepeatState.Track)
         {
             //return US
-            return this with
+            return (this with
             {
                 PermanentEnd = false,
                 StartFrom = Option<TimeSpan>.None
-            };
+            }, true);
         }
 
         //queue!
@@ -51,7 +52,7 @@ public readonly record struct WaveePlayerState(
         {
             var queuedTrack = this.Queue.Peek();
             var queuedTrackData = await queuedTrack.Factory(CancellationToken.None);
-            return this with
+            return (this with
             {
                 TrackId = queuedTrackData.Id,
                 TrackUid = queuedTrack.TrackUid,
@@ -60,7 +61,7 @@ public readonly record struct WaveePlayerState(
                 PermanentEnd = false,
                 StartFrom = Option<TimeSpan>.None,
                 Queue = this.Queue.Dequeue()
-            };
+            }, true);
         }
 
         var ctx = Context.ValueUnsafe();
@@ -81,12 +82,13 @@ public readonly record struct WaveePlayerState(
                 theoreticalNext = 0;
                 nextTrack = ctx.FutureTracks.ElementAtOrDefault(0);
             }
+
             nextIndex = theoreticalNext;
         }
 
         if (nextTrack is null)
         {
-            return this with
+            return (this with
             {
                 PermanentEnd = setPermanentEndIfNothing,
                 StartFrom = new Option<TimeSpan>(),
@@ -96,11 +98,11 @@ public readonly record struct WaveePlayerState(
                     RepeatState.Context => RepeatState.Context,
                     RepeatState.None => RepeatState.None
                 }
-            };
+            }, false);
         }
 
         var nextTrackData = await nextTrack.Factory(CancellationToken.None);
-        return this with
+        return (this with
         {
             TrackId = nextTrackData.Id,
             TrackUid = nextTrack.TrackUid,
@@ -114,6 +116,6 @@ public readonly record struct WaveePlayerState(
                 RepeatState.Context => RepeatState.Context,
                 RepeatState.None => RepeatState.None
             }
-        };
+        }, true);
     }
 }

@@ -88,6 +88,7 @@ public sealed class SpotifyDecryptedStream : Stream
 
     protected override void Dispose(bool disposing)
     {
+        if (closed is null) return;
         closed();
 
         closed = null;

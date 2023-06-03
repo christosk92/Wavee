@@ -63,6 +63,8 @@ internal sealed class SpotifyRemoteClient : ISpotifyRemoteClient, IDisposable
         {
             TrackId = currentState.TrackUri.ValueUnsafe(),
             TrackUid = currentState.TrackUid,
+            PlayingFromQueue = currentState.PlayingFromQueue,
+            TrackForQueueHint = currentState.TrackForQueueHint,
             PlaybackPosition = currentState.Position,
             ContextUri = currentState.ContextUri,
             IsPaused = currentState.IsPaused,
@@ -146,6 +148,124 @@ internal sealed class SpotifyRemoteClient : ISpotifyRemoteClient, IDisposable
 
                         switch (endpoint)
                         {
+                            case "add_to_queue":
+                            {
+                                var track = command.GetProperty("track");
+                                var uri = track.GetProperty("uri").GetString();
+                                string uid = string.Empty;
+                                if (track.TryGetProperty("uid", out var uidd))
+                                {
+                                    uid = uidd.GetString();
+                                }
+
+                                var pv = new ProvidedTrack
+                                {
+                                    Uri = uri,
+                                    Uid = uid
+                                };
+                                var metadata = track.GetProperty("metadata");
+                                foreach (var key in metadata.EnumerateObject())
+                                {
+                                    pv.Metadata[key.Name] = key.Value.GetString();
+                                }
+
+                                pv.Provider = track.GetProperty("provider").GetString();
+                                await _playbackEvent(new RemoteSpotifyPlaybackEvent
+                                {
+                                    EventType = RemoteSpotifyPlaybackEventType.AddToQueue,
+                                    SentBy = sentBy,
+                                    Queue = Some<IEnumerable<ProvidedTrack>>(new ProvidedTrack[]
+                                    {
+                                        pv
+                                    }),
+                                    TrackUid = default,
+                                    TrackIndex = default
+                                });
+                                break;
+                            }
+                            case "set_queue":
+                                var nextTracks = command.GetProperty("next_tracks")
+                                    .EnumerateArray()
+                                    .Select(track =>
+                                    {
+                                        var uri = track.GetProperty("uri").GetString();
+                                        string? uid = string.Empty;
+                                        if (track.TryGetProperty("uid", out var uidd))
+                                        {
+                                            uid = uidd.GetString();
+                                        }
+
+                                        var pv = new ProvidedTrack
+                                        {
+                                            Uri = uri,
+                                            Uid = uid
+                                        };
+                                        var metadata = track.GetProperty("metadata");
+                                        foreach (var key in metadata.EnumerateObject())
+                                        {
+                                            pv.Metadata[key.Name] = key.Value.GetString();
+                                        }
+
+                                        pv.Provider = track.GetProperty("provider").GetString();
+                                        return pv;
+                                    });
+
+                                await _playbackEvent(new RemoteSpotifyPlaybackEvent
+                                {
+                                    EventType = RemoteSpotifyPlaybackEventType.SetQueue,
+                                    SentBy = sentBy,
+                                    CommandId = messageId,
+                                    TrackUid = default,
+                                    TrackIndex = default,
+                                    Queue = Some(nextTracks)
+                                });
+                                break;
+                            case "set_repeating_track":
+                            {
+                                var value = command.GetProperty("value").GetBoolean();
+                                if (value)
+                                {
+                                    await _playbackEvent(new RemoteSpotifyPlaybackEvent
+                                    {
+                                        EventType = RemoteSpotifyPlaybackEventType.Repeat,
+                                        SentBy = sentBy,
+                                        CommandId = messageId,
+                                        RepeatState = value ? RepeatState.Track : Option<RepeatState>.None,
+                                        TrackUid = default,
+                                        TrackIndex = default,
+                                    });
+                                }
+
+                                break;
+                            }
+                            case "set_repeating_context":
+                            {
+                                var value = command.GetProperty("value").GetBoolean();
+                                await _playbackEvent(new RemoteSpotifyPlaybackEvent
+                                {
+                                    EventType = RemoteSpotifyPlaybackEventType.Repeat,
+                                    SentBy = sentBy,
+                                    CommandId = messageId,
+                                    RepeatState = value ? RepeatState.Context : RepeatState.None,
+                                    TrackUid = default,
+                                    TrackIndex = default
+                                });
+                                break;
+                            }
+                            case "set_shuffling_context":
+                            {
+                                var value = command.GetProperty("value").GetBoolean();
+                                await _playbackEvent(new RemoteSpotifyPlaybackEvent
+                                {
+                                    EventType = RemoteSpotifyPlaybackEventType.Shuffle,
+                                    SentBy = sentBy,
+                                    CommandId = messageId,
+                                    IsShuffling = value,
+                                    TrackUid = default,
+                                    TrackIndex = default
+                                });
+                                break;
+                            }
                             case "play":
                                 var skipTo = command.GetProperty("options").GetProperty("skip_to");
                                 var ctx = command.GetProperty("context");
@@ -157,15 +277,15 @@ internal sealed class SpotifyRemoteClient : ISpotifyRemoteClient, IDisposable
                                     EventType = RemoteSpotifyPlaybackEventType.Play,
                                     SentBy = sentBy,
                                     CommandId = messageId,
-                                    TrackUid = trackUid, 
+                                    TrackUid = trackUid,
                                     TrackId = AudioId.FromUri(skipTo.GetProperty("track_uri").GetString()),
                                     TrackIndex = skipTo.GetProperty("track_index").GetInt32(),
-                                    ContextUri = ctx.GetProperty("uri").GetString(), 
+                                    ContextUri = ctx.GetProperty("uri").GetString(),
                                     IsPaused = false,
-                                    IsShuffling = None, 
-                                    RepeatState = None, 
-                                    Queue = None, 
-                                    PlaybackPosition = TimeSpan.Zero, 
+                                    IsShuffling = None,
+                                    RepeatState = None,
+                                    Queue = None,
+                                    PlaybackPosition = TimeSpan.Zero,
                                     SeekTo = None
                                 });
                                 break;

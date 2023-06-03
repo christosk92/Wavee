@@ -266,23 +266,15 @@ public sealed class WaveePlayer
     {
         if (crossfadeIn)
         {
-            var maybe = _state.Value.TrackId.Map(f => f.ToString());
-            var currentTrack = _state.Value.TrackUid.IfNone(maybe.IfNone(""));
-
+            bool changedT = false;
             var next = await atomic(() => _state.SwapAsync(async x =>
             {
-                var nextState = await x.SkipNext(false, overrideRepeatState);
+                var (nextState, changed) = await x.SkipNext(false, overrideRepeatState);
+                changedT = changed;
                 return nextState;
             }));
 
-            var maybeTo = next.TrackId.Map(f => f.ToString());
-            var nextTrack = next.TrackUid.IfNone(maybeTo.IfNone(""));
-            if (currentTrack != nextTrack || next.RepeatState is RepeatState.Track)
-            {
-                return true;
-            }
-
-            return false;
+            return changedT;
         }
         else
         {
@@ -293,18 +285,15 @@ public sealed class WaveePlayer
             _crossfadingOut?.Dispose();
             _crossfadingOut = null;
 
-            var maybe = _state.Value.TrackId.Map(f => f.ToString());
-            var currentTrack = _state.Value.TrackUid.IfNone(maybe.IfNone(""));
-
+            bool changedT = false;
             var next = await atomic(() => _state.SwapAsync(async x =>
             {
-                var nextState = await x.SkipNext(true);
+                var (nextState, changed) = await x.SkipNext(true, overrideRepeatState);
+                changedT = changed;
                 return nextState;
             }));
 
-            var maybeTo = next.TrackId.Map(f => f.ToString());
-            var nextTrack = next.TrackUid.IfNone(maybeTo.IfNone(""));
-            if (currentTrack != nextTrack || next.RepeatState is RepeatState.Track)
+            if (changedT)
             {
                 _playbackEvent.Set();
             }
@@ -338,7 +327,10 @@ public sealed class WaveePlayer
         }
     }
 
-    public async Task Play(WaveeContext context, Option<int> indexInContext,
+    public async Task Play(
+        WaveeContext context,
+        Option<FutureWaveeTrack> playingFromQueueTrack,
+        Option<int> indexInContext,
         Option<TimeSpan> startFrom,
         Option<bool> startPaused,
         Option<bool> shuffling,
@@ -346,44 +338,58 @@ public sealed class WaveePlayer
         Option<Que<FutureWaveeTrack>> queue,
         CancellationToken ct = default)
     {
-        _playbackEvent.Reset();
-        _mainStream?.Dispose();
-        _mainStream = null;
-        _crossfadingOut?.Dispose();
-        _crossfadingOut = null;
-
-        var track = context.FutureTracks.ElementAtOrDefault(indexInContext.IfNone(0));
-        if (track is null)
+        try
         {
-            return;
+            _playbackEvent.Reset();
+            _mainStream?.Dispose();
+            _mainStream = null;
+            _crossfadingOut?.Dispose();
+            _crossfadingOut = null;
+
+            FutureWaveeTrack track;
+            if (playingFromQueueTrack.IsNone)
+            {
+                track = context.FutureTracks.ElementAtOrDefault(indexInContext.IfNone(0));
+                if (track is null)
+                {
+                    return;
+                }
+            }
+            else
+            {
+                track = playingFromQueueTrack.ValueUnsafe();
+            }
+
+            var trackStream = await track.Factory(ct);
+            atomic(() => _state.Swap(x => x with
+            {
+                TrackId = track.TrackId,
+                TrackUid = track.TrackUid,
+                TrackIndex = indexInContext,
+                Context = Some(context),
+                IsPaused = startPaused.IfNone(false),
+                IsShuffling = shuffling.IfNone(x.IsShuffling),
+                RepeatState = repeatState.IfNone(x.RepeatState),
+                StartFrom = startFrom,
+                TrackDetails = trackStream,
+                PermanentEnd = false,
+                Queue = queue.IfNone(x.Queue)
+            }));
+            if (startPaused.IfNone(false))
+            {
+                NAudioSink.Instance.Pause();
+            }
+            else
+            {
+                NAudioSink.Instance.Resume();
+            }
+
+            _playbackEvent.Set();
         }
-
-        var trackStream = await track.Factory(ct);
-
-        atomic(() => _state.Swap(x => x with
+        catch (Exception e)
         {
-            TrackId = track.TrackId,
-            TrackUid = track.TrackUid,
-            TrackIndex = indexInContext,
-            Context = Some(context),
-            IsPaused = startPaused.IfNone(false),
-            IsShuffling = shuffling.IfNone(x.IsShuffling),
-            RepeatState = repeatState.IfNone(x.RepeatState),
-            StartFrom = startFrom,
-            TrackDetails = trackStream,
-            PermanentEnd = false,
-            Queue = queue.IfNone(x.Queue)
-        }));
-        if (startPaused.IfNone(false))
-        {
-            NAudioSink.Instance.Pause();
+            Debug.WriteLine(e);
         }
-        else
-        {
-            NAudioSink.Instance.Resume();
-        }
-
-        _playbackEvent.Set();
     }
 
 
@@ -404,5 +410,25 @@ public sealed class WaveePlayer
     {
         NAudioSink.Instance.Pause();
         atomic(() => _state.Swap(x => x with { IsPaused = true }));
+    }
+
+    public void SetShuffle(bool valueUnsafe)
+    {
+        atomic(() => _state.Swap(x => x with { IsShuffling = valueUnsafe }));
+    }
+
+    public void SetRepeat(RepeatState valueUnsafe)
+    {
+        atomic(() => _state.Swap(x => x with { RepeatState = valueUnsafe }));
+    }
+
+    public void ReplaceQueue(Option<Que<FutureWaveeTrack>> queue)
+    {
+        atomic(() => _state.Swap(x => x with { Queue = queue.IfNone(x.Queue) }));
+    }
+
+    public void AddToQueue(Option<Que<FutureWaveeTrack>> items)
+    {
+        atomic(() => _state.Swap(x => x with { Queue = x.Queue.Append(items.IfNone(Que<FutureWaveeTrack>.Empty)) }));
     }
 }
