@@ -338,11 +338,12 @@ public sealed class WaveePlayer
         }
     }
 
-    public async Task Play(WaveeContext context, Option<int> indexInContext, Option<TimeSpan> startFrom,
-        bool startPaused,
+    public async Task Play(WaveeContext context, Option<int> indexInContext,
+        Option<TimeSpan> startFrom,
+        Option<bool> startPaused,
         Option<bool> shuffling,
         Option<RepeatState> repeatState,
-        Que<FutureWaveeTrack> queue,
+        Option<Que<FutureWaveeTrack>> queue,
         CancellationToken ct = default)
     {
         _playbackEvent.Reset();
@@ -365,15 +366,15 @@ public sealed class WaveePlayer
             TrackUid = track.TrackUid,
             TrackIndex = indexInContext,
             Context = Some(context),
-            IsPaused = startPaused,
+            IsPaused = startPaused.IfNone(false),
             IsShuffling = shuffling.IfNone(x.IsShuffling),
             RepeatState = repeatState.IfNone(x.RepeatState),
             StartFrom = startFrom,
             TrackDetails = trackStream,
             PermanentEnd = false,
-            Queue = queue
+            Queue = queue.IfNone(x.Queue)
         }));
-        if (startPaused)
+        if (startPaused.IfNone(false))
         {
             NAudioSink.Instance.Pause();
         }

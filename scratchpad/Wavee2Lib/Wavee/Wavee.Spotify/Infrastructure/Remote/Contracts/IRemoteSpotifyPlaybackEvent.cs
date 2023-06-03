@@ -14,6 +14,7 @@ public enum RemoteSpotifyPlaybackEventType
     SkipNext,
     UpdateDevice
 }
+
 public readonly struct RemoteSpotifyPlaybackEvent
 {
     public required RemoteSpotifyPlaybackEventType EventType { get; init; }
@@ -22,11 +23,11 @@ public readonly struct RemoteSpotifyPlaybackEvent
     public required Option<int> TrackIndex { get; init; }
     public TimeSpan PlaybackPosition { get; init; }
     public Option<string> ContextUri { get; init; }
-    public bool IsPaused { get; init; }
-    public bool IsShuffling { get; init; }
-    public RepeatState RepeatState { get; init; }
+    public Option<bool> IsPaused { get; init; }
+    public Option<bool> IsShuffling { get; init; }
+    public Option<RepeatState> RepeatState { get; init; }
     public Option<TimeSpan> SeekTo { get; init; }
     public Option<string> SentBy { get; init; }
     public Option<uint> CommandId { get; init; }
-    public IEnumerable<ProvidedTrack> Queue { get; init; }
+    public Option<IEnumerable<ProvidedTrack>> Queue { get; init; }
 }

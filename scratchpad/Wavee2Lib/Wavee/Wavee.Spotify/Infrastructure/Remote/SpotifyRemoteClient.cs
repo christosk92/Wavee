@@ -9,6 +9,7 @@ using Eum.Spotify.connectstate;
 using Google.Protobuf;
 using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
+using Wavee.Core.Ids;
 using Wavee.Infrastructure.IO;
 using Wavee.Player;
 using Wavee.Spotify.Infrastructure.Playback.Contracts;
@@ -69,7 +70,7 @@ internal sealed class SpotifyRemoteClient : ISpotifyRemoteClient, IDisposable
             RepeatState = currentState.RepeatState,
             EventType = RemoteSpotifyPlaybackEventType.Play,
             TrackIndex = currentState.TrackIndex,
-            Queue = currentState.NextTracks.Filter(f => f.Provider is "queue")
+            Queue = Some(currentState.NextTracks.Filter(f => f.Provider is "queue"))
         });
 
         return Some(default(Unit));
@@ -119,7 +120,7 @@ internal sealed class SpotifyRemoteClient : ISpotifyRemoteClient, IDisposable
 
             atomic(() => State.Swap(_ => SpotifyRemoteState.From(cluster, _deviceId)));
 
-            Ready.SetResult(Unit.Default);
+            Ready.TrySetResult(Unit.Default);
             //Start the loop
             while (true)
             {
@@ -145,6 +146,29 @@ internal sealed class SpotifyRemoteClient : ISpotifyRemoteClient, IDisposable
 
                         switch (endpoint)
                         {
+                            case "play":
+                                var skipTo = command.GetProperty("options").GetProperty("skip_to");
+                                var ctx = command.GetProperty("context");
+                                Option<string> trackUid = None;
+                                if (skipTo.TryGetProperty("track_uid", out var trackUidProp))
+                                    trackUid = trackUidProp.GetString();
+                                await _playbackEvent(new RemoteSpotifyPlaybackEvent
+                                {
+                                    EventType = RemoteSpotifyPlaybackEventType.Play,
+                                    SentBy = sentBy,
+                                    CommandId = messageId,
+                                    TrackUid = trackUid, 
+                                    TrackId = AudioId.FromUri(skipTo.GetProperty("track_uri").GetString()),
+                                    TrackIndex = skipTo.GetProperty("track_index").GetInt32(),
+                                    ContextUri = ctx.GetProperty("uri").GetString(), 
+                                    IsPaused = false,
+                                    IsShuffling = None, 
+                                    RepeatState = None, 
+                                    Queue = None, 
+                                    PlaybackPosition = TimeSpan.Zero, 
+                                    SeekTo = None
+                                });
+                                break;
                             case "transfer":
                                 await _playbackEvent(new RemoteSpotifyPlaybackEvent
                                 {

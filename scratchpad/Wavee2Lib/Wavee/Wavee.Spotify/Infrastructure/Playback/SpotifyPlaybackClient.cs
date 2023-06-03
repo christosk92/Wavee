@@ -150,14 +150,14 @@ internal sealed class SpotifyPlaybackClient : ISpotifyPlaybackClient, IDisposabl
     private async Task<Unit> PlayInternal(string contextUri,
         Option<string> trackUid,
         Option<int> indexInContext,
-        AudioId trackId, TimeSpan from,
-        bool startPaused,
-        bool shuffling,
-        RepeatState repeatState,
-        IEnumerable<ProvidedTrack> queue)
+        AudioId trackId,
+        Option<TimeSpan> from,
+        Option<bool> startPaused,
+        Option<bool> shuffling,
+        Option<RepeatState> repeatState,
+        Option<IEnumerable<ProvidedTrack>> queue)
     {
-        var ctx = await BuildContext(contextUri, _mercuryFactory);
-        var queueAsFutureTrack = new Que<FutureWaveeTrack>(queue.Select(x =>
+        var queueAsFutureTrack = queue.Map(y => y.Select(x =>
         {
             var id = AudioId.FromUri(x.Uri);
             return new FutureWaveeTrack(
@@ -165,7 +165,20 @@ internal sealed class SpotifyPlaybackClient : ISpotifyPlaybackClient, IDisposabl
                 TrackUid: x.Uid,
                 Factory: token => StreamTrack(id, x.Metadata.ToHashMap(), _countryCode.Value.IfNone("US"), token)
             );
-        }));
+        })).Map(f => new Que<FutureWaveeTrack>(f));
+
+        WaveeContext ctx;
+
+        if (WaveePlayer.Instance.State.Context.IsSome &&
+            WaveePlayer.Instance.State.Context.ValueUnsafe().Id == contextUri)
+        {
+            //same context, just play
+            ctx = WaveePlayer.Instance.State.Context.ValueUnsafe();
+        }
+        else
+        {
+            ctx = await BuildContext(contextUri, _mercuryFactory);
+        }
 
         int findCorrectIndex()
         {
@@ -196,7 +209,12 @@ internal sealed class SpotifyPlaybackClient : ISpotifyPlaybackClient, IDisposabl
         }
 
         var idx = findCorrectIndex();
-        await WaveePlayer.Instance.Play(ctx, idx, from, startPaused, shuffling, repeatState, queueAsFutureTrack);
+        await WaveePlayer.Instance.Play(ctx, idx,
+            from,
+            startPaused,
+            shuffling,
+            repeatState,
+            queueAsFutureTrack);
         return default;
     }
 
