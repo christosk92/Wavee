@@ -1,5 +1,10 @@
 # Wavee
 
+# Disclaimer
+I DO NOT encourage piracy and DO NOT support any form of downloader/recorder designed with the help of this repository and in general anything that goes against the Spotify ToS. 
+I have built in a standard premium checker, and if any forks are made that override this requirement, I will pull the code.
+Please please please, do not do this stuff, as it will endanger the future of this, and many other projects.
+
 ## Note (2023/05/23)
 
 I am beyond excited to share my app with everyone. I am really proud of the work I've done. 
