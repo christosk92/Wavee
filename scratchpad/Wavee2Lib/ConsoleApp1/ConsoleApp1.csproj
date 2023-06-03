@@ -15,6 +15,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\Wavee\Wavee.Sinks\Wavee.Sinks.csproj" />
       <ProjectReference Include="..\Wavee\Wavee.Spotify\Wavee.Spotify.csproj" />
       <ProjectReference Include="..\Wavee\Wavee\Wavee.csproj" />
     </ItemGroup>

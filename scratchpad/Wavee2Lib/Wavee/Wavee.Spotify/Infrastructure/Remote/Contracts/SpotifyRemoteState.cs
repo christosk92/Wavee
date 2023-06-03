@@ -9,6 +9,7 @@ namespace Wavee.Spotify.Infrastructure.Remote.Contracts;
 public readonly record struct SpotifyRemoteState(Option<string> ActiveDeviceId,
     Option<AudioId> TrackUri,
     Option<string> TrackUid,
+    Option<int> TrackIndex,
     bool IsPlaying,
     bool IsPaused,
     bool IsBuffering,
@@ -28,6 +29,10 @@ public readonly record struct SpotifyRemoteState(Option<string> ActiveDeviceId,
                 .Bind(t => !string.IsNullOrEmpty(t.Track?.Uri) ? Some(t.Track.Uri) : Option<string>.None)
                 .Map(x => AudioId.FromUri(x));
 
+        var trackidx =
+            playerState
+                .Bind(t => t.Index is not null  ? Some(t.Index.Track) : Option<uint>.None);
+        
         var trackUid =
             playerState
                 .Bind(t => !string.IsNullOrEmpty(t.Track?.Uid) ? Some(t.Track.Uid) : Option<string>.None);
@@ -60,6 +65,7 @@ public readonly record struct SpotifyRemoteState(Option<string> ActiveDeviceId,
             ActiveDeviceId: activeDeviceId,
             TrackUri: uri,
             TrackUid: trackUid,
+            TrackIndex: trackidx.Map(x=> (int)x),
             IsPlaying: playerState.Map(t => t.IsPlaying).IfNone(false),
             IsPaused: playerState.Map(t => t.IsPaused).IfNone(false),
             IsBuffering: playerState.Map(t => t.IsBuffering).IfNone(false),
@@ -90,6 +96,7 @@ public readonly record struct SpotifyRemoteState(Option<string> ActiveDeviceId,
             return TimeSpan.FromMilliseconds(p.PositionAsOfTimestamp);
         }).IfNone(TimeSpan.Zero);
     }
+
 }
 
 public readonly record struct SpotifyRemoteDeviceInfo(

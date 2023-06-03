@@ -1,12 +1,18 @@
 ﻿using System.Buffers.Binary;
 using System.Diagnostics;
+using System.Numerics;
+using System.Text;
 using System.Text.Json;
 using System.Threading.Channels;
 using Eum.Spotify;
 using Eum.Spotify.context;
+using Eum.Spotify.storage;
+using Google.Protobuf;
 using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
 using NeoSmart.AsyncLock;
+using Spotify.Metadata;
+using Wavee.Core.Ids;
 using Wavee.Spotify.Infrastructure.Connection;
 using Wavee.Spotify.Infrastructure.Mercury.Models;
 using static LanguageExt.Prelude;
@@ -93,6 +99,20 @@ internal readonly struct MercuryClient : ISpotifyMercuryClient
         return parsed;
     }
 
+    public async Task<Track> GetTrack(AudioId id, CancellationToken ct = default)
+    {
+        const string query = "hm://metadata/4/track/{0}";
+        var finalUri = string.Format(query, id.ToBase16());
+
+        var tcs = new TaskCompletionSource<MercuryPacket>(TaskCreationOptions.RunContinuationsAsynchronously);
+        CreateListener(finalUri, MercuryMethod.Get, null, tcs, ct);
+        var finalData = await tcs.Task;
+        if (finalData.Header.StatusCode != 200)
+            throw new Exception("Failed to get track. Failed with status code: " + finalData.Header.StatusCode);
+        return Track.Parser.ParseFrom(finalData.Payload.Span);
+    }
+    
+
     private static SpotifyContext Parse(JsonDocument jsonDocument)
     {
         var metadata = jsonDocument.RootElement.TryGetProperty("metadata", out var metadataElement)
@@ -127,7 +147,7 @@ internal readonly struct MercuryClient : ISpotifyMercuryClient
         return new SpotifyContext(url, metadata, pages, restrictions);
     }
 
-    private readonly object _sendLock = new();
+    private static readonly object SendLock = new();
 
     private Unit CreateListener(
         string uri,
@@ -138,11 +158,12 @@ internal readonly struct MercuryClient : ISpotifyMercuryClient
     {
         string username = _username;
         ulong seq = 0;
-        lock (_sendLock)
+        lock (SendLock)
         {
             seq = SendSequences[username];
             SendSequences[username] = seq + 1;
         }
+
         // var seq = SendSequences.Swap(x => x.AddOrUpdate(username,
         //     None: () => 0,
         //     Some: y => y + 1

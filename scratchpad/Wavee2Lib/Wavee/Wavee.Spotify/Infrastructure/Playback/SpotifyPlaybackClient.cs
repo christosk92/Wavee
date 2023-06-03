@@ -1,8 +1,17 @@
-﻿using System.Reactive.Linq;
+﻿using System.Net.Http.Headers;
+using System.Reactive.Linq;
+using System.Text;
+using Eum.Spotify.storage;
+using Google.Protobuf;
 using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
+using Spotify.Metadata;
 using Wavee.Core.Ids;
+using Wavee.Infrastructure.IO;
 using Wavee.Player;
+using Wavee.Spotify.Infrastructure.ApResolve;
+using Wavee.Spotify.Infrastructure.AudioKey;
+using Wavee.Spotify.Infrastructure.Cache;
 using Wavee.Spotify.Infrastructure.Mercury;
 using Wavee.Spotify.Infrastructure.Playback.Contracts;
 using Wavee.Spotify.Infrastructure.Remote.Contracts;
@@ -11,6 +20,8 @@ namespace Wavee.Spotify.Infrastructure.Playback;
 
 internal sealed class SpotifyPlaybackClient : ISpotifyPlaybackClient, IDisposable
 {
+    private Func<ISpotifyCache> _cacheFactory;
+    private Func<IAudioKeyProvider> _audioKeyProviderFactory;
     private Func<ISpotifyMercuryClient> _mercuryFactory;
     private Func<SpotifyLocalPlaybackState, Task> _remoteUpdates;
     private readonly SpotifyPlaybackConfig _config;
@@ -18,8 +29,11 @@ internal sealed class SpotifyPlaybackClient : ISpotifyPlaybackClient, IDisposabl
     private readonly SpotifyRemoteConfig _remoteConfig;
     private readonly Ref<Option<string>> _countryCode;
     private readonly TaskCompletionSource<Unit> _ready;
-    
-    public SpotifyPlaybackClient(Func<ISpotifyMercuryClient> mercuryFactory,
+
+    public SpotifyPlaybackClient(
+        Func<ISpotifyMercuryClient> mercuryFactory,
+        Func<IAudioKeyProvider> audioKeyProviderFactory,
+        Func<ISpotifyCache> cacheFactory,
         Func<SpotifyLocalPlaybackState, Task> remoteUpdates,
         SpotifyPlaybackConfig config,
         string deviceId,
@@ -32,6 +46,8 @@ internal sealed class SpotifyPlaybackClient : ISpotifyPlaybackClient, IDisposabl
         _remoteConfig = remoteConfig;
         _countryCode = countryCode;
         _ready = ready;
+        _audioKeyProviderFactory = audioKeyProviderFactory;
+        _cacheFactory = cacheFactory;
 
         object _stateLock = new object();
         bool isActive = false;
@@ -47,10 +63,10 @@ internal sealed class SpotifyPlaybackClient : ISpotifyPlaybackClient, IDisposabl
                     previousState = SpotifyLocalPlaybackState.Empty(_remoteConfig, deviceId);
                     return previousState;
                 }
-                
+
                 //wait for a connectionid
                 await _ready.Task;
-                
+
                 lock (_stateLock)
                 {
                     if (!isActive)
@@ -75,13 +91,67 @@ internal sealed class SpotifyPlaybackClient : ISpotifyPlaybackClient, IDisposabl
     public async Task<Unit> Play(string contextUri, Option<int> indexInContext, CancellationToken ct = default)
     {
         var ctx = await BuildContext(contextUri, _mercuryFactory);
-        await WaveePlayer.Instance.Play(ctx, indexInContext);
+        await WaveePlayer.Instance.Play(ctx, indexInContext, Option<TimeSpan>.None, false);
         return default;
     }
 
-    public Task OnPlaybackEvent(RemoteSpotifyPlaybackEvent ev)
+    private async Task<Unit> PlayInternal(string contextUri,
+        Option<string> trackUid,
+        Option<int> indexInContext,
+        AudioId trackId, TimeSpan from,
+        bool startPaused)
+
     {
-        throw new NotImplementedException();
+        var ctx = await BuildContext(contextUri, _mercuryFactory);
+
+        int findCorrectIndex()
+        {
+            if (indexInContext.IsSome)
+            {
+                return indexInContext.ValueUnsafe();
+            }
+
+            int index = 0;
+            foreach (var itemIn in ctx.FutureTracks)
+            {
+                if (trackUid.IsSome)
+                {
+                    if (itemIn.TrackUid == trackUid.ValueUnsafe())
+                    {
+                        return index;
+                    }
+                }
+                else if (itemIn.TrackId == trackId)
+                {
+                    return index;
+                }
+
+                index++;
+            }
+
+            return index;
+        }
+
+        var idx = findCorrectIndex();
+        await WaveePlayer.Instance.Play(ctx, idx, from, startPaused);
+        return default;
+    }
+
+    public async Task OnPlaybackEvent(RemoteSpotifyPlaybackEvent ev)
+    {
+        switch (ev.EventType)
+        {
+            case RemoteSpotifyPlaybackEventType.Play:
+                await PlayInternal(ev.ContextUri.ValueUnsafe(),
+                    ev.TrackUid,
+                    ev.TrackIndex,
+                    ev.TrackId,
+                    ev.PlaybackPosition,
+                    ev.IsPaused);
+                break;
+            default:
+                throw new ArgumentOutOfRangeException();
+        }
     }
 
     private async Task<WaveeContext> BuildContext(string contextUri, Func<ISpotifyMercuryClient> mercuryFactory)
@@ -116,7 +186,7 @@ internal sealed class SpotifyPlaybackClient : ISpotifyPlaybackClient, IDisposabl
 
                     yield return new FutureWaveeTrack(id,
                         TrackUid: uid.IfNone(id.ToBase16()),
-                        () => StreamTrack(id, trackMetadata, country.Value.IfNone("US")));
+                        (ct) => StreamTrack(id, trackMetadata, country.Value.IfNone("US"), ct));
                 }
             }
             else
@@ -152,18 +222,193 @@ internal sealed class SpotifyPlaybackClient : ISpotifyPlaybackClient, IDisposabl
 
     private Task<WaveeTrack> StreamTrack(AudioId id,
         HashMap<string, string> trackMetadata,
-        string country)
+        string country,
+        CancellationToken ct)
     {
-        //dummy vmp3
-        //"C:\Users\chris-pc\Music\Busker Busker - 처음엔 사랑이란게 (Love At First).mp3"
-        var path = @"C:\Users\chris-pc\Music\Busker Busker - 처음엔 사랑이란게 (Love At First).mp3";
-        return Task.FromResult(new WaveeTrack(
-            audioStream: File.OpenRead(path),
+        var mercury = _mercuryFactory();
+        var audioKeyProvider = _audioKeyProviderFactory();
+        var cache = _cacheFactory();
+        switch (id.Type)
+        {
+            case AudioItemType.Track:
+                return StreamTrackSpecifically(id, trackMetadata, country, mercury, audioKeyProvider, cache, ct);
+            case AudioItemType.PodcastEpisode:
+                return StreamPodcastEpisodeSpecifically(id, trackMetadata, country, mercury);
+        }
+
+        throw new NotSupportedException("Cannot stream this type of audio item");
+    }
+
+    private Task<WaveeTrack> StreamPodcastEpisodeSpecifically(AudioId id, HashMap<string, string> trackMetadata,
+        string country, ISpotifyMercuryClient mercury)
+    {
+        throw new NotImplementedException();
+    }
+
+    internal async Task<WaveeTrack> StreamTrackSpecifically(AudioId id,
+        HashMap<string, string> trackMetadata,
+        string country,
+        ISpotifyMercuryClient mercury,
+        IAudioKeyProvider audioKeyProvider,
+        ISpotifyCache cache,
+        CancellationToken ct)
+    {
+        var track = await mercury.GetTrack(id, ct);
+        var preferedQuality = _config.PreferedQuality;
+        var canPlay = CanPlay(track, country);
+        if (!canPlay)
+        {
+            throw new NotSupportedException("Cannot play this track");
+        }
+
+        var format = GetBestFormat(track, preferedQuality);
+        if (format is null)
+        {
+            throw new NotSupportedException("Cannot play this track");
+        }
+
+        var audioKeyRes = await audioKeyProvider.GetAudioKey(id, format, ct);
+        var audoioKey = audioKeyRes.Match(
+            Left: err => throw new Exception($"Could not get audio key: {err}"),
+            Right: key => key
+        );
+
+        var stream = await cache.AudioFile(format)
+            .IfNoneAsync(() => StreamFromWeb(format, audoioKey, mercury, ct));
+
+        return new WaveeTrack(
+            audioStream: stream,
+            title: track.Name,
             id: id,
             metadata: trackMetadata,
-            title: "Busker Busker - 처음엔 사랑이란게 (Love At First)",
-            duration: TimeSpan.FromSeconds(200)
-        ));
+            duration: TimeSpan.FromMilliseconds(track.Duration)
+        );
+    }
+
+    private static async Task<Stream> StreamFromWeb(
+        AudioFile format,
+        ReadOnlyMemory<byte> audioKey,
+        ISpotifyMercuryClient mercuryClient,
+        CancellationToken ct)
+    {
+        //storage-resolve/files/audio/interactive/{fileId}?alt=json
+        var bearer = await mercuryClient.GetAccessToken(ct);
+        var storageResolve = await StorageResolve(format.FileId, bearer, ct);
+        if (storageResolve.Result is not StorageResolveResponse.Types.Result.Cdn)
+        {
+            throw new NotSupportedException("Cannot play this track for some reason.. Cdn is not available.");
+        }
+
+        var cdnUrl = storageResolve.Cdnurl.First();
+        //TODO: check expiration
+
+        const int firstChunkStart = 0;
+        const int chunkSize = SpotifyDecryptedStream.ChunkSize;
+        const int firstChunkEnd = firstChunkStart + chunkSize - 1;
+
+
+        using var firstChunk = await HttpIO.GetWithContentRange(
+            cdnUrl,
+            firstChunkStart,
+            firstChunkEnd,
+            Option<AuthenticationHeaderValue>.None,
+            HashMap<string, string>.Empty, ct);
+        var firstChunkBytes = await firstChunk.Content.ReadAsByteArrayAsync(ct);
+
+        ValueTask<byte[]> GetChunkFunc(int index)
+        {
+            if (index == 0)
+            {
+                return new ValueTask<byte[]>(firstChunkBytes);
+            }
+
+            var start = index * chunkSize;
+            var end = start + chunkSize - 1;
+            return new ValueTask<byte[]>(HttpIO.GetWithContentRange(
+                    cdnUrl,
+                    start,
+                    end,
+                    Option<AuthenticationHeaderValue>.None,
+                    HashMap<string, string>.Empty, ct)
+                .MapAsync(x => x.Content.ReadAsByteArrayAsync(ct)));
+        }
+
+        return new SpotifyDecryptedStream(GetChunkFunc,
+            length: firstChunk.Content.Headers.ContentRange?.Length ?? 0,
+            audioKey,
+            format);
+    }
+
+    private static async Task<StorageResolveResponse> StorageResolve(ByteString file, string jwt, CancellationToken ct)
+    {
+        var spClient = ApResolver.SpClient.First();
+
+        var query = $"https://{spClient}/storage-resolve/files/audio/interactive/{{0}}";
+
+        static string ToBase16(ByteString data)
+        {
+            var sp = data.Span;
+            var hex = new StringBuilder(sp.Length * 2);
+            foreach (var b in sp)
+            {
+                hex.AppendFormat("{0:x2}", b);
+            }
+
+            return hex.ToString();
+        }
+
+        var finalUri = string.Format(query, ToBase16(file));
+
+        using var resp = await HttpIO.Get(finalUri, new AuthenticationHeaderValue("Bearer", jwt),
+            HashMap<string, string>.Empty, ct);
+        resp.EnsureSuccessStatusCode();
+        await using var stream = await resp.Content.ReadAsStreamAsync();
+        return StorageResolveResponse.Parser.ParseFrom(stream);
+    }
+
+    private AudioFile? GetBestFormat(Track track, PreferredQualityType preferedQuality)
+    {
+        foreach (var file in track.File)
+        {
+            switch (file.Format)
+            {
+                case AudioFile.Types.Format.OggVorbis96:
+                    if (preferedQuality is PreferredQualityType.Normal)
+                        return file;
+                    break;
+                case AudioFile.Types.Format.OggVorbis160:
+                    if (preferedQuality is PreferredQualityType.High)
+                        return file;
+                    break;
+                case AudioFile.Types.Format.OggVorbis320:
+                    if (preferedQuality is PreferredQualityType.VeryHigh)
+                        return file;
+                    break;
+            }
+        }
+
+        //if no format is found, return the first one
+        var firstOne = track.File.FirstOrDefault(c => c.Format is AudioFile.Types.Format.OggVorbis96
+            or AudioFile.Types.Format.OggVorbis160 or AudioFile.Types.Format.OggVorbis320);
+        if (firstOne is null)
+        {
+            foreach (var alternative in track.Alternative)
+            {
+                var altItem = GetBestFormat(alternative, preferedQuality);
+                if (altItem is not null)
+                {
+                    return altItem;
+                }
+            }
+        }
+
+        return firstOne;
+    }
+
+    private bool CanPlay(Track track, string country)
+    {
+        //TODO:
+        return true;
     }
 
     public void Dispose()

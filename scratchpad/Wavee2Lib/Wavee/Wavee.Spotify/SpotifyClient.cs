@@ -1,6 +1,8 @@
 ﻿using Eum.Spotify;
 using LanguageExt.UnsafeValueAccess;
 using Wavee.Spotify.Infrastructure.ApResolve;
+using Wavee.Spotify.Infrastructure.AudioKey;
+using Wavee.Spotify.Infrastructure.Cache;
 using Wavee.Spotify.Infrastructure.Connection;
 using Wavee.Spotify.Infrastructure.Mercury;
 using Wavee.Spotify.Infrastructure.Playback;
@@ -19,6 +21,7 @@ public sealed class SpotifyClient : IDisposable
 {
     private readonly string _deviceId;
     private readonly SpotifyTcpConnection _connection;
+    private readonly SpotifyCacheConfig _config;
 
     //Some clients should be reference types, some should be value types (single-use)
     private SpotifyClient(
@@ -26,6 +29,7 @@ public sealed class SpotifyClient : IDisposable
         SpotifyTcpConnection connection,
         string deviceId)
     {
+        _config = config.Cache;
         _connection = connection;
         _deviceId = deviceId;
         Remote = new SpotifyRemoteClient(
@@ -37,12 +41,20 @@ public sealed class SpotifyClient : IDisposable
 
         Playback = new SpotifyPlaybackClient(
             mercuryFactory: () => Mercury,
-            remoteUpdates: (state) => (Remote as SpotifyRemoteClient)!.OnPlaybackUpdate(state),
-            config: config.Playback,
-            deviceId: deviceId,
-            remoteConfig: config.Remote,
-            countryCode: _connection.LastCountryCode,
-            ready: (Remote as SpotifyRemoteClient)!.Ready);
+            audioKeyProviderFactory: () => AudioKeyProvder,
+            cacheFactory: () => Cache,
+            remoteUpdates:
+            (state) => (Remote as SpotifyRemoteClient)!.OnPlaybackUpdate(state),
+            config:
+            config.Playback,
+            deviceId:
+            deviceId,
+            remoteConfig:
+            config.Remote,
+            countryCode:
+            _connection.LastCountryCode,
+            ready:
+            (Remote as SpotifyRemoteClient)!.Ready);
     }
 
     public static async Task<SpotifyClient> CreateAsync(
@@ -103,6 +115,15 @@ public sealed class SpotifyClient : IDisposable
         onPackageReceive: (condition) => _connection.CreateListener(condition)
     );
 
+
+    public ISpotifyCache Cache => new SpotifyCache(
+        root: _config.CacheRoot
+    );
+
+    public IAudioKeyProvider AudioKeyProvder => new AudioKeyProvider(
+        username: _connection.LastWelcomeMessage.Value.CanonicalUsername,
+        onPackageSend: (pkg) => _connection.Send(pkg),
+        onPackageReceive: (condition) => _connection.CreateListener(condition));
 
     public void Dispose()
     {

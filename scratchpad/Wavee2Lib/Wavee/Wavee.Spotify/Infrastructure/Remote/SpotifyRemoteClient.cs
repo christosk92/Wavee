@@ -48,6 +48,31 @@ internal sealed class SpotifyRemoteClient : ISpotifyRemoteClient, IDisposable
     public IObservable<Option<SpotifyRemoteState>> StateUpdates =>
         State.OnChange().StartWith(State.Value);
 
+    public async Task<Option<Unit>> Takeover(CancellationToken ct = default)
+    {
+        await Ready.Task;
+        if(State.Value.IsNone)
+            return Option<Unit>.None;
+        if(State.Value.ValueUnsafe().TrackUri.IsNone)
+            return Option<Unit>.None;
+        
+        var currentState = State.Value.ValueUnsafe();
+        await _playbackEvent(new RemoteSpotifyPlaybackEvent
+        {
+            TrackId = currentState.TrackUri.ValueUnsafe(),
+            TrackUid = currentState.TrackUid,
+            PlaybackPosition = currentState.Position,
+            ContextUri = currentState.ContextUri,
+            IsPaused = currentState.IsPaused,
+            IsShuffling = currentState.IsShuffling,
+            RepeatState = currentState.RepeatState,
+            EventType = RemoteSpotifyPlaybackEventType.Play,
+            TrackIndex = currentState.TrackIndex
+        });
+        
+        return Some(default(Unit));
+    }
+
     public async Task OnPlaybackUpdate(SpotifyLocalPlaybackState state)
     {
         if (ConnectionId.Value.IsNone)

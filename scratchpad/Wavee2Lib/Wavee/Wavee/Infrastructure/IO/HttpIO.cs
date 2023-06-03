@@ -44,4 +44,57 @@ public static class HttpIO
 
         return await Client.SendAsync(request, ct);
     }
+
+    public static async Task<HttpResponseMessage> Get(
+        string url,
+        Option<AuthenticationHeaderValue> bearerHeader,
+        HashMap<string, string> headers, CancellationToken ct = default)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, url);
+        bearerHeader.IfSome(b => request.Headers.Authorization = b);
+        foreach (var header in headers)
+        {
+            switch (header.Key)
+            {
+                case "accept":
+                    request.Headers.AcceptEncoding.Add(new StringWithQualityHeaderValue(header.Value));
+                    break;
+                default:
+                    request.Headers.Add(header.Key, header.Value);
+                    break;
+            }
+        }
+        
+        var response = await Client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, ct);
+        response.EnsureSuccessStatusCode();
+        return response;
+    }
+
+    public static async Task<HttpResponseMessage> GetWithContentRange(
+        string url,
+        int start,
+        int end,
+        Option<AuthenticationHeaderValue> bearerHeader,
+        HashMap<string, string> headers, CancellationToken ct = default)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, url);
+        bearerHeader.IfSome(b => request.Headers.Authorization = b);
+        foreach (var header in headers)
+        {
+            switch (header.Key)
+            {
+                case "accept":
+                    request.Headers.AcceptEncoding.Add(new StringWithQualityHeaderValue(header.Value));
+                    break;
+                default:
+                    request.Headers.Add(header.Key, header.Value);
+                    break;
+            }
+        }
+        
+        request.Headers.Range = new RangeHeaderValue(start, end);
+        var response = await Client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, ct);
+        response.EnsureSuccessStatusCode();
+        return response;
+    }
 }

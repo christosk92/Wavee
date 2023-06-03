@@ -6,4 +6,5 @@ namespace Wavee.Spotify.Infrastructure.Remote.Contracts;
 public interface ISpotifyRemoteClient
 {
     IObservable<Option<SpotifyRemoteState>> StateUpdates { get; }
+    Task<Option<Unit>> Takeover(CancellationToken ct = default);
 }
