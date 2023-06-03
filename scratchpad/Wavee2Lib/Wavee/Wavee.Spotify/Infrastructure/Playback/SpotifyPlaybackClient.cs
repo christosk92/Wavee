@@ -33,6 +33,7 @@ internal sealed class SpotifyPlaybackClient : ISpotifyPlaybackClient, IDisposabl
     private readonly TaskCompletionSource<Unit> _ready;
     private SpotifyLocalPlaybackState previousState;
     private readonly bool _isPremium;
+
     public SpotifyPlaybackClient(
         Func<ISpotifyMercuryClient> mercuryFactory,
         Func<IAudioKeyProvider> audioKeyProviderFactory,
@@ -148,7 +149,6 @@ internal sealed class SpotifyPlaybackClient : ISpotifyPlaybackClient, IDisposabl
         Option<int> indexInContext,
         AudioId trackId, TimeSpan from,
         bool startPaused)
-
     {
         var ctx = await BuildContext(contextUri, _mercuryFactory);
 
@@ -402,6 +402,7 @@ internal sealed class SpotifyPlaybackClient : ISpotifyPlaybackClient, IDisposabl
         var requested = new TaskCompletionSource<byte[]>[numberOfChunks];
         requested[0] = new TaskCompletionSource<byte[]>();
         requested[0].SetResult(firstChunkBytes);
+
         ValueTask<byte[]> GetChunkFunc(int index)
         {
             if (requested[index] is { Task.IsCompleted: true })
@@ -421,23 +422,26 @@ internal sealed class SpotifyPlaybackClient : ISpotifyPlaybackClient, IDisposabl
                         Option<AuthenticationHeaderValue>.None,
                         HashMap<string, string>.Empty, ct)
                     .MapAsync(x => x.Content.ReadAsByteArrayAsync(ct))
-                    .ContinueWith(x=> {
+                    .ContinueWith(x =>
+                    {
                         requested[index].SetResult(x.Result);
                         return x.Result;
                     }, ct));
             }
+
             return new ValueTask<byte[]>(requested[index].Task);
         }
 
         return new SpotifyDecryptedStream(GetChunkFunc,
             length: firstChunk.Content.Headers.ContentRange?.Length ?? 0,
             audioKey,
-            format);
+            format,
+            () => Array.Clear(requested));
     }
 
     private static async Task<StorageResolveResponse> StorageResolve(ByteString file, string jwt, CancellationToken ct)
     {
-        var spClient = ApResolver.SpClient.First();
+        var spClient = ApResolver.SpClient.ValueUnsafe();
 
         var query = $"https://{spClient}/storage-resolve/files/audio/interactive/{{0}}";
 

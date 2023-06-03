@@ -115,7 +115,7 @@ public sealed class WaveePlayer
                 //TODO: check other formats
                 stream.Position = 0;
 
-                var decoder = new VorbisWaveReader(stream, duration);
+                var decoder = new VorbisWaveReader(stream, duration, true);
                 //var decoder = new Mp3FileReader(stream);
                 //var wave32 = new WaveChannel32(decoder);
 
@@ -338,6 +338,12 @@ public sealed class WaveePlayer
     public async Task Play(WaveeContext context, Option<int> indexInContext, Option<TimeSpan> startFrom,
         bool startPaused, CancellationToken ct = default)
     {
+        _playbackEvent.Reset();
+        _mainStream?.Dispose();
+        _mainStream = null;
+        _crossfadingOut?.Dispose();
+        _crossfadingOut = null;
+        
         var track = context.FutureTracks.ElementAtOrDefault(indexInContext.IfNone(0));
         if (track is null)
         {

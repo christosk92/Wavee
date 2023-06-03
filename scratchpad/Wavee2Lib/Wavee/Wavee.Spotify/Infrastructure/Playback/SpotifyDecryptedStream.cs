@@ -61,15 +61,16 @@ public sealed class SpotifyDecryptedStream : Stream
     private Func<int, ValueTask<byte[]>> _getChunkFunc;
     private readonly long _offset;
     private readonly long _length;
-
+    private Action closed;
     public SpotifyDecryptedStream(
         Func<int, ValueTask<byte[]>> getChunkFunc,
         long length,
         ReadOnlyMemory<byte> decryptionKey,
-        AudioFile format)
+        AudioFile format, Action closed)
     {
         _position = 0;
         _chosenFormat = format;
+        this.closed = closed;
         _length = length;
         _getChunkFunc = getChunkFunc;
         _offset = format.Format switch
@@ -82,6 +83,16 @@ public sealed class SpotifyDecryptedStream : Stream
             key: decryptionKey.ToArray(),
             iv: AUDIO_AES_IV,
             chunkSize: ChunkSize);
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        closed();
+        
+        closed = null;
+        _getChunkFunc = null;
+        _decryptedChunks.Clear();
+        base.Dispose(disposing);
     }
 
     public override int Read(byte[] buffer, int offset, int count)
