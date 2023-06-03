@@ -1,5 +1,6 @@
 ﻿using Eum.Spotify;
 using LanguageExt.UnsafeValueAccess;
+using Wavee.Player;
 using Wavee.Spotify.Infrastructure.ApResolve;
 using Wavee.Spotify.Infrastructure.AudioKey;
 using Wavee.Spotify.Infrastructure.Cache;
@@ -63,6 +64,8 @@ public sealed class SpotifyClient : IDisposable
     {
         await ApResolver.Populate();
 
+        WaveePlayer.Instance.CrossfadeDuration = config.Playback.CrossfadeDuration;
+        
         var firstAp = ApResolver.AccessPoint.ValueUnsafe();
         var split = firstAp.Split(':');
 

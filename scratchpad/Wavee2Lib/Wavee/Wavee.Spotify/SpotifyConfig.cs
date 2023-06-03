@@ -29,11 +29,13 @@ public class SpotifyCacheConfig
 
 public class SpotifyPlaybackConfig
 {
-    public SpotifyPlaybackConfig(PreferredQualityType preferedQuality)
+    public SpotifyPlaybackConfig(TimeSpan crossfadeDuration, PreferredQualityType preferedQuality)
     {
         PreferedQuality = preferedQuality;
+        CrossfadeDuration = crossfadeDuration;
     }
 
+    public Option<TimeSpan> CrossfadeDuration { get; }
     public PreferredQualityType PreferedQuality { get; set; }
 }
 

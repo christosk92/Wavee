@@ -9,6 +9,11 @@
     <ItemGroup>
       <PackageReference Include="LanguageExt.Core" Version="4.4.3" />
       <PackageReference Include="LanguageExt.Rx" Version="4.4.3" />
+      <PackageReference Include="NAudio.Core" Version="2.1.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Wavee.Sinks\Wavee.Sinks.csproj" />
     </ItemGroup>
 
 </Project>

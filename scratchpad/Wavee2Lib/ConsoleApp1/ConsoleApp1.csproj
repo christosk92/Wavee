@@ -20,4 +20,9 @@
       <ProjectReference Include="..\Wavee\Wavee\Wavee.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <PackageReference Include="taglib-sharp-netstandard2.0" Version="2.1.0" />
+    </ItemGroup>
+
+
 </Project>
