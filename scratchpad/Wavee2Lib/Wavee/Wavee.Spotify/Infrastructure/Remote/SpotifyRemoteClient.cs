@@ -2,6 +2,7 @@
 using System.Net.Http.Headers;
 using System.Net.WebSockets;
 using System.Reactive.Linq;
+using System.Text;
 using System.Text.Json;
 using System.Threading.Channels;
 using Eum.Spotify.connectstate;
@@ -132,8 +133,79 @@ internal sealed class SpotifyRemoteClient : ISpotifyRemoteClient, IDisposable
                         HandleMessage(nextMessage);
                         break;
                     case SpotifyWebsocketMessageType.Request:
+                    {
+                        var jsonData = Encoding.UTF8.GetString(nextMessage.Payload.ValueUnsafe().Span);
+                        using var jsonDoc = JsonDocument.Parse(jsonData);
+                        var request = jsonDoc.RootElement;
+                        var messageId = request.GetProperty("message_id").GetUInt32();
+                        var sentBy = request.GetProperty("sent_by_device_id").GetString();
+                        var command = request.GetProperty("command");
+                        var endpoint = command.GetProperty("endpoint").GetString();
 
+                        switch (endpoint)
+                        {
+                            case "skip_next":
+                                await _playbackEvent(new RemoteSpotifyPlaybackEvent
+                                {
+                                    EventType = RemoteSpotifyPlaybackEventType.SkipNext,
+                                    SentBy = sentBy,
+                                    CommandId = messageId,
+                            
+                                    TrackUid = default,
+                                    TrackIndex = default
+                                });
+                                break;
+                            case "seek_to":
+                                await _playbackEvent(new RemoteSpotifyPlaybackEvent
+                                {
+                                    EventType = RemoteSpotifyPlaybackEventType.SeekTo,
+                                    SeekTo = TimeSpan.FromMilliseconds(command.GetProperty("value")
+                                        .GetDouble()),
+                                    SentBy = sentBy,
+                                    CommandId = messageId,
+                            
+                                    TrackUid = default,
+                                    TrackIndex = default
+                                });
+                                break;
+                            case "pause":
+                                await _playbackEvent(new RemoteSpotifyPlaybackEvent
+                                {
+                                    EventType = RemoteSpotifyPlaybackEventType.Pause,
+                                    SentBy = sentBy,
+                                    CommandId = messageId,
+                            
+                                    TrackUid = default,
+                                    TrackIndex = default
+                                });
+                                break;
+                            case "resume":
+                                await _playbackEvent(new RemoteSpotifyPlaybackEvent
+                                {
+                                    EventType = RemoteSpotifyPlaybackEventType.Resume,
+                                    SentBy = sentBy,
+                                    CommandId = messageId,
+                            
+                                    TrackUid = default,
+                                    TrackIndex = default
+                                });
+                                break;
+                        }
+                        
+                        //respond
+                        var datareply = new
+                        {
+                            type = "reply",
+                            key = nextMessage.Uri,
+                            payload = new
+                            {
+                                success = true.ToString().ToLower()
+                            }
+                        };
+                        ReadOnlyMemory<byte> payload = JsonSerializer.SerializeToUtf8Bytes(datareply);
+                        await ws.SendAsync(payload, WebSocketMessageType.Text, true, CancellationToken.None);
                         break;
+                    }
                     default:
                         throw new ArgumentOutOfRangeException();
                 }

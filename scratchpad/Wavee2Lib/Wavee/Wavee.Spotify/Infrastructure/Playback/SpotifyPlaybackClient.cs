@@ -31,7 +31,7 @@ internal sealed class SpotifyPlaybackClient : ISpotifyPlaybackClient, IDisposabl
     private readonly SpotifyRemoteConfig _remoteConfig;
     private readonly Ref<Option<string>> _countryCode;
     private readonly TaskCompletionSource<Unit> _ready;
-
+    private SpotifyLocalPlaybackState previousState;
     public SpotifyPlaybackClient(
         Func<ISpotifyMercuryClient> mercuryFactory,
         Func<IAudioKeyProvider> audioKeyProviderFactory,
@@ -54,7 +54,6 @@ internal sealed class SpotifyPlaybackClient : ISpotifyPlaybackClient, IDisposabl
         object _stateLock = new object();
         bool isActive = false;
         bool activeChanged = false;
-        SpotifyLocalPlaybackState previousState = default;
 
         _positionUpdates = WaveePlayer.Instance.PositionUpdates
             .SelectMany(async x =>
@@ -196,6 +195,40 @@ internal sealed class SpotifyPlaybackClient : ISpotifyPlaybackClient, IDisposabl
                     ev.TrackId,
                     ev.PlaybackPosition,
                     ev.IsPaused);
+                break;
+
+            case RemoteSpotifyPlaybackEventType.SeekTo:
+                previousState = previousState with
+                {
+                    LastCommandId = ev.CommandId.ValueUnsafe(),
+                    LastCommandSentBy = ev.SentBy.ValueUnsafe()
+                };
+                var to = ev.SeekTo.IfNone(TimeSpan.Zero);
+                WaveePlayer.Instance.SeekTo(to);
+                break;
+            case RemoteSpotifyPlaybackEventType.SkipNext:
+                previousState = previousState with
+                {
+                    LastCommandId = ev.CommandId.ValueUnsafe(),
+                    LastCommandSentBy = ev.SentBy.ValueUnsafe()
+                };
+                await WaveePlayer.Instance.SkipNext(false);
+                break;
+            case RemoteSpotifyPlaybackEventType.Pause:
+                previousState = previousState with
+                {
+                    LastCommandId = ev.CommandId.ValueUnsafe(),
+                    LastCommandSentBy = ev.SentBy.ValueUnsafe()
+                };
+                WaveePlayer.Instance.Pause();
+                break;
+            case RemoteSpotifyPlaybackEventType.Resume:
+                previousState = previousState with
+                {
+                    LastCommandId = ev.CommandId.ValueUnsafe(),
+                    LastCommandSentBy = ev.SentBy.ValueUnsafe()
+                };
+                WaveePlayer.Instance.Resume();
                 break;
             default:
                 throw new ArgumentOutOfRangeException();

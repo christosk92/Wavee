@@ -6,7 +6,11 @@ namespace Wavee.Spotify.Infrastructure.Remote.Contracts;
 
 public enum RemoteSpotifyPlaybackEventType
 {
-    Play
+    Play,
+    SeekTo,
+    Pause,
+    Resume,
+    SkipNext
 }
 public readonly struct RemoteSpotifyPlaybackEvent
 {
@@ -19,4 +23,7 @@ public readonly struct RemoteSpotifyPlaybackEvent
     public bool IsPaused { get; init; }
     public bool IsShuffling { get; init; }
     public RepeatState RepeatState { get; init; }
+    public Option<TimeSpan> SeekTo { get; init; }
+    public Option<string> SentBy { get; init; }
+    public Option<uint> CommandId { get; init; }
 }

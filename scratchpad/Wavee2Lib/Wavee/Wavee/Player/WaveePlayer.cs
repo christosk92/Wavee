@@ -159,72 +159,85 @@ public sealed class WaveePlayer
                 _positionUpdates.OnNext(decoder.CurrentTime);
                 while (true)
                 {
-                    if (goout)
+                    try
                     {
-                        break;
-                    }
-
-                    //read samples from main stream
-                    var old = decoder.CurrentTime;
-                    var buffer = decoder.ReadSamples(sampleCount);
-                    var diff = decoder.CurrentTime - old;
-                    if (diff > expectedTimeIncreasePerCycle || diff < TimeSpan.Zero)
-                    {
-                        _positionUpdates.OnNext(decoder.CurrentTime);
-                    }
-
-                    //if reached end, break
-                    if (buffer.Length == 0 || decoder.Ended)
-                    {
-                        break;
-                    }
-
-                    //check if we need to crossfade out
-                    if (CrossfadeDuration.IsSome && !startedCrossfade)
-                    {
-                        if (decoder.CurrentTime > dur - CrossfadeDuration.ValueUnsafe())
+                        if (goout)
                         {
-                            startedCrossfade = true;
+                            break;
+                        }
 
-                            //if we are already crossfading out, skip
-                            if (_crossfadingOut is not null)
+                        //read samples from main stream
+                        var old = decoder.CurrentTime;
+                        var buffer = decoder.ReadSamples(sampleCount);
+                        var diff = decoder.CurrentTime - old;
+                        if (diff > expectedTimeIncreasePerCycle || diff < TimeSpan.Zero)
+                        {
+                            _positionUpdates.OnNext(decoder.CurrentTime);
+                        }
+
+                        //if reached end, break
+                        if (buffer.Length == 0 || decoder.Ended)
+                        {
+                            break;
+                        }
+
+                        //check if we need to crossfade out
+                        if (CrossfadeDuration.IsSome && !startedCrossfade)
+                        {
+                            if (decoder.CurrentTime > dur - CrossfadeDuration.ValueUnsafe())
                             {
-                                continue;
+                                startedCrossfade = true;
+
+                                //if we are already crossfading out, skip
+                                if (_crossfadingOut is not null)
+                                {
+                                    continue;
+                                }
+
+                                //if we are not crossfading out, crossfade out
+                                Task.Run(async () =>
+                                {
+                                    var skipped = await SkipNext(true);
+                                    if (skipped)
+                                    {
+                                        _crossfadingOut = _mainStream;
+                                        _crossfadingOut?.CrossfadingOut(CrossfadeDuration.ValueUnsafe());
+                                        goout = true;
+                                    }
+                                });
+                            }
+                        }
+
+                        //if crossfading out, read samples from crossfading out stream
+                        if (_crossfadingOut is not null)
+                        {
+                            var crossfadeBuffer = _crossfadingOut.ReadSamples(sampleCount);
+                            for (var i = 0; i < crossfadeBuffer.Length; i++)
+                            {
+                                buffer[i] += crossfadeBuffer[i];
                             }
 
-                            //if we are not crossfading out, crossfade out
-                            Task.Run(async () =>
+                            if (_crossfadingOut.Ended)
                             {
-                                var skipped = await SkipNext(true);
-                                if (skipped)
-                                {
-                                    _crossfadingOut = _mainStream;
-                                    _crossfadingOut?.CrossfadingOut(CrossfadeDuration.ValueUnsafe());
-                                    goout = true;
-                                }
-                            });
+                                _crossfadingOut.Dispose();
+                                _crossfadingOut = null;
+                            }
                         }
-                    }
 
-                    //if crossfading out, read samples from crossfading out stream
-                    if (_crossfadingOut is not null)
+                        var bufferSpan = MemoryMarshal.Cast<float, byte>(buffer);
+
+                        NAudioSink.Instance.Write(bufferSpan);
+                    }
+                    catch (ObjectDisposedException)
                     {
-                        var crossfadeBuffer = _crossfadingOut.ReadSamples(sampleCount);
-                        for (var i = 0; i < crossfadeBuffer.Length; i++)
-                        {
-                            buffer[i] += crossfadeBuffer[i];
-                        }
-
-                        if (_crossfadingOut.Ended)
-                        {
-                            _crossfadingOut.Dispose();
-                            _crossfadingOut = null;
-                        }
+                        goout = true;
+                        break;
                     }
-
-                    var bufferSpan = MemoryMarshal.Cast<float, byte>(buffer);
-
-                    NAudioSink.Instance.Write(bufferSpan);
+                    catch (NullReferenceException)
+                    {
+                        goout = true;
+                        break;
+                    }
                 }
 
                 if (!goout)
@@ -246,35 +259,19 @@ public sealed class WaveePlayer
         SeekTo(_mainStream, valueUnsafe);
     }
 
-    private async ValueTask<bool> SkipNext(bool crossfadeIn)
+    public async ValueTask<bool> SkipNext(bool crossfadeIn)
     {
         if (crossfadeIn)
         {
             var maybe = _state.Value.TrackId.Map(f => f.ToString());
             var currentTrack = _state.Value.TrackUid.IfNone(maybe.IfNone(""));
-            
+
             var next = await atomic(() => _state.SwapAsync(async x =>
             {
-                var maybe = _state.Value.TrackId.Map(f => f.ToString());
-                var currentTrack = _state.Value.TrackUid.IfNone(maybe.IfNone(""));
-
                 var nextState = await x.SkipNext(false);
-                
-                var maybeTo = nextState.TrackId.Map(f => f.ToString());
-                var nextTrack = nextState.TrackUid.IfNone(maybeTo.IfNone(""));
-                
-                if (nextTrack != currentTrack)
-                {
-                    _playbackEvent.Set();
-                }
-                else
-                {
-                    _playbackEvent.Reset();
-                }
-
                 return nextState;
             }));
-            
+
             var maybeTo = next.TrackId.Map(f => f.ToString());
             var nextTrack = next.TrackUid.IfNone(maybeTo.IfNone(""));
             if (currentTrack != nextTrack)
@@ -283,37 +280,35 @@ public sealed class WaveePlayer
             }
 
             return false;
-
-            return next.PermanentEnd;
         }
         else
         {
+            _playbackEvent.Reset();
+            
             _mainStream?.Dispose();
             _mainStream = null;
             _crossfadingOut?.Dispose();
             _crossfadingOut = null;
 
+            var maybe = _state.Value.TrackId.Map(f => f.ToString());
+            var currentTrack = _state.Value.TrackUid.IfNone(maybe.IfNone(""));
+
             var next = await atomic(() => _state.SwapAsync(async x =>
             {
-                var maybe = _state.Value.TrackId.Map(f => f.ToString());
-                var currentTrack = _state.Value.TrackUid.IfNone(maybe.IfNone(""));
-
                 var nextState = await x.SkipNext(true);
-                
-                var maybeTo = nextState.TrackId.Map(f => f.ToString());
-                var nextTrack = nextState.TrackUid.IfNone(maybeTo.IfNone(""));
-
-                if (nextTrack != currentTrack)
-                {
-                    _playbackEvent.Set();
-                }
-                else
-                {
-                    _playbackEvent.Reset();
-                }
-
                 return nextState;
             }));
+
+            var maybeTo = next.TrackId.Map(f => f.ToString());
+            var nextTrack = next.TrackUid.IfNone(maybeTo.IfNone(""));
+            if (nextTrack != currentTrack)
+            {
+                _playbackEvent.Set();
+            }
+            else
+            {
+                _playbackEvent.Reset();
+            }
 
             return !next.PermanentEnd;
         }
@@ -323,7 +318,14 @@ public sealed class WaveePlayer
     {
         try
         {
+            var wasPaused = _state.Value.IsPaused;
+            NAudioSink.Instance.Pause();
+            NAudioSink.Instance.DiscardBuffer();
             decoder.CurrentTime = valueUnsafe;
+
+            if (!wasPaused)
+                NAudioSink.Instance.Resume();
+            _positionUpdates.OnNext(valueUnsafe);
         }
         catch (Exception e)
         {
@@ -348,6 +350,7 @@ public sealed class WaveePlayer
         {
             TrackId = track.TrackId,
             TrackUid = track.TrackUid,
+            TrackIndex = indexInContext,
             Context = Some(context),
             IsPaused = false,
             IsShuffling = false,
@@ -381,6 +384,15 @@ public sealed class WaveePlayer
     public Option<TimeSpan> CrossfadeDuration { get; set; } = Option<TimeSpan>.None;
     public Option<TimeSpan> Position => _mainStream?.CurrentTime ?? Option<TimeSpan>.None;
 
-    public void Resume() => NAudioSink.Instance.Resume();
-    public void Pause() => NAudioSink.Instance.Pause();
+    public void Resume()
+    {
+        NAudioSink.Instance.Resume();
+        atomic(() => _state.Swap(x => x with { IsPaused = false }));
+    }
+
+    public void Pause()
+    {
+        NAudioSink.Instance.Pause();
+        atomic(() => _state.Swap(x => x with { IsPaused = true }));
+    }
 }
