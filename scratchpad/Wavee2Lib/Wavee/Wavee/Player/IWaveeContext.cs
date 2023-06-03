@@ -7,9 +7,9 @@ public readonly record struct WaveeContext(
     string Id,
     string Name,
     IEnumerable<FutureWaveeTrack> FutureTracks,
-    Option<IShuffleProvider> ShuffleProvider
+    IShuffleProvider ShuffleProvider
 );
 public interface IShuffleProvider
 {
-    int GetNextIndex(int currentIndex, int maxIndex);
+    int GetNextIndex(int currentIndex);
 }

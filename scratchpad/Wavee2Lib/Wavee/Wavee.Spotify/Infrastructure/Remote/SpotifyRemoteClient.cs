@@ -68,7 +68,8 @@ internal sealed class SpotifyRemoteClient : ISpotifyRemoteClient, IDisposable
             IsShuffling = currentState.IsShuffling,
             RepeatState = currentState.RepeatState,
             EventType = RemoteSpotifyPlaybackEventType.Play,
-            TrackIndex = currentState.TrackIndex
+            TrackIndex = currentState.TrackIndex,
+            Queue = currentState.NextTracks.Filter(f => f.Provider is "queue")
         });
 
         return Some(default(Unit));
@@ -145,6 +146,14 @@ internal sealed class SpotifyRemoteClient : ISpotifyRemoteClient, IDisposable
                         switch (endpoint)
                         {
                             case "transfer":
+                                await _playbackEvent(new RemoteSpotifyPlaybackEvent
+                                {
+                                    EventType = RemoteSpotifyPlaybackEventType.UpdateDevice,
+                                    SentBy = sentBy,
+                                    CommandId = messageId,
+                                    TrackUid = default,
+                                    TrackIndex = default,
+                                });
                                 await Takeover();
                                 break;
                             case "skip_next":

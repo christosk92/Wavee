@@ -14,6 +14,7 @@ public readonly record struct WaveePlayerState(
     Option<WaveeContext> Context,
     Option<WaveeTrack> TrackDetails,
     Option<TimeSpan> StartFrom,
+    Que<FutureWaveeTrack> Queue,
     bool PermanentEnd = false)
 {
     public static WaveePlayerState Empty()
@@ -27,21 +28,74 @@ public readonly record struct WaveePlayerState(
             RepeatState: RepeatState.None,
             Context: Option<WaveeContext>.None,
             TrackDetails: Option<WaveeTrack>.None,
-            StartFrom: Option<TimeSpan>.None
+            StartFrom: Option<TimeSpan>.None,
+            Queue: Que<FutureWaveeTrack>.Empty
         );
     }
 
-    public async Task<WaveePlayerState> SkipNext(bool setPermanentEndIfNothing)
+    public async Task<WaveePlayerState> SkipNext(bool setPermanentEndIfNothing, bool overrideRepeatState = false)
     {
-        //TODO: Queue
-        var nextIndex = this.TrackIndex.ValueUnsafe() + 1;
-        var nextTrack = Context.ValueUnsafe().FutureTracks.ElementAtOrDefault(nextIndex);
+        //repeat state (=track) beats queue
+        if (!overrideRepeatState && RepeatState is RepeatState.Track)
+        {
+            //return US
+            return this with
+            {
+                PermanentEnd = false,
+                StartFrom = Option<TimeSpan>.None
+            };
+        }
+
+        //queue!
+        if (!this.Queue.IsEmpty)
+        {
+            var queuedTrack = this.Queue.Peek();
+            var queuedTrackData = await queuedTrack.Factory(CancellationToken.None);
+            return this with
+            {
+                TrackId = queuedTrackData.Id,
+                TrackUid = queuedTrack.TrackUid,
+                TrackIndex = this.TrackIndex, //keep track index for potential next track
+                TrackDetails = queuedTrackData,
+                PermanentEnd = false,
+                StartFrom = Option<TimeSpan>.None,
+                Queue = this.Queue.Dequeue()
+            };
+        }
+
+        var ctx = Context.ValueUnsafe();
+        var currentIndex = this.TrackIndex.IfNone(0);
+        int nextIndex = 0;
+        FutureWaveeTrack? nextTrack = null;
+        if (IsShuffling)
+        {
+            nextIndex = ctx.ShuffleProvider.GetNextIndex(currentIndex);
+            nextTrack = ctx.FutureTracks.ElementAtOrDefault(nextIndex);
+        }
+        else
+        {
+            var theoreticalNext = currentIndex + 1;
+            nextTrack = ctx.FutureTracks.ElementAtOrDefault(theoreticalNext);
+            if (nextTrack is null && RepeatState is RepeatState.Context)
+            {
+                theoreticalNext = 0;
+                nextTrack = ctx.FutureTracks.ElementAtOrDefault(0);
+            }
+            nextIndex = theoreticalNext;
+        }
+
         if (nextTrack is null)
         {
             return this with
             {
                 PermanentEnd = setPermanentEndIfNothing,
-                StartFrom = new Option<TimeSpan>()
+                StartFrom = new Option<TimeSpan>(),
+                RepeatState = this.RepeatState switch
+                {
+                    RepeatState.Track => RepeatState.Context,
+                    RepeatState.Context => RepeatState.Context,
+                    RepeatState.None => RepeatState.None
+                }
             };
         }
 
@@ -53,7 +107,13 @@ public readonly record struct WaveePlayerState(
             TrackIndex = nextIndex,
             TrackDetails = nextTrackData,
             PermanentEnd = false,
-            StartFrom = Option<TimeSpan>.None
+            StartFrom = Option<TimeSpan>.None,
+            RepeatState = this.RepeatState switch
+            {
+                RepeatState.Track => RepeatState.Context,
+                RepeatState.Context => RepeatState.Context,
+                RepeatState.None => RepeatState.None
+            }
         };
     }
 }

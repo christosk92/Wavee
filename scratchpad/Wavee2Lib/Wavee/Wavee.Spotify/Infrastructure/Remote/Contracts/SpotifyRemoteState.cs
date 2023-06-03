@@ -1,5 +1,7 @@
 ﻿using Eum.Spotify.connectstate;
+using Eum.Spotify.context;
 using Google.Protobuf;
+using Google.Protobuf.Collections;
 using LanguageExt;
 using Wavee.Core.Ids;
 using static LanguageExt.Prelude;
@@ -17,6 +19,7 @@ public readonly record struct SpotifyRemoteState(Option<string> ActiveDeviceId,
     RepeatState RepeatState,
     Option<string> ContextUri,
     TimeSpan Position,
+    IEnumerable<ProvidedTrack> NextTracks,
     HashMap<string, SpotifyRemoteDeviceInfo> Devices)
 {
     internal static SpotifyRemoteState From(Cluster cluster, string ourDeviceId)
@@ -31,8 +34,8 @@ public readonly record struct SpotifyRemoteState(Option<string> ActiveDeviceId,
 
         var trackidx =
             playerState
-                .Bind(t => t.Index is not null  ? Some(t.Index.Track) : Option<uint>.None);
-        
+                .Bind(t => t.Index is not null ? Some(t.Index.Track) : Option<uint>.None);
+
         var trackUid =
             playerState
                 .Bind(t => !string.IsNullOrEmpty(t.Track?.Uid) ? Some(t.Track.Uid) : Option<string>.None);
@@ -50,6 +53,9 @@ public readonly record struct SpotifyRemoteState(Option<string> ActiveDeviceId,
             ? Some(cluster.ActiveDeviceId)
             : Option<string>.None;
 
+        var nextTracks = playerState.Map(x => x.NextTracks.AsEnumerable())
+            .IfNone(Enumerable.Empty<ProvidedTrack>());
+
         var devices = cluster.Device.ToDictionary(d => d.Key,
                 v => new SpotifyRemoteDeviceInfo(
                     DeviceId: v.Value.DeviceId,
@@ -65,7 +71,7 @@ public readonly record struct SpotifyRemoteState(Option<string> ActiveDeviceId,
             ActiveDeviceId: activeDeviceId,
             TrackUri: uri,
             TrackUid: trackUid,
-            TrackIndex: trackidx.Map(x=> (int)x),
+            TrackIndex: trackidx.Map(x => (int)x),
             IsPlaying: playerState.Map(t => t.IsPlaying).IfNone(false),
             IsPaused: playerState.Map(t => t.IsPaused).IfNone(false),
             IsBuffering: playerState.Map(t => t.IsBuffering).IfNone(false),
@@ -73,6 +79,7 @@ public readonly record struct SpotifyRemoteState(Option<string> ActiveDeviceId,
             RepeatState: repeatState,
             ContextUri: contextUri,
             Position: ParsePosition(playerState),
+            NextTracks: nextTracks,
             devices
         );
     }
@@ -96,7 +103,6 @@ public readonly record struct SpotifyRemoteState(Option<string> ActiveDeviceId,
             return TimeSpan.FromMilliseconds(p.PositionAsOfTimestamp);
         }).IfNone(TimeSpan.Zero);
     }
-
 }
 
 public readonly record struct SpotifyRemoteDeviceInfo(

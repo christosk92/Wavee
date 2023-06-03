@@ -8,13 +8,14 @@ using NAudio.Vorbis;
 using NAudio.Wave;
 using Wavee.Sinks;
 using static LanguageExt.Prelude;
+using TrackingHashMap = LanguageExt.TrackingHashMap;
 
 namespace Wavee.Player;
 
 internal class CrossfadeStream : IDisposable
 {
     private readonly WaveStream _mainStream;
-    private readonly ISampleProvider _mainSampleProvider;
+    private ISampleProvider _mainSampleProvider;
 
     private TimeSpan _crossfadeDuration;
     private bool _crossfadingOut;
@@ -87,6 +88,7 @@ internal class CrossfadeStream : IDisposable
     public void Dispose()
     {
         _mainStream.Dispose();
+        _mainSampleProvider = null;
     }
 }
 
@@ -125,6 +127,7 @@ public sealed class WaveePlayer
             while (true)
             {
                 _playbackEvent.WaitOne();
+                GC.Collect();
                 if (_state.Value.TrackDetails.IsNone)
                 {
                     _playbackEvent.Reset();
@@ -197,7 +200,7 @@ public sealed class WaveePlayer
                                 //if we are not crossfading out, crossfade out
                                 Task.Run(async () =>
                                 {
-                                    var skipped = await SkipNext(true);
+                                    var skipped = await SkipNext(true, false);
                                     if (skipped)
                                     {
                                         _crossfadingOut = _mainStream;
@@ -243,7 +246,7 @@ public sealed class WaveePlayer
                 if (!goout)
                 {
                     _playbackEvent.Reset();
-                    _ = SkipNext(false);
+                    _ = SkipNext(false, false);
                 }
             }
         });
@@ -259,7 +262,7 @@ public sealed class WaveePlayer
         SeekTo(_mainStream, valueUnsafe);
     }
 
-    public async ValueTask<bool> SkipNext(bool crossfadeIn)
+    public async ValueTask<bool> SkipNext(bool crossfadeIn, bool overrideRepeatState)
     {
         if (crossfadeIn)
         {
@@ -268,13 +271,13 @@ public sealed class WaveePlayer
 
             var next = await atomic(() => _state.SwapAsync(async x =>
             {
-                var nextState = await x.SkipNext(false);
+                var nextState = await x.SkipNext(false, overrideRepeatState);
                 return nextState;
             }));
 
             var maybeTo = next.TrackId.Map(f => f.ToString());
             var nextTrack = next.TrackUid.IfNone(maybeTo.IfNone(""));
-            if (currentTrack != nextTrack)
+            if (currentTrack != nextTrack || next.RepeatState is RepeatState.Track)
             {
                 return true;
             }
@@ -284,7 +287,7 @@ public sealed class WaveePlayer
         else
         {
             _playbackEvent.Reset();
-            
+
             _mainStream?.Dispose();
             _mainStream = null;
             _crossfadingOut?.Dispose();
@@ -301,7 +304,7 @@ public sealed class WaveePlayer
 
             var maybeTo = next.TrackId.Map(f => f.ToString());
             var nextTrack = next.TrackUid.IfNone(maybeTo.IfNone(""));
-            if (nextTrack != currentTrack)
+            if (currentTrack != nextTrack || next.RepeatState is RepeatState.Track)
             {
                 _playbackEvent.Set();
             }
@@ -336,14 +339,18 @@ public sealed class WaveePlayer
     }
 
     public async Task Play(WaveeContext context, Option<int> indexInContext, Option<TimeSpan> startFrom,
-        bool startPaused, CancellationToken ct = default)
+        bool startPaused,
+        Option<bool> shuffling,
+        Option<RepeatState> repeatState,
+        Que<FutureWaveeTrack> queue,
+        CancellationToken ct = default)
     {
         _playbackEvent.Reset();
         _mainStream?.Dispose();
         _mainStream = null;
         _crossfadingOut?.Dispose();
         _crossfadingOut = null;
-        
+
         var track = context.FutureTracks.ElementAtOrDefault(indexInContext.IfNone(0));
         if (track is null)
         {
@@ -358,17 +365,13 @@ public sealed class WaveePlayer
             TrackUid = track.TrackUid,
             TrackIndex = indexInContext,
             Context = Some(context),
-            IsPaused = false,
-            IsShuffling = false,
-            RepeatState = x.RepeatState switch
-            {
-                RepeatState.Context => RepeatState.Context,
-                RepeatState.None => RepeatState.None,
-                RepeatState.Track => RepeatState.Context
-            },
+            IsPaused = startPaused,
+            IsShuffling = shuffling.IfNone(x.IsShuffling),
+            RepeatState = repeatState.IfNone(x.RepeatState),
             StartFrom = startFrom,
             TrackDetails = trackStream,
-            PermanentEnd = false
+            PermanentEnd = false,
+            Queue = queue
         }));
         if (startPaused)
         {

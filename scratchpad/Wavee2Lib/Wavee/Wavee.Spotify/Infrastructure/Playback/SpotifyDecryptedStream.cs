@@ -62,6 +62,7 @@ public sealed class SpotifyDecryptedStream : Stream
     private readonly long _offset;
     private readonly long _length;
     private Action closed;
+
     public SpotifyDecryptedStream(
         Func<int, ValueTask<byte[]>> getChunkFunc,
         long length,
@@ -88,7 +89,7 @@ public sealed class SpotifyDecryptedStream : Stream
     protected override void Dispose(bool disposing)
     {
         closed();
-        
+
         closed = null;
         _getChunkFunc = null;
         _decryptedChunks.Clear();
@@ -105,9 +106,14 @@ public sealed class SpotifyDecryptedStream : Stream
         if (!_decryptedChunks.TryGetValue(chunkIndex, out var chunk))
         {
             chunk = _getChunkFunc(chunkIndex).Result;
-            //preload ahead 2 chunks
-            Task.Run(async () => { await _getChunkFunc(chunkIndex + 1); });
-            Task.Run(async () => { await _getChunkFunc(chunkIndex + 2); });
+            //preload ahead 4 chunks
+            for (var i = 1; i < 4; i++)
+            {
+                var nextChunkIndex = chunkIndex + i;
+                if (!_decryptedChunks.ContainsKey(nextChunkIndex))
+                    Task.Run(async () => { await _getChunkFunc(nextChunkIndex); });
+            }
+
             _decryptor.Decrypt(chunkIndex, chunk);
             _decryptedChunks.Add(chunkIndex, chunk);
         }

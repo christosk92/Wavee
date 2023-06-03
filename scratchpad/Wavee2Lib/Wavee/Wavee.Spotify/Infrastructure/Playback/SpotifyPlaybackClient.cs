@@ -2,6 +2,7 @@
 using System.Net.Http.Headers;
 using System.Reactive.Linq;
 using System.Text;
+using Eum.Spotify.connectstate;
 using Eum.Spotify.storage;
 using Google.Protobuf;
 using LanguageExt;
@@ -107,7 +108,8 @@ internal sealed class SpotifyPlaybackClient : ISpotifyPlaybackClient, IDisposabl
                     Debug.WriteLine("Permanent end");
                     var autoplay = await mercuryFactory().Autoplay(x.Context.ValueUnsafe().Id);
                     var nextContext = await BuildContext(autoplay, _mercuryFactory);
-                    await WaveePlayer.Instance.Play(nextContext, 0, Option<TimeSpan>.None, false);
+                    await WaveePlayer.Instance.Play(nextContext, 0, Option<TimeSpan>.None, false, Option<bool>.None,
+                        Option<RepeatState>.None, Que<FutureWaveeTrack>.Empty);
                     return Option<SpotifyLocalPlaybackState>.None;
                 }
 
@@ -140,7 +142,8 @@ internal sealed class SpotifyPlaybackClient : ISpotifyPlaybackClient, IDisposabl
         CancellationToken ct = default)
     {
         var ctx = await BuildContext(contextUri, _mercuryFactory);
-        await WaveePlayer.Instance.Play(ctx, indexInContext, startFrom, false);
+        await WaveePlayer.Instance.Play(ctx, indexInContext, startFrom, false, Option<bool>.None,
+            Option<RepeatState>.None, Que<FutureWaveeTrack>.Empty);
         return default;
     }
 
@@ -148,9 +151,21 @@ internal sealed class SpotifyPlaybackClient : ISpotifyPlaybackClient, IDisposabl
         Option<string> trackUid,
         Option<int> indexInContext,
         AudioId trackId, TimeSpan from,
-        bool startPaused)
+        bool startPaused,
+        bool shuffling,
+        RepeatState repeatState,
+        IEnumerable<ProvidedTrack> queue)
     {
         var ctx = await BuildContext(contextUri, _mercuryFactory);
+        var queueAsFutureTrack = new Que<FutureWaveeTrack>(queue.Select(x =>
+        {
+            var id = AudioId.FromUri(x.Uri);
+            return new FutureWaveeTrack(
+                TrackId: id,
+                TrackUid: x.Uid,
+                Factory: token => StreamTrack(id, x.Metadata.ToHashMap(), _countryCode.Value.IfNone("US"), token)
+            );
+        }));
 
         int findCorrectIndex()
         {
@@ -181,7 +196,7 @@ internal sealed class SpotifyPlaybackClient : ISpotifyPlaybackClient, IDisposabl
         }
 
         var idx = findCorrectIndex();
-        await WaveePlayer.Instance.Play(ctx, idx, from, startPaused);
+        await WaveePlayer.Instance.Play(ctx, idx, from, startPaused, shuffling, repeatState, queueAsFutureTrack);
         return default;
     }
 
@@ -195,9 +210,20 @@ internal sealed class SpotifyPlaybackClient : ISpotifyPlaybackClient, IDisposabl
                     ev.TrackIndex,
                     ev.TrackId,
                     ev.PlaybackPosition,
-                    ev.IsPaused);
+                    ev.IsPaused,
+                    ev.IsShuffling,
+                    ev.RepeatState,
+                    ev.Queue
+                );
                 break;
 
+            case RemoteSpotifyPlaybackEventType.UpdateDevice:
+                previousState = previousState with
+                {
+                    LastCommandId = ev.CommandId.ValueUnsafe(),
+                    LastCommandSentBy = ev.SentBy.ValueUnsafe()
+                };
+                break;
             case RemoteSpotifyPlaybackEventType.SeekTo:
                 previousState = previousState with
                 {
@@ -213,7 +239,7 @@ internal sealed class SpotifyPlaybackClient : ISpotifyPlaybackClient, IDisposabl
                     LastCommandId = ev.CommandId.ValueUnsafe(),
                     LastCommandSentBy = ev.SentBy.ValueUnsafe()
                 };
-                await WaveePlayer.Instance.SkipNext(false);
+                await WaveePlayer.Instance.SkipNext(false, true);
                 break;
             case RemoteSpotifyPlaybackEventType.Pause:
                 previousState = previousState with
@@ -247,8 +273,25 @@ internal sealed class SpotifyPlaybackClient : ISpotifyPlaybackClient, IDisposabl
             Id: contextUri,
             Name: context.Metadata.Find("context_description").IfNone(contextUri.ToString()),
             FutureTracks: futureTracks,
-            ShuffleProvider: Option<IShuffleProvider>.None
+            ShuffleProvider: new BasicShuffleProvider(context)
         );
+    }
+
+    private class BasicShuffleProvider : IShuffleProvider
+    {
+        private readonly SpotifyContext _context;
+
+        public BasicShuffleProvider(SpotifyContext context)
+        {
+            _context = context;
+        }
+
+        public int GetNextIndex(int _)
+        {
+            var count = _context.Pages.Sum(x => x.Tracks.Count);
+            //just perform a randomizer
+            return new Random().Next(0, count);
+        }
     }
 
     private IEnumerable<FutureWaveeTrack> BuildFutureTracks(SpotifyContext spotifyContext, Ref<Option<string>> country)
@@ -462,7 +505,7 @@ internal sealed class SpotifyPlaybackClient : ISpotifyPlaybackClient, IDisposabl
         using var resp = await HttpIO.Get(finalUri, new AuthenticationHeaderValue("Bearer", jwt),
             HashMap<string, string>.Empty, ct);
         resp.EnsureSuccessStatusCode();
-        await using var stream = await resp.Content.ReadAsStreamAsync();
+        await using var stream = await resp.Content.ReadAsStreamAsync(ct);
         return StorageResolveResponse.Parser.ParseFrom(stream);
     }
 

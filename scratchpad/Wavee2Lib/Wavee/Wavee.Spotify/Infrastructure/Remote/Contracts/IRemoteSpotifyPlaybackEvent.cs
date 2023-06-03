@@ -1,4 +1,5 @@
-﻿using Google.Protobuf.WellKnownTypes;
+﻿using Eum.Spotify.connectstate;
+using Google.Protobuf.WellKnownTypes;
 using LanguageExt;
 using Wavee.Core.Ids;
 
@@ -10,7 +11,8 @@ public enum RemoteSpotifyPlaybackEventType
     SeekTo,
     Pause,
     Resume,
-    SkipNext
+    SkipNext,
+    UpdateDevice
 }
 public readonly struct RemoteSpotifyPlaybackEvent
 {
@@ -26,4 +28,5 @@ public readonly struct RemoteSpotifyPlaybackEvent
     public Option<TimeSpan> SeekTo { get; init; }
     public Option<string> SentBy { get; init; }
     public Option<uint> CommandId { get; init; }
+    public IEnumerable<ProvidedTrack> Queue { get; init; }
 }
