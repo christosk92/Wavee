@@ -83,7 +83,6 @@
 		<ProjectCapability Include="Msix" />
 	</ItemGroup>
 	<ItemGroup>
-		<ProjectReference Include="..\..\lib\Wavee.Spotify\Wavee.Spotify.csproj" />
 		<ProjectReference Include="..\Wavee.UI\Wavee.UI.csproj" />
 	</ItemGroup>
 	<ItemGroup>

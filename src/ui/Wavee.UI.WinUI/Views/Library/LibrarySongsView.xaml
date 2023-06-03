@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+
 <UserControl x:Class="Wavee.UI.WinUI.Views.Library.LibrarySongsView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -9,9 +10,9 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:library="using:Wavee.UI.ViewModels.Library"
              xmlns:components="using:Wavee.UI.WinUI.Components"
-             xmlns:contracts="using:Wavee.Core.Contracts"
              xmlns:system="using:System"
              xmlns:ui="using:CommunityToolkit.WinUI.UI"
+             xmlns:models="using:Wavee.Spotify.Infrastructure.Mercury.Models"
              mc:Ignorable="d">
 
     <UserControl.Resources>
@@ -20,7 +21,7 @@
                         Spacing="4" />
         </ItemsPanelTemplate>
         <DataTemplate x:Key="HorizontalArtistTemplate"
-                      x:DataType="contracts:ITrackArtist">
+                      x:DataType="models:SpotifyTrackArtist">
             <HyperlinkButton VerticalAlignment="Center"
                              Padding="0,8,8,8"
                              Tag="{x:Bind Id}"
@@ -162,7 +163,7 @@
                                            Grid.Column="1"
                                            TextTrimming="CharacterEllipsis"
                                            x:Phase="1"
-                                           Text="{x:Bind Track.Title, Mode=OneWay}" />
+                                           Text="{x:Bind Track.Name, Mode=OneWay}" />
 
                                 <ItemsControl VerticalAlignment="Center"
                                               x:Phase="3"
@@ -176,10 +177,10 @@
                                                  Grid.Column="3"
                                                  x:Phase="4"
                                                  Padding="0,8,8,8"
-                                                 Tag="{x:Bind Track.Album.Id}"
+                                                 Tag="{x:Bind Track.Group.Id}"
                                                  Tapped="NavigateToMetadata"
                                                  Foreground="{ThemeResource ApplicationForegroundThemeBrush}"
-                                                 Content="{x:Bind Track.Album.Name, Mode=OneWay}" />
+                                                 Content="{x:Bind Track.Group.Name, Mode=OneWay}" />
                                 <TextBlock VerticalAlignment="Center"
                                            Grid.Column="4"
                                            x:Phase="5"
@@ -194,7 +195,7 @@
                 </DataTemplate>
             </ListView.ItemTemplate>
             <ListView.Footer>
-                <Border Height="80"/>
+                <Border Height="80" />
             </ListView.Footer>
         </ListView>
     </Grid>

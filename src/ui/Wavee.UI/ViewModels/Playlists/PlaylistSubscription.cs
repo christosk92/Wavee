@@ -6,6 +6,7 @@ using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
 using ReactiveUI;
 using Wavee.Core.Ids;
+using Wavee.Spotify.Infrastructure.Mercury.Models;
 using Wavee.Spotify.Infrastructure.Playback;
 using Wavee.UI.Infrastructure.Live;
 using Wavee.UI.Infrastructure.Sys;

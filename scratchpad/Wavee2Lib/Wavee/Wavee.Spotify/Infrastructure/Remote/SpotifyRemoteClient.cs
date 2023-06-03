@@ -2,10 +2,12 @@
 using System.Net.Http.Headers;
 using System.Net.WebSockets;
 using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Channels;
 using Eum.Spotify.connectstate;
+using Eum.Spotify.playlist4;
 using Google.Protobuf;
 using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
@@ -20,6 +22,11 @@ namespace Wavee.Spotify.Infrastructure.Remote;
 
 internal sealed class SpotifyRemoteClient : ISpotifyRemoteClient, IDisposable
 {
+
+    private readonly Subject<SpotifyLibraryUpdateNotification> _libraryNotifSubj;
+    private readonly Subject<SpotifyRootlistUpdateNotification> _rootlistNotifSubj;
+
+
     private Func<CancellationToken, Task<string>> _tokenFactory;
     private Func<RemoteSpotifyPlaybackEvent, Task> _playbackEvent;
     private readonly SpotifyRemoteConfig _config;
@@ -35,6 +42,8 @@ internal sealed class SpotifyRemoteClient : ISpotifyRemoteClient, IDisposable
         Func<RemoteSpotifyPlaybackEvent, Task> playbackEvent, SpotifyRemoteConfig config, string deviceId,
         string userId)
     {
+        _libraryNotifSubj = new Subject<SpotifyLibraryUpdateNotification>();
+        _rootlistNotifSubj = new Subject<SpotifyRootlistUpdateNotification>();
         _tokenFactory = tokenFactory;
         _playbackEvent = playbackEvent;
         _config = config;
@@ -49,6 +58,14 @@ internal sealed class SpotifyRemoteClient : ISpotifyRemoteClient, IDisposable
 
     public IObservable<Option<SpotifyRemoteState>> StateUpdates =>
         State.OnChange().StartWith(State.Value);
+
+    public IObservable<SpotifyRootlistUpdateNotification> RootlistChanged =>
+        _rootlistNotifSubj.StartWith(
+            new SpotifyRootlistUpdateNotification(_userId));
+
+    public IObservable<SpotifyLibraryUpdateNotification> LibraryChanged => _libraryNotifSubj
+        .StartWith(new SpotifyLibraryUpdateNotification(
+            true, new AudioId(), true, Option<DateTimeOffset>.None));
 
     public async Task<Option<Unit>> Takeover(CancellationToken ct = default)
     {
@@ -76,6 +93,19 @@ internal sealed class SpotifyRemoteClient : ISpotifyRemoteClient, IDisposable
         });
 
         return Some(default(Unit));
+    }
+
+    public Task<Unit> RefreshState()
+    {
+        //TODO:
+        return Task.FromResult(default(Unit));
+        //     return Put(_, PutStateReason.PlayerStateChanged);
+    }
+
+    public IObservable<Diff> ObservePlaylist(AudioId id)
+    {
+        //TODO
+        return Observable.Never<Diff>();
     }
 
     public async Task OnPlaybackUpdate(SpotifyLocalPlaybackState state)
@@ -137,59 +167,22 @@ internal sealed class SpotifyRemoteClient : ISpotifyRemoteClient, IDisposable
                         HandleMessage(nextMessage);
                         break;
                     case SpotifyWebsocketMessageType.Request:
-                    {
-                        var jsonData = Encoding.UTF8.GetString(nextMessage.Payload.ValueUnsafe().Span);
-                        using var jsonDoc = JsonDocument.Parse(jsonData);
-                        var request = jsonDoc.RootElement;
-                        var messageId = request.GetProperty("message_id").GetUInt32();
-                        var sentBy = request.GetProperty("sent_by_device_id").GetString();
-                        var command = request.GetProperty("command");
-                        var endpoint = command.GetProperty("endpoint").GetString();
-
-                        switch (endpoint)
                         {
-                            case "add_to_queue":
+                            var jsonData = Encoding.UTF8.GetString(nextMessage.Payload.ValueUnsafe().Span);
+                            using var jsonDoc = JsonDocument.Parse(jsonData);
+                            var request = jsonDoc.RootElement;
+                            var messageId = request.GetProperty("message_id").GetUInt32();
+                            var sentBy = request.GetProperty("sent_by_device_id").GetString();
+                            var command = request.GetProperty("command");
+                            var endpoint = command.GetProperty("endpoint").GetString();
+
+                            switch (endpoint)
                             {
-                                var track = command.GetProperty("track");
-                                var uri = track.GetProperty("uri").GetString();
-                                string uid = string.Empty;
-                                if (track.TryGetProperty("uid", out var uidd))
-                                {
-                                    uid = uidd.GetString();
-                                }
-
-                                var pv = new ProvidedTrack
-                                {
-                                    Uri = uri,
-                                    Uid = uid
-                                };
-                                var metadata = track.GetProperty("metadata");
-                                foreach (var key in metadata.EnumerateObject())
-                                {
-                                    pv.Metadata[key.Name] = key.Value.GetString();
-                                }
-
-                                pv.Provider = track.GetProperty("provider").GetString();
-                                await _playbackEvent(new RemoteSpotifyPlaybackEvent
-                                {
-                                    EventType = RemoteSpotifyPlaybackEventType.AddToQueue,
-                                    SentBy = sentBy,
-                                    Queue = Some<IEnumerable<ProvidedTrack>>(new ProvidedTrack[]
+                                case "add_to_queue":
                                     {
-                                        pv
-                                    }),
-                                    TrackUid = default,
-                                    TrackIndex = default
-                                });
-                                break;
-                            }
-                            case "set_queue":
-                                var nextTracks = command.GetProperty("next_tracks")
-                                    .EnumerateArray()
-                                    .Select(track =>
-                                    {
+                                        var track = command.GetProperty("track");
                                         var uri = track.GetProperty("uri").GetString();
-                                        string? uid = string.Empty;
+                                        string uid = string.Empty;
                                         if (track.TryGetProperty("uid", out var uidd))
                                         {
                                             uid = uidd.GetString();
@@ -207,163 +200,200 @@ internal sealed class SpotifyRemoteClient : ISpotifyRemoteClient, IDisposable
                                         }
 
                                         pv.Provider = track.GetProperty("provider").GetString();
-                                        return pv;
-                                    });
+                                        await _playbackEvent(new RemoteSpotifyPlaybackEvent
+                                        {
+                                            EventType = RemoteSpotifyPlaybackEventType.AddToQueue,
+                                            SentBy = sentBy,
+                                            Queue = Some<IEnumerable<ProvidedTrack>>(new ProvidedTrack[]
+                                            {
+                                        pv
+                                            }),
+                                            TrackUid = default,
+                                            TrackIndex = default
+                                        });
+                                        break;
+                                    }
+                                case "set_queue":
+                                    var nextTracks = command.GetProperty("next_tracks")
+                                        .EnumerateArray()
+                                        .Select(track =>
+                                        {
+                                            var uri = track.GetProperty("uri").GetString();
+                                            string? uid = string.Empty;
+                                            if (track.TryGetProperty("uid", out var uidd))
+                                            {
+                                                uid = uidd.GetString();
+                                            }
 
-                                await _playbackEvent(new RemoteSpotifyPlaybackEvent
-                                {
-                                    EventType = RemoteSpotifyPlaybackEventType.SetQueue,
-                                    SentBy = sentBy,
-                                    CommandId = messageId,
-                                    TrackUid = default,
-                                    TrackIndex = default,
-                                    Queue = Some(nextTracks)
-                                });
-                                break;
-                            case "set_repeating_track":
-                            {
-                                var value = command.GetProperty("value").GetBoolean();
-                                if (value)
-                                {
+                                            var pv = new ProvidedTrack
+                                            {
+                                                Uri = uri,
+                                                Uid = uid
+                                            };
+                                            var metadata = track.GetProperty("metadata");
+                                            foreach (var key in metadata.EnumerateObject())
+                                            {
+                                                pv.Metadata[key.Name] = key.Value.GetString();
+                                            }
+
+                                            pv.Provider = track.GetProperty("provider").GetString();
+                                            return pv;
+                                        });
+
                                     await _playbackEvent(new RemoteSpotifyPlaybackEvent
                                     {
-                                        EventType = RemoteSpotifyPlaybackEventType.Repeat,
+                                        EventType = RemoteSpotifyPlaybackEventType.SetQueue,
                                         SentBy = sentBy,
                                         CommandId = messageId,
-                                        RepeatState = value ? RepeatState.Track : Option<RepeatState>.None,
+                                        TrackUid = default,
+                                        TrackIndex = default,
+                                        Queue = Some(nextTracks)
+                                    });
+                                    break;
+                                case "set_repeating_track":
+                                    {
+                                        var value = command.GetProperty("value").GetBoolean();
+                                        if (value)
+                                        {
+                                            await _playbackEvent(new RemoteSpotifyPlaybackEvent
+                                            {
+                                                EventType = RemoteSpotifyPlaybackEventType.Repeat,
+                                                SentBy = sentBy,
+                                                CommandId = messageId,
+                                                RepeatState = value ? RepeatState.Track : Option<RepeatState>.None,
+                                                TrackUid = default,
+                                                TrackIndex = default,
+                                            });
+                                        }
+
+                                        break;
+                                    }
+                                case "set_repeating_context":
+                                    {
+                                        var value = command.GetProperty("value").GetBoolean();
+                                        await _playbackEvent(new RemoteSpotifyPlaybackEvent
+                                        {
+                                            EventType = RemoteSpotifyPlaybackEventType.Repeat,
+                                            SentBy = sentBy,
+                                            CommandId = messageId,
+                                            RepeatState = value ? RepeatState.Context : RepeatState.None,
+                                            TrackUid = default,
+                                            TrackIndex = default
+                                        });
+                                        break;
+                                    }
+                                case "set_shuffling_context":
+                                    {
+                                        var value = command.GetProperty("value").GetBoolean();
+                                        await _playbackEvent(new RemoteSpotifyPlaybackEvent
+                                        {
+                                            EventType = RemoteSpotifyPlaybackEventType.Shuffle,
+                                            SentBy = sentBy,
+                                            CommandId = messageId,
+                                            IsShuffling = value,
+                                            TrackUid = default,
+                                            TrackIndex = default
+                                        });
+                                        break;
+                                    }
+                                case "play":
+                                    var skipTo = command.GetProperty("options").GetProperty("skip_to");
+                                    var ctx = command.GetProperty("context");
+                                    Option<string> trackUid = None;
+                                    if (skipTo.TryGetProperty("track_uid", out var trackUidProp))
+                                        trackUid = trackUidProp.GetString();
+                                    await _playbackEvent(new RemoteSpotifyPlaybackEvent
+                                    {
+                                        EventType = RemoteSpotifyPlaybackEventType.Play,
+                                        SentBy = sentBy,
+                                        CommandId = messageId,
+                                        TrackUid = trackUid,
+                                        TrackId = skipTo.TryGetProperty("track_uri", out var ur)
+                                            ? AudioId.FromUri(ur.GetString())
+                                            : None,
+                                        TrackIndex = skipTo.TryGetProperty("track_index", out var idx) ? idx.GetInt32() : 0,
+                                        ContextUri = ctx.GetProperty("uri").GetString(),
+                                        IsPaused = false,
+                                        IsShuffling = None,
+                                        RepeatState = None,
+                                        Queue = None,
+                                        PlaybackPosition = TimeSpan.Zero,
+                                        SeekTo = None
+                                    });
+                                    break;
+                                case "transfer":
+                                    await _playbackEvent(new RemoteSpotifyPlaybackEvent
+                                    {
+                                        EventType = RemoteSpotifyPlaybackEventType.UpdateDevice,
+                                        SentBy = sentBy,
+                                        CommandId = messageId,
                                         TrackUid = default,
                                         TrackIndex = default,
                                     });
+                                    await Takeover();
+                                    break;
+                                case "skip_next":
+                                    await _playbackEvent(new RemoteSpotifyPlaybackEvent
+                                    {
+                                        EventType = RemoteSpotifyPlaybackEventType.SkipNext,
+                                        SentBy = sentBy,
+                                        CommandId = messageId,
+
+                                        TrackUid = default,
+                                        TrackIndex = default
+                                    });
+                                    break;
+                                case "seek_to":
+                                    await _playbackEvent(new RemoteSpotifyPlaybackEvent
+                                    {
+                                        EventType = RemoteSpotifyPlaybackEventType.SeekTo,
+                                        SeekTo = TimeSpan.FromMilliseconds(command.GetProperty("value")
+                                            .GetDouble()),
+                                        SentBy = sentBy,
+                                        CommandId = messageId,
+
+                                        TrackUid = default,
+                                        TrackIndex = default
+                                    });
+                                    break;
+                                case "pause":
+                                    await _playbackEvent(new RemoteSpotifyPlaybackEvent
+                                    {
+                                        EventType = RemoteSpotifyPlaybackEventType.Pause,
+                                        SentBy = sentBy,
+                                        CommandId = messageId,
+
+                                        TrackUid = default,
+                                        TrackIndex = default
+                                    });
+                                    break;
+                                case "resume":
+                                    await _playbackEvent(new RemoteSpotifyPlaybackEvent
+                                    {
+                                        EventType = RemoteSpotifyPlaybackEventType.Resume,
+                                        SentBy = sentBy,
+                                        CommandId = messageId,
+
+                                        TrackUid = default,
+                                        TrackIndex = default
+                                    });
+                                    break;
+                            }
+
+                            //respond
+                            var datareply = new
+                            {
+                                type = "reply",
+                                key = nextMessage.Uri,
+                                payload = new
+                                {
+                                    success = true.ToString().ToLower()
                                 }
-
-                                break;
-                            }
-                            case "set_repeating_context":
-                            {
-                                var value = command.GetProperty("value").GetBoolean();
-                                await _playbackEvent(new RemoteSpotifyPlaybackEvent
-                                {
-                                    EventType = RemoteSpotifyPlaybackEventType.Repeat,
-                                    SentBy = sentBy,
-                                    CommandId = messageId,
-                                    RepeatState = value ? RepeatState.Context : RepeatState.None,
-                                    TrackUid = default,
-                                    TrackIndex = default
-                                });
-                                break;
-                            }
-                            case "set_shuffling_context":
-                            {
-                                var value = command.GetProperty("value").GetBoolean();
-                                await _playbackEvent(new RemoteSpotifyPlaybackEvent
-                                {
-                                    EventType = RemoteSpotifyPlaybackEventType.Shuffle,
-                                    SentBy = sentBy,
-                                    CommandId = messageId,
-                                    IsShuffling = value,
-                                    TrackUid = default,
-                                    TrackIndex = default
-                                });
-                                break;
-                            }
-                            case "play":
-                                var skipTo = command.GetProperty("options").GetProperty("skip_to");
-                                var ctx = command.GetProperty("context");
-                                Option<string> trackUid = None;
-                                if (skipTo.TryGetProperty("track_uid", out var trackUidProp))
-                                    trackUid = trackUidProp.GetString();
-                                await _playbackEvent(new RemoteSpotifyPlaybackEvent
-                                {
-                                    EventType = RemoteSpotifyPlaybackEventType.Play,
-                                    SentBy = sentBy,
-                                    CommandId = messageId,
-                                    TrackUid = trackUid,
-                                    TrackId = skipTo.TryGetProperty("track_uri", out var ur)
-                                        ? AudioId.FromUri(ur.GetString())
-                                        : None,
-                                    TrackIndex = skipTo.TryGetProperty("track_index", out var idx) ? idx.GetInt32() : 0,
-                                    ContextUri = ctx.GetProperty("uri").GetString(),
-                                    IsPaused = false,
-                                    IsShuffling = None,
-                                    RepeatState = None,
-                                    Queue = None,
-                                    PlaybackPosition = TimeSpan.Zero,
-                                    SeekTo = None
-                                });
-                                break;
-                            case "transfer":
-                                await _playbackEvent(new RemoteSpotifyPlaybackEvent
-                                {
-                                    EventType = RemoteSpotifyPlaybackEventType.UpdateDevice,
-                                    SentBy = sentBy,
-                                    CommandId = messageId,
-                                    TrackUid = default,
-                                    TrackIndex = default,
-                                });
-                                await Takeover();
-                                break;
-                            case "skip_next":
-                                await _playbackEvent(new RemoteSpotifyPlaybackEvent
-                                {
-                                    EventType = RemoteSpotifyPlaybackEventType.SkipNext,
-                                    SentBy = sentBy,
-                                    CommandId = messageId,
-
-                                    TrackUid = default,
-                                    TrackIndex = default
-                                });
-                                break;
-                            case "seek_to":
-                                await _playbackEvent(new RemoteSpotifyPlaybackEvent
-                                {
-                                    EventType = RemoteSpotifyPlaybackEventType.SeekTo,
-                                    SeekTo = TimeSpan.FromMilliseconds(command.GetProperty("value")
-                                        .GetDouble()),
-                                    SentBy = sentBy,
-                                    CommandId = messageId,
-
-                                    TrackUid = default,
-                                    TrackIndex = default
-                                });
-                                break;
-                            case "pause":
-                                await _playbackEvent(new RemoteSpotifyPlaybackEvent
-                                {
-                                    EventType = RemoteSpotifyPlaybackEventType.Pause,
-                                    SentBy = sentBy,
-                                    CommandId = messageId,
-
-                                    TrackUid = default,
-                                    TrackIndex = default
-                                });
-                                break;
-                            case "resume":
-                                await _playbackEvent(new RemoteSpotifyPlaybackEvent
-                                {
-                                    EventType = RemoteSpotifyPlaybackEventType.Resume,
-                                    SentBy = sentBy,
-                                    CommandId = messageId,
-
-                                    TrackUid = default,
-                                    TrackIndex = default
-                                });
-                                break;
+                            };
+                            ReadOnlyMemory<byte> payload = JsonSerializer.SerializeToUtf8Bytes(datareply);
+                            await ws.SendAsync(payload, WebSocketMessageType.Text, true, CancellationToken.None);
+                            break;
                         }
-
-                        //respond
-                        var datareply = new
-                        {
-                            type = "reply",
-                            key = nextMessage.Uri,
-                            payload = new
-                            {
-                                success = true.ToString().ToLower()
-                            }
-                        };
-                        ReadOnlyMemory<byte> payload = JsonSerializer.SerializeToUtf8Bytes(datareply);
-                        await ws.SendAsync(payload, WebSocketMessageType.Text, true, CancellationToken.None);
-                        break;
-                    }
                     default:
                         throw new ArgumentOutOfRangeException();
                 }

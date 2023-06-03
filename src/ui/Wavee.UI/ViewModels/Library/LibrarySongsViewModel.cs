@@ -11,12 +11,9 @@ using Eum.Spotify.playlist4;
 using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
 using ReactiveUI;
-using SQLitePCL;
-using Wavee.Core.Contracts;
+using Spotify.Metadata;
 using Wavee.Core.Ids;
-using Wavee.Spotify.Infrastructure.Playback;
-using Wavee.Spotify.Infrastructure.Remote.Messaging;
-using Wavee.Spotify.Models.Response;
+using Wavee.Spotify.Infrastructure.Mercury.Models;
 using Wavee.UI.Infrastructure.Sys;
 using Wavee.UI.Infrastructure.Traits;
 using Wavee.UI.Services;
@@ -51,44 +48,43 @@ public sealed class LibrarySongsViewModel<R> :
                 {
                     LibraryTrackSortType.Added_Asc =>
                        SortExpressionComparer<LibraryTrack>.Ascending(x => x.Added)
-                           .ThenByDescending(x => x.Track.Album.Name.Length)
-                           .ThenByAscending(x => x.Track.Album.ArtistName)
-                           .ThenByAscending(x => x.Track.Album.DiscNumber)
-                           .ThenByAscending(x => x.Track.TrackNumber),
+                           .ThenByDescending(x => x.Track.AsTrack.Album.Name.Length)
+                           .ThenByAscending(x => x.Track.AsTrack.Album.Artist[0].Name)
+                           .ThenByAscending(x => x.Track.AsTrack.DiscNumber)
+                           .ThenByAscending(x => x.Track.AsTrack.Number),
                     LibraryTrackSortType.Added_Desc =>
                         SortExpressionComparer<LibraryTrack>.Descending(x => x.Added)
-                            .ThenByDescending(x => x.Track.Album.Name.Length)
-                            .ThenByAscending(x => x.Track.Album.ArtistName)
-                            .ThenByAscending(x => x.Track.Album.DiscNumber)
-                            .ThenByAscending(x => x.Track.TrackNumber),
+                            .ThenByDescending(x => x.Track.AsTrack.Album.Name.Length)
+                            .ThenByAscending(x => x.Track.AsTrack.Album.Artist[0].Name)
+                            .ThenByAscending(x => x.Track.AsTrack.DiscNumber)
+                            .ThenByAscending(x => x.Track.AsTrack.Number),
                     LibraryTrackSortType.Title_Asc =>
-                        SortExpressionComparer<LibraryTrack>.Ascending(x => x.Track.Title),
+                        SortExpressionComparer<LibraryTrack>.Ascending(x => x.Track.Name),
                     LibraryTrackSortType.Title_Desc =>
-                        SortExpressionComparer<LibraryTrack>.Descending(x => x.Track.Title),
+                        SortExpressionComparer<LibraryTrack>.Descending(x => x.Track.Name),
                     LibraryTrackSortType.Artist_Asc =>
                         SortExpressionComparer<LibraryTrack>.Ascending(x => x.Track.Artists.First().Name)
-                            .ThenByDescending(x => x.Track.Album.Name.Length)
-                            .ThenByAscending(x => x.Track.Album.DiscNumber)
-                            .ThenByAscending(x => x.Track.TrackNumber),
+                            .ThenByDescending(x => x.Track.AsTrack.Album.Name.Length)
+                            .ThenByAscending(x => x.Track.AsTrack.DiscNumber)
+                            .ThenByAscending(x => x.Track.AsTrack.Number),
                     LibraryTrackSortType.Artist_Desc =>
                         SortExpressionComparer<LibraryTrack>.Descending(x => x.Track.Artists.First().Name)
-                        .ThenByDescending(x => x.Track.Album.Name.Length)
-                        .ThenByAscending(x => x.Track.Album.DiscNumber)
-                        .ThenByAscending(x => x.Track.TrackNumber),
+                        .ThenByDescending(x => x.Track.AsTrack.Album.Name.Length)
+                        .ThenByAscending(x => x.Track.AsTrack.DiscNumber)
+                        .ThenByAscending(x => x.Track.AsTrack.Number),
                     LibraryTrackSortType.Album_Asc =>
                         SortExpressionComparer<LibraryTrack>
-                            .Ascending(x => x.Track.Album)
-                            .ThenByAscending(x => x.Track.Album.DiscNumber)
-                            .ThenByAscending(x => x.Track.TrackNumber),
+                            .Ascending(x => x.Track.AsTrack.Album.Name)
+                            .ThenByAscending(x => x.Track.AsTrack.DiscNumber)
+                            .ThenByAscending(x => x.Track.AsTrack.Number),
                     LibraryTrackSortType.Album_Desc =>
-                        SortExpressionComparer<LibraryTrack>.Descending(x => x.Track.Album.Name[0])
-                            .ThenByDescending(x => x.Track.Album.DiscNumber)
-                            .ThenByDescending(x => x.Track.TrackNumber),
+                        SortExpressionComparer<LibraryTrack>.Descending(x => x.Track.AsTrack.Album.Name[0])
+                            .ThenByDescending(x => x.Track.AsTrack.DiscNumber)
+                            .ThenByDescending(x => x.Track.AsTrack.Number),
                     _ => throw new ArgumentOutOfRangeException()
                 })
                 .ObserveOn(RxApp.TaskpoolScheduler);
         var country = Spotify<R>.CountryCode().Run(runtime).Result.ThrowIfFail().ValueUnsafe();
-        var cdnUrl = Spotify<R>.CdnUrl().Run(runtime).ThrowIfFail().ValueUnsafe();
         var playCommand = ReactiveCommand.CreateFromTask<AudioId>(Execute);
 
 
@@ -103,10 +99,9 @@ public sealed class LibrarySongsViewModel<R> :
              })
              .Transform(item =>
              {
-                 var tr = SpotifyTrackResponse.From(country, cdnUrl, itemsTemp[item.Id].ValueUnsafe().Value.Match(Left: _ => throw new NotSupportedException(), Right: r => r.Value));
                  return new LibraryTrack
                  {
-                     Track = tr,
+                     Track = itemsTemp[item.Id].ValueUnsafe(),
                      Added = item.AddedAt,
                      PlayCommand = playCommand
                  };
@@ -261,8 +256,8 @@ public sealed class LibrarySongsViewModel<R> :
     private static Func<LibraryTrack, bool> BuildFilter(string? searchText)
     {
         if (string.IsNullOrEmpty(searchText)) return _ => true;
-        return t => t.Track.Title.Contains(searchText, StringComparison.OrdinalIgnoreCase)
-                    || t.Track.Album.Name.Contains(searchText, StringComparison.OrdinalIgnoreCase)
+        return t => t.Track.Name.Contains(searchText, StringComparison.OrdinalIgnoreCase)
+                    || t.Track.Group.Name.Contains(searchText, StringComparison.OrdinalIgnoreCase)
                     || t.Track.Artists.Any(a => a.Name.Contains(searchText, StringComparison.OrdinalIgnoreCase));
     }
     public void Dispose()
@@ -274,7 +269,7 @@ public sealed class LibrarySongsViewModel<R> :
 public class LibraryTrack : INotifyPropertyChanged
 {
     private int _index;
-    public required ITrack Track { get; init; }
+    public required TrackOrEpisode Track { get; init; }
     public required DateTimeOffset Added { get; init; }
 
     public int OriginalIndex
@@ -285,9 +280,9 @@ public class LibraryTrack : INotifyPropertyChanged
 
     public required ICommand PlayCommand { get; init; }
 
-    public string GetSmallestImage(ITrack track)
+    public string GetSmallestImage(TrackOrEpisode track)
     {
-        return track.Album.Artwork.OrderBy(i => i.Width).First().Url;
+        return track.GetImage(Image.Types.Size.Small);
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;

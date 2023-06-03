@@ -1,10 +1,6 @@
-﻿using System.Drawing;
-using System.IO;
-using System.Text;
-using System.Text.Json;
+﻿using System.Text.Json;
 using Eum.Spotify.connectstate;
 using LanguageExt;
-using LanguageExt.Common;
 using Wavee.UI.Infrastructure.Sys.IO;
 using Wavee.UI.Infrastructure.Traits;
 using Wavee.UI.ViewModels;

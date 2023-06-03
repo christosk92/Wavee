@@ -1,5 +1,6 @@
 ﻿using Eum.Spotify.connectstate;
 using Eum.Spotify.context;
+using Eum.Spotify.playlist4;
 using Google.Protobuf;
 using Google.Protobuf.Collections;
 using LanguageExt;
@@ -9,6 +10,13 @@ using static LanguageExt.Prelude;
 
 namespace Wavee.Spotify.Infrastructure.Remote.Contracts;
 
+public readonly record struct SpotifyLibraryUpdateNotification(
+    bool Initial,
+    AudioId Item,
+    bool Removed,
+    Option<DateTimeOffset> AddedAt);
+public readonly record struct SpotifyRootlistUpdateNotification(string Username);
+public readonly record struct SpotifyPlaylistUpdateNotification(AudioId Id, Diff Delta);
 public readonly record struct SpotifyRemoteState(Option<string> ActiveDeviceId,
     Option<AudioId> TrackUri,
     Option<string> TrackUid,

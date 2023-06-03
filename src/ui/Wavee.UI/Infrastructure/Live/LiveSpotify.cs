@@ -1,34 +1,27 @@
 ﻿using Eum.Spotify;
 using LanguageExt;
-using System;
 using System.Buffers.Binary;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
-using System.Numerics;
+using System.Reactive.Linq;
 using System.Text.Json;
 using Eum.Spotify.playlist4;
 using Wavee.Spotify;
 using Wavee.Spotify.Infrastructure.Cache;
 using Wavee.Spotify.Infrastructure.Mercury;
 using Wavee.Spotify.Infrastructure.Remote;
-using Wavee.Spotify.Infrastructure.Remote.Messaging;
-using static LanguageExt.Prelude;
-using System.Threading;
 using System.Web;
 using Google.Protobuf;
-using Wavee.Spotify.Infrastructure.ApResolver;
-using LanguageExt;
-using LanguageExt.Common;
 using LanguageExt.UnsafeValueAccess;
 using Spotify.Collection.Proto.V2;
-using Wavee.Core.Contracts;
 using Wavee.Core.Ids;
-using Wavee.Core.Infrastructure.IO;
 using Eum.Spotify.extendedmetadata;
 using Spotify.Metadata;
-using Wavee.Spotify.Helpers;
-using Wavee.Spotify.Infrastructure.Playback;
 using System.Text;
+using Wavee.Infrastructure.IO;
+using Wavee.Spotify.Infrastructure.ApResolve;
+using Wavee.Spotify.Infrastructure.Mercury.Models;
+using Wavee.Spotify.Infrastructure.Remote.Contracts;
 
 namespace Wavee.UI.Infrastructure.Live;
 
@@ -44,12 +37,12 @@ internal sealed class LiveSpotify : Traits.SpotifyIO
 
     public Aff<SelectedListContent> GetRootList(CancellationToken ct) =>
         from client in Eff(() => _connection.ValueUnsafe())
-        from spclient in ApResolve.GetSpClient(ct).ToAff()
-            .Map(x => $"https://{x.host}:{x.port}")
+        from spclient in SuccessEff(ApResolver.SpClient.First())
+            .Map(x => $"https://{x}")
             .Map(x =>
                 $"{x}/playlist/v2/user/{client.WelcomeMessage.CanonicalUsername}/rootlist?decorate=revision,length,attributes,timestamp,owner")
-        from bearer in client.TokenClient.GetToken(ct).ToAff().Map(x => new AuthenticationHeaderValue("Bearer", x))
-        from result in HttpIO.GetAsync(spclient, bearer, LanguageExt.HashMap<string, string>.Empty, ct)
+        from bearer in client.Mercury.GetAccessToken(ct).ToAff().Map(x => new AuthenticationHeaderValue("Bearer", x))
+        from result in HttpIO.Get(spclient, bearer, LanguageExt.HashMap<string, string>.Empty, ct)
             .ToAff().MapAsync(async r =>
             {
                 await using var stream = await r.Content.ReadAsStreamAsync(ct);
@@ -62,8 +55,8 @@ internal sealed class LiveSpotify : Traits.SpotifyIO
         CancellationToken ct) =>
         from client in Eff(() => _connection.ValueUnsafe())
         let apiurl = $"https://api.spotify.com/v1/views/desktop-home?types={types}&offset={offset}&limit={limit}&content_limit={contentLimit}&content_offset={contentOffset}"
-        from bearer in client.TokenClient.GetToken(ct).ToAff().Map(x => new AuthenticationHeaderValue("Bearer", x))
-        from result in HttpIO.GetAsync(apiurl, bearer, LanguageExt.HashMap<string, string>.Empty, ct)
+        from bearer in client.Mercury.GetAccessToken(ct).ToAff().Map(x => new AuthenticationHeaderValue("Bearer", x))
+        from result in HttpIO.Get(apiurl, bearer, LanguageExt.HashMap<string, string>.Empty, ct)
             .ToAff().MapAsync(async r =>
             {
                 await using var stream = await r.Content.ReadAsStreamAsync(ct);
@@ -74,9 +67,9 @@ internal sealed class LiveSpotify : Traits.SpotifyIO
     public Aff<T> GetFromPublicApi<T>(string endpoint, CancellationToken cancellation) =>
         from client in Eff(() => _connection.ValueUnsafe())
         let apiUrl = $"https://api.spotify.com/v1{endpoint}"
-        from bearer in client.TokenClient.GetToken(cancellation).ToAff()
+        from bearer in client.Mercury.GetAccessToken(cancellation).ToAff()
             .Map(x => new AuthenticationHeaderValue("Bearer", x))
-        from result in HttpIO.GetAsync(apiUrl, bearer, LanguageExt.HashMap<string, string>.Empty, cancellation)
+        from result in HttpIO.Get(apiUrl, bearer, LanguageExt.HashMap<string, string>.Empty, cancellation)
             .ToAff().MapAsync(async r =>
             {
                 var result = await r.Content.ReadFromJsonAsync<T>(cancellationToken: cancellation);
@@ -89,11 +82,11 @@ internal sealed class LiveSpotify : Traits.SpotifyIO
         string lastRevision,
         Seq<AudioId> audioIds, Option<int> position) =>
         from client in Eff(() => _connection.ValueUnsafe())
-        from spclient in ApResolve.GetSpClient(CancellationToken.None).ToAff()
-            .Map(x => $"https://{x.host}:{x.port}")
+        from spclient in SuccessEff(ApResolver.SpClient.First())
+            .Map(x => $"https://{x}")
             .Map(x =>
                 $"{x}/playlist/v2/playlist/{playlistId.ToBase62()}/changes")
-        from bearer in client.TokenClient.GetToken(CancellationToken.None).ToAff()
+        from bearer in client.Mercury.GetAccessToken(CancellationToken.None).ToAff()
             .Map(x => new AuthenticationHeaderValue("Bearer", x))
         from content in Eff(() =>
         {
@@ -141,7 +134,9 @@ internal sealed class LiveSpotify : Traits.SpotifyIO
             return (HttpContent)gzip;
         })
 
-        from posted in HttpIO.Post(spclient, bearer, content, CancellationToken.None)
+        from posted in HttpIO.Post(spclient, bearer,
+                LanguageExt.HashMap<string, string>.Empty,
+                content, CancellationToken.None)
             .ToAff()
             .Map(x => x.EnsureSuccessStatusCode())
         select unit;
@@ -149,11 +144,11 @@ internal sealed class LiveSpotify : Traits.SpotifyIO
     public Aff<Unit> WriteLibrary(WriteRequest writeRequest, CancellationToken ct) =>
         //https://spclient.wg.spotify.com/collection/v2/write
         from client in Eff(() => _connection.ValueUnsafe())
-        from spclient in ApResolve.GetSpClient(ct).ToAff()
-            .Map(x => $"https://{x.host}:{x.port}")
+        from spclient in SuccessEff(ApResolver.SpClient.First())
+            .Map(x => $"https://{x}")
             .Map(x =>
                 $"{x}/collection/v2/write")
-        from bearer in client.TokenClient.GetToken(CancellationToken.None).ToAff()
+        from bearer in client.Mercury.GetAccessToken(CancellationToken.None).ToAff()
             .Map(x => new AuthenticationHeaderValue("Bearer", x))
         from content in Eff(() =>
         {
@@ -161,21 +156,23 @@ internal sealed class LiveSpotify : Traits.SpotifyIO
             byteArrCnt.Headers.ContentType = new MediaTypeHeaderValue("application/vnd.collection-v2.spotify.proto");
             return byteArrCnt;
         })
-        from posted in HttpIO.Post(spclient, bearer, content, CancellationToken.None)
+        from posted in HttpIO.Post(spclient, bearer,
+                LanguageExt.HashMap<string, string>.Empty,
+                content, CancellationToken.None)
             .ToAff()
             .Map(x => x.EnsureSuccessStatusCode())
         select unit;
 
     public Aff<SelectedListContent> FetchPlaylist(AudioId playlistId) =>
         from client in Eff(() => _connection.ValueUnsafe())
-        from spclient in ApResolve.GetSpClient(CancellationToken.None).ToAff()
-            .Map(x => $"https://{x.host}:{x.port}")
-            .Map(x =>
+        from spclient in SuccessEff(ApResolver.SpClient.First())
+            .Map(x => $"https://{x}")
+             .Map(x =>
                 $"{x}/playlist/v2/playlist/{playlistId.ToBase62()}")
-        from bearer in client.TokenClient.GetToken(CancellationToken.None).ToAff()
+        from bearer in client.Mercury.GetAccessToken(CancellationToken.None).ToAff()
             .Map(x => new AuthenticationHeaderValue("Bearer", x))
         from result in HttpIO
-            .GetAsync(spclient, bearer, LanguageExt.HashMap<string, string>.Empty, CancellationToken.None)
+            .Get(spclient, bearer, LanguageExt.HashMap<string, string>.Empty, CancellationToken.None)
             .MapAsync(async x =>
             {
                 x.EnsureSuccessStatusCode();
@@ -188,14 +185,14 @@ internal sealed class LiveSpotify : Traits.SpotifyIO
     public Aff<Diff> DiffRevision(AudioId playlistId, ByteString currentRevision) =>
         from client in Eff(() => _connection.ValueUnsafe())
         let revisionString = CalculateRevisionStr(currentRevision)
-        from spclient in ApResolve.GetSpClient(CancellationToken.None).ToAff()
-            .Map(x => $"https://{x.host}:{x.port}")
+        from spclient in SuccessEff(ApResolver.SpClient.First())
+            .Map(x => $"https://{x}")
             .Map(x =>
                 $"{x}/playlist/v2/playlist/{playlistId.ToBase62()}/diff?revision={HttpUtility.UrlEncode(revisionString)}&handlesContent=")
-        from bearer in client.TokenClient.GetToken(CancellationToken.None).ToAff()
+        from bearer in client.Mercury.GetAccessToken(CancellationToken.None).ToAff()
             .Map(x => new AuthenticationHeaderValue("Bearer", x))
         from result in HttpIO
-            .GetAsync(spclient, bearer, LanguageExt.HashMap<string, string>.Empty, CancellationToken.None)
+            .Get(spclient, bearer, LanguageExt.HashMap<string, string>.Empty, CancellationToken.None)
             .MapAsync(async x =>
             {
                 x.EnsureSuccessStatusCode();
@@ -244,11 +241,11 @@ internal sealed class LiveSpotify : Traits.SpotifyIO
         if (items.IsEmpty)
             return SuccessAff(LanguageExt.Seq<TrackOrEpisode>.Empty);
         return from client in Eff(() => _connection.ValueUnsafe())
-               from spclient in ApResolve.GetSpClient(ct).ToAff()
-                   .Map(x => $"https://{x.host}:{x.port}")
+            from spclient in SuccessEff(ApResolver.SpClient.First())
+                .Map(x => $"https://{x}")
                    .Map(x =>
                        $"{x}/extended-metadata/v0/extended-metadata")
-               from bearer in client.TokenClient.GetToken(CancellationToken.None).ToAff()
+               from bearer in client.Mercury.GetAccessToken(CancellationToken.None).ToAff()
                    .Map(x => new AuthenticationHeaderValue("Bearer", x))
                from content in Eff(() =>
                {
@@ -278,7 +275,9 @@ internal sealed class LiveSpotify : Traits.SpotifyIO
                    //byteArrCnt.Headers.ContentType = new MediaTypeHeaderValue("application/vnd.collection-v2.spotify.proto");
                    return byteArrCnt;
                })
-               from posted in HttpIO.Post(spclient, bearer, content, CancellationToken.None)
+               from posted in HttpIO.Post(spclient, bearer,
+                       LanguageExt.HashMap<string, string>.Empty, 
+                       content, CancellationToken.None)
                    .ToAff()
                    .MapAsync(async x =>
                    {
@@ -310,7 +309,7 @@ internal sealed class LiveSpotify : Traits.SpotifyIO
 
     public async ValueTask<Unit> Authenticate(LoginCredentials credentials, CancellationToken ct = default)
     {
-        var core = await SpotifyClient.CreateAsync(credentials, _config, ct);
+        var core = await SpotifyClient.CreateAsync(_config,credentials);
         _connection = Some(core);
         return Unit.Default;
     }
@@ -324,26 +323,26 @@ internal sealed class LiveSpotify : Traits.SpotifyIO
     public Option<IObservable<SpotifyRootlistUpdateNotification>> ObserveRootlist()
     {
         return _connection
-            .Map(x => x.RemoteClient.RootlistChanged);
+            .Map(x => x.Remote.RootlistChanged);
     }
 
     public Option<IObservable<SpotifyLibraryUpdateNotification>> ObserveLibrary()
     {
         return _connection
-            .Map(x => x.RemoteClient.LibraryChanged);
+            .Map(x => x.Remote.LibraryChanged);
     }
 
 
     public Option<IObservable<SpotifyRemoteState>> ObserveRemoteState()
     {
         return _connection
-            .Map(x => x.RemoteClient.StateChanged);
+            .Map(x => x.Remote.StateUpdates.Select(x => x.ValueUnsafe()));
     }
     public Option<IObservable<Diff>> ObservePlaylist(AudioId id) =>
         _connection
-            .Map(x => x.RemoteClient.ObservePlaylist(id));
+            .Map(x => x.Remote.ObservePlaylist(id));
 
-    public Option<SpotifyCache> Cache()
+    public Option<ISpotifyCache> Cache()
     {
         return _connection
             .Map(x => x.Cache);
@@ -355,16 +354,10 @@ internal sealed class LiveSpotify : Traits.SpotifyIO
             .Bind(x => x.CountryCode);
     }
 
-    public Option<string> CdnUrl()
+    public ISpotifyMercuryClient Mercury()
     {
         return _connection
-            .Bind(x => x.ProductInfo.Find("image_url"));
-    }
-
-    public MercuryClient Mercury()
-    {
-        return _connection
-            .Map(x => x.MercuryClient)
+            .Map(x => x.Mercury)
             .IfNone(() => throw new InvalidOperationException("Mercury client not available"));
     }
 
@@ -374,9 +367,9 @@ internal sealed class LiveSpotify : Traits.SpotifyIO
             .Map(x => x.DeviceId);
     }
 
-    public Option<SpotifyRemoteClient> GetRemoteClient()
+    public Option<ISpotifyRemoteClient> GetRemoteClient()
     {
         return _connection
-            .Map(x => x.RemoteClient);
+            .Map(x => x.Remote);
     }
 }

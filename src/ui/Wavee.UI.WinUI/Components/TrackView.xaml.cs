@@ -10,8 +10,8 @@ using Microsoft.UI.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
-using Wavee.Core.Contracts;
 using Wavee.Core.Ids;
+using Wavee.Spotify.Infrastructure.Mercury.Models;
 using Wavee.UI.Infrastructure.Live;
 using Wavee.UI.Models;
 using Wavee.UI.ViewModels;
@@ -162,7 +162,7 @@ public sealed partial class TrackView : UserControl
         ShellViewModel<WaveeUIRuntime>.Instance.Playback.PauseChanged -= PlaybackOnPauseChanged;
         ShellViewModel<WaveeUIRuntime>.Instance.Playback.CurrentTrackChanged -= PlaybackOnCurrentTrackChanged;
     }
-    private void PlaybackOnCurrentTrackChanged(object sender, ITrack e)
+    private void PlaybackOnCurrentTrackChanged(object sender, TrackOrEpisode e)
     {
         if (e is null)
         {

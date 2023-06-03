@@ -97,8 +97,8 @@ public sealed class SettingsViewModel<R> : ReactiveObject, INavigableViewModel w
             .ObserveOn(RxApp.TaskpoolScheduler)
             .Select(async (d, t) =>
             {
-                Config.Remote.DeviceName = d.Item1;
-                Config.Remote.DeviceType = d.Item2;
+                // Config.Remote.DeviceName = d.Item1;
+                // Config.Remote.DeviceType = d.Item2;
 
                 var aff =
                     from _ in UiConfig<R>.SetDeviceName(DeviceName)
@@ -115,8 +115,8 @@ public sealed class SettingsViewModel<R> : ReactiveObject, INavigableViewModel w
             .ObserveOn(RxApp.TaskpoolScheduler)
             .Select(async (d, t) =>
             {
-                Config.Cache.AudioCachePath = d.Item2;
-                Config.Cache.CachePath = d.Item1;
+                // Config.Cache.AudioCachePath = d.Item2;
+                // Config.Cache.CachePath = d.Item1;
 
                 var aff =
                     from _ in UiConfig<R>.SetMetadataCachePath(MetadataCachePathBase)
@@ -134,15 +134,15 @@ public sealed class SettingsViewModel<R> : ReactiveObject, INavigableViewModel w
             .ObserveOn(RxApp.TaskpoolScheduler)
             .Select(async (d) =>
             {
-                Config.Playback.Autoplay = d.Item1;
-                Config.Playback.CrossfadeDuration = d.Item2 > 0 ? TimeSpan.FromSeconds(d.Item2) : None;
-                Config.Playback.PreferredQualityType = d.Item3 switch
-                {
-                    0 => PreferredQualityType.Low,
-                    1 => PreferredQualityType.Normal,
-                    2 => PreferredQualityType.High,
-                    _ => PreferredQualityType.Normal
-                };
+                // Config.Playback.Autoplay = d.Item1;
+                // Config.Playback.CrossfadeDuration = d.Item2 > 0 ? TimeSpan.FromSeconds(d.Item2) : None;
+                // Config.Playback.PreferredQualityType = d.Item3 switch
+                // {
+                //     0 => PreferredQualityType.Normal,
+                //     1 => PreferredQualityType.Normal,
+                //     2 => PreferredQualityType.High,
+                //     _ => PreferredQualityType.Normal
+                // };
                 var aff =
                     from _ in UiConfig<R>.SetPlaybackConfig(Autoplay, CrossfadeSeconds, AudioQuality)
                     select Unit.Default;

@@ -6,13 +6,11 @@ using LanguageExt;
 using LanguageExt.Attributes;
 using LanguageExt.Effects.Traits;
 using Spotify.Collection.Proto.V2;
-using Wavee.Core.Contracts;
 using Wavee.Core.Ids;
 using Wavee.Spotify.Infrastructure.Cache;
 using Wavee.Spotify.Infrastructure.Mercury;
-using Wavee.Spotify.Infrastructure.Playback;
-using Wavee.Spotify.Infrastructure.Remote;
-using Wavee.Spotify.Infrastructure.Remote.Messaging;
+using Wavee.Spotify.Infrastructure.Mercury.Models;
+using Wavee.Spotify.Infrastructure.Remote.Contracts;
 
 namespace Wavee.UI.Infrastructure.Traits;
 
@@ -25,12 +23,11 @@ public interface SpotifyIO
     Option<IObservable<SpotifyRemoteState>> ObserveRemoteState();
     Option<IObservable<Diff>> ObservePlaylist(AudioId id);
 
-    Option<SpotifyCache> Cache();
+    Option<ISpotifyCache> Cache();
     Option<string> CountryCode();
-    Option<string> CdnUrl();
-    MercuryClient Mercury();
+    ISpotifyMercuryClient Mercury();
     Option<string> GetOwnDeviceId();
-    Option<SpotifyRemoteClient> GetRemoteClient();
+    Option<ISpotifyRemoteClient> GetRemoteClient();
     Aff<SelectedListContent> GetRootList(CancellationToken ct);
     Aff<JsonDocument> FetchDesktopHome(string types,
         int limit, int offset,

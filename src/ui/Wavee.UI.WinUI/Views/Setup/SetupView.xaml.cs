@@ -1,17 +1,12 @@
 using System;
 using Eum.Spotify;
 using Google.Protobuf;
-using LanguageExt;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
-using Org.BouncyCastle.Asn1.Cmp;
-using Wavee.Spotify.Infrastructure.Authentication;
+using Wavee.Spotify.Infrastructure.Connection;
 using Wavee.UI.Infrastructure.Live;
 using Wavee.UI.Infrastructure.Sys;
-using Wavee.UI.ViewModels;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.StartPanel;
-using Windows.Security.Credentials;
 
 namespace Wavee.UI.WinUI.Views.Setup
 {
@@ -56,13 +51,13 @@ namespace Wavee.UI.WinUI.Views.Setup
                 switch (ex)
                 {
                     case SpotifyAuthenticationException authenticationException:
-                        ErrorMessage.Text = authenticationException.AuthFailure.ErrorCode switch
+                        ErrorMessage.Text = authenticationException.ErrorCode.ErrorCode switch
                         {
                             ErrorCode.BadCredentials => "Check username and/or password.",
                             ErrorCode.TravelRestriction => "Reached travel limit.",
                             ErrorCode.PremiumAccountRequired => "Premium account required.",
                             ErrorCode.TryAnotherAp => "Try another AP (Try again).",
-                            _ => $"Unknown error ({authenticationException.AuthFailure.ErrorCode.ToString()}"
+                            _ => $"Unknown error ({authenticationException.ErrorCode.ToString()}"
                         };
                         break;
                     default:

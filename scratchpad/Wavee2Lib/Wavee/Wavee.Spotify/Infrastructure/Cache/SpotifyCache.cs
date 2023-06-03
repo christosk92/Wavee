@@ -2,18 +2,22 @@
 using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
 using Spotify.Metadata;
+using Wavee.Core.Ids;
+using Wavee.Spotify.Infrastructure.Mercury.Models;
 
 namespace Wavee.Spotify.Infrastructure.Cache;
 
-internal readonly struct SpotifyCache : ISpotifyCache
+public readonly struct SpotifyCache : ISpotifyCache
 {
     private readonly Option<string> _root;
     private readonly Option<string> _audioFilesRoot;
-    public SpotifyCache(Option<string> root)
+    public SpotifyCache(Option<string> root, string en)
     {
         _root = root;
         _audioFilesRoot = _root.Map(r => Path.Combine(r, "audiofiles"));
     }
+
+    public static bool Initialized { get; set; }
 
     public Option<Stream> AudioFile(AudioFile file)
     {
@@ -41,6 +45,41 @@ internal readonly struct SpotifyCache : ISpotifyCache
         }
         
         return Unit.Default;
+    }
+
+    public Option<TrackOrEpisode> Get(AudioId audioId)
+    {
+        return Option<TrackOrEpisode>.None;
+    }
+
+    public Unit Save(TrackOrEpisode fetchedTrack)
+    {
+        return Unit.Default;
+    }
+
+    public Dictionary<AudioId, Option<TrackOrEpisode>> GetBulk(Seq<AudioId> request)
+    {
+        var result = new Dictionary<AudioId, Option<TrackOrEpisode>>();
+        foreach (var audioId in request)
+        {
+            result.Add(audioId, Option<TrackOrEpisode>.None);
+        }
+        return result;
+    }
+
+    public Unit SaveBulk(Seq<TrackOrEpisode> result)
+    {
+        return Unit.Default;
+    }
+
+    public Option<ReadOnlyMemory<byte>> GetRawEntity(AudioId id)
+    {
+       return Option<ReadOnlyMemory<byte>>.None;
+    }
+
+    public Unit SaveRawEntity(AudioId Id, string title, ReadOnlyMemory<byte> data, DateTimeOffset expiration)
+    {
+      return Unit.Default;
     }
 
     static string ToBase16(AudioFile file)

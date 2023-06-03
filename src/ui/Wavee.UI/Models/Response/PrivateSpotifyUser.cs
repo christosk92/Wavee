@@ -1,5 +1,4 @@
 ﻿using System.Text.Json.Serialization;
-using Wavee.Core.Contracts;
 
 namespace Wavee.UI.Models.Response;
 

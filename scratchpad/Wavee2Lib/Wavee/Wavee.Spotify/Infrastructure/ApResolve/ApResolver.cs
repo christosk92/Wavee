@@ -4,7 +4,7 @@ using Wavee.Infrastructure.IO;
 
 namespace Wavee.Spotify.Infrastructure.ApResolve;
 
-internal static class ApResolver
+public static class ApResolver
 {
     public static Option<string> AccessPoint { get; private set; }
     public static Option<string> SpClient { get; private set; }

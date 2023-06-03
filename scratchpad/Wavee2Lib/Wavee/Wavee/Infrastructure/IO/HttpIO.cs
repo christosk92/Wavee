@@ -97,4 +97,29 @@ public static class HttpIO
         response.EnsureSuccessStatusCode();
         return response;
     }
+
+    public static async Task<HttpResponseMessage> Post(string url,
+        AuthenticationHeaderValue bearerHeader,
+        HashMap<string, string> headers,
+        HttpContent body, CancellationToken ct = default)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Put, url);
+        request.Headers.Authorization = bearerHeader;
+        foreach (var header in headers)
+        {
+            switch (header.Key)
+            {
+                case "accept":
+                    request.Headers.AcceptEncoding.Add(new StringWithQualityHeaderValue(header.Value));
+                    break;
+                default:
+                    request.Headers.Add(header.Key, header.Value);
+                    break;
+            }
+        }
+
+        request.Content = body;
+
+        return await Client.SendAsync(request, ct);
+    }
 }

@@ -2,8 +2,8 @@
 using System.Diagnostics;
 using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
-using Wavee.Core.Contracts;
 using Wavee.Core.Ids;
+using Wavee.Spotify.Infrastructure.Mercury.Models;
 using Wavee.Spotify.Infrastructure.Playback;
 using Wavee.UI.Infrastructure.Sys;
 using Wavee.UI.Infrastructure.Traits;

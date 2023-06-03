@@ -148,7 +148,7 @@
                             <TextBlock FontSize="16"
                                        FontWeight="SemiBold"
                                        MaxLines="2"
-                                       Text="{x:Bind Playback.CurrentTrack.Title, Mode=OneWay}"
+                                       Text="{x:Bind Playback.CurrentTrack.Name, Mode=OneWay}"
                                        TextTrimming="CharacterEllipsis"
                                        TextWrapping="Wrap" />
                         </HyperlinkButton>

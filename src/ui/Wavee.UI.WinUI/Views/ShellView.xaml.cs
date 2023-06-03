@@ -5,7 +5,6 @@ using System.Windows.Forms;
 using CommunityToolkit.WinUI.UI.Controls;
 using Eum.Spotify;
 using LanguageExt;
-using Wavee.Core.Contracts;
 using Wavee.Core.Ids;
 using Wavee.UI.Infrastructure.Live;
 using Wavee.UI.Infrastructure.Sys;

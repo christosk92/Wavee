@@ -3,7 +3,6 @@ using System.Text.Json;
 using Eum.Spotify.playlist4;
 using LanguageExt;
 using ReactiveUI;
-using Wavee.Core.Contracts;
 using Wavee.Core.Ids;
 using Wavee.UI.Infrastructure.Sys;
 using Wavee.UI.Infrastructure.Traits;

@@ -5,7 +5,7 @@ using CommunityToolkit.HighPerformance;
 
 namespace Wavee.Spotify.Infrastructure.Remote.Contracts;
 
-internal static class GzipHelpers
+public static class GzipHelpers
 {
     public static StreamContent GzipCompress(ReadOnlyMemory<byte> data)
     {

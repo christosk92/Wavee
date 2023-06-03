@@ -1,4 +1,5 @@
 ﻿using Eum.Spotify;
+using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
 using Wavee.Player;
 using Wavee.Spotify.Infrastructure.ApResolve;
@@ -20,7 +21,6 @@ namespace Wavee.Spotify;
 /// </summary>
 public sealed class SpotifyClient : IDisposable
 {
-    private readonly string _deviceId;
     private readonly SpotifyTcpConnection _connection;
     private readonly SpotifyCacheConfig _config;
 
@@ -32,7 +32,7 @@ public sealed class SpotifyClient : IDisposable
     {
         _config = config.Cache;
         _connection = connection;
-        _deviceId = deviceId;
+        DeviceId = deviceId;
         Remote = new SpotifyRemoteClient(
             tokenFactory: (ct) => Mercury.GetAccessToken(ct),
             playbackEvent: (ev) => (Playback as SpotifyPlaybackClient)!.OnPlaybackEvent(ev),
@@ -119,13 +119,18 @@ public sealed class SpotifyClient : IDisposable
 
 
     public ISpotifyCache Cache => new SpotifyCache(
-        root: _config.CacheRoot
+        root: _config.CacheRoot,
+        en: "en"
     );
 
     public IAudioKeyProvider AudioKeyProvder => new AudioKeyProvider(
         username: _connection.LastWelcomeMessage.Value.CanonicalUsername,
         onPackageSend: (pkg) => _connection.Send(pkg),
         onPackageReceive: (condition) => _connection.CreateListener(condition));
+
+    public APWelcome WelcomeMessage => _connection.LastWelcomeMessage.Value;
+    public Option<string> CountryCode => _connection.LastCountryCode;
+    public string DeviceId { get; }
 
     public void Dispose()
     {

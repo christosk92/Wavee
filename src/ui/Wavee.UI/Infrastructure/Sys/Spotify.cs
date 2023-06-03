@@ -1,24 +1,16 @@
 ﻿using Eum.Spotify;
 using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
-using System.Net;
-using Spotify.Metadata;
-using Wavee.Core.Contracts;
 using Wavee.Core.Ids;
-using Wavee.Spotify;
 using Wavee.Spotify.Infrastructure.Cache;
 using Wavee.Spotify.Infrastructure.Mercury;
-using Wavee.Spotify.Infrastructure.Playback;
-using Wavee.Spotify.Infrastructure.Remote;
-using Wavee.Spotify.Infrastructure.Remote.Messaging;
-using Wavee.Spotify.Models.Response;
 using Wavee.UI.Infrastructure.Traits;
-using System;
 using System.Text.Json;
 using Eum.Spotify.playlist4;
 using Google.Protobuf;
-using LanguageExt.Common;
 using Spotify.Collection.Proto.V2;
+using Wavee.Spotify.Infrastructure.Mercury.Models;
+using Wavee.Spotify.Infrastructure.Remote.Contracts;
 
 namespace Wavee.UI.Infrastructure.Sys;
 
@@ -68,19 +60,14 @@ public static class Spotify<R> where R : struct, HasSpotify<R>
         default(R).SpotifyEff.Map(x => x.ObservePlaylist(id));
     public static Eff<R, Option<string>> GetOwnDeviceId() =>
         default(R).SpotifyEff.Map(x => x.GetOwnDeviceId());
-    public static Eff<R, SpotifyCache> Cache() => default(R).SpotifyEff.Map(x => x.Cache().
-        IfNone(new SpotifyCache(new SpotifyCacheConfig(Option<string>.None,
-            Option<string>.None,
-            Option<TimeSpan>.None), "en")));
-    public static Eff<R, Option<SpotifyRemoteClient>> GetRemoteClient() =>
+    public static Eff<R, ISpotifyCache> Cache() => default(R).SpotifyEff.Map(x => x.Cache().
+        IfNone(new SpotifyCache(Option<string>.None, "en")));
+    public static Eff<R, Option<ISpotifyRemoteClient>> GetRemoteClient() =>
         default(R).SpotifyEff.Map(x => x.GetRemoteClient());
-    public static Aff<R, ITrack> GetTrack(AudioId audioId) =>
+    public static Aff<R, TrackOrEpisode> GetTrack(AudioId audioId) =>
         from countryCode in default(R).SpotifyEff.Map(x => x.CountryCode().IfNone("US"))
-        from cdnUrl in default(R).SpotifyEff.Map(x => x.CdnUrl().IfNone("https://i.scdn.co/image/{file_id}"))
         from cache in default(R).SpotifyEff
-            .Map(x => x.Cache().IfNone(new SpotifyCache(new SpotifyCacheConfig(Option<string>.None,
-                Option<string>.None,
-                Option<TimeSpan>.None), "en")))
+            .Map(x => x.Cache().IfNone(new SpotifyCache(Option<string>.None, "en")))
         from trackOrEpisode in cache.Get(audioId).Map(x => SuccessAff<R, TrackOrEpisode>(x))
             .IfNone(() =>
             {
@@ -89,17 +76,14 @@ public static class Spotify<R> where R : struct, HasSpotify<R>
                     from _ in Eff(() => cache.Save(fetchedTrack))
                     select fetchedTrack;
             })
-        let trackResponse = trackOrEpisode.Value.Match(
-            Left: episode => default(ITrack),
-            Right: track => SpotifyTrackResponse.From(countryCode, cdnUrl, track.Value))
-        select trackResponse;
+        select trackOrEpisode;
 
     private static Aff<R, TrackOrEpisode> FetchTrack(AudioId id, string country) =>
         from mercury in default(R).SpotifyEff.Map(x => x.Mercury())
         from trackOrEpisode in mercury.GetMetadata(id, country, CancellationToken.None).ToAff()
         select trackOrEpisode;
 
-    public static Eff<R, MercuryClient> Mercury() =>
+    public static Eff<R, ISpotifyMercuryClient> Mercury() =>
         default(R).SpotifyEff.Map(x => x.Mercury());
 
     public static Aff<R, Option<string>> CountryCode() =>
@@ -118,9 +102,7 @@ public static class Spotify<R> where R : struct, HasSpotify<R>
     public static Eff<R, Dictionary<AudioId, Option<TrackOrEpisode>>> GetFromCache(Seq<AudioId> request,
         CancellationToken ct = default) =>
         from cache in default(R).SpotifyEff
-            .Map(x => x.Cache().IfNone(new SpotifyCache(new SpotifyCacheConfig(Option<string>.None,
-                Option<string>.None,
-                Option<TimeSpan>.None), "en")))
+            .Map(x => x.Cache().IfNone(new SpotifyCache(Option<string>.None, "en")))
             //check which tracks are already cached
         let cachedTracksMaybe = cache.GetBulk(request)
         select cachedTracksMaybe;
@@ -128,34 +110,26 @@ public static class Spotify<R> where R : struct, HasSpotify<R>
     public static Aff<R, Dictionary<AudioId, TrackOrEpisode>> FetchBatchOfTracks(Seq<AudioId> request,
         CancellationToken ct = default) =>
         from cache in default(R).SpotifyEff
-            .Map(x => x.Cache().IfNone(new SpotifyCache(new SpotifyCacheConfig(Option<string>.None,
-                Option<string>.None,
-                Option<TimeSpan>.None), "en")))
+            .Map(x => x.Cache().IfNone(new SpotifyCache(Option<string>.None, "en")))
         from aff in default(R).SpotifyEff.Map(x => x.FetchBatchOfTracks(request, ct))
         from result in aff
-        //save the fetched tracks
+            //save the fetched tracks
         from _ in Eff(() => cache.SaveBulk(result.Distinct(x => x.Id)))
-        //combine the cached and fetched tracks
+            //combine the cached and fetched tracks
         select result.ToDictionary(x => x.Id, x => x);
 
-    public static Eff<R, Option<string>> CdnUrl() =>
-        from aff in default(R).SpotifyEff.Map(x => x.CdnUrl())
-        select aff;
-
-    public static Aff<R, (SelectedListContent Playlist, bool FromCache)> GetPlaylistMaybeCached(AudioId playlistId) =>
-        from cache in default(R).SpotifyEff
-            .Map(x => x.Cache().IfNone(new SpotifyCache(new SpotifyCacheConfig(Option<string>.None,
-                Option<string>.None,
-                Option<TimeSpan>.None), "en")))
-        from playlist in cache.GetPlaylist(playlistId).Map(x => SuccessAff<R, (SelectedListContent, bool)>((x, true)))
-            .IfNone(() =>
-            {
-                return
-                    from fetchedPlaylist in GetPlaylistFromApi(playlistId)
-                    from _ in Eff(() => cache.SavePlaylist(playlistId, fetchedPlaylist))
-                    select (fetchedPlaylist, false);
-            })
-        select playlist;
+    // public static Aff<R, (SelectedListContent Playlist, bool FromCache)> GetPlaylistMaybeCached(AudioId playlistId) =>
+    //     from cache in default(R).SpotifyEff
+    //         .Map(x => x.Cache().IfNone(new SpotifyCache(Option<string>.None, "en")))
+    //     from playlist in cache.GetPlaylist(playlistId).Map(x => SuccessAff<R, (SelectedListContent, bool)>((x, true)))
+    //         .IfNone(() =>
+    //         {
+    //             return
+    //                 from fetchedPlaylist in GetPlaylistFromApi(playlistId)
+    //                 from _ in Eff(() => cache.SavePlaylist(playlistId, fetchedPlaylist))
+    //                 select (fetchedPlaylist, false);
+    //         })
+    //     select playlist;
 
     private static Aff<R, SelectedListContent> GetPlaylistFromApi(AudioId playlistId) =>
         from affR in default(R).SpotifyEff.Map(x => x.FetchPlaylist(playlistId))

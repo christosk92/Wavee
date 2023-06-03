@@ -493,7 +493,7 @@ internal sealed class SpotifyPlaybackClient : ISpotifyPlaybackClient, IDisposabl
         ISpotifyCache cache,
         CancellationToken ct)
     {
-        var track = await mercury.GetTrack(id, ct);
+        var track = await mercury.GetTrack(id, country, ct);
         var preferedQuality = _config.PreferedQuality;
         var canPlay = CanPlay(track, country);
         if (!canPlay)

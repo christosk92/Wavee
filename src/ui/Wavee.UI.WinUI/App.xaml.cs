@@ -41,21 +41,17 @@ public partial class App : Application
         Directory.CreateDirectory(cachePath);
 
         Config = new SpotifyConfig(
-            Cache: new SpotifyCacheConfig(
-                CachePath: cachePath,
-                AudioCachePath: Path.Combine(cachePath, "Audio"),
-                CacheNoTouchExpiration: Option<TimeSpan>.None
+            cache: new SpotifyCacheConfig(
+                cacheRoot: cachePath
                 ),
-            Remote: new SpotifyRemoteConfig(
-                DeviceName: "Wavee",
-                DeviceType: DeviceType.Computer
+            remote: new SpotifyRemoteConfig(
+                deviceName: "Wavee",
+                deviceType: DeviceType.Computer
             ),
-            Playback: new SpotifyPlaybackConfig(
-                PreferredQualityType.Normal,
-                CrossfadeDuration: Option<TimeSpan>.None,
-                Autoplay: true
-            ),
-            locale: "en"
+            playback: new SpotifyPlaybackConfig( 
+                crossfadeDuration: TimeSpan.Zero, 
+                PreferredQualityType.Normal
+            )
         );
         Runtime = WaveeUIRuntime.New(string.Empty, Config);
         var home = Environment<WaveeUIRuntime>.getEnvironmentVariable("APPDATA").Run(Runtime)
@@ -89,28 +85,28 @@ public partial class App : Application
         var locale = (UiConfig<WaveeUIRuntime>.Locale.Run(Runtime)).IfFail("en-US");
         settings.CurrentTheme = theme;
         settings.CurrentLocale = AppLocale.Find(locale);
-        Config.Locale = settings.CurrentLocale.Culture.TwoLetterISOLanguageName.ToLower();
+       // Config.Locale = settings.CurrentLocale.Culture.TwoLetterISOLanguageName.ToLower();
 
         var deviceType = (UiConfig<WaveeUIRuntime>.DeviceType.Run(Runtime)).IfFail(DeviceType.Computer);
         var deviceName = (UiConfig<WaveeUIRuntime>.DeviceName.Run(Runtime)).IfFail("Wavee");
         
         settings.DeviceType = deviceType;
         settings.DeviceName = deviceName;
-        Config.Remote.DeviceName = deviceName;
-        Config.Remote.DeviceType = deviceType;
+      //  Config.Remote.DeviceName = deviceName;
+       // Config.Remote.DeviceType = deviceType;
 
 
         var pb = (UiConfig<WaveeUIRuntime>.GetPlaybackConfig.Run(Runtime)).IfFail(new UiConfig<WaveeUIRuntime>.Playback(true, 1, 0));
-        Config.Playback.CrossfadeDuration = pb.CrossfadeSeconds > 0 ? TimeSpan.FromSeconds(pb.CrossfadeSeconds)
-                : Option<TimeSpan>.None;
-        Config.Playback.Autoplay = pb.Autoplay;
-        Config.Playback.PreferredQualityType = pb.Quality switch
-        {
-            0 => PreferredQualityType.Low,
-            1 => PreferredQualityType.Normal,
-            2 => PreferredQualityType.High,
-            _ => PreferredQualityType.Normal
-        };
+        // Config.Playback.CrossfadeDuration = pb.CrossfadeSeconds > 0 ? TimeSpan.FromSeconds(pb.CrossfadeSeconds)
+        //         : Option<TimeSpan>.None;
+        // Config.Playback.Autoplay = pb.Autoplay;
+        // Config.Playback.PreferredQualityType = pb.Quality switch
+        // {
+        //     0 => PreferredQualityType.Low,
+        //     1 => PreferredQualityType.Normal,
+        //     2 => PreferredQualityType.High,
+        //     _ => PreferredQualityType.Normal
+        // };
         settings.Autoplay = pb.Autoplay;
         settings.CrossfadeSeconds = pb.CrossfadeSeconds;
         settings.AudioQuality = pb.Quality;
@@ -118,26 +114,26 @@ public partial class App : Application
         var metadataCachePath = (UiConfig<WaveeUIRuntime>.MetadataCachePath.Run(Runtime)).IfFail(string.Empty);
         if (metadataCachePath != string.Empty)
         {
-            Config.Cache.CachePath = metadataCachePath;
+          //  Config.Cache.CachePath = metadataCachePath;
             settings.MetadataCachePathBase = metadataCachePath;
         }
         else
         {
-            UiConfig<WaveeUIRuntime>.SetMetadataCachePath(Config.Cache.CachePath.ValueUnsafe()).Run(Runtime);
-            settings.MetadataCachePathBase = Config.Cache.CachePath.ValueUnsafe();
+           // UiConfig<WaveeUIRuntime>.SetMetadataCachePath(Config.Cache.CachePath.ValueUnsafe()).Run(Runtime);
+           // settings.MetadataCachePathBase = Config.Cache.CachePath.ValueUnsafe();
         }
 
         var audioCachePath = (UiConfig<WaveeUIRuntime>.AudioFilesCachePath.Run(Runtime))
             .IfFail(string.Empty);
         if (audioCachePath != string.Empty)
         {
-            Config.Cache.AudioCachePath = audioCachePath;
+          //  Config.Cache.AudioCachePath = audioCachePath;
             settings.AudioFilesCachePath = audioCachePath;
         }
         else
         {
-            UiConfig<WaveeUIRuntime>.SetAudioCachePath(Config.Cache.AudioCachePath.ValueUnsafe()).Run(Runtime);
-            settings.AudioFilesCachePath = Config.Cache.AudioCachePath.ValueUnsafe();
+         //   UiConfig<WaveeUIRuntime>.SetAudioCachePath(Config.Cache.AudioCachePath.ValueUnsafe()).Run(Runtime);
+          //  settings.AudioFilesCachePath = Config.Cache.AudioCachePath.ValueUnsafe();
         }
 
 

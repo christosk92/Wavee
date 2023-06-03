@@ -99,10 +99,10 @@ internal readonly struct MercuryClient : ISpotifyMercuryClient
         return parsed;
     }
 
-    public async Task<Track> GetTrack(AudioId id, CancellationToken ct = default)
+    public async Task<Track> GetTrack(AudioId id, string country, CancellationToken ct = default)
     {
-        const string query = "hm://metadata/4/track/{0}";
-        var finalUri = string.Format(query, id.ToBase16());
+        const string query = "hm://metadata/4/track/{0}?country={1}";
+        var finalUri = string.Format(query, id.ToBase16(), country);
 
         var tcs = new TaskCompletionSource<MercuryPacket>(TaskCreationOptions.RunContinuationsAsynchronously);
         CreateListener(finalUri, MercuryMethod.Get, null, tcs, ct);
@@ -110,6 +110,21 @@ internal readonly struct MercuryClient : ISpotifyMercuryClient
         if (finalData.Header.StatusCode != 200)
             throw new Exception("Failed to get track. Failed with status code: " + finalData.Header.StatusCode);
         return Track.Parser.ParseFrom(finalData.Payload.Span);
+    }
+
+    public Task<Episode> GetEpisode(AudioId id, string country, CancellationToken ct = default)
+    {
+        const string query = "hm://metadata/4/episode/{0}?country={1}";
+        var finalUri = string.Format(query, id.ToBase16(), country);
+        var tcs = new TaskCompletionSource<MercuryPacket>(TaskCreationOptions.RunContinuationsAsynchronously);
+        CreateListener(finalUri, MercuryMethod.Get, null, tcs, ct);
+        return tcs.Task.ContinueWith(x =>
+        {
+            var finalData = x.Result;
+            if (finalData.Header.StatusCode != 200)
+                throw new Exception("Failed to get track. Failed with status code: " + finalData.Header.StatusCode);
+            return Episode.Parser.ParseFrom(finalData.Payload.Span);
+        }, ct);
     }
 
     public Task<string> Autoplay(string id, CancellationToken ct = default)
@@ -125,6 +140,23 @@ internal readonly struct MercuryClient : ISpotifyMercuryClient
                 throw new Exception("Failed to get track. Failed with status code: " + finalData.Header.StatusCode);
             return Encoding.UTF8.GetString(finalData.Payload.Span);
         }, ct);
+    }
+
+    public Task<TrackOrEpisode> GetMetadata(AudioId id, string country, CancellationToken ct = default)
+    {
+        return id.Type switch
+        {
+            AudioItemType.Track => GetTrack(id, country, ct).Map(x => new TrackOrEpisode(new Lazy<Track>(x))),
+            AudioItemType.PodcastEpisode => GetEpisode(id, country, ct).Map(x => new TrackOrEpisode(x)),
+            _ => throw new ArgumentOutOfRangeException(nameof(id), id, null)
+        };
+    }
+
+    public Task<MercuryPacket> Get(string url, CancellationToken ct = default)
+    {
+        var tcs = new TaskCompletionSource<MercuryPacket>(TaskCreationOptions.RunContinuationsAsynchronously);
+        CreateListener(url, MercuryMethod.Get, null, tcs, ct);
+        return tcs.Task;
     }
 
 
@@ -316,4 +348,4 @@ internal readonly struct MercuryClient : ISpotifyMercuryClient
 
 internal delegate Unit SendPackage(SpotifyUnencryptedPackage package);
 
-internal readonly record struct MercuryPacket(Header Header, ReadOnlyMemory<byte> Payload);
+public readonly record struct MercuryPacket(Header Header, ReadOnlyMemory<byte> Payload);

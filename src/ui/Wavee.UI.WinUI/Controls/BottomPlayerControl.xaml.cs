@@ -2,19 +2,18 @@ using CommunityToolkit.WinUI.UI.Controls;
 using Microsoft.UI.Xaml.Controls;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using CommunityToolkit.Labs.WinUI.SizerBaseLocal;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Input;
-using Wavee.Core.Contracts;
-using Wavee.Core.Playback;
+using Wavee.Spotify.Infrastructure.Mercury.Models;
 using Wavee.UI.Infrastructure.Live;
 using Wavee.UI.ViewModels;
 using Wavee.UI.ViewModels.Library;
 using Wavee.UI.WinUI.Components;
 using Wavee.UI.ViewModels.Playback;
+using Image = Spotify.Metadata.Image;
 
 namespace Wavee.UI.WinUI.Controls;
 
@@ -55,11 +54,11 @@ public sealed partial class BottomPlayerControl : UserControl
     }
 
 
-    public Uri GetImageFor(ITrack track)
+    public Uri GetImageFor(TrackOrEpisode track)
     {
-        if (track is not null && track.Album.Artwork.Length > 0)
+        if (track is not null && track.Group.ArtistName.Length > 0)
         {
-            return new Uri(track.Album.Artwork.OrderBy(x => x.Height.IfNone(0)).ElementAtOrDefault(1).Url);
+            return new Uri(track.GetImage(Image.Types.Size.Default));
         }
         else
         {
@@ -67,7 +66,7 @@ public sealed partial class BottomPlayerControl : UserControl
         }
     }
 
-    public IEnumerable<MetadataItem> TransformItemsForMetadata(ITrack track)
+    public IEnumerable<MetadataItem> TransformItemsForMetadata(TrackOrEpisode track)
     {
         if (track is null) return Enumerable.Empty<MetadataItem>();
 
@@ -79,7 +78,7 @@ public sealed partial class BottomPlayerControl : UserControl
         });
     }
 
-    public string FormatDuration(ITrack track)
+    public string FormatDuration(TrackOrEpisode track)
     {
         if (track is null) return "--:--";
         return FormatDuration(track.Duration);
@@ -203,7 +202,7 @@ public sealed partial class BottomPlayerControl : UserControl
 
     private void DisplayTitle_OnTapped(object sender, TappedRoutedEventArgs e)
     {
-        var currentItemAlbum = Playback.CurrentTrack?.Album?.Id;
+        var currentItemAlbum = Playback.CurrentTrack?.Group.Id;
         if (currentItemAlbum.HasValue)
         {
             UICommands.NavigateTo.Execute(currentItemAlbum.Value);

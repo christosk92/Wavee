@@ -1,21 +1,17 @@
-﻿using System;
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Reactive.Linq;
-using System.Threading.Tasks;
 using System.Windows.Input;
 using Eum.Spotify.connectstate;
 using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
 using ReactiveUI;
-using Wavee.Core.Contracts;
 using Wavee.Core.Ids;
-using Wavee.Core.Playback;
-using Wavee.Spotify.Infrastructure.Mercury;
-using Wavee.Spotify.Infrastructure.Remote.Messaging;
+using Wavee.Spotify.Infrastructure.Mercury.Models;
+using Wavee.Spotify.Infrastructure.Remote.Contracts;
 using Wavee.UI.Infrastructure.Sys;
 using Wavee.UI.Infrastructure.Traits;
-using static LanguageExt.Prelude;
+
 namespace Wavee.UI.ViewModels.Playback;
 
 public sealed class PlaybackViewModel<R> : ReactiveObject where R : struct, HasSpotify<R>, HasFile<R>, HasDirectory<R>, HasLocalPath<R>
@@ -29,7 +25,7 @@ public sealed class PlaybackViewModel<R> : ReactiveObject where R : struct, HasS
     private long _positionMs;
     private readonly Timer _positionTimer;
     private readonly R _runtime;
-    private ITrack? _currentTrack;
+    private TrackOrEpisode? _currentTrack;
     private bool _paused;
     private bool _canControlVolume;
     private bool _shuffling;
@@ -168,7 +164,7 @@ public sealed class PlaybackViewModel<R> : ReactiveObject where R : struct, HasS
                                      || string.Equals(ActiveDevice.DeviceId, _ownDeviceId)
                                     || ActiveDevice.Volume.IsSome;
 
-    public ITrack? CurrentTrack
+    public TrackOrEpisode? CurrentTrack
     {
         get => _currentTrack;
         set
@@ -219,7 +215,7 @@ public sealed class PlaybackViewModel<R> : ReactiveObject where R : struct, HasS
 
     public event EventHandler<bool> PauseChanged;
 
-    public event EventHandler<ITrack?> CurrentTrackChanged;
+    public event EventHandler<TrackOrEpisode?> CurrentTrackChanged;
 
     public async Task SetVolumeAsync(double volumePerc)
     {
@@ -230,12 +226,12 @@ public sealed class PlaybackViewModel<R> : ReactiveObject where R : struct, HasS
             return;
         }
 
-        var aff =
-            from remoteClient in Spotify<R>.GetRemoteClient()
-            from _ in remoteClient.ValueUnsafe().SetVolume(volumeFrac, CancellationToken.None).ToAff()
-            select unit;
-
-        var result = await aff.Run(_runtime);
+        // var aff =
+        //     from remoteClient in Spotify<R>.GetRemoteClient()
+        //     from _ in remoteClient.ValueUnsafe().SetVolume(volumeFrac, CancellationToken.None).ToAff()
+        //     select unit;
+        //
+        // var result = await aff.Run(_runtime);
     }
 
     public async Task PlayContextAsync(PlayContextStruct context)
@@ -247,35 +243,35 @@ public sealed class PlaybackViewModel<R> : ReactiveObject where R : struct, HasS
         }
 
         //remote command
-        if (context.NextPages.IsSome)
-        {
-            var aff =
-                from remoteClient in Spotify<R>.GetRemoteClient()
-                from _ in remoteClient.ValueUnsafe().PlayContextPaged(
-                    contextId: context.ContextId,
-                    pages: context.NextPages.ValueUnsafe(),
-                    trackIndex: context.Index,
-                    pageIndex: context.PageIndex.ValueUnsafe(),
-                    metadata: context.Metadata
-                ).ToAff()
-                select unit;
-            var result = await aff.Run(_runtime);
-        }
-        else
-        {
-            var aff =
-                from remoteClient in Spotify<R>.GetRemoteClient()
-                from _ in remoteClient.ValueUnsafe().PlayContextRaw(
-                    contextId: context.ContextId,
-                    contextUrl: context.ContextUrl.ValueUnsafe(),
-                    trackIndex: context.Index,
-                    trackId: context.TrackId,
-                    pageIndex: context.PageIndex.IfNone(0),
-                    metadata: context.Metadata
-                ).ToAff()
-                select unit;
-            var result = await aff.Run(_runtime);
-        }
+        // if (context.NextPages.IsSome)
+        // {
+        //     var aff =
+        //         from remoteClient in Spotify<R>.GetRemoteClient()
+        //         from _ in remoteClient.ValueUnsafe().PlayContextPaged(
+        //             contextId: context.ContextId,
+        //             pages: context.NextPages.ValueUnsafe(),
+        //             trackIndex: context.Index,
+        //             pageIndex: context.PageIndex.ValueUnsafe(),
+        //             metadata: context.Metadata
+        //         ).ToAff()
+        //         select unit;
+        //     var result = await aff.Run(_runtime);
+        // }
+        // else
+        // {
+        //     var aff =
+        //         from remoteClient in Spotify<R>.GetRemoteClient()
+        //         from _ in remoteClient.ValueUnsafe().PlayContextRaw(
+        //             contextId: context.ContextId,
+        //             contextUrl: context.ContextUrl.ValueUnsafe(),
+        //             trackIndex: context.Index,
+        //             trackId: context.TrackId,
+        //             pageIndex: context.PageIndex.IfNone(0),
+        //             metadata: context.Metadata
+        //         ).ToAff()
+        //         select unit;
+        //     var result = await aff.Run(_runtime);
+        // }
         return;
     }
 
@@ -288,13 +284,13 @@ public sealed class PlaybackViewModel<R> : ReactiveObject where R : struct, HasS
             return;
         }
 
-        //remote command
-        var aff =
-            from remoteClient in Spotify<R>.GetRemoteClient()
-            from _ in remoteClient.ValueUnsafe().SeekTo(to).ToAff()
-            select unit;
-
-        var result = await aff.Run(_runtime);
+        // //remote command
+        // var aff =
+        //     from remoteClient in Spotify<R>.GetRemoteClient()
+        //     from _ in remoteClient.ValueUnsafe().SeekTo(to).ToAff()
+        //     select unit;
+        //
+        // var result = await aff.Run(_runtime);
     }
 
     private Option<double> previousVolumeAsPerc = Option<double>.None;
@@ -308,11 +304,11 @@ public sealed class PlaybackViewModel<R> : ReactiveObject where R : struct, HasS
             return;
         }
         //remote command
-        var aff =
-            from remoteClient in Spotify<R>.GetRemoteClient()
-            from _ in remoteClient.ValueUnsafe().SkipNext(ct).ToAff()
-            select unit;
-        var result = await aff.Run(_runtime);
+        // var aff =
+        //     from remoteClient in Spotify<R>.GetRemoteClient()
+        //     from _ in remoteClient.ValueUnsafe().SkipNext(ct).ToAff()
+        //     select unit;
+        // var result = await aff.Run(_runtime);
     }
 
     private async Task SkipPrevious(CancellationToken ct)
@@ -322,12 +318,12 @@ public sealed class PlaybackViewModel<R> : ReactiveObject where R : struct, HasS
             //skip player
             return;
         }
-        //remote command
-        var aff =
-            from remoteClient in Spotify<R>.GetRemoteClient()
-            from _ in remoteClient.ValueUnsafe().SkipPrevious(ct).ToAff()
-            select unit;
-        var result = await aff.Run(_runtime);
+        // //remote command
+        // var aff =
+        //     from remoteClient in Spotify<R>.GetRemoteClient()
+        //     from _ in remoteClient.ValueUnsafe().SkipPrevious(ct).ToAff()
+        //     select unit;
+        // var result = await aff.Run(_runtime);
     }
 
     private async Task Repeat(CancellationToken ct)
@@ -341,13 +337,13 @@ public sealed class PlaybackViewModel<R> : ReactiveObject where R : struct, HasS
             return;
         }
 
-        //remote command
-        var aff =
-            from remoteClient in Spotify<R>.GetRemoteClient()
-            from _ in remoteClient.ValueUnsafe().SetRepeatState(nextRepeatState, ct).ToAff()
-            select unit;
-
-        var result = await aff.Run(_runtime);
+        // //remote command
+        // var aff =
+        //     from remoteClient in Spotify<R>.GetRemoteClient()
+        //     from _ in remoteClient.ValueUnsafe().SetRepeatState(nextRepeatState, ct).ToAff()
+        //     select unit;
+        //
+        // var result = await aff.Run(_runtime);
     }
 
     private async Task AddToQueue(AddToQueueRequest req, CancellationToken ct)
@@ -358,134 +354,134 @@ public sealed class PlaybackViewModel<R> : ReactiveObject where R : struct, HasS
             return;
         }
 
-        //queuing in spotify remote is so f*d up...
-        //you have to set the next tracks
-        var currentCluster = Spotify<R>.GetRemoteClient()
-            .Run(_runtime)
-            .ThrowIfFail()
-            .ValueUnsafe()
-            .LatestCluster.ValueUnsafe();
-
-        var nextTracks = currentCluster.PlayerState.NextTracks;
-
-        //if id = playlist/album/artist,
-        //we need to lazilly set the next tracks
-        //add the first track of the context to the queue with extra metadata:
-        /*
-         *   {
-                "uri": "spotify:delimiter",
-                "uid": "delimiter1",
-                "metadata": {
-                    "iteration": "1",
-                    "hidden": "true",
-                    "wavee_play_context": "spotify:{type}:{id}",
-                },
-                "removed": [
-                    "context/delimiter"
-                ],
-                "provider": "context"
-            }
-         */
-        //if its tracks, we can just add the track to the queue 
-
-        switch (req.Position)
-        {
-            case AddToQueuePositionType.AfterContext:
-                {
-                    break;
-                }
-            case AddToQueuePositionType.AfterTrackButAfterQueued: //most common case:
-                {
-                    var isSpecialType = req.Ids.Head.Type
-                        is AudioItemType.Playlist
-                        or AudioItemType.Album
-                        or AudioItemType.Artist;
-
-                    if (isSpecialType)
-                    {
-                        //do the lazy thing
-                        var firstItem = nextTracks.First();
-                        nextTracks.Clear();
-                        var contextResolve =
-                            from mercry in Spotify<R>.Mercury()
-                            from ctx in mercry.ContextResolve(req.Ids.Head.ToString(), ct: ct).ToAff()
-                            select ctx;
-
-                        var ctxResolved = (await contextResolve.Run(_runtime)).ThrowIfFail();
-                        var tracks = ctxResolved.Pages
-                            .SelectMany(c => c.Tracks
-                                .Select(px => new ProvidedTrack
-                                {
-                                    Uid = px.Uid,
-                                    Uri = px.Uri,
-                                    Provider = "queue",
-                                    Metadata =
-                                    {
-                                        {"context_uri", req.Ids.Head.ToString()},
-                                        {"entity_uri", req.Ids.Head.ToString()},
-                                    }
-                                }));
-                        nextTracks.AddRange(tracks);
-                        //add a delimiter
-                        nextTracks.Add(new ProvidedTrack
-                        {
-                            Uri = "spotify:delimiter",
-                            Uid = "delimiter1",
-                            Provider = "context",
-                            Removed =
-                            {
-                                "context/delimiter"
-                            },
-                            Metadata =
-                            {
-                                {"iteration", "1"},
-                                {"hidden", "true"},
-                                {"wavee_play_context", req.Ids.Head.ToString()},
-                            }
-                        });
-                    }
-                    else
-                    {
-                        //TODO: Optimize this
-
-                        //add the track to the queue
-                        var queuedItems = nextTracks
-                            .TakeWhile(x => x.Provider is "queue")
-                            .ToArray();
-                        var remainingItems = nextTracks
-                            .SkipWhile(x => x.Provider is "queue")
-                            .ToArray();
-                        nextTracks.Clear();
-                        nextTracks.AddRange(queuedItems);
-                        foreach (var id in req.Ids)
-                        {
-                            //q417
-                            var nextId = $"q{queuedItems.Length}";
-                            nextTracks.Add(new ProvidedTrack
-                            {
-                                Uri = id.ToString(),
-                                Uid = nextId,
-                                Provider = "queue",
-                                Metadata =
-                                {
-                                    {"is_queued", "true"},
-                                }
-                            });
-                        }
-                        nextTracks.AddRange(remainingItems);
-                    }
-                }
-                break;
-            default:
-                throw new ArgumentOutOfRangeException();
-        }
-
-        var aff =
-            from remoteClient in Spotify<R>.GetRemoteClient()
-            from _ in remoteClient.ValueUnsafe().SetQueue(nextTracks, ct).ToAff()
-            select unit;
-
-        var result = await aff.Run(_runtime);
+        // //queuing in spotify remote is so f*d up...
+        // //you have to set the next tracks
+        // var currentCluster = Spotify<R>.GetRemoteClient()
+        //     .Run(_runtime)
+        //     .ThrowIfFail()
+        //     .ValueUnsafe()
+        //     .LatestCluster.ValueUnsafe();
+        //
+        // var nextTracks = currentCluster.PlayerState.NextTracks;
+        //
+        // //if id = playlist/album/artist,
+        // //we need to lazilly set the next tracks
+        // //add the first track of the context to the queue with extra metadata:
+        // /*
+        //  *   {
+        //         "uri": "spotify:delimiter",
+        //         "uid": "delimiter1",
+        //         "metadata": {
+        //             "iteration": "1",
+        //             "hidden": "true",
+        //             "wavee_play_context": "spotify:{type}:{id}",
+        //         },
+        //         "removed": [
+        //             "context/delimiter"
+        //         ],
+        //         "provider": "context"
+        //     }
+        //  */
+        // //if its tracks, we can just add the track to the queue 
+        //
+        // switch (req.Position)
+        // {
+        //     case AddToQueuePositionType.AfterContext:
+        //         {
+        //             break;
+        //         }
+        //     case AddToQueuePositionType.AfterTrackButAfterQueued: //most common case:
+        //         {
+        //             var isSpecialType = req.Ids.Head.Type
+        //                 is AudioItemType.Playlist
+        //                 or AudioItemType.Album
+        //                 or AudioItemType.Artist;
+        //
+        //             if (isSpecialType)
+        //             {
+        //                 //do the lazy thing
+        //                 var firstItem = nextTracks.First();
+        //                 nextTracks.Clear();
+        //                 var contextResolve =
+        //                     from mercry in Spotify<R>.Mercury()
+        //                     from ctx in mercry.ContextResolve(req.Ids.Head.ToString(), ct: ct).ToAff()
+        //                     select ctx;
+        //
+        //                 var ctxResolved = (await contextResolve.Run(_runtime)).ThrowIfFail();
+        //                 var tracks = ctxResolved.Pages
+        //                     .SelectMany(c => c.Tracks
+        //                         .Select(px => new ProvidedTrack
+        //                         {
+        //                             Uid = px.Uid,
+        //                             Uri = px.Uri,
+        //                             Provider = "queue",
+        //                             Metadata =
+        //                             {
+        //                                 {"context_uri", req.Ids.Head.ToString()},
+        //                                 {"entity_uri", req.Ids.Head.ToString()},
+        //                             }
+        //                         }));
+        //                 nextTracks.AddRange(tracks);
+        //                 //add a delimiter
+        //                 nextTracks.Add(new ProvidedTrack
+        //                 {
+        //                     Uri = "spotify:delimiter",
+        //                     Uid = "delimiter1",
+        //                     Provider = "context",
+        //                     Removed =
+        //                     {
+        //                         "context/delimiter"
+        //                     },
+        //                     Metadata =
+        //                     {
+        //                         {"iteration", "1"},
+        //                         {"hidden", "true"},
+        //                         {"wavee_play_context", req.Ids.Head.ToString()},
+        //                     }
+        //                 });
+        //             }
+        //             else
+        //             {
+        //                 //TODO: Optimize this
+        //
+        //                 //add the track to the queue
+        //                 var queuedItems = nextTracks
+        //                     .TakeWhile(x => x.Provider is "queue")
+        //                     .ToArray();
+        //                 var remainingItems = nextTracks
+        //                     .SkipWhile(x => x.Provider is "queue")
+        //                     .ToArray();
+        //                 nextTracks.Clear();
+        //                 nextTracks.AddRange(queuedItems);
+        //                 foreach (var id in req.Ids)
+        //                 {
+        //                     //q417
+        //                     var nextId = $"q{queuedItems.Length}";
+        //                     nextTracks.Add(new ProvidedTrack
+        //                     {
+        //                         Uri = id.ToString(),
+        //                         Uid = nextId,
+        //                         Provider = "queue",
+        //                         Metadata =
+        //                         {
+        //                             {"is_queued", "true"},
+        //                         }
+        //                     });
+        //                 }
+        //                 nextTracks.AddRange(remainingItems);
+        //             }
+        //         }
+        //         break;
+        //     default:
+        //         throw new ArgumentOutOfRangeException();
+        // }
+        // //
+        // // var aff =
+        // //     from remoteClient in Spotify<R>.GetRemoteClient()
+        // //     from _ in remoteClient.ValueUnsafe().SetQueue(nextTracks, ct).ToAff()
+        // //     select unit;
+        // //
+        // // var result = await aff.Run(_runtime);
     }
     private async Task Shuffle(CancellationToken ct)
     {
@@ -497,12 +493,12 @@ public sealed class PlaybackViewModel<R> : ReactiveObject where R : struct, HasS
         }
 
         //remote command
-        var aff =
-            from remoteClient in Spotify<R>.GetRemoteClient()
-            from _ in remoteClient.ValueUnsafe().SetShuffleState(nextShuffleState, ct).ToAff()
-            select unit;
-
-        var result = await aff.Run(_runtime);
+        // var aff =
+        //     from remoteClient in Spotify<R>.GetRemoteClient()
+        //     from _ in remoteClient.ValueUnsafe().SetShuffleState(nextShuffleState, ct).ToAff()
+        //     select unit;
+        //
+        // var result = await aff.Run(_runtime);
     }
 
     private async Task MuteOrRestoreVolume(CancellationToken ct)
@@ -521,13 +517,13 @@ public sealed class PlaybackViewModel<R> : ReactiveObject where R : struct, HasS
             return;
         }
 
-
-        var aff =
-            from remoteClient in Spotify<R>.GetRemoteClient()
-            from _ in remoteClient.ValueUnsafe().SetVolume(newVolumePerc / 100, ct).ToAff()
-            select unit;
-
-        var result = await aff.Run(_runtime);
+        //
+        // var aff =
+        //     from remoteClient in Spotify<R>.GetRemoteClient()
+        //     from _ in remoteClient.ValueUnsafe().SetVolume(newVolumePerc / 100, ct).ToAff()
+        //     select unit;
+        //
+        // var result = await aff.Run(_runtime);
     }
     private async Task PauseResume(CancellationToken ct)
     {
@@ -539,14 +535,14 @@ public sealed class PlaybackViewModel<R> : ReactiveObject where R : struct, HasS
 
         //remote command
         var paused = Paused;
-        var aff =
-            from remoteClient in Spotify<R>.GetRemoteClient()
-            from _ in paused
-                ? remoteClient.ValueUnsafe().Resume(ct).ToAff()
-                : remoteClient.ValueUnsafe().Pause(ct).ToAff()
-            select unit;
-
-        var result = await aff.Run(_runtime);
+        // var aff =
+        //     from remoteClient in Spotify<R>.GetRemoteClient()
+        //     from _ in paused
+        //         ? remoteClient.ValueUnsafe().Resume(ct).ToAff()
+        //         : remoteClient.ValueUnsafe().Pause(ct).ToAff()
+        //     select unit;
+        //
+        // var result = await aff.Run(_runtime);
     }
 
 
