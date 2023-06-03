@@ -136,8 +136,8 @@ spotifyClient.Remote.StateUpdates.Subscribe(state =>
     }
 });
 //https://open.spotify.com/track/26hOm7dTtBi0TdpDGl141t?si=63327ca800964207
-const string ctxUri = "spotify:artist:7jFUYMpMUBDL4JQtMZ5ilc";
-const int ctxIndex = 0;
-//await spotifyClient.Remote.Takeover();
-await spotifyClient.Playback.Play(ctxUri, ctxIndex, Option<TimeSpan>.None);
+// const string ctxUri = "spotify:artist:7jFUYMpMUBDL4JQtMZ5ilc";
+// const int ctxIndex = 0;
+// //await spotifyClient.Remote.Takeover();
+// await spotifyClient.Playback.Play(ctxUri, ctxIndex, Option<TimeSpan>.None);
 Console.ReadLine();

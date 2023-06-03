@@ -52,11 +52,11 @@ internal sealed class SpotifyRemoteClient : ISpotifyRemoteClient, IDisposable
     public async Task<Option<Unit>> Takeover(CancellationToken ct = default)
     {
         await Ready.Task;
-        if(State.Value.IsNone)
+        if (State.Value.IsNone)
             return Option<Unit>.None;
-        if(State.Value.ValueUnsafe().TrackUri.IsNone)
+        if (State.Value.ValueUnsafe().TrackUri.IsNone)
             return Option<Unit>.None;
-        
+
         var currentState = State.Value.ValueUnsafe();
         await _playbackEvent(new RemoteSpotifyPlaybackEvent
         {
@@ -70,7 +70,7 @@ internal sealed class SpotifyRemoteClient : ISpotifyRemoteClient, IDisposable
             EventType = RemoteSpotifyPlaybackEventType.Play,
             TrackIndex = currentState.TrackIndex
         });
-        
+
         return Some(default(Unit));
     }
 
@@ -144,13 +144,16 @@ internal sealed class SpotifyRemoteClient : ISpotifyRemoteClient, IDisposable
 
                         switch (endpoint)
                         {
+                            case "transfer":
+                                await Takeover();
+                                break;
                             case "skip_next":
                                 await _playbackEvent(new RemoteSpotifyPlaybackEvent
                                 {
                                     EventType = RemoteSpotifyPlaybackEventType.SkipNext,
                                     SentBy = sentBy,
                                     CommandId = messageId,
-                            
+
                                     TrackUid = default,
                                     TrackIndex = default
                                 });
@@ -163,7 +166,7 @@ internal sealed class SpotifyRemoteClient : ISpotifyRemoteClient, IDisposable
                                         .GetDouble()),
                                     SentBy = sentBy,
                                     CommandId = messageId,
-                            
+
                                     TrackUid = default,
                                     TrackIndex = default
                                 });
@@ -174,7 +177,7 @@ internal sealed class SpotifyRemoteClient : ISpotifyRemoteClient, IDisposable
                                     EventType = RemoteSpotifyPlaybackEventType.Pause,
                                     SentBy = sentBy,
                                     CommandId = messageId,
-                            
+
                                     TrackUid = default,
                                     TrackIndex = default
                                 });
@@ -185,13 +188,13 @@ internal sealed class SpotifyRemoteClient : ISpotifyRemoteClient, IDisposable
                                     EventType = RemoteSpotifyPlaybackEventType.Resume,
                                     SentBy = sentBy,
                                     CommandId = messageId,
-                            
+
                                     TrackUid = default,
                                     TrackIndex = default
                                 });
                                 break;
                         }
-                        
+
                         //respond
                         var datareply = new
                         {
