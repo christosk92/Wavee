@@ -134,6 +134,9 @@ public readonly record struct SpotifyLocalPlaybackState(
     {
         var state = this.State;
 
+        state.Position = 0;
+        state.Timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        state.PositionAsOfTimestamp = (long)WaveePlayer.Instance.Position.IfNone(TimeSpan.Zero).TotalMilliseconds;
         state.Options = new ContextPlayerOptions
         {
             RepeatingContext = waveePlayerState.RepeatState is RepeatState.Context,
@@ -184,4 +187,16 @@ public readonly record struct SpotifyLocalPlaybackState(
     }
 
     public Option<DateTimeOffset> PlayingSince { get; init; }
+
+    public SpotifyLocalPlaybackState SetPosition(TimeSpan pos)
+    {
+        var st = State;
+        st.Position = 0l;
+        st.PositionAsOfTimestamp = (long)pos.TotalMilliseconds;
+        st.Timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        return this with
+        {
+            State = st
+        };
+    }
 }

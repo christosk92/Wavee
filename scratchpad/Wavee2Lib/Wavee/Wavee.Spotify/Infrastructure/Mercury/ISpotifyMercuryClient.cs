@@ -14,6 +14,7 @@ public interface ISpotifyMercuryClient
     Task<SpotifyContext> ContextResolve(string contextUri, CancellationToken ct = default);
     Task<SpotifyContext> ContextResolveRaw(string pageUrl, CancellationToken ct = default);
     Task<Track> GetTrack(AudioId id, CancellationToken ct = default);
+    Task<string> Autoplay(string id, CancellationToken ct = default);
 }
 
 public readonly record struct SpotifyContext(string Url, HashMap<string, string> Metadata, Seq<ContextPage> Pages, HashMap<string, Seq<string>> Restrictions);

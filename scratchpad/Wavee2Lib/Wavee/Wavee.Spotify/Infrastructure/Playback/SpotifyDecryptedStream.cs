@@ -98,7 +98,7 @@ public sealed class SpotifyDecryptedStream : Stream
             _decryptedChunks.Add(chunkIndex, chunk);
         }
 
-        var bytesToRead = Math.Min(count, chunk.Length - chunkOffset);
+        var bytesToRead = Math.Max(0,Math.Min(count, chunk.Length - chunkOffset));
         Array.Copy(chunk, chunkOffset, buffer, offset, bytesToRead);
         _position += bytesToRead;
         return bytesToRead;

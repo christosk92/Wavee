@@ -1,4 +1,5 @@
-﻿using System.Net.Http.Headers;
+﻿using System.Diagnostics;
+using System.Net.Http.Headers;
 using System.Reactive.Linq;
 using System.Text;
 using Eum.Spotify.storage;
@@ -26,6 +27,7 @@ internal sealed class SpotifyPlaybackClient : ISpotifyPlaybackClient, IDisposabl
     private Func<SpotifyLocalPlaybackState, Task> _remoteUpdates;
     private readonly SpotifyPlaybackConfig _config;
     private readonly IDisposable _stateUpdatesSubscription;
+    private readonly IDisposable _positionUpdates;
     private readonly SpotifyRemoteConfig _remoteConfig;
     private readonly Ref<Option<string>> _countryCode;
     private readonly TaskCompletionSource<Unit> _ready;
@@ -53,6 +55,37 @@ internal sealed class SpotifyPlaybackClient : ISpotifyPlaybackClient, IDisposabl
         bool isActive = false;
         bool activeChanged = false;
         SpotifyLocalPlaybackState previousState = default;
+
+        _positionUpdates = WaveePlayer.Instance.PositionUpdates
+            .SelectMany(async x =>
+            {
+                if (!previousState.IsActive || x.IsNone)
+                    return Option<SpotifyLocalPlaybackState>.None;
+
+                await _ready.Task;
+
+                lock (_stateLock)
+                {
+                    if (!isActive)
+                    {
+                        isActive = true;
+                        activeChanged = true;
+                    }
+
+                    var ns = previousState.SetPosition(x.ValueUnsafe());
+                    previousState = ns;
+                    return Option<SpotifyLocalPlaybackState>.Some(ns);
+                }
+            })
+            .SelectMany(async (x) =>
+            {
+                if (x.IsSome)
+                {
+                    await _remoteUpdates(x.ValueUnsafe());
+                }
+
+                return default(Unit);
+            }).Subscribe();
         _stateUpdatesSubscription = WaveePlayer.Instance.StateUpdates
             .SelectMany(async x =>
             {
@@ -61,11 +94,21 @@ internal sealed class SpotifyPlaybackClient : ISpotifyPlaybackClient, IDisposabl
                     //immediatly create new empty state, and set no playback
                     isActive = false;
                     previousState = SpotifyLocalPlaybackState.Empty(_remoteConfig, deviceId);
-                    return previousState;
+                    return Option<SpotifyLocalPlaybackState>.Some(previousState);
                 }
 
                 //wait for a connectionid
                 await _ready.Task;
+
+                if (x.PermanentEnd)
+                {
+                    //start autoplay query
+                    Debug.WriteLine("Permanent end");
+                    var autoplay = await mercuryFactory().Autoplay(x.Context.ValueUnsafe().Id);
+                    var nextContext = await BuildContext(autoplay, _mercuryFactory);
+                    await WaveePlayer.Instance.Play(nextContext, 0, Option<TimeSpan>.None, false);
+                    return Option<SpotifyLocalPlaybackState>.None;
+                }
 
                 lock (_stateLock)
                 {
@@ -77,21 +120,26 @@ internal sealed class SpotifyPlaybackClient : ISpotifyPlaybackClient, IDisposabl
 
                     var ns = previousState.FromPlayer(x, isActive, activeChanged);
                     previousState = ns;
-                    return ns;
+                    return Option<SpotifyLocalPlaybackState>.Some(ns);
                 }
             })
             .SelectMany(async x =>
             {
-                await _remoteUpdates(x);
+                if (x.IsSome)
+                {
+                    await _remoteUpdates(x.ValueUnsafe());
+                }
+
                 return default(Unit);
             })
             .Subscribe();
     }
 
-    public async Task<Unit> Play(string contextUri, Option<int> indexInContext, CancellationToken ct = default)
+    public async Task<Unit> Play(string contextUri, Option<int> indexInContext, Option<TimeSpan> startFrom,
+        CancellationToken ct = default)
     {
         var ctx = await BuildContext(contextUri, _mercuryFactory);
-        await WaveePlayer.Instance.Play(ctx, indexInContext, Option<TimeSpan>.None, false);
+        await WaveePlayer.Instance.Play(ctx, indexInContext, startFrom, false);
         return default;
     }
 

@@ -19,10 +19,12 @@ internal class CrossfadeStream : IDisposable
     private TimeSpan _crossfadeDuration;
     private bool _crossfadingOut;
     private bool _crossfadingIn;
+    private readonly TimeSpan _duration;
 
-    public CrossfadeStream(WaveStream mainStream)
+    public CrossfadeStream(WaveStream mainStream, TimeSpan duration)
     {
         _mainStream = mainStream;
+        _duration = duration;
         _mainSampleProvider = mainStream.ToSampleProvider();
     }
 
@@ -33,6 +35,7 @@ internal class CrossfadeStream : IDisposable
     }
 
     public bool Ended => _mainStream.Position >= _mainStream.Length;
+    public WaveFormat WaveFormat => _mainStream.WaveFormat;
 
 
     public Span<float> ReadSamples(int sampleCount)
@@ -41,9 +44,12 @@ internal class CrossfadeStream : IDisposable
         var read = _mainSampleProvider.Read(buffer, 0, sampleCount);
         if (_crossfadingOut)
         {
-            // crossfde duration is like 10 second
-            //meaning, at the final 10 seconds of the track, we need to start fading out
-            var multiplier = 1f - (float)(_mainStream.CurrentTime.TotalSeconds / _mainStream.TotalTime.TotalSeconds);
+            var diffrence = _duration - _mainStream.CurrentTime;
+            //if this approaches 0, then 0/(x) -> 0, 
+            //if this approaches 10 seconds, and crossfadeDur = 10 seconds, then 10/10 -> 1
+            var multiplier = (float)(diffrence.TotalSeconds / _crossfadeDuration.TotalSeconds);
+            multiplier = Math.Clamp(multiplier, 0, 1);
+
             for (var i = 0; i < read; i++)
             {
                 buffer[i] *= multiplier;
@@ -51,7 +57,12 @@ internal class CrossfadeStream : IDisposable
         }
         else if (_crossfadingIn)
         {
-            var multiplier = (float)(_mainStream.CurrentTime.TotalSeconds / _mainStream.TotalTime.TotalSeconds);
+            var difference = _crossfadeDuration - _mainStream.CurrentTime;
+            var progress = (float)(difference.TotalSeconds / _crossfadeDuration.TotalSeconds);
+            //if diff approaches 0, (meaning we have reached it) then this will result in 0/x -> 0
+            //so we need to get the complement of this
+            var multiplier = Math.Clamp(progress, 0, 1);
+            multiplier = 1 - multiplier;
             for (var i = 0; i < read; i++)
             {
                 buffer[i] *= multiplier;
@@ -99,13 +110,16 @@ public sealed class WaveePlayer
     {
         Task.Factory.StartNew(() =>
         {
-            static CrossfadeStream OpenDecoder(Stream stream)
+            static CrossfadeStream OpenDecoder(Stream stream, TimeSpan duration)
             {
                 //TODO: check other formats
-                var decoder = new Mp3FileReader(stream);
-                var wave32 = new WaveChannel32(decoder);
+                stream.Position = 0;
 
-                return new CrossfadeStream(wave32);
+                var decoder = new VorbisWaveReader(stream);
+                //var decoder = new Mp3FileReader(stream);
+                //var wave32 = new WaveChannel32(decoder);
+
+                return new CrossfadeStream(decoder, duration);
             }
 
             while (true)
@@ -119,8 +133,13 @@ public sealed class WaveePlayer
 
                 var trackDetails = _state.Value.TrackDetails.ValueUnsafe();
                 var trackStream = trackDetails.AudioStream;
-                var decoder = OpenDecoder(trackStream);
+                var decoder = OpenDecoder(trackStream, trackDetails.Duration);
                 _mainStream = decoder;
+                if (_crossfadingOut is not null)
+                {
+                    _mainStream.CrossfadeIn(CrossfadeDuration.ValueUnsafe());
+                }
+
                 _positionUpdates.OnNext(_state.Value.StartFrom);
 
                 if (_state.Value.StartFrom.IsSome && _state.Value.StartFrom.ValueUnsafe() > TimeSpan.Zero)
@@ -131,7 +150,13 @@ public sealed class WaveePlayer
 
                 var dur = trackDetails.Duration;
 
+                bool startedCrossfade = false;
                 bool goout = false;
+
+                const int sampleCount = 4096;
+                var expectedTimeIncreasePerCycle =
+                    TimeSpan.FromSeconds((double)sampleCount / decoder.WaveFormat.SampleRate);
+                _positionUpdates.OnNext(decoder.CurrentTime);
                 while (true)
                 {
                     if (goout)
@@ -140,8 +165,14 @@ public sealed class WaveePlayer
                     }
 
                     //read samples from main stream
-                    const int sampleCount = 4096;
+                    var old = decoder.CurrentTime;
                     var buffer = decoder.ReadSamples(sampleCount);
+                    var diff = decoder.CurrentTime - old;
+                    if (diff > expectedTimeIncreasePerCycle || diff < TimeSpan.Zero)
+                    {
+                        _positionUpdates.OnNext(decoder.CurrentTime);
+                    }
+
                     //if reached end, break
                     if (buffer.Length == 0 || decoder.Ended)
                     {
@@ -149,10 +180,12 @@ public sealed class WaveePlayer
                     }
 
                     //check if we need to crossfade out
-                    if (CrossfadeDuration.IsSome)
+                    if (CrossfadeDuration.IsSome && !startedCrossfade)
                     {
                         if (decoder.CurrentTime > dur - CrossfadeDuration.ValueUnsafe())
                         {
+                            startedCrossfade = true;
+
                             //if we are already crossfading out, skip
                             if (_crossfadingOut is not null)
                             {
@@ -162,10 +195,13 @@ public sealed class WaveePlayer
                             //if we are not crossfading out, crossfade out
                             Task.Run(async () =>
                             {
-                                await SkipNext(true);
-                                _crossfadingOut = _mainStream;
-                                _crossfadingOut?.CrossfadingOut(CrossfadeDuration.ValueUnsafe());
-                                goout = true;
+                                var skipped = await SkipNext(true);
+                                if (skipped)
+                                {
+                                    _crossfadingOut = _mainStream;
+                                    _crossfadingOut?.CrossfadingOut(CrossfadeDuration.ValueUnsafe());
+                                    goout = true;
+                                }
                             });
                         }
                     }
@@ -178,11 +214,23 @@ public sealed class WaveePlayer
                         {
                             buffer[i] += crossfadeBuffer[i];
                         }
+
+                        if (_crossfadingOut.Ended)
+                        {
+                            _crossfadingOut.Dispose();
+                            _crossfadingOut = null;
+                        }
                     }
 
                     var bufferSpan = MemoryMarshal.Cast<float, byte>(buffer);
 
                     NAudioSink.Instance.Write(bufferSpan);
+                }
+
+                if (!goout)
+                {
+                    _playbackEvent.Reset();
+                    _ = SkipNext(false);
                 }
             }
         });
@@ -198,15 +246,76 @@ public sealed class WaveePlayer
         SeekTo(_mainStream, valueUnsafe);
     }
 
-    private async ValueTask SkipNext(bool crossfadeIn)
+    private async ValueTask<bool> SkipNext(bool crossfadeIn)
     {
         if (crossfadeIn)
         {
-            var nextState = await atomic(() => _state.SwapAsync(async x => await x.SkipNext()));
-            if (nextState.TrackDetails.IsSome)
+            var maybe = _state.Value.TrackId.Map(f => f.ToString());
+            var currentTrack = _state.Value.TrackUid.IfNone(maybe.IfNone(""));
+            
+            var next = await atomic(() => _state.SwapAsync(async x =>
             {
-                _playbackEvent.Set();
+                var maybe = _state.Value.TrackId.Map(f => f.ToString());
+                var currentTrack = _state.Value.TrackUid.IfNone(maybe.IfNone(""));
+
+                var nextState = await x.SkipNext(false);
+                
+                var maybeTo = nextState.TrackId.Map(f => f.ToString());
+                var nextTrack = nextState.TrackUid.IfNone(maybeTo.IfNone(""));
+                
+                if (nextTrack != currentTrack)
+                {
+                    _playbackEvent.Set();
+                }
+                else
+                {
+                    _playbackEvent.Reset();
+                }
+
+                return nextState;
+            }));
+            
+            var maybeTo = next.TrackId.Map(f => f.ToString());
+            var nextTrack = next.TrackUid.IfNone(maybeTo.IfNone(""));
+            if (currentTrack != nextTrack)
+            {
+                return true;
             }
+
+            return false;
+
+            return next.PermanentEnd;
+        }
+        else
+        {
+            _mainStream?.Dispose();
+            _mainStream = null;
+            _crossfadingOut?.Dispose();
+            _crossfadingOut = null;
+
+            var next = await atomic(() => _state.SwapAsync(async x =>
+            {
+                var maybe = _state.Value.TrackId.Map(f => f.ToString());
+                var currentTrack = _state.Value.TrackUid.IfNone(maybe.IfNone(""));
+
+                var nextState = await x.SkipNext(true);
+                
+                var maybeTo = nextState.TrackId.Map(f => f.ToString());
+                var nextTrack = nextState.TrackUid.IfNone(maybeTo.IfNone(""));
+
+                if (nextTrack != currentTrack)
+                {
+                    _playbackEvent.Set();
+                }
+                else
+                {
+                    _playbackEvent.Reset();
+                }
+
+                return nextState;
+            }));
+
+            return !next.PermanentEnd;
         }
     }
 
@@ -249,7 +358,8 @@ public sealed class WaveePlayer
                 RepeatState.Track => RepeatState.Context
             },
             StartFrom = startFrom,
-            TrackDetails = trackStream
+            TrackDetails = trackStream,
+            PermanentEnd = false
         }));
         if (startPaused)
         {

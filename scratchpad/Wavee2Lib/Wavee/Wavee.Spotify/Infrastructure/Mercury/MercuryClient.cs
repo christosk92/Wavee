@@ -111,7 +111,22 @@ internal readonly struct MercuryClient : ISpotifyMercuryClient
             throw new Exception("Failed to get track. Failed with status code: " + finalData.Header.StatusCode);
         return Track.Parser.ParseFrom(finalData.Payload.Span);
     }
-    
+
+    public Task<string> Autoplay(string id, CancellationToken ct = default)
+    {
+        const string query = "hm://autoplay-enabled/query?uri={0}";
+        var finalUri = string.Format(query, id);
+        var tcs = new TaskCompletionSource<MercuryPacket>(TaskCreationOptions.RunContinuationsAsynchronously);
+        CreateListener(finalUri, MercuryMethod.Get, null, tcs, ct);
+        return tcs.Task.ContinueWith(x =>
+        {
+            var finalData = x.Result;
+            if (finalData.Header.StatusCode != 200)
+                throw new Exception("Failed to get track. Failed with status code: " + finalData.Header.StatusCode);
+            return Encoding.UTF8.GetString(finalData.Payload.Span);
+        }, ct);
+    }
+
 
     private static SpotifyContext Parse(JsonDocument jsonDocument)
     {

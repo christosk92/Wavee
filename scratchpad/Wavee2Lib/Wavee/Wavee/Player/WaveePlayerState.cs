@@ -13,7 +13,8 @@ public readonly record struct WaveePlayerState(
     RepeatState RepeatState,
     Option<WaveeContext> Context,
     Option<WaveeTrack> TrackDetails,
-    Option<TimeSpan> StartFrom)
+    Option<TimeSpan> StartFrom,
+    bool PermanentEnd = false)
 {
     public static WaveePlayerState Empty()
     {
@@ -30,18 +31,27 @@ public readonly record struct WaveePlayerState(
         );
     }
 
-    public async Task<WaveePlayerState> SkipNext()
+    public async Task<WaveePlayerState> SkipNext(bool setPermanentEndIfNothing)
     {
         //TODO: Queue
         var nextIndex = this.TrackIndex.ValueUnsafe() + 1;
         var nextTrack = Context.ValueUnsafe().FutureTracks.ElementAtOrDefault(nextIndex);
+        if (nextTrack is null)
+        {
+            return this with
+            {
+                PermanentEnd = setPermanentEndIfNothing,
+            };
+        }
+
         var nextTrackData = await nextTrack.Factory(CancellationToken.None);
         return this with
         {
             TrackId = nextTrackData.Id,
             TrackUid = nextTrack.TrackUid,
             TrackIndex = nextIndex,
-            TrackDetails = nextTrackData
+            TrackDetails = nextTrackData,
+            PermanentEnd = false
         };
     }
 }
