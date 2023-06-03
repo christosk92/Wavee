@@ -278,8 +278,10 @@ internal sealed class SpotifyRemoteClient : ISpotifyRemoteClient, IDisposable
                                     SentBy = sentBy,
                                     CommandId = messageId,
                                     TrackUid = trackUid,
-                                    TrackId = AudioId.FromUri(skipTo.GetProperty("track_uri").GetString()),
-                                    TrackIndex = skipTo.GetProperty("track_index").GetInt32(),
+                                    TrackId = skipTo.TryGetProperty("track_uri", out var ur)
+                                        ? AudioId.FromUri(ur.GetString())
+                                        : None,
+                                    TrackIndex = skipTo.TryGetProperty("track_index", out var idx) ? idx.GetInt32() : 0,
                                     ContextUri = ctx.GetProperty("uri").GetString(),
                                     IsPaused = false,
                                     IsShuffling = None,

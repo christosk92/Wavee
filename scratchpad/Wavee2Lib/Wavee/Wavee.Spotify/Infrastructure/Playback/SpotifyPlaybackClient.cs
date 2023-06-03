@@ -156,7 +156,7 @@ internal sealed class SpotifyPlaybackClient : ISpotifyPlaybackClient, IDisposabl
         Option<ProvidedTrack> evTrackForQueueHint,
         Option<string> trackUid,
         Option<int> indexInContext,
-        AudioId trackId,
+        Option<AudioId> trackId,
         Option<TimeSpan> from,
         Option<bool> startPaused,
         Option<bool> shuffling,
@@ -207,13 +207,14 @@ internal sealed class SpotifyPlaybackClient : ISpotifyPlaybackClient, IDisposabl
                         return index;
                     }
                 }
-                else if (itemIn.TrackId == itemId.ValueUnsafe())
+                else if (itemId.IsSome && itemIn.TrackId == itemId.ValueUnsafe())
                 {
                     return index;
                 }
 
                 index++;
             }
+
             //not found, lets try without uid
             index = 0;
             foreach (var itemIn in tracks)
@@ -225,6 +226,7 @@ internal sealed class SpotifyPlaybackClient : ISpotifyPlaybackClient, IDisposabl
 
                 index++;
             }
+
             return index;
         }
 
@@ -235,6 +237,7 @@ internal sealed class SpotifyPlaybackClient : ISpotifyPlaybackClient, IDisposabl
             {
                 var item = evTrackForQueueHint.ValueUnsafe();
                 idx = findCorrectIndex(Option<int>.None, item.Uid, AudioId.FromUri(item.Uri), ctx.FutureTracks);
+                idx = Math.Max(0, idx - 1);
             }
         }
         else

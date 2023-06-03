@@ -22,7 +22,7 @@ public enum RemoteSpotifyPlaybackEventType
 public readonly struct RemoteSpotifyPlaybackEvent
 {
     public required RemoteSpotifyPlaybackEventType EventType { get; init; }
-    public AudioId TrackId { get; init; }
+    public Option<AudioId> TrackId { get; init; }
     public required Option<string> TrackUid { get; init; }
     public required Option<int> TrackIndex { get; init; }
     public Option<ProvidedTrack> PlayingFromQueue { get; init; }
