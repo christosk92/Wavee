@@ -31,16 +31,19 @@ internal readonly struct MercuryClient : ISpotifyMercuryClient
     private static readonly AsyncLock AccessTokenLock = new();
     private readonly SendPackage _onPackageSend;
     private readonly Func<PackageReceiveCondition, Channel<BoxedSpotifyPacket>> _onPackageReceive;
+    private readonly Action<ChannelWriter<BoxedSpotifyPacket>> _onPackageReceiverDone;
 
     public MercuryClient(string username,
         string countryCode,
         SendPackage onPackageSend,
-        Func<PackageReceiveCondition, Channel<BoxedSpotifyPacket>> onPackageReceive)
+        Func<PackageReceiveCondition, Channel<BoxedSpotifyPacket>> onPackageReceive, 
+        Action<ChannelWriter<BoxedSpotifyPacket>> onPackageReceiverDone)
     {
         _username = username;
         _countryCode = countryCode;
         _onPackageSend = onPackageSend;
         _onPackageReceive = onPackageReceive;
+        _onPackageReceiverDone = onPackageReceiverDone;
         if (!AccessTokens.ContainsKey(username))
             AccessTokens.Add(username,
                 new AccessToken(string.Empty, DateTimeOffset.MinValue));
@@ -221,6 +224,7 @@ internal readonly struct MercuryClient : ISpotifyMercuryClient
         var partials = new List<ReadOnlyMemory<byte>>();
         var sw = Stopwatch.StartNew();
 
+        Action<ChannelWriter<BoxedSpotifyPacket>> onPackageReceiverDone = _onPackageReceiverDone;
         Task.Run(async () =>
         {
             await foreach (var receivedPacket in reader.Reader.ReadAllAsync(ct))
@@ -253,6 +257,7 @@ internal readonly struct MercuryClient : ISpotifyMercuryClient
                 reader.Writer.Complete();
                 var response = new MercuryPacket(header, body);
                 onCompletion.SetResult(response);
+                onPackageReceiverDone(reader.Writer);
             }
         }, ct);
 

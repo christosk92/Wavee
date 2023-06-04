@@ -35,7 +35,7 @@ public class SpotifyPlaybackConfig
         CrossfadeDuration = crossfadeDuration;
     }
 
-    public Option<TimeSpan> CrossfadeDuration { get; }
+    public Option<TimeSpan> CrossfadeDuration { get; set; }
     public PreferredQualityType PreferedQuality { get; set; }
 }
 
@@ -65,6 +65,6 @@ public class SpotifyRemoteConfig
         DeviceType = deviceType;
     }
 
-    public string DeviceName { get; internal set; }
-    public DeviceType DeviceType { get; internal set; }
+    public string DeviceName { get; set; }
+    public DeviceType DeviceType { get; set; }
 }

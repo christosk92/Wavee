@@ -95,18 +95,20 @@
                         <Button.Flyout>
                             <MenuFlyout Placement="BottomEdgeAlignedLeft">
                                 <MenuFlyout.Items>
-                                    <MenuFlyoutItem 
-                                        Tapped="Settings_Tapped"
-                                        Text="Settings">
+                                    <MenuFlyoutItem Tapped="Settings_Tapped"
+                                                    Text="Settings">
                                         <MenuFlyoutItem.Icon>
-                                            <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE115;" />
+                                            <FontIcon FontFamily="Segoe Fluent Icons"
+                                                      Glyph="&#xE115;" />
                                         </MenuFlyoutItem.Icon>
                                     </MenuFlyoutItem>
 
-                                    <MenuFlyoutSeparator/>
-                                    <MenuFlyoutItem Text="Sign Out" Foreground="Red">
+                                    <MenuFlyoutSeparator />
+                                    <MenuFlyoutItem Text="Sign Out"
+                                                    Foreground="Red">
                                         <MenuFlyoutItem.Icon>
-                                            <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xF3B1;" />
+                                            <FontIcon FontFamily="Segoe Fluent Icons"
+                                                      Glyph="&#xF3B1;" />
                                         </MenuFlyoutItem.Icon>
                                     </MenuFlyoutItem>
                                 </MenuFlyout.Items>
@@ -212,11 +214,12 @@
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
-            <ContentControl Grid.Column="0"
-                            Grid.ColumnSpan="2"
-                            Content="{x:Bind NavigationFrame, Mode=OneWay}"
-                            VerticalContentAlignment="Stretch"
-                            HorizontalContentAlignment="Stretch" />
+            <ContentPresenter x:Name="NavigationFrame"
+                              Grid.Column="0"
+                              x:FieldModifier="public"
+                              Grid.ColumnSpan="2"
+                              VerticalContentAlignment="Stretch"
+                              HorizontalContentAlignment="Stretch" />
             <labs:PropertySizer HorizontalAlignment="Left"
                                 x:Name="SidebarResizer"
                                 Binding="{x:Bind CoreSplitView.OpenPaneLength, Mode=TwoWay}"

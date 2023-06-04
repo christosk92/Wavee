@@ -11,7 +11,7 @@
              xmlns:artist="using:Wavee.UI.ViewModels.Artist"
              mc:Ignorable="d">
 
-    <ItemsRepeater ItemsSource="{x:Bind Items}">
+    <ItemsRepeater ItemsSource="{x:Bind Items, Mode=OneWay}">
         <ItemsRepeater.Layout>
             <UniformGridLayout MinItemWidth="220"
                                ItemsStretch="Uniform"

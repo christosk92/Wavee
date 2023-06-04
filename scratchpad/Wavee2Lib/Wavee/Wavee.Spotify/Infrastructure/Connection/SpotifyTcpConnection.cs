@@ -171,6 +171,12 @@ internal sealed class SpotifyTcpConnection : IDisposable
         return result;
     }
 
+    public void RemoveListener(ChannelWriter<BoxedSpotifyPacket> channel)
+    {
+        var condition = _callbacks.First(x => x.Writer == channel);
+        _callbacks.Remove(condition);
+    }
+
     // public Task<T> Receive<T>(
     //     PackageReceiveCondition condition,
     //     MutatePackageFuncDelegate<T> projection)

@@ -19,16 +19,18 @@ internal readonly struct AudioKeyProvider : IAudioKeyProvider
 
     private readonly SendPackage _onPackageSend;
     private readonly Func<PackageReceiveCondition, Channel<BoxedSpotifyPacket>> _onPackageReceive;
+    private readonly Action<ChannelWriter<BoxedSpotifyPacket>> _onPackageReceiverDone;
     private readonly string _username;
     private static readonly object SendLock = new object();
 
-    public AudioKeyProvider(
-        string username,
+    public AudioKeyProvider(string username,
         SendPackage onPackageSend,
-        Func<PackageReceiveCondition, Channel<BoxedSpotifyPacket>> onPackageReceive)
+        Func<PackageReceiveCondition, Channel<BoxedSpotifyPacket>> onPackageReceive, 
+        Action<ChannelWriter<BoxedSpotifyPacket>> onPackageReceiverDone)
     {
         _onPackageSend = onPackageSend;
         _onPackageReceive = onPackageReceive;
+        _onPackageReceiverDone = onPackageReceiverDone;
         _username = username;
         _onPackageSend = onPackageSend;
         _onPackageReceive = onPackageReceive;
@@ -65,11 +67,13 @@ internal readonly struct AudioKeyProvider : IAudioKeyProvider
             {
                 case SpotifyPacketType.AesKey:
                     var key = aespacket.Data.Slice(4, 16);
+                    _onPackageReceiverDone(reader.Writer);
                     return key;
                 //    return Right(new AudioKey(key));
                 case SpotifyPacketType.AesKeyError:
                     var errorCode = aespacket.Data.Span[4];
                     var errorType = aespacket.Data.Span[5];
+                    _onPackageReceiverDone(reader.Writer);
                     return Left(new AesKeyError(errorCode, errorType));
             }
         }

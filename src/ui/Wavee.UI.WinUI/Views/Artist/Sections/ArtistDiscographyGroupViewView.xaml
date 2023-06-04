@@ -38,12 +38,12 @@
                 </labs:SegmentedItem>
             </labs:Segmented>
         </Grid>
-        <ContentControl Grid.Row="1"
-                        Margin="0,12,0,0"
-                        VerticalContentAlignment="Top"
-                        VerticalAlignment="Top"
-                        Content="{x:Bind CurrentView, Mode=OneWay}"
-                        HorizontalContentAlignment="Stretch"
-                        x:Name="ItemsView" />
+        <ContentPresenter Grid.Row="1"
+                          Margin="0,12,0,0"
+                          VerticalContentAlignment="Top"
+                          VerticalAlignment="Top"
+                          Content="{x:Bind CurrentView, Mode=OneWay}"
+                          HorizontalContentAlignment="Stretch"
+                          x:Name="ItemsView" />
     </Grid>
 </UserControl>

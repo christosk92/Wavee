@@ -143,7 +143,6 @@
                 <DataTemplate x:DataType="library:LibraryTrack">
                     <components:TrackView AlternatingRowColor="True"
                                           Height="42"
-                                          x:Phase="2"
                                           PlayCommand="{x:Bind PlayCommand ,Mode=OneWay}"
                                           Index="{x:Bind OriginalIndex, Mode=OneWay}"
                                           ImageUrl="{x:Bind GetSmallestImage(Track), Mode=OneWay}"
@@ -162,12 +161,9 @@
                                 <TextBlock VerticalAlignment="Center"
                                            Grid.Column="1"
                                            TextTrimming="CharacterEllipsis"
-                                           x:Phase="1"
                                            Text="{x:Bind Track.Name, Mode=OneWay}" />
 
                                 <ItemsControl VerticalAlignment="Center"
-                                              x:Phase="3"
-
                                               ItemsPanel="{StaticResource ArtistLayout}"
                                               ItemTemplate="{StaticResource HorizontalArtistTemplate}"
                                               ItemsSource="{x:Bind Track.Artists, Mode=OneWay}"
@@ -175,7 +171,6 @@
 
                                 <HyperlinkButton VerticalAlignment="Center"
                                                  Grid.Column="3"
-                                                 x:Phase="4"
                                                  Padding="0,8,8,8"
                                                  Tag="{x:Bind Track.Group.Id}"
                                                  Tapped="NavigateToMetadata"
@@ -183,11 +178,9 @@
                                                  Content="{x:Bind Track.Group.Name, Mode=OneWay}" />
                                 <TextBlock VerticalAlignment="Center"
                                            Grid.Column="4"
-                                           x:Phase="5"
                                            Text="{x:Bind FormatToRelativeDate(Added), Mode=OneWay}" />
                                 <TextBlock VerticalAlignment="Center"
                                            Grid.Column="5"
-                                           x:Phase="5"
                                            Text="{x:Bind FormatToShorterTimestamp(Track.Duration), Mode=OneWay}" />
                             </Grid>
                         </components:TrackView.View>

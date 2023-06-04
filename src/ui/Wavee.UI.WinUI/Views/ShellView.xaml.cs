@@ -106,7 +106,7 @@ public sealed partial class ShellView : UserControl
         }
 
         ViewModel = new ShellViewModel<WaveeUIRuntime>(runtime, userId, OnLibraryItemAdded, OnLibraryItemRemoved);
-        NavigationService = new NavigationService(NavigationFrame);
+        NavigationService = new NavigationService(SidebarControl.NavigationFrame);
         NavigationService.Navigated += NavigationService_Navigated;
     }
 

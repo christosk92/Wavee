@@ -103,7 +103,7 @@ public static class HttpIO
         HashMap<string, string> headers,
         HttpContent body, CancellationToken ct = default)
     {
-        using var request = new HttpRequestMessage(HttpMethod.Put, url);
+        using var request = new HttpRequestMessage(HttpMethod.Post, url);
         request.Headers.Authorization = bearerHeader;
         foreach (var header in headers)
         {

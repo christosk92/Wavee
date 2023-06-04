@@ -14,13 +14,7 @@
         <sidebar:SidebarControl User="{x:Bind ViewModel.User, Mode=OneWay}"
                                 x:FieldModifier="public"
                                 Playlists="{x:Bind ViewModel.PlaylistsVm.Playlists}"
-                                x:Name="SidebarControl">
-            <sidebar:SidebarControl.NavigationFrame>
-                <ContentControl x:Name="NavigationFrame"
-                                VerticalContentAlignment="Stretch"
-                                HorizontalContentAlignment="Stretch" />
-            </sidebar:SidebarControl.NavigationFrame>
-        </sidebar:SidebarControl>
+                                x:Name="SidebarControl" />
 
         <Border VerticalAlignment="Bottom"
                 HorizontalAlignment="Stretch"

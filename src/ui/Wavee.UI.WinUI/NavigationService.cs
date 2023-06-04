@@ -19,7 +19,7 @@ public record CachedPage(INavigablePage Page, object? WithParameter, int Inserte
 
 public sealed class NavigationService
 {
-    private ContentControl _contentControl;
+    private ContentPresenter _contentControl;
 
     private object? _lastParameter;
     private readonly Stack<(Type Type, object? Parameter)> _backStack = new();
@@ -65,7 +65,7 @@ public sealed class NavigationService
             RegisterConstructor(type);
         }
     }
-    public NavigationService(ContentControl frame)
+    public NavigationService(ContentPresenter frame)
     {
         _contentControl = frame;
         Instance = this;

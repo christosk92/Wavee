@@ -13,7 +13,7 @@ namespace Wavee.UI.WinUI.Views.Setup
 {
     public sealed partial class SigninInView : UserControl
     {
-        public const string VAULT_KEY = "WaveeSpotify";
+        public const string VAULT_KEY = "WaveeSpotify2";
 
 
         private bool _naivgateToSetupView;

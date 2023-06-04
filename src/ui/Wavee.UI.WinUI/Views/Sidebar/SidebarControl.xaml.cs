@@ -28,9 +28,6 @@ namespace Wavee.UI.WinUI.Views.Sidebar
         public static readonly DependencyProperty SidebarWidthProperty = DependencyProperty.Register(nameof(SidebarWidth), typeof(double), typeof(SidebarControl), new PropertyMetadata(Constants.DefaultSidebarWidth));
         public static readonly DependencyProperty SidebarItemsProperty = DependencyProperty.Register(nameof(SidebarItems), typeof(IReadOnlyCollection<AbsSidebarItemViewModel>), typeof(SidebarControl), new PropertyMetadata(default(IReadOnlyCollection<AbsSidebarItemViewModel>)));
         public static readonly DependencyProperty PlaylistsProperty = DependencyProperty.Register(nameof(Playlists), typeof(ReadOnlyObservableCollection<PlaylistSubscription>), typeof(SidebarControl), new PropertyMetadata(default(ReadOnlyObservableCollection<PlaylistSubscription>)));
-        public static readonly DependencyProperty NavigationFrameProperty = DependencyProperty.Register(nameof(NavigationFrame), typeof(object),
-            typeof(SidebarControl), new PropertyMetadata(default(object)));
-
         public static readonly DependencyProperty UserProperty = DependencyProperty.Register(nameof(User), typeof(User), typeof(SidebarControl), new PropertyMetadata(default(User)));
 
         public SidebarControl()
@@ -56,13 +53,6 @@ namespace Wavee.UI.WinUI.Views.Sidebar
         {
             get => (ReadOnlyObservableCollection<PlaylistSubscription>)GetValue(PlaylistsProperty);
             set => SetValue(PlaylistsProperty, value);
-        }
-
-
-        public object NavigationFrame
-        {
-            get => (object)GetValue(NavigationFrameProperty);
-            set => SetValue(NavigationFrameProperty, value);
         }
 
         public User User

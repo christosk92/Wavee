@@ -65,7 +65,7 @@ public sealed class SpotifyClient : IDisposable
         await ApResolver.Populate();
 
         WaveePlayer.Instance.CrossfadeDuration = config.Playback.CrossfadeDuration;
-        
+
         var firstAp = ApResolver.AccessPoint.ValueUnsafe();
         var split = firstAp.Split(':');
 
@@ -115,7 +115,8 @@ public sealed class SpotifyClient : IDisposable
         username: _connection.LastWelcomeMessage.Value.CanonicalUsername,
         countryCode: _connection.LastCountryCode.Value.IfNone("US"),
         onPackageSend: (pkg) => _connection.Send(pkg),
-        onPackageReceive: (condition) => _connection.CreateListener(condition)
+        onPackageReceive: (condition) => _connection.CreateListener(condition),
+        onPackageReceiverDone: (receiver) => _connection.RemoveListener(receiver)
     );
 
 
@@ -127,7 +128,9 @@ public sealed class SpotifyClient : IDisposable
     public IAudioKeyProvider AudioKeyProvder => new AudioKeyProvider(
         username: _connection.LastWelcomeMessage.Value.CanonicalUsername,
         onPackageSend: (pkg) => _connection.Send(pkg),
-        onPackageReceive: (condition) => _connection.CreateListener(condition));
+        onPackageReceive: (condition) => _connection.CreateListener(condition),
+        onPackageReceiverDone: (receiver) => _connection.RemoveListener(receiver)
+        );
 
     public APWelcome WelcomeMessage => _connection.LastWelcomeMessage.Value;
     public Option<string> CountryCode => _connection.LastCountryCode;

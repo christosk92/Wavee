@@ -140,28 +140,23 @@
                                       x:Name="SavedButton"
                                       Margin="6,0" />
 
-                    <Grid x:Name="ImageShimemrDataGrid"
-                          x:Load="{x:Bind ShowImage, Mode=OneWay}"
-                          Margin="4,0"
-                          VerticalAlignment="Center">
-                        <Border CornerRadius="4"
-                                Width="28"
-                                Height="28">
-                            <Grid>
-                                <winUi:Shimmer x:Load="{x:Bind HasImage(ImageUrl, x:False),Mode=OneWay}"
-                                               x:Name="ImageShimmer" />
-                                <Image DataContext="{x:Bind}"
-                                       x:Name="ImageData"
-                                       x:Load="{x:Bind HasImage(ImageUrl, x:True), Mode=OneWay}">
-                                    <Image.Source>
-                                        <BitmapImage UriSource="{Binding ImageUrl, Mode=OneWay}"
-                                                     DecodePixelHeight="40"
-                                                     DecodePixelWidth="40" />
-                                    </Image.Source>
-                                </Image>
-                            </Grid>
-                        </Border>
-                    </Grid>
+                    <Border CornerRadius="4"
+                            Width="28"
+                            Margin="4,0"
+                            x:Name="ImageBorder"
+                            x:Load="{x:Bind ShowImage, Mode=OneWay}"
+                            Height="28">
+                        <Image DataContext="{x:Bind}"
+                               x:Name="ImageData"
+                               VerticalAlignment="Center"
+                               x:Load="{x:Bind HasImage(ImageUrl, x:True), Mode=OneWay}">
+                            <Image.Source>
+                                <BitmapImage UriSource="{Binding ImageUrl, Mode=OneWay}"
+                                             DecodePixelHeight="28"
+                                             DecodePixelWidth="28" />
+                            </Image.Source>
+                        </Image>
+                    </Border>
                 </StackPanel>
                 <ContentControl VerticalAlignment="Center"
                                 VerticalContentAlignment="Stretch"
