@@ -38,7 +38,7 @@
                                                  EndPoint="0,1">
                                 <GradientStop Color="#00000000"
                                               Offset="0" />
-                                <GradientStop Color="#8000000"
+                                <GradientStop Color="#80000000"
                                               Offset="1" />
                             </LinearGradientBrush>
 

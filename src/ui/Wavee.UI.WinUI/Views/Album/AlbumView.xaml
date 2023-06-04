@@ -46,9 +46,7 @@
                         Background="{x:Bind GetCorrectColor(App.CurrentTheme, ViewModel.LightColor, ViewModel.DarkColor),Mode=OneWay}"
                         x:Name="OverlayRectangle"
                         HorizontalAlignment="Stretch"
-                        VerticalAlignment="Stretch"
-                        CornerRadius="0"
-                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
+                        VerticalAlignment="Stretch">
                     <Border Margin="0"
                             Background="{ThemeResource BackgroundGradient}" />
                 </Border>
