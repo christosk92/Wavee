@@ -5,6 +5,8 @@ using System.Linq;
 using System.Numerics;
 using System.Windows.Forms;
 using Windows.Foundation;
+using Windows.UI;
+using CommunityToolkit.WinUI.Helpers;
 using CommunityToolkit.WinUI.UI;
 using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
@@ -24,6 +26,7 @@ using Canvas = Microsoft.UI.Xaml.Controls.Canvas;
 using Microsoft.UI.Xaml.Hosting;
 using CommunityToolkit.WinUI.UI.Animations.Expressions;
 using Eum.Spotify.context;
+using Microsoft.UI;
 using Wavee.UI.ViewModels.Library;
 using Wavee.UI.ViewModels.Playback;
 using Button = Microsoft.UI.Xaml.Controls.Button;
@@ -61,7 +64,7 @@ public sealed partial class AlbumView : UserControl, INavigablePage
         _scrollerPropertySet.Dispose();
         _compositor = null;
     }
-
+    public App App => App.Instance;
     public AlbumViewModel<WaveeUIRuntime> ViewModel { get; }
 
     private async void AlbumView_OnLoaded(object sender, RoutedEventArgs e)
@@ -294,5 +297,17 @@ public sealed partial class AlbumView : UserControl, INavigablePage
             Metadata: HashMap.empty<string, string>()
         );
         await ShellViewModel<WaveeUIRuntime>.Instance.Playback.PlayContextAsync(context);
+    }
+
+    public Brush GetCorrectColor(AppTheme appTheme, string light, string dark)
+    {
+        if(string.IsNullOrEmpty(light) || string.IsNullOrEmpty(dark))
+            return new SolidColorBrush(Colors.Transparent);
+        var hex = appTheme switch
+        {
+            _ => App.MWindow.Content is FrameworkElement { RequestedTheme: ElementTheme.Dark } ? dark : light
+        };
+
+        return new SolidColorBrush(hex.ToColor());
     }
 }

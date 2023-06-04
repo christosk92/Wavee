@@ -3,6 +3,7 @@ using LanguageExt;
 using Spotify.Metadata;
 using Wavee.Core.Ids;
 using Wavee.Spotify.Infrastructure.Mercury.Models;
+using Wavee.Spotify.Infrastructure.PrivateApi.Contracts.Response;
 
 namespace Wavee.Spotify.Infrastructure.Cache;
 
@@ -18,4 +19,7 @@ public interface ISpotifyCache
     Unit SaveRawEntity(AudioId Id, string title,
         ReadOnlyMemory<byte> data,
         DateTimeOffset expiration);
+
+    Option<SpotifyColors> GetColorFor(string imageUrl);
+    Unit SaveColorFor(string imageUrl, SpotifyColors response);
 }

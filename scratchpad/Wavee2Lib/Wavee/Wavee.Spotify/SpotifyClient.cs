@@ -10,6 +10,7 @@ using Wavee.Spotify.Infrastructure.Mercury;
 using Wavee.Spotify.Infrastructure.Playback;
 using Wavee.Spotify.Infrastructure.Playback.Contracts;
 using Wavee.Spotify.Infrastructure.PrivateApi;
+using Wavee.Spotify.Infrastructure.PrivateApi.Contracts;
 using Wavee.Spotify.Infrastructure.PublicApi;
 using Wavee.Spotify.Infrastructure.Remote;
 using Wavee.Spotify.Infrastructure.Remote.Contracts;

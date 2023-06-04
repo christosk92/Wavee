@@ -10,6 +10,7 @@ using Eum.Spotify.playlist4;
 using Google.Protobuf;
 using Spotify.Collection.Proto.V2;
 using Wavee.Spotify.Infrastructure.Mercury.Models;
+using Wavee.Spotify.Infrastructure.PrivateApi.Contracts;
 using Wavee.Spotify.Infrastructure.Remote.Contracts;
 
 namespace Wavee.UI.Infrastructure.Sys;
@@ -140,4 +141,8 @@ public static class Spotify<R> where R : struct, HasSpotify<R>
         from affR in default(R).SpotifyEff.Map(x => x.DiffRevision(playlistId, currentRevision))
         from result in affR
         select result;
+
+    public static Eff<R, ISpotifyPrivateApi> PrivateApi() =>
+        from affR in default(R).SpotifyEff.Map(x => x.PrivateApi())
+        select affR.ValueUnsafe();
 }

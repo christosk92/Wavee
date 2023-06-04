@@ -22,6 +22,7 @@ using Wavee.Infrastructure.IO;
 using Wavee.Spotify.Infrastructure.ApResolve;
 using Wavee.Spotify.Infrastructure.Mercury.Models;
 using Wavee.Spotify.Infrastructure.Remote.Contracts;
+using Wavee.Spotify.Infrastructure.PrivateApi.Contracts;
 
 namespace Wavee.UI.Infrastructure.Live;
 
@@ -241,10 +242,10 @@ internal sealed class LiveSpotify : Traits.SpotifyIO
         if (items.IsEmpty)
             return SuccessAff(LanguageExt.Seq<TrackOrEpisode>.Empty);
         return from client in Eff(() => _connection.ValueUnsafe())
-            from spclient in SuccessEff(ApResolver.SpClient.First())
-                .Map(x => $"https://{x}")
-                   .Map(x =>
-                       $"{x}/extended-metadata/v0/extended-metadata")
+               from spclient in SuccessEff(ApResolver.SpClient.First())
+                   .Map(x => $"https://{x}")
+                      .Map(x =>
+                          $"{x}/extended-metadata/v0/extended-metadata")
                from bearer in client.Mercury.GetAccessToken(CancellationToken.None).ToAff()
                    .Map(x => new AuthenticationHeaderValue("Bearer", x))
                from content in Eff(() =>
@@ -276,7 +277,7 @@ internal sealed class LiveSpotify : Traits.SpotifyIO
                    return byteArrCnt;
                })
                from posted in HttpIO.Post(spclient, bearer,
-                       LanguageExt.HashMap<string, string>.Empty, 
+                       LanguageExt.HashMap<string, string>.Empty,
                        content, CancellationToken.None)
                    .ToAff()
                    .MapAsync(async x =>
@@ -309,7 +310,7 @@ internal sealed class LiveSpotify : Traits.SpotifyIO
 
     public async ValueTask<Unit> Authenticate(LoginCredentials credentials, CancellationToken ct = default)
     {
-        var core = await SpotifyClient.CreateAsync(_config,credentials);
+        var core = await SpotifyClient.CreateAsync(_config, credentials);
         _connection = Some(core);
         return Unit.Default;
     }
@@ -338,6 +339,9 @@ internal sealed class LiveSpotify : Traits.SpotifyIO
         return _connection
             .Map(x => x.Remote.StateUpdates.Select(x => x.ValueUnsafe()));
     }
+    public Option<ISpotifyPrivateApi> PrivateApi() =>
+        _connection
+            .Map(x => x.PrivateApi);
     public Option<IObservable<Diff>> ObservePlaylist(AudioId id) =>
         _connection
             .Map(x => x.Remote.ObservePlaylist(id));

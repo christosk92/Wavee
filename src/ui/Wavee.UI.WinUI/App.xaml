@@ -22,8 +22,26 @@
                                              Color="{StaticResource CardBackgroundFillColorDefault}" />
                             <SolidColorBrush x:Key="App.Theme.FileArea.BackgroundBrush"
                                              Color="{StaticResource CardBackgroundFillColorDefault}" />
+                            <LinearGradientBrush x:Key="BackgroundGradient"
+                                                 StartPoint="0,0"
+                                                 EndPoint="0,1">
+                                <GradientStop Color="#FFFFFFFF"
+                                              Offset="1" />
+                                <GradientStop Color="#80FFFFFF"
+                                              Offset="0" />
+                            </LinearGradientBrush>
+
                         </ResourceDictionary>
                         <ResourceDictionary x:Key="Dark">
+                            <LinearGradientBrush x:Key="BackgroundGradient"
+                                                 StartPoint="0,0"
+                                                 EndPoint="0,1">
+                                <GradientStop Color="#00000000"
+                                              Offset="0" />
+                                <GradientStop Color="#8000000"
+                                              Offset="1" />
+                            </LinearGradientBrush>
+
                             <SolidColorBrush x:Key="App.Theme.BackgroundBrush"
                                              Color="Transparent" />
                             <SolidColorBrush x:Key="App.Theme.AddressBar.BackgroundBrush"

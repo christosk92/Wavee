@@ -23,13 +23,12 @@ internal readonly struct MercuryClient : ISpotifyMercuryClient
 {
     private readonly record struct AccessToken(string Token, DateTimeOffset ExpiresAt);
 
-    private record AccessTokenLockComposite(AccessToken Token, AsyncLock Lock);
-
     private static readonly Dictionary<string, ulong> SendSequences = new Dictionary<string, ulong>();
-    private static readonly Dictionary<string, AccessTokenLockComposite> AccessTokenLocks = new();
+    private static readonly Dictionary<string, AccessToken> AccessTokens = new();
 
     private readonly string _username;
     private readonly string _countryCode;
+    private static readonly AsyncLock AccessTokenLock = new();
     private readonly SendPackage _onPackageSend;
     private readonly Func<PackageReceiveCondition, Channel<BoxedSpotifyPacket>> _onPackageReceive;
 
@@ -42,9 +41,9 @@ internal readonly struct MercuryClient : ISpotifyMercuryClient
         _countryCode = countryCode;
         _onPackageSend = onPackageSend;
         _onPackageReceive = onPackageReceive;
-        if (!AccessTokenLocks.ContainsKey(username))
-            AccessTokenLocks.Add(username,
-                new AccessTokenLockComposite(new AccessToken(string.Empty, DateTimeOffset.MinValue), new AsyncLock()));
+        if (!AccessTokens.ContainsKey(username))
+            AccessTokens.Add(username,
+                new AccessToken(string.Empty, DateTimeOffset.MinValue));
 
         lock (SendSequences)
         {
@@ -54,11 +53,10 @@ internal readonly struct MercuryClient : ISpotifyMercuryClient
 
     public async Task<string> GetAccessToken(CancellationToken ct = default)
     {
-        var (token, lockObj) = AccessTokenLocks[_username];
-        using (await lockObj.LockAsync(ct))
+        using (await AccessTokenLock.LockAsync(ct))
         {
-            if (token.ExpiresAt > DateTimeOffset.UtcNow)
-                return token.Token;
+            if (AccessTokens[_username].ExpiresAt > DateTimeOffset.UtcNow)
+                return AccessTokens[_username].Token;
 
             const string KEYMASTER_URI =
                 "hm://keymaster/token/authenticated?scope=user-read-private,user-read-email,playlist-modify-public,ugc-image-upload,playlist-read-private,playlist-read-collaborative,playlist-read&client_id=65b708073fc0480ea92a077233ca87bd&device_id=";
@@ -69,7 +67,7 @@ internal readonly struct MercuryClient : ISpotifyMercuryClient
             var newToken =
                 new AccessToken(tokenData.AccessToken,
                     DateTimeOffset.UtcNow.AddSeconds(tokenData.ExpiresIn).Subtract(TimeSpan.FromMinutes(1)));
-            AccessTokenLocks[_username] = new AccessTokenLockComposite(newToken, lockObj);
+            AccessTokens[_username] = newToken;
             return tokenData.AccessToken;
         }
     }

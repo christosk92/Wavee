@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
+using System.Runtime.CompilerServices;
 using Windows.Graphics;
 using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
@@ -26,9 +29,10 @@ using WinRT.Interop;
 
 namespace Wavee.UI.WinUI;
 
-public partial class App : Application
+public partial class App : Application, INotifyPropertyChanged
 {
     public static readonly SpotifyConfig Config;
+    private AppTheme _currentTheme;
 
     static App()
     {
@@ -68,6 +72,18 @@ public partial class App : Application
     public App()
     {
         InitializeComponent();
+        Instance = this;
+    }
+
+    public AppTheme CurrentTheme
+    {
+        get => _currentTheme;
+        set
+        {
+            if (_currentTheme == value) return;
+            _currentTheme = value;
+            OnPropertyChanged();
+        }
     }
 
     public static WaveeUIRuntime Runtime { get; }
@@ -187,6 +203,7 @@ public partial class App : Application
                         _ => throw new ArgumentOutOfRangeException()
                     }
                 };
+                CurrentTheme = settings.CurrentTheme;
                 return (UIElement)shellView;
             },
             None: () =>
@@ -201,6 +218,7 @@ public partial class App : Application
                         _ => throw new ArgumentOutOfRangeException()
                     }
                 };
+                CurrentTheme = settings.CurrentTheme;
                 return setupView;
             });
         var window = new Window
@@ -256,6 +274,7 @@ public partial class App : Application
         long dwMaximumWorkingSetSize);
 
     public static Window MWindow { get; private set; }
+    public static App Instance { get; private set; }
 
 
     [DllImport("Shcore.dll", SetLastError = true)]
@@ -286,5 +305,20 @@ public partial class App : Application
 
         uint scaleFactorPercent = (uint)(((long)dpiX * 100 + (96 >> 1)) / 96);
         return scaleFactorPercent / 100.0;
+    }
+
+    public event PropertyChangedEventHandler PropertyChanged;
+
+    protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+    {
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    }
+
+    protected bool SetField<T>(ref T field, T value, [CallerMemberName] string propertyName = null)
+    {
+        if (EqualityComparer<T>.Default.Equals(field, value)) return false;
+        field = value;
+        OnPropertyChanged(propertyName);
+        return true;
     }
 }

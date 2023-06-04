@@ -17,10 +17,10 @@ public partial class ArtistDiscographyGroupViewView
 {
     public static readonly DependencyProperty TitleProperty = DependencyProperty.Register(nameof(Title), typeof(string), typeof(ArtistDiscographyGroupViewView), new PropertyMetadata(default(string)));
     public static readonly DependencyProperty CanSwitchTemplatesProperty = DependencyProperty.Register(nameof(CanSwitchTemplates), typeof(bool), typeof(ArtistDiscographyGroupViewView), new PropertyMetadata(default(bool)));
-    public static readonly DependencyProperty ViewsProperty = 
-        DependencyProperty.Register(nameof(Views), 
-            typeof(List<ArtistDiscographyView>), 
-            typeof(ArtistDiscographyGroupViewView), 
+    public static readonly DependencyProperty ViewsProperty =
+        DependencyProperty.Register(nameof(Views),
+            typeof(List<ArtistDiscographyView>),
+            typeof(ArtistDiscographyGroupViewView),
             new PropertyMetadata(default(List<ArtistDiscographyView>)));
 
     public ArtistDiscographyGroupViewView()
@@ -53,6 +53,12 @@ public partial class ArtistDiscographyGroupViewView
         }
     }
 
+    public object CurrentView
+    {
+        get => (object)GetValue(CurrentViewProperty);
+        set => SetValue(CurrentViewProperty, value);
+    }
+
     private readonly TaskCompletionSource _waitForViews = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
     private async void SwitchTemplatesControl_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
     {
@@ -73,7 +79,7 @@ public partial class ArtistDiscographyGroupViewView
                     "list" => new ArtistDiscographyListView(Views) as UIElement
                 };
                 _pages[Title] = pages;
-                ItemsView.Content = pages[key];
+                CurrentView = pages[key];
             }
             else
             {
@@ -84,13 +90,13 @@ public partial class ArtistDiscographyGroupViewView
                         "grid" => new ArtistDiscographyGridView(Views),
                         "list" => new ArtistDiscographyListView(Views) as UIElement
                     };
-                    ItemsView.Content = pages[key];
+                    CurrentView = pages[key];
                 }
                 else
                 {
                     try
                     {
-                        ItemsView.Content = page;
+                        CurrentView = page;
                     }
                     catch (Exception exception)
                     {
@@ -104,6 +110,7 @@ public partial class ArtistDiscographyGroupViewView
     }
 
     private static readonly ConcurrentDictionary<string, Dictionary<string, object>> _pages = new();
+    public static readonly DependencyProperty CurrentViewProperty = DependencyProperty.Register(nameof(CurrentView), typeof(object), typeof(ArtistDiscographyGroupViewView), new PropertyMetadata(default(object)));
 
     public static void ClearAll()
     {

@@ -15,6 +15,11 @@
              xmlns:templateSelectors="using:Wavee.UI.WinUI.TemplateSelectors"
              xmlns:controls1="using:CommunityToolkit.WinUI.UI.Controls"
              mc:Ignorable="d">
+    <UserControl.Transitions>
+        <TransitionCollection>
+            <EntranceThemeTransition />
+        </TransitionCollection>
+    </UserControl.Transitions>
     <!-- <UserControl.Resources> -->
     <!--     <panels:HorizontalPanelLayout x:Name="HorizontalPanelLayout" -->
     <!--                                   x:Key="HorizontalPanelLayout" /> -->

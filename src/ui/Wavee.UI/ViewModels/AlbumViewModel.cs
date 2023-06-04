@@ -9,6 +9,7 @@ using Wavee.UI.Infrastructure.Traits;
 using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
 using Wavee.Spotify.Infrastructure.Cache;
+using Wavee.Spotify.Infrastructure.PrivateApi.Contracts.Response;
 using Wavee.UI.Models;
 using Wavee.UI.ViewModels.Artist;
 using Wavee.UI.ViewModels.Playback;
@@ -22,6 +23,18 @@ public sealed class AlbumViewModel<R> : ReactiveObject, INavigableViewModel wher
     {
         get => _isBusy;
         set => this.RaiseAndSetIfChanged(ref _isBusy, value);
+    }
+
+    public string DarkColor
+    {
+        get => _darkColor;
+        set => this.RaiseAndSetIfChanged(ref _darkColor, value);
+    }
+
+    public string LightColor
+    {
+        get => _lightColor;
+        set => this.RaiseAndSetIfChanged(ref _lightColor, value);
     }
 
     private readonly IDisposable _listener;
@@ -50,6 +63,8 @@ public sealed class AlbumViewModel<R> : ReactiveObject, INavigableViewModel wher
 
     public TaskCompletionSource AlbumFetched = new TaskCompletionSource();
     private bool _isSaved;
+    private string _darkColor;
+    private string _lightColor;
 
     public async void OnNavigatedTo(object? parameter)
     {
@@ -66,26 +81,40 @@ public sealed class AlbumViewModel<R> : ReactiveObject, INavigableViewModel wher
             from cached in Spotify<R>.Cache()
                 .Map(x => x.GetRawEntity(id)
                     .BiMap(Some: r => SuccessAff(r),
-                           None: () => from countryCode in Spotify<R>.CountryCode().Map(x => x.ValueUnsafe())
-                                       let url = string.Format(fetch_uri, id.ToString(), countryCode)
-                                       from mercuryClient in Spotify<R>.Mercury().Map(x => x)
-                                       from response in mercuryClient.Get(url, CancellationToken.None).ToAff()
-                                       from _ in Spotify<R>.Cache().Map(x => x.SaveRawEntity(id,
-                                           id.Id.ToString(),
-                                           response.Payload, DateTimeOffset.UtcNow.AddDays(1)))
-                                       select response.Payload
-                        )
+                        None: () => from countryCode in Spotify<R>.CountryCode().Map(x => x.ValueUnsafe())
+                            let url = string.Format(fetch_uri, id.ToString(), countryCode)
+                            from mercuryClient in Spotify<R>.Mercury().Map(x => x)
+                            from response in mercuryClient.Get(url, CancellationToken.None).ToAff()
+                            from _ in Spotify<R>.Cache().Map(x => x.SaveRawEntity(id,
+                                id.Id.ToString(),
+                                response.Payload, DateTimeOffset.UtcNow.AddDays(1)))
+                            select response.Payload
+                    )
                 )
             from response in cached.ValueUnsafe()
-            select response;
+            let parsedDocument = JsonDocument.Parse(response)
+            let coverd = parsedDocument.RootElement.GetProperty("cover").GetProperty("uri").ToString()
+            from cachedColor in Spotify<R>.Cache()
+                .Map(x => x.GetColorFor(coverd)
+                    .BiMap(Some: r => SuccessAff(r),
+                        None: () =>
+                            from privateApi in Spotify<R>.PrivateApi().Map(x => x)
+                            from response in privateApi.FetchColorFor(Seq1(coverd), CancellationToken.None).ToAff()
+                            from _ in Spotify<R>.Cache().Map(x => x.SaveColorFor(coverd,
+                                response))
+                            select response
+                    )
+                )
+            from colors in cachedColor.ValueUnsafe()
+            select (parsedDocument, colors);
 
 
         var result = await aff.Run(runtime: _runtime);
         var r = result.ThrowIfFail();
-        using var jsonDoc = JsonDocument.Parse(r);
-
+        var jsonDoc = r.parsedDocument;
         var name = jsonDoc.RootElement.GetProperty("name").GetString();
         var cover = jsonDoc.RootElement.GetProperty("cover").GetProperty("uri").ToString();
+
 
         var year = jsonDoc.RootElement.GetProperty("year").GetUInt16();
         var trackCount = jsonDoc.RootElement.GetProperty("track_count").GetUInt16();
@@ -209,7 +238,8 @@ public sealed class AlbumViewModel<R> : ReactiveObject, INavigableViewModel wher
                 HasMultipleDiscs = numbOfDiscs > 1
             });
         }
-
+        DarkColor = r.colors.Dark;
+        LightColor = r.colors.Light;
         Name = name;
         Image = cover;
         Year = year;
@@ -223,6 +253,7 @@ public sealed class AlbumViewModel<R> : ReactiveObject, INavigableViewModel wher
         Copyrights = copyrights;
         AlbumFetched.SetResult();
         IsBusy = false;
+        r.parsedDocument.Dispose();
     }
 
     public AudioId Id { get; set; }

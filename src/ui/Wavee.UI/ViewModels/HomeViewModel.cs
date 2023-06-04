@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Text.Json;
 using Eum.Spotify.playlist4;
 using LanguageExt;
@@ -15,7 +16,7 @@ public sealed class HomeViewModel<R> : ReactiveObject, INavigableViewModel where
     private readonly R _runtime;
     private bool _isLoading;
 
-    private static readonly Seq<HomeGroupView> _fakeShimmerData = Enumerable.Range(0, 4)
+    private static readonly List<HomeGroupView> _fakeShimmerData = Enumerable.Range(0, 4)
         .Select(_ => new HomeGroupView
         {
             Items = Enumerable.Range(0,
@@ -29,9 +30,9 @@ public sealed class HomeViewModel<R> : ReactiveObject, INavigableViewModel where
                 })
                 .ToSeq(),
             Title = null
-        }).ToSeq();
+        }).ToList();
 
-    private Seq<HomeGroupView> _items;
+    private List<HomeGroupView> _items;
 
     public HomeViewModel(R runtime)
     {
@@ -59,7 +60,7 @@ public sealed class HomeViewModel<R> : ReactiveObject, INavigableViewModel where
 
     }
 
-    public Seq<HomeGroupView> Items
+    public List<HomeGroupView> Items
     {
         get => _items;
         set => this.RaiseAndSetIfChanged(ref _items, value);
@@ -80,7 +81,7 @@ public sealed class HomeViewModel<R> : ReactiveObject, INavigableViewModel where
 
         Seq<HomeGroupView> groupResults = LanguageExt.Seq<HomeGroupView>.Empty;
         using var home = aff.Match(Succ: x => x, Fail: _ => throw new InvalidOperationException());
-        if (home.RootElement.TryGetProperty("content",out var ct)
+        if (home.RootElement.TryGetProperty("content", out var ct)
             && ct.TryGetProperty("items", out var items))
         {
             using var itemsArr = items.EnumerateArray();
@@ -177,7 +178,7 @@ public sealed class HomeViewModel<R> : ReactiveObject, INavigableViewModel where
             }
         }
 
-        Items = groupResults;
+        Items = groupResults.ToList();
         IsLoading = false;
     }
 

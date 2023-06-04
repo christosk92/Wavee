@@ -61,6 +61,7 @@ namespace Wavee.UI.WinUI.Views.Settings
                     AppTheme.Light => ElementTheme.Light,
                     AppTheme.Dark => ElementTheme.Dark,
                 };
+                App.Instance.CurrentTheme = ViewModel.CurrentTheme;
             }
         }
 

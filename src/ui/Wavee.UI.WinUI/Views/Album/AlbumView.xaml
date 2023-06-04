@@ -12,14 +12,18 @@
              xmlns:models="using:Wavee.UI.Models"
              xmlns:artist="using:Wavee.UI.ViewModels.Artist"
              mc:Ignorable="d">
-
+    <UserControl.Transitions>
+        <TransitionCollection>
+            <EntranceThemeTransition />
+        </TransitionCollection>
+    </UserControl.Transitions>
     <ScrollViewer Canvas.ZIndex="100"
                   ViewChanged="MainScroller_OnViewChanged"
                   x:Name="MainScroller">
         <StackPanel>
             <Grid x:Name="MainHeader"
                   HorizontalAlignment="Stretch"
-                  Background="Transparent"
+                  Background="{x:Bind GetCorrectColor(App.CurrentTheme, ViewModel.LightColor, ViewModel.DarkColor),Mode=OneWay}"
                   Padding="24,24,24,24"
                   ContextRequested="ALbumHeaderContextRequested">
                 <Grid.ColumnDefinitions>
@@ -30,20 +34,23 @@
                     <RowDefinition Height="*" />
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
+                <Border Grid.RowSpan="2"
+                        Margin="-24"
+                        Background="{ThemeResource BackgroundGradient}"
+                        Grid.ColumnSpan="2" />
+
                 <Border Grid.ColumnSpan="2"
                         Grid.RowSpan="2"
                         Opacity="0"
                         Margin="-24"
-                        Background="{ThemeResource SolidBackgroundFillColorQuarternaryBrush}"
+                        Background="{x:Bind GetCorrectColor(App.CurrentTheme, ViewModel.LightColor, ViewModel.DarkColor),Mode=OneWay}"
                         x:Name="OverlayRectangle"
                         HorizontalAlignment="Stretch"
                         VerticalAlignment="Stretch"
                         CornerRadius="0"
-                        BorderThickness="1"
                         BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
-                    <Border.OpacityTransition>
-                        <ScalarTransition Duration="00:00:00.10" />
-                    </Border.OpacityTransition>
+                    <Border Margin="0"
+                            Background="{ThemeResource BackgroundGradient}" />
                 </Border>
                 <!-- -->
                 <!-- <controls:ImageTransitionControl Grid.ColumnSpan="2" -->
@@ -140,9 +147,8 @@
                     <StackPanel Spacing="8"
                                 x:Name="ButtonsPanel"
                                 Orientation="Horizontal">
-                        <Button
-                            Tapped="PlayEntireAlbumTappped"
-                            Style="{ThemeResource AccentButtonStyle}">
+                        <Button Tapped="PlayEntireAlbumTappped"
+                                Style="{ThemeResource AccentButtonStyle}">
                             <StackPanel Spacing="4"
                                         Orientation="Horizontal">
                                 <FontIcon FontFamily="Segoe Fluent Icons"
@@ -195,7 +201,7 @@
                 </Border>
             </Grid>
 
-            <ItemsRepeater ItemsSource="{x:Bind ViewModel.Discs}">
+            <ItemsRepeater Margin="0,6,0,0" ItemsSource="{x:Bind ViewModel.Discs}">
                 <ItemsRepeater.ItemTemplate>
                     <DataTemplate x:DataType="viewModels:SpotifyDiscView">
                         <Grid>
@@ -254,7 +260,6 @@
                     </DataTemplate>
                 </ItemsRepeater.ItemTemplate>
             </ItemsRepeater>
-
             <TextBlock Margin="18,12,18,4"
                        FontWeight="SemiBold"
                        Opacity=".8"

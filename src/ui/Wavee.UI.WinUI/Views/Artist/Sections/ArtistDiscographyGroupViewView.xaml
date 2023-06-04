@@ -22,7 +22,7 @@
             <labs:Segmented SelectedIndex="0"
                             SelectionChanged="SwitchTemplatesControl_OnSelectionChanged"
                             x:Name="SwitchTemplatesControl"
-                            x:Load="{x:Bind CanSwitchTemplates, Mode=OneTime}"
+                            x:Load="{x:Bind CanSwitchTemplates, Mode=OneWay}"
                             Grid.Column="1">
                 <labs:SegmentedItem Tag="grid">
                     <labs:SegmentedItem.Icon>
@@ -42,6 +42,7 @@
                         Margin="0,12,0,0"
                         VerticalContentAlignment="Top"
                         VerticalAlignment="Top"
+                        Content="{x:Bind CurrentView, Mode=OneWay}"
                         HorizontalContentAlignment="Stretch"
                         x:Name="ItemsView" />
     </Grid>

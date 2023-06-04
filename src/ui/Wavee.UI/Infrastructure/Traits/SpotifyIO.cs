@@ -10,6 +10,7 @@ using Wavee.Core.Ids;
 using Wavee.Spotify.Infrastructure.Cache;
 using Wavee.Spotify.Infrastructure.Mercury;
 using Wavee.Spotify.Infrastructure.Mercury.Models;
+using Wavee.Spotify.Infrastructure.PrivateApi.Contracts;
 using Wavee.Spotify.Infrastructure.Remote.Contracts;
 
 namespace Wavee.UI.Infrastructure.Traits;
@@ -22,7 +23,7 @@ public interface SpotifyIO
     Option<IObservable<SpotifyLibraryUpdateNotification>> ObserveLibrary();
     Option<IObservable<SpotifyRemoteState>> ObserveRemoteState();
     Option<IObservable<Diff>> ObservePlaylist(AudioId id);
-
+    Option<ISpotifyPrivateApi> PrivateApi();
     Option<ISpotifyCache> Cache();
     Option<string> CountryCode();
     ISpotifyMercuryClient Mercury();
