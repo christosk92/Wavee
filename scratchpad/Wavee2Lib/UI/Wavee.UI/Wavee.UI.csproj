@@ -10,7 +10,9 @@
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="ReactiveUI" Version="19.2.1" />
   </ItemGroup>
-
+	<ItemGroup>
+		<PublishReadyToRunExclude Include="LanguageExt.Core.dll" />
+	</ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Wavee\Wavee.Spotify\Wavee.Spotify.csproj" />
   </ItemGroup>

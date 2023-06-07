@@ -3,7 +3,8 @@ using System.Text.Json;
 using LanguageExt;
 using Wavee.Infrastructure.IO;
 using Wavee.Spotify;
-
+using Wavee.Spotify.Infrastructure.Mercury;
+using static LanguageExt.Prelude;
 namespace Wavee.UI;
 
 internal static class Spotify
@@ -28,4 +29,11 @@ internal static class Spotify
                 })
             select result;
     }
+
+    public static Aff<MercuryPacket> GetLibarryComponent(this SpotifyClient client, string key, string userId,
+        CancellationToken ct) =>
+        from mercury in SuccessEff(client.Mercury)
+        from tracksAndAlbums in mercury.Get(
+            $"hm://collection/{key}/{userId}?allowonlytracks=false&format=json&", ct).ToAff()
+        select tracksAndAlbums;
 }

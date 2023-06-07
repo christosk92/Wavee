@@ -6,6 +6,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:viewModels="using:Wavee.UI.ViewModels"
+             xmlns:playlists="using:Wavee.UI.ViewModels.Playlists"
              mc:Ignorable="d">
     <UserControl.Resources>
         <Style TargetType="SplitView"
@@ -1153,7 +1154,7 @@
         </Style>
 
         <DataTemplate x:Key="FolderTemplate"
-                      x:DataType="viewModels:PlaylistOrFolder">
+                      x:DataType="playlists:PlaylistOrFolder">
             <TreeViewItem AutomationProperties.Name="{x:Bind Name}"
                           ItemsSource="{x:Bind ItemsIfFolder}"
                           IsExpanded="True">
@@ -1167,7 +1168,7 @@
         </DataTemplate>
 
         <DataTemplate x:Key="PlaylistTemplate"
-                      x:DataType="viewModels:PlaylistOrFolder">
+                      x:DataType="playlists:PlaylistOrFolder">
             <TreeViewItem Padding="-24,0,0,0"
                           AutomationProperties.Name="{x:Bind Name}">
                 <StackPanel Orientation="Horizontal">
@@ -1177,7 +1178,7 @@
             </TreeViewItem>
         </DataTemplate>
         <DataTemplate x:Key="PlaylistTemplateWithMargin"
-                      x:DataType="viewModels:PlaylistOrFolder">
+                      x:DataType="playlists:PlaylistOrFolder">
             <TreeViewItem Padding="-34,0,0,0"
                           AutomationProperties.Name="{x:Bind Name}">
                 <StackPanel Orientation="Horizontal">
@@ -1252,6 +1253,7 @@
                       x:DataType="local:SidebarItem">
             <TextBlock x:Name="HeaderText"
                        VerticalAlignment="Center"
+                       Opacity=".8"
                        Style="{ThemeResource NavigationViewItemHeaderTextStyle}"
                        Text="{x:Bind Title}"
                        TextWrapping="NoWrap" />
@@ -1411,9 +1413,9 @@
                             Height="110" />
                 </Grid>
             </SplitView.Pane>
-
-            <Grid>
-            </Grid>
+            <ContentPresenter x:Name="MainNavigator"
+                              VerticalContentAlignment="Stretch"
+                              HorizontalContentAlignment="Stretch" />
         </SplitView>
     </Grid>
 </UserControl>

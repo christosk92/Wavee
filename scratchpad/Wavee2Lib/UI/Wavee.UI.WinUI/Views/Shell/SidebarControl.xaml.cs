@@ -10,12 +10,13 @@ using Wavee.UI.WinUI.Helpers;
 using Wavee.UI.Settings;
 using Windows.System;
 using Windows.UI.Core;
+using DynamicData.Binding;
 using LanguageExt.UnsafeValueAccess;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Imaging;
 using Wavee.UI.Models.Common;
-using Wavee.UI.ViewModels;
-using Microsoft.VisualBasic.ApplicationServices;
+using Wavee.UI.ViewModels.Playlists;
+using Wavee.UI.WinUI.Navigation;
 
 namespace Wavee.UI.WinUI.Views.Shell
 {
@@ -31,7 +32,7 @@ namespace Wavee.UI.WinUI.Views.Shell
 
         private bool lockFlag = false;
         public static readonly DependencyProperty FixedItemsProperty = DependencyProperty.Register(nameof(FixedItems), typeof(IReadOnlyCollection<SidebarItem>), typeof(SidebarControl), new PropertyMetadata(default(IReadOnlyCollection<SidebarItem>)));
-        public static readonly DependencyProperty PlaylistsProperty = DependencyProperty.Register(nameof(Playlists), typeof(List<PlaylistOrFolder>), typeof(SidebarControl), new PropertyMetadata(default(List<PlaylistOrFolder>)));
+        public static readonly DependencyProperty PlaylistsProperty = DependencyProperty.Register(nameof(Playlists), typeof(ObservableCollectionExtended<PlaylistOrFolder>), typeof(SidebarControl), new PropertyMetadata(default(ObservableCollectionExtended<PlaylistOrFolder>)));
         public static readonly DependencyProperty UserSettingsProperty = DependencyProperty.Register(nameof(UserSettings),
             typeof(UserSettings), typeof(SidebarControl), new PropertyMetadata(default(UserSettings), PropertyChangedCallback));
 
@@ -50,6 +51,7 @@ namespace Wavee.UI.WinUI.Views.Shell
         public SidebarControl()
         {
             this.InitializeComponent();
+            NavigationService = new NavigationService(MainNavigator);
         }
 
         public IReadOnlyCollection<SidebarItem> FixedItems
@@ -58,9 +60,9 @@ namespace Wavee.UI.WinUI.Views.Shell
             set => SetValue(FixedItemsProperty, value);
         }
 
-        public List<PlaylistOrFolder> Playlists
+        public ObservableCollectionExtended<PlaylistOrFolder> Playlists
         {
-            get => (List<PlaylistOrFolder>)GetValue(PlaylistsProperty);
+            get => (ObservableCollectionExtended<PlaylistOrFolder>)GetValue(PlaylistsProperty);
             set => SetValue(PlaylistsProperty, value);
         }
 
@@ -75,6 +77,8 @@ namespace Wavee.UI.WinUI.Views.Shell
             get => (SpotifyUser)GetValue(UserInfoProperty);
             set => SetValue(UserInfoProperty, value);
         }
+
+        public NavigationService NavigationService { get; }
 
         private void Border_ManipulationDelta(object sender, ManipulationDeltaRoutedEventArgs e)
         {
@@ -207,6 +211,13 @@ namespace Wavee.UI.WinUI.Views.Shell
         }
         private void FixedSidebarItemsListView_OnItemClick(object sender, ItemClickEventArgs e)
         {
+            if (e.ClickedItem is SidebarItem x)
+            {
+                if (x.Navigation is not null)
+                {
+                    x.Navigation();
+                }
+            }
         }
 
         private void FixedSidebarItemsListView_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -223,7 +234,6 @@ namespace Wavee.UI.WinUI.Views.Shell
                 if (x.IsAHeader)
                 {
                     container.IsHitTestVisible = false;
-                    container.IsEnabled = false;
                 }
                 if (!x.IsEnabled)
                 {

@@ -1,12 +1,14 @@
-﻿using Wavee.Spotify;
+﻿using ReactiveUI;
+using Wavee.Spotify;
 using Wavee.UI.Models.Common;
 using Wavee.UI.Settings;
 
 namespace Wavee.UI;
 
-public sealed class State : IDisposable
+public sealed class State : ReactiveObject, IDisposable
 {
     public readonly SpotifyClient Client;
+    private SpotifyUser _user;
 
     public State(SpotifyClient client,
         SpotifyConfig spotifyConfig,
@@ -30,12 +32,17 @@ public sealed class State : IDisposable
 
         Config.Remote.DeviceName = Settings.DeviceName;
         Config.Remote.DeviceType = Settings.DeviceType;
-        Task.Run(async() => await Client.Remote.RefreshState());
+        Task.Run(async () => await Client.Remote.RefreshState());
     }
 
     public SpotifyConfig Config { get; }
     public static State Instance { get; private set; } = null!;
-    public SpotifyUser User { get; }
+
+    public SpotifyUser User
+    {
+        get => _user;
+        set => this.RaiseAndSetIfChanged(ref _user, value);
+    }
 
     public UserSettings Settings { get; }
 

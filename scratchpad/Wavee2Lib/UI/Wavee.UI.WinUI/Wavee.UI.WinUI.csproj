@@ -14,6 +14,9 @@
   <ItemGroup>
     <None Remove="Assets\Fonts\MediaPlayerIcons.ttf" />
     <None Remove="Assets\Logo-Test.png" />
+    <None Remove="Components\ArtistCardView.xaml" />
+    <None Remove="Components\CardView.xaml" />
+    <None Remove="Views\Browse\BrowseVIew.xaml" />
     <None Remove="Views\Home\HomeView.xaml" />
     <None Remove="Views\Shell\ShellView.xaml" />
     <None Remove="Views\Shell\SidebarControl.xaml" />
@@ -32,6 +35,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Labs.WinUI.SegmentedControl" Version="0.0.3" />
+    <PackageReference Include="CommunityToolkit.Labs.WinUI.Shimmer" Version="0.0.1" />
+    <PackageReference Include="CommunityToolkit.Labs.WinUI.TokenView" Version="0.0.6" />
     <PackageReference Include="CommunityToolkit.WinUI" Version="7.1.2" />
     <PackageReference Include="CommunityToolkit.WinUI.UI" Version="7.1.2" />
     <PackageReference Include="CommunityToolkit.WinUI.UI.Controls" Version="7.1.2" />
@@ -62,6 +68,14 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
+    <Page Update="Components\ArtistCardView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
+	  <PublishReadyToRunExclude Include="LanguageExt.Core.dll" />
+  </ItemGroup>
+  <ItemGroup>
     <Page Update="Views\Shell\SidebarControl.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -83,6 +97,16 @@
   </ItemGroup>
   <ItemGroup>
     <Page Update="Views\Home\HomeView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <Page Update="Components\CardView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <Page Update="Views\Browse\BrowseVIew.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
   </ItemGroup>

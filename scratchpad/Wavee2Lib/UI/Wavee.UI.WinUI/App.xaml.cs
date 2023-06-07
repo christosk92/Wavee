@@ -5,15 +5,18 @@ using Eum.Spotify.connectstate;
 using LanguageExt;
 using Microsoft.UI.Xaml;
 using Wavee.Spotify;
+using ReactiveUI;
 
 namespace Wavee.UI.WinUI
 {
     public partial class App : Application
     {
-        private const string c_appName = "Wavee";
+        private const string c_appName = "Wavee2";
         public App()
         {
             this.InitializeComponent();
+            var a = RxApp.MainThreadScheduler;
+
             //TODO: read from config file
             SpotifyConfig = new SpotifyConfig(
                 remote: new SpotifyRemoteConfig(

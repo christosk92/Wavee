@@ -7,6 +7,7 @@ using Wavee.UI.ViewModels;
 using FontFamily = Microsoft.UI.Xaml.Media.FontFamily;
 using LanguageExt;
 using Wavee.Core.Ids;
+using Wavee.UI.WinUI.Views.Browse;
 
 namespace Wavee.UI.WinUI.Views.Shell
 {
@@ -21,7 +22,6 @@ namespace Wavee.UI.WinUI.Views.Shell
             var podcastsLibraryItem = BuildLibrary(LibraryItemType.Podcasts);
 
             SidebarControl.UserSettings = State.Instance.Settings;
-            SidebarControl.UserInfo = spotifyUser;
 
             SidebarControl.FixedItems = new[]
             {
@@ -63,14 +63,14 @@ namespace Wavee.UI.WinUI.Views.Shell
                 podcastsLibraryItem.Count -= podcastsRemoved;
             }
 
-            ViewModel = new ShellViewModel(OnLibraryItemAdded, OnLibraryItemRemoved);
+            ViewModel = new ShellViewModel(OnLibraryItemAdded, OnLibraryItemRemoved, user: spotifyUser);
             GC.Collect();
         }
         public ShellViewModel ViewModel { get; }
 
         private void NavigateTo(Type type, object? parameter)
         {
-
+            SidebarControl.NavigationService.Navigate(type, parameter);
         }
         private SidebarItem BuildLibrary(LibraryItemType type)
         {
@@ -119,7 +119,7 @@ namespace Wavee.UI.WinUI.Views.Shell
                     FontFamily = new FontFamily("/Assets/Fonts/MediaPlayerIcons.ttf#Media Player Fluent Icons"),
                 },
                 IsAHeader = false,
-                Navigation = null //TODO
+                Navigation = () => NavigateTo(typeof(BrowseView), null)
             };
         }
 

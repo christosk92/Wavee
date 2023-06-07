@@ -13,6 +13,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Wavee.Spotify", "..\..\Wave
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Wavee.Spotify.Proto", "..\..\Wavee\Wavee.Spotify.Proto\Wavee.Spotify.Proto.csproj", "{CEFF6A75-125C-454E-9D6F-229112F8A2DD}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Wavee.UI.Avalonia", "..\Wavee.UI.Avalonia\Wavee.UI.Avalonia.csproj", "{A0CE800D-F4B8-44A5-AEA5-DA99F472286E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -113,6 +115,22 @@ Global
 		{CEFF6A75-125C-454E-9D6F-229112F8A2DD}.Release|x64.Build.0 = Release|Any CPU
 		{CEFF6A75-125C-454E-9D6F-229112F8A2DD}.Release|x86.ActiveCfg = Release|Any CPU
 		{CEFF6A75-125C-454E-9D6F-229112F8A2DD}.Release|x86.Build.0 = Release|Any CPU
+		{A0CE800D-F4B8-44A5-AEA5-DA99F472286E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A0CE800D-F4B8-44A5-AEA5-DA99F472286E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A0CE800D-F4B8-44A5-AEA5-DA99F472286E}.Debug|ARM64.ActiveCfg = Debug|Any CPU
+		{A0CE800D-F4B8-44A5-AEA5-DA99F472286E}.Debug|ARM64.Build.0 = Debug|Any CPU
+		{A0CE800D-F4B8-44A5-AEA5-DA99F472286E}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{A0CE800D-F4B8-44A5-AEA5-DA99F472286E}.Debug|x64.Build.0 = Debug|Any CPU
+		{A0CE800D-F4B8-44A5-AEA5-DA99F472286E}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{A0CE800D-F4B8-44A5-AEA5-DA99F472286E}.Debug|x86.Build.0 = Debug|Any CPU
+		{A0CE800D-F4B8-44A5-AEA5-DA99F472286E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A0CE800D-F4B8-44A5-AEA5-DA99F472286E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A0CE800D-F4B8-44A5-AEA5-DA99F472286E}.Release|ARM64.ActiveCfg = Release|Any CPU
+		{A0CE800D-F4B8-44A5-AEA5-DA99F472286E}.Release|ARM64.Build.0 = Release|Any CPU
+		{A0CE800D-F4B8-44A5-AEA5-DA99F472286E}.Release|x64.ActiveCfg = Release|Any CPU
+		{A0CE800D-F4B8-44A5-AEA5-DA99F472286E}.Release|x64.Build.0 = Release|Any CPU
+		{A0CE800D-F4B8-44A5-AEA5-DA99F472286E}.Release|x86.ActiveCfg = Release|Any CPU
+		{A0CE800D-F4B8-44A5-AEA5-DA99F472286E}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

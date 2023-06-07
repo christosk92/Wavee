@@ -1,7 +1,8 @@
 {
   "profiles": {
     "Wavee.UI.WinUI (Package)": {
-      "commandName": "MsixPackage"
+      "commandName": "MsixPackage",
+      "nativeDebugging": false
     },
     "Wavee.UI.WinUI (Unpackaged)": {
       "commandName": "Project"
