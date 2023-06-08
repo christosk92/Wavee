@@ -15,4 +15,20 @@
         <Setter Property="Background"
                 Value="Transparent" />
     </Style>
+
+
+    <Style TargetType="Grid"
+           x:Key="EvenBorderStyleGrid">
+        <Setter Property="Background"
+                Value="{ThemeResource LayerFillColorDefaultBrush}" />
+        <Setter Property="BorderBrush"
+                Value="{ThemeResource CardStrokeColorDefaultBrush}" />
+        <Setter Property="BorderThickness"
+                Value="1" />
+    </Style>
+    <Style TargetType="Grid"
+           x:Key="OddBorderStyleGrid">
+        <Setter Property="Background"
+                Value="Transparent" />
+    </Style>
 </ResourceDictionary>

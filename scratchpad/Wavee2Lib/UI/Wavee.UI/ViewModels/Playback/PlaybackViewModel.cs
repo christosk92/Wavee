@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Reactive.Linq;
 using System.Windows.Input;
+using DynamicData.Binding;
 using Eum.Spotify.connectstate;
 using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
@@ -42,6 +43,16 @@ public sealed partial class PlaybackViewModel : ReactiveObject
         _positionMs = 0;
         _positionTimer = new Timer(MainPositionTimerCallback, null, Timeout.Infinite, Timeout.Infinite);
         _updates = new PlaybackViewModelUpdates(this);
+        this.WhenChanged(
+            x => x.Paused,
+            x => x.CurrentTrack,
+            (_, _, _) => default(Unit))
+            .ObserveOn(RxApp.MainThreadScheduler)
+            .Subscribe(_ =>
+            {
+                PauseChanged?.Invoke(this, Paused);
+                CurrentTrackChanged?.Invoke(this, CurrentTrack);
+            });
 
         bool IsPlayingOnThisDevice() => Device.DeviceId == State.Instance.Client.DeviceId;
 
@@ -484,4 +495,6 @@ public sealed partial class PlaybackViewModel : ReactiveObject
     }
 
     public static PlaybackViewModel Instance { get; private set; }
+    public event EventHandler<TrackOrEpisode?> CurrentTrackChanged;
+    public event EventHandler<bool>? PauseChanged;
 }

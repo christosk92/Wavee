@@ -25,6 +25,9 @@ using Eum.Spotify.context;
 using LanguageExt.UnsafeValueAccess;
 using System.Windows.Input;
 using Wavee.UI.ViewModels.Playback;
+using DynamicData;
+using CommunityToolkit.Labs.WinUI;
+using LanguageExt.Pretty;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -33,6 +36,8 @@ namespace Wavee.UI.WinUI.Views.Artist
 {
     public sealed partial class ArtistRootView : UserControl, ICacheablePage, INavigateablePage
     {
+        private readonly TaskCompletionSource<ArtistView> _artistFetched = new TaskCompletionSource<ArtistView>();
+
         public ArtistRootView()
         {
             this.InitializeComponent();
@@ -66,6 +71,10 @@ namespace Wavee.UI.WinUI.Views.Artist
 
         public void RemovedFromCache()
         {
+            _overview.ClearItems();
+            _overview = null;
+            _concerts = null;
+            _about = null;
             ViewModel.Destroy();
         }
 
@@ -79,6 +88,7 @@ namespace Wavee.UI.WinUI.Views.Artist
             ViewModel.Create(artistId);
 
             var artist = await FetchArtist(artistId);
+            _artistFetched.TrySetResult(artist);
             ArtistNameBlock.Text = artist.Name;
             HeaderImage.Source = artist.HeaderImage;
             var r = artist.MonthlyListeners.ToString("N0");
@@ -207,7 +217,7 @@ namespace Wavee.UI.WinUI.Views.Artist
                 {
                     var rl = albums.GetProperty("releases");
                     using var albumReleases = rl.EnumerateArray();
-                    var albumsView = new List<ArtistDiscographyView>(rl.GetArrayLength());
+                    var albumsView = new List<ArtistDiscographyItem>(rl.GetArrayLength());
 
                     foreach (var release in albumReleases)
                     {
@@ -295,7 +305,7 @@ namespace Wavee.UI.WinUI.Views.Artist
                         }
 
                         var pluralModifier = tracks.Count > 1 ? "tracks" : "track";
-                        albumsView.Add(new ArtistDiscographyView
+                        albumsView.Add(new ArtistDiscographyItem
                         {
                             Id = AudioId.FromUri(releaseUri),
                             Title = releaseName,
@@ -406,20 +416,35 @@ namespace Wavee.UI.WinUI.Views.Artist
 
             return stckp;
         }
-
-        private void Selector_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
+        private ArtistOverviewView? _overview;
+        private ArtistConcertsView? _concerts;
+        private ArtistAboutView? _about;
+        private async void Selector_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-
+            var artist = await _artistFetched.Task;
+            var selectedItems = e.AddedItems;
+            if (selectedItems.Count > 0)
+            {
+                var item = (SegmentedItem)selectedItems[0];
+                var content = item.Tag switch
+                {
+                    "overview" => _overview ??= new ArtistOverviewView(artist.Discography, artist.TopTracks),
+                    "concerts" => _concerts ??= new ArtistConcertsView(),
+                    "about" => (_about ??= new ArtistAboutView()) as UIElement,
+                    _ => throw new ArgumentOutOfRangeException()
+                };
+                MainContent.Content = content;
+            }
         }
     }
 
     public class ArtistDiscographyGroupView
     {
         public required string GroupName { get; set; }
-        public required List<ArtistDiscographyView> Views { get; set; }
+        public required List<ArtistDiscographyItem> Views { get; set; }
         public required bool CanSwitchTemplates { get; set; }
     }
-    public class ArtistDiscographyView
+    public class ArtistDiscographyItem
     {
         public string Title { get; set; }
         public string Image { get; set; }

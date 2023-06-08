@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using System.Runtime;
 using System.Runtime.InteropServices;
 using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
@@ -127,7 +128,13 @@ public sealed class WaveePlayer
             while (true)
             {
                 _playbackEvent.WaitOne();
-                GC.Collect();
+                _ = Task.Run(() =>
+                {
+                    GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
+                    GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced, true, true);
+                    GC.WaitForPendingFinalizers();
+                    GC.Collect();
+                });
                 if (_state.Value.TrackDetails.IsNone)
                 {
                     _playbackEvent.Reset();

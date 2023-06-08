@@ -132,7 +132,7 @@
                                     </StackPanel>
                                     <ItemsRepeater Margin="0,0,0,24"
                                                    Grid.Row="1"
-                                                   ItemTemplate="{StaticResource HomeItemTemplateSelector}"
+                                                   ItemTemplate="{StaticResource elementFactory}"
                                                    ItemsSource="{x:Bind Items}">
                                         <ItemsRepeater.Layout>
                                             <panels:HorizontalAdaptiveLayout DesiredWidth="220" />

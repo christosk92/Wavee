@@ -114,11 +114,11 @@
                     </StackPanel>
                 </Grid>
 
-                <ContentControl VerticalAlignment="Stretch"
-                                VerticalContentAlignment="Stretch"
-                                HorizontalAlignment="Stretch"
-                                HorizontalContentAlignment="Stretch"
-                                x:Name="MainContent" />
+                <ContentPresenter VerticalAlignment="Stretch"
+                                  VerticalContentAlignment="Stretch"
+                                  HorizontalAlignment="Stretch"
+                                  HorizontalContentAlignment="Stretch"
+                                  x:Name="MainContent" />
             </StackPanel>
         </ScrollViewer>
 

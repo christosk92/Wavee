@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "OggTest (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "OggTest (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}
