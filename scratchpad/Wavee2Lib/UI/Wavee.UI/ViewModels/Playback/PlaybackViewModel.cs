@@ -38,11 +38,17 @@ public sealed partial class PlaybackViewModel : ReactiveObject
 
     public PlaybackViewModel()
     {
+        Instance = this;
         _positionMs = 0;
         _positionTimer = new Timer(MainPositionTimerCallback, null, Timeout.Infinite, Timeout.Infinite);
         _updates = new PlaybackViewModelUpdates(this);
 
         bool IsPlayingOnThisDevice() => Device.DeviceId == State.Instance.Client.DeviceId;
+
+        PlayCommand = ReactiveCommand.CreateFromTask<PlayContextStruct, Unit>((play, ct) =>
+        {
+            return Task.FromResult(default(Unit));
+        });
 
         ResumePauseCommand = ReactiveCommand.CreateFromTask((ct) =>
         {
@@ -197,6 +203,7 @@ public sealed partial class PlaybackViewModel : ReactiveObject
     }
 
     public bool IsLoading => !IsConnectedToRemoteState || IsLoadingItem;
+    public ReactiveCommand<PlayContextStruct, Unit> PlayCommand { get; }
     public ICommand ResumePauseCommand { get; }
     public ICommand SkipNextCommand { get; }
     public ICommand ToggleRepeatCommand { get; }
@@ -458,4 +465,5 @@ public sealed partial class PlaybackViewModel : ReactiveObject
         }
     }
 
+    public static PlaybackViewModel Instance { get; private set; }
 }

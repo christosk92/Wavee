@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using Microsoft.UI.Xaml.Controls;
+using Wavee.UI.WinUI.Views.Artist;
 using Wavee.UI.WinUI.Views.Browse;
 using Wavee.UI.WinUI.Views.Home;
 
@@ -27,7 +28,8 @@ public sealed class NavigationService
         var types = new[]
         {
             typeof(HomeView),
-            typeof(BrowseView)
+            typeof(BrowseView),
+            typeof(ArtistRootView)
         };
 
         static void RegisterConstructor(Type type)
@@ -120,6 +122,10 @@ public sealed class NavigationService
             var newPage = func.DynamicInvoke();
             var newEntry = new CachedPage(newPage, parameter, _backStack.Count);
             _cachedPages.Add(newEntry);
+            if (newPage is INavigateablePage navigablePage)
+            {
+                navigablePage.NavigatedTo(parameter);
+            }
             // newPage.ViewModel.IfSome(x => x.OnNavigatedTo(parameter));
             // newPage.NavigatedTo(parameter);
 
@@ -150,6 +156,11 @@ public sealed class NavigationService
         _contentControl = null;
         _lastParameter = null;
     }
+}
+
+public interface INavigateablePage
+{
+    void NavigatedTo(object? parameter);
 }
 
 public interface ICacheablePage

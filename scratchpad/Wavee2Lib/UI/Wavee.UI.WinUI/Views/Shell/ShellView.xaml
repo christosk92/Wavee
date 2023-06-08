@@ -15,9 +15,10 @@
                               Playlists="{x:Bind ViewModel.Playlists.Items, Mode=OneWay}" />
         <Grid x:Name="OpenPaneButton"
               Visibility="Collapsed"
-              VerticalAlignment="Center">
+              VerticalAlignment="Top">
             <Button Height="100"
-                    Width="16" Background="{ThemeResource SystemAccentColorLight2}"
+                    Opacity=".7"
+                    Width="16" Background="{ThemeResource SystemAccentColor}"
                     Margin="-3,0,0,0"
                     Padding="0,0,0,0"
                     Tapped="OpenpaneButtonTapped">

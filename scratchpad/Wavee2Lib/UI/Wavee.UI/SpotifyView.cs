@@ -8,6 +8,7 @@ using LanguageExt.Common;
 using LanguageExt.UnsafeValueAccess;
 using Wavee.Core.Ids;
 using Wavee.Spotify;
+using Wavee.Spotify.Infrastructure.Mercury;
 using Wavee.Spotify.Infrastructure.Mercury.Models;
 using Wavee.Spotify.Infrastructure.PrivateApi.Contracts.Response;
 using Wavee.Spotify.Infrastructure.Remote.Contracts;
@@ -177,4 +178,6 @@ public static class SpotifyView
         var response = State.Instance.Client.PrivateApi.FetchColorFor(Seq1(imageUrl));
         return response.ToAff();
     }
+
+    public static Eff<ISpotifyMercuryClient> Mercury => SuccessEff(State.Instance.Client.Mercury);
 }

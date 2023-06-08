@@ -103,29 +103,6 @@ internal sealed class HorizontalAdaptiveLayout : NonVirtualizingLayout
             }
         }
 
-        // //all items should have the same height
-        for (var index = 0; index < count; index++)
-        {
-            var child = context.Children[index];
-            try
-            {
-                if (child is Button f)
-                {
-                    f.Height = maxHeight;
-                    if (f.Content is CardView c)
-                    {
-                        c.Height = maxHeight;
-                        var rect = state.LayoutRects[index];
-                        rect.Height = maxHeight;
-                        state.LayoutRects[index] = rect;
-                    }
-                }
-            }
-            catch (COMException e)
-            {
-            }
-        }
-
         return new Size(totalWidth, totalHeight);
     }
     protected override Size ArrangeOverride(NonVirtualizingLayoutContext context, Size finalSize)

@@ -1,6 +1,7 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using System;
+using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media.Imaging;
 using Wavee.Core.Ids;
 
@@ -59,5 +60,21 @@ namespace Wavee.UI.WinUI.Components
             set => SetValue(ImageProperty, value);
         }
 
+        private void CardView_OnPointerEntered(object sender, PointerRoutedEventArgs e)
+        {
+            var buttonsPanel = this.FindName("ButtonsPanel") as UIElement;
+            if (buttonsPanel != null)
+                buttonsPanel.Visibility = Visibility.Visible;
+        }
+
+        private void CardView_OnPointerExited(object sender, PointerRoutedEventArgs e)
+        {
+            var buttonsPanel = this.FindName("ButtonsPanel") as UIElement;
+            if (buttonsPanel != null)
+            {
+                buttonsPanel.Visibility = Visibility.Collapsed;
+                Microsoft.UI.Xaml.Markup.XamlMarkupHelper.UnloadObject(buttonsPanel);
+            }
+        }
     }
 }

@@ -196,7 +196,7 @@ public sealed partial class PlayerControl : UserControl
         return track.Artists.Select(c => new MetadataItem
         {
             Label = c.Name,
-            //Command = UICommands.NavigateTo,
+            Command = UICommands.NavigateTo,
             CommandParameter = c.Id
         });
     }

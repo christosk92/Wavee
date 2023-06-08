@@ -7,6 +7,7 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using CommunityToolkit.Labs.WinUI;
+using CommunityToolkit.WinUI.UI;
 using LanguageExt;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -73,7 +74,20 @@ public sealed partial class HomeView : UserControl, ICacheablePage
 
     private void SpotifyItemTapped(object sender, TappedRoutedEventArgs e)
     {
+        var tag = (sender as FrameworkElement)?.Tag;
+        if (tag is not AudioId id)
+        {
+            return;
+        }
 
+        //if the originalSource contains ButtonsPanel, we tapped on a button and we don't want to navigate
+        if (e.OriginalSource is FrameworkElement originalSource
+            && originalSource.FindAscendantOrSelf<FrameworkElement>(x => x.Name is "ButtonsPanel") is { })
+        {
+            return;
+        }
+
+        UICommands.NavigateTo.Execute(id);
     }
 
     private void OnSelectTemplateKey(RecyclingElementFactory sender, SelectTemplateEventArgs e)

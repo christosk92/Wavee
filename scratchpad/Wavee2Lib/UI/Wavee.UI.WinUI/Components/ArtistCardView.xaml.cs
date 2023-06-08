@@ -59,5 +59,21 @@ namespace Wavee.UI.WinUI.Components
             get => (string?)GetValue(ImageProperty);
             set => SetValue(ImageProperty, value);
         }
+        private void CardView_OnPointerEntered(object sender, PointerRoutedEventArgs e)
+        {
+            var buttonsPanel = this.FindName("ButtonsPanel") as UIElement;
+            if (buttonsPanel != null)
+                buttonsPanel.Visibility = Visibility.Visible;
+        }
+
+        private void CardView_OnPointerExited(object sender, PointerRoutedEventArgs e)
+        {
+            var buttonsPanel = this.FindName("ButtonsPanel") as UIElement;
+            if (buttonsPanel != null)
+            {
+                buttonsPanel.Visibility = Visibility.Collapsed;
+                Microsoft.UI.Xaml.Markup.XamlMarkupHelper.UnloadObject(buttonsPanel);
+            }
+        }
     }
 }

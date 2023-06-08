@@ -79,7 +79,7 @@ namespace Wavee.UI.WinUI.Views.Shell
             set => SetValue(UserInfoProperty, value);
         }
 
-        public NavigationService NavigationService { get; }
+        public static NavigationService NavigationService { get; private set; }
         public event EventHandler<bool>? ClosedChanged;
         public event EventHandler<double>? Resized;
 

@@ -12,6 +12,7 @@
     <EnableMsixTooling>true</EnableMsixTooling>
   </PropertyGroup>
   <ItemGroup>
+    <Content Remove="Assets\amb.png" />
     <Content Remove="Assets\icon_album_placeholder.png" />
   </ItemGroup>
   <ItemGroup>
@@ -19,10 +20,12 @@
     <None Remove="Assets\Logo-Test.png" />
     <None Remove="Components\ArtistCardView.xaml" />
     <None Remove="Components\CardView.xaml" />
+    <None Remove="Components\ImageTransitionControl.xaml" />
     <None Remove="Components\Player\PlayerControl.xaml" />
     <None Remove="Components\Player\PlayingOnRemoteDeviceControl.xaml" />
     <None Remove="Themes\Styles\BorderStyles.xaml" />
     <None Remove="Themes\Styles\ButtonStyles.xaml" />
+    <None Remove="Views\Artist\ArtistRootView.xaml" />
     <None Remove="Views\Browse\BrowseVIew.xaml" />
     <None Remove="Views\Home\HomeView.xaml" />
     <None Remove="Views\Shell\ShellView.xaml" />
@@ -45,6 +48,7 @@
     <PackageReference Include="CommunityToolkit.Labs.WinUI.SegmentedControl" Version="0.0.3" />
     <PackageReference Include="CommunityToolkit.Labs.WinUI.Shimmer" Version="0.0.1" />
     <PackageReference Include="CommunityToolkit.Labs.WinUI.TokenView" Version="0.0.6" />
+    <PackageReference Include="CommunityToolkit.Labs.WinUI.TransitionHelper" Version="0.0.1" />
     <PackageReference Include="CommunityToolkit.WinUI" Version="7.1.2" />
     <PackageReference Include="CommunityToolkit.WinUI.UI" Version="7.1.2" />
     <PackageReference Include="CommunityToolkit.WinUI.UI.Controls" Version="7.1.2" />
@@ -85,9 +89,18 @@
 	  <PublishReadyToRunExclude Include="LanguageExt.Core.dll" />
   </ItemGroup>
   <ItemGroup>
+    <None Update="Assets\amb.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="Assets\icon_album_placeholder.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <Page Update="Components\ImageTransitionControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Update="Views\Artist\ArtistRootView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
   <ItemGroup>
     <Page Update="Themes\Styles\BorderStyles.xaml">

@@ -17,6 +17,7 @@ public sealed class LibrariesViewModel : ReactiveObject
         Action<Seq<AudioId>> onLibraryItemAdded,
         Action<Seq<AudioId>> onLibraryItemRemoved, string userId)
     {
+        Instance = this;
         var listener = _items.Connect()
             .Transform(x => x.Id)
             .ObserveOn(RxApp.MainThreadScheduler)
@@ -28,7 +29,7 @@ public sealed class LibrariesViewModel : ReactiveObject
                     switch (y.Key)
                     {
                         case ChangeReason.Add:
-                            onLibraryItemAdded(y.Map(z=> z.Key).ToSeq());
+                            onLibraryItemAdded(y.Map(z => z.Key).ToSeq());
                             break;
                         case ChangeReason.Remove:
                             onLibraryItemRemoved(y.Map(z => z.Key).ToSeq());
@@ -92,10 +93,10 @@ public sealed class LibrariesViewModel : ReactiveObject
                 },
                 type is "LOCAL_TRACK" ? ServiceType.Local : ServiceType.Spotify
             );
-// #if DEBUG
-//             if (type is "LOCAL_TRACK")
-//                 Debugger.Break();
-// #endif
+            // #if DEBUG
+            //             if (type is "LOCAL_TRACK")
+            //                 Debugger.Break();
+            // #endif
             var addedAt = item.GetProperty("added_at").GetInt64();
             var spotifyLibaryItem = new SpotifyLibaryItem(audioId, DateTimeOffset.FromUnixTimeSeconds(addedAt));
             res = res.Add(spotifyLibaryItem);
@@ -108,6 +109,9 @@ public sealed class LibrariesViewModel : ReactiveObject
     {
         return _items.Lookup(id).HasValue;
     }
+
+    public static LibrariesViewModel Instance { get; private set; }
+
 }
 public enum LibraryItemType
 {

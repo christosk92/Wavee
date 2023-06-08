@@ -98,8 +98,8 @@ internal sealed class SpotifyRemoteClient : ISpotifyRemoteClient, IDisposable
 
     public Task<Unit> SetShuffle(bool isShuffling, CancellationToken ct = default)
     {
-       const string commandName = "set_shuffling_context";
-       return InvokeCommand(commandName, new HashMap<string, object>().Add("value", isShuffling), ct);
+        const string commandName = "set_shuffling_context";
+        return InvokeCommand(commandName, new HashMap<string, object>().Add("value", isShuffling), ct);
     }
 
     public Task<Unit> Resume(CancellationToken ct = default)
@@ -133,7 +133,8 @@ internal sealed class SpotifyRemoteClient : ISpotifyRemoteClient, IDisposable
 
     public Task<Unit> SeekTo(TimeSpan to, CancellationToken ct = default)
     {
-        throw new NotImplementedException();
+        const string commandName = "seek_to";
+        return InvokeCommand(commandName, new HashMap<string, object>().Add("value", to.TotalMilliseconds), ct);
     }
 
     public Task<Unit> RefreshState()
