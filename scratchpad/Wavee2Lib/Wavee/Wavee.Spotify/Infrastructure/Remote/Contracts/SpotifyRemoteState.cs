@@ -81,6 +81,7 @@ public readonly record struct SpotifyRemoteState(Option<string> ActiveDeviceId,
                     DeviceId: v.Value.DeviceId,
                     DeviceName: v.Value.Name,
                     DeviceType: v.Value.DeviceType,
+                    IsActive: activeDeviceId.Map(x => x == v.Value.DeviceId).IfNone(false),
                     Volume: v.Value.Capabilities.DisableVolume
                         ? Option<double>.None
                         : Some((double)v.Value.Volume / ushort.MaxValue)
@@ -131,4 +132,8 @@ public readonly record struct SpotifyRemoteDeviceInfo(
     string DeviceId,
     string DeviceName,
     DeviceType DeviceType,
-    Option<double> Volume);
+    bool IsActive,
+    Option<double> Volume)
+{
+    public bool CanControlVolume => Volume.IsSome;
+}

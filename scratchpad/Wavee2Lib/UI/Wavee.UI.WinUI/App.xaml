@@ -8,6 +8,9 @@
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
+                <ResourceDictionary Source="/Themes/Styles/ButtonStyles.xaml" />
+                <ResourceDictionary Source="/Themes/Styles/BorderStyles.xaml" />
+
                 <ResourceDictionary>
                     <ResourceDictionary.ThemeDictionaries>
                         <ResourceDictionary x:Key="Light">
@@ -31,7 +34,7 @@
                         <ResourceDictionary x:Key="Dark">
                             <LinearGradientBrush x:Key="BackgroundGradient"
                                                  StartPoint="0,0"
-                                                 EndPoint="0,1">
+                                                 EndPoint="1,0">
                                 <GradientStop Color="#00000000"
                                               Offset="0" />
                                 <GradientStop Color="#80000000"

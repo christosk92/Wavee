@@ -18,6 +18,7 @@
         </TransitionCollection>
     </UserControl.Transitions>
     <UserControl.Resources>
+        <RecyclePool x:Key="RecyclePool" />
         <DataTemplate x:Key="Regular"
                       x:DataType="common:CardViewItem">
             <Button Padding="12"
@@ -49,7 +50,16 @@
                                            Image="{x:Bind ImageUrl}" />
             </Button>
         </DataTemplate>
-
+        <RecyclingElementFactory x:Key="elementFactory"
+                                 RecyclePool="{StaticResource RecyclePool}"
+                                 SelectTemplateKey="OnSelectTemplateKey">
+            <RecyclingElementFactory.Templates>
+                <StaticResource x:Key="regular"
+                                ResourceKey="Regular" />
+                <StaticResource x:Key="artist"
+                                ResourceKey="ArtistView" />
+            </RecyclingElementFactory.Templates>
+        </RecyclingElementFactory>
         <templateSelectors:HomeItemTemplateSelector Normal="{StaticResource Regular}"
                                                     Artist="{StaticResource ArtistView}"
                                                     x:Key="HomeItemTemplateSelector" />
@@ -102,7 +112,8 @@
             <StackPanel>
                 <Grid x:Name="ActualDataGrid"
                       x:Load="{x:Bind NegateBool(ViewModel.IsLoading), Mode=OneWay}">
-                    <ItemsRepeater ItemsSource="{x:Bind ViewModel.Items, Mode=OneWay}">
+                    <ItemsRepeater 
+                        ItemsSource="{x:Bind ViewModel.Items, Mode=OneWay}">
                         <ItemsRepeater.ItemTemplate>
                             <DataTemplate x:DataType="home:HomeGroup">
                                 <Grid>

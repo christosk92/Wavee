@@ -33,8 +33,6 @@ namespace Wavee.UI.WinUI.Components
             {
                 var bitmapImage = new BitmapImage();
                 control.MainImage.Source = bitmapImage;
-                bitmapImage.DecodePixelHeight = 200;
-                bitmapImage.DecodePixelWidth = 200;
                 bitmapImage.UriSource = new System.Uri(image, UriKind.RelativeOrAbsolute);
             }
         }

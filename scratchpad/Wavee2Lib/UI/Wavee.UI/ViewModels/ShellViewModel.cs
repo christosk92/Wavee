@@ -5,6 +5,7 @@ using ReactiveUI;
 using Wavee.Core.Ids;
 using Wavee.UI.Models.Common;
 using Wavee.UI.ViewModels.Library;
+using Wavee.UI.ViewModels.Playback;
 using Wavee.UI.ViewModels.Playlists;
 
 namespace Wavee.UI.ViewModels;
@@ -18,6 +19,7 @@ public sealed class ShellViewModel : ReactiveObject
     {
         Playlists = new PlaylistsViewModel();
         Library = new LibrariesViewModel(onLibraryItemAdded, onLibraryItemRemoved, user.Id);
+        Player = new PlaybackViewModel();
         State.Instance.User = user;
         Task.Run(async () =>
         {
@@ -28,7 +30,7 @@ public sealed class ShellViewModel : ReactiveObject
             _ = RxApp.MainThreadScheduler.Schedule(() =>
             {
                 State.Instance.User = new SpotifyUser(
-                    Id: user.Id, 
+                    Id: user.Id,
                     DisplayName: newUser.DisplayName,
                     ImageUrl: image
                 );
@@ -40,4 +42,5 @@ public sealed class ShellViewModel : ReactiveObject
 
     public PlaylistsViewModel Playlists { get; }
     public LibrariesViewModel Library { get; }
+    public PlaybackViewModel Player { get; }
 }

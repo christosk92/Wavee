@@ -78,10 +78,11 @@ internal sealed class HorizontalAdaptiveLayout : NonVirtualizingLayout
         double totalWidth = 0;
         double totalHeight = 0;
         var count = Math.Min(fitItems, items);
-        double maxheightMetadataPanel = 0;
+        double maxHeight = 0;
 
         for (var i = 0; i < count; i++)
         {
+            mainData:
             try
             {
                 var item = context.Children[i];
@@ -94,23 +95,34 @@ internal sealed class HorizontalAdaptiveLayout : NonVirtualizingLayout
                 state.LayoutRects.Add(new Rect(totalWidth, 0, additionalWidth, additionalHeight));
                 totalWidth += additionalWidth;
                 totalHeight = Math.Max(additionalHeight, totalHeight);
-                // //all items should have the same height
-                // foreach (var child in context.Children)
-                // {
-                //     if (child is Button f)
-                //     {
-                //         f.Height = totalHeight;
-                //         if (f.Content is CardView c)
-                //         {
-                //             maxheightMetadataPanel = Math.Max(maxheightMetadataPanel, c.MetadataPanel.DesiredSize.Height);
-                //             c.MetadataPanel.Height = maxheightMetadataPanel;
-                //         }
-                //     }
-                // }
+                maxHeight = Math.Max(maxHeight, additionalHeight);
             }
-            catch (COMException)
+            catch (COMException e)
             {
+                goto mainData;
+            }
+        }
 
+        // //all items should have the same height
+        for (var index = 0; index < count; index++)
+        {
+            var child = context.Children[index];
+            try
+            {
+                if (child is Button f)
+                {
+                    f.Height = maxHeight;
+                    if (f.Content is CardView c)
+                    {
+                        c.Height = maxHeight;
+                        var rect = state.LayoutRects[index];
+                        rect.Height = maxHeight;
+                        state.LayoutRects[index] = rect;
+                    }
+                }
+            }
+            catch (COMException e)
+            {
             }
         }
 

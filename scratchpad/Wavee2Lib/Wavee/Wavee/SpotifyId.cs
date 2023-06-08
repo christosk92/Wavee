@@ -45,20 +45,31 @@ public readonly record struct AudioId(BigInteger Id, AudioItemType Type, Service
 
     public string ToBase62()
     {
-        var value = Id;
-        var sb = new StringBuilder();
-        
-        while (value > 0)
+        switch (Service)
         {
-            value = BigInteger.DivRem(value, BASE62_CHARS.Length, out BigInteger remainder);
-            sb.Insert(0, BASE62_CHARS[(int)remainder]);
+            case ServiceType.Local:
+                //since local ids are just base64 , we can just convert it to a string
+                Span<byte> bytes = Id.ToByteArray();
+                return System.Text.Encoding.UTF8.GetString(bytes);
+            case ServiceType.Spotify:
+                var value = Id;
+                var sb = new StringBuilder();
+
+                while (value > 0)
+                {
+                    value = BigInteger.DivRem(value, BASE62_CHARS.Length, out BigInteger remainder);
+                    sb.Insert(0, BASE62_CHARS[(int)remainder]);
+                }
+                //expected length is 22
+                while (sb.Length < 22)
+                {
+                    sb.Insert(0, '0');
+                }
+                return sb.ToString();
+                break;
+            default:
+                throw new ArgumentOutOfRangeException();
         }
-        //expected length is 22
-        while (sb.Length < 22)
-        {
-            sb.Insert(0, '0');
-        }
-        return sb.ToString();
     }
 
     public static AudioId FromUri(ReadOnlySpan<char> uri)
@@ -160,12 +171,21 @@ public readonly record struct AudioId(BigInteger Id, AudioItemType Type, Service
 
     public static AudioId FromRaw(ReadOnlySpan<byte> id, AudioItemType type, ServiceType serviceType)
     {
-        var result = new BigInteger();
-        foreach (var t in id)
+        switch (serviceType)
         {
-            result = BigInteger.Multiply(result, 256) + t;
+            case ServiceType.Local:
+                return new AudioId(new BigInteger(id), type, serviceType);
+            case ServiceType.Spotify:
+                var result = new BigInteger();
+                foreach (var t in id)
+                {
+                    result = BigInteger.Multiply(result, 256) + t;
+                }
+
+                return new AudioId(result, type, serviceType);
+                break;
         }
-        
-        return new AudioId(result, type, serviceType);
+
+        return new AudioId();
     }
 }

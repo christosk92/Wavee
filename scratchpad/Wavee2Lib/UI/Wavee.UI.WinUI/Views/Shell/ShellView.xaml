@@ -5,10 +5,45 @@
              xmlns:local="using:Wavee.UI.WinUI.Views.Shell"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:player="using:Wavee.UI.WinUI.Components.Player"
              mc:Ignorable="d">
     <Grid>
         <local:SidebarControl x:Name="SidebarControl"
+                              Resized="SidebarControl_OnResized"
+                              ClosedChanged="SidebarControl_OnClosedChanged"
                               UserInfo="{x:Bind ViewModel.State.User, Mode=OneWay}"
-                              Playlists="{x:Bind ViewModel.Playlists.Items, Mode=OneWay}"/>
+                              Playlists="{x:Bind ViewModel.Playlists.Items, Mode=OneWay}" />
+        <Grid x:Name="OpenPaneButton"
+              Visibility="Collapsed"
+              VerticalAlignment="Center">
+            <Button Height="100"
+                    Width="16" Background="{ThemeResource SystemAccentColorLight2}"
+                    Margin="-3,0,0,0"
+                    Padding="0,0,0,0"
+                    Tapped="OpenpaneButtonTapped">
+                <FontIcon FontFamily="Segoe Fluent Icons"
+                          FontSize="11"
+                          Glyph="&#xE017;" />
+            </Button>
+        </Grid>
+
+        <RelativePanel x:Name="BottomPlayer"
+                       HorizontalAlignment="Stretch"
+                       VerticalAlignment="Bottom">
+            <player:PlayerControl Height="90"
+                                  RelativePanel.AlignLeftWithPanel="True"
+                                  RelativePanel.AlignRightWithPanel="True"
+                                  HorizontalAlignment="Stretch"
+                                  RelativePanel.AlignTopWithPanel="True"
+                                  HorizontalContentAlignment="Stretch"
+                                  x:Name="MainPlayer"
+                                  Player="{x:Bind ViewModel.Player}" />
+            <player:PlayingOnRemoteDeviceControl x:Name="PlayingOnRemoteDevice"
+                                                 RelativePanel.AlignLeftWithPanel="True"
+                                                 RelativePanel.AlignRightWithPanel="True"
+                                                 RelativePanel.Below="MainPlayer"
+                                                 Visibility="{x:Bind IsOurDevice(ViewModel.Player.Device), Mode=OneWay}"
+                                                 Device="{x:Bind ViewModel.Player.Device, Mode=OneWay}" />
+        </RelativePanel>
     </Grid>
 </UserControl>

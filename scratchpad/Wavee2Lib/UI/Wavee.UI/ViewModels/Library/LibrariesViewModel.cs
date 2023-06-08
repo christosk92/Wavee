@@ -1,4 +1,5 @@
-﻿using System.Reactive.Linq;
+﻿using System.Diagnostics;
+using System.Reactive.Linq;
 using DynamicData;
 using Eum.Spotify.playlist4;
 using LanguageExt;
@@ -38,8 +39,22 @@ public sealed class LibrariesViewModel : ReactiveObject
 
         Task.Run(async () =>
         {
-            var initial = await FetchLibraryInitial(userId);
-            _items.AddOrUpdate(initial);
+            while (true)
+            {
+                try
+                {
+                    var initial = await FetchLibraryInitial(userId);
+                    _items.AddOrUpdate(initial);
+                    break;
+                }
+                catch (Exception e)
+                {
+                    //"   at Wavee.UI.ViewModels.Library.LibrariesViewModel.<FetchLibraryComponent>d__3.MoveNext() in C:\\Users\\chris-pc\\dev\\personal\\Wavee\\scratchpad\\Wavee2Lib\\UI\\Wavee.UI\\ViewModels\\Library\\LibrariesViewModel.cs:line 90\r\n   at Wavee.UI.ViewModels.Library.LibrariesViewModel.<FetchLibraryInitial>d__2.MoveNext() in C:\\Users\\chris-pc\\dev\\personal\\Wavee\\scratchpad\\Wavee2Lib\\UI\\Wavee.UI\\ViewModels\\Library\\LibrariesViewModel.cs:line 65\r\n   at Wavee.UI.ViewModels.Library.LibrariesViewModel.<>c__DisplayClass1_0.<<-ctor>b__2>d.MoveNext() in C:\\Users\\chris-pc\\dev\\personal\\Wavee\\scratchpad\\Wavee2Lib\\UI\\Wavee.UI\\ViewModels\\Library\\LibrariesViewModel.cs:line 46"
+                    Console.WriteLine(e);
+                    Debug.WriteLine(e);
+                    await Task.Delay(4000);
+                }
+            }
         });
     }
 
@@ -70,14 +85,17 @@ public sealed class LibrariesViewModel : ReactiveObject
                 id: item.GetProperty("identifier").GetBytesFromBase64(),
                 type: type switch
                 {
-                    "TRACK" => AudioItemType.Track,
+                    "TRACK" or "LOCAL_TRACK" => AudioItemType.Track,
                     "ALBUM" => AudioItemType.Album,
                     "ARTIST" => AudioItemType.Artist,
                     _ => throw new Exception("Unknown type")
                 },
-                ServiceType.Spotify
+                type is "LOCAL_TRACK" ? ServiceType.Local : ServiceType.Spotify
             );
-
+// #if DEBUG
+//             if (type is "LOCAL_TRACK")
+//                 Debugger.Break();
+// #endif
             var addedAt = item.GetProperty("added_at").GetInt64();
             var spotifyLibaryItem = new SpotifyLibaryItem(audioId, DateTimeOffset.FromUnixTimeSeconds(addedAt));
             res = res.Add(spotifyLibaryItem);

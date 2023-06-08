@@ -44,6 +44,7 @@ namespace Wavee.UI.WinUI.Views.Shell
 
             control.UserSettings = e.NewValue as UserSettings;
             control.SidebarSplitter.OpenPaneLength = control.UserSettings.SidebarWidth;
+            control.Resized?.Invoke(control, control.UserSettings.SidebarWidth);
         }
 
         public static readonly DependencyProperty UserInfoProperty = DependencyProperty.Register(nameof(UserInfo), typeof(SpotifyUser), typeof(SidebarControl), new PropertyMetadata(default(SpotifyUser)));
@@ -79,6 +80,8 @@ namespace Wavee.UI.WinUI.Views.Shell
         }
 
         public NavigationService NavigationService { get; }
+        public event EventHandler<bool>? ClosedChanged;
+        public event EventHandler<double>? Resized;
 
         private void Border_ManipulationDelta(object sender, ManipulationDeltaRoutedEventArgs e)
         {
@@ -151,6 +154,7 @@ namespace Wavee.UI.WinUI.Views.Shell
                 SidebarSplitter.OpenPaneLength = val + SidebarSplitter.CompactPaneLength; // set open sidebar length to minimum value to keep it smooth
                 SidebarSplitter.IsPaneOpen = true;
             }
+            Resized?.Invoke(this, SidebarSplitter.OpenPaneLength);
         }
 
         private void PaneRoot_RightTapped(object sender, RightTappedRoutedEventArgs e)
@@ -268,5 +272,21 @@ namespace Wavee.UI.WinUI.Views.Shell
             //display name or id
             return spotifyUser.DisplayName.Length > 0 ? spotifyUser.DisplayName[0].ToString() : spotifyUser.Id[0].ToString();
         }
+
+        private void SidebarSplitter_OnPaneOpening(SplitView sender, object args)
+        {
+            ClosedChanged?.Invoke(this, false);
+        }
+
+        private void SidebarSplitter_OnPaneClosing(SplitView sender, SplitViewPaneClosingEventArgs args)
+        {
+            ClosedChanged?.Invoke(this, true);
+        }
+
+        public void OpenPane()
+        {
+            SidebarSplitter.IsPaneOpen = true;
+        }
+
     }
 }

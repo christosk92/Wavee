@@ -14,6 +14,7 @@ using LanguageExt.UnsafeValueAccess;
 using Wavee.Core.Ids;
 using Wavee.Infrastructure.IO;
 using Wavee.Player;
+using Wavee.Spotify.Infrastructure.ApResolve;
 using Wavee.Spotify.Infrastructure.Playback.Contracts;
 using Wavee.Spotify.Infrastructure.Remote.Contracts;
 using static LanguageExt.Prelude;
@@ -95,6 +96,46 @@ internal sealed class SpotifyRemoteClient : ISpotifyRemoteClient, IDisposable
         return Some(default(Unit));
     }
 
+    public Task<Unit> SetShuffle(bool isShuffling, CancellationToken ct = default)
+    {
+       const string commandName = "set_shuffling_context";
+       return InvokeCommand(commandName, new HashMap<string, object>().Add("value", isShuffling), ct);
+    }
+
+    public Task<Unit> Resume(CancellationToken ct = default)
+    {
+        const string commandName = "resume";
+        return InvokeCommand(commandName, LanguageExt.HashMap<string, object>.Empty, ct);
+    }
+
+    public Task<Unit> Pause(CancellationToken ct = default)
+    {
+        const string commandName = "pause";
+        return InvokeCommand(commandName, LanguageExt.HashMap<string, object>.Empty, ct);
+    }
+
+    public Task<Unit> SkipNext(CancellationToken ct = default)
+    {
+        const string commandName = "skip_next";
+
+        return InvokeCommand(commandName, LanguageExt.HashMap<string, object>.Empty, ct);
+    }
+
+    public Task<Unit> SetRepeat(RepeatState next, CancellationToken ct = default)
+    {
+        var options = new HashMap<string, object>()
+            .Add("repeating_context", next >= RepeatState.Context)
+            .Add("repeating_track", next is RepeatState.Track);
+        const string commandName = "set_options";
+
+        return InvokeCommand(commandName, options, ct);
+    }
+
+    public Task<Unit> SeekTo(TimeSpan to, CancellationToken ct = default)
+    {
+        throw new NotImplementedException();
+    }
+
     public Task<Unit> RefreshState()
     {
         //TODO:
@@ -114,6 +155,45 @@ internal sealed class SpotifyRemoteClient : ISpotifyRemoteClient, IDisposable
             return;
 
         await Put(state, PutStateReason.PlayerStateChanged);
+    }
+
+    /// <summary>
+    /// Invokes a command on the remote device
+    /// </summary>
+    /// <param name="commandName"></param>
+    /// <param name="value"></param>
+    /// <param name="ct"></param>
+    /// <returns></returns>
+    /// <exception cref="NoActiveDeviceException"></exception>
+    private async Task<Unit> InvokeCommand(
+        string commandName,
+        HashMap<string, object> value, CancellationToken ct)
+    {
+        //POSThttps://gae2-spclient.spotify.com/connect-state/v1/player/command/from/35ee833111913f567c4dc6ba7537cb6d089b130f/to/35ee833111913f567c4dc6ba7537cb6d089b130f
+        var spClient = ApResolver.SpClient.ValueUnsafe();
+        var activeDevice = State.Value.IfNone(() => throw new NoActiveDeviceException()).ActiveDeviceId.IfNone(() => throw new NoActiveDeviceException());
+        var url = $"https://{spClient}/connect-state/v1/player/command/from/{_deviceId}/to/{activeDevice}";
+
+        //{"command":{"repeating_context":true,"repeating_track":false,"endpoint":"set_options"}}
+        //we need to concat the command name with the parameter (which is optional, and is just a dictionary 
+        //of key value pairs)
+
+        var command = new Dictionary<string, object>
+        {
+            {"endpoint", commandName}
+        };
+        foreach (var (key, val) in value)
+            command.Add(key, val);
+
+        var serialized = JsonSerializer.Serialize(new
+        {
+            command = command
+        });
+        using var content = new StringContent(serialized, Encoding.UTF8, "application/json");
+        var jwt = await _tokenFactory(ct);
+        using var response = await HttpIO.Post(url, new AuthenticationHeaderValue("Bearer", jwt), LanguageExt.HashMap<string, string>.Empty,
+            content, ct);
+        return default;
     }
 
     private async Task Connect(string deviceId)
@@ -506,5 +586,14 @@ internal sealed class SpotifyRemoteClient : ISpotifyRemoteClient, IDisposable
         _tokenFactory = null;
         _playbackEvent = null;
 #pragma warning restore CS8625
+    }
+}
+
+public sealed class NoActiveDeviceException : Exception
+{
+    const string message = "No active device found.";
+
+    public NoActiveDeviceException() : base(message)
+    {
     }
 }

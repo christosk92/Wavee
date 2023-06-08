@@ -7,8 +7,8 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:controls="using:CommunityToolkit.WinUI.UI.Controls"
              mc:Ignorable="d">
-    <RelativePanel>
-
+    <RelativePanel x:Name="MainPanel"
+                   x:FieldModifier="public">
         <controls:ConstrainedBox x:Name="ImageBox"
                                  RelativePanel.AlignLeftWithPanel="True"
                                  RelativePanel.AlignRightWithPanel="True"
@@ -19,6 +19,7 @@
         </controls:ConstrainedBox>
 
         <TextBlock FontSize="15"
+                   x:FieldModifier="public"
                    RelativePanel.Below="ImageBox"
                    Margin="0,6,0,0"
                    FontWeight="SemiBold"
@@ -30,6 +31,8 @@
                    MaxLines="2" />
         <TextBlock Text="{x:Bind Description, Mode=OneWay}"
                    TextWrapping="Wrap"
+                   x:Name="DescriptionBox"
+                   x:FieldModifier="public"
                    RelativePanel.AlignLeftWithPanel="True"
                    RelativePanel.AlignRightWithPanel="True"
                    RelativePanel.Below="TitleBlock"

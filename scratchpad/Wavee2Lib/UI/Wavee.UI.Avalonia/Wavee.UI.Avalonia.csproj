@@ -1,12 +1,15 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <OutputType>WinExe</OutputType>
-        <TargetFramework>net7.0</TargetFramework>
+        <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
         <Nullable>enable</Nullable>
         <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
         <ApplicationManifest>app.manifest</ApplicationManifest>
         <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
         <AvaloniaVersion>11.0.0-rc1.1</AvaloniaVersion>
+        <RuntimeIdentifiers>win10-x86;win10-x64;win10-arm64</RuntimeIdentifiers>
+        <WindowsPackageType>None</WindowsPackageType>
+        <OutputType>WinExe</OutputType>
     </PropertyGroup>
 
     <ItemGroup>
@@ -27,5 +30,6 @@
         <PackageReference Include="Avalonia.ReactiveUI" Version="$(AvaloniaVersion)" />
         <PackageReference Include="FluentAvalonia.FluentIcons" Version="1.1.201.1-preview7" />
         <PackageReference Include="FluentAvaloniaUI" Version="2.0.0-rc1" />
+        <PackageReference Include="Microsoft.Windows.CsWinRT" Version="2.0.2" />
     </ItemGroup>
 </Project>

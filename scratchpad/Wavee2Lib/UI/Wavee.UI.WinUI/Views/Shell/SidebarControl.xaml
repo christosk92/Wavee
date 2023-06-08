@@ -1266,7 +1266,10 @@
 
     <Grid>
         <SplitView  DisplayMode="Inline"
+                    PaneClosing="SidebarSplitter_OnPaneClosing"
+                    PaneOpening="SidebarSplitter_OnPaneOpening"
                     IsPaneOpen="True"
+                    CompactPaneLength="24"
                     Style="{StaticResource ResizableSidebar}"
                     x:Name="SidebarSplitter">
             <SplitView.Pane>

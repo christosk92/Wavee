@@ -142,7 +142,7 @@ public readonly record struct SpotifyLocalPlaybackState(
             RepeatingContext = waveePlayerState.RepeatState is RepeatState.Context,
             RepeatingTrack = waveePlayerState.RepeatState is RepeatState.Track,
             ShufflingContext = waveePlayerState.IsShuffling
-        };  
+        };
         if (waveePlayerState.Context.IsSome)
         {
             var ctx = waveePlayerState.Context.ValueUnsafe();
@@ -168,16 +168,17 @@ public readonly record struct SpotifyLocalPlaybackState(
             {
                 State.Track.Uid = waveePlayerState.TrackUid.ValueUnsafe();
             }
-            
-            
+
+
             State.Track.Metadata.Clear();
             foreach (var (key, value) in waveePlayerState.TrackDetails.ValueUnsafe().Metadata)
             {
-                State.Track.Metadata[key] = value;
+                if (value is string v)
+                    State.Track.Metadata[key] = v;
             }
         }
-        
-        
+
+
         return this with
         {
             IsActive = isActive,

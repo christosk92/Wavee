@@ -75,4 +75,17 @@ public sealed partial class HomeView : UserControl, ICacheablePage
     {
 
     }
+
+    private void OnSelectTemplateKey(RecyclingElementFactory sender, SelectTemplateEventArgs e)
+    {
+        if (e.DataContext is CardViewItem item)
+        {
+            e.TemplateKey = item.Id.Type switch
+            {
+                AudioItemType.Artist => "artist",
+                _ => "regular"
+            };
+            //e.TemplateKey = (item.Index % 2 == 0) ? "even" : "odd";
+        }
+    }
 }

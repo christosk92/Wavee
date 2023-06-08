@@ -17,7 +17,7 @@
         <controls:ConstrainedBox AspectRatio="1:1">
             <Grid>
                 <Border CornerRadius="400">
-                    <Image x:Name="MainImage" />
+                    <Image Stretch="UniformToFill" x:Name="MainImage" />
                 </Border>
             </Grid>
         </controls:ConstrainedBox>

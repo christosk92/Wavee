@@ -15,6 +15,7 @@ using Wavee.Spotify.Infrastructure.ApResolve;
 using Wavee.Spotify.Infrastructure.AudioKey;
 using Wavee.Spotify.Infrastructure.Cache;
 using Wavee.Spotify.Infrastructure.Mercury;
+using Wavee.Spotify.Infrastructure.Mercury.Models;
 using Wavee.Spotify.Infrastructure.Playback.Contracts;
 using Wavee.Spotify.Infrastructure.Remote.Contracts;
 
@@ -542,11 +543,17 @@ internal sealed class SpotifyPlaybackClient : ISpotifyPlaybackClient, IDisposabl
                 return StreamFromWeb(format, audoioKey, mercury, cache, ct);
             });
 
+        var newMetadata = new HashMap<string, object>();
+        foreach (var (key, value) in trackMetadata)
+        {
+            newMetadata = newMetadata.Add(key, value);
+        }
+        newMetadata = newMetadata.Add("track_or_episode", new TrackOrEpisode(new Lazy<Track>(track)));
         return new WaveeTrack(
             audioStream: stream,
             title: track.Name,
             id: id,
-            metadata: trackMetadata,
+            metadata: newMetadata,
             duration: TimeSpan.FromMilliseconds(track.Duration)
         );
     }

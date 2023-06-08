@@ -1,9 +1,16 @@
 ﻿using System.Collections.ObjectModel;
+using System.Reactive.Linq;
 using System.Text.Json;
 using Eum.Spotify;
+using Eum.Spotify.connectstate;
 using LanguageExt;
+using LanguageExt.Common;
+using LanguageExt.UnsafeValueAccess;
 using Wavee.Core.Ids;
 using Wavee.Spotify;
+using Wavee.Spotify.Infrastructure.Mercury.Models;
+using Wavee.Spotify.Infrastructure.PrivateApi.Contracts.Response;
+using Wavee.Spotify.Infrastructure.Remote.Contracts;
 using Wavee.UI.Models.Common;
 using Wavee.UI.Models.Home;
 using static LanguageExt.Prelude;
@@ -110,9 +117,10 @@ public static class SpotifyView
                                 });
                                 break;
                             case "artist":
+                                var uri = AudioId.FromUri(item.GetProperty("uri").GetString());
                                 result.Add(new CardViewItem
                                 {
-                                    Id = AudioId.FromUri(item.GetProperty("uri").GetString()),
+                                    Id = uri,
                                     Title = item.GetProperty("name").GetString()!,
                                     ImageUrl = image,
                                     Subtitle = item.GetProperty("followers").GetProperty("total").GetInt32().ToString()
@@ -148,5 +156,25 @@ public static class SpotifyView
                 contentOffset: 0, ct)
             from parsed in Eff(() => ParseHome(result))
             select parsed;
+    }
+
+    public static IObservable<SpotifyRemoteState> ObserveRemoteState() =>
+        State.Instance.Client.Remote.StateUpdates
+            .Where(c => c.IsSome)
+            .Select(c => c.ValueUnsafe());
+
+    public static Aff<TrackOrEpisode> GetTrack(AudioId id, CancellationToken ct = default)
+    {
+        if (id.Type is not AudioItemType.Track and not AudioItemType.PodcastEpisode)
+            return FailEff<TrackOrEpisode>(Error.New("Item is not a track or episode."));
+
+        var country = State.Instance.Client.CountryCode.IfNone("US");
+        return State.Instance.Client.Mercury.GetMetadata(id, country, ct).ToAff();
+    }
+
+    public static Aff<SpotifyColors> GetColorForImage(string imageUrl)
+    {
+        var response = State.Instance.Client.PrivateApi.FetchColorFor(Seq1(imageUrl));
+        return response.ToAff();
     }
 }

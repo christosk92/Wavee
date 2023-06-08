@@ -6,7 +6,10 @@ using Wavee.UI.WinUI.Views.Home;
 using Wavee.UI.ViewModels;
 using FontFamily = Microsoft.UI.Xaml.Media.FontFamily;
 using LanguageExt;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Input;
 using Wavee.Core.Ids;
+using Wavee.Spotify.Infrastructure.Remote.Contracts;
 using Wavee.UI.WinUI.Views.Browse;
 
 namespace Wavee.UI.WinUI.Views.Shell
@@ -132,6 +135,43 @@ namespace Wavee.UI.WinUI.Views.Shell
                 IsAHeader = false,
                 Navigation = () => NavigateTo(typeof(HomeView), null)
             };
+        }
+
+        public Visibility IsOurDevice(SpotifyRemoteDeviceInfo spotifyRemoteDeviceInfo)
+        {
+            //hide our device
+            return spotifyRemoteDeviceInfo.DeviceId ==
+                   State.Instance.Client.DeviceId ? Visibility.Collapsed : Visibility.Visible;
+        }
+
+
+        private void SidebarControl_OnResized(object sender, double e)
+        {
+            //Margin="{x:Bind GetMarginFrom(ViewModel.State.Settings.SidebarWidth,12, 12),Mode=OneWay}"
+            BottomPlayer.Margin = GetMarginFrom(e, 12, 12);
+        }
+        public Thickness GetMarginFrom(double left, double paddingOnLeft, double uniformRest)
+        {
+            return new Thickness(left + paddingOnLeft, uniformRest, uniformRest, uniformRest);
+        }
+
+        private void SidebarControl_OnClosedChanged(object sender, bool e)
+        {
+            if (e)
+            {
+                BottomPlayer.Margin = GetMarginFrom(0, 12, 12);
+                OpenPaneButton.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                BottomPlayer.Margin = GetMarginFrom(ViewModel.State.Settings.SidebarWidth, 12, 12);
+                OpenPaneButton.Visibility = Visibility.Collapsed;
+            }
+        }
+
+        private void OpenpaneButtonTapped(object sender, TappedRoutedEventArgs e)
+        {
+            SidebarControl.OpenPane();
         }
     }
 }
