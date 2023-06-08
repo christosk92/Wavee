@@ -311,10 +311,9 @@ public sealed class WaveePlayer
         try
         {
             var wasPaused = _state.Value.IsPaused;
-            NAudioSink.Instance.Pause();
             NAudioSink.Instance.DiscardBuffer();
+            NAudioSink.Instance.Pause();
             decoder.CurrentTime = valueUnsafe;
-
             if (!wasPaused)
                 NAudioSink.Instance.Resume();
             _positionUpdates.OnNext(valueUnsafe);

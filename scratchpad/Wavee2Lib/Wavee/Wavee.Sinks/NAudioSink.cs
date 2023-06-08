@@ -46,7 +46,7 @@ public sealed class NAudioSink
 
             while (_bufferedWaveProvider.BufferedDuration.TotalSeconds > 0.5)
             {
-                Thread.Sleep(10);
+                Thread.Sleep(1);
             }
         }
         finally

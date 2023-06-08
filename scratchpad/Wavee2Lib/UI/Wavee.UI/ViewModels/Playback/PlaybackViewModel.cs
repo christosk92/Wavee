@@ -222,6 +222,11 @@ public sealed partial class PlaybackViewModel : ReactiveObject
         if (Device.DeviceId == State.Instance.Client.DeviceId)
         {
             WaveePlayer.Instance.SeekTo(TimeSpan.FromMilliseconds(to));
+            var seekTo = GetNewPosition((long)to);
+            lock (_positionLock)
+            {
+                _positionMs = seekTo;
+            }
             return Task.FromResult(default(Unit));
         }
 
@@ -316,6 +321,15 @@ public sealed partial class PlaybackViewModel : ReactiveObject
                 .Subscribe(UpdateViewModel);
 
             WaveePlayer.Instance
+                .PositionUpdates
+                .ObserveOn(RxApp.MainThreadScheduler)
+                .Subscribe(x =>
+                {
+                    if (x.IsSome)
+                        SetPosition((long)x.IfNone(TimeSpan.Zero).TotalMilliseconds);
+                });
+
+            WaveePlayer.Instance
                 .StateUpdates
                 .ObserveOn(RxApp.MainThreadScheduler)
                 .Subscribe(UpdateViewModelFromPlayer);
@@ -368,7 +382,11 @@ public sealed partial class PlaybackViewModel : ReactiveObject
             {
                 if (device.DeviceId != State.Instance.Client.DeviceId)
                 {
-                    devicesItems.Add(device);
+                    var newDevice = device with
+                    {
+                        IsActive = false
+                    };
+                    devicesItems.Add(newDevice);
                 }
             }
             _inner.Devices = devicesItems.ToImmutableList();
