@@ -358,6 +358,8 @@ namespace Wavee.UI.WinUI.Views.Artist
             IReadOnlyCollection<ArtistTopTrackView> TopTracks,
             IReadOnlyCollection<ArtistDiscographyGroupView> Discography);
 
+        private bool _wasTransformed;
+
         private async void ScrollViewer_OnViewChanged(object sender, ScrollViewerViewChangedEventArgs e)
         {
             var frac = ((ScrollViewer)sender).VerticalOffset / ImageT.Height;
@@ -370,19 +372,22 @@ namespace Wavee.UI.WinUI.Views.Artist
 
             //at around 75%, we should start transforming the header into a floating one
             const double threshold = 0.75;
-            if (progress >= 0.75)
+            if (progress > 0.75 && !_wasTransformed)
             {
+                _wasTransformed = true;
                 BaseTrans.Source = MetadataPnale;
                 BaseTrans.Target = SecondMetadataPanel;
                 await BaseTrans.StartAsync();
             }
-            else
+            else if (progress <= .75 && _wasTransformed)
             {
+                _wasTransformed = false;
                 BaseTrans.Source = SecondMetadataPanel;
                 BaseTrans.Target = MetadataPnale;
                 await BaseTrans.StartAsync();
             }
         }
+
 
         private void ImageT_OnContextRequested(UIElement sender, ContextRequestedEventArgs args)
         {
@@ -449,12 +454,14 @@ namespace Wavee.UI.WinUI.Views.Artist
         public string Title { get; set; }
         public string Image { get; set; }
         public AudioId Id { get; set; }
+
         public ArtistDiscographyTracksHolder Tracks { get; set; }
         public string ReleaseDateAsStr { get; set; }
     }
 
     public class ArtistDiscographyTracksHolder
     {
+
         public List<ArtistDiscographyTrack> Tracks { get; set; }
         public AudioId AlbumId { get; set; }
     }

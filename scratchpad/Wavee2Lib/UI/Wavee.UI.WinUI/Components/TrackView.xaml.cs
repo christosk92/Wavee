@@ -37,7 +37,7 @@ namespace Wavee.UI.WinUI.Components
         public static readonly DependencyProperty ImageUrlProperty =
             DependencyProperty.Register(nameof(ImageUrl),
                 typeof(string), typeof(TrackView),
-                new PropertyMetadata(default(string?)));
+                new PropertyMetadata(default(string?), ImagePropertiesChanged));
 
         public static readonly DependencyProperty AlternatingRowColorProperty =
             DependencyProperty.Register(nameof(AlternatingRowColor), typeof(bool), typeof(TrackView),
@@ -79,10 +79,11 @@ namespace Wavee.UI.WinUI.Components
             //if showimage = false, unload ImageBorder and set MainContent relativepanel RightOf = savedbutton
             if (ShowImage)
             {
-                var buttonsPanel = this.FindName("ImageBorder") as UIElement;
+                var buttonsPanel = this.FindName("ImageBorder") as FrameworkElement;
                 if (buttonsPanel != null)
                 {
                     buttonsPanel.Visibility = Visibility.Visible;
+                    buttonsPanel.Width = 28;
                 }
 
                 if (!string.IsNullOrEmpty(ImageUrl))
@@ -92,6 +93,8 @@ namespace Wavee.UI.WinUI.Components
                     bitmapImage.DecodePixelHeight = 24;
                     bitmapImage.DecodePixelWidth = 24;
                     bitmapImage.UriSource = new System.Uri(ImageUrl, UriKind.RelativeOrAbsolute);
+
+                    RelativePanel.SetRightOf(MainContent, "ImageBorder");
                 }
             }
             else
@@ -102,6 +105,7 @@ namespace Wavee.UI.WinUI.Components
                     ImageBorder.Visibility = Visibility.Collapsed;
                     AlbumImage.Source = null;
                     Microsoft.UI.Xaml.Markup.XamlMarkupHelper.UnloadObject(ImageBorder);
+                    RelativePanel.SetRightOf(MainContent, "SavedButton");
                 }
             }
         }

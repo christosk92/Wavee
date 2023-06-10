@@ -4,6 +4,8 @@ using System;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media.Imaging;
 using Wavee.Core.Ids;
+using Microsoft.UI.Input;
+using Wavee.UI.WinUI.Helpers;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -65,6 +67,8 @@ namespace Wavee.UI.WinUI.Components
             var buttonsPanel = this.FindName("ButtonsPanel") as UIElement;
             if (buttonsPanel != null)
                 buttonsPanel.Visibility = Visibility.Visible;
+
+            (sender as UIElement).ChangeCursor(InputSystemCursor.Create(InputSystemCursorShape.Hand));
         }
 
         private void CardView_OnPointerExited(object sender, PointerRoutedEventArgs e)
@@ -75,6 +79,7 @@ namespace Wavee.UI.WinUI.Components
                 buttonsPanel.Visibility = Visibility.Collapsed;
                 Microsoft.UI.Xaml.Markup.XamlMarkupHelper.UnloadObject(buttonsPanel);
             }
+            (sender as UIElement).ChangeCursor(InputSystemCursor.Create(InputSystemCursorShape.Arrow));
         }
     }
 }
