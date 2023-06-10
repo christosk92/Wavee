@@ -7,18 +7,26 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:components="using:Wavee.UI.WinUI.Components"
              mc:Ignorable="d">
+    <UserControl.Transitions>
+        <TransitionCollection>
+            <EntranceThemeTransition />
+        </TransitionCollection>
+    </UserControl.Transitions>
     <UserControl.Resources>
         <DataTemplate x:Key="Regular"
                       x:DataType="local:ArtistDiscographyItem">
-            <Button Padding="12" VerticalAlignment="Top"
+            <Button Padding="12"
+                    VerticalAlignment="Top"
                     Margin="0,0,16,0"
                     CornerRadius="6"
+                    x:Phase="0"
                     Tag="{x:Bind Id}"
                     BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                     BorderThickness="1"
                     Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
                 <components:CardView Title="{x:Bind Title}"
                                      Id="{x:Bind Id}"
+                                     x:Phase="1"
                                      Description="{x:Bind ReleaseDateAsStr}"
                                      Image="{x:Bind Image}" />
             </Button>

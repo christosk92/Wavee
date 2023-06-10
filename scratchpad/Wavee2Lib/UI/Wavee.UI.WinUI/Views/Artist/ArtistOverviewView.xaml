@@ -74,8 +74,9 @@
                 <DataTemplate x:DataType="local:ArtistDiscographyGroupView">
                     <local:ArtistDiscographyView Margin="0,24"
                                                  VerticalAlignment="Top"
+                                                 AlwaysHorizontal="{x:Bind AlwaysHorizontal, Mode=OneWay}"
                                                  Title="{x:Bind GroupName,Mode=OneWay}"
-                                                 CanSwitchTemplates="{x:Bind CanSwitchTemplates}"
+                                                 CanSwitchTemplates="{x:Bind CanSwitchTemplates, Mode=OneWay}"
                                                  Views="{x:Bind Views,Mode=OneWay}" />
                 </DataTemplate>
             </ItemsRepeater.ItemTemplate>

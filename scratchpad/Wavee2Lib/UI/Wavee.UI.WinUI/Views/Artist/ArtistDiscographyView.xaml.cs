@@ -24,7 +24,9 @@ namespace Wavee.UI.WinUI.Views.Artist
     public sealed partial class ArtistDiscographyView : UserControl
     {
         public static readonly DependencyProperty TitleProperty = DependencyProperty.Register(nameof(Title), typeof(string), typeof(ArtistDiscographyView), new PropertyMetadata(default(string)));
-        public static readonly DependencyProperty CanSwitchTemplatesProperty = DependencyProperty.Register(nameof(CanSwitchTemplates), typeof(bool), typeof(ArtistDiscographyView), new PropertyMetadata(default(bool)));
+        public static readonly DependencyProperty CanSwitchTemplatesProperty = DependencyProperty.Register(nameof(CanSwitchTemplates), 
+            typeof(bool), typeof(ArtistDiscographyView), new PropertyMetadata(default(bool)));
+
         public static readonly DependencyProperty ViewsProperty =
             DependencyProperty.Register(nameof(Views),
                 typeof(List<ArtistDiscographyItem>),
@@ -57,6 +59,10 @@ namespace Wavee.UI.WinUI.Views.Artist
                 if (value.Count > 0)
                 {
                     _waitForViews.TrySetResult();
+                    if (!CanSwitchTemplates && !AlwaysHorizontal)
+                    {
+                        CurrentView = new ArtistDiscographyGridView(Views);
+                    }
                 }
             }
         }
@@ -65,6 +71,12 @@ namespace Wavee.UI.WinUI.Views.Artist
         {
             get => (object)GetValue(CurrentViewProperty);
             set => SetValue(CurrentViewProperty, value);
+        }
+
+        public bool AlwaysHorizontal
+        {
+            get => (bool)GetValue(AlwaysHorizontalProperty);
+            set => SetValue(AlwaysHorizontalProperty, value);
         }
 
         private readonly TaskCompletionSource _waitForViews = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -79,13 +91,15 @@ namespace Wavee.UI.WinUI.Views.Artist
                 var key = item.Tag.ToString()!;
                 if (!_pages.TryGetValue(Title, out var pages))
                 {
-                    pages = new Dictionary<string, object>();
-
-                    pages[key] = item.Tag switch
+                    pages = new Dictionary<string, object>
                     {
-                        "grid" => new ArtistDiscographyGridView(Views),
-                        "list" => new ArtistDiscographyListView(Views) as UIElement
+                        [key] = item.Tag switch
+                        {
+                            "grid" => new ArtistDiscographyGridView(Views),
+                            "list" => new ArtistDiscographyListView(Views) as UIElement
+                        }
                     };
+
                     _pages[Title] = pages;
                     CurrentView = pages[key];
                 }
@@ -119,6 +133,22 @@ namespace Wavee.UI.WinUI.Views.Artist
 
         private readonly ConcurrentDictionary<string, Dictionary<string, object>> _pages = new();
         public static readonly DependencyProperty CurrentViewProperty = DependencyProperty.Register(nameof(CurrentView), typeof(object), typeof(ArtistDiscographyView), new PropertyMetadata(default(object)));
+        public static readonly DependencyProperty AlwaysHorizontalProperty = DependencyProperty.Register(nameof(AlwaysHorizontal), typeof(bool), typeof(ArtistDiscographyView),
+            new PropertyMetadata(default(bool), AlwaysHorizontalChanged));
+
+        private static async void AlwaysHorizontalChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            var x = (ArtistDiscographyView)d;
+            if (e.NewValue is true)
+            {
+                await x._waitForViews.Task;
+                x.CurrentView = new ArtistDiscographyHorizontalView(x.Views);
+            }
+            else if(!x.CanSwitchTemplates)
+            {
+                x.CurrentView = new ArtistDiscographyGridView(x.Views);
+            }
+        }
 
         public void ClearAll()
         {

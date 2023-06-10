@@ -7,7 +7,11 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:components="using:Wavee.UI.WinUI.Components"
              mc:Ignorable="d">
-
+    <UserControl.Transitions>
+        <TransitionCollection>
+            <EntranceThemeTransition />
+        </TransitionCollection>
+    </UserControl.Transitions>
     <UserControl.Resources>
         <DataTemplate x:Key="ArtistDiscographyTrackTemplate"
                       x:DataType="local:ArtistDiscographyTrack">

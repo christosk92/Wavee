@@ -26,9 +26,11 @@
     <None Remove="Components\TrackView.xaml" />
     <None Remove="Themes\Styles\BorderStyles.xaml" />
     <None Remove="Themes\Styles\ButtonStyles.xaml" />
+    <None Remove="Views\Artist\About\ArtistAboutSection.xaml" />
     <None Remove="Views\Artist\ArtistAboutView.xaml" />
     <None Remove="Views\Artist\ArtistConcertsView.xaml" />
     <None Remove="Views\Artist\ArtistDiscographyGridView.xaml" />
+    <None Remove="Views\Artist\ArtistDiscographyHorizontalView.xaml" />
     <None Remove="Views\Artist\ArtistDiscographyListView.xaml" />
     <None Remove="Views\Artist\ArtistDiscographyView.xaml" />
     <None Remove="Views\Artist\ArtistOverviewView.xaml" />
@@ -61,6 +63,8 @@
     <PackageReference Include="CommunityToolkit.WinUI.UI.Controls" Version="7.1.2" />
     <PackageReference Include="CommunityToolkit.WinUI.UI.Controls.Media" Version="7.1.2" />
     <PackageReference Include="CommunityToolkit.WinUI.UI.Media" Version="7.1.2" />
+    <PackageReference Include="FontAwesome6.Svg.WinUI" Version="2.5.1" />
+    <PackageReference Include="HtmlAgilityPack" Version="1.11.46" />
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.4.230518007-experimental1" />
     <PackageReference Include="ReactiveUI.WinUI" Version="19.2.1" />
     <Manifest Include="$(ApplicationManifest)" />
@@ -102,6 +106,12 @@
     <None Update="Assets\icon_album_placeholder.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <Page Update="Views\Artist\About\ArtistAboutSection.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Update="Views\Artist\ArtistDiscographyHorizontalView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Update="Components\TrackView.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>

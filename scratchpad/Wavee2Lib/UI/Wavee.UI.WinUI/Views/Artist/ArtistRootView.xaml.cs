@@ -28,6 +28,7 @@ using Wavee.UI.ViewModels.Playback;
 using DynamicData;
 using CommunityToolkit.Labs.WinUI;
 using LanguageExt.Pretty;
+using Wavee.UI.WinUI.Views.Artist.About;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -71,9 +72,10 @@ namespace Wavee.UI.WinUI.Views.Artist
 
         public void RemovedFromCache()
         {
-            _overview.ClearItems();
+            _overview?.ClearItems();
             _overview = null;
             _concerts = null;
+            _about?.Clear();
             _about = null;
             ViewModel.Destroy();
         }
@@ -132,7 +134,7 @@ namespace Wavee.UI.WinUI.Views.Artist
                 from mercuryClient in SpotifyView.Mercury
                 from response in mercuryClient.Get(url, CancellationToken.None).ToAff()
                 select response;
-            var result = await aff.Run();
+            var result = await Task.Run(async () => await aff.Run());
             var r = result.ThrowIfFail();
             using var jsonDoc = JsonDocument.Parse(r.Payload);
             var info = jsonDoc.RootElement.GetProperty("info");
@@ -208,6 +210,7 @@ namespace Wavee.UI.WinUI.Views.Artist
             static void GetView(JsonElement releases,
                 string key,
                 bool canSwitchViews,
+                bool alwaysHorizontal,
                 List<ArtistDiscographyGroupView> output,
                 AudioId artistid)
             {
@@ -323,7 +326,8 @@ namespace Wavee.UI.WinUI.Views.Artist
                     {
                         GroupName = FirstCharToUpper(key),
                         Views = albumsView,
-                        CanSwitchTemplates = canSwitchViews
+                        CanSwitchTemplates = canSwitchViews,
+                        AlwaysHorizontal = alwaysHorizontal
                     };
 
                     output.Add(newGroup);
@@ -332,13 +336,14 @@ namespace Wavee.UI.WinUI.Views.Artist
 
 
             var res = new List<ArtistDiscographyGroupView>(3);
-            GetView(releases, "albums", true, res, artistId);
-            GetView(releases, "singles", true, res, artistId);
-            GetView(releases, "compilations", false, res, artistId);
-
+            GetView(releases, "albums", true, false, res, artistId);
+            GetView(releases, "singles", true, false, res, artistId);
+            GetView(releases, "compilations", false, false, res, artistId);
+            GetView(releases, "appears_on", false, true, res, artistId);
 
 
             return new ArtistView(
+                Id: artistId,
                 Name: name,
                 ProfilePicture: profilePic,
                 HeaderImage: headerImage,
@@ -354,7 +359,10 @@ namespace Wavee.UI.WinUI.Views.Artist
             return $"{char.ToUpper(sliced[0])}{sliced[1..]}";
         }
 
-        private readonly record struct ArtistView(string Name, string ProfilePicture, string HeaderImage, ulong MonthlyListeners,
+        private readonly record struct ArtistView(
+            AudioId Id,
+            string Name, string ProfilePicture, string HeaderImage,
+            ulong MonthlyListeners,
             IReadOnlyCollection<ArtistTopTrackView> TopTracks,
             IReadOnlyCollection<ArtistDiscographyGroupView> Discography);
 
@@ -435,7 +443,7 @@ namespace Wavee.UI.WinUI.Views.Artist
                 {
                     "overview" => _overview ??= new ArtistOverviewView(artist.Discography, artist.TopTracks),
                     "concerts" => _concerts ??= new ArtistConcertsView(),
-                    "about" => (_about ??= new ArtistAboutView()) as UIElement,
+                    "about" => (_about ??= new ArtistAboutView(artist.Id.ToBase62())) as UIElement,
                     _ => throw new ArgumentOutOfRangeException()
                 };
                 MainContent.Content = content;
@@ -448,6 +456,7 @@ namespace Wavee.UI.WinUI.Views.Artist
         public required string GroupName { get; set; }
         public required List<ArtistDiscographyItem> Views { get; set; }
         public required bool CanSwitchTemplates { get; set; }
+        public required bool AlwaysHorizontal { get; set; }
     }
     public class ArtistDiscographyItem
     {
