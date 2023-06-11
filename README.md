@@ -1,7 +1,7 @@
 # Wavee
 
 # Note (6/12/2023)
-Hey guys. I wanted to address some clarification on why there's still no release. While I've mentioned multiple times that the release is close, I have to admit that I'm not satisfied with the performance, particularly in the UI section.
+Hey guys. I wanted to address some clarification on why there's still no release. While I've mentioned multiple times that the release is close, I have to admit that I'm not satisfied with the performance, particularly in the UI section. A while back I was not satisfied with the performance of the client library. It took me a while to iron that part out, and now I am really proud of the performance there. So now its the UI's turn.
 
 Perhaps some of you find it adequate. For instance, my friend said, "What do you mean? It's fast enough." However, I do not agree, and I want to emphasize that I'm not being pedantic or something.
 
