@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl x:Class="Wavee.UI.WinUI.Components.CardView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Wavee.UI.WinUI.Components"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:controls="using:CommunityToolkit.WinUI.UI.Controls"
+             xmlns:animations="using:CommunityToolkit.WinUI.UI.Animations"
+             Background="Transparent" Tapped="CardView_OnTapped"
+             PointerEntered="CardView_OnPointerEntered"
+             PointerExited="CardView_OnPointerExited"
+             mc:Ignorable="d">
+    <Button Padding="12"
+            Margin="0,0,16,0"
+            CornerRadius="6"
+            Tag="{x:Bind Id}"
+            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+            BorderThickness="1"
+            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+        <RelativePanel x:Name="MainPanel"
+                       x:FieldModifier="public">
+            <controls:ConstrainedBox x:Name="ImageBox"
+                                     RelativePanel.AlignLeftWithPanel="True"
+                                     RelativePanel.AlignRightWithPanel="True"
+                                     RelativePanel.AlignTopWithPanel="True"
+                                     AspectRatio="1:1">
+                <Image x:Name="LoadingImage"
+                       Stretch="UniformToFill" />
+            </controls:ConstrainedBox>
+
+
+
+            <Border x:Name="ButtonsPanel"
+                    PointerExited="ButtonsPanel_OnPointerExited"
+                    PointerEntered="ButtonsPanel_OnPointerEntered"
+                    RelativePanel.AlignBottomWith="ImageBox"
+                    RelativePanel.AlignLeftWithPanel="True"
+                    RelativePanel.AlignRightWithPanel="True"
+                    Visibility="Collapsed"
+                    x:Load="False">
+                <animations:Implicit.ShowAnimations>
+                    <animations:TranslationAnimation Duration="0:0:0.167"
+                                                     From="0, 25, 0"
+                                                     EasingType="Cubic"
+                                                     To="0" />
+                    <animations:OpacityAnimation  Duration="0:0:0.167"
+                                                  From="0"
+                                                  To="1.0" />
+                </animations:Implicit.ShowAnimations>
+                <animations:Implicit.HideAnimations>
+                    <animations:OpacityAnimation  Duration="0:0:0.167"
+                                                  To="0.0" />
+                    <animations:TranslationAnimation  Duration="0:0:0.167"
+                                                      From="0, 0, 0"
+                                                      To="0,25,0" />
+                </animations:Implicit.HideAnimations>
+                <RelativePanel  RelativePanel.AlignBottomWith="ImageBox"
+                                RelativePanel.AlignLeftWithPanel="True"
+                                Margin="6"
+                                RelativePanel.AlignRightWithPanel="True">
+                    <Button Padding="12"
+                            Background="{ThemeResource AcrylicInAppFillColorDefaultBrush}"
+                            CornerRadius="100"
+                            RelativePanel.AlignLeftWithPanel="True">
+                        <FontIcon FontFamily="Segoe Fluent Icons"
+                                  Glyph="&#xEB52;" />
+                    </Button>
+
+                    <Button Padding="12"
+                            Foreground="{ThemeResource ApplicationForegroundThemeBrush}"
+                            Style="{ThemeResource AccentButtonStyle}"
+                            CornerRadius="100"
+                            RelativePanel.AlignRightWithPanel="True">
+                        <FontIcon FontFamily="Segoe Fluent Icons"
+                                  Glyph="&#xF5B0;" />
+                    </Button>
+                </RelativePanel>
+            </Border>
+
+
+            <TextBlock FontSize="15"
+                       FontWeight="SemiBold"
+                       Text="{x:Bind Title, Mode=OneWay}"
+                       TextWrapping="Wrap"
+                       Margin="0,6,0,0"
+                       RelativePanel.Below="ImageBox"
+                       RelativePanel.AlignLeftWithPanel="True"
+                       RelativePanel.AlignRightWithPanel="True"
+                       x:Name="TitleBlock"
+                       MaxLines="2" />
+            <TextBlock Text="{x:Bind Description, Mode=OneWay}"
+                       TextWrapping="Wrap"
+                       x:Name="DescriptionBox"
+                       x:FieldModifier="public"
+                       RelativePanel.AlignLeftWithPanel="True"
+                       RelativePanel.AlignRightWithPanel="True"
+                       RelativePanel.Below="TitleBlock"
+                       Opacity=".8"
+                       MaxLines="2" />
+        </RelativePanel>
+    </Button>
+</UserControl>

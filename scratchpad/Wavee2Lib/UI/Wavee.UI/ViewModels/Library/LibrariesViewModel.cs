@@ -6,6 +6,7 @@ using LanguageExt;
 using ReactiveUI;
 using System.Text.Json;
 using Wavee.Core.Ids;
+using Wavee.UI.Client;
 
 namespace Wavee.UI.ViewModels.Library;
 
@@ -70,7 +71,7 @@ public sealed class LibrariesViewModel : ReactiveObject
 
     private static async Task<Seq<SpotifyLibaryItem>> FetchLibraryComponent(string key, string userId, CancellationToken ct)
     {
-        var libraryAff = State.Instance.Client.GetLibarryComponent(key, userId, ct);
+        var libraryAff = SpotifyView.GetLibaryComponent(key, userId, ct);
 
         var response = await libraryAff.Run();
         var k = response.ThrowIfFail();

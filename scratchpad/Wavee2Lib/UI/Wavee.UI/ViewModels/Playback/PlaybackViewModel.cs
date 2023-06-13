@@ -12,6 +12,7 @@ using Wavee.Player;
 using Wavee.Spotify.Infrastructure.Mercury.Models;
 using Wavee.Spotify.Infrastructure.PrivateApi.Contracts.Response;
 using Wavee.Spotify.Infrastructure.Remote.Contracts;
+using Wavee.UI.Client;
 
 namespace Wavee.UI.ViewModels.Playback;
 

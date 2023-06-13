@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl x:Class="Wavee.UI.WinUI.Views.Artist.ArtistPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Wavee.UI.WinUI.Views.Artist"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:labs="using:CommunityToolkit.Labs.WinUI"
+             xmlns:ui="using:CommunityToolkit.WinUI.UI"
+             xmlns:animations="using:CommunityToolkit.WinUI.UI.Animations"
+             xmlns:components="using:Wavee.UI.WinUI.Components"
+             SizeChanged="ArtistPage_OnSizeChanged"
+             Loaded="ArtistPage_OnLoaded"
+             mc:Ignorable="d">
+    <UserControl.Transitions>
+        <TransitionCollection>
+            <EntranceThemeTransition />
+        </TransitionCollection>
+    </UserControl.Transitions>
+    <UserControl.Resources>
+        <labs:TransitionHelper x:Name="BaseTrans">
+            <labs:TransitionConfig Id="name"
+                                   ScaleMode="None" />
+            <labs:TransitionConfig EnableClipAnimation="true"
+                                   Id="buttonspanel" />
+            <labs:TransitionConfig Id="background"
+                                   ScaleMode="Scale" />
+            <labs:TransitionConfig Id="image"
+                                   ScaleMode="Scale" />
+        </labs:TransitionHelper>
+    </UserControl.Resources>
+    <Grid>
+        <ScrollViewer  ui:ScrollViewerExtensions.VerticalScrollBarMargin="0,34,0,110"
+                       VerticalAlignment="Top"
+                       ViewChanged="ScrollViewer_OnViewChanged">
+            <StackPanel>
+                <Grid VerticalAlignment="Top"
+                      x:Name="ImageT">
+                    <components:ImageTransitionControl x:Name="HeaderImage"
+                                                       Grid.ColumnSpan="2"
+                                                       VerticalAlignment="Stretch"
+                                                       TransitionDuration="00:00:01" />
+                    <StackPanel Margin="24,0,0,-12"
+                                x:Name="MetadataPnale"
+                                labs:TransitionHelper.Id="background"
+                                Visibility="Collapsed"
+                                ui:VisualExtensions.NormalizedCenterPoint="0.5"
+                                VerticalAlignment="Bottom"
+                                Orientation="Horizontal">
+                        <PersonPicture x:Name="AlternativeArtistImage"
+                                       VerticalAlignment="Bottom"
+                                       Visibility="Collapsed"
+                                       Margin="0,0,24,0"
+                                       labs:TransitionHelper.Id="image"
+                                       Width="150"
+                                       Height="150"
+                                       Grid.Column="0" />
+                        <StackPanel>
+                            <animations:Explicit.Animations>
+                                <animations:AnimationSet x:Name="ShowPanelAnim">
+                                    <animations:TranslationAnimation Delay="0:0:0.2"
+                                                                     Duration="0:0:1"
+                                                                     From="0, 50, 0"
+                                                                     To="0" />
+                                    <animations:OpacityAnimation Delay="0:0:0.2"
+                                                                 Duration="0:0:1"
+                                                                 From="0"
+                                                                 To="1.0" />
+                                </animations:AnimationSet>
+                            </animations:Explicit.Animations>
+                            <TextBlock Text="VERIFIED ARTIST"
+                                       FontWeight="Bold"
+                                       FontSize="12"
+                                       Opacity=".8" />
+                            <TextBlock FontSize="64"
+                                       labs:TransitionHelper.Id="name"
+                                       FontWeight="Bold"
+                                       x:Name="ArtistNameBlock" />
+
+                            <TextBlock FontWeight="SemiBold"
+                                       x:Name="MonthlyListenersBlock" />
+
+                            <StackPanel Orientation="Horizontal"
+                                        Spacing="8"
+                                        labs:TransitionHelper.Id="buttonspanel"
+                                        Margin="0,12,0,0">
+                                <Button CornerRadius="100"
+                                        Padding="9"
+                                        x:Name="PlayLargeButton"
+                                        Style="{ThemeResource AccentButtonStyle}">
+                                    <FontIcon FontFamily="Segoe Fluent Icons"
+                                              Glyph="&#xE102;" />
+                                </Button>
+
+                                <Button Padding="8"
+                                        BorderThickness="1"
+                                        Content="{x:Bind FollowingToContent(ViewModel.IsFollowing), Mode=OneWay}"
+                                        x:Name="FollowButton" />
+
+
+                                <Border CornerRadius="4"
+                                        Padding="0"
+                                        Margin="0,4,12,0"
+                                        HorizontalAlignment="Left"
+                                        VerticalAlignment="Top"
+                                        Background="{ThemeResource AcrylicBackgroundFillColorBaseBrush}">
+                                    <labs:Segmented SelectionChanged="Selector_OnSelectionChanged"
+                                                    SelectedIndex="0">
+                                        <labs:SegmentedItem Tag="overview"
+                                                            Content="Overview" />
+                                        <labs:SegmentedItem Tag="about"
+                                                            Content="About" />
+                                        <labs:SegmentedItem Tag="concerts"
+                                                            IsEnabled="False"
+                                                            Content="Concerts" />
+                                    </labs:Segmented>
+                                </Border>
+                            </StackPanel>
+                        </StackPanel>
+                    </StackPanel>
+                </Grid>
+
+                <ContentPresenter VerticalAlignment="Stretch"
+                                  VerticalContentAlignment="Stretch"
+                                  HorizontalAlignment="Stretch"
+                                  HorizontalContentAlignment="Stretch"
+                                  x:Name="MainContent" />
+            </StackPanel>
+        </ScrollViewer>
+
+        <Border x:Name="SecondMetadataPanel"
+                Visibility="Collapsed"
+                labs:TransitionHelper.Id="background"
+                Height="100"
+                Margin="18"
+                Background="{ThemeResource AcrylicBackgroundFillColorDefaultBrush}"
+                VerticalAlignment="Top"
+                HorizontalAlignment="Stretch"
+                CornerRadius="8"
+                BorderThickness="1"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
+            <StackPanel DataContext="{x:Bind}"
+                        Spacing="8"
+                        Orientation="Horizontal">
+                <PersonPicture Width="70"
+                               Margin="12"
+                               Height="70"
+                               labs:TransitionHelper.Id="image"
+                               x:Name="SecondPersonPicture" />
+                <TextBlock labs:TransitionHelper.Id="name"
+                           VerticalAlignment="Center"
+                           FontSize="34"
+                           FontWeight="Bold"
+                           Text="{x:Bind ArtistNameBlock.Text, Mode=OneWay}" />
+                <Button Style="{ThemeResource AccentButtonStyle}"
+                        CornerRadius="50"
+                        Padding="8"
+                        VerticalAlignment="Center"
+                        Width="38"
+                        Height="38"
+                        labs:TransitionHelper.Id="buttonspanel">
+                    <FontIcon FontFamily="Segoe Fluent Icons"
+                              Glyph="&#xE102;" />
+                </Button>
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>

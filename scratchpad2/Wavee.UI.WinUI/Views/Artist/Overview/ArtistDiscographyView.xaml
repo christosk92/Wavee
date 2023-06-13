@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl x:Class="Wavee.UI.WinUI.Views.Artist.Overview.ArtistDiscographyView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Wavee.UI.WinUI.Views.Artist.Overview"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:labs="using:CommunityToolkit.Labs.WinUI"
+             mc:Ignorable="d">
+
+    <Grid VerticalAlignment="Top">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition />
+        </Grid.RowDefinitions>
+
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBlock FontSize="16"
+                       VerticalAlignment="Center"
+                       FontWeight="SemiBold"
+                       Text="{x:Bind Title, Mode=OneWay}" />
+
+            <labs:Segmented SelectedIndex="0"
+                            SelectionChanged="SwitchTemplatesControl_OnSelectionChanged"
+                            x:Name="SwitchTemplatesControl"
+                            x:Load="{x:Bind CanSwitchTemplates, Mode=OneWay}"
+                            Grid.Column="1">
+                <labs:SegmentedItem Tag="grid">
+                    <labs:SegmentedItem.Icon>
+                        <FontIcon FontFamily="Segoe Fluent Icons"
+                                  Glyph="&#xF0E2;" />
+                    </labs:SegmentedItem.Icon>
+                </labs:SegmentedItem>
+                <labs:SegmentedItem Tag="list">
+                    <labs:SegmentedItem.Icon>
+                        <FontIcon FontFamily="Segoe Fluent Icons"
+                                  Glyph="&#xE8FD;" />
+                    </labs:SegmentedItem.Icon>
+                </labs:SegmentedItem>
+            </labs:Segmented>
+        </Grid>
+        <ContentPresenter Grid.Row="1"
+                          Margin="0,12,0,0"
+                          VerticalContentAlignment="Top"
+                          VerticalAlignment="Top"
+                          Content="{x:Bind CurrentView, Mode=OneWay}"
+                          HorizontalContentAlignment="Stretch"
+                          x:Name="ItemsView" />
+    </Grid>
+</UserControl>

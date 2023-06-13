@@ -11,6 +11,7 @@ using Microsoft.UI.Input;
 using Microsoft.UI.Xaml.Media.Imaging;
 using Wavee.Core.Ids;
 using Wavee.Spotify.Infrastructure.Mercury.Models;
+using Wavee.UI.Client.Artist;
 using Wavee.UI.ViewModels.Library;
 using Wavee.UI.ViewModels.Playback;
 using Wavee.UI.WinUI.Views.Artist;

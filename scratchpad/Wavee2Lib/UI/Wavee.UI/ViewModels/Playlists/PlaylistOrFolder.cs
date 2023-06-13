@@ -8,20 +8,20 @@ public sealed class PlaylistOrFolder : ReactiveObject
 {
     private int _originalIndex;
 
-    public PlaylistOrFolder(Either<PlaylistFolderViewModel, PlaylistViewModel> value)
+    public PlaylistOrFolder(Either<PlaylistFolderSidebarItem, PlaylistSidebarItem> value)
     {
         Value = value;
         //setup a listener for when the name changes
     }
 
-    public Either<PlaylistFolderViewModel, PlaylistViewModel> Value { get; }
+    public Either<PlaylistFolderSidebarItem, PlaylistSidebarItem> Value { get; }
 
     public string Name => Value.Match(
         folder => folder.Name,
         playlist => playlist.Name
     );
 
-    public ObservableCollection<PlaylistViewModel> ItemsIfFolder => Value.Match(
+    public ObservableCollection<PlaylistSidebarItem> ItemsIfFolder => Value.Match(
         folder => folder.Items,
         playlist => throw new InvalidOperationException("This is not a folder")
     );

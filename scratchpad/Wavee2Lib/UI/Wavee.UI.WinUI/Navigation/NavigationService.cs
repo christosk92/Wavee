@@ -7,6 +7,7 @@ using Microsoft.UI.Xaml.Controls;
 using Wavee.UI.WinUI.Views.Artist;
 using Wavee.UI.WinUI.Views.Browse;
 using Wavee.UI.WinUI.Views.Home;
+using Wavee.UI.WinUI.Views.Playlist;
 
 namespace Wavee.UI.WinUI.Navigation;
 public record CachedPage(object Page, object? WithParameter, int InsertedAt);
@@ -29,7 +30,8 @@ public sealed class NavigationService
         {
             typeof(HomeView),
             typeof(BrowseView),
-            typeof(ArtistRootView)
+            typeof(ArtistRootView),
+            typeof(PlaylistView)
         };
 
         static void RegisterConstructor(Type type)

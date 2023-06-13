@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl x:Class="Wavee.UI.WinUI.Views.Artist.Overview.ArtistDiscographyGridView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Wavee.UI.WinUI.Views.Artist.Overview"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:components="using:Wavee.UI.WinUI.Components"
+             xmlns:artist="using:Wavee.UI.Core.Contracts.Artist"
+             mc:Ignorable="d">
+
+    <UserControl.Transitions>
+        <TransitionCollection>
+            <EntranceThemeTransition />
+        </TransitionCollection>
+    </UserControl.Transitions>
+    <UserControl.Resources>
+        <DataTemplate x:Key="Regular"
+                      x:DataType="artist:ArtistDiscographyItem">
+            <components:CardView Title="{x:Bind Title}"
+                                 Id="{x:Bind Id}"
+                                 x:Phase="1"
+                                 VerticalAlignment="Top"
+                                 Description="{x:Bind ReleaseDateAsStr}"
+                                 Image="{x:Bind Image}" />
+        </DataTemplate>
+        <RecyclePool x:Key="RecyclePool" />
+        <RecyclingElementFactory x:Key="elementFactory"
+                                 SelectTemplateKey="ElementFactory_OnSelectTemplateKey"
+                                 RecyclePool="{StaticResource RecyclePool}">
+            <RecyclingElementFactory.Templates>
+                <StaticResource x:Key="regular"
+                                ResourceKey="Regular" />
+            </RecyclingElementFactory.Templates>
+        </RecyclingElementFactory>
+    </UserControl.Resources>
+    <ItemsRepeater ItemTemplate="{StaticResource elementFactory}"
+                   VerticalAlignment="Top"
+                   ItemsSource="{x:Bind Items}">
+        <ItemsRepeater.Layout>
+            <UniformGridLayout MinItemWidth="220"
+                               ItemsStretch="Uniform"
+                               MinItemHeight="280"
+                               MinRowSpacing="12"
+                               ItemsJustification="Center"
+                               MinColumnSpacing="6" />
+        </ItemsRepeater.Layout>
+        <!-- <GridView.ItemContainerStyle> -->
+        <!--     <Style TargetType="GridViewItem" BasedOn="{StaticResource DefaultGridViewItemStyle}"> -->
+        <!--         <Setter Property="Margin" Value="0,0,14,24"/> -->
+        <!--         <Setter Property="Padding" Value="2"/> -->
+        <!--     </Style> -->
+        <!-- </GridView.ItemContainerStyle> -->
+    </ItemsRepeater>
+</UserControl>

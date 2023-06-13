@@ -1,0 +1,264 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl
+    x:Class="Wavee.UI.WinUI.Views.Artist.About.ArtistAboutView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:Wavee.UI.WinUI.Views.Artist"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:svg="using:FontAwesome6.Svg"
+    xmlns:about="using:Wavee.UI.WinUI.Views.Artist.About"
+    xmlns:media="using:CommunityToolkit.WinUI.UI.Media"
+    xmlns:winUi="using:CommunityToolkit.Labs.WinUI"
+    mc:Ignorable="d">
+
+
+    <Grid Margin="0,24,0,0"
+          HorizontalAlignment="Stretch"
+          VerticalAlignment="Stretch">
+        <StackPanel>
+            <about:ArtistAboutSection x:Name="Gallery"
+                                           Title="Gallery">
+                <about:ArtistAboutSection.Icon>
+                    <FontIcon FontFamily="Segoe Fluent Icons"
+                              FontSize="22"
+                              Glyph="&#xE158;" />
+                </about:ArtistAboutSection.Icon>
+                <Grid x:Name="GalleryGrid"
+                      Height="500"
+                      Margin="12,0,0,0"
+                      ColumnSpacing="8"
+                      PointerEntered="GalleryGrid_OnPointerEntered"
+                      PointerExited="GalleryGrid_OnPointerExited">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition x:Name="LeftGrid"
+                                          Width="2*" />
+                        <!--  These columns are used in the case of 2|(1/1) OR 1/1  -->
+                        <ColumnDefinition x:Name="RightGrid" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition x:Name="TopGrid" />
+                        <!--  These rows are used in the case of 1|(1/1)  -->
+                        <RowDefinition x:Name="BottomGrid" />
+                    </Grid.RowDefinitions>
+                    <Grid Grid.RowSpan="2"
+                          Grid.Column="0">
+                        <Border x:Name="LeftImage" />
+                    </Grid>
+                    <Grid x:Name="TopRightImageGr"
+                          Grid.Row="0"
+                          Grid.Column="1">
+                        <Image Source="{x:Bind TopRightImage.Source}"
+                               Stretch="Fill" />
+                        <Border Margin="-1"
+                                BorderThickness="1">
+                            <Border.Background>
+                                <media:BackdropBlurBrush Amount="100" />
+                            </Border.Background>
+                        </Border>
+                        <Image x:Name="TopRightImage"
+                               Stretch="UniformToFill" />
+                    </Grid>
+
+                    <Grid Grid.Row="1"
+                          Grid.Column="1">
+                        <Image Source="{x:Bind BottomRightImage.Source}"
+                               Stretch="Fill" />
+                        <Border Margin="-1"
+                                BorderThickness="1">
+                            <Border.Background>
+                                <media:BackdropBlurBrush Amount="100" />
+                            </Border.Background>
+                        </Border>
+                        <Image x:Name="BottomRightImage"
+                               Stretch="Uniform" />
+                    </Grid>
+                </Grid>
+            </about:ArtistAboutSection>
+
+            <about:ArtistAboutSection x:Name="Biographies"
+                                           Title="Biography">
+                <about:ArtistAboutSection.Icon>
+                    <FontIcon VerticalAlignment="Center"
+                              FontFamily="Segoe Fluent Icons"
+                              FontSize="22"
+                              Glyph="&#xE136;" />
+                </about:ArtistAboutSection.Icon>
+                <StackPanel Margin="12,0,0,0">
+                    <winUi:Segmented x:Name="BiographySegments"
+                                     SelectedIndex="0"
+                                     SelectionChanged="BiographySegments_OnSelectionChanged" />
+
+                    <TextBlock x:Name="BiographyContent"
+                               MaxWidth="900"
+                               Margin="0,24,24,12"
+                               HorizontalAlignment="Left"
+                               FontSize="14"
+                               TextWrapping="Wrap" />
+
+                    <StackPanel x:Name="PostedByArtist"
+                                Margin="0,0,0,24"
+                                HorizontalAlignment="Left"
+                                Orientation="Horizontal">
+                        <PersonPicture x:Name="PostedByPicture"
+                                       Width="48"
+                                       Height="48" />
+                        <StackPanel Margin="6,0,3,0"
+                                    VerticalAlignment="Center"
+                                    Orientation="Vertical">
+                            <TextBlock VerticalAlignment="Center"
+                                       FontSize="12"
+                                       Opacity=".8"
+                                       Text="Posted by" />
+                            <TextBlock Margin="0,-2,0,0"
+                                       VerticalAlignment="Center"
+                                       FontSize="18"
+                                       FontWeight="SemiBold"
+                                       Text="{x:Bind Info.Name, Mode=OneWay}" />
+                        </StackPanel>
+                    </StackPanel>
+                </StackPanel>
+            </about:ArtistAboutSection>
+
+            <about:ArtistAboutSection x:Name="GeneralInfo"
+                                           Title="Info">
+                <about:ArtistAboutSection.Icon>
+                    <FontIcon VerticalAlignment="Center"
+                              FontFamily="Segoe Fluent Icons"
+                              FontSize="22"
+                              Glyph="&#xEBDA;" />
+                </about:ArtistAboutSection.Icon>
+
+                <Grid Margin="12,12"
+                      ColumnSpacing="24">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel VerticalAlignment="Center"
+                                Spacing="24">
+                        <StackPanel Orientation="Horizontal"
+                                    Spacing="12">
+                            <FontIcon VerticalAlignment="Center"
+                                      FontFamily="Segoe Fluent Icons"
+                                      FontSize="24"
+                                      Glyph="&#xE125;" />
+                            <StackPanel Orientation="Vertical">
+                                <TextBlock FontSize="14"
+                                           Opacity=".8"
+                                           Text="Monthly listeners" />
+                                <TextBlock x:Name="MonthlyListenersBlock"
+                                           FontSize="24"
+                                           FontWeight="SemiBold"
+                                           Text="{x:Bind FormatMonthlyListeners(Info.MonthlyListeners), Mode=OneWay}" />
+                            </StackPanel>
+                        </StackPanel>
+
+                        <StackPanel Orientation="Horizontal"
+                                    Spacing="12">
+                            <FontIcon VerticalAlignment="Center"
+                                      FontFamily="Segoe Fluent Icons"
+                                      FontSize="24"
+                                      Glyph="&#xEB52;" />
+                            <StackPanel Orientation="Vertical">
+                                <TextBlock FontSize="14"
+                                           Opacity=".8"
+                                           Text="Followers" />
+                                <TextBlock x:Name="FollowersBlock"
+                                           FontSize="24"
+                                           FontWeight="SemiBold"
+                                           Text="{x:Bind FormatMonthlyListeners(Info.Followers), Mode=OneWay}" />
+                            </StackPanel>
+                        </StackPanel>
+
+                    </StackPanel>
+                    <StackPanel x:Name="LinksPanel"
+                                Grid.Column="1"
+                                Margin="48,0">
+                        <StackPanel Margin="0,0,0,8"
+                                    Orientation="Horizontal"
+                                    Spacing="8">
+                            <FontIcon FontFamily="Segoe Fluent Icons"
+                                      Glyph="&#xE167;" />
+                            <TextBlock VerticalAlignment="Center"
+                                       FontWeight="SemiBold"
+                                       Text="Links" />
+                        </StackPanel>
+
+                        <ItemsRepeater ItemsSource="{x:Bind Info.Links, Mode=OneWay}">
+                            <ItemsRepeater.ItemTemplate>
+                                <DataTemplate x:DataType="about:ArtistLink">
+                                    <StackPanel Orientation="Horizontal"
+                                                Spacing="0">
+                                        <svg:SvgAwesome Width="18"
+                                                        Height="18"
+                                                        Icon="{x:Bind GetIcon(Key)}" />
+                                        <HyperlinkButton Content="{x:Bind Key}"
+                                                         NavigateUri="{x:Bind Ref}" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ItemsRepeater.ItemTemplate>
+                        </ItemsRepeater>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="2"
+                                Orientation="Horizontal">
+                        <Rectangle Width=".5"
+                                   Margin="12,0,12,0"
+                                   Fill="LightGray" />
+                        <StackPanel VerticalAlignment="Center"
+                                    Orientation="Horizontal"
+                                    Spacing="4">
+                            <FontIcon VerticalAlignment="Center"
+                                      FontFamily="Segoe Fluent Icons"
+                                      Glyph="&#xE707;" />
+                            <TextBlock VerticalAlignment="Center"
+                                       Text="Where people listen" />
+                        </StackPanel>
+                    </StackPanel>
+
+                    <ListView Grid.Column="3"
+                              VerticalAlignment="Stretch"
+                              ItemsSource="{x:Bind Info.City}"
+                              ScrollViewer.HorizontalScrollBarVisibility="Hidden"
+                              ScrollViewer.HorizontalScrollMode="Enabled"
+                              SelectionMode="None">
+                        <ListView.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <ItemsWrapGrid VerticalAlignment="Center"
+                                               ItemHeight="40"
+                                               ItemWidth="200"
+                                               MaximumRowsOrColumns="3"
+                                               Orientation="Vertical" />
+                            </ItemsPanelTemplate>
+                        </ListView.ItemsPanel>
+
+                        <ListView.ItemTemplate>
+                            <DataTemplate x:DataType="about:ArtistCity">
+                                <StackPanel Orientation="Horizontal"
+                                            Spacing="8">
+                                    <TextBlock VerticalAlignment="Center"
+                                               FontSize="18"
+                                               FontWeight="Bold"
+                                               Text="{x:Bind FormatIndex(Index)}" />
+                                    <StackPanel Orientation="Vertical">
+                                        <TextBlock FontSize="16"
+                                                   Text="{x:Bind FormatDisplayName(City, Country)}" />
+                                        <TextBlock FontSize="12"
+                                                   FontWeight="SemiBold"
+                                                   Opacity=".8"
+                                                   Text="{x:Bind FormatListeners(Listeners)}" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                </Grid>
+            </about:ArtistAboutSection>
+
+            <Border Height="100" />
+        </StackPanel>
+    </Grid>
+</UserControl>

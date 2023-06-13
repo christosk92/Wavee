@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl x:Class="Wavee.UI.WinUI.Views.Playlist.PlaylistView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:specific="using:Wavee.UI.ViewModels.Playlists.Specific"
+             xmlns:components="using:Wavee.UI.WinUI.Components"
+             xmlns:winUi="using:Wavee.UI.WinUI"
+             mc:Ignorable="d">
+    <UserControl.Transitions>
+        <TransitionCollection>
+            <EntranceThemeTransition />
+        </TransitionCollection>
+    </UserControl.Transitions>
+    <UserControl.Resources>
+        <DataTemplate x:Key="RegularTrack"
+                      x:DataType="specific:PlaylistTrackViewModel">
+            <components:TrackView VerticalAlignment="Stretch"
+                                  ShowImage="False"
+                                  Height="38"
+                                  Index="{x:Bind OriginalIndex}"
+                                  Id="{x:Bind Id}"
+                                  AlternatingRowColor="True"
+                                  VerticalContentAlignment="Stretch"
+                                  HorizontalAlignment="Stretch"
+                                  HorizontalContentAlignment="Stretch">
+                <components:TrackView.View>
+                    <Grid ColumnSpacing="8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="28" />
+                            <ColumnDefinition Width=".8*" />
+                            <ColumnDefinition Width=".8*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <Border CornerRadius="4"
+                                Height="28"
+                                VerticalAlignment="Center">
+                            <Image Source="{x:Bind SmallestImage}"
+                                   x:Phase="2" />
+                        </Border>
+                        <TextBlock Grid.Column="1"
+                                   x:Phase="1"
+                                   VerticalAlignment="Center"
+                                   Text="{x:Bind View.Name}" />
+                    </Grid>
+                </components:TrackView.View>
+            </components:TrackView>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <Grid>
+        <ProgressBar IsIndeterminate="True"
+                     VerticalAlignment="Top"
+                     Visibility="{x:Bind IsBusyVisibility(ViewModel.IsBusy), Mode=OneWay}" />
+        <ListView ItemsSource="{x:Bind ViewModel.Tracks}"
+                  x:Name="Lv"
+                  Loaded="Lv_OnLoaded"
+                  Unloaded="Lv_OnUnloaded"
+                  ItemTemplate="{StaticResource RegularTrack}">
+            <ListView.ItemContainerTransitions>
+                <TransitionCollection>
+                    <!-- Animate when items are removed, 
+                 but don't stagger the animation across columns. -->
+                    <AddDeleteThemeTransition />
+                    <ContentThemeTransition />
+                    <ReorderThemeTransition />
+                </TransitionCollection>
+            </ListView.ItemContainerTransitions>
+        </ListView>
+    </Grid>
+</UserControl>

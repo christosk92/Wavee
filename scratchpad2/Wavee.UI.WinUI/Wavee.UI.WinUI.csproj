@@ -1,0 +1,165 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<OutputType>WinExe</OutputType>
+		<TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+		<TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+		<RootNamespace>Wavee.UI.WinUI</RootNamespace>
+		<ApplicationManifest>app.manifest</ApplicationManifest>
+		<Platforms>x86;x64;ARM64</Platforms>
+		<RuntimeIdentifiers>win10-x86;win10-x64;win10-arm64</RuntimeIdentifiers>
+		<PublishProfile>win10-$(Platform).pubxml</PublishProfile>
+		<UseWinUI>true</UseWinUI>
+		<EnableMsixTooling>true</EnableMsixTooling>
+		<WindowsPackageType>None</WindowsPackageType>
+		<SupportedOSPlatformVersion>10.0.19041.0</SupportedOSPlatformVersion>
+	</PropertyGroup>
+	<ItemGroup>
+		<Content Remove="Assets\amb.png" />
+		<Content Remove="Assets\Fonts\MediaPlayerIcons.ttf" />
+	</ItemGroup>
+	<ItemGroup>
+		<None Remove="Assets\spotify.png" />
+		<None Remove="Components\ArtistCardView.xaml" />
+		<None Remove="Components\CardView.xaml" />
+		<None Remove="Components\ImageTransitionControl.xaml" />
+		<None Remove="Components\SidebarControl.xaml" />
+		<None Remove="Components\TrackView.xaml" />
+		<None Remove="Themes\BorderStyles.xaml" />
+		<None Remove="Views\Artist\About\ArtistConcertsView.xaml" />
+		<None Remove="Views\Artist\ArtistAboutView.xaml" />
+		<None Remove="Views\Artist\ArtistPage.xaml" />
+		<None Remove="Views\Artist\Overview\ArtistDiscographyGridView.xaml" />
+		<None Remove="Views\Artist\Overview\ArtistDiscographyHorizontalView.xaml" />
+		<None Remove="Views\Artist\Overview\ArtistDiscographyListView.xaml" />
+		<None Remove="Views\Artist\Overview\ArtistDiscographyView.xaml" />
+		<None Remove="Views\Artist\Overview\ArtistOverviewView.xaml" />
+		<None Remove="Views\Home\HomePage.xaml" />
+		<None Remove="Views\Login\LoginView.xaml" />
+		<None Remove="Views\Playlist\PlaylistPage.xaml" />
+		<None Remove="Views\Shell\ShellView.xaml" />
+	</ItemGroup>
+	<ItemGroup>
+		<PublishReadyToRunExclude Include="LanguageExt.Core.dll" />
+	</ItemGroup>
+	<ItemGroup>
+		<Content Include="Assets\SplashScreen.scale-200.png" />
+		<Content Include="Assets\LockScreenLogo.scale-200.png" />
+		<Content Include="Assets\Square150x150Logo.scale-200.png" />
+		<Content Include="Assets\Square44x44Logo.scale-200.png" />
+		<Content Include="Assets\Square44x44Logo.targetsize-24_altform-unplated.png" />
+		<Content Include="Assets\StoreLogo.png" />
+		<Content Include="Assets\Wide310x150Logo.scale-200.png" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="CommunityToolkit.Labs.WinUI.SegmentedControl" Version="0.0.3" />
+		<PackageReference Include="CommunityToolkit.Labs.WinUI.Shimmer" Version="0.0.1" />
+		<PackageReference Include="CommunityToolkit.Labs.WinUI.TokenView" Version="0.0.6" />
+		<PackageReference Include="CommunityToolkit.Labs.WinUI.TransitionHelper" Version="0.0.1" />
+		<PackageReference Include="Microsoft.Windows.CsWinRT" Version="2.0.3" />
+		<PackageReference Include="Microsoft.WindowsAppSDK" Version="1.4.230518007-experimental1" />
+		<Manifest Include="$(ApplicationManifest)" />
+	</ItemGroup>
+
+	<!-- 
+    Defining the "Msix" ProjectCapability here allows the Single-project MSIX Packaging
+    Tools extension to be activated for this project even if the Windows App SDK Nuget
+    package has not yet been restored.
+  -->
+	<ItemGroup Condition="'$(DisableMsixProjectCapabilityAddedByProject)'!='true' and '$(EnableMsixTooling)'=='true'">
+		<ProjectCapability Include="Msix" />
+	</ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\Wavee.UI\Wavee.UI.csproj" />
+	</ItemGroup>
+	<ItemGroup>
+		<Page Update="Views\Login\LoginView.xaml">
+			<Generator>MSBuild:Compile</Generator>
+		</Page>
+	</ItemGroup>
+	<ItemGroup>
+		<Page Update="Views\Shell\ShellView.xaml">
+			<Generator>MSBuild:Compile</Generator>
+		</Page>
+	</ItemGroup>
+	<ItemGroup>
+		<Folder Include="Extensions\Markup\" />
+		<Folder Include="Views\Artist\Concert\" />
+	</ItemGroup>
+	<ItemGroup>
+		<Content Update="Assets\spotify.png">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>
+	<ItemGroup>
+		<None Update="Assets\amb.png">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="Assets\Fonts\MediaPlayerIcons.ttf">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+		<Page Update="Themes\BorderStyles.xaml">
+			<Generator>MSBuild:Compile</Generator>
+		</Page>
+		<Page Update="Views\Artist\ArtistAboutView.xaml">
+			<Generator>MSBuild:Compile</Generator>
+		</Page>
+		<Page Update="Views\Artist\About\ArtistConcertsView.xaml">
+			<Generator>MSBuild:Compile</Generator>
+		</Page>
+		<Page Update="Views\Artist\Overview\ArtistDiscographyHorizontalView.xaml">
+			<Generator>MSBuild:Compile</Generator>
+		</Page>
+		<Page Update="Views\Artist\Overview\ArtistDiscographyListView.xaml">
+			<Generator>MSBuild:Compile</Generator>
+		</Page>
+		<Page Update="Views\Artist\Overview\ArtistDiscographyGridView.xaml">
+			<Generator>MSBuild:Compile</Generator>
+		</Page>
+		<Page Update="Components\TrackView.xaml">
+			<Generator>MSBuild:Compile</Generator>
+		</Page>
+		<Page Update="Views\Artist\Overview\ArtistDiscographyView.xaml">
+			<Generator>MSBuild:Compile</Generator>
+		</Page>
+		<Page Update="Views\Artist\Overview\ArtistOverviewView.xaml">
+			<Generator>MSBuild:Compile</Generator>
+		</Page>
+		<Page Update="Components\ImageTransitionControl.xaml">
+			<Generator>MSBuild:Compile</Generator>
+		</Page>
+		<Page Update="Views\Artist\ArtistPage.xaml">
+			<Generator>MSBuild:Compile</Generator>
+		</Page>
+		<Page Update="Components\ArtistCardView.xaml">
+			<Generator>MSBuild:Compile</Generator>
+		</Page>
+		<Page Update="Components\CardView.xaml">
+			<Generator>MSBuild:Compile</Generator>
+		</Page>
+	</ItemGroup>
+	<ItemGroup>
+		<Page Update="Views\Home\HomePage.xaml">
+			<Generator>MSBuild:Compile</Generator>
+		</Page>
+	</ItemGroup>
+	<ItemGroup>
+		<Page Update="Views\Playlist\PlaylistPage.xaml">
+			<Generator>MSBuild:Compile</Generator>
+		</Page>
+	</ItemGroup>
+	<ItemGroup>
+		<Page Update="Components\SidebarControl.xaml">
+			<Generator>MSBuild:Compile</Generator>
+		</Page>
+	</ItemGroup>
+
+	<!-- 
+    Defining the "HasPackageAndPublishMenuAddedByProject" property here allows the Solution 
+    Explorer "Package and Publish" context menu entry to be enabled for this project even if 
+    the Windows App SDK Nuget package has not yet been restored.
+  -->
+	<PropertyGroup Condition="'$(DisableHasPackageAndPublishMenuAddedByProject)'!='true' and '$(EnableMsixTooling)'=='true'">
+		<HasPackageAndPublishMenu>true</HasPackageAndPublishMenu>
+	</PropertyGroup>
+</Project>

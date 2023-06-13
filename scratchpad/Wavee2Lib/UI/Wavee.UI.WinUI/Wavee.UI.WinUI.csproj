@@ -37,6 +37,7 @@
     <None Remove="Views\Artist\ArtistRootView.xaml" />
     <None Remove="Views\Browse\BrowseVIew.xaml" />
     <None Remove="Views\Home\HomeView.xaml" />
+    <None Remove="Views\Playlist\PlaylistView.xaml" />
     <None Remove="Views\Shell\ShellView.xaml" />
     <None Remove="Views\Shell\SidebarControl.xaml" />
     <None Remove="Views\SignIn\EnterCredentialsView.xaml" />
@@ -106,6 +107,9 @@
     <None Update="Assets\icon_album_placeholder.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <Page Update="Views\Playlist\PlaylistView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Update="Views\Artist\About\ArtistAboutSection.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -194,6 +198,9 @@
     <Page Update="Themes\Styles\ButtonStyles.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Views\Artist\Concerts\" />
   </ItemGroup>
 
   <!-- 

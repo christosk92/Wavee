@@ -3,6 +3,7 @@ using ReactiveUI;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using Wavee.Core.Ids;
+using Wavee.UI.Client;
 using Wavee.UI.Models.Common;
 using Wavee.UI.Models.Home;
 

@@ -4,7 +4,7 @@ using Eum.Spotify;
 using LanguageExt.Common;
 using Microsoft.UI.Xaml.Controls;
 using Wavee.Spotify;
-
+using Wavee.UI.Client;
 
 namespace Wavee.UI.WinUI.Views.SignIn;
 
