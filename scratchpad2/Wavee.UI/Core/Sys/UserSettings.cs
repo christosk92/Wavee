@@ -11,6 +11,7 @@ public sealed class UserSettings : ConfigBase
     private double _windowHeight = 600;
     private double _windowWidth = 800;
     private double _sidebarWidth = 300;
+    private AppTheme _appTheme;
     public const double MaximumSidebarWidth = 500;
     public const double MinimumSidebarWidth = 100;
 
@@ -51,6 +52,13 @@ public sealed class UserSettings : ConfigBase
         }
     }
 
+    [JsonProperty(PropertyName = "AppTheme")]
+    public AppTheme AppTheme
+    {
+        get => _appTheme;
+        set => this.RaiseAndSetIfChanged(ref _appTheme, value);
+    }
+
     static string BuildAppPathFor(string username)
     {
         var persistentStoragePath = Global.GetPersistentStoragePath!();
@@ -59,4 +67,11 @@ public sealed class UserSettings : ConfigBase
         IoHelpers.EnsureContainingDirectoryExists(finalPath);
         return finalPath;
     }
+}
+
+public enum AppTheme
+{
+    System,
+    Light,
+    Dark
 }

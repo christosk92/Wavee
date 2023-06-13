@@ -8,10 +8,10 @@
              xmlns:controls="using:Wavee.UI.WinUI.Controls"
              xmlns:components="using:Wavee.UI.WinUI.Components"
              xmlns:navigation="using:Wavee.UI.WinUI.Navigation"
+             xmlns:playback="using:Wavee.UI.WinUI.Views.Playback"
              mc:Ignorable="d">
     <Grid x:Name="LayoutRoot">
         <components:SidebarControl  x:Name="SidebarControl"
-                                    Canvas.ZIndex="1000"
                                     IsPaneToggleButtonVisible="False"
                                     IsSettingsVisible="False"
                                     BackRequested="SidebarControl_OnBackRequested"
@@ -115,6 +115,25 @@
                               HorizontalContentAlignment="Stretch"
                               x:Name="MainFrame" />
         </components:SidebarControl>
+
+        <RelativePanel x:Name="BottomPlayer"
+                       HorizontalAlignment="Stretch"
+                       VerticalAlignment="Bottom">
+            <playback:BottomPlayerControl Height="90"
+                                  RelativePanel.AlignLeftWithPanel="True"
+                                  RelativePanel.AlignRightWithPanel="True"
+                                  HorizontalAlignment="Stretch"
+                                  RelativePanel.AlignTopWithPanel="True"
+                                  HorizontalContentAlignment="Stretch"
+                                  x:Name="MainPlayer"
+                                  Player="{x:Bind ViewModel.Player}" />
+            <playback:PlayingOnRemoteDeviceControl x:Name="PlayingOnRemoteDevice"
+                                                 RelativePanel.AlignLeftWithPanel="True"
+                                                 RelativePanel.AlignRightWithPanel="True"
+                                                 RelativePanel.Below="MainPlayer"
+                                                 Visibility="{x:Bind IsOurDevice(ViewModel.Player.Device), Mode=OneWay}"
+                                                 Device="{x:Bind ViewModel.Player.Device, Mode=OneWay}" />
+        </RelativePanel>
 
         <Border x:Name="Titlebar"
                 Height="48"

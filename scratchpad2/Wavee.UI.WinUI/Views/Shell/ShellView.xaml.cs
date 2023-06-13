@@ -11,11 +11,13 @@ using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Imaging;
+using Wavee.Spotify.Infrastructure.Remote.Contracts;
 using Wavee.UI.Navigation;
 using Wavee.UI.WinUI.Navigation;
 using Wavee.UI.WinUI.Views.Home;
 using WinRT.Interop;
-
+using Wavee.UI.Core.Sys.Mock;
+using Wavee.UI.ViewModel;
 
 namespace Wavee.UI.WinUI.Views.Shell
 {
@@ -31,11 +33,13 @@ namespace Wavee.UI.WinUI.Views.Shell
             NavigationService.Navigated += NavigationServiceOnNavigating;
             NavigationService.Navigate(typeof(HomePage));
             AppState = appState;
+            ViewModel = new ShellViewModel(appState);
             GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
             GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced, true, true);
             GC.WaitForPendingFinalizers();
             GC.Collect();
         }
+        public ShellViewModel ViewModel { get; }
 
         private void TitlebarOnSizeChanged(object sender, SizeChangedEventArgs e)
         {
@@ -59,7 +63,6 @@ namespace Wavee.UI.WinUI.Views.Shell
 
         public IAppState AppState { get; }
 
-        public static Button BackButton { get; }
         public static NavigationService NavigationService { get; private set; }
 
         public NavigationService NavService => NavigationService;
@@ -174,6 +177,14 @@ namespace Wavee.UI.WinUI.Views.Shell
 
             uint scaleFactorPercent = (uint)(((long)dpiX * 100 + (96 >> 1)) / 96);
             return scaleFactorPercent / 100.0;
+        }
+
+
+        public Visibility IsOurDevice(SpotifyRemoteDeviceInfo spotifyRemoteDeviceInfo)
+        {
+            //hide our device
+            return spotifyRemoteDeviceInfo.DeviceId ==
+                   Global.AppState.DeviceId ? Visibility.Collapsed : Visibility.Visible;
         }
     }
 }

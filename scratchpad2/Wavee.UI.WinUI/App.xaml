@@ -6,7 +6,7 @@
             <ResourceDictionary.MergedDictionaries>
                 <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
                 <ResourceDictionary Source="/Themes/BorderStyles.xaml" />
-
+                <ResourceDictionary Source="/Themes/ButtonStyles.xaml" />
                 <ResourceDictionary>
                     <ResourceDictionary.ThemeDictionaries>
                         <ResourceDictionary x:Key="Light">
@@ -150,7 +150,7 @@
                 <Setter Property="HorizontalContentAlignment"
                         Value="Stretch" />
                 <Setter Property="Margin"
-                        Value="16,0,12,0" />
+                        Value="0,0,12,0" />
                 <Setter Property="Padding"
                         Value="2,0" />
             </Style>

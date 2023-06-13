@@ -25,6 +25,7 @@
 		<None Remove="Components\SidebarControl.xaml" />
 		<None Remove="Components\TrackView.xaml" />
 		<None Remove="Themes\BorderStyles.xaml" />
+		<None Remove="Themes\ButtonStyles.xaml" />
 		<None Remove="Views\Artist\About\ArtistConcertsView.xaml" />
 		<None Remove="Views\Artist\ArtistAboutView.xaml" />
 		<None Remove="Views\Artist\ArtistPage.xaml" />
@@ -35,6 +36,7 @@
 		<None Remove="Views\Artist\Overview\ArtistOverviewView.xaml" />
 		<None Remove="Views\Home\HomePage.xaml" />
 		<None Remove="Views\Login\LoginView.xaml" />
+		<None Remove="Views\Playback\BottomPlayerControl.xaml" />
 		<None Remove="Views\Playlist\PlaylistPage.xaml" />
 		<None Remove="Views\Shell\ShellView.xaml" />
 	</ItemGroup>
@@ -58,6 +60,7 @@
 		<PackageReference Include="CommunityToolkit.Labs.WinUI.TransitionHelper" Version="0.0.1" />
 		<PackageReference Include="Microsoft.Windows.CsWinRT" Version="2.0.3" />
 		<PackageReference Include="Microsoft.WindowsAppSDK" Version="1.4.230518007-experimental1" />
+		<PackageReference Include="ReactiveUI.WinUI" Version="19.2.1" />
 		<Manifest Include="$(ApplicationManifest)" />
 	</ItemGroup>
 
@@ -98,6 +101,15 @@
 		<None Update="Assets\Fonts\MediaPlayerIcons.ttf">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</None>
+		<None Update="Views\Playback\PlayingOnRemoteDeviceControl.xaml">
+		  <Generator>MSBuild:Compile</Generator>
+		</None>
+		<Page Update="Themes\ButtonStyles.xaml">
+		  <Generator>MSBuild:Compile</Generator>
+		</Page>
+		<Page Update="Views\Playback\BottomPlayerControl.xaml">
+		  <Generator>MSBuild:Compile</Generator>
+		</Page>
 		<Page Update="Themes\BorderStyles.xaml">
 			<Generator>MSBuild:Compile</Generator>
 		</Page>
