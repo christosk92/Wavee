@@ -16,6 +16,7 @@ using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Navigation;
 using Microsoft.UI.Xaml.Media.Animation;
 using Microsoft.UI.Xaml.Media.Imaging;
+using Wavee.UI.Core.Contracts.Album;
 using Wavee.UI.Navigation;
 using Wavee.UI.ViewModel.Album;
 
@@ -48,6 +49,8 @@ namespace Wavee.UI.WinUI.Views.Album
                 {
                     anim.TryStart(Src);
                 }
+
+                await ViewModel.Create(img.Id);
             }
         }
 
@@ -88,7 +91,7 @@ namespace Wavee.UI.WinUI.Views.Album
             if (progress > .4 && !_wasTransformed)
             {
                 _wasTransformed = true;
-                BaseTrans.Source = Header;
+                BaseTrans.Source = MetadataPanel;
                 BaseTrans.Target = SecondMetadataPanel;
                 _ = BaseTrans.StartAsync();
             }
@@ -96,8 +99,29 @@ namespace Wavee.UI.WinUI.Views.Album
             {
                 _wasTransformed = false;
                 BaseTrans.Source = SecondMetadataPanel;
-                BaseTrans.Target = Header;
+                BaseTrans.Target = MetadataPanel;
                 _ = BaseTrans.StartAsync();
+            }
+        }
+
+        public object GetAppropriateCollection(IReadOnlyList<SpotifyDiscView> spotifyDiscViews)
+        {
+            if(spotifyDiscViews is null) return null;
+            if (spotifyDiscViews.Count == 1)
+            {
+                return new CollectionViewSource
+                {
+                    Source = spotifyDiscViews[0].Tracks
+                }.View;
+            }
+            else
+            {
+                return new CollectionViewSource
+                {
+                    Source = spotifyDiscViews,
+                    IsSourceGrouped = true, 
+                    ItemsPath = new PropertyPath(nameof(SpotifyDiscView.Tracks))
+                }.View;
             }
         }
     }

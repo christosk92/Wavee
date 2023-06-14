@@ -1,4 +1,5 @@
 ﻿using LanguageExt;
+using Wavee.UI.Core.Contracts.Album;
 using Wavee.UI.Core.Contracts.Artist;
 using Wavee.UI.Core.Contracts.Home;
 using Wavee.UI.Core.Contracts.Metadata;
@@ -18,6 +19,7 @@ internal class MockAppState : IAppState
     public UserSettings UserSettings { get; }
     public IHomeView Home => new MockHomeView();
     public IArtistView Artist => new MockArtistView();
+    public IAlbumView Album { get; set; }
     public IRemotePlaybackClient Remote { get; }
     public IMetadataClient Metadata { get; }
     public string DeviceId { get; }

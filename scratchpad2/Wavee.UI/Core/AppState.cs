@@ -1,4 +1,5 @@
-﻿using Wavee.UI.Core.Contracts.Artist;
+﻿using Wavee.UI.Core.Contracts.Album;
+using Wavee.UI.Core.Contracts.Artist;
 using Wavee.UI.Core.Contracts.Home;
 using Wavee.UI.Core.Contracts.Metadata;
 using Wavee.UI.Core.Contracts.Playback;
@@ -20,6 +21,7 @@ public interface IAppState
 
     IHomeView Home { get; }
     IArtistView Artist { get; }
+    IAlbumView Album { get; }
     IRemotePlaybackClient Remote { get; }
     IMetadataClient Metadata { get; }
     string DeviceId { get; }

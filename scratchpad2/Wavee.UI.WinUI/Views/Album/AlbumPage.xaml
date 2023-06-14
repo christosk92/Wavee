@@ -7,6 +7,9 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:labs="using:CommunityToolkit.Labs.WinUI"
              xmlns:controls="using:Wavee.UI.WinUI.Controls"
+             xmlns:album="using:Wavee.UI.Core.Contracts.Album"
+             xmlns:artist="using:Wavee.UI.Core.Contracts.Artist"
+             xmlns:components="using:Wavee.UI.WinUI.Components"
              mc:Ignorable="d">
     <UserControl.Transitions>
         <TransitionCollection>
@@ -26,103 +29,203 @@
     <Grid>
         <ListView x:Name="TracksList"
                   Padding="48"
-                  ItemContainerStyle="{StaticResource TracksListViewItemStyle}"
+                  ItemsSource="{x:Bind GetAppropriateCollection(ViewModel.Discs),Mode=OneWay}"
                   Loaded="TracksList_OnLoaded">
+            <ListView.ItemContainerStyle>
+                <Style BasedOn="{StaticResource TracksListViewItemStyle}"
+                       TargetType="ListViewItem">
+                    <Setter Property="Margin"
+                            Value="0,0,12,8" />
+                </Style>
+            </ListView.ItemContainerStyle>
+            <ListView.ItemTemplate>
+                <DataTemplate x:DataType="artist:ArtistDiscographyTrack">
+                    <components:TrackView VerticalAlignment="Stretch"
+                                          VerticalContentAlignment="Stretch"
+                                          HorizontalAlignment="Stretch"
+                                          HorizontalContentAlignment="Stretch"
+                                          AlternatingRowColor="True"
+                                          Index="{x:Bind MinusOne(Number)}"
+                                          Id="{x:Bind Id}">
+                        <components:TrackView.View>
+                            <Grid VerticalAlignment="Center">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="2*" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="{x:Bind Title}" />
+                                <TextBlock Grid.Column="1"
+                                           Text="{x:Bind FormatPlaycount(Playcount)}" />
+
+                                <TextBlock Text="{x:Bind FormatTimestamp(Duration)}"
+                                           Grid.Column="2" />
+                            </Grid>
+                        </components:TrackView.View>
+                    </components:TrackView>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+            <ListView.GroupStyle>
+                <GroupStyle>
+                    <GroupStyle.HeaderContainerStyle>
+                        <Style TargetType="ListViewHeaderItem">
+                            <Setter Property="FontFamily"
+                                    Value="{ThemeResource ContentControlThemeFontFamily}" />
+                            <Setter Property="FontSize"
+                                    Value="{ThemeResource ListViewHeaderItemThemeFontSize}" />
+                            <Setter Property="Background"
+                                    Value="{ThemeResource ListViewHeaderItemBackground}" />
+                            <Setter Property="Margin"
+                                    Value="0,0,0,4" />
+                            <Setter Property="Padding"
+                                    Value="8,8,12,0" />
+                            <Setter Property="HorizontalContentAlignment"
+                                    Value="Left" />
+                            <Setter Property="VerticalContentAlignment"
+                                    Value="Top" />
+                            <Setter Property="MinHeight"
+                                    Value="{ThemeResource ListViewHeaderItemMinHeight}" />
+                            <Setter Property="UseSystemFocusVisuals"
+                                    Value="{StaticResource UseSystemFocusVisuals}" />
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="ListViewHeaderItem">
+                                        <StackPanel Background="{TemplateBinding Background}"
+                                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                                    BorderThickness="{TemplateBinding BorderThickness}"
+                                                    CornerRadius="{TemplateBinding CornerRadius}">
+                                            <ContentPresenter x:Name="ContentPresenter"
+                                                              Margin="{TemplateBinding Padding}"
+                                                              Content="{TemplateBinding Content}"
+                                                              ContentTemplate="{TemplateBinding ContentTemplate}"
+                                                              ContentTransitions="{TemplateBinding ContentTransitions}"
+                                                              HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                                              VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}" />
+                                        </StackPanel>
+
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </GroupStyle.HeaderContainerStyle>
+                    <GroupStyle.HeaderTemplate>
+                        <DataTemplate x:DataType="album:SpotifyDiscView">
+                            <Border AutomationProperties.AccessibilityView="Raw">
+                                <StackPanel Spacing="8"
+                                            Orientation="Horizontal">
+                                    <FontIcon FontFamily="Segoe Fluent Icons"
+                                              Foreground="{ThemeResource SystemControlForegroundAccentBrush}"
+                                              VerticalAlignment="Center"
+                                              Glyph="&#xE958;" />
+                                    <TextBlock Text="{x:Bind Number}"
+                                               VerticalAlignment="Top"
+                                               Margin="0,0,0,4"
+                                               Opacity=".9"
+                                               FontWeight="Bold"
+                                               AutomationProperties.AccessibilityView="Raw" />
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </GroupStyle.HeaderTemplate>
+                </GroupStyle>
+            </ListView.GroupStyle>
             <ListView.Header>
-                <RelativePanel x:Name="Header"
-                               Margin="-48,-48,-48,-28"
-                               Padding="48">
-                    <Image x:Name="Src"
-                           VerticalAlignment="Top"
-                           HorizontalAlignment="Left"
-                           Width="200"
-                           labs:TransitionHelper.Id="background"
-                           Source="{x:Bind ViewModel.AlbumImage, Mode=OneWay}"
-                           Height="200" />
+                <Border Height="220"
+                        x:Name="Header">
+                    <RelativePanel Margin="-48,-48,-48,-28"
+                                   x:Name="MetadataPanel"
+                                   Padding="48">
+                        <Image x:Name="Src"
+                               VerticalAlignment="Top"
+                               HorizontalAlignment="Left"
+                               Width="200"
+                               labs:TransitionHelper.Id="background"
+                               Source="{x:Bind ViewModel.AlbumImage, Mode=OneWay}"
+                               Height="200" />
 
-                    <RelativePanel     RelativePanel.RightOf="Src"
-                                       RelativePanel.AlignBottomWith="Src"
-                                       Margin="24,0,0,0"
-                                       x:Name="MetadataPanel">
-                        <TextBlock x:Name="AlbumType"
-                                   Text="ALBUM"
-                                   FontWeight="Bold"
-                                   Foreground="{ThemeResource ApplicationSecondaryForegroundThemeBrush}"
-                                   RelativePanel.Above="Title" />
+                        <RelativePanel     RelativePanel.RightOf="Src"
+                                           RelativePanel.AlignBottomWith="Src"
+                                           Margin="24,0,0,0">
+                            <TextBlock x:Name="AlbumType"
+                                       Text="{x:Bind ViewModel.AlbumType, Mode=OneWay}"
+                                       FontWeight="Bold"
+                                       Foreground="{ThemeResource ApplicationSecondaryForegroundThemeBrush}"
+                                       RelativePanel.Above="Title" />
 
-                        <TextBlock x:Name="Title"
-                                   RelativePanel.Above="Metadata"
-                                   FontSize="58"
-                                   labs:TransitionHelper.Id="name"
-                                   Text="SMITHEREENS"
-                                   FontWeight="Bold"
-                                   TextWrapping="WrapWholeWords" />
+                            <TextBlock x:Name="Title"
+                                       RelativePanel.Above="Metadata"
+                                       FontSize="58"
+                                       labs:TransitionHelper.Id="name"
+                                       Text="{x:Bind ViewModel.AlbumName,Mode=OneWay}"
+                                       FontWeight="Bold"
+                                       TextWrapping="WrapWholeWords" />
 
-                        <labs:TokenView RelativePanel.Above="Buttons"
-                                        x:Name="Metadata"
-                                        Margin="0,8,0,18"
-                                        SelectionMode="None">
-                            <labs:TokenView.Items>
-                                <labs:TokenItem>
-                                    <StackPanel Spacing="6"
+                            <labs:TokenView RelativePanel.Above="Buttons"
+                                            x:Name="Metadata"
+                                            Margin="0,8,0,18"
+                                            SelectionMode="None">
+                                <labs:TokenView.Items>
+                                    <labs:TokenItem>
+                                        <StackPanel Spacing="6"
+                                                    Orientation="Horizontal">
+                                            <FontIcon FontFamily="Segoe Fluent Icons"
+                                                      Glyph="&#xE163;" />
+                                            <TextBlock Text="{x:Bind ViewModel.AlbumReleaseYear,Mode=OneWay}" />
+                                        </StackPanel>
+                                    </labs:TokenItem>
+
+                                    <labs:TokenItem>
+                                        <StackPanel Spacing="6"
+                                                    Orientation="Horizontal">
+                                            <FontIcon FontFamily="Segoe Fluent Icons"
+                                                      Glyph="&#xEC4F;" />
+                                            <TextBlock Text="{x:Bind ViewModel.AlbumTrackCountString,Mode=OneWay}" />
+                                        </StackPanel>
+                                    </labs:TokenItem>
+
+                                    <labs:TokenItem>
+                                        <StackPanel Spacing="6"
+                                                    Orientation="Horizontal">
+                                            <FontIcon FontFamily="Segoe Fluent Icons"
+                                                      Glyph="&#xE916;" />
+                                            <TextBlock Text="{x:Bind ViewModel.AlbumDurationString, Mode=OneWay}" />
+                                        </StackPanel>
+                                    </labs:TokenItem>
+                                </labs:TokenView.Items>
+                            </labs:TokenView>
+
+                            <StackPanel x:Name="Buttons"
+                                        Spacing="6"
+                                        RelativePanel.AlignBottomWithPanel="True"
+                                        labs:TransitionHelper.Id="buttonspanel"
+                                        Orientation="Horizontal">
+                                <Button Height="34"
+                                        Style="{ThemeResource AccentButtonStyle}">
+                                    <StackPanel Spacing="8"
                                                 Orientation="Horizontal">
                                         <FontIcon FontFamily="Segoe Fluent Icons"
-                                                  Glyph="&#xE163;" />
-                                        <TextBlock Text="2022" />
+                                                  Glyph="&#xF5B0;" />
+                                        <TextBlock Text="Play" />
                                     </StackPanel>
-                                </labs:TokenItem>
+                                </Button>
 
-                                <labs:TokenItem>
-                                    <StackPanel Spacing="6"
+                                <Button Height="34">
+                                    <StackPanel Spacing="8"
                                                 Orientation="Horizontal">
                                         <FontIcon FontFamily="Segoe Fluent Icons"
-                                                  Glyph="&#xEC4F;" />
-                                        <TextBlock Text="9 songs" />
+                                                  Glyph="&#xE14B;" />
+                                        <TextBlock Text="Shuffle" />
                                     </StackPanel>
-                                </labs:TokenItem>
+                                </Button>
 
-                                <labs:TokenItem>
-                                    <StackPanel Spacing="6"
-                                                Orientation="Horizontal">
-                                        <FontIcon FontFamily="Segoe Fluent Icons"
-                                                  Glyph="&#xE916;" />
-                                        <TextBlock Text="25 min 23 sec" />
-                                    </StackPanel>
-                                </labs:TokenItem>
-                            </labs:TokenView.Items>
-                        </labs:TokenView>
-
-                        <StackPanel x:Name="Buttons"
-                                    Spacing="6"
-                                    RelativePanel.AlignBottomWithPanel="True"
-                                    labs:TransitionHelper.Id="buttonspanel"
-                                    Orientation="Horizontal">
-                            <Button Height="34"
-                                    Style="{ThemeResource AccentButtonStyle}">
-                                <StackPanel Spacing="8"
-                                            Orientation="Horizontal">
-                                    <FontIcon FontFamily="Segoe Fluent Icons"
-                                              Glyph="&#xF5B0;" />
-                                    <TextBlock Text="Play" />
-                                </StackPanel>
-                            </Button>
-
-                            <Button Height="34">
-                                <StackPanel Spacing="8"
-                                            Orientation="Horizontal">
-                                    <FontIcon FontFamily="Segoe Fluent Icons"
-                                              Glyph="&#xE14B;" />
-                                    <TextBlock Text="Shuffle" />
-                                </StackPanel>
-                            </Button>
-
-                            <Button Height="34"
-                                    IsHitTestVisible="True">
-                                <controls:StarButton FontSize="24" />
-                            </Button>
-                        </StackPanel>
+                                <Button Height="34"
+                                        IsHitTestVisible="True">
+                                    <controls:StarButton FontSize="24" />
+                                </Button>
+                            </StackPanel>
+                        </RelativePanel>
                     </RelativePanel>
-                </RelativePanel>
+                </Border>
             </ListView.Header>
         </ListView>
 
