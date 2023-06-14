@@ -39,7 +39,7 @@ public sealed class NavigationService
         if (_contentControl.Content is INavigable x)
         {
             //check if we are navigating BACK
-            var goingBackByBacktack = addToStack && _backStack.Any() && (_backStack.Peek().Type == pageType && Equals(_lastPrameter, parameter));
+            var goingBackByBacktack = addToStack && _backStack.Any() && (_backStack.Peek().Type == pageType && Equals(_backStack.Peek().Parameter, parameter));
             var goingBack = goingBackForSure || goingBackByBacktack;
             x.NavigatedFrom(goingBack ? NavigationMode.Back : NavigationMode.New);
         }

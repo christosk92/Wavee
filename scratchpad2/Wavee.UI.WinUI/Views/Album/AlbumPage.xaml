@@ -5,18 +5,183 @@
              xmlns:local="using:Wavee.UI.WinUI.Views.Album"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:labs="using:CommunityToolkit.Labs.WinUI"
+             xmlns:controls="using:Wavee.UI.WinUI.Controls"
              mc:Ignorable="d">
     <UserControl.Transitions>
         <TransitionCollection>
             <EntranceThemeTransition />
         </TransitionCollection>
     </UserControl.Transitions>
+    <UserControl.Resources>
+        <labs:TransitionHelper x:Name="BaseTrans">
+            <labs:TransitionConfig Id="name"
+                                   ScaleMode="None" />
+            <labs:TransitionConfig EnableClipAnimation="true"
+                                   Id="buttonspanel" />
+            <labs:TransitionConfig Id="background"
+                                   ScaleMode="None" />
+        </labs:TransitionHelper>
+    </UserControl.Resources>
     <Grid>
-        <Image x:Name="Src" 
-               Margin="48"
-               VerticalAlignment="Top"
-               HorizontalAlignment="Left"
-               Width="200"
-               Height="200" />
+        <ListView x:Name="TracksList"
+                  Padding="48"
+                  ItemContainerStyle="{StaticResource TracksListViewItemStyle}"
+                  Loaded="TracksList_OnLoaded">
+            <ListView.Header>
+                <RelativePanel x:Name="Header"
+                               Margin="-48,-48,-48,-28"
+                               Padding="48">
+                    <Image x:Name="Src"
+                           VerticalAlignment="Top"
+                           HorizontalAlignment="Left"
+                           Width="200"
+                           labs:TransitionHelper.Id="background"
+                           Source="{x:Bind ViewModel.AlbumImage, Mode=OneWay}"
+                           Height="200" />
+
+                    <RelativePanel     RelativePanel.RightOf="Src"
+                                       RelativePanel.AlignBottomWith="Src"
+                                       Margin="24,0,0,0"
+                                       x:Name="MetadataPanel">
+                        <TextBlock x:Name="AlbumType"
+                                   Text="ALBUM"
+                                   FontWeight="Bold"
+                                   Foreground="{ThemeResource ApplicationSecondaryForegroundThemeBrush}"
+                                   RelativePanel.Above="Title" />
+
+                        <TextBlock x:Name="Title"
+                                   RelativePanel.Above="Metadata"
+                                   FontSize="58"
+                                   labs:TransitionHelper.Id="name"
+                                   Text="SMITHEREENS"
+                                   FontWeight="Bold"
+                                   TextWrapping="WrapWholeWords" />
+
+                        <labs:TokenView RelativePanel.Above="Buttons"
+                                        x:Name="Metadata"
+                                        Margin="0,8,0,18"
+                                        SelectionMode="None">
+                            <labs:TokenView.Items>
+                                <labs:TokenItem>
+                                    <StackPanel Spacing="6"
+                                                Orientation="Horizontal">
+                                        <FontIcon FontFamily="Segoe Fluent Icons"
+                                                  Glyph="&#xE163;" />
+                                        <TextBlock Text="2022" />
+                                    </StackPanel>
+                                </labs:TokenItem>
+
+                                <labs:TokenItem>
+                                    <StackPanel Spacing="6"
+                                                Orientation="Horizontal">
+                                        <FontIcon FontFamily="Segoe Fluent Icons"
+                                                  Glyph="&#xEC4F;" />
+                                        <TextBlock Text="9 songs" />
+                                    </StackPanel>
+                                </labs:TokenItem>
+
+                                <labs:TokenItem>
+                                    <StackPanel Spacing="6"
+                                                Orientation="Horizontal">
+                                        <FontIcon FontFamily="Segoe Fluent Icons"
+                                                  Glyph="&#xE916;" />
+                                        <TextBlock Text="25 min 23 sec" />
+                                    </StackPanel>
+                                </labs:TokenItem>
+                            </labs:TokenView.Items>
+                        </labs:TokenView>
+
+                        <StackPanel x:Name="Buttons"
+                                    Spacing="6"
+                                    RelativePanel.AlignBottomWithPanel="True"
+                                    labs:TransitionHelper.Id="buttonspanel"
+                                    Orientation="Horizontal">
+                            <Button Height="34"
+                                    Style="{ThemeResource AccentButtonStyle}">
+                                <StackPanel Spacing="8"
+                                            Orientation="Horizontal">
+                                    <FontIcon FontFamily="Segoe Fluent Icons"
+                                              Glyph="&#xF5B0;" />
+                                    <TextBlock Text="Play" />
+                                </StackPanel>
+                            </Button>
+
+                            <Button Height="34">
+                                <StackPanel Spacing="8"
+                                            Orientation="Horizontal">
+                                    <FontIcon FontFamily="Segoe Fluent Icons"
+                                              Glyph="&#xE14B;" />
+                                    <TextBlock Text="Shuffle" />
+                                </StackPanel>
+                            </Button>
+
+                            <Button Height="34"
+                                    IsHitTestVisible="True">
+                                <controls:StarButton FontSize="24" />
+                            </Button>
+                        </StackPanel>
+                    </RelativePanel>
+                </RelativePanel>
+            </ListView.Header>
+        </ListView>
+
+        <Border x:Name="SecondMetadataPanel"
+                Visibility="Collapsed"
+                labs:TransitionHelper.Id="background"
+                Height="90"
+                Padding="24,12"
+                Margin="48,18"
+                Background="{ThemeResource AcrylicBackgroundFillColorDefaultBrush}"
+                VerticalAlignment="Top"
+                HorizontalAlignment="Stretch"
+                CornerRadius="8"
+                BorderThickness="1"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
+            <RelativePanel>
+                <StackPanel Spacing="8"
+                            RelativePanel.AlignTopWithPanel="True"
+                            Orientation="Horizontal">
+                    <Button Style="{ThemeResource AccentButtonStyle}"
+                            CornerRadius="50"
+                            Padding="4"
+                            VerticalAlignment="Center"
+                            Width="34"
+                            Height="34"
+                            labs:TransitionHelper.Id="buttonspanel">
+                        <FontIcon FontFamily="Segoe Fluent Icons"
+                                  FontSize="14"
+                                  Glyph="&#xF5B0;" />
+                    </Button>
+                    <TextBlock labs:TransitionHelper.Id="name"
+                               VerticalAlignment="Center"
+                               FontSize="28"
+                               FontWeight="Bold"
+                               Text="SMITHEREENS" />
+                </StackPanel>
+
+                <Grid RelativePanel.AlignLeftWithPanel="True"
+                      RelativePanel.AlignRightWithPanel="True"
+                      RelativePanel.AlignBottomWithPanel="True">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="100" />
+                        <ColumnDefinition />
+                        <ColumnDefinition />
+                        <ColumnDefinition Width="50" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="#" />
+
+                    <TextBlock Text="Title"
+                               Grid.Column="1" />
+
+                    <TextBlock Text="Plays"
+                               Grid.Column="2" />
+
+                    <TextBlock Grid.Column="3"
+                               FontFamily="Segoe Fluent Icons"
+                               Text="&#xE916;" />
+                </Grid>
+            </RelativePanel>
+        </Border>
     </Grid>
 </UserControl>

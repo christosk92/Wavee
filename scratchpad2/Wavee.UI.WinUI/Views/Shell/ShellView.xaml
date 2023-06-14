@@ -136,9 +136,9 @@
         </RelativePanel>
 
         <Border x:Name="Titlebar"
-                Height="48"
+                Height="48" 
                 VerticalAlignment="Top"
-                Margin="48,0"
+                Margin="48,0,140,0"
                 Background="Transparent"
                 HorizontalAlignment="Stretch" />
     </Grid>
