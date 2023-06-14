@@ -1,0 +1,75 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:login="clr-namespace:Wavee.UI.ViewModel.Login;assembly=Wavee.UI"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:DataType="login:LoginViewModel"
+             Loaded="Control_OnLoaded"
+             x:Class="Wavee.UI.Avalonia.Views.LoginView">
+    <Grid Background="Transparent">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="40" />
+            <RowDefinition Height="48" />
+            <RowDefinition />
+        </Grid.RowDefinitions>
+
+        <Border
+            Grid.Row="1"
+            Grid.RowSpan="2"
+            Padding="12,0,12,20">
+            <StackPanel x:Name="UserPassPanel"
+                        VerticalAlignment="Center"
+                        MaxWidth="360">
+                <Image x:Name="Logo2Panel"
+                       Width="160"
+                       Source="/Assets/spotify.png"
+                       Height="160" />
+
+                <StackPanel x:Name="CredentialsInnerPanel"
+                            Margin="0,32,0,0">
+                    <TextBlock x:Name="TitleLabel"
+                               Text="Hey!"
+                               Theme="{DynamicResource TitleTextBlockStyle}"
+                               TextAlignment="Center" />
+                    <TextBlock Text="Enter your Spotify credentials to continue."
+                               Theme="{DynamicResource BodyTextBlockStyle}"
+                               TextAlignment="Center"
+                               Padding="0,8,0,16" />
+
+                    <TextBlock Text="{Binding ErrorMessage}"
+                               IsVisible="{Binding HasErrorMessage}"
+                               Theme="{DynamicResource BodyTextBlockStyle}"
+                               Foreground="Red"
+                               TextAlignment="Center"
+                               Padding="0,8,0,16" />
+
+
+                    <TextBox TabIndex="0"
+                             MinWidth="280"
+                             Text="{Binding Username, Mode=TwoWay}"
+                             Watermark="Spotify e-mail"
+                             x:Name="UsernameInput"
+                             HorizontalAlignment="Stretch" />
+
+                    <TextBox x:Name="PasswordInput"
+                             TabIndex="1"
+                             Watermark="Password" RevealPassword="False" PasswordChar="●"
+                             MinWidth="200"
+                             Text="{Binding Password, Mode=TwoWay}"
+                             Margin="0,12,0,4" />
+
+                    <ProgressBar IsIndeterminate="{Binding IsLoading, Mode=OneWay}"
+                                 Background="Transparent" />
+
+                    <Button x:Name="NextButton"
+                            Content="Sign in"
+                            Command="{Binding SignInCommand}"
+                            Theme="{DynamicResource AccentButtonStyle}"
+                            HorizontalAlignment="Stretch"
+                            Margin="0,4,0,8" />
+                </StackPanel>
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>

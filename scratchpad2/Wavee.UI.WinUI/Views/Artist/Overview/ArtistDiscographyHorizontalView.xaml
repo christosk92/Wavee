@@ -21,6 +21,8 @@
             <components:CardView Title="{x:Bind Title}"
                                  Id="{x:Bind Id}"
                                  x:Phase="1"
+                                 Height="260" Tapped="UIElement_OnTapped"
+                                 Width="200"
                                  Description="{x:Bind ReleaseDateAsStr}"
                                  Image="{x:Bind Image}" />
         </DataTemplate>
@@ -49,14 +51,7 @@
                            x:Name="ItemsRepeater"
                            ItemsSource="{x:Bind Items}">
                 <ItemsRepeater.Layout>
-                    <UniformGridLayout MinItemWidth="220"
-                                       ItemsStretch="Uniform"
-                                       MinItemHeight="270"
-                                       MinRowSpacing="12"
-                                       Orientation="Vertical"
-                                       MaximumRowsOrColumns="1"
-                                       ItemsJustification="Start"
-                                       MinColumnSpacing="6" />
+                    <StackLayout Orientation="Horizontal" />
                 </ItemsRepeater.Layout>
             </ItemsRepeater>
         </ScrollView>

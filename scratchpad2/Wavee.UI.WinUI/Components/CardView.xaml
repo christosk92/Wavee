@@ -39,22 +39,7 @@
                     RelativePanel.AlignRightWithPanel="True"
                     Visibility="Collapsed"
                     x:Load="False">
-                <animations:Implicit.ShowAnimations>
-                    <animations:TranslationAnimation Duration="0:0:0.167"
-                                                     From="0, 25, 0"
-                                                     EasingType="Cubic"
-                                                     To="0" />
-                    <animations:OpacityAnimation  Duration="0:0:0.167"
-                                                  From="0"
-                                                  To="1.0" />
-                </animations:Implicit.ShowAnimations>
-                <animations:Implicit.HideAnimations>
-                    <animations:OpacityAnimation  Duration="0:0:0.167"
-                                                  To="0.0" />
-                    <animations:TranslationAnimation  Duration="0:0:0.167"
-                                                      From="0, 0, 0"
-                                                      To="0,25,0" />
-                </animations:Implicit.HideAnimations>
+              
                 <RelativePanel  RelativePanel.AlignBottomWith="ImageBox"
                                 RelativePanel.AlignLeftWithPanel="True"
                                 Margin="6"

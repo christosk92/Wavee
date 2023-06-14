@@ -1,0 +1,143 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:shell="clr-namespace:Wavee.UI.Avalonia.Views.Shell"
+             xmlns:viewModel="clr-namespace:Wavee.UI.ViewModel;assembly=Wavee.UI"
+             xmlns:controls="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:DataType="viewModel:ShellViewModel"
+             x:Class="Wavee.UI.Avalonia.Views.Shell.ShellView">
+    <Grid x:Name="LayoutRoot">
+        <controls:NavigationView x:Name="SidebarControl"
+                                 IsPaneToggleButtonVisible="False" OpenPaneLength="230"
+                                 IsSettingsVisible="False" IsPaneOpen="True"
+                                 PaneDisplayMode="Left"
+                                 BackRequested="SidebarControl_OnBackRequested">
+            <controls:NavigationView.AutoCompleteBox>
+                <AutoCompleteBox Watermark="Search..."
+                                 Margin="-4,0"
+                                 HorizontalAlignment="Stretch" />
+            </controls:NavigationView.AutoCompleteBox>
+            <controls:NavigationView.PaneHeader>
+                <Button HorizontalContentAlignment="Stretch"
+                        HorizontalAlignment="Stretch"
+                        Margin="0,-12,0,6"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        CornerRadius="0">
+                    <RelativePanel>
+                        <!-- <PersonPicture Height="58" -->
+                        <!--                Initials="{x:Bind GetUserInitials(AppState.UserProfile)}" -->
+                        <!--                ProfilePicture="{x:Bind GetUserPicture(AppState.UserProfile)}" -->
+                        <!--                x:Name="UserPicture" -->
+                        <!--                Width="58" /> -->
+                        <TextBlock RelativePanel.RightOf="UserPicture"
+                                   Margin="8,9,0,0"
+                                   FontWeight="SemiBold"
+                                   x:Name="UserName"
+                                   FontSize="16" />
+                        <TextBlock RelativePanel.AlignLeftWith="UserName"
+                                   Margin="8,0,0,0"
+                                   FontWeight="Bold"
+                                   FontSize="11"
+                                   Foreground="{DynamicResource ApplicationSecondaryForegroundThemeBrush}"
+                                   RelativePanel.Below="UserName" />
+                    </RelativePanel>
+                </Button>
+            </controls:NavigationView.PaneHeader>
+            <controls:NavigationView.MenuItems>
+                <controls:NavigationViewItemHeader Content="For You" />
+                <controls:NavigationViewItem Content="Home"
+                                             Loaded="HomeLoaded">
+                    <controls:NavigationViewItem.IconSource>
+                        <controls:FontIconSource
+                            Glyph="&#xE10F;" FontFamily="{StaticResource SymbolThemeFontFamily}" />
+                    </controls:NavigationViewItem.IconSource>
+                </controls:NavigationViewItem>
+                <controls:NavigationViewItem Content="Browse">
+                    <controls:NavigationViewItem.IconSource>
+                        <controls:FontIconSource
+                            FontFamily="{StaticResource SymbolThemeFontFamily}"
+                            Glyph="&#xE794;" />
+                    </controls:NavigationViewItem.IconSource>
+                </controls:NavigationViewItem>
+                <controls:NavigationViewItemHeader Content="Yours" />
+                <controls:NavigationViewItem Content="Songs">
+                    <controls:NavigationViewItem.InfoBadge>
+                        <controls:InfoBadge Value="0" />
+                    </controls:NavigationViewItem.InfoBadge>
+                    <controls:NavigationViewItem.IconSource>
+                        <controls:FontIconSource
+                            Glyph="&#xEB52;"
+                            FontFamily="{StaticResource SymbolThemeFontFamily}" />
+                    </controls:NavigationViewItem.IconSource>
+                </controls:NavigationViewItem>
+                <controls:NavigationViewItem Content="Albums">
+                    <controls:NavigationViewItem.InfoBadge>
+                        <controls:InfoBadge Value="0" />
+                    </controls:NavigationViewItem.InfoBadge>
+                    <controls:NavigationViewItem.IconSource>
+                        <controls:FontIconSource
+                            Glyph="&#xE93C;"
+                            FontFamily="{StaticResource SymbolThemeFontFamily}" />
+                    </controls:NavigationViewItem.IconSource>
+                </controls:NavigationViewItem>
+                <controls:NavigationViewItem Content="Artists">
+                    <controls:NavigationViewItem.InfoBadge>
+                        <controls:InfoBadge Value="0" />
+                    </controls:NavigationViewItem.InfoBadge>
+                    <controls:NavigationViewItem.IconSource>
+                        <controls:FontIconSource
+                            Glyph="&#xEBDA;"
+                            FontFamily="{StaticResource SymbolThemeFontFamily}" />
+                    </controls:NavigationViewItem.IconSource>
+                </controls:NavigationViewItem>
+                <controls:NavigationViewItem Content="Podcasts"
+                                             IsEnabled="False">
+                    <controls:NavigationViewItem.InfoBadge>
+                        <controls:InfoBadge Value="0" />
+                    </controls:NavigationViewItem.InfoBadge>
+                    <controls:NavigationViewItem.IconSource>
+                        <controls:FontIconSource
+                            Glyph="&#xEB44;"
+                            FontFamily="{StaticResource SymbolThemeFontFamily}" />
+                    </controls:NavigationViewItem.IconSource>
+                </controls:NavigationViewItem>
+
+                <controls:NavigationViewItemHeader Content="Playlists" />
+            </controls:NavigationView.MenuItems>
+
+
+            <ContentPresenter VerticalContentAlignment="Stretch"
+                              HorizontalContentAlignment="Stretch"
+                              x:Name="MainFrame" />
+        </controls:NavigationView>
+
+        <!-- <RelativePanel x:Name="BottomPlayer" -->
+        <!--                HorizontalAlignment="Stretch" -->
+        <!--                VerticalAlignment="Bottom"> -->
+        <!--     <playback:BottomPlayerControl Height="90" -->
+        <!--                                   RelativePanel.AlignLeftWithPanel="True" -->
+        <!--                                   RelativePanel.AlignRightWithPanel="True" -->
+        <!--                                   HorizontalAlignment="Stretch" -->
+        <!--                                   RelativePanel.AlignTopWithPanel="True" -->
+        <!--                                   HorizontalContentAlignment="Stretch" -->
+        <!--                                   x:Name="MainPlayer" -->
+        <!--                                   Player="{Binding Player}" /> -->
+        <!--     <playback:PlayingOnRemoteDeviceControl x:Name="PlayingOnRemoteDevice" -->
+        <!--                                            RelativePanel.AlignLeftWithPanel="True" -->
+        <!--                                            RelativePanel.AlignRightWithPanel="True" -->
+        <!--                                            RelativePanel.Below="MainPlayer" -->
+        <!--                                            Visibility="{x:Bind IsOurDevice(ViewModel.Player.Device), Mode=OneWay}" -->
+        <!--                                            Device="{Binding Player.Device, Mode=OneWay}" /> -->
+        <!-- </RelativePanel> -->
+
+        <Border x:Name="Titlebar"
+                Height="48"
+                VerticalAlignment="Top"
+                Margin="48,0"
+                Background="Transparent"
+                HorizontalAlignment="Stretch" />
+    </Grid>
+</UserControl>

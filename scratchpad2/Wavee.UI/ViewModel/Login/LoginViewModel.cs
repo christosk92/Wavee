@@ -88,8 +88,15 @@ public sealed class LoginViewModel : ObservableObject
     public string? ErrorMessage
     {
         get => _errorMessage;
-        set => SetProperty(ref _errorMessage, value);
+        set
+        {
+            if (SetProperty(ref _errorMessage, value))
+            {
+                OnPropertyChanged(nameof(HasErrorMessage));
+            }
+        }
     }
+    public bool HasErrorMessage => !string.IsNullOrEmpty(ErrorMessage);
     public string Username
     {
         get => _username;

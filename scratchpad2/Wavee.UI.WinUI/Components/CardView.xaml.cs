@@ -16,6 +16,7 @@ using Wavee.UI.WinUI.Extensions;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Microsoft.UI.Xaml.Media.Imaging;
+using Microsoft.UI.Xaml.Media.Animation;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -102,7 +103,16 @@ namespace Wavee.UI.WinUI.Components
 
         private void CardView_OnTapped(object sender, TappedRoutedEventArgs e)
         {
-            UICommands.NavigateTo.Execute(Id);
+            if (Id.Type is AudioItemType.Album)
+            {
+                ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("ForwardConnectedAnimation", ImageBox);
+                UICommands.NavigateToWithImage.Execute(new NavigationWithImage(
+                    Id, Image));
+            }
+            else
+            {
+                UICommands.NavigateTo.Execute(Id);
+            }
         }
     }
 }

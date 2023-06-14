@@ -4,7 +4,9 @@ using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Navigation;
 using Wavee.UI.Navigation;
+using Wavee.UI.WinUI.Views.Album;
 using Wavee.UI.WinUI.Views.Artist;
 using Wavee.UI.WinUI.Views.Home;
 
@@ -31,13 +33,22 @@ public sealed class NavigationService
 
     public void Navigate(Type pageType,
         object? parameter = null,
-        bool addToStack = true)
+        bool addToStack = true,
+        bool goingBackForSure = false)
     {
+        if (_contentControl.Content is INavigable x)
+        {
+            //check if we are navigating BACK
+            var goingBackByBacktack = addToStack && _backStack.Any() && (_backStack.Peek().Type == pageType && Equals(_lastPrameter, parameter));
+            var goingBack = goingBackForSure || goingBackByBacktack;
+            x.NavigatedFrom(goingBack ? NavigationMode.Back : NavigationMode.New);
+        }
         if (addToStack && _contentControl.Content != null)
         {
             _backStack.Push(new GeneralBackStackItem(_contentControl.Content.GetType(), _lastPrameter));
         }
         EvaluateCache();
+
 
         var cachedPage = _cachedPages.FirstOrDefault(cp => cp.PageReference.IsAlive && cp.Type == pageType && Equals(cp.WithParameter, parameter));
 
@@ -45,6 +56,9 @@ public sealed class NavigationService
         {
             // Use the page from the cache
             _contentControl.Content = null;
+            if (cachedPage.PageReference.Target is INavigable navigablePage)
+                navigablePage.NavigatedTo(parameter);
+
             _contentControl.Content = cachedPage.PageReference.Target;
 
             // Remove the old cache entry
@@ -56,16 +70,14 @@ public sealed class NavigationService
             var constructor = _constructors.GetValueOrDefault(pageType);
 
             var page = constructor.DynamicInvoke();
-            _contentControl.Content = null;
+            if (page is INavigable navigablePage)
+                navigablePage.NavigatedTo(parameter);
             _contentControl.Content = page;
 
             if (page is ICacheablePage cacheablePage)
             {
                 _cachedPages.Add(new CachedPage(new WeakReference(cacheablePage), pageType, parameter, _backStack.Count));
             }
-
-            if (page is INavigable navigablePage)
-                navigablePage.NavigatedTo(parameter);
         }
         _lastPrameter = parameter;
         Navigated?.Invoke(this, (pageType, parameter));
@@ -101,7 +113,7 @@ public sealed class NavigationService
         if (CanGoBack)
         {
             var backItem = _backStack.Pop();
-            Navigate(backItem.Type, backItem.Parameter, addToStack: false);
+            Navigate(backItem.Type, backItem.Parameter, addToStack: false, true);
         }
     }
 
@@ -118,7 +130,8 @@ public sealed class NavigationService
         var types = new[]
         {
             typeof(HomePage),
-            typeof(ArtistPage)
+            typeof(ArtistPage),
+            typeof(AlbumPage)
         };
 
         static void RegisterConstructor(Type type)

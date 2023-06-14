@@ -22,6 +22,8 @@
                       x:DataType="common:CardItem">
             <components:CardView Title="{x:Bind Title}"
                                  Id="{x:Bind Id}"
+                                 MaxHeight="300" Tapped="UIElement_OnTapped"
+                                 MaxWidth="300"
                                  Description="{x:Bind Subtitle}"
                                  Image="{x:Bind ImageUrl}" />
         </DataTemplate>
@@ -29,6 +31,8 @@
                       x:DataType="common:CardItem">
             <components:ArtistCardView Title="{x:Bind Title}"
                                        Id="{x:Bind Id}"
+                                       MaxHeight="300"
+                                       MaxWidth="300"
                                        Image="{x:Bind ImageUrl}" />
         </DataTemplate>
         <RecyclingElementFactory x:Key="elementFactory"

@@ -29,11 +29,11 @@
                                    ScaleMode="Scale" />
         </labs:TransitionHelper>
     </UserControl.Resources>
-    <Grid>
+    <Grid VerticalAlignment="Top">
         <ScrollViewer  ui:ScrollViewerExtensions.VerticalScrollBarMargin="0,34,0,110"
                        VerticalAlignment="Top"
                        ViewChanged="ScrollViewer_OnViewChanged">
-            <StackPanel>
+            <StackPanel  VerticalAlignment="Top">
                 <Grid VerticalAlignment="Top"
                       x:Name="ImageT">
                     <components:ImageTransitionControl x:Name="HeaderImage"
@@ -120,8 +120,8 @@
                     </StackPanel>
                 </Grid>
 
-                <ContentPresenter VerticalAlignment="Stretch"
-                                  VerticalContentAlignment="Stretch"
+                <ContentPresenter VerticalAlignment="Top"
+                                  VerticalContentAlignment="Top"
                                   HorizontalAlignment="Stretch"
                                   HorizontalContentAlignment="Stretch"
                                   x:Name="MainContent" />

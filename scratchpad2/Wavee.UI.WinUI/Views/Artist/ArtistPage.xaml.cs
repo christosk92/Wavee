@@ -16,6 +16,8 @@ using Wavee.UI.WinUI.Views.Artist.Concert;
 using Wavee.UI.WinUI.Views.Artist.Overview;
 using System.Diagnostics;
 using Microsoft.UI.Xaml.Media.Animation;
+using Windows.Foundation.Metadata;
+using Microsoft.UI.Xaml.Navigation;
 
 namespace Wavee.UI.WinUI.Views.Artist
 {
@@ -33,6 +35,24 @@ namespace Wavee.UI.WinUI.Views.Artist
         private AudioId _id;
         public async void NavigatedTo(object parameter)
         {
+            if (_storeditem != null)
+            {
+                ConnectedAnimation animation = ConnectedAnimationService.GetForCurrentView()
+                    .GetAnimation("BackConnectedAnimation");
+                if (animation != null)
+                {
+                    // Setup the "back" configuration if the API is present. 
+                    if (ApiInformation.IsApiContractPresent("Windows.Foundation.UniversalApiContract", 7))
+                    {
+                        animation.Configuration = new DirectConnectedAnimationConfiguration();
+                    }
+
+                    animation.TryStart(_storeditem);
+                    _storeditem = null;
+                    //  await collection.TryStartConnectedAnimationAsync(animation, _storeditem, "connectedElement");
+                }
+            }
+
             if (parameter is AudioId id)
             {
                 ViewModel.Create(_id);
@@ -97,10 +117,14 @@ namespace Wavee.UI.WinUI.Views.Artist
                 GC.WaitForPendingFinalizers();
             });
         }
-        public void NavigatedFrom()
+
+        internal UIElement _storeditem;
+        public void NavigatedFrom(NavigationMode mode)
         {
-            ViewModel?.Destroy();
+           
         }
+
+
         private ArtistOverviewView? _overview;
         private ArtistConcertsView? _concerts;
         private ArtistAboutView? _about;
@@ -126,7 +150,7 @@ namespace Wavee.UI.WinUI.Views.Artist
 
         private void ScrollViewer_OnViewChanged(object sender, ScrollViewerViewChangedEventArgs e)
         {
-            var frac = ((ScrollViewer)sender).VerticalOffset / ImageT.Height;
+            var frac = (sender as ScrollViewer).VerticalOffset / ImageT.Height;
             var progress = Math.Clamp(frac, 0, 1);
             HeaderImage.BlurValue = progress * 20;
 

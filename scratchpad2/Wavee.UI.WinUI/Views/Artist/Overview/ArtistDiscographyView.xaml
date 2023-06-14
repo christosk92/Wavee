@@ -14,7 +14,7 @@
             <RowDefinition />
         </Grid.RowDefinitions>
 
-        <Grid>
+        <Grid VerticalAlignment="Top">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition />
                 <ColumnDefinition Width="Auto" />
@@ -48,7 +48,7 @@
                           VerticalContentAlignment="Top"
                           VerticalAlignment="Top"
                           Content="{x:Bind CurrentView, Mode=OneWay}"
-                          HorizontalContentAlignment="Stretch"
+                          HorizontalContentAlignment="Stretch" 
                           x:Name="ItemsView" />
     </Grid>
 </UserControl>

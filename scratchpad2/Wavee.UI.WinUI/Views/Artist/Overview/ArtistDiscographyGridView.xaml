@@ -19,7 +19,9 @@
                       x:DataType="artist:ArtistDiscographyItem">
             <components:CardView Title="{x:Bind Title}"
                                  Id="{x:Bind Id}"
-                                 x:Phase="1"
+                                 x:Phase="1" Tapped="UIElement_OnTapped"
+                                 MaxHeight="300"
+                                 MaxWidth="300"
                                  VerticalAlignment="Top"
                                  Description="{x:Bind ReleaseDateAsStr}"
                                  Image="{x:Bind Image}" />
@@ -42,7 +44,7 @@
                                ItemsStretch="Uniform"
                                MinItemHeight="280"
                                MinRowSpacing="12"
-                               ItemsJustification="Center"
+                               ItemsJustification="Start"
                                MinColumnSpacing="6" />
         </ItemsRepeater.Layout>
         <!-- <GridView.ItemContainerStyle> -->

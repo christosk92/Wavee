@@ -12,6 +12,8 @@ using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using CommunityToolkit.WinUI.UI;
+using CommunityToolkit.WinUI.UI.Controls;
 using Wavee.UI.Core.Contracts.Artist;
 
 // To learn more about WinUI, the WinUI project structure,
@@ -62,5 +64,10 @@ namespace Wavee.UI.WinUI.Views.Artist.Overview
             Scroller.ScrollTo(offset, 0);
         }
 
+        private void UIElement_OnTapped(object sender, TappedRoutedEventArgs e)
+        {
+            this.FindAscendant<ArtistPage>()._storeditem = (sender as UIElement)
+                .FindDescendant<ConstrainedBox>();
+        }
     }
 }

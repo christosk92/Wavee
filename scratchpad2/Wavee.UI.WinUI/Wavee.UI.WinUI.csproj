@@ -26,6 +26,7 @@
 		<None Remove="Components\TrackView.xaml" />
 		<None Remove="Themes\BorderStyles.xaml" />
 		<None Remove="Themes\ButtonStyles.xaml" />
+		<None Remove="Views\Album\AlbumPage.xaml" />
 		<None Remove="Views\Artist\About\ArtistConcertsView.xaml" />
 		<None Remove="Views\Artist\ArtistAboutView.xaml" />
 		<None Remove="Views\Artist\ArtistPage.xaml" />
@@ -101,6 +102,9 @@
 		<None Update="Assets\Fonts\MediaPlayerIcons.ttf">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</None>
+		<Page Update="Views\Album\AlbumPage.xaml">
+		  <Generator>MSBuild:Compile</Generator>
+		</Page>
 		<None Update="Views\Playback\PlayingOnRemoteDeviceControl.xaml">
 		  <Generator>MSBuild:Compile</Generator>
 		</None>
