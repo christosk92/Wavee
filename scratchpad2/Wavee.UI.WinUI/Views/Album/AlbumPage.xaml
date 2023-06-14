@@ -20,6 +20,10 @@
         <labs:TransitionHelper x:Name="BaseTrans">
             <labs:TransitionConfig Id="name"
                                    ScaleMode="None" />
+            <labs:TransitionConfig Id="albumtype"
+                                   ScaleMode="None" />
+            <labs:TransitionConfig Id="albummetadata"
+                                   ScaleMode="None" />
             <labs:TransitionConfig EnableClipAnimation="true"
                                    Id="buttonspanel" />
             <labs:TransitionConfig Id="background"
@@ -149,6 +153,7 @@
                             <TextBlock x:Name="AlbumType"
                                        Text="{x:Bind ViewModel.AlbumType, Mode=OneWay}"
                                        FontWeight="Bold"
+                                       labs:TransitionHelper.Id="albumtype"
                                        Foreground="{ThemeResource ApplicationSecondaryForegroundThemeBrush}"
                                        RelativePanel.Above="Title" />
 
@@ -162,6 +167,7 @@
 
                             <labs:TokenView RelativePanel.Above="Buttons"
                                             x:Name="Metadata"
+                                            labs:TransitionHelper.Id="albummetadata"
                                             Margin="0,8,0,18"
                                             SelectionMode="None">
                                 <labs:TokenView.Items>
@@ -260,17 +266,19 @@
                                VerticalAlignment="Center"
                                FontSize="28"
                                FontWeight="Bold"
-                               Text="SMITHEREENS" />
+                               Text="{x:Bind ViewModel.AlbumName, Mode=OneWay}" />
                 </StackPanel>
 
                 <Grid RelativePanel.AlignLeftWithPanel="True"
+                      Padding="-10,0"
                       RelativePanel.AlignRightWithPanel="True"
+                      labs:TransitionHelper.Id="albummetadata"
                       RelativePanel.AlignBottomWithPanel="True">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="100" />
-                        <ColumnDefinition />
-                        <ColumnDefinition />
                         <ColumnDefinition Width="50" />
+                        <ColumnDefinition Width="2*" />
+                        <ColumnDefinition />
+                        <ColumnDefinition Width="40" />
                     </Grid.ColumnDefinitions>
                     <TextBlock Text="#" />
 
