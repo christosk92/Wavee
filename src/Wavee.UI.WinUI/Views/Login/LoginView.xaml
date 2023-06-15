@@ -40,6 +40,7 @@
 
                 <TextBox TabIndex="0"
                          MinWidth="280"
+                         IsEnabled="{x:Bind Negate(ViewModel.IsLoading), Mode=OneWay}"
                          Text="{x:Bind ViewModel.Username, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                          x:Uid="/Login/Username"
                          x:Name="UsernameInput"
@@ -47,6 +48,7 @@
 
                 <PasswordBox x:Name="PasswordInput"
                              TabIndex="1"
+                             IsEnabled="{x:Bind Negate(ViewModel.IsLoading), Mode=OneWay}"
                              x:Uid="/Login/Password"
                              Password="{x:Bind ViewModel.Password, Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"
                              MinWidth="200"
@@ -57,6 +59,7 @@
 
                 <Button x:Name="NextButton"
                         x:Uid="/Login/Go"
+                        IsEnabled="{x:Bind Negate(ViewModel.IsLoading), Mode=OneWay}"
                         Command="{x:Bind ViewModel.SignInCommand}"
                         Style="{ThemeResource AccentButtonStyle}"
                         HorizontalAlignment="Stretch"

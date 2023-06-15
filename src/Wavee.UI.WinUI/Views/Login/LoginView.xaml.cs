@@ -2,6 +2,7 @@ using System;
 using Microsoft.UI;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using System.Threading;
 using System.Windows.Documents;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
@@ -31,14 +32,14 @@ namespace Wavee.UI.WinUI.Views.Login
 
         public LoginViewModel ViewModel { get; }
 
-        private void OnLoaded(object sender, RoutedEventArgs e)
+        private async void OnLoaded(object sender, RoutedEventArgs e)
         {
             App.MainWindow.SetTitleBar(titleBar: TitleBar);
             var titlebar = App.MainWindow.AppWindow.TitleBar;
             titlebar.ExtendsContentIntoTitleBar = true;
             App.MainWindow.AppWindow.TitleBar.BackgroundColor = Colors.Transparent;
 
-
+            await ViewModel.AttemptLoginStored(CancellationToken.None);
             UsernameInput.Focus(FocusState.Keyboard);
         }
 
@@ -116,6 +117,11 @@ namespace Wavee.UI.WinUI.Views.Login
 
                 appWindow.TitleBar.SetDragRectangles(dragRects);
             }
+        }
+
+        public bool Negate(bool b)
+        {
+            return !b;
         }
     }
 }

@@ -26,6 +26,7 @@ namespace Wavee.UI.WinUI
             this.ExtendsContentIntoTitleBar = true;
             this.SystemBackdrop = new MicaBackdrop();
 
+
             SetLogInView();
 
             this.SizeChanged += (sender, args) =>
