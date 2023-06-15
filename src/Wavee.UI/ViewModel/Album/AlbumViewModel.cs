@@ -81,8 +81,11 @@ public sealed class AlbumViewModel : ObservableObject
         set => SetProperty(ref _artists, value);
     }
 
+    public AudioId AlbumId { get; private set; }
+
     public async Task Create(AudioId id, CancellationToken ct = default)
     {
+        AlbumId = id;
         var album = await Global.AppState.Album.GetAlbumViewAsync(id, ct);
         if (string.IsNullOrEmpty(AlbumImage))
         {

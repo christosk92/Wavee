@@ -263,7 +263,7 @@
                                         RelativePanel.AlignBottomWithPanel="True"
                                         labs:TransitionHelper.Id="buttonspanel"
                                         Orientation="Horizontal">
-                                <Button Height="34"
+                                <Button Height="34" Tapped="PlayFromStart"
                                         Style="{ThemeResource AccentButtonStyle}">
                                     <StackPanel Spacing="8"
                                                 Orientation="Horizontal">

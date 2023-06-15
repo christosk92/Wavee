@@ -23,8 +23,11 @@ using CommunityToolkit.WinUI.UI.Controls;
 using Wavee.UI.WinUI.Components;
 using Windows.Foundation.Metadata;
 using CommunityToolkit.Mvvm.Input;
+using Eum.Spotify.context;
+using LanguageExt;
 using Wavee.Core.Ids;
 using Wavee.UI.Core.Contracts.Artist;
+using Wavee.UI.ViewModel.Playback;
 using Wavee.UI.WinUI.Navigation;
 
 // To learn more about WinUI, the WinUI project structure,
@@ -38,11 +41,41 @@ namespace Wavee.UI.WinUI.Views.Album
         {
             this.InitializeComponent();
             ViewModel = new AlbumViewModel();
-            PlayTrackCommand = new AsyncRelayCommand<TrackView>(PlayTrack);
+            PlayTrackCommand = new AsyncRelayCommand<Option<TrackView>>(PlayTrack);
         }
 
-        private Task PlayTrack(TrackView arg)
+        private Task PlayTrack(Option<TrackView> item)
         {
+            if (item.IsNone)
+            {
+                //play from start
+                PlaybackViewModel.Instance.PlayCommand
+                    .Execute(new PlayContextStruct(
+                        ContextId: ViewModel.AlbumId.ToString(),
+                        ContextUrl: $"context://{ViewModel.AlbumId.ToString()}",
+                        Index: 0,
+                        TrackId: Option<AudioId>.None,
+                        NextPages: Option<IEnumerable<ContextPage>>.None,
+                        PageIndex: Option<int>.None,
+                        Metadata: HashMap<string, string>.Empty
+                    ));
+                return Task.CompletedTask;
+            }
+
+
+            var track = item.IfNoneUnsafe(() => throw new Exception("track is none"));
+            var trackIndex = ViewModel.Discs.SelectMany(x => x.Tracks).ToList()
+                .FindIndex(x => x.Id == track.Id);
+            PlaybackViewModel.Instance.PlayCommand
+                .Execute(new PlayContextStruct(
+                    ContextId: ViewModel.AlbumId.ToString(),
+                    ContextUrl: $"context://{ViewModel.AlbumId.ToString()}",
+                    Index: trackIndex,
+                    TrackId: track.Id,
+                    NextPages: Option<IEnumerable<ContextPage>>.None,
+                    PageIndex: Option<int>.None,
+                    Metadata: HashMap<string, string>.Empty
+                ));
             return Task.CompletedTask;
         }
 
@@ -75,7 +108,7 @@ namespace Wavee.UI.WinUI.Views.Album
                 binding.Mode = BindingMode.OneWay;
                 BindingOperations.SetBinding(Src, Image.SourceProperty, binding);
                 _navigatedToSomethingWithBack = false;
-                 await ViewModel.Create(id);
+                await ViewModel.Create(id);
             }
         }
 
@@ -169,7 +202,7 @@ namespace Wavee.UI.WinUI.Views.Album
         //         await Task.Delay(TimeSpan.FromMilliseconds(10));
         //     }
         // }
-        public AsyncRelayCommand<TrackView> PlayTrackCommand { get; }
+        public AsyncRelayCommand<Option<TrackView>> PlayTrackCommand { get; }
 
         private bool isAdjusting = false;
         private const double maxFontSize = 46; // set your max font size
@@ -236,6 +269,11 @@ namespace Wavee.UI.WinUI.Views.Album
             {
                 UICommands.NavigateTo.Execute(id);
             }
+        }
+
+        private void PlayFromStart(object sender, TappedRoutedEventArgs e)
+        {
+            PlayTrackCommand.Execute(Option<TrackView>.None);
         }
     }
 }

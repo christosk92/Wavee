@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System.Data.Common;
+using System.Diagnostics;
 using System.Net.Http.Headers;
 using System.Net.WebSockets;
 using System.Reactive.Linq;
@@ -7,10 +8,12 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Channels;
 using Eum.Spotify.connectstate;
+using Eum.Spotify.context;
 using Eum.Spotify.playlist4;
 using Google.Protobuf;
 using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
+using Spotify.Metadata;
 using Wavee.Core.Ids;
 using Wavee.Infrastructure.IO;
 using Wavee.Player;
@@ -141,6 +144,52 @@ internal sealed class SpotifyRemoteClient : ISpotifyRemoteClient, IDisposable
         return InvokeCommand(commandName, new HashMap<string, object>().Add("value", to.TotalMilliseconds), ct);
     }
 
+    public Task<Unit> PlayContextPaged(string contextId, IEnumerable<ContextPage> pages, int trackIndex, int pageIndex,
+        HashMap<string, string> metadata)
+    {
+        const string endpoint = "play";
+        var command = new HashMap<string, object>()
+            .Add("context", new HashMap<string, object>()
+                .Add("uri", contextId)
+                .Add("pages", pages.Select(c => new HashMap<string, object>()
+                    .Add("page_url", c.PageUrl)))
+                .Add("metadata", metadata))
+            .Add("options", new HashMap<string, object>()
+                .Add("license", "premium")
+                .Add("skip_to", new HashMap<string, object>()
+                    .Add("track_index", trackIndex)
+                    .Add("page_index", pageIndex))
+                .Add("player_options_override", new object()));
+
+        return InvokeCommand(endpoint, command, CancellationToken.None);
+    }
+
+    public Task<Unit> PlayContextRaw(string contextId, string contextUrl, int trackIndex, Option<AudioId> trackId,
+        int pageIndex,
+        HashMap<string, string> metadata)
+    {
+        const string endpoint = "play";
+        var skipTo = new HashMap<string, object>()
+            .Add("track_index", trackIndex)
+            .Add("page_index", pageIndex);
+        if (trackId.IsSome)
+        {
+            skipTo = skipTo.Add("track_uri", trackId.ValueUnsafe().ToString());
+        }
+
+        var command = new HashMap<string, object>()
+            .Add("context", new HashMap<string, object>()
+                .Add("uri", contextId)
+                .Add("url", contextUrl)
+                .Add("metadata", metadata))
+            .Add("options", new HashMap<string, object>()
+                .Add("license", "premium")
+                .Add("skip_to", skipTo)
+                .Add("player_options_override", new object()));
+
+        return InvokeCommand(endpoint, command, CancellationToken.None);
+    }
+
     public Task<Unit> RefreshState()
     {
         //TODO:
@@ -187,8 +236,43 @@ internal sealed class SpotifyRemoteClient : ISpotifyRemoteClient, IDisposable
         {
             {"endpoint", commandName}
         };
+        //we need to flatten value
+        static void Add(string key, object item, Dictionary<string, object> to)
+        {
+            //if item is a dictionary, add as nested dictionary
+            if (item is HashMap<string, object> dict)
+            {
+                var nested = new Dictionary<string, object>();
+                foreach (var (k, v) in dict)
+                {
+                    Add(k, v, nested);
+                }
+
+                to.Add(key, nested);
+            }
+            else if (item is HashMap<string, string> dictAsString)
+            {
+                var nested = new Dictionary<string, string>();
+                foreach (var (k, v) in dictAsString)
+                {
+                    nested.Add(k, v);
+                }
+
+                to.Add(key, nested);
+            }
+            else 
+            {
+                to.Add(key, item);
+            }
+        }
+
         foreach (var (key, val) in value)
-            command.Add(key, val);
+        {
+            Add(key, val, command);
+        }
+
+        // foreach (var (key, val) in value)
+        //     command.Add(key, val);
 
         var serialized = JsonSerializer.Serialize(new
         {

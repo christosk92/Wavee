@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Reactive.Linq;
 using System.Windows.Input;
+using CommunityToolkit.Mvvm.Input;
 using DynamicData.Binding;
 using Eum.Spotify.connectstate;
 using Eum.Spotify.spircs;
@@ -15,7 +16,7 @@ using Wavee.Spotify.Infrastructure.PrivateApi.Contracts.Response;
 using Wavee.Spotify.Infrastructure.Remote.Contracts;
 using Wavee.UI.Core;
 using Wavee.UI.ViewModel.Library;
-
+using static LanguageExt.Prelude;
 namespace Wavee.UI.ViewModel.Playback;
 
 public sealed partial class PlaybackViewModel : ReactiveObject
@@ -47,7 +48,7 @@ public sealed partial class PlaybackViewModel : ReactiveObject
         _positionMs = 0;
         _positionTimer = new Timer(MainPositionTimerCallback, null, Timeout.Infinite, Timeout.Infinite);
         _updates = new PlaybackViewModelUpdates(this);
-        
+
         LibrariesViewModel.Instance.ListenForChanges
             .ObserveOn(RxApp.MainThreadScheduler)
             .Subscribe(x =>
@@ -71,9 +72,42 @@ public sealed partial class PlaybackViewModel : ReactiveObject
 
         bool IsPlayingOnThisDevice() => Device.DeviceId == Global.AppState.DeviceId;
 
-        PlayCommand = ReactiveCommand.CreateFromTask<PlayContextStruct, Unit>((play, ct) =>
+        PlayCommand = new AsyncRelayCommand<PlayContextStruct>(async (context, ct) =>
         {
-            return Task.FromResult(default(Unit));
+            if (IsPlayingOnThisDevice())
+            {
+                //play on this device
+                return;
+            }
+
+            //remote command
+            if (context.NextPages.IsSome)
+            {
+                var aff =
+                    from _ in Global.AppState.Remote.PlayContextPaged(
+                        contextId: context.ContextId,
+                        pages: context.NextPages.ValueUnsafe(),
+                        trackIndex: context.Index,
+                        pageIndex: context.PageIndex.ValueUnsafe(),
+                        metadata: context.Metadata
+                    ).ToAff()
+                    select unit;
+                var result = await aff.Run();
+            }
+            else
+            {
+                var aff =
+                    from _ in Global.AppState.Remote.PlayContextRaw(
+                        contextId: context.ContextId,
+                        contextUrl: context.ContextUrl.ValueUnsafe(),
+                        trackIndex: context.Index,
+                        trackId: context.TrackId,
+                        pageIndex: context.PageIndex.IfNone(0),
+                        metadata: context.Metadata
+                    ).ToAff()
+                    select unit;
+                var result = await aff.Run();
+            }
         });
 
         ResumePauseCommand = ReactiveCommand.CreateFromTask((ct) =>
@@ -235,7 +269,7 @@ public sealed partial class PlaybackViewModel : ReactiveObject
     }
 
     public bool IsLoading => !IsConnectedToRemoteState || IsLoadingItem;
-    public ReactiveCommand<PlayContextStruct, Unit> PlayCommand { get; }
+    public AsyncRelayCommand<PlayContextStruct> PlayCommand { get; }
     public ICommand ResumePauseCommand { get; }
     public ICommand SkipNextCommand { get; }
     public ICommand ToggleRepeatCommand { get; }
