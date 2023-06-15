@@ -14,6 +14,7 @@ using Wavee.Spotify.Infrastructure.Mercury.Models;
 using Wavee.Spotify.Infrastructure.PrivateApi.Contracts.Response;
 using Wavee.Spotify.Infrastructure.Remote.Contracts;
 using Wavee.UI.Core;
+using Wavee.UI.ViewModel.Library;
 
 namespace Wavee.UI.ViewModel.Playback;
 
@@ -31,6 +32,7 @@ public sealed partial class PlaybackViewModel : ReactiveObject
     private bool _shuffling;
     private TrackOrEpisode? _currentTrack;
     private double _volume;
+    private bool _currentTrackSaved;
     private bool _hasLyrics;
     private readonly Timer _positionTimer;
     private long _positionMs;
@@ -54,6 +56,7 @@ public sealed partial class PlaybackViewModel : ReactiveObject
             {
                 PauseChanged?.Invoke(this, Paused);
                 CurrentTrackChanged?.Invoke(this, CurrentTrack);
+                CurrentTrackSaved = CurrentTrack is not null && LibrariesViewModel.Instance.InLibrary(CurrentTrack.Id);
             });
 
         bool IsPlayingOnThisDevice() => Device.DeviceId == Global.AppState.DeviceId;
@@ -148,6 +151,12 @@ public sealed partial class PlaybackViewModel : ReactiveObject
     {
         get => _currentTrackColors;
         set => this.RaiseAndSetIfChanged(ref _currentTrackColors, value);
+    }
+
+    public bool CurrentTrackSaved
+    {
+        get => _currentTrackSaved;
+        set => this.RaiseAndSetIfChanged(ref _currentTrackSaved, value);
     }
     public TrackOrEpisode? CurrentTrack
     {

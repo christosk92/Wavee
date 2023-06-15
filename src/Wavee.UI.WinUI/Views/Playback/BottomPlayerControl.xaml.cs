@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
+using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using CommunityToolkit.WinUI.Helpers;
@@ -24,9 +25,10 @@ using Wavee.Spotify.Infrastructure.Mercury.Models;
 using Wavee.Spotify.Infrastructure.PrivateApi.Contracts.Response;
 using Wavee.Spotify.Infrastructure.Remote.Contracts;
 using Wavee.UI.Core;
+using Wavee.UI.ViewModel.Library;
 using Wavee.UI.ViewModel.Playback;
 using Image = Spotify.Metadata.Image;
-
+using static LanguageExt.Prelude;
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
 
@@ -246,6 +248,17 @@ namespace Wavee.UI.WinUI.Views.Playback
             return isOurDevice
                 ? (Brush)Application.Current.Resources["ApplicationForegroundThemeBrush"]
                 : (Brush)(Application.Current.Resources["SystemControlForegroundAccentBrush"]);
+        }
+
+        private async void StarButton_OnTapped(object sender, TappedRoutedEventArgs e)
+        {
+            var id = Player.CurrentTrack?.Id;
+
+            if (id.HasValue)
+            {
+                await Task.Delay(20);
+                LibrariesViewModel.Instance.SaveItem(Seq1(id.Value));
+            }
         }
     }
 }

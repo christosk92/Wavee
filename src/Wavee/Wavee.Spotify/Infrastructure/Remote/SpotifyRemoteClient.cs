@@ -64,10 +64,7 @@ internal sealed class SpotifyRemoteClient : ISpotifyRemoteClient, IDisposable
         _rootlistNotifSubj.StartWith(
             new SpotifyRootlistUpdateNotification(_userId));
 
-    public IObservable<SpotifyLibraryUpdateNotification> LibraryChanged => _libraryNotifSubj
-        .StartWith(new SpotifyLibraryUpdateNotification(
-            true, new AudioId(), true, Option<DateTimeOffset>.None));
-
+    public IObservable<SpotifyLibraryUpdateNotification> LibraryChanged => _libraryNotifSubj;
     public async Task<Option<Unit>> Takeover(CancellationToken ct = default)
     {
         await Ready.Task;
@@ -525,20 +522,19 @@ internal sealed class SpotifyRemoteClient : ISpotifyRemoteClient, IDisposable
                     var type = item.GetProperty("type").GetString();
                     var removed = item.GetProperty("removed").GetBoolean();
                     var addedAt = item.GetProperty("addedAt").GetUInt64();
-                    // var result = new SpotifyLibraryUpdateNotification(
-                    //     Initial: false,
-                    //     Item: AudioId.FromBase62(
-                    //         base62: item.GetProperty("identifier").GetString(),
-                    //         itemType: type switch
-                    //         {
-                    //             "track" => AudioItemType.Track,
-                    //             "artist" => AudioItemType.Artist,
-                    //             "album" => AudioItemType.Album
-                    //         }, ServiceType.Spotify),
-                    //     Removed: removed,
-                    //     AddedAt: removed ? Option<DateTimeOffset>.None : DateTimeOffset.Now
-                    // );
-                    // atomic(() => _libraryNotifSubj.OnNext(result));
+                    var result = new SpotifyLibraryUpdateNotification(
+                        Item: AudioId.FromBase62(
+                            base62: item.GetProperty("identifier").GetString(),
+                            itemType: type switch
+                            {
+                                "track" => AudioItemType.Track,
+                                "artist" => AudioItemType.Artist,
+                                "album" => AudioItemType.Album
+                            }, ServiceType.Spotify),
+                        Removed: removed,
+                        AddedAt: removed ? Option<DateTimeOffset>.None : DateTimeOffset.FromUnixTimeSeconds((long)addedAt)
+                    );
+                    atomic(() => _libraryNotifSubj.OnNext(result));
                 }
             }
         }

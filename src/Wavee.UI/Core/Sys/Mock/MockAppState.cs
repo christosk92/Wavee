@@ -2,6 +2,7 @@
 using Wavee.UI.Core.Contracts.Album;
 using Wavee.UI.Core.Contracts.Artist;
 using Wavee.UI.Core.Contracts.Home;
+using Wavee.UI.Core.Contracts.Library;
 using Wavee.UI.Core.Contracts.Metadata;
 using Wavee.UI.Core.Contracts.Playback;
 using Wavee.UI.Core.Sys;
@@ -22,6 +23,7 @@ internal class MockAppState : IAppState
     public IAlbumView Album { get; set; }
     public IRemotePlaybackClient Remote { get; }
     public IMetadataClient Metadata { get; }
+    public ILibraryView Library { get; }
     public string DeviceId { get; }
 }
 

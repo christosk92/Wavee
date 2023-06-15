@@ -2,6 +2,7 @@ using Microsoft.UI.Xaml.Controls;
 using System.Runtime;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Wavee.UI.Core;
 using System.Net.NetworkInformation;
 using System.Runtime.InteropServices;

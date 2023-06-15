@@ -1,7 +1,10 @@
 ﻿using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Web;
+using Google.Protobuf;
 using LanguageExt;
+using LanguageExt.UnsafeValueAccess;
+using Spotify.Collection.Proto.V2;
 using Wavee.Infrastructure.IO;
 using Wavee.Spotify.Infrastructure.PrivateApi.Contracts;
 using Wavee.Spotify.Infrastructure.PrivateApi.Contracts.Response;
@@ -83,10 +86,31 @@ internal readonly struct SpotifyPrivateApi : ISpotifyPrivateApi
         return new SpotifyColors(Dark: colorDark!, Light: colorLight!);
     }
 
+    public async Task<Unit> WriteLibrary(WriteRequest writeRequest, CancellationToken ct = default)
+    {
+        var spClient = ApResolve.ApResolver.SpClient.ValueUnsafe();
+        var url = $"https://{spClient}/collection/v2/write";
+        var data = writeRequest.ToByteArray();
+        using var streamContent = new ByteArrayContent(data);
+        streamContent.Headers.ContentType = new MediaTypeHeaderValue("application/vnd.collection-v2.spotify.proto");
+       
+        using var response = await PostResponse(url, streamContent, ct);
+        response.EnsureSuccessStatusCode();
+
+        return Unit.Default;
+    }
+
     private async Task<HttpResponseMessage> GetResponse(string url, CancellationToken ct)
     {
         var bearer = await _tokenFactory(ct);
         var bearerHeader = new AuthenticationHeaderValue("Bearer", bearer);
         return await HttpIO.Get(url, bearerHeader, HashMap<string, string>.Empty, ct);
+    }
+
+    private async Task<HttpResponseMessage> PostResponse(string url, HttpContent body, CancellationToken ct)
+    {
+        var bearer = await _tokenFactory(ct);
+        var bearerHeader = new AuthenticationHeaderValue("Bearer", bearer);
+        return await HttpIO.Post(url, bearerHeader, HashMap<string, string>.Empty, body, ct);
     }
 }

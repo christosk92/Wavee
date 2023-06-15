@@ -11,7 +11,6 @@ using static LanguageExt.Prelude;
 namespace Wavee.Spotify.Infrastructure.Remote.Contracts;
 
 public readonly record struct SpotifyLibraryUpdateNotification(
-    bool Initial,
     AudioId Item,
     bool Removed,
     Option<DateTimeOffset> AddedAt);

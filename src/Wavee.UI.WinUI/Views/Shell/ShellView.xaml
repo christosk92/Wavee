@@ -69,27 +69,30 @@
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
                 <NavigationViewItemHeader Content="Yours" />
-                <NavigationViewItem Content="Songs">
+                <NavigationViewItem Tag="songs"
+                                    Content="Songs">
                     <NavigationViewItem.InfoBadge>
-                        <InfoBadge Value="0" />
+                        <InfoBadge Value="{x:Bind ViewModel.Libraries.TracksSaved, Mode=OneWay}" />
                     </NavigationViewItem.InfoBadge>
                     <NavigationViewItem.Icon>
                         <FontIcon FontFamily="Segoe Fluent Icons"
                                   Glyph="&#xEB52;" />
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
-                <NavigationViewItem Content="Albums">
+                <NavigationViewItem Tag="albums"
+                                    Content="Albums">
                     <NavigationViewItem.InfoBadge>
-                        <InfoBadge Value="0" />
+                        <InfoBadge Value="{x:Bind ViewModel.Libraries.AlbumsSaved, Mode=OneWay}" />
                     </NavigationViewItem.InfoBadge>
                     <NavigationViewItem.Icon>
                         <FontIcon FontFamily="Segoe Fluent Icons"
                                   Glyph="&#xE93C;" />
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
-                <NavigationViewItem Content="Artists">
+                <NavigationViewItem Tag="artists"
+                                    Content="Artists">
                     <NavigationViewItem.InfoBadge>
-                        <InfoBadge Value="0" />
+                        <InfoBadge Value="{x:Bind ViewModel.Libraries.ArtistsSaved, Mode=OneWay}" />
                     </NavigationViewItem.InfoBadge>
                     <NavigationViewItem.Icon>
                         <FontIcon FontFamily="Segoe Fluent Icons"
@@ -120,23 +123,23 @@
                        HorizontalAlignment="Stretch"
                        VerticalAlignment="Bottom">
             <playback:BottomPlayerControl Height="90"
-                                  RelativePanel.AlignLeftWithPanel="True"
-                                  RelativePanel.AlignRightWithPanel="True"
-                                  HorizontalAlignment="Stretch"
-                                  RelativePanel.AlignTopWithPanel="True"
-                                  HorizontalContentAlignment="Stretch"
-                                  x:Name="MainPlayer"
-                                  Player="{x:Bind ViewModel.Player}" />
+                                          RelativePanel.AlignLeftWithPanel="True"
+                                          RelativePanel.AlignRightWithPanel="True"
+                                          HorizontalAlignment="Stretch"
+                                          RelativePanel.AlignTopWithPanel="True"
+                                          HorizontalContentAlignment="Stretch"
+                                          x:Name="MainPlayer"
+                                          Player="{x:Bind ViewModel.Player}" />
             <playback:PlayingOnRemoteDeviceControl x:Name="PlayingOnRemoteDevice"
-                                                 RelativePanel.AlignLeftWithPanel="True"
-                                                 RelativePanel.AlignRightWithPanel="True"
-                                                 RelativePanel.Below="MainPlayer"
-                                                 Visibility="{x:Bind IsOurDevice(ViewModel.Player.Device), Mode=OneWay}"
-                                                 Device="{x:Bind ViewModel.Player.Device, Mode=OneWay}" />
+                                                   RelativePanel.AlignLeftWithPanel="True"
+                                                   RelativePanel.AlignRightWithPanel="True"
+                                                   RelativePanel.Below="MainPlayer"
+                                                   Visibility="{x:Bind IsOurDevice(ViewModel.Player.Device), Mode=OneWay}"
+                                                   Device="{x:Bind ViewModel.Player.Device, Mode=OneWay}" />
         </RelativePanel>
 
         <Border x:Name="Titlebar"
-                Height="48" 
+                Height="48"
                 VerticalAlignment="Top"
                 Margin="80,0,140,0"
                 Background="Transparent"

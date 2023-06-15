@@ -1,15 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<UserControl
-    x:Class="Wavee.UI.WinUI.Views.Playback.BottomPlayerControl"
-    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:Wavee.UI.WinUI.Views.Playback"
-    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:controls="using:Wavee.UI.WinUI.Controls"
-    xmlns:controls1="using:CommunityToolkit.WinUI.UI.Controls"
-    xmlns:winUi="using:CommunityToolkit.Labs.WinUI"
-    mc:Ignorable="d">
+<UserControl x:Class="Wavee.UI.WinUI.Views.Playback.BottomPlayerControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Wavee.UI.WinUI.Views.Playback"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:controls="using:Wavee.UI.WinUI.Controls"
+             xmlns:controls1="using:CommunityToolkit.WinUI.UI.Controls"
+             xmlns:winUi="using:CommunityToolkit.Labs.WinUI"
+             mc:Ignorable="d">
 
     <UserControl.Resources>
         <ResourceDictionary>
@@ -158,7 +157,9 @@
                       Visibility="{x:Bind IsLoadingToVisibility(Player.IsLoading), Mode=OneWay}"
                       Margin="12,0">
                     <controls:StarButton FontSize="24"
-                                      x:Name="StarButton" />
+                                         IsChecked="{x:Bind Player.CurrentTrackSaved,Mode=OneWay}"
+                                         Tapped="StarButton_OnTapped"
+                                         x:Name="StarButton" />
                 </Grid>
             </Grid>
         </Border>

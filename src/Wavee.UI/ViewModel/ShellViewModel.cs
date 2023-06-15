@@ -1,4 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
+using LanguageExt;
+using Wavee.Core.Ids;
 using Wavee.UI.Core;
 using Wavee.UI.ViewModel.Library;
 using Wavee.UI.ViewModel.Playback;
@@ -11,7 +13,7 @@ public sealed class ShellViewModel : ObservableObject
     {
         AppState = appState;
         Player = new PlaybackViewModel();
-        Libraries = new LibrariesViewModel();
+        Libraries = new LibrariesViewModel(appState);
     }
     public LibrariesViewModel Libraries { get; }
     public PlaybackViewModel Player { get; }
