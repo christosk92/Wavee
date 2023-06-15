@@ -317,8 +317,13 @@ public sealed partial class PlaybackViewModel : ReactiveObject
                     {
                         try
                         {
-                            var track = await Global.AppState.Metadata.GetItem(x.TrackUri.ValueUnsafe());
-                            return (x, track);
+                            var track = await Global.AppState.Metadata.GetItem(x.TrackUri.ValueUnsafe()).Run();
+                            if (track.IsFail)
+                            {
+                                var err = track.Match(Fail: y => y, Succ: _ => throw new NotSupportedException());
+                                throw err.ToException();
+                            }
+                            return (x, track.Match(Succ: y => y, Fail: _ => throw new NotSupportedException()));
                         }
                         catch (Exception e)
                         {

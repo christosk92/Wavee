@@ -3,6 +3,8 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using Wavee.Core.Ids;
 using Wavee.UI.Core;
 using Wavee.UI.Core.Contracts.Album;
+using Wavee.UI.Core.Contracts.Artist;
+using Wavee.UI.Core.Contracts.Common;
 
 namespace Wavee.UI.ViewModel.Album;
 
@@ -15,6 +17,9 @@ public sealed class AlbumViewModel : ObservableObject
     private string? _albumTrackCountString;
     private string? _albumDurationString;
     private IReadOnlyList<SpotifyDiscView> _discs;
+    private IReadOnlyList<string> _copyRights;
+    private IReadOnlyList<CardItem> _related;
+    private IReadOnlyList<SpotifyAlbumArtistView> _artists;
 
     public string? AlbumImage
     {
@@ -58,10 +63,28 @@ public sealed class AlbumViewModel : ObservableObject
         set => SetProperty(ref _discs, value);
     }
 
+    public IReadOnlyList<string> Copyrights
+    {
+        get => _copyRights;
+        set => SetProperty(ref _copyRights, value);
+    }
+
+    public IReadOnlyList<CardItem> Related
+    {
+        get => _related;
+        set => SetProperty(ref _related, value);
+    }
+
+    public IReadOnlyList<SpotifyAlbumArtistView> Artists
+    {
+        get => _artists;
+        set => SetProperty(ref _artists, value);
+    }
+
     public async Task Create(AudioId id, CancellationToken ct = default)
     {
         var album = await Global.AppState.Album.GetAlbumViewAsync(id, ct);
-        if (!string.IsNullOrEmpty(AlbumImage))
+        if (string.IsNullOrEmpty(AlbumImage))
         {
             AlbumImage = album.Cover;
         }
@@ -82,6 +105,13 @@ public sealed class AlbumViewModel : ObservableObject
         AlbumDurationString = FormatDurationAsString(duration);
 
         Discs = album.Discs;
+        Copyrights = album.CopyRights;
+        Related = album.Related;
+        Artists = album.Artists;
+        // Artists = album.Discs
+        //     .SelectMany(x => x.Tracks.SelectMany(f => f.Artists))
+        //     .DistinctBy(x=> x.Id)
+        //     .ToList();
     }
 
     private string? FormatDurationAsString(TimeSpan duration)

@@ -6,6 +6,7 @@
                 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
                 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
                 OpenPaneLength="{x:Bind UserSettings.SidebarWidth, Mode=OneWay}"
+                DisplayModeChanged="SidebarControl_OnDisplayModeChanged" 
                 ItemInvoked="Sidebar_ItemInvoked"
                 mc:Ignorable="d">
     <NavigationView.Resources>

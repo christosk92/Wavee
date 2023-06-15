@@ -19,18 +19,31 @@ using Microsoft.UI.Xaml.Media.Imaging;
 using Wavee.UI.Core.Contracts.Album;
 using Wavee.UI.Navigation;
 using Wavee.UI.ViewModel.Album;
+using CommunityToolkit.WinUI.UI.Controls;
+using Wavee.UI.WinUI.Components;
+using Windows.Foundation.Metadata;
+using CommunityToolkit.Mvvm.Input;
+using Wavee.Core.Ids;
+using Wavee.UI.Core.Contracts.Artist;
+using Wavee.UI.WinUI.Navigation;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
 
 namespace Wavee.UI.WinUI.Views.Album
 {
-    public sealed partial class AlbumPage : UserControl, INavigable
+    public sealed partial class AlbumPage : UserControl, INavigable, IPlayableView, ICacheablePage
     {
         public AlbumPage()
         {
             this.InitializeComponent();
             ViewModel = new AlbumViewModel();
+            PlayTrackCommand = new AsyncRelayCommand<TrackView>(PlayTrack);
+        }
+
+        private Task PlayTrack(TrackView arg)
+        {
+            return Task.CompletedTask;
         }
 
         public AlbumViewModel ViewModel { get; }
@@ -39,25 +52,40 @@ namespace Wavee.UI.WinUI.Views.Album
         {
             if (parameter is NavigationWithImage img)
             {
-                // var bmp = new BitmapImage();
-                // Src.Source = bmp;
-                // bmp.UriSource = new Uri(img.Image, UriKind.RelativeOrAbsolute);
-                ViewModel.AlbumImage = img.Image;
+                var bmp = new BitmapImage();
+                Src.Source = bmp;
+                bmp.UriSource = new Uri(img.Image, UriKind.RelativeOrAbsolute);
+
                 var anim = ConnectedAnimationService.GetForCurrentView().GetAnimation("ForwardConnectedAnimation");
-                anim.Configuration = new DirectConnectedAnimationConfiguration();
                 if (anim != null)
                 {
+                    anim.Configuration = new DirectConnectedAnimationConfiguration();
                     anim.TryStart(Src);
                 }
-
+                ViewModel.AlbumImage = "something";
+                _navigatedToSomethingWithBack = true;
                 await ViewModel.Create(img.Id);
+            }
+            else if (parameter is AudioId id)
+            {
+                // Source="{x:Bind ViewModel.AlbumImage, Mode=OneWay}" create a binding
+                var binding = new Binding();
+                binding.Source = ViewModel;
+                binding.Path = new PropertyPath(nameof(ViewModel.AlbumImage));
+                binding.Mode = BindingMode.OneWay;
+                BindingOperations.SetBinding(Src, Image.SourceProperty, binding);
+                _navigatedToSomethingWithBack = false;
+                 await ViewModel.Create(id);
             }
         }
 
+        private bool _navigatedToSomethingWithBack;
         public void NavigatedFrom(NavigationMode mode)
         {
-            if (mode is NavigationMode.Back)
+            if (mode is NavigationMode.Back && _navigatedToSomethingWithBack)
+            {
                 ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("BackConnectedAnimation", Src);
+            }
         }
 
         private void TracksList_OnLoaded(object sender, RoutedEventArgs e)
@@ -76,6 +104,7 @@ namespace Wavee.UI.WinUI.Views.Album
             scroller.ViewChanged -= Scroller_ViewChanged;
         }
         private bool _wasTransformed;
+
         private void Scroller_ViewChanged(object sender, ScrollViewerViewChangedEventArgs e)
         {
             //check if we scrolled past final header
@@ -88,14 +117,14 @@ namespace Wavee.UI.WinUI.Views.Album
             // HeaderImage.Opacity = opacity;
 
             //at around 75%, we should start transforming the header into a floating one
-            if (progress > .4 && !_wasTransformed)
+            if (progress > .75 && !_wasTransformed)
             {
                 _wasTransformed = true;
                 BaseTrans.Source = MetadataPanel;
                 BaseTrans.Target = SecondMetadataPanel;
                 _ = BaseTrans.StartAsync();
             }
-            else if (progress <= .4 && _wasTransformed)
+            else if (progress <= .75 && _wasTransformed)
             {
                 _wasTransformed = false;
                 BaseTrans.Source = SecondMetadataPanel;
@@ -106,7 +135,7 @@ namespace Wavee.UI.WinUI.Views.Album
 
         public object GetAppropriateCollection(IReadOnlyList<SpotifyDiscView> spotifyDiscViews)
         {
-            if(spotifyDiscViews is null) return null;
+            if (spotifyDiscViews is null) return null;
             if (spotifyDiscViews.Count == 1)
             {
                 return new CollectionViewSource
@@ -119,9 +148,93 @@ namespace Wavee.UI.WinUI.Views.Album
                 return new CollectionViewSource
                 {
                     Source = spotifyDiscViews,
-                    IsSourceGrouped = true, 
+                    IsSourceGrouped = true,
                     ItemsPath = new PropertyPath(nameof(SpotifyDiscView.Tracks))
                 }.View;
+            }
+        }
+
+        private void UIElement_OnTapped(object sender, TappedRoutedEventArgs e)
+        {
+
+        }
+        //
+        // private async void Title_OnIsTextTrimmedChanged(TextBlock sender, IsTextTrimmedChangedEventArgs args)
+        // {
+        //     //if we are trimming, it means we are too long
+        //     //resize font size until we are no longer trimming
+        //     while (sender.IsTextTrimmed)
+        //     {
+        //         sender.FontSize -= 1;
+        //         await Task.Delay(TimeSpan.FromMilliseconds(10));
+        //     }
+        // }
+        public AsyncRelayCommand<TrackView> PlayTrackCommand { get; }
+
+        private bool isAdjusting = false;
+        private const double maxFontSize = 46; // set your max font size
+        private const double minFontSize = 10; // set your min font size
+        private async void Title_OnIsTextTrimmedChanged(TextBlock sender, IsTextTrimmedChangedEventArgs args)
+        {
+
+        }
+
+        private void AlbumPage_OnSizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            var titleIsTrimmed = Title.IsTextTrimmed;
+
+        }
+
+        private void TitleBorderSizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            //check how much space we have
+            var width = e.NewSize.Width;
+            //var currentFontSize = AlbumType.FontSize;
+
+            if (Title.ActualWidth == 0) return;
+            //check if we can fit the text
+            var textWidth = Title.ActualWidth;
+            //calculate the appropriate new fontsize (not a ratio)
+            var newFontSize = Math.Max(minFontSize, Math.Min(maxFontSize, Title.FontSize * width / textWidth));
+            Title.FontSize = newFontSize;
+
+            // if (textWidth > width)
+            // {
+            //     //we can't fit the text, so we need to shrink it
+            //     //calculate the appropriate 
+            //
+            //     AlbumType.FontSize = newFontSize;
+            // }
+            // else
+            // {
+            //     //we can fit the text, so we need to grow it
+            //
+            //     AlbumType.FontSize = newFontSize;
+            // }
+        }
+
+        private void Artists_OnItemClick(object sender, ItemClickEventArgs e)
+        {
+            var clickedItem = e.ClickedItem as SpotifyAlbumArtistView;
+
+            UICommands.NavigateTo.Execute(clickedItem.Id);
+        }
+
+        public bool ShouldKeepInCache(int currentDepth)
+        {
+            return currentDepth <= 2;
+        }
+
+        public void RemovedFromCache()
+        {
+        }
+
+        private void ArtistItemTapped(object sender, TappedRoutedEventArgs e)
+        {
+            var tag = (sender as FrameworkElement).Tag;
+            if (tag is AudioId id)
+            {
+                UICommands.NavigateTo.Execute(id);
             }
         }
     }

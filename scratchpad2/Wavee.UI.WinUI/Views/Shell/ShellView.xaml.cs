@@ -139,10 +139,10 @@ namespace Wavee.UI.WinUI.Views.Shell
                 List<Windows.Graphics.RectInt32> dragRectsList = new();
 
                 Windows.Graphics.RectInt32 dragRectL;
-                dragRectL.X = (int)((80) * scaleAdjustment);
+                dragRectL.X = (int)((80 + 80) * scaleAdjustment);
                 dragRectL.Y = 0;
                 dragRectL.Height = (int)(Titlebar.ActualHeight * scaleAdjustment);
-                dragRectL.Width = (int)((Titlebar.ActualWidth - dragRectL.X - 120) * scaleAdjustment);
+                dragRectL.Width = (int)((Titlebar.ActualWidth - dragRectL.X - 200) * scaleAdjustment);
                 dragRectsList.Add(dragRectL);
                 Windows.Graphics.RectInt32[] dragRects = dragRectsList.ToArray();
 

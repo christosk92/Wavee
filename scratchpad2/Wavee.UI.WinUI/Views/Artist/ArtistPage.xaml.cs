@@ -53,15 +53,23 @@ namespace Wavee.UI.WinUI.Views.Artist
                 }
             }
 
-            if (parameter is AudioId id)
+            if (parameter is AudioId id && !_artistFetched.Task.IsCompleted)
             {
                 ViewModel.Create(_id);
                 _id = id;
-                Artist = await Task.Run(() =>
-                    Global.AppState.Artist.GetArtistViewAsync(id, CancellationToken.None));
+                var artistResult = await Task.Run(async () => await Global.AppState.Artist.GetArtistViewAsync(id, CancellationToken.None).Run());
+                if (artistResult.IsFail)
+                {
+                    //showerror
+                    var err = artistResult.Match(Fail: e => e, Succ: _ => throw new NotSupportedException());
+                    Debug.WriteLine(err);
+                    return;
+                }
+
+                Artist = artistResult.Match(Fail: e => throw new NotSupportedException(), Succ: a => a);
                 _artistFetched.TrySetResult(Artist);
                 ArtistNameBlock.Text = Artist.Name;
-                HeaderImage.Source = Artist.HeaderImage;
+                ViewModel.Header = Artist.HeaderImage;
                 var r = Artist.MonthlyListeners.ToString("N0");
                 MonthlyListenersBlock.Text = $"{r} monthly listeners";
                 MetadataPnale.Visibility = Visibility.Visible;
@@ -103,25 +111,25 @@ namespace Wavee.UI.WinUI.Views.Artist
             _about?.Clear();
             _about = null;
 
-            Task.Run(() =>
-            {
-                Process prs = Process.GetCurrentProcess();
-                try
-                {
-                    prs.MinWorkingSet = (IntPtr)(300000);
-                }
-                catch (Exception exception)
-                {
-                }
-                GC.Collect();
-                GC.WaitForPendingFinalizers();
-            });
+            // Task.Run(() =>
+            // {
+            //     Process prs = Process.GetCurrentProcess();
+            //     try
+            //     {
+            //         prs.MinWorkingSet = (IntPtr)(300000);
+            //     }
+            //     catch (Exception exception)
+            //     {
+            //     }
+            //     GC.Collect();
+            //     GC.WaitForPendingFinalizers();
+            // });
         }
 
         internal UIElement _storeditem;
         public void NavigatedFrom(NavigationMode mode)
         {
-           
+
         }
 
 
@@ -182,7 +190,7 @@ namespace Wavee.UI.WinUI.Views.Artist
             if (!string.IsNullOrEmpty(HeaderImage.Source))
             {
                 var topHeight = newSize * 0.5;
-                topHeight = Math.Min(topHeight, 550);
+                topHeight = Math.Min(topHeight, 650);
                 ImageT.Height = topHeight;
             }
             else

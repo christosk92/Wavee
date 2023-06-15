@@ -167,5 +167,19 @@ namespace Wavee.UI.WinUI.Components
                 ShellView.NavigationService.Navigate(navigateTo.To, navigateTo.Parameter);
             }
         }
+
+        private void SidebarControl_OnDisplayModeChanged(NavigationView sender, NavigationViewDisplayModeChangedEventArgs args)
+        {
+            if (args.DisplayMode == NavigationViewDisplayMode.Expanded)
+            {
+               this.IsPaneToggleButtonVisible = false;
+               this.OpenPaneLength = UserSettings.SidebarWidth;
+            }
+            else
+            {
+                this.IsPaneToggleButtonVisible = true;
+                this.OpenPaneLength = 250;
+            }
+        }
     }
 }

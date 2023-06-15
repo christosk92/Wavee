@@ -22,8 +22,8 @@
                       x:DataType="common:CardItem">
             <components:CardView Title="{x:Bind Title}"
                                  Id="{x:Bind Id}"
-                                 MaxHeight="300" Tapped="UIElement_OnTapped"
-                                 MaxWidth="300"
+                                 MaxHeight="400" Tapped="UIElement_OnTapped"
+                                 MaxWidth="400"
                                  Description="{x:Bind Subtitle}"
                                  Image="{x:Bind ImageUrl}" />
         </DataTemplate>
@@ -116,7 +116,7 @@
                                                    ItemTemplate="{StaticResource elementFactory}"
                                                    ItemsSource="{x:Bind Items}">
                                         <ItemsRepeater.Layout>
-                                            <panels:HorizontalAdaptiveLayout DesiredWidth="220" />
+                                            <panels:HorizontalAdaptiveLayout DesiredWidth="230" />
                                         </ItemsRepeater.Layout>
                                     </ItemsRepeater>
                                 </Grid>

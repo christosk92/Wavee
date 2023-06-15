@@ -10,13 +10,14 @@ using Wavee.UI.WinUI.Views.Login;
 using Wavee.UI.WinUI.Views.Shell;
 using WinRT.Interop;
 using Windows.UI.WindowManagement;
+using WinUIEx;
 
 namespace Wavee.UI.WinUI
 {
     /// <summary>
     /// An empty window that can be used on its own or navigated to within a Frame.
     /// </summary>
-    public sealed partial class MainWindow : Window
+    public sealed partial class MainWindow : WindowEx
     {
         public MainWindow()
         {
@@ -69,6 +70,8 @@ namespace Wavee.UI.WinUI
                 _Height: (int)height
             ));
 
+            this.MinWidth = 640;
+            this.MinHeight = 600;
             Global.AppState = state;
             this.Content = new ShellView(state);
         }

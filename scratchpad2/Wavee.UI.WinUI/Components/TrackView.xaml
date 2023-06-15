@@ -8,6 +8,13 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:animatedVisuals="using:AnimatedVisuals"
     xmlns:controls="using:Wavee.UI.WinUI.Controls"
+    Loaded="TrackView_OnLoaded"
+    Tapped="TrackView_OnTapped"
+    IsDoubleTapEnabled="True"
+    DoubleTapped="TrackView_OnDoubleTapped"
+    PointerEntered="TrackView_OnPointerEntered"
+    PointerExited="TrackView_OnPointerExited"
+    Unloaded="TrackView_OnUnloaded"
     mc:Ignorable="d">
 
 
@@ -35,9 +42,9 @@
                         <Setter Target="PlaybackViewContent.Content">
                             <Setter.Value>
                                 <Button x:Name="PlaButton"
-                                        Margin="-8,0,5,0"
-                                        CommandParameter="{x:Bind Id, Mode=OneWay}"
-                                        Padding="6,8"
+                                        Margin="-4,0,-3,0"
+                                        Tapped="PlaButton_OnTapped"
+                                        Padding="8,8"
                                         VerticalAlignment="Center">
                                     <FontIcon FontSize="12"
                                               FontFamily="Segoe Fluent Icons"
@@ -73,9 +80,9 @@
                     <VisualState.Setters>
                         <Setter Target="PlaybackViewContent.Content">
                             <Setter.Value>
-                                <Button Padding="6,8"
+                                <Button Padding="8,8"
                                         x:Name="PauseButton"
-                                        Margin="-8,0,5,0"
+                                        Margin="-4,0,-3,0"
                                         Tapped="PauseButton_OnTapped"
                                         VerticalAlignment="Center">
                                     <FontIcon FontSize="12"

@@ -26,6 +26,7 @@
 		<None Remove="Components\TrackView.xaml" />
 		<None Remove="Themes\BorderStyles.xaml" />
 		<None Remove="Themes\ButtonStyles.xaml" />
+		<None Remove="Themes\ItemContainerStyles.xaml" />
 		<None Remove="Views\Album\AlbumPage.xaml" />
 		<None Remove="Views\Artist\About\ArtistConcertsView.xaml" />
 		<None Remove="Views\Artist\ArtistAboutView.xaml" />
@@ -62,6 +63,7 @@
 		<PackageReference Include="Microsoft.Windows.CsWinRT" Version="2.0.3" />
 		<PackageReference Include="Microsoft.WindowsAppSDK" Version="1.4.230518007-experimental1" />
 		<PackageReference Include="ReactiveUI.WinUI" Version="19.2.1" />
+		<PackageReference Include="WinUIEx" Version="2.2.0" />
 		<Manifest Include="$(ApplicationManifest)" />
 	</ItemGroup>
 
@@ -102,6 +104,9 @@
 		<None Update="Assets\Fonts\MediaPlayerIcons.ttf">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</None>
+		<Page Update="Themes\ItemContainerStyles.xaml">
+		  <Generator>MSBuild:Compile</Generator>
+		</Page>
 		<Page Update="Views\Album\AlbumPage.xaml">
 		  <Generator>MSBuild:Compile</Generator>
 		</Page>

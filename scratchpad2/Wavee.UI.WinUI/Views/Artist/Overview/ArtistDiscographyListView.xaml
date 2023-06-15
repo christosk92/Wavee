@@ -20,9 +20,11 @@
             <ItemContainer CanUserInvoke="UserCannotInvoke"
                            CanUserSelect="UserCanSelect"
                            Height="38"
+                           Style="{ThemeResource ListViewLikeContainer}"
                            Margin="0,0,0,8"
                            MultiSelectMode="Extended">
                 <components:TrackView VerticalAlignment="Stretch"
+                                      Margin="4,0,0,0"
                                       VerticalContentAlignment="Stretch"
                                       HorizontalAlignment="Stretch"
                                       HorizontalContentAlignment="Stretch"
@@ -49,7 +51,12 @@
         </DataTemplate>
         <DataTemplate x:Key="Regular"
                       x:DataType="artist:ArtistDiscographyItem">
-            <RelativePanel Padding="16">
+            <RelativePanel AllowFocusOnInteraction="True"
+                           TabIndex="1"
+                           Padding="16"
+                           Background="Transparent"
+                           PreviewKeyDown="UIElement_OnKeyDown"
+                           KeyDown="UIElement_OnKeyDown">
                 <Image Height="130"
                        Width="130"
                        PointerEntered="UIElement_OnPointerEntered"

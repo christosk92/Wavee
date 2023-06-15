@@ -7,13 +7,18 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:controls="using:CommunityToolkit.WinUI.UI.Controls"
              xmlns:animations="using:CommunityToolkit.WinUI.UI.Animations"
-             Background="Transparent" Tapped="CardView_OnTapped"
+             Background="Transparent"
+             VerticalAlignment="Top"
+             VerticalContentAlignment="Top"
+             Tapped="CardView_OnTapped"
              PointerEntered="CardView_OnPointerEntered"
              PointerExited="CardView_OnPointerExited"
              mc:Ignorable="d">
     <Button Padding="12"
             Margin="0,0,16,0"
             CornerRadius="6"
+            VerticalAlignment="Top"
+            VerticalContentAlignment="Top"
             Tag="{x:Bind Id}"
             BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
             BorderThickness="1"
@@ -21,6 +26,8 @@
         <RelativePanel x:Name="MainPanel"
                        x:FieldModifier="public">
             <controls:ConstrainedBox x:Name="ImageBox"
+                                     VerticalAlignment="Top"
+                                     VerticalContentAlignment="Top"
                                      RelativePanel.AlignLeftWithPanel="True"
                                      RelativePanel.AlignRightWithPanel="True"
                                      RelativePanel.AlignTopWithPanel="True"
@@ -39,7 +46,7 @@
                     RelativePanel.AlignRightWithPanel="True"
                     Visibility="Collapsed"
                     x:Load="False">
-              
+
                 <RelativePanel  RelativePanel.AlignBottomWith="ImageBox"
                                 RelativePanel.AlignLeftWithPanel="True"
                                 Margin="6"

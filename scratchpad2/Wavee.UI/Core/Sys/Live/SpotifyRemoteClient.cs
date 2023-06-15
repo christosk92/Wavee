@@ -17,37 +17,36 @@ internal sealed class SpotifyRemoteClient : IRemotePlaybackClient
 
     public Task<Unit> Resume(CancellationToken ct = default)
     {
-        throw new NotImplementedException();
+        return _client.Remote.Resume(ct);
     }
 
     public Task<Unit> Pause(CancellationToken ct = default)
     {
-        throw new NotImplementedException();
+       return _client.Remote.Pause(ct);
     }
 
     public Task<Unit> SetShuffle(bool isShuffling, CancellationToken ct = default)
     {
-        throw new NotImplementedException();
+        return _client.Remote.SetShuffle(isShuffling, ct);
     }
 
     public Task<Unit> SetRepeat(RepeatState next, CancellationToken ct = default)
     {
-        throw new NotImplementedException();
+        return _client.Remote.SetRepeat(next, ct);
     }
 
     public Task<Unit> SkipNext(CancellationToken ct = default)
     {
-        throw new NotImplementedException();
+       return _client.Remote.SkipNext(ct);
     }
 
     public Task<Unit> SkipPrevious(CancellationToken ct = default)
     {
-        throw new NotImplementedException();
+       return _client.Remote.SkipPrevious(ct);
     }
 
     public Task<Unit> SeekTo(TimeSpan to, CancellationToken ct = default)
-    {
-        throw new NotImplementedException();
+    {return _client.Remote.SeekTo(to, ct);
     }
 
     public IObservable<SpotifyRemoteState> ObserveRemoteState() => _client.Remote.StateUpdates

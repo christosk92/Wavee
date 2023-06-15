@@ -37,9 +37,12 @@
                 <Grid VerticalAlignment="Top"
                       x:Name="ImageT">
                     <components:ImageTransitionControl x:Name="HeaderImage"
+                                                       Source="{x:Bind ViewModel.Header, Mode=OneWay}"
                                                        Grid.ColumnSpan="2"
+                                                       OffsetY="0"
                                                        VerticalAlignment="Stretch"
                                                        TransitionDuration="00:00:01" />
+
                     <StackPanel Margin="24,0,0,-12"
                                 x:Name="MetadataPnale"
                                 labs:TransitionHelper.Id="background"

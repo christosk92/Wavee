@@ -16,6 +16,7 @@ public interface ISpotifyRemoteClient
     Task<Unit> Resume(CancellationToken ct = default);
     Task<Unit> Pause(CancellationToken ct = default);
     Task<Unit> SkipNext(CancellationToken ct = default);
+    Task<Unit> SkipPrevious(CancellationToken ct = default);
     Task<Unit> SetRepeat(RepeatState next, CancellationToken ct = default);
     Task<Unit> SeekTo(TimeSpan to, CancellationToken ct = default);
     Task<Unit> RefreshState();

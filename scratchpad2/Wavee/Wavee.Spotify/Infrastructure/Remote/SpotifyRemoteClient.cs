@@ -121,6 +121,13 @@ internal sealed class SpotifyRemoteClient : ISpotifyRemoteClient, IDisposable
         return InvokeCommand(commandName, LanguageExt.HashMap<string, object>.Empty, ct);
     }
 
+    public Task<Unit> SkipPrevious(CancellationToken ct = default)
+    {
+        const string commandName = "skip_prev";
+
+        return InvokeCommand(commandName, LanguageExt.HashMap<string, object>.Empty, ct);
+    }
+
     public Task<Unit> SetRepeat(RepeatState next, CancellationToken ct = default)
     {
         var options = new HashMap<string, object>()

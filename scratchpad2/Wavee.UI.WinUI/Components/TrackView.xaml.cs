@@ -1,43 +1,39 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Controls.Primitives;
-using Microsoft.UI.Xaml.Data;
 using Microsoft.UI.Xaml.Input;
-using Microsoft.UI.Xaml.Media;
-using Microsoft.UI.Xaml.Navigation;
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
 using Microsoft.UI.Xaml.Media.Imaging;
 using Wavee.Core.Ids;
-
-// To learn more about WinUI, the WinUI project structure,
-// and more about our project templates, see: http://aka.ms/winui-project-info.
-
+using Wavee.UI.ViewModel.Library;
+using Wavee.UI.ViewModel.Playback;
+using Wavee.Spotify.Infrastructure.Mercury.Models;
+using CommunityToolkit.WinUI.UI;
+using Microsoft.UI.Input;
+using Wavee.UI.WinUI.Views;
+using static LanguageExt.Prelude;
 namespace Wavee.UI.WinUI.Components
 {
     public sealed partial class TrackView : UserControl
     {
         public static readonly DependencyProperty IndexProperty = DependencyProperty.Register(nameof(Index), typeof(int), typeof(TrackView), new PropertyMetadata(default(int)));
-        public static readonly DependencyProperty IdProperty = DependencyProperty.Register(nameof(Id), typeof(AudioId), typeof(TrackView), new PropertyMetadata(default(AudioId)));
+        public static readonly DependencyProperty IdProperty = DependencyProperty.Register(nameof(Id), typeof(AudioId), typeof(TrackView), new PropertyMetadata(default(AudioId), IdChanged));
+        public static readonly DependencyProperty PlaybackStateProperty = DependencyProperty.Register(nameof(PlaybackState), typeof(TrackPlaybackState), typeof(TrackView), new PropertyMetadata(default(TrackPlaybackState), PlaybackStateChanged));
+
         public static readonly DependencyProperty AlternatingRowColorProperty = DependencyProperty.Register(nameof(AlternatingRowColor), typeof(bool), typeof(TrackView), new PropertyMetadata(default(bool)));
         public static readonly DependencyProperty ViewProperty = DependencyProperty.Register(nameof(View), typeof(object), typeof(TrackView), new PropertyMetadata(default(object)));
-        public static readonly DependencyProperty ImageUrlProperty =
-            DependencyProperty.Register(nameof(ImageUrl),
-                typeof(string), typeof(TrackView),
-                new PropertyMetadata(default(string?), ImagePropertiesChanged));
-        public static readonly DependencyProperty ShowImageProperty = DependencyProperty.Register(nameof(ShowImage),
-            typeof(bool), typeof(TrackView), new PropertyMetadata(default(bool), ImagePropertiesChanged));
+        public static readonly DependencyProperty ImageUrlProperty = DependencyProperty.Register(nameof(ImageUrl), typeof(string), typeof(TrackView), new PropertyMetadata(default(string?), ImagePropertiesChanged));
+        public static readonly DependencyProperty ShowImageProperty = DependencyProperty.Register(nameof(ShowImage), typeof(bool), typeof(TrackView), new PropertyMetadata(default(bool), ImagePropertiesChanged));
 
         public TrackView()
         {
             this.InitializeComponent();
         }
 
+        public TrackPlaybackState PlaybackState
+        {
+            get => (TrackPlaybackState)GetValue(PlaybackStateProperty);
+            set => SetValue(PlaybackStateProperty, value);
+        }
         public int Index
         {
             get => (int)GetValue(IndexProperty);
@@ -72,7 +68,202 @@ namespace Wavee.UI.WinUI.Components
             get => (string)GetValue(ImageUrlProperty);
             set => SetValue(ImageUrlProperty, value);
         }
+        private async void FrameworkElement_OnLoaded(object sender, RoutedEventArgs e)
+        {
+            var p = (AnimatedVisualPlayer)sender;
+            if (!p.IsPlaying)
+            {
+                await p.PlayAsync(0, 1, true);
+            }
+        }
+        private void TrackView_OnTapped(object sender, TappedRoutedEventArgs e)
+        {
+            if (e.PointerDeviceType is PointerDeviceType.Touch or PointerDeviceType.Pen)
+            {
+                var playCommand = (IPlayableView?)this.FindAscendant<FrameworkElement>(a => a is IPlayableView);
+                playCommand?.PlayTrackCommand.Execute(this);
+            }
+        }
+        private void PauseButton_OnTapped(object sender, TappedRoutedEventArgs e)
+        {
+            PlaybackViewModel.Instance.ResumePauseCommand.Execute(null);
+        }
 
+        private void SavedButton_OnTapped(object sender, TappedRoutedEventArgs e)
+        {
+            LibrariesViewModel.Instance.SaveItem(Seq1(Id));
+        }
+
+        private void TrackView_OnLoaded(object sender, RoutedEventArgs e)
+        {
+            RegisterPlaybackEvents();
+        }
+
+        private void TrackView_OnUnloaded(object sender, RoutedEventArgs e)
+        {
+            UnregisterPlaybackEvents();
+        }
+        private void TrackView_OnPointerEntered(object sender, PointerRoutedEventArgs e)
+        {
+            if (e.Pointer.PointerDeviceType is PointerDeviceType.Touch)
+            {
+                return;
+            }
+            switch (PlaybackState)
+            {
+                case TrackPlaybackState.None:
+                    VisualStateManager.GoToState(this, "NoPlaybackHover", true);
+                    break;
+                case TrackPlaybackState.Playing:
+                    VisualStateManager.GoToState(this, "PlayingPlaybackHover", true);
+                    break;
+                case TrackPlaybackState.Paused:
+                    VisualStateManager.GoToState(this, "PausedPlaybackHover", true);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
+
+        private void TrackView_OnPointerExited(object sender, PointerRoutedEventArgs e)
+        {
+            if (e.Pointer.PointerDeviceType is PointerDeviceType.Touch)
+            {
+                return;
+            }
+            switch (PlaybackState)
+            {
+                case TrackPlaybackState.None:
+                    VisualStateManager.GoToState(this, "NoPlayback", true);
+                    break;
+                case TrackPlaybackState.Playing:
+                    // PlaybackViewContent.Content = new AnimatedVisualPlayer
+                    // {
+                    //     Source = new Equaliser(),
+                    //     AutoPlay = true,
+                    //     PlaybackRate = 2.0
+                    // };
+                    VisualStateManager.GoToState(this, "PlayingPlayback", true);
+                    break;
+                case TrackPlaybackState.Paused:
+                    VisualStateManager.GoToState(this, "PausedPlayback", true);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
+        private void PlaButton_OnTapped(object sender, TappedRoutedEventArgs e)
+        {
+            var playCommand = (IPlayableView?)this.FindAscendant<FrameworkElement>(a => a is IPlayableView);
+            playCommand?.PlayTrackCommand.Execute(this);
+        }
+        private void TrackView_OnDoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
+        {
+            var playCommand = (IPlayableView?)this.FindAscendant<FrameworkElement>(a => a is IPlayableView);
+            playCommand?.PlayTrackCommand.Execute(this);
+        }
+
+        private void HandleIdChange(AudioId id)
+        {
+            if (PlaybackViewModel.Instance.CurrentTrack?.Id.Equals(id) is true)
+            {
+                PlaybackState = PlaybackViewModel.Instance.Paused
+                    ? TrackPlaybackState.Paused
+                    : TrackPlaybackState.Playing;
+            }
+            else
+            {
+                PlaybackState = TrackPlaybackState.None;
+            }
+
+            if (LibrariesViewModel.Instance.InLibrary(id))
+            {
+                SavedButton.IsChecked = true;
+            }
+            else
+            {
+                SavedButton.IsChecked = false;
+            }
+        }
+        private void PlaybackOnPauseChanged(object sender, bool e)
+        {
+            if (PlaybackViewModel.Instance.CurrentTrack is null)
+            {
+                PlaybackState = TrackPlaybackState.None;
+                return;
+            }
+
+            if (PlaybackViewModel.Instance.CurrentTrack.Id.Equals(Id))
+            {
+                if (PlaybackViewModel.Instance.Paused)
+                {
+
+                    PlaybackState = TrackPlaybackState.Paused;
+                }
+                else
+                {
+                    PlaybackState = TrackPlaybackState.Playing;
+                }
+            }
+        }
+        private void ChangePlaybackState(TrackPlaybackState state)
+        {
+            switch (state)
+            {
+                case TrackPlaybackState.None:
+                    VisualStateManager.GoToState(this, "NoPlayback", true);
+                    break;
+                case TrackPlaybackState.Playing:
+                    VisualStateManager.GoToState(this, "PlayingPlayback", true);
+                    // PlaybackViewContent.Content = new AnimatedVisualPlayer
+                    // {
+                    //     Source = new Equaliser(),
+                    //     AutoPlay = true,
+                    //     PlaybackRate = 2.0
+                    // };
+                    break;
+                case TrackPlaybackState.Paused:
+                    VisualStateManager.GoToState(this, "PausedPlayback", true);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(state), state, null);
+            }
+        }
+        private void PlaybackOnCurrentTrackChanged(object sender, TrackOrEpisode e)
+        {
+            if (e is null)
+            {
+                PlaybackState = TrackPlaybackState.None;
+                return;
+            }
+
+            if (e.Id.Equals(Id))
+            {
+                if (PlaybackViewModel.Instance.Paused)
+                {
+
+                    PlaybackState = TrackPlaybackState.Paused;
+                }
+                else
+                {
+                    PlaybackState = TrackPlaybackState.Playing;
+                }
+            }
+            else
+            {
+                PlaybackState = TrackPlaybackState.None;
+            }
+        }
+        private void RegisterPlaybackEvents()
+        {
+            PlaybackViewModel.Instance.PauseChanged += PlaybackOnPauseChanged;
+            PlaybackViewModel.Instance.CurrentTrackChanged += PlaybackOnCurrentTrackChanged;
+        }
+        private void UnregisterPlaybackEvents()
+        {
+            PlaybackViewModel.Instance.PauseChanged -= PlaybackOnPauseChanged;
+            PlaybackViewModel.Instance.CurrentTrackChanged -= PlaybackOnCurrentTrackChanged;
+        }
         private void HandleImagePropertiesChanged()
         {
             //ImageBorder
@@ -132,23 +323,25 @@ namespace Wavee.UI.WinUI.Components
             x.HandleImagePropertiesChanged();
         }
 
-        private async void FrameworkElement_OnLoaded(object sender, RoutedEventArgs e)
+        private static void IdChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            var p = (AnimatedVisualPlayer)sender;
-            if (!p.IsPlaying)
+            var x = (TrackView)d;
+            x.HandleIdChange((AudioId)e.NewValue);
+        }
+        private static void PlaybackStateChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            var x = (TrackView)d;
+
+            if (e.NewValue is TrackPlaybackState tr && e.NewValue != e.OldValue)
             {
-                await p.PlayAsync(0, 1, true);
+                x.ChangePlaybackState(tr);
             }
         }
-
-        private void PauseButton_OnTapped(object sender, TappedRoutedEventArgs e)
-        {
-            
-        }
-
-        private void SavedButton_OnTapped(object sender, TappedRoutedEventArgs e)
-        {
-            
-        }
     }
+}
+public enum TrackPlaybackState
+{
+    None,
+    Playing,
+    Paused
 }

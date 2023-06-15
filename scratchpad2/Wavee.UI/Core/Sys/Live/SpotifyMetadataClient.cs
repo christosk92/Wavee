@@ -15,15 +15,37 @@ internal sealed class SpotifyMetadataClient : IMetadataClient
         _client = client;
     }
 
-    public Task<TrackOrEpisode> GetItem(AudioId id, CancellationToken ct = default)
+    public Aff<TrackOrEpisode> GetItem(AudioId id, CancellationToken ct = default)
     {
         var country = _client.CountryCode.IfNone("US");
-        return _client.Mercury.GetMetadata(id, country, ct);
+
+        var res =
+            from potentialCache in _client.Cache.Get(id)
+                .Match(
+                    Some: x => SuccessAff(x),
+                    None: () =>
+                        from fetched in _client.Mercury.GetMetadata(id, country, ct).ToAff()
+                        from _ in Eff(() => _client.Cache.Save(fetched))
+                        select fetched
+                )
+            select potentialCache;
+
+        return res;
     }
 
     public Aff<SpotifyColors> GetColorForImage(string imageUrl, CancellationToken ct = default)
     {
-        return _client.PrivateApi.FetchColorFor(Seq1(imageUrl), ct)
-            .ToAff();
+        var res =
+            from potentialCache in _client.Cache.GetColorFor(imageUrl)
+                .Match(
+                    Some: x => SuccessAff(x),
+                    None: () =>
+                        from fetched in _client.PrivateApi.FetchColorFor(Seq1(imageUrl), ct).ToAff()
+                        from _ in Eff(() => _client.Cache.SaveColorFor(imageUrl, fetched))
+                        select fetched
+                )
+            select potentialCache;
+
+        return res;
     }
 }

@@ -29,6 +29,7 @@ namespace Wavee.UI.WinUI.Components
         public static readonly DependencyProperty IdProperty = DependencyProperty.Register(nameof(Id), typeof(AudioId), typeof(CardView), new PropertyMetadata(default(AudioId)));
         public static readonly DependencyProperty DescriptionProperty = DependencyProperty.Register(nameof(Description), typeof(string), typeof(CardView), new PropertyMetadata(default(string?)));
         public static readonly DependencyProperty ImageProperty = DependencyProperty.Register(nameof(Image), typeof(string), typeof(CardView), new PropertyMetadata(default(string?), PropertyChangedCallback));
+        public static readonly DependencyProperty NavigateWithImageProperty = DependencyProperty.Register(nameof(NavigateWithImage), typeof(bool), typeof(CardView), new PropertyMetadata(true));
 
         private static void PropertyChangedCallback(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
@@ -73,6 +74,12 @@ namespace Wavee.UI.WinUI.Components
             set => SetValue(ImageProperty, value);
         }
 
+        public bool NavigateWithImage
+        {
+            get => (bool)GetValue(NavigateWithImageProperty);
+            set => SetValue(NavigateWithImageProperty, value);
+        }
+
         private void CardView_OnPointerEntered(object sender, PointerRoutedEventArgs e)
         {
             var buttonsPanel = this.FindName("ButtonsPanel") as UIElement;
@@ -103,7 +110,7 @@ namespace Wavee.UI.WinUI.Components
 
         private void CardView_OnTapped(object sender, TappedRoutedEventArgs e)
         {
-            if (Id.Type is AudioItemType.Album)
+            if (Id.Type is AudioItemType.Album && NavigateWithImage)
             {
                 ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("ForwardConnectedAnimation", ImageBox);
                 UICommands.NavigateToWithImage.Execute(new NavigationWithImage(

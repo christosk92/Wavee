@@ -19,9 +19,10 @@
                       x:DataType="artist:ArtistDiscographyItem">
             <components:CardView Title="{x:Bind Title}"
                                  Id="{x:Bind Id}"
-                                 x:Phase="1" Tapped="UIElement_OnTapped"
-                                 MaxHeight="300"
-                                 MaxWidth="300"
+                                 x:Phase="1"
+                                 Tapped="UIElement_OnTapped"
+                                 MaxHeight="400"
+                                 MaxWidth="400"
                                  VerticalAlignment="Top"
                                  Description="{x:Bind ReleaseDateAsStr}"
                                  Image="{x:Bind Image}" />

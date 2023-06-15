@@ -36,10 +36,15 @@ public sealed class NavigationService
         bool addToStack = true,
         bool goingBackForSure = false)
     {
+        EvaluateCache();
+
         if (_contentControl.Content is INavigable x)
         {
             //check if we are navigating BACK
             var goingBackByBacktack = addToStack && _backStack.Any() && (_backStack.Peek().Type == pageType && Equals(_backStack.Peek().Parameter, parameter));
+            //also make sure the page is cached, if so we are going back
+            var goingBackByCache = _cachedPages.Any(cp => cp.PageReference.IsAlive && cp.Type == pageType && Equals(cp.WithParameter, parameter));
+            goingBackByBacktack = goingBackByBacktack && goingBackByCache;
             var goingBack = goingBackForSure || goingBackByBacktack;
             x.NavigatedFrom(goingBack ? NavigationMode.Back : NavigationMode.New);
         }
@@ -47,7 +52,6 @@ public sealed class NavigationService
         {
             _backStack.Push(new GeneralBackStackItem(_contentControl.Content.GetType(), _lastPrameter));
         }
-        EvaluateCache();
 
 
         var cachedPage = _cachedPages.FirstOrDefault(cp => cp.PageReference.IsAlive && cp.Type == pageType && Equals(cp.WithParameter, parameter));

@@ -55,6 +55,8 @@ public sealed partial class ImageTransitionControl : UserControl
         DependencyProperty.Register("BlurValue", typeof(double),
             typeof(ImageTransitionControl), new PropertyMetadata(default(double), OnBlurValueChanged));
 
+    public static readonly DependencyProperty OffsetYProperty = DependencyProperty.Register(nameof(OffsetY), typeof(double), typeof(ImageTransitionControl), new PropertyMetadata(default(double)));
+
     public ImageTransitionControl()
     {
         InitializeComponent();
@@ -84,6 +86,12 @@ public sealed partial class ImageTransitionControl : UserControl
     {
         get => (double)GetValue(BlurValueProperty);
         set => SetValue(BlurValueProperty, value);
+    }
+
+    public double OffsetY
+    {
+        get => (double)GetValue(OffsetYProperty);
+        set => SetValue(OffsetYProperty, value);
     }
 
     private static void OnBlurValueChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
@@ -123,7 +131,7 @@ public sealed partial class ImageTransitionControl : UserControl
     private static void OnStretchPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
         var control = (ImageTransitionControl)d;
-        control.Image.Stretch = (Stretch)e.NewValue;
+       // control.Image.Stretch = (Stretch)e.NewValue;
     }
 
     private void Image_OnImageOpened(object sender, RoutedEventArgs e)
@@ -216,6 +224,7 @@ public class ImageOpacityBrush : XamlCompositionBrushBase, IDisposable
 
     private LoadedImageSurface _surface;
     private CompositionSurfaceBrush _surfaceBrush;
+    public static readonly DependencyProperty OffsetYProperty = DependencyProperty.Register(nameof(OffsetY), typeof(double), typeof(ImageOpacityBrush), new PropertyMetadata(default(double), OffsetChanged));
 
     /// <summary>
     ///     Gets or sets the <see cref="BitmapImage" /> source of the image to composite.
@@ -242,6 +251,12 @@ public class ImageOpacityBrush : XamlCompositionBrushBase, IDisposable
         set => SetValue(BlurProperty, value);
     }
 
+    public double OffsetY
+    {
+        get => (double)GetValue(OffsetYProperty);
+        set => SetValue(OffsetYProperty, value);
+    }
+
     public void Dispose()
     {
         // newSurface?.Dispose();
@@ -250,6 +265,12 @@ public class ImageOpacityBrush : XamlCompositionBrushBase, IDisposable
     public event TypedEventHandler<ImageOpacityBrush, EventArgs> Opened;
 
     private static void OnPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        var brush = (ImageOpacityBrush)d;
+        brush.OnDisconnected();
+        brush.OnConnected();
+    }
+    private static void OffsetChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
         var brush = (ImageOpacityBrush)d;
         brush.OnDisconnected();
@@ -278,6 +299,8 @@ public class ImageOpacityBrush : XamlCompositionBrushBase, IDisposable
             // Load Surface onto SurfaceBrush
             _surfaceBrush = MainWindow.Instance.Compositor.CreateSurfaceBrush(_surface);
             _surfaceBrush.Stretch = CompositionStretch.UniformToFill;
+            //offset a bit
+            _surfaceBrush.Offset = new Vector2(0, (float)OffsetY);
 
 
             var compositor = MainWindow.Instance.Compositor;

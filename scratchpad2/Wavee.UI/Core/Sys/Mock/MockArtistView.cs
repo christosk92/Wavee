@@ -1,4 +1,5 @@
 ﻿using System.Text.Json;
+using LanguageExt;
 using Wavee.Core.Ids;
 using Wavee.UI.Core.Contracts.Artist;
 
@@ -6,11 +7,9 @@ namespace Wavee.UI.Core.Sys.Mock;
 
 internal sealed class MockArtistView : IArtistView
 {
-    public Task<SpotifyArtistView> GetArtistViewAsync(AudioId id, CancellationToken ct = default)
+    public Aff<SpotifyArtistView> GetArtistViewAsync(AudioId id, CancellationToken ct = default)
     {
-        using var jsonDocu = JsonDocument.Parse(ARTIST_JSON);
-
-        return Task.FromResult(SpotifyArtistView.From(jsonDocu, id));
+        throw new NotSupportedException();
     }
 
     private const string ARTIST_JSON = """
