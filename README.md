@@ -20,4 +20,8 @@ Wavee is a alternative to the original Spotify desktop client for Windows.
 It is written in native C#, in combination with WinUI (using Windows App Sdk), for a native Windows 11 Spotify experience. 
 Playback is handles using NAudio.
 
-![image](https://user-images.githubusercontent.com/13438702/211539400-25468ac1-2458-4b9e-b149-d27a5405a186.png)
+![image](https://github.com/christosk92/Wavee/assets/13438702/c9795767-2d7d-497f-97b9-4b562821a9db)
+
+
+![image](https://github.com/christosk92/Wavee/assets/13438702/5ae4655d-d3e1-47b6-b72e-406b77f4c3f1)
+
