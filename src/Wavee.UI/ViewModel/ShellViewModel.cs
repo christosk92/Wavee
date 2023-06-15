@@ -12,8 +12,8 @@ public sealed class ShellViewModel : ObservableObject
     public ShellViewModel(IAppState appState)
     {
         AppState = appState;
-        Player = new PlaybackViewModel();
         Libraries = new LibrariesViewModel(appState);
+        Player = new PlaybackViewModel();
     }
     public LibrariesViewModel Libraries { get; }
     public PlaybackViewModel Player { get; }

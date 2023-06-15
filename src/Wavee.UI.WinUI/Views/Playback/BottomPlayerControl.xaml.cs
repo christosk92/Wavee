@@ -52,11 +52,12 @@ namespace Wavee.UI.WinUI.Views.Playback
             x.RegiterPositionSlider();
 
             x.Player
-                .WhenValueChanged(x => x.CurrentTrack)
-                .StartWith(x.Player.CurrentTrack)
-                .Select(f =>
+                .WhenAny(
+                    y => y.CurrentTrackSaved,
+                    (_) => Unit.Default)
+                .Select((_) =>
                 {
-                    x.StarButton.IsChecked = f is not null && LibrariesViewModel.Instance.InLibrary(f.Id);
+                    x.StarButton.IsChecked = x.Player.CurrentTrackSaved;
                     return default(Unit);
                 }).Subscribe();
 

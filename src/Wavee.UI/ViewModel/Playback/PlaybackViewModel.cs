@@ -47,6 +47,16 @@ public sealed partial class PlaybackViewModel : ReactiveObject
         _positionMs = 0;
         _positionTimer = new Timer(MainPositionTimerCallback, null, Timeout.Infinite, Timeout.Infinite);
         _updates = new PlaybackViewModelUpdates(this);
+        
+        LibrariesViewModel.Instance.ListenForChanges
+            .ObserveOn(RxApp.MainThreadScheduler)
+            .Subscribe(x =>
+            {
+                if (x.Item == CurrentTrack?.Id)
+                {
+                    CurrentTrackSaved = !x.Removed;
+                }
+            });
         this.WhenChanged(
             x => x.Paused,
             x => x.CurrentTrack,

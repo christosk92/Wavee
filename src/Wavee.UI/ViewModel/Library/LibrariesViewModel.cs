@@ -5,6 +5,7 @@ using DynamicData;
 using LanguageExt;
 using ReactiveUI;
 using Wavee.Core.Ids;
+using Wavee.Spotify.Infrastructure.Remote.Contracts;
 using Wavee.UI.Core;
 using Wavee.UI.Core.Contracts.Library;
 using static LanguageExt.Prelude;
@@ -64,8 +65,9 @@ public class LibrariesViewModel : ObservableObject
             }
         });
     }
-    public static LibrariesViewModel Instance { get; private set; }
 
+    public static LibrariesViewModel Instance { get; private set; }
+    public IObservable<SpotifyLibraryUpdateNotification> ListenForChanges => _appState.Library.ListenForChanges;
     public int TracksSaved
     {
         get => _tracksSaved;
