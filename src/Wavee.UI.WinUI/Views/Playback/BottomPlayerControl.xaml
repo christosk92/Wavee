@@ -119,6 +119,7 @@
                             Orientation="Vertical">
                     <Grid>
                         <HyperlinkButton Padding="-1,0"
+                                         Tapped="DisplayTitle_OnTapped"
                                          Foreground="{ThemeResource ApplicationForegroundThemeBrush}"
                                          x:Name="DisplayTitle">
                             <TextBlock FontSize="16"
@@ -157,7 +158,6 @@
                       Visibility="{x:Bind IsLoadingToVisibility(Player.IsLoading), Mode=OneWay}"
                       Margin="12,0">
                     <controls:StarButton FontSize="24"
-                                         IsChecked="{x:Bind Player.CurrentTrackSaved,Mode=OneWay}"
                                          Tapped="StarButton_OnTapped"
                                          x:Name="StarButton" />
                 </Grid>

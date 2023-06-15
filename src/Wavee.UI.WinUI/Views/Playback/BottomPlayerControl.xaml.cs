@@ -52,6 +52,15 @@ namespace Wavee.UI.WinUI.Views.Playback
             x.RegiterPositionSlider();
 
             x.Player
+                .WhenValueChanged(x => x.CurrentTrack)
+                .StartWith(x.Player.CurrentTrack)
+                .Select(f =>
+                {
+                    x.StarButton.IsChecked = f is not null && LibrariesViewModel.Instance.InLibrary(f.Id);
+                    return default(Unit);
+                }).Subscribe();
+
+            x.Player
                 .WhenValueChanged(x => x.CurrentTrackColors)
                 .Select(f =>
                 {
@@ -258,6 +267,16 @@ namespace Wavee.UI.WinUI.Views.Playback
             {
                 await Task.Delay(20);
                 LibrariesViewModel.Instance.SaveItem(Seq1(id.Value));
+            }
+        }
+
+        private void DisplayTitle_OnTapped(object sender, TappedRoutedEventArgs e)
+        {
+            //go to album or show
+            var id = Player.CurrentTrack?.Group.Id;
+            if (id.HasValue)
+            {
+                UICommands.NavigateTo.Execute(id.Value);
             }
         }
     }
