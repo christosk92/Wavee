@@ -18,7 +18,7 @@ using Wavee.Spotify.Infrastructure.Mercury;
 using Wavee.Spotify.Infrastructure.Mercury.Models;
 using Wavee.Spotify.Infrastructure.Playback.Contracts;
 using Wavee.Spotify.Infrastructure.Remote.Contracts;
-
+using static LanguageExt.Prelude;
 namespace Wavee.Spotify.Infrastructure.Playback;
 
 internal sealed class SpotifyPlaybackClient : ISpotifyPlaybackClient, IDisposable
@@ -495,7 +495,27 @@ internal sealed class SpotifyPlaybackClient : ISpotifyPlaybackClient, IDisposabl
         CancellationToken ct)
     {
         var sw = Stopwatch.StartNew();
-        var track = await mercury.GetTrack(id, country, ct);
+        var trackAFf =
+            from potentialCache in cache.Get(id)
+                .Match(
+                    Some: x => SuccessAff(x),
+                    None: () =>
+                        from fetched in mercury.GetMetadata(id, country, ct).ToAff()
+                        from _ in Eff(() => cache.Save(fetched))
+                        select fetched
+                )
+            select potentialCache;
+
+        var trackMaybe = await trackAFf.Run();
+
+        var track = trackMaybe.Match(
+            Fail: err => throw new Exception($"Could not get track", err.ToException()),
+            Succ: x => x.Value.Match(
+                Right: y => y.Value,
+                Left: (_) => throw new Exception($"Could not get track")
+            )
+        );
+
         var preferedQuality = _config.PreferedQuality;
         var canPlay = CanPlay(track, country);
         if (!canPlay)
@@ -563,7 +583,7 @@ internal sealed class SpotifyPlaybackClient : ISpotifyPlaybackClient, IDisposabl
         );
     }
 
-    static HashMap<string, string> acceptGzipHeaders = HashMap<string, string>.Empty.Add("accept", "gzip");
+    static HashMap<string, string> acceptGzipHeaders = LanguageExt.HashMap<string, string>.Empty.Add("accept", "gzip");
 
     private static async Task<Stream> StreamFromWeb(
         AudioFile format,
@@ -618,7 +638,7 @@ internal sealed class SpotifyPlaybackClient : ISpotifyPlaybackClient, IDisposabl
                         cdnUrl,
                         start,
                         end,
-                        Option<AuthenticationHeaderValue>.None, 
+                        Option<AuthenticationHeaderValue>.None,
                         acceptGzipHeaders, ct)
                     .MapAsync(x => x.Content.ReadAsByteArrayAsync(ct))
                     .ContinueWith(x =>
@@ -640,14 +660,14 @@ internal sealed class SpotifyPlaybackClient : ISpotifyPlaybackClient, IDisposabl
                 //check if we have all chunks.
                 if (requested.Any(x => x is null || x.Task.IsCompleted == false))
                 {
-                    Array.Clear(requested);
+                    System.Array.Clear(requested);
                     return;
                 }
 
                 //save to cache
                 cache.SaveAudioFile(format, requested.SelectMany(x => x.Task.Result).ToArray());
 
-                Array.Clear(requested);
+                System.Array.Clear(requested);
             });
     }
 
@@ -672,7 +692,7 @@ internal sealed class SpotifyPlaybackClient : ISpotifyPlaybackClient, IDisposabl
         var finalUri = string.Format(query, ToBase16(file));
 
         using var resp = await HttpIO.Get(finalUri, new AuthenticationHeaderValue("Bearer", jwt),
-            HashMap<string, string>.Empty, ct);
+            LanguageExt.HashMap<string, string>.Empty, ct);
         resp.EnsureSuccessStatusCode();
         await using var stream = await resp.Content.ReadAsStreamAsync(ct);
         return StorageResolveResponse.Parser.ParseFrom(stream);
