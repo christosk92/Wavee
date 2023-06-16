@@ -6,6 +6,7 @@ using Wavee.UI.Core.Contracts.Home;
 using Wavee.UI.Core.Contracts.Library;
 using Wavee.UI.Core.Contracts.Metadata;
 using Wavee.UI.Core.Contracts.Playback;
+using Wavee.UI.Core.Contracts.Search;
 using Wavee.UI.Core.Sys.Mock;
 
 namespace Wavee.UI.Core.Sys.Live;
@@ -34,5 +35,6 @@ internal sealed class LiveAppState : IAppState
     public IRemotePlaybackClient Remote => new SpotifyRemoteClient(_client);
     public IMetadataClient Metadata => new SpotifyMetadataClient(_client);
     public ILibraryView Library => new SpotifyLibraryClient(_client);
+    public ISearchClient Search => new SpotifySearchClient(_client);
     public string DeviceId => _client.DeviceId;
 }

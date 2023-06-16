@@ -4,6 +4,7 @@ using Wavee.UI.Core.Contracts.Home;
 using Wavee.UI.Core.Contracts.Library;
 using Wavee.UI.Core.Contracts.Metadata;
 using Wavee.UI.Core.Contracts.Playback;
+using Wavee.UI.Core.Contracts.Search;
 using Wavee.UI.Core.Sys;
 using Wavee.UI.Core.Sys.Mock;
 
@@ -26,5 +27,7 @@ public interface IAppState
     IRemotePlaybackClient Remote { get; }
     IMetadataClient Metadata { get; }
     ILibraryView Library { get; }
+    ISearchClient Search { get; }
+
     string DeviceId { get; }
 }

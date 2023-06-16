@@ -40,6 +40,7 @@
 		<None Remove="Views\Login\LoginView.xaml" />
 		<None Remove="Views\Playback\BottomPlayerControl.xaml" />
 		<None Remove="Views\Playlist\PlaylistPage.xaml" />
+		<None Remove="Views\Search\SearchPage.xaml" />
 		<None Remove="Views\Shell\ShellView.xaml" />
 	</ItemGroup>
 	<ItemGroup>
@@ -104,6 +105,9 @@
 		<None Update="Assets\Fonts\MediaPlayerIcons.ttf">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</None>
+		<Page Update="Views\Search\SearchPage.xaml">
+		  <Generator>MSBuild:Compile</Generator>
+		</Page>
 		<Page Update="Themes\ItemContainerStyles.xaml">
 		  <Generator>MSBuild:Compile</Generator>
 		</Page>

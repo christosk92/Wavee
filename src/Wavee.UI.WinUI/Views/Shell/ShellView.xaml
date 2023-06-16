@@ -20,6 +20,7 @@
             <components:SidebarControl.AutoSuggestBox>
                 <AutoSuggestBox PlaceholderText="Search..."
                                 QueryIcon="Find"
+                                TextChanged="AutoSuggestBox_OnTextChanged"
                                 Margin="-4,0"
                                 HorizontalAlignment="Stretch" />
             </components:SidebarControl.AutoSuggestBox>

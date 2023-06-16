@@ -24,6 +24,7 @@ public sealed class SpotifyClient : IDisposable
 {
     private readonly SpotifyTcpConnection _connection;
     private readonly SpotifyCacheConfig _config;
+    private readonly SpotifyConfig _spotifyConfig;
 
     //Some clients should be reference types, some should be value types (single-use)
     private SpotifyClient(
@@ -135,6 +136,7 @@ public sealed class SpotifyClient : IDisposable
     public APWelcome WelcomeMessage => _connection.LastWelcomeMessage.Value;
     public Option<string> CountryCode => _connection.LastCountryCode;
     public string DeviceId { get; }
+    public SpotifyConfig Config => _spotifyConfig;
 
     public void Dispose()
     {

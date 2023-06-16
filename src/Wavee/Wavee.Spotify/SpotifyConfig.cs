@@ -15,6 +15,7 @@ public class SpotifyConfig
     public SpotifyRemoteConfig Remote { get; }
     public SpotifyPlaybackConfig Playback { get; }
     public SpotifyCacheConfig Cache { get; }
+    public string Locale { get; } = "en";
 }
 
 public class SpotifyCacheConfig

@@ -19,6 +19,7 @@ using Windows.Foundation.Collections;
 using Microsoft.UI.Composition;
 using Microsoft.UI.Xaml.Media.Animation;
 using Microsoft.UI.Xaml.Media.Imaging;
+using System.Runtime;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -38,7 +39,7 @@ public sealed partial class ImageTransitionControl : UserControl
     // Using a DependencyProperty as the backing store for TransitionDuration.  This enables animation, styling, binding, etc...
     public static readonly DependencyProperty TransitionDurationProperty =
         DependencyProperty.Register("TransitionDuration", typeof(TimeSpan), typeof(ImageTransitionControl),
-            new PropertyMetadata(TimeSpan.FromSeconds(0.15),
+            new PropertyMetadata(TimeSpan.Parse("00:00:01"),
                 (d, e) =>
                 {
                     var control = (ImageTransitionControl)d;
@@ -131,7 +132,7 @@ public sealed partial class ImageTransitionControl : UserControl
     private static void OnStretchPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
         var control = (ImageTransitionControl)d;
-       // control.Image.Stretch = (Stretch)e.NewValue;
+        // control.Image.Stretch = (Stretch)e.NewValue;
     }
 
     private void Image_OnImageOpened(object sender, RoutedEventArgs e)
@@ -373,7 +374,13 @@ public class ImageOpacityBrush : XamlCompositionBrushBase, IDisposable
         }
 
         //Source = null;
-        //GC.Collect();
+        Task.Run(() =>
+        {
+            GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
+            GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced, true, true);
+            GC.WaitForPendingFinalizers();
+            GC.Collect();
+        });
         //GC.Collect();
     }
 

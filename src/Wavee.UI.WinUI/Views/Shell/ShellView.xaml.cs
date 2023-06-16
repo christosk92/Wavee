@@ -187,5 +187,10 @@ namespace Wavee.UI.WinUI.Views.Shell
             return spotifyRemoteDeviceInfo.DeviceId ==
                    Global.AppState.DeviceId ? Visibility.Collapsed : Visibility.Visible;
         }
+
+        private void AutoSuggestBox_OnTextChanged(AutoSuggestBox sender, AutoSuggestBoxTextChangedEventArgs args)
+        {
+            ViewModel.Search.Query = sender.Text;
+        }
     }
 }
