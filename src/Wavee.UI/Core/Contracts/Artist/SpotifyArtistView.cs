@@ -136,6 +136,7 @@ public record SpotifyArtistView(
                             }));
                     }
 
+                    const int magicNumber = 130 + 30;
                     var pluralModifier = tracks.Count > 1 ? "tracks" : "track";
                     albumsView.Add(new ArtistDiscographyItem
                     {
@@ -147,7 +148,8 @@ public record SpotifyArtistView(
                             Tracks = tracks,
                             AlbumId = AudioId.FromUri(releaseUri)
                         },
-                        ReleaseDateAsStr = $"{year.ToString()} - {tracks.Count} {pluralModifier}"
+                        ReleaseDateAsStr = $"{year.ToString()} - {tracks.Count} {pluralModifier}",
+                        EstimatedHeight = tracks.Count * 38 + magicNumber
                     });
                 }
                 static string FirstCharToUpper(string key)
@@ -172,7 +174,7 @@ public record SpotifyArtistView(
         GetView(releases, "albums", true, false, res, artistId);
         GetView(releases, "singles", true, false, res, artistId);
         GetView(releases, "compilations", false, false, res, artistId);
-        GetView(releases, "appears_on", false, true, res, artistId);
+        //GetView(releases, "appears_on", false, true, res, artistId);
 
         return new SpotifyArtistView(
             Id: artistId,
@@ -219,6 +221,7 @@ public class ArtistDiscographyItem
 
     public ArtistDiscographyTracksHolder Tracks { get; set; }
     public string ReleaseDateAsStr { get; set; }
+    public double EstimatedHeight { get; set; }
 }
 
 public class ArtistDiscographyTracksHolder

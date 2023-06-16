@@ -39,11 +39,12 @@
     </UserControl.Resources>
 
 
-    <StackPanel>
-
+    <RelativePanel Height="300">
         <ScrollViewer Margin="0,0,0,0"
                       Padding="0,0,0,24"
                       x:Name="Scroller"
+                      RelativePanel.AlignLeftWithPanel="True"
+                      RelativePanel.AlignRightWithPanel="True"
                       HorizontalScrollBarVisibility="Hidden"
                       HorizontalScrollMode="Enabled"
                       VerticalAlignment="Top">
@@ -56,13 +57,15 @@
             </ItemsRepeater>
         </ScrollViewer>
         <PipsPager x:Name="FlipViewPipsPager"
+                   RelativePanel.Below="Scroller"
+                   RelativePanel.AlignHorizontalCenterWith="Scroller"
                    HorizontalAlignment="Center"
                    NextButtonVisibility="Visible"
                    PreviousButtonVisibility="Visible"
                    Margin="0, 12, 0, 0"
                    SelectedIndexChanged="FlipViewPipsPager_OnSelectedIndexChanged" />
 
-    </StackPanel>
+    </RelativePanel>
 
     <!-- <ScrollView Margin="0,0,0,0" -->
     <!--             Padding="0,0,0,24" -->

@@ -25,14 +25,14 @@ using CommunityToolkit.WinUI.UI;
 
 namespace Wavee.UI.WinUI.Views.Artist.Overview
 {
-    public sealed partial class ArtistDiscographyListView : UserControl
+    public sealed partial class ArtistDiscographyListView : UserControl, IDisposable
     {
         public ArtistDiscographyListView(List<ArtistDiscographyItem> artistDiscographyViews)
         {
             Items = artistDiscographyViews;
             this.InitializeComponent();
         }
-        public List<ArtistDiscographyItem> Items { get; }
+        public List<ArtistDiscographyItem> Items { get; set; }
         // private void ElementFactory_OnSelectTemplateKey(RecyclingElementFactory sender, SelectTemplateEventArgs args)
         // {
         //     args.TemplateKey = args.DataContext switch
@@ -77,6 +77,17 @@ namespace Wavee.UI.WinUI.Views.Artist.Overview
             //         e.Handled = true;
             //     }
             // }
+        }
+
+        public void Dispose()
+        {
+            foreach (var item in Items)
+            {
+                item.Tracks.Tracks.Clear();
+                item.Tracks = null;
+            }
+            Items.Clear();
+            Items = null;
         }
     }
 }

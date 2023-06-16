@@ -51,6 +51,8 @@
                       x:DataType="artist:ArtistDiscographyItem">
             <RelativePanel AllowFocusOnInteraction="True"
                            TabIndex="1"
+                           x:Phase="2"
+                           Height="{x:Bind EstimatedHeight, Mode=OneWay}"
                            Padding="16"
                            Background="Transparent"
                            PreviewKeyDown="UIElement_OnKeyDown"
@@ -104,6 +106,7 @@
     </UserControl.Resources>
     <ItemsRepeater ItemTemplate="{StaticResource Regular}"
                    VerticalAlignment="Top"
+                   x:Name="MainRepeater"
                    ItemsSource="{x:Bind Items}">
         <ItemsRepeater.Layout>
             <StackLayout Orientation="Vertical"
