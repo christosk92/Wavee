@@ -36,18 +36,18 @@ namespace Wavee.UI.WinUI.Views.Home
             return !b;
         }
 
-        private void OnSelectTemplateKey(RecyclingElementFactory sender, SelectTemplateEventArgs e)
-        {
-            if (e.DataContext is CardItem item)
-            {
-                e.TemplateKey = item.Id.Type switch
-                {
-                    AudioItemType.Artist => "artist",
-                    _ => "regular"
-                };
-                //e.TemplateKey = (item.Index % 2 == 0) ? "even" : "odd";
-            }
-        }
+        // private void OnSelectTemplateKey(RecyclingElementFactory sender, SelectTemplateEventArgs e)
+        // {
+        //     if (e.DataContext is CardItem item)
+        //     {
+        //         e.TemplateKey = item.Id.Type switch
+        //         {
+        //             AudioItemType.Artist => "artist",
+        //             _ => "regular"
+        //         };
+        //         //e.TemplateKey = (item.Index % 2 == 0) ? "even" : "odd";
+        //     }
+        // }
 
         private UIElement _storeditem;
 

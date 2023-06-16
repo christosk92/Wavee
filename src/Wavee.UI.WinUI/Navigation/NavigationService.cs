@@ -71,6 +71,8 @@ public sealed class NavigationService
         }
         else
         {
+            _contentControl.Content = null;
+
             var constructor = _constructors.GetValueOrDefault(pageType);
 
             var page = constructor.DynamicInvoke();

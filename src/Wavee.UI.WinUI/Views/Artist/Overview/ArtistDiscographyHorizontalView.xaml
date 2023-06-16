@@ -21,40 +21,40 @@
             <components:CardView Title="{x:Bind Title}"
                                  Id="{x:Bind Id}"
                                  x:Phase="1"
-                                 Height="260" Tapped="UIElement_OnTapped"
+                                 Height="260"
+                                 Tapped="UIElement_OnTapped"
                                  Width="200"
                                  Description="{x:Bind ReleaseDateAsStr}"
                                  Image="{x:Bind Image}" />
         </DataTemplate>
-        <RecyclePool x:Key="RecyclePool" />
-        <RecyclingElementFactory x:Key="elementFactory"
-                                 SelectTemplateKey="ElementFactory_OnSelectTemplateKey"
-                                 RecyclePool="{StaticResource RecyclePool}">
-            <RecyclingElementFactory.Templates>
-                <StaticResource x:Key="regular"
-                                ResourceKey="Regular" />
-            </RecyclingElementFactory.Templates>
-        </RecyclingElementFactory>
+        <!-- <RecyclePool x:Key="RecyclePool" /> -->
+        <!-- <DataTemplateSele x:Key="elementFactory" -->
+        <!--                          SelectTemplateKey="ElementFactory_OnSelectTemplateKey" -->
+        <!--                          RecyclePool="{StaticResource RecyclePool}"> -->
+        <!--     <RecyclingElementFactory.Templates> -->
+        <!--         <StaticResource x:Key="regular" -->
+        <!--                         ResourceKey="Regular" /> -->
+        <!--     </RecyclingElementFactory.Templates> -->
+        <!-- </DataTemplateSel> -->
     </UserControl.Resources>
 
 
     <StackPanel>
 
-        <ScrollView IgnoredInputKinds="MouseWheel"
-                    Margin="0,0,0,0"
-                    Padding="0,0,0,24"
-                    x:Name="Scroller"
-                    HorizontalScrollBarVisibility="Hidden"
-                    HorizontalScrollMode="Enabled"
-                    VerticalAlignment="Top">
-            <ItemsRepeater ItemTemplate="{StaticResource elementFactory}"
+        <ScrollViewer Margin="0,0,0,0"
+                      Padding="0,0,0,24"
+                      x:Name="Scroller"
+                      HorizontalScrollBarVisibility="Hidden"
+                      HorizontalScrollMode="Enabled"
+                      VerticalAlignment="Top">
+            <ItemsRepeater ItemTemplate="{StaticResource Regular}"
                            x:Name="ItemsRepeater"
                            ItemsSource="{x:Bind Items}">
                 <ItemsRepeater.Layout>
                     <StackLayout Orientation="Horizontal" />
                 </ItemsRepeater.Layout>
             </ItemsRepeater>
-        </ScrollView>
+        </ScrollViewer>
         <PipsPager x:Name="FlipViewPipsPager"
                    HorizontalAlignment="Center"
                    NextButtonVisibility="Visible"

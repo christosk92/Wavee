@@ -17,12 +17,9 @@
     <UserControl.Resources>
         <DataTemplate x:Key="ArtistDiscographyTrackTemplate"
                       x:DataType="artist:ArtistDiscographyTrack">
-            <ItemContainer CanUserInvoke="UserCannotInvoke"
-                           CanUserSelect="UserCanSelect"
-                           Height="38"
-                           Style="{ThemeResource ListViewLikeContainer}"
-                           Margin="0,0,0,8"
-                           MultiSelectMode="Extended">
+            <ListViewItem Height="38"
+                          Style="{ThemeResource DefaultListViewItemStyle}"
+                          Margin="0,0,0,8">
                 <components:TrackView VerticalAlignment="Stretch"
                                       Margin="4,0,0,0"
                                       VerticalContentAlignment="Stretch"
@@ -47,7 +44,7 @@
                         </Grid>
                     </components:TrackView.View>
                 </components:TrackView>
-            </ItemContainer>
+            </ListViewItem>
         </DataTemplate>
         <DataTemplate x:Key="Regular"
                       x:DataType="artist:ArtistDiscographyItem">
@@ -84,28 +81,27 @@
                            RelativePanel.AlignLeftWithPanel="True"
                            RelativePanel.Below="TitleBlock" />
 
-                <ItemsView RelativePanel.RightOf="MainImage"
-                           Margin="24,0"
-                           ItemsSource="{x:Bind Tracks.Tracks}"
-                           x:Phase="3"
-                           SelectionMode="Extended"
-                           ItemTemplate="{StaticResource elementFactory}"
-                           RelativePanel.AlignRightWithPanel="True" />
+                <ItemsRepeater RelativePanel.RightOf="MainImage"
+                               Margin="24,0"
+                               ItemsSource="{x:Bind Tracks.Tracks}"
+                               x:Phase="3"
+                               ItemTemplate="{StaticResource ArtistDiscographyTrackTemplate}"
+                               RelativePanel.AlignRightWithPanel="True" />
             </RelativePanel>
         </DataTemplate>
-        <RecyclePool x:Key="RecyclePool" />
-        <RecyclingElementFactory x:Key="elementFactory"
-                                 SelectTemplateKey="ElementFactory_OnSelectTemplateKey"
-                                 RecyclePool="{StaticResource RecyclePool}">
-            <RecyclingElementFactory.Templates>
-                <StaticResource x:Key="regular"
-                                ResourceKey="Regular" />
-                <StaticResource x:Key="track"
-                                ResourceKey="ArtistDiscographyTrackTemplate" />
-            </RecyclingElementFactory.Templates>
-        </RecyclingElementFactory>
+        <!-- <RecyclePool x:Key="RecyclePool" /> -->
+        <!-- <RecyclingElementFactory x:Key="elementFactory" -->
+        <!--                          SelectTemplateKey="ElementFactory_OnSelectTemplateKey" -->
+        <!--                          RecyclePool="{StaticResource RecyclePool}"> -->
+        <!--     <RecyclingElementFactory.Templates> -->
+        <!--         <StaticResource x:Key="regular" -->
+        <!--                         ResourceKey="Regular" /> -->
+        <!--         <StaticResource x:Key="track" -->
+        <!--                         ResourceKey="ArtistDiscographyTrackTemplate" /> -->
+        <!--     </RecyclingElementFactory.Templates> -->
+        <!-- </RecyclingElementFactory> -->
     </UserControl.Resources>
-    <ItemsRepeater ItemTemplate="{StaticResource elementFactory}"
+    <ItemsRepeater ItemTemplate="{StaticResource Regular}"
                    VerticalAlignment="Top"
                    ItemsSource="{x:Bind Items}">
         <ItemsRepeater.Layout>

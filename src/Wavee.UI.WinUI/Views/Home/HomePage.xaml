@@ -10,6 +10,8 @@
              xmlns:panels="using:Wavee.UI.WinUI.Panels"
              xmlns:common="using:Wavee.UI.Core.Contracts.Common"
              xmlns:components="using:Wavee.UI.WinUI.Components"
+             xmlns:system="using:System"
+             xmlns:winUi="using:Wavee.UI.WinUI"
              mc:Ignorable="d">
     <UserControl.Transitions>
         <TransitionCollection>
@@ -17,12 +19,13 @@
         </TransitionCollection>
     </UserControl.Transitions>
     <UserControl.Resources>
-        <RecyclePool x:Key="RecyclePool" />
+        <!-- <RecyclePool x:Key="RecyclePool" /> -->
         <DataTemplate x:Key="Regular"
                       x:DataType="common:CardItem">
             <components:CardView Title="{x:Bind Title}"
                                  Id="{x:Bind Id}"
-                                 MaxHeight="400" Tapped="UIElement_OnTapped"
+                                 MaxHeight="400"
+                                 Tapped="UIElement_OnTapped"
                                  MaxWidth="400"
                                  Description="{x:Bind Subtitle}"
                                  Image="{x:Bind ImageUrl}" />
@@ -35,16 +38,21 @@
                                        MaxWidth="300"
                                        Image="{x:Bind ImageUrl}" />
         </DataTemplate>
-        <RecyclingElementFactory x:Key="elementFactory"
-                                 RecyclePool="{StaticResource RecyclePool}"
-                                 SelectTemplateKey="OnSelectTemplateKey">
-            <RecyclingElementFactory.Templates>
-                <StaticResource x:Key="regular"
-                                ResourceKey="Regular" />
-                <StaticResource x:Key="artist"
-                                ResourceKey="ArtistView" />
-            </RecyclingElementFactory.Templates>
-        </RecyclingElementFactory>
+        <winUi:HomeItemTemplateSelector x:Key="HomeItemTemplateSelector"
+                                        Artist="{StaticResource ArtistView}"
+                                        Regular="{StaticResource Regular}" />
+
+
+        <!-- <RecyclingElementFactory x:Key="elementFactory" -->
+        <!--                          RecyclePool="{StaticResource RecyclePool}" -->
+        <!--                          SelectTemplateKey="OnSelectTemplateKey"> -->
+        <!--     <RecyclingElementFactory.Templates> -->
+        <!--         <StaticResource x:Key="regular" -->
+        <!--                         ResourceKey="Regular" /> -->
+        <!--         <StaticResource x:Key="artist" -->
+        <!--                         ResourceKey="ArtistView" /> -->
+        <!--     </RecyclingElementFactory.Templates> -->
+        <!-- </RecyclingElementFactory> -->
     </UserControl.Resources>
 
     <Grid Padding="24,0">
@@ -113,7 +121,7 @@
                                     </StackPanel>
                                     <ItemsRepeater Margin="0,0,0,24"
                                                    Grid.Row="1"
-                                                   ItemTemplate="{StaticResource elementFactory}"
+                                                   ItemTemplate="{StaticResource HomeItemTemplateSelector}"
                                                    ItemsSource="{x:Bind Items}">
                                         <ItemsRepeater.Layout>
                                             <panels:HorizontalAdaptiveLayout DesiredWidth="230" />

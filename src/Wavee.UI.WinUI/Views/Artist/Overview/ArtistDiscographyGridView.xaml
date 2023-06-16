@@ -27,17 +27,17 @@
                                  Description="{x:Bind ReleaseDateAsStr}"
                                  Image="{x:Bind Image}" />
         </DataTemplate>
-        <RecyclePool x:Key="RecyclePool" />
-        <RecyclingElementFactory x:Key="elementFactory"
-                                 SelectTemplateKey="ElementFactory_OnSelectTemplateKey"
-                                 RecyclePool="{StaticResource RecyclePool}">
-            <RecyclingElementFactory.Templates>
-                <StaticResource x:Key="regular"
-                                ResourceKey="Regular" />
-            </RecyclingElementFactory.Templates>
-        </RecyclingElementFactory>
+        <!-- <RecyclePool x:Key="RecyclePool" /> -->
+        <!-- <RecyclingElementFactory x:Key="elementFactory" -->
+        <!--                          SelectTemplateKey="ElementFactory_OnSelectTemplateKey" -->
+        <!--                          RecyclePool="{StaticResource RecyclePool}"> -->
+        <!--     <RecyclingElementFactory.Templates> -->
+        <!--         <StaticResource x:Key="regular" -->
+        <!--                         ResourceKey="Regular" /> -->
+        <!--     </RecyclingElementFactory.Templates> -->
+        <!-- </RecyclingElementFactory> -->
     </UserControl.Resources>
-    <ItemsRepeater ItemTemplate="{StaticResource elementFactory}"
+    <ItemsRepeater ItemTemplate="{StaticResource Regular}"
                    VerticalAlignment="Top"
                    ItemsSource="{x:Bind Items}">
         <ItemsRepeater.Layout>

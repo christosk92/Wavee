@@ -7,6 +7,8 @@ public sealed class ArtistViewModel : ObservableObject
 {
     private bool _isFollowing;
     private string? _header;
+    private string? _name;
+    private string? _monthlyListenersText;
 
     public bool IsFollowing
     {
@@ -18,6 +20,18 @@ public sealed class ArtistViewModel : ObservableObject
     {
         get => _header;
         set => SetProperty(ref _header, value);
+    }
+
+    public string? Name
+    {
+        get => _name;
+        set => SetProperty(ref _name, value);
+    }
+
+    public string? MonthlyListenersText
+    {
+        get => _monthlyListenersText;
+        set => SetProperty(ref _monthlyListenersText, value);
     }
 
     public void Create(AudioId id)

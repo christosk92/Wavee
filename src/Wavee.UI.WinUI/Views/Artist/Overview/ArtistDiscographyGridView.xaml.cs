@@ -31,10 +31,10 @@ namespace Wavee.UI.WinUI.Views.Artist.Overview
 
         public List<ArtistDiscographyItem> Items { get; set; }
 
-        private void ElementFactory_OnSelectTemplateKey(RecyclingElementFactory sender, SelectTemplateEventArgs args)
-        {
-            args.TemplateKey = "regular";
-        }
+        // private void ElementFactory_OnSelectTemplateKey(RecyclingElementFactory sender, SelectTemplateEventArgs args)
+        // {
+        //     args.TemplateKey = "regular";
+        // }
 
         public void Dispose()
         {

@@ -83,8 +83,8 @@
                                             </DataTemplate>
                                         </ItemsRepeater.ItemTemplate>
                                         <ItemsRepeater.Layout>
-                                            <StackLayout DisableVirtualization="True" Spacing="12"
-                                                         Orientation="Horizontal" />
+                                            <StackLayout  Spacing="12"
+                                                          Orientation="Horizontal" />
                                         </ItemsRepeater.Layout>
                                     </ItemsRepeater>
                                 </StackPanel>
@@ -263,7 +263,8 @@
                                         RelativePanel.AlignBottomWithPanel="True"
                                         labs:TransitionHelper.Id="buttonspanel"
                                         Orientation="Horizontal">
-                                <Button Height="34" Tapped="PlayFromStart"
+                                <Button Height="34"
+                                        Tapped="PlayFromStart"
                                         Style="{ThemeResource AccentButtonStyle}">
                                     <StackPanel Spacing="8"
                                                 Orientation="Horizontal">

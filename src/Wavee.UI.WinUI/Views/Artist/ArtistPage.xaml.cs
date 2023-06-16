@@ -17,6 +17,7 @@ using Wavee.UI.WinUI.Views.Artist.Overview;
 using System.Diagnostics;
 using Microsoft.UI.Xaml.Media.Animation;
 using Windows.Foundation.Metadata;
+using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml.Navigation;
 
 namespace Wavee.UI.WinUI.Views.Artist
@@ -57,7 +58,8 @@ namespace Wavee.UI.WinUI.Views.Artist
             {
                 ViewModel.Create(_id);
                 _id = id;
-                var artistResult = await Task.Run(async () => await Global.AppState.Artist.GetArtistViewAsync(id, CancellationToken.None).Run());
+                var artistResult = await Task.Run(async () =>
+                    await Global.AppState.Artist.GetArtistViewAsync(id, CancellationToken.None).Run());
                 if (artistResult.IsFail)
                 {
                     //showerror
@@ -68,12 +70,15 @@ namespace Wavee.UI.WinUI.Views.Artist
 
                 Artist = artistResult.Match(Fail: e => throw new NotSupportedException(), Succ: a => a);
                 _artistFetched.TrySetResult(Artist);
-                ArtistNameBlock.Text = Artist.Name;
+
+                ViewModel.Name = Artist.Name;
                 ViewModel.Header = Artist.HeaderImage;
+
                 var r = Artist.MonthlyListeners.ToString("N0");
-                MonthlyListenersBlock.Text = $"{r} monthly listeners";
+                ViewModel.MonthlyListenersText = $"{r} monthly listeners";
+
                 MetadataPnale.Visibility = Visibility.Visible;
-                ShowPanelAnim.Start();
+                _ = ShowPanelAnim.StartAsync();
                 if (!string.IsNullOrEmpty(Artist.ProfilePicture))
                 {
                     SecondPersonPicture.ProfilePicture = new BitmapImage(new Uri(Artist.ProfilePicture));
@@ -97,6 +102,7 @@ namespace Wavee.UI.WinUI.Views.Artist
                         AlternativeArtistImage.DisplayName = SecondPersonPicture.DisplayName;
                     }
                 }
+
                 ArtistPage_OnSizeChanged(this, null);
             }
         }

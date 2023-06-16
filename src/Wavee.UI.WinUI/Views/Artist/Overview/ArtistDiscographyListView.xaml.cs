@@ -33,14 +33,14 @@ namespace Wavee.UI.WinUI.Views.Artist.Overview
             this.InitializeComponent();
         }
         public List<ArtistDiscographyItem> Items { get; }
-        private void ElementFactory_OnSelectTemplateKey(RecyclingElementFactory sender, SelectTemplateEventArgs args)
-        {
-            args.TemplateKey = args.DataContext switch
-            {
-                ArtistDiscographyTrack => "track",
-                _ => "regular"
-            };
-        }
+        // private void ElementFactory_OnSelectTemplateKey(RecyclingElementFactory sender, SelectTemplateEventArgs args)
+        // {
+        //     args.TemplateKey = args.DataContext switch
+        //     {
+        //         ArtistDiscographyTrack => "track",
+        //         _ => "regular"
+        //     };
+        // }
 
         private void UIElement_OnPointerEntered(object sender, PointerRoutedEventArgs e)
         {
@@ -57,12 +57,12 @@ namespace Wavee.UI.WinUI.Views.Artist.Overview
             bool bCtrlDown = (Microsoft.UI.Input.InputKeyboardSource.GetKeyStateForCurrentThread(Windows.System.VirtualKey.Control).HasFlag(Windows.UI.Core.CoreVirtualKeyStates.Down));
             if (bCtrlDown && e.Key == VirtualKey.A)
             {
-                var itemsView = (sender as UIElement).FindDescendant<ItemsView>();
-                if (itemsView.SelectionModel.SelectedItems.Count == ((IList)itemsView.ItemsSource).Count)
-                {
-                    itemsView.SelectionModel.ClearSelection();
-                    e.Handled = true;
-                }
+                // var itemsView = (sender as UIElement).FindDescendant<ItemsView>();
+                // if (itemsView.SelectionModel.SelectedItems.Count == ((IList)itemsView.ItemsSource).Count)
+                // {
+                //     itemsView.SelectionModel.ClearSelection();
+                //     e.Handled = true;
+                // }
                 // Mark event as handled
 
             }

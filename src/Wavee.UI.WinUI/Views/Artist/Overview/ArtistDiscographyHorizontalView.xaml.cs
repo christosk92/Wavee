@@ -37,10 +37,10 @@ namespace Wavee.UI.WinUI.Views.Artist.Overview
         }
 
 
-        private void ElementFactory_OnSelectTemplateKey(RecyclingElementFactory sender, SelectTemplateEventArgs args)
-        {
-            args.TemplateKey = "regular";
-        }
+        // private void ElementFactory_OnSelectTemplateKey(RecyclingElementFactory sender, SelectTemplateEventArgs args)
+        // {
+        //     args.TemplateKey = "regular";
+        // }
 
         private double incrementPerPage = 0;
         private void ArtistDiscographyHorizontalView_OnSizeChanged(object sender, SizeChangedEventArgs e)
@@ -61,7 +61,7 @@ namespace Wavee.UI.WinUI.Views.Artist.Overview
             var offset = page * incrementPerPage;
             ignoreSetPage = true;
             lastOffset = offset;
-            Scroller.ScrollTo(offset, 0);
+            Scroller.ChangeView(offset, null, null);
         }
 
         private void UIElement_OnTapped(object sender, TappedRoutedEventArgs e)
