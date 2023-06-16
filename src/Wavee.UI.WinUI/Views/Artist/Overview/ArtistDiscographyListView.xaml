@@ -21,6 +21,7 @@
                           Style="{ThemeResource DefaultListViewItemStyle}"
                           Margin="0,0,0,8">
                 <components:TrackView VerticalAlignment="Stretch"
+                                      Height="38"
                                       Margin="4,0,0,0"
                                       VerticalContentAlignment="Stretch"
                                       HorizontalAlignment="Stretch"
