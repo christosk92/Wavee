@@ -21,7 +21,7 @@ internal sealed class SpotifySearchClient : ISearchClient
         if (string.IsNullOrEmpty(query))
             return Enumerable.Empty<SearchResult>();
         var mercury = _client.Mercury;
-        const string search = "hm://searchview/km/v4/search/{0}?limit=10&entityVersion=2&catalogue=premium&country={1}&locale={2}";
+        const string search = "hm://searchview/km/v4/search/{0}?limit=10&entityVersion=4&catalogue=premium&country={1}&locale={2}";
         var url = string.Format(search, HttpUtility.UrlEncode(query), _client.CountryCode.IfNone("US"), _client.Config.Locale);
 
         var response = await mercury.Get(url, token);
@@ -33,30 +33,40 @@ internal sealed class SpotifySearchClient : ISearchClient
         var output = new List<SearchResult>();
         foreach (var category in order)
         {
-            var categoryResults = results.GetProperty(category.GetString());
-            var items = categoryResults.GetProperty("hits").EnumerateArray();
-            foreach (var item in items)
+            if (results.TryGetProperty(category.GetString(), out var categoryResults))
             {
-                var type = item.GetProperty("type").GetString();
-                var id = item.GetProperty("uri").GetString();
-                var uri = AudioId.FromUri(id);
-                var name = item.GetProperty("name").GetString();
-                var imageUrl = item.GetProperty("image").GetProperty("url").GetString();
-                var key = new SearchResultKey(uri, type switch
+                var items = categoryResults.GetProperty("hits").EnumerateArray();
+                foreach (var item in items)
                 {
-                    "track" => SearchGroup.Track,
-                    "album" => SearchGroup.Album,
-                    "artist" => SearchGroup.Artist,
-                    _ => SearchGroup.Unknown
-                });
-                var cardItem = new CardItem
-                {
-                    Id = uri,
-                    Title = name,
-                    ImageUrl = imageUrl,
-                    Subtitle = string.Empty
-                };
-                output.Add(new SearchResult(key, cardItem));
+                    var id = item.GetProperty("uri").GetString();
+                    var uri = AudioId.FromUri(id);
+                    var name = item.GetProperty("name").GetString();
+
+                    var imageUrl = item.TryGetProperty("image", out var img)
+                        ? img.GetString()
+                        : string.Empty;
+                    var key = new SearchResultKey(uri, category.GetString() switch
+                    {
+                        "topHit" => SearchGroup.Highlighted,
+                        "topRecommendations" => SearchGroup.Recommended,
+                        "tracks" => SearchGroup.Track,
+                        "artists" => SearchGroup.Artist,
+                        "albums" => SearchGroup.Album,
+                        "playlists" => SearchGroup.Playlist,
+                        "shows" => SearchGroup.PodcastShow,
+                        "audioepisodes" => SearchGroup.PodcastEpisode,
+                        "profiles" => SearchGroup.Unknown,
+                        "genres" => SearchGroup.Unknown,
+                    });
+                    var cardItem = new CardItem
+                    {
+                        Id = uri,
+                        Title = name,
+                        ImageUrl = imageUrl,
+                        Subtitle = string.Empty
+                    };
+                    output.Add(new SearchResult(key, cardItem));
+                }
             }
         }
 

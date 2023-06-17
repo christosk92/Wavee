@@ -19,6 +19,7 @@ using Wavee.UI.WinUI.Views.Home;
 using WinRT.Interop;
 using Wavee.UI.Core.Sys.Mock;
 using Wavee.UI.ViewModel;
+using Wavee.UI.WinUI.Views.Search;
 
 namespace Wavee.UI.WinUI.Views.Shell
 {
@@ -191,6 +192,10 @@ namespace Wavee.UI.WinUI.Views.Shell
         private void AutoSuggestBox_OnTextChanged(AutoSuggestBox sender, AutoSuggestBoxTextChangedEventArgs args)
         {
             ViewModel.Search.Query = sender.Text;
+            if (MainFrame.Content is not SearchPage)
+            {
+                NavigationService.Navigate(typeof(SearchPage), ViewModel.Search);
+            }
         }
     }
 }

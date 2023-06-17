@@ -9,6 +9,7 @@ using Wavee.UI.Navigation;
 using Wavee.UI.WinUI.Views.Album;
 using Wavee.UI.WinUI.Views.Artist;
 using Wavee.UI.WinUI.Views.Home;
+using Wavee.UI.WinUI.Views.Search;
 
 namespace Wavee.UI.WinUI.Navigation;
 public record CachedPage(WeakReference PageReference, Type Type, object? WithParameter, int InsertedAt);
@@ -137,7 +138,8 @@ public sealed class NavigationService
         {
             typeof(HomePage),
             typeof(ArtistPage),
-            typeof(AlbumPage)
+            typeof(AlbumPage),
+            typeof(SearchPage)
         };
 
         static void RegisterConstructor(Type type)

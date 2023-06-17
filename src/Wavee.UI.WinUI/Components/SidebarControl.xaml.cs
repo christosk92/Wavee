@@ -8,6 +8,8 @@ using Microsoft.VisualBasic;
 using System.Threading.Tasks;
 using Windows.System;
 using Windows.UI.Core;
+using Microsoft.UI;
+using Microsoft.UI.Xaml.Media;
 using Wavee.UI.Core.Sys;
 using Wavee.UI.WinUI.Extensions;
 using Wavee.UI.WinUI.Navigation;
@@ -180,6 +182,25 @@ namespace Wavee.UI.WinUI.Components
                 this.IsPaneToggleButtonVisible = true;
                 this.OpenPaneLength = 250;
             }
+        }
+
+        private void SidebarControl_OnPaneOpening(NavigationView sender, object args)
+        {
+            //PaneRoot
+            if (this.DisplayMode is NavigationViewDisplayMode.Minimal or NavigationViewDisplayMode.Compact)
+            {
+                var bg = this.FindDescendant<Grid>(x => x.Name is "PaneRoot");
+                //AcrylicInAppFillColorDefaultBrush
+                bg.Background = (Brush)Application.Current.Resources["AcrylicInAppFillColorDefaultBrush"];
+                //bg.Background = new SolidColorBrush(Colors.White);
+            }
+        }
+
+        private void SidebarControl_OnPaneClosing(NavigationView sender, NavigationViewPaneClosingEventArgs args)
+        {
+            var bg = this.FindDescendant<Grid>(x => x.Name is "PaneRoot");
+            //AcrylicInAppFillColorDefaultBrush
+            bg.Background = null;
         }
     }
 }

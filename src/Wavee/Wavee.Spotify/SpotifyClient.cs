@@ -32,6 +32,7 @@ public sealed class SpotifyClient : IDisposable
         SpotifyTcpConnection connection,
         string deviceId)
     {
+        _spotifyConfig = config;
         _config = config.Cache;
         _connection = connection;
         DeviceId = deviceId;

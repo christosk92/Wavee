@@ -18,5 +18,8 @@ public enum SearchGroup
     Track,
     Album,
     Artist,
-    Unknown
+    Playlist,
+    PodcastShow,
+    PodcastEpisode,
+    Unknown,
 }
