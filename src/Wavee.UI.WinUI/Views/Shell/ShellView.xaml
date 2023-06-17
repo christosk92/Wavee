@@ -21,7 +21,7 @@
             UserSettings="{x:Bind AppState.UserSettings}">
             <components:SidebarControl.AutoSuggestBox>
                 <AutoSuggestBox
-                    Margin="-14,0"
+                    Margin="-4,0"
                     HorizontalAlignment="Stretch"
                     PlaceholderText="Search..."
                     TextChanged="AutoSuggestBox_OnTextChanged" />

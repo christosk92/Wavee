@@ -501,7 +501,7 @@ internal sealed class SpotifyPlaybackClient : ISpotifyPlaybackClient, IDisposabl
                     Some: x => SuccessAff(x),
                     None: () =>
                         from fetched in mercury.GetMetadata(id, country, ct).ToAff()
-                        from _ in Eff(() => cache.Save(fetched))
+                        from _ in Eff(() => cache.Save(id, fetched))
                         select fetched
                 )
             select potentialCache;

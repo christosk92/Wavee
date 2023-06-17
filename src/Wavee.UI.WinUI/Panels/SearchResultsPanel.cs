@@ -55,7 +55,7 @@ public sealed class SearchResultsPanel : NonVirtualizingLayout
         bool previouswasHighlight = false;
         int addedItems = 0;
         double addedHeight = 0;
-
+        double addedWidth = 0;
         for (var i = 0; i < children.Count; i++)
         {
             //check the item type (by checking the datacontext)
@@ -71,11 +71,14 @@ public sealed class SearchResultsPanel : NonVirtualizingLayout
                     case SearchGroup.Highlighted:
                         previouswasHighlight = true;
                         //highlight can resize itself (but for now assume a 300x150 size)
-                        var highlightSize = new Size(372, 240);
+                        child.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+
+                        var highlightSize = child.DesiredSize;
                         state.LayoutRects.Add(new Rect(0, 0, highlightSize.Width, highlightSize.Height));
                         child.Measure(highlightSize);
                         addedItems++;
                         addedHeight += highlightSize.Height;
+                        addedWidth += highlightSize.Width;
                         break;
                     case SearchGroup.Recommended:
                     case SearchGroup.Track:
@@ -83,8 +86,8 @@ public sealed class SearchResultsPanel : NonVirtualizingLayout
                             if (previouswasHighlight)
                             {
                                 //measure with the available width
-                                var trackSize = new Size(availableWidth - 372, 240);
-                                state.LayoutRects.Add(new Rect(372, 0, trackSize.Width, trackSize.Height));
+                                var trackSize = new Size(availableWidth - addedWidth, addedHeight);
+                                state.LayoutRects.Add(new Rect(addedWidth, 0, trackSize.Width, trackSize.Height));
                                 child.Measure(trackSize);
                             }
                             else
@@ -114,13 +117,12 @@ public sealed class SearchResultsPanel : NonVirtualizingLayout
 
     private double SizeLikeHorizontalAdaptiveLayout(UIElement child, double availableWidth, List<Rect> stateLayoutRects, double addedHeight)
     {
-        var childDesiredSize = child.DesiredSize;
-        var childWidth = childDesiredSize.Width;
-        var childHeight = childDesiredSize.Height > 0 ? childDesiredSize.Height : 200;
-        var childSize = new Size(availableWidth, childHeight);
+        var infinite = new Size(availableWidth, double.PositiveInfinity);
+        child.Measure(infinite);
+        var childHeight = child.DesiredSize.Height;
+
         var childRect = new Rect(0, addedHeight, availableWidth, childHeight);
         stateLayoutRects.Add(childRect);
-        child.Measure(childSize);
         return childHeight;
     }
 

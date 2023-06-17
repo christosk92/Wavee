@@ -10,8 +10,8 @@
              xmlns:album="using:Wavee.UI.Core.Contracts.Album"
              xmlns:artist="using:Wavee.UI.Core.Contracts.Artist"
              xmlns:components="using:Wavee.UI.WinUI.Components"
-             xmlns:panels="using:Wavee.UI.WinUI.Panels"
              xmlns:common="using:Wavee.UI.Core.Contracts.Common"
+             xmlns:panels="using:Wavee.UI.WinUI.Panels"
              mc:Ignorable="d">
     <UserControl.Transitions>
         <TransitionCollection>

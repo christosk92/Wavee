@@ -141,7 +141,7 @@ public readonly struct SpotifyCache : ISpotifyCache
         return Option<TrackOrEpisode>.None;
     }
 
-    public Unit Save(TrackOrEpisode fetchedTrack)
+    public Unit Save(AudioId id,TrackOrEpisode fetchedTrack)
     {
         if (_connString.IsNone) return Unit.Default;
         using var connection = new SQLiteConnection(_connString.ValueUnsafe());
@@ -151,7 +151,7 @@ public readonly struct SpotifyCache : ISpotifyCache
             @"INSERT INTO tracks (id, name, artist_space, album_name, duration, can_play, data) VALUES (@id, @name, @artistSpace, @albumName, @duration, @canPlay, @data);";
 
         using var command = new SQLiteCommand(sql, connection);
-        command.Parameters.AddWithValue("@id", fetchedTrack.Id.ToString());
+        command.Parameters.AddWithValue("@id", id.ToString());
         command.Parameters.AddWithValue("@name", fetchedTrack.Name);
         command.Parameters.AddWithValue("@artistSpace", string.Join(" ", fetchedTrack.Artists.Select(c => c.Name)));
         command.Parameters.AddWithValue("@albumName", fetchedTrack.Group.Name);

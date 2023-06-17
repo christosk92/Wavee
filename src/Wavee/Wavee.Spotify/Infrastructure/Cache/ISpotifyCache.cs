@@ -12,7 +12,7 @@ public interface ISpotifyCache
     Option<Stream> AudioFile(AudioFile file);
     Unit SaveAudioFile(AudioFile file, byte[] data);
     Option<TrackOrEpisode> Get(AudioId audioId);
-    Unit Save(TrackOrEpisode fetchedTrack);
+    Unit Save(AudioId id, TrackOrEpisode fetchedTrack);
     bool[] CheckExists(Seq<AudioId> request);
     Unit SaveBulk(Seq<TrackOrEpisode> result);
     Option<ReadOnlyMemory<byte>> GetRawEntity(string id);

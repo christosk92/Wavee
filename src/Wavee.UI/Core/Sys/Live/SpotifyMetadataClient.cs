@@ -25,7 +25,7 @@ internal sealed class SpotifyMetadataClient : IMetadataClient
                     Some: x => SuccessAff(x),
                     None: () =>
                         from fetched in _client.Mercury.GetMetadata(id, country, ct).ToAff()
-                        from _ in Eff(() => _client.Cache.Save(fetched))
+                        from _ in Eff(() => _client.Cache.Save(id, fetched))
                         select fetched
                 )
             select potentialCache;
