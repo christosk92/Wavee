@@ -85,16 +85,16 @@ public sealed class SpotifyDecryptedStream : Stream
             iv: AUDIO_AES_IV,
             chunkSize: ChunkSize);
 
-        var numberOfChnks = (int)(length / ChunkSize);
-        //preload all chunks
-        for (var i = 1; i < numberOfChnks - 1; i++)
+        var numberofchunks = Math.Ceiling((double)length / ChunkSize);
+        //preload all chunks except last one
+        Task.Run(async () =>
         {
-            var nextChunkIndex = i;
-            Task.Run(async () =>
+            for (var i = 0; i < numberofchunks - 1; i++)
             {
-                await _getChunkFunc(nextChunkIndex);
-            });
-        }
+                var i1 = i;
+                _ = Task.Run(() => _getChunkFunc(i1));
+            }
+        });
     }
 
     protected override void Dispose(bool disposing)
@@ -117,7 +117,7 @@ public sealed class SpotifyDecryptedStream : Stream
 
         if (!_decryptedChunks.TryGetValue(chunkIndex, out var chunk))
         {
-            chunk = _getChunkFunc(chunkIndex).ConfigureAwait(false).GetAwaiter().GetResult().ToArray(); //create a copy
+            chunk = _getChunkFunc(chunkIndex).Result.ToArray(); //create a copy
             _decryptor.Decrypt(chunkIndex, chunk);
             _decryptedChunks.Add(chunkIndex, chunk);
         }

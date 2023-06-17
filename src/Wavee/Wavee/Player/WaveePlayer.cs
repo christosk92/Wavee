@@ -248,6 +248,21 @@ public sealed class WaveePlayer
                         goout = true;
                         break;
                     }
+                    catch (Exception x)
+                    {
+                        if (x is IndexOutOfRangeException or NotSupportedException)
+                        {
+                            //wrong packet, skip
+                            //seek back a bit
+                            var nextTime = decoder.CurrentTime - TimeSpan.FromSeconds(0.1);
+                            if (nextTime < TimeSpan.Zero)
+                            {
+                                nextTime = TimeSpan.Zero;
+                            }
+
+                            decoder.CurrentTime = nextTime;
+                        }
+                    }
                 }
 
                 if (!goout)
@@ -319,12 +334,26 @@ public sealed class WaveePlayer
         {
             try
             {
+                //since we are always reading samples 500ms ahead, we need to seek back 300ms
+                if (valueUnsafe < TimeSpan.Zero)
+                {
+                    valueUnsafe = TimeSpan.Zero;
+                }
+
                 var wasPaused = _state.Value.IsPaused;
                 NAudioSink.Instance.Pause();
                 NAudioSink.Instance.DiscardBuffer();
                 decoder.CurrentTime = valueUnsafe;
+
                 if (!wasPaused)
+                {
+                    //read a couple of samples
+                    var discarded = decoder.ReadSamples(4410);
+
                     NAudioSink.Instance.Resume();
+                    NAudioSink.Instance.DiscardBuffer();
+                }
+
                 _positionUpdates.OnNext(valueUnsafe);
             }
             catch (Exception e)

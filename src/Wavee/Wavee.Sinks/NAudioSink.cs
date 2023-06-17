@@ -18,6 +18,7 @@ public sealed class NAudioSink
         waveFormat = WaveFormat.CreateIeeeFloatWaveFormat(sampleRate, channels);
         _bufferedWaveProvider = new BufferedWaveProvider(waveFormat);
         _wavePlayer.Init(_bufferedWaveProvider);
+        _wavePlayer.Volume = 1;
     }
 
     public void Pause()
@@ -61,6 +62,11 @@ public sealed class NAudioSink
         _wavePlayer.Volume = (float)volume;
     }
 
-    public double Volume => _wavePlayer.Volume;
+    public double Volume
+    {
+        get => _wavePlayer.Volume;
+        set => _wavePlayer.Volume = (float)value;
+    }
+
     public static NAudioSink Instance => _instance ??= new NAudioSink();
 }

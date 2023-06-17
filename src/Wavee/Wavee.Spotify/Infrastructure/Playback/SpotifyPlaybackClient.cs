@@ -665,20 +665,8 @@ internal sealed class SpotifyPlaybackClient : ISpotifyPlaybackClient, IDisposabl
                     return;
                 }
 
-                //save to cache ONLY if completed naturally (meaning we have reached the end of the track)
-                //for now, assume its when we are at 75% of track length
-                if (WaveePlayer.Instance.Position.IsSome)
-                {
-                    const float magicNumber = .75f;
-                    var pos = WaveePlayer.Instance.Position.ValueUnsafe();
-                    var percent = pos.TotalMilliseconds / trackDuration.TotalMilliseconds;
 
-                    var reached = percent >= magicNumber;
-                    if (reached)
-                    {
-                        cache.SaveAudioFile(format, requested.SelectMany(x => x.Task.Result).ToArray());
-                    }
-                }
+                cache.SaveAudioFile(format, requested.SelectMany(x => x.Task.Result).ToArray());
 
                 System.Array.Clear(requested);
             });
