@@ -13,7 +13,7 @@ public sealed class UserSettings : ConfigBase
     private double _sidebarWidth = 300;
     private AppTheme _appTheme;
     public const double MaximumSidebarWidth = 500;
-    public const double MinimumSidebarWidth = 100;
+    public const double MinimumSidebarWidth = 160;
 
     public UserSettings(string username) : base(BuildAppPathFor(username))
     {

@@ -315,22 +315,25 @@ public sealed class WaveePlayer
 
     private void SeekTo(CrossfadeStream decoder, TimeSpan valueUnsafe)
     {
-        try
+        Task.Run(() =>
         {
-            var wasPaused = _state.Value.IsPaused;
-            NAudioSink.Instance.Pause();
-            NAudioSink.Instance.DiscardBuffer();
-            decoder.CurrentTime = valueUnsafe;
-            if (!wasPaused)
-                NAudioSink.Instance.Resume();
-            _positionUpdates.OnNext(valueUnsafe);
-        }
-        catch (Exception e)
-        {
-            Debug.WriteLine(e);
-            //try again, 100ms back
-            SeekTo(decoder, valueUnsafe - TimeSpan.FromSeconds(1));
-        }
+            try
+            {
+                var wasPaused = _state.Value.IsPaused;
+                NAudioSink.Instance.Pause();
+                NAudioSink.Instance.DiscardBuffer();
+                decoder.CurrentTime = valueUnsafe;
+                if (!wasPaused)
+                    NAudioSink.Instance.Resume();
+                _positionUpdates.OnNext(valueUnsafe);
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine(e);
+                //try again, 100ms back
+                SeekTo(decoder, valueUnsafe - TimeSpan.FromSeconds(1));
+            }
+        });
     }
 
     public async Task Play(
