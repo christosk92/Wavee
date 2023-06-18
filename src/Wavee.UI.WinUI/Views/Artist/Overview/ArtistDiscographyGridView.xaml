@@ -7,6 +7,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:components="using:Wavee.UI.WinUI.Components"
              xmlns:artist="using:Wavee.UI.Core.Contracts.Artist"
+             xmlns:panels="using:Wavee.UI.WinUI.Panels"
              mc:Ignorable="d">
 
     <UserControl.Transitions>
@@ -41,12 +42,12 @@
                    VerticalAlignment="Top"
                    ItemsSource="{x:Bind Items}">
         <ItemsRepeater.Layout>
-            <UniformGridLayout MinItemWidth="220"
-                               ItemsStretch="Uniform"
-                               MinItemHeight="280"
-                               MinRowSpacing="12"
-                               ItemsJustification="Start"
-                               MinColumnSpacing="6" />
+            <panels:UniformGridLayoutPanel MinItemWidth="220"
+                                    ItemsStretch="Uniform"
+                                    MinItemHeight="280"
+                                    MinRowSpacing="12"
+                                    ItemsJustification="Start"
+                                    MinColumnSpacing="6" />
         </ItemsRepeater.Layout>
         <!-- <GridView.ItemContainerStyle> -->
         <!--     <Style TargetType="GridViewItem" BasedOn="{StaticResource DefaultGridViewItemStyle}"> -->
