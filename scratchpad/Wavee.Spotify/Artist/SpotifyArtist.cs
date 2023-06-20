@@ -4,6 +4,33 @@ using Wavee.Spotify.Common;
 
 namespace Wavee.Spotify.Artist;
 
+/// <summary>
+/// Represents a Spotify artist.
+/// </summary>
+/// <param name="Id">
+/// The <see cref="SpotifyId"/> of the artist.
+/// </param>
+/// <param name="Name">
+/// The name of the artist.
+/// </param>
+/// <param name="IsVerified">
+/// A value indicating whether the artist is verified.
+/// </param>
+/// <param name="ProfilePicture">
+/// The URL to the profile picture of the artist.
+/// </param>
+/// <param name="HeaderPicture">
+/// The URL to the header picture of the artist.
+/// </param>
+/// <param name="Discography">
+/// A collection of <see cref="SpotifyArtistDiscographyGroup"/> representing the discography of the artist.
+/// </param>
+/// <param name="TopTracks">
+/// A collection of <see cref="SpotifyArtistTopTrack"/> representing the top tracks of the artist.
+/// </param>
+/// <param name="MonthlyListeners">
+/// The monthly listeners of the artist.
+/// </param>
 public sealed record SpotifyArtist(
     SpotifyId Id,
     string Name,
@@ -14,7 +41,7 @@ public sealed record SpotifyArtist(
     IReadOnlyCollection<SpotifyArtistTopTrack> TopTracks,
     ulong MonthlyListeners)
 {
-    public static SpotifyArtist ParseFrom(Stream stream)
+    internal static SpotifyArtist ParseFrom(Stream stream)
     {
         using var json = JsonDocument.Parse(stream);
 
@@ -216,18 +243,89 @@ public sealed record SpotifyArtist(
     }
 }
 
+/// <summary>
+/// A track from the top tracks of an artist
+/// </summary>
+/// <param name="Uid">
+/// The unique id of the track. Note that this is not the same as the <see cref="SpotifyId"/> and is only used for uniquely identifying the track in the top tracks list.
+/// </param>
+/// <param name="Name">
+/// The name of the track
+/// </param>
+/// <param name="Id">
+/// The <see cref="SpotifyId"/> of the track
+/// </param>
+/// <param name="Playcount">
+///  The playcount of the track. If this is null, the track has been played less than 1000 times.
+/// </param>
+/// <param name="Duration">
+/// The duration of the track
+/// </param>
+/// <param name="Artists">
+///  All artists that contributed to the track
+/// </param>
+/// <param name="Album">
+/// The album the track is from
+/// </param>
+/// <param name="Index">
+///  The index of the track in the top tracks list
+/// </param>
 public sealed record SpotifyArtistTopTrack(string Uid,
     string Name, SpotifyId Id, long? Playcount,
     TimeSpan Duration,
     SpotifyAlbumArtist[] Artists,
     SpotifyTrackAlbumShort Album, ushort Index);
 
+/// <summary>
+/// Describes a group of releases in an artist's discography.
+/// Note that the <see cref="Items"/> array may contain null values.
+/// </summary>
+/// <param name="Type">
+/// The type of the group (e.g. albums, singles, compilations)
+/// </param>
+/// <param name="Items">
+///  An array of releases. Note that this array may contain null values. Check the <see cref="SpotifyArtistDiscographyReleaseWrapper.Initialized"/> property to see if the value is null.
+/// </param>
 public sealed record SpotifyArtistDiscographyGroup
     (DiscographyType Type, SpotifyArtistDiscographyReleaseWrapper[] Items);
 
-public sealed record SpotifyArtistDiscographyReleaseWrapper(bool Initialized,
-    SpotifyArtistDiscographyRelease? Value);
+/// <summary>
+/// A particular release in an artist's discography.
+/// </summary>
+/// <param name="Initialized">
+/// If this is false, the <see cref="Value"/> property is null.
+/// The reason for this is that the Spotify API does not return all releases in an artist's discography.
+/// Which means some pagination is required to get all releases.
+/// </param>
+/// <param name="Value">
+/// The release. This is null if <see cref="Initialized"/> is false.
+/// </param>
+public sealed record SpotifyArtistDiscographyReleaseWrapper(bool Initialized, SpotifyArtistDiscographyRelease? Value);
 
+/// <summary>
+/// The release of a particular album/single/compilation in an artist's discography.
+/// </summary>
+/// <param name="Id">
+/// The <see cref="SpotifyId"/> of the release
+/// </param>
+/// <param name="Name">
+/// The name of the release
+///  </param>
+/// <param name="ImageUrl">
+/// The url of the image of the release
+/// </param>
+/// <param name="TotalTracks">
+///  The total number of tracks in the release
+/// </param>
+/// <param name="Year">
+/// The year the release was released
+/// </param>
+/// <param name="Month">
+/// The month the release was released. This is null if the month is unknown.
+/// </param>
+/// <param name="Day">
+/// The day the release was released. This is null if the day is unknown.
+/// </param>
 public sealed record SpotifyArtistDiscographyRelease(
     SpotifyId Id,
     string Name,
@@ -237,17 +335,49 @@ public sealed record SpotifyArtistDiscographyRelease(
     ushort? Month,
     ushort? Day);
 
+/// <summary>
+/// The type of a discography group
+/// </summary>
 public enum DiscographyType
 {
+    /// <summary>
+    /// Albums
+    /// </summary>
     Albums,
+
+    /// <summary>
+    /// Singles and EPs
+    /// </summary>
     Singles,
+
+    /// <summary>
+    /// Compilations
+    /// </summary>
     Compilations
 }
 
+/// <summary>
+/// The type of a release date
+/// </summary>
 public enum ReleaseDatePrecisionType
 {
+    /// <summary>
+    /// No release date
+    /// </summary>
     Unknown,
+
+    /// <summary>
+    /// The release date is only known to the year
+    /// </summary>
     Year,
+
+    /// <summary>
+    /// The release date is only known to the month an
+    /// </summary>
     Month,
+
+    /// <summary>
+    /// The full release date is known
+    /// </summary>
     Day
 }

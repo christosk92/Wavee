@@ -24,12 +24,10 @@ public class SpotifyClient
     }
 
     // ReSharper disable once HeapView.BoxingAllocation
-    public IArtistClient Artist => new LiveArtistClient(
-        api: InternalApi);
+    public IArtistClient Artist => new LiveArtistClient(api: InternalApi);
 
     // ReSharper disable once HeapView.BoxingAllocation
-    public IInternalApi InternalApi => new LiveInternalApi(
-        tokenFactory: CreateTokenFactory());
+    public IInternalApi InternalApi => new LiveInternalApi(tokenFactory: CreateTokenFactory());
 
     public IMercuryClient Mercury { get; }
 
