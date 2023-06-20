@@ -1,8 +1,11 @@
 # Wavee
 
 # Note 6/19/2023
-Spotify recently made a change ( I think?, or their internal services are just having some issues..) I think they finally killed support for the old mercury (over raw tcp) connections. So... it means i'll have to migrate to the web/graphql apis (which are much slower and kinda shitty). 
-The responses return bad gateway errors, which make me think they just shut them off.. I'll wait it out and maybe they'll come back eventually.
+Spotify recently killed a lot of the internal APIs I relied on. 
+Specifically the main connection over TCP will be phased out soon I assume, so I will convert everything to HTTPs, inlcuding authentication which will work using oauth.
+This change is gonna require some time..
+
+
 
 # Note (6/12/2023)
 Hey guys. I wanted to address some clarification on why there's still no release. While I've mentioned multiple times that the release is close, I have to admit that I'm not satisfied with the performance, particularly in the UI section. A while back I was not satisfied with the performance of the client library. It took me a while to iron that part out, and now I am really proud of the performance there. So now its the UI's turn.
