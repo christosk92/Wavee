@@ -23,12 +23,12 @@ namespace Wavee.UI.WinUI.Views.Artist.Overview
 {
     public sealed partial class ArtistDiscographyHorizontalView : UserControl
     {
-        public ArtistDiscographyHorizontalView(List<ArtistDiscographyItem> items)
+        public ArtistDiscographyHorizontalView(SpotifyArtistDiscographyV2[] items)
         {
             Items = items;
             this.InitializeComponent();
         }
-        public List<ArtistDiscographyItem> Items { get; }
+        public SpotifyArtistDiscographyV2[] Items { get; }
 
         public int SelectedIndex
         {

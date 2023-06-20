@@ -35,11 +35,11 @@
                 </ItemsPanelTemplate>
             </ListView.ItemsPanel>
             <ListView.ItemTemplate>
-                <DataTemplate x:DataType="artist:ArtistTopTrackView">
+                <DataTemplate x:DataType="artist:SpotifyArtistTopTrackV2">
                     <components:TrackView VerticalAlignment="Stretch"
                                           Height="38"
                                           ShowImage="True"
-                                          ImageUrl="{x:Bind ReleaseImage}"
+                                          ImageUrl="{x:Bind Album.ImageUrl}"
                                           Index="{x:Bind Index}"
                                           Id="{x:Bind Id}"
                                           AlternatingRowColor="False"
@@ -54,11 +54,11 @@
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
                                 <TextBlock Grid.Column="0"
-                                           Text="{x:Bind Title}" />
+                                           Text="{x:Bind Name}" />
 
                                 <TextBlock Grid.Column="1"
                                            TextTrimming="CharacterEllipsis"
-                                           Text="{x:Bind ReleaseName}" />
+                                           Text="{x:Bind Album.ImageUrl}" />
 
                                 <TextBlock HorizontalAlignment="Right"
                                            Grid.Column="2"
@@ -72,16 +72,17 @@
 
 
         <ItemsRepeater x:Name="MainRepeater"
+                       VerticalCacheLength="100"
                        ItemsSource="{x:Bind Discography}">
             <ItemsRepeater.ItemTemplate>
-                <DataTemplate x:DataType="artist:ArtistDiscographyGroupView">
+                <DataTemplate x:DataType="artist:SpotifyArtistDiscographyGroupV2">
                     <local:ArtistDiscographyView Margin="0,24"
                                                  VerticalAlignment="Top"
                                                  VerticalContentAlignment="Top"
                                                  AlwaysHorizontal="{x:Bind AlwaysHorizontal, Mode=OneWay}"
                                                  Title="{x:Bind GroupName,Mode=OneWay}"
                                                  CanSwitchTemplates="{x:Bind CanSwitchTemplates, Mode=OneWay}"
-                                                 Views="{x:Bind Views,Mode=OneWay}" />
+                                                 Views="{x:Bind Items,Mode=OneWay}" />
                 </DataTemplate>
             </ItemsRepeater.ItemTemplate>
         </ItemsRepeater>

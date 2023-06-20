@@ -280,7 +280,8 @@ internal readonly struct MercuryClient : ISpotifyMercuryClient
         if (packagetocheck.Type is SpotifyPacketType.MercuryEvent
             or SpotifyPacketType.MercuryReq
             or SpotifyPacketType.MercurySub
-            or SpotifyPacketType.MercuryUnsub)
+            or SpotifyPacketType.MercuryUnsub
+            or SpotifyPacketType.Unknown0xb6)
         {
             var seqLength = BinaryPrimitives.ReadUInt16BigEndian(packagetocheck.Payload.Slice(0, 2));
             var calculatedSeq = BinaryPrimitives.ReadUInt64BigEndian(packagetocheck.Payload.Slice(2, seqLength));

@@ -23,13 +23,13 @@ namespace Wavee.UI.WinUI.Views.Artist.Overview
 {
     public sealed partial class ArtistDiscographyGridView : UserControl, IDisposable
     {
-        public ArtistDiscographyGridView(List<ArtistDiscographyItem> artistDiscographyViews)
+        public ArtistDiscographyGridView(SpotifyArtistDiscographyV2[] artistDiscographyViews)
         {
             Items = artistDiscographyViews;
             this.InitializeComponent();
         }
 
-        public List<ArtistDiscographyItem> Items { get; set; }
+        public SpotifyArtistDiscographyV2[] Items { get; set; }
 
         // private void ElementFactory_OnSelectTemplateKey(RecyclingElementFactory sender, SelectTemplateEventArgs args)
         // {
@@ -40,10 +40,10 @@ namespace Wavee.UI.WinUI.Views.Artist.Overview
         {
             foreach (var item in Items)
             {
-                item.Tracks.Tracks.Clear();
-                item.Tracks = null;
+                // item.Tracks.Tracks.Clear();
+                // item.Tracks = null;
             }
-            Items.Clear();
+            Array.Clear(Items, 0, Items.Length);
             Items = null;
         }
 

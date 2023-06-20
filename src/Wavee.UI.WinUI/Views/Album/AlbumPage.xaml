@@ -52,7 +52,7 @@
                 </Style>
             </ListView.ItemContainerStyle>
             <ListView.ItemTemplate>
-                <DataTemplate x:DataType="artist:ArtistDiscographyTrack">
+                <DataTemplate x:DataType="album:ArtistDiscographyTrack">
                     <components:TrackView VerticalAlignment="Stretch"
                                           VerticalContentAlignment="Stretch"
                                           HorizontalAlignment="Stretch"

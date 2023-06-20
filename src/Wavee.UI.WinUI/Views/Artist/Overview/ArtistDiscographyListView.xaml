@@ -7,6 +7,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:artist="using:Wavee.UI.Core.Contracts.Artist"
              xmlns:components="using:Wavee.UI.WinUI.Components"
+             xmlns:album="using:Wavee.UI.Core.Contracts.Album"
              mc:Ignorable="d">
 
     <UserControl.Transitions>
@@ -16,7 +17,7 @@
     </UserControl.Transitions>
     <UserControl.Resources>
         <DataTemplate x:Key="ArtistDiscographyTrackTemplate"
-                      x:DataType="artist:ArtistDiscographyTrack">
+                      x:DataType="album:ArtistDiscographyTrack">
             <ListViewItem Height="38"
                           Style="{ThemeResource DefaultListViewItemStyle}"
                           Margin="0,0,0,8">
@@ -48,11 +49,9 @@
             </ListViewItem>
         </DataTemplate>
         <DataTemplate x:Key="Regular"
-                      x:DataType="artist:ArtistDiscographyItem">
+                      x:DataType="artist:SpotifyArtistDiscographyItemV2">
             <RelativePanel AllowFocusOnInteraction="True"
                            TabIndex="1"
-                           x:Phase="2"
-                           Height="{x:Bind EstimatedHeight, Mode=OneWay}"
                            Padding="16"
                            Background="Transparent"
                            PreviewKeyDown="UIElement_OnKeyDown"
@@ -65,8 +64,8 @@
                        RelativePanel.AlignTopWithPanel="True"
                        x:Name="MainImage"
                        x:Phase="2"
-                       Source="{x:Bind Image}" />
-                <TextBlock Text="{x:Bind Title}"
+                       Source="{x:Bind ImageUrl}" />
+                <TextBlock Text="{x:Bind Name}"
                            x:Name="TitleBlock"
                            MaxWidth="140"
                            MaxLines="2"
@@ -86,8 +85,6 @@
 
                 <ItemsRepeater RelativePanel.RightOf="MainImage"
                                Margin="24,0"
-                               ItemsSource="{x:Bind Tracks.Tracks}"
-                               x:Phase="3"
                                ItemTemplate="{StaticResource ArtistDiscographyTrackTemplate}"
                                RelativePanel.AlignRightWithPanel="True" />
             </RelativePanel>

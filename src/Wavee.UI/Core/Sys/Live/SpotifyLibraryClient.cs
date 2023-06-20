@@ -99,12 +99,12 @@ internal sealed class SpotifyLibraryClient : ILibraryView
                         id: item.GetProperty("identifier").GetBytesFromBase64(),
                         type: type switch
                         {
-                            "TRACK" => AudioItemType.Track,
+                            "TRACK" or "LOCAL_TRACK" => AudioItemType.Track,
                             "ALBUM" => AudioItemType.Album,
                             "ARTIST" => AudioItemType.Artist,
                             _ => throw new Exception("Unknown type")
                         },
-                        ServiceType.Spotify
+                        !type.StartsWith("LOCAL_") ? ServiceType.Spotify : ServiceType.Local
                     );
 
                     var addedAt = item.GetProperty("added_at").GetInt64();

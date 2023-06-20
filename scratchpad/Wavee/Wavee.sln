@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Wavee", "Wavee.csproj", "{DECB0114-349A-4255-BD35-8025CCEAEA50}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Wavee.Spotify", "..\Wavee.Spotify\Wavee.Spotify.csproj", "{8862178E-D35E-4100-AA6F-D681B4C80E57}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WaveeConsoleTest", "..\WaveeConsoleTest\WaveeConsoleTest.csproj", "{FBBEABD2-A99E-42ED-9D04-7603A8BC2E98}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Wavee.Spotify.Proto", "..\Wavee.Spotify.Proto\Wavee.Spotify.Proto.csproj", "{7EC430EA-83A9-416B-B5A0-B48727042CA5}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{DECB0114-349A-4255-BD35-8025CCEAEA50}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DECB0114-349A-4255-BD35-8025CCEAEA50}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DECB0114-349A-4255-BD35-8025CCEAEA50}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DECB0114-349A-4255-BD35-8025CCEAEA50}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8862178E-D35E-4100-AA6F-D681B4C80E57}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8862178E-D35E-4100-AA6F-D681B4C80E57}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8862178E-D35E-4100-AA6F-D681B4C80E57}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8862178E-D35E-4100-AA6F-D681B4C80E57}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FBBEABD2-A99E-42ED-9D04-7603A8BC2E98}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FBBEABD2-A99E-42ED-9D04-7603A8BC2E98}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FBBEABD2-A99E-42ED-9D04-7603A8BC2E98}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FBBEABD2-A99E-42ED-9D04-7603A8BC2E98}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7EC430EA-83A9-416B-B5A0-B48727042CA5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7EC430EA-83A9-416B-B5A0-B48727042CA5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7EC430EA-83A9-416B-B5A0-B48727042CA5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7EC430EA-83A9-416B-B5A0-B48727042CA5}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

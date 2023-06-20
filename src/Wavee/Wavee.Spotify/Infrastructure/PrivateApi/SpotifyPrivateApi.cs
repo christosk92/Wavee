@@ -5,6 +5,7 @@ using Google.Protobuf;
 using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
 using Spotify.Collection.Proto.V2;
+using Wavee.Core.Ids;
 using Wavee.Infrastructure.IO;
 using Wavee.Spotify.Infrastructure.PrivateApi.Contracts;
 using Wavee.Spotify.Infrastructure.PrivateApi.Contracts.Response;
@@ -93,11 +94,30 @@ internal readonly struct SpotifyPrivateApi : ISpotifyPrivateApi
         var data = writeRequest.ToByteArray();
         using var streamContent = new ByteArrayContent(data);
         streamContent.Headers.ContentType = new MediaTypeHeaderValue("application/vnd.collection-v2.spotify.proto");
-       
+
         using var response = await PostResponse(url, streamContent, ct);
         response.EnsureSuccessStatusCode();
 
         return Unit.Default;
+    }
+
+    public async Task<Stream> GetArtistOverviewAsync(AudioId id, CancellationToken ct = default)
+    {
+        const string operationHash = "35648a112beb1794e39ab931365f6ae4a8d45e65396d641eeda94e4003d41497";
+        const string operationName = "queryArtistOverview";
+        var variables = new
+        {
+            uri = id.ToString(),
+            locale = string.Empty,
+            includePrerelease = false
+        };
+        var variablesJson = JsonSerializer.Serialize(variables);
+
+        //http encode
+        var finalUrl = string.Format(partnerApi, operationName, HttpUtility.UrlEncode(variablesJson), operationHash);
+        var response = await GetResponse(finalUrl, ct);
+        var stream = await response.Content.ReadAsStreamAsync(ct);
+        return stream;
     }
 
     private async Task<HttpResponseMessage> GetResponse(string url, CancellationToken ct)

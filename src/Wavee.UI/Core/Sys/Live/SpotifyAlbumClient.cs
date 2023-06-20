@@ -30,6 +30,13 @@ internal sealed class SpotifyAlbumClient : IAlbumView
         var uri = string.Format(fetch_uri, id.ToString(), locale, country);
 
         return _client.Mercury.Get(uri, ct)
-            .Map(response => AlbumView.From(response.Payload, id));
+            .Map(response =>
+            {
+                if (response.Header.StatusCode != 200)
+                {
+                    throw new MercuryException(response);
+                }
+                return AlbumView.From(response.Payload, id);
+            });
     }
 }

@@ -17,16 +17,26 @@
     </UserControl.Transitions>
     <UserControl.Resources>
         <DataTemplate x:Key="Regular"
-                      x:DataType="artist:ArtistDiscographyItem">
-            <components:CardView Title="{x:Bind Title}"
-                                 Id="{x:Bind Id}"
-                                 x:Phase="1"
-                                 Tapped="UIElement_OnTapped"
-                                 MaxHeight="400"
-                                 MaxWidth="400"
-                                 VerticalAlignment="Top"
-                                 Description="{x:Bind ReleaseDateAsStr}"
-                                 Image="{x:Bind Image}" />
+                      x:DataType="artist:SpotifyArtistDiscographyV2">
+            <Grid>
+                <Border x:Name="Unloaded"
+                        x:Load="{x:Bind Negate(Initialized), Mode=OneWay}">
+                    <TextBlock Text="Loading..." />
+                </Border>
+
+                <Border x:Name="Loaded"
+                        x:Load="{x:Bind Initialized, Mode=OneWay}">
+                    <components:CardView Title="{x:Bind Value.Name}"
+                                         Id="{x:Bind Value.Id}"
+                                         x:Phase="1"
+                                         Tapped="UIElement_OnTapped"
+                                         MaxHeight="400"
+                                         MaxWidth="400"
+                                         VerticalAlignment="Top"
+                                         Description="{x:Bind Value.ReleaseDateAsStr}"
+                                         Image="{x:Bind Value.ImageUrl}" />
+                </Border>
+            </Grid>
         </DataTemplate>
         <!-- <RecyclePool x:Key="RecyclePool" /> -->
         <!-- <RecyclingElementFactory x:Key="elementFactory" -->
@@ -43,11 +53,11 @@
                    ItemsSource="{x:Bind Items}">
         <ItemsRepeater.Layout>
             <panels:UniformGridLayoutPanel MinItemWidth="220"
-                                    ItemsStretch="Uniform"
-                                    MinItemHeight="280"
-                                    MinRowSpacing="12"
-                                    ItemsJustification="Start"
-                                    MinColumnSpacing="6" />
+                                           ItemsStretch="Uniform"
+                                           MinItemHeight="280"
+                                           MinRowSpacing="12"
+                                           ItemsJustification="Start"
+                                           MinColumnSpacing="6" />
         </ItemsRepeater.Layout>
         <!-- <GridView.ItemContainerStyle> -->
         <!--     <Style TargetType="GridViewItem" BasedOn="{StaticResource DefaultGridViewItemStyle}"> -->

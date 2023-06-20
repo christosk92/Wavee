@@ -1,10 +1,12 @@
-﻿using System.Text;
+﻿using System.Diagnostics;
+using System.Text;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Wavee.Core.Ids;
 using Wavee.UI.Core;
 using Wavee.UI.Core.Contracts.Album;
 using Wavee.UI.Core.Contracts.Artist;
 using Wavee.UI.Core.Contracts.Common;
+using Wavee.UI.Core.Sys.Live;
 
 namespace Wavee.UI.ViewModel.Album;
 
@@ -86,35 +88,44 @@ public sealed class AlbumViewModel : ObservableObject
     public async Task Create(AudioId id, CancellationToken ct = default)
     {
         AlbumId = id;
-        var album = await Global.AppState.Album.GetAlbumViewAsync(id, ct);
-        if (string.IsNullOrEmpty(AlbumImage))
+        try
         {
-            AlbumImage = album.Cover;
-        }
-        AlbumName = album.Name;
-        AlbumType = album.Type;
-        AlbumReleaseYear = album.Year.ToString();
-        AlbumTrackCountString = album.TrackCount.ToString();
-
-        double durationMs = 0;
-        foreach (var disc in album.Discs)
-        {
-            foreach (var track in disc.Tracks)
+            var album = await Global.AppState.Album.GetAlbumViewAsync(id, ct);
+            if (string.IsNullOrEmpty(AlbumImage))
             {
-                durationMs += track.Duration.TotalMilliseconds;
+                AlbumImage = album.Cover;
             }
-        }
-        var duration = TimeSpan.FromMilliseconds(durationMs);
-        AlbumDurationString = FormatDurationAsString(duration);
 
-        Discs = album.Discs;
-        Copyrights = album.CopyRights;
-        Related = album.Related;
-        Artists = album.Artists;
-        // Artists = album.Discs
-        //     .SelectMany(x => x.Tracks.SelectMany(f => f.Artists))
-        //     .DistinctBy(x=> x.Id)
-        //     .ToList();
+            AlbumName = album.Name;
+            AlbumType = album.Type;
+            AlbumReleaseYear = album.Year.ToString();
+            AlbumTrackCountString = album.TrackCount.ToString();
+
+            double durationMs = 0;
+            foreach (var disc in album.Discs)
+            {
+                foreach (var track in disc.Tracks)
+                {
+                    durationMs += track.Duration.TotalMilliseconds;
+                }
+            }
+
+            var duration = TimeSpan.FromMilliseconds(durationMs);
+            AlbumDurationString = FormatDurationAsString(duration);
+
+            Discs = album.Discs;
+            Copyrights = album.CopyRights;
+            Related = album.Related;
+            Artists = album.Artists;
+            // Artists = album.Discs
+            //     .SelectMany(x => x.Tracks.SelectMany(f => f.Artists))
+            //     .DistinctBy(x=> x.Id)
+            //     .ToList();
+        }
+        catch (MercuryException ex)
+        {
+            Debug.WriteLine(ex);
+        }
     }
 
     private string? FormatDurationAsString(TimeSpan duration)

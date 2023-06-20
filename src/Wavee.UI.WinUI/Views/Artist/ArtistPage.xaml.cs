@@ -30,9 +30,9 @@ namespace Wavee.UI.WinUI.Views.Artist
             ViewModel = new ArtistViewModel();
         }
 
-        public SpotifyArtistView Artist { get; set; }
+        public SpotifyArtistViewV2 Artist { get; set; }
         public ArtistViewModel ViewModel { get; }
-        private TaskCompletionSource<SpotifyArtistView> _artistFetched = new TaskCompletionSource<SpotifyArtistView>(TaskCreationOptions.RunContinuationsAsynchronously);
+        private TaskCompletionSource<SpotifyArtistViewV2> _artistFetched = new TaskCompletionSource<SpotifyArtistViewV2>(TaskCreationOptions.RunContinuationsAsynchronously);
         private AudioId _id;
         public async void NavigatedTo(object parameter)
         {
@@ -72,28 +72,28 @@ namespace Wavee.UI.WinUI.Views.Artist
                 _artistFetched.TrySetResult(Artist);
 
                 ViewModel.Name = Artist.Name;
-                ViewModel.Header = Artist.HeaderImage;
+                ViewModel.Header = Artist.HeaderImageUrl;
 
                 var r = Artist.MonthlyListeners.ToString("N0");
                 ViewModel.MonthlyListenersText = $"{r} monthly listeners";
 
                 MetadataPnale.Visibility = Visibility.Visible;
                 _ = ShowPanelAnim.StartAsync();
-                if (!string.IsNullOrEmpty(Artist.ProfilePicture))
+                if (!string.IsNullOrEmpty(Artist.ProfileImageUrl))
                 {
-                    SecondPersonPicture.ProfilePicture = new BitmapImage(new Uri(Artist.ProfilePicture));
+                    SecondPersonPicture.ProfilePicture = new BitmapImage(new Uri(Artist.ProfileImageUrl));
                 }
                 else
                 {
                     SecondPersonPicture.DisplayName = Artist.Name;
                 }
 
-                if (string.IsNullOrEmpty(Artist.HeaderImage))
+                if (string.IsNullOrEmpty(Artist.HeaderImageUrl))
                 {
                     //show picture
                     HeaderImage.Visibility = Visibility.Collapsed;
                     AlternativeArtistImage.Visibility = Visibility.Visible;
-                    if (!string.IsNullOrEmpty(Artist.ProfilePicture))
+                    if (!string.IsNullOrEmpty(Artist.ProfileImageUrl))
                     {
                         AlternativeArtistImage.ProfilePicture = SecondPersonPicture.ProfilePicture;
                     }

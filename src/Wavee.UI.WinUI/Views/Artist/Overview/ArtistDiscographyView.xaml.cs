@@ -30,9 +30,9 @@ namespace Wavee.UI.WinUI.Views.Artist.Overview
 
         public static readonly DependencyProperty ViewsProperty =
             DependencyProperty.Register(nameof(Views),
-                typeof(List<ArtistDiscographyItem>),
+                typeof(SpotifyArtistDiscographyV2[]),
                 typeof(ArtistDiscographyView),
-                new PropertyMetadata(default(List<ArtistDiscographyItem>)));
+                new PropertyMetadata(default(SpotifyArtistDiscographyV2[])));
 
         public ArtistDiscographyView()
         {
@@ -51,13 +51,13 @@ namespace Wavee.UI.WinUI.Views.Artist.Overview
             set => SetValue(CanSwitchTemplatesProperty, value);
         }
 
-        public List<ArtistDiscographyItem> Views
+        public SpotifyArtistDiscographyV2[] Views
         {
-            get => (List<ArtistDiscographyItem>)GetValue(ViewsProperty);
+            get => (SpotifyArtistDiscographyV2[])GetValue(ViewsProperty);
             set
             {
                 SetValue(ViewsProperty, value);
-                if (value.Count > 0)
+                if (value.Length > 0)
                 {
                     _waitForViews.TrySetResult();
                     if (!CanSwitchTemplates && !AlwaysHorizontal)

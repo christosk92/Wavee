@@ -7,7 +7,7 @@ namespace Wavee.UI.Core.Sys.Mock;
 
 internal sealed class MockArtistView : IArtistView
 {
-    public Aff<SpotifyArtistView> GetArtistViewAsync(AudioId id, CancellationToken ct = default)
+    public Aff<SpotifyArtistViewV2> GetArtistViewAsync(AudioId id, CancellationToken ct = default)
     {
         throw new NotSupportedException();
     }

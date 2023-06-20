@@ -23,15 +23,15 @@ namespace Wavee.UI.WinUI.Views.Artist.Overview
 {
     public sealed partial class ArtistOverviewView : UserControl
     {
-        public ArtistOverviewView(IList<ArtistDiscographyGroupView> discography, IList<ArtistTopTrackView> topTracks)
+        public ArtistOverviewView(IList<SpotifyArtistDiscographyGroupV2> discography, IList<SpotifyArtistTopTrackV2> topTracks)
         {
             Discography = discography;
             TopTracks = topTracks;
             this.InitializeComponent();
         }
 
-        public IList<ArtistDiscographyGroupView> Discography { get; set; }
-        public IList<ArtistTopTrackView> TopTracks { get; set; }
+        public IList<SpotifyArtistDiscographyGroupV2> Discography { get; set; }
+        public IList<SpotifyArtistTopTrackV2> TopTracks { get; set; }
 
         public void ClearItems()
         {
@@ -44,9 +44,8 @@ namespace Wavee.UI.WinUI.Views.Artist.Overview
 
             foreach (var artistDiscographyGroupView in Discography)
             {
-                artistDiscographyGroupView.Views.ForEach(f => f.Tracks.Tracks.Clear());
-                artistDiscographyGroupView.Views.Clear();
-                artistDiscographyGroupView.Views = null;
+                //artistDiscographyGroupView.Items.ForEach(f => f.Tracks.Tracks.Clear());
+                artistDiscographyGroupView.Items = null;
             }
 
             Discography.Clear();
@@ -72,7 +71,7 @@ namespace Wavee.UI.WinUI.Views.Artist.Overview
             if (args.IsContainerPrepared && args.ItemContainer.ContentTemplateRoot is TrackView f)
             {
                 f.Index = index;
-                f.ImageUrl = ((ArtistTopTrackView)args.Item).ReleaseImage;
+                f.ImageUrl = ((SpotifyArtistTopTrackV2)args.Item).Album.ImageUrl;
             }
         }
 
@@ -82,7 +81,7 @@ namespace Wavee.UI.WinUI.Views.Artist.Overview
             if (args.ItemContainer?.ContentTemplateRoot is TrackView f)
             {
                 f.Index = index;
-                f.ImageUrl = ((ArtistTopTrackView)args.Item).ReleaseImage;
+                f.ImageUrl = ((SpotifyArtistTopTrackV2)args.Item).Album.ImageUrl;
             }
         }
 
@@ -102,7 +101,7 @@ namespace Wavee.UI.WinUI.Views.Artist.Overview
                 return;
             }
             //if we have more than 5 items, and the width >= 800, we make two columns
-            var items = TopTracks.Count;
+            var items = TopTracks?.Count;
             if (items > 5)
             {
                 panel.Orientation = Orientation.Vertical;
