@@ -15,5 +15,11 @@ public interface ISpotifyRemoteClient
     /// </summary>
     SpotifyRemoteState State { get; }
     
-    Task PauseAsync(CancellationToken cancellationToken = default);
+    Task Pause(CancellationToken cancellationToken = default);
+    Task Resume(CancellationToken ct = default);
+    Task SetShuffle(bool isShuffling, CancellationToken ct = default);
+    Task SetRepeat(RepeatState next, CancellationToken ct = default);
+    Task SkipNext(CancellationToken ct = default);
+    Task SkipPrevious(CancellationToken ct = default);
+    Task SeekTo(TimeSpan position, CancellationToken ct = default);
 }

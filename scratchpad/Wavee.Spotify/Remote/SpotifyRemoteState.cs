@@ -16,7 +16,8 @@ public readonly record struct SpotifyRemoteState(
     uint? IndexInContext,
     TimeSpan Position,
     IEnumerable<ProvidedTrack> NextTracks,
-    IReadOnlyDictionary<string, SpotifyRemoteDeviceInfo> Devices)
+    IReadOnlyDictionary<string, SpotifyRemoteDeviceInfo> Devices,
+    string? ActiveDeviceId)
 {
     internal static SpotifyRemoteState ParseFrom(Cluster cluster, string ourDeviceId)
     {
@@ -77,7 +78,8 @@ public readonly record struct SpotifyRemoteState(
             IndexInContext: trackIdx,
             Position: ParsePosition(playerState),
             NextTracks: nextTracks,
-            Devices: devices
+            Devices: devices,
+            activeDeviceId
         );
     }
 

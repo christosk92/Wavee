@@ -23,7 +23,7 @@ public class SpotifyClient
     {
         _conn = conn;
         Mercury = new LiveMercuryClient(_conn);
-        Remote = new SpotifyRemoteClient(() => Mercury, _conn);
+        Remote = new SpotifyRemoteClient(() => Mercury, _conn, _conn.Access().DeviceId, CreateTokenFactory());
     }
 
     // ReSharper disable once HeapView.BoxingAllocation
