@@ -51,6 +51,7 @@ public sealed record SpotifyArtist(
             var uri = artist.GetProperty("uri").GetString()!;
             var profile = artist.GetProperty("profile");
 
+            var artistId = SpotifyId.FromUri(uri);
             var name = profile.GetProperty("name").GetString()!;
             var verified = profile.GetProperty("verified").GetBoolean();
             //TODO: Playlists (playlistsV2)
@@ -81,6 +82,7 @@ public sealed record SpotifyArtist(
 
 
             static void GetView(JsonElement releases,
+                SpotifyId artistId,
                 DiscographyType type,
                 bool canSwitchViews,
                 bool alwaysHorizontal,
@@ -160,9 +162,9 @@ public sealed record SpotifyArtist(
             }
 
             var res = new List<SpotifyArtistDiscographyGroup>(3);
-            GetView(discography, DiscographyType.Albums, true, false, res);
-            GetView(discography, DiscographyType.Singles, true, false, res);
-            GetView(discography, DiscographyType.Compilations, false, false, res);
+            GetView(discography, artistId, DiscographyType.Albums, true, false, res);
+            GetView(discography, artistId, DiscographyType.Singles, true, false, res);
+            GetView(discography, artistId, DiscographyType.Compilations, false, false, res);
 
 
             var topTracks = discography.GetProperty("topTracks");
@@ -222,8 +224,8 @@ public sealed record SpotifyArtist(
 
             return new SpotifyArtist
             (
-                Id: SpotifyId.FromUri(artist.GetProperty("uri").GetString()),
-                Name: artist.GetProperty("profile").GetProperty("name").GetString()!,
+                Id: artistId,
+                Name: name,
                 IsVerified: verified,
                 ProfilePicture: avatarImage,
                 HeaderPicture: headerImage,
@@ -288,6 +290,9 @@ public sealed record SpotifyArtistTopTrack(string Uid,
 /// </param>
 public sealed record SpotifyArtistDiscographyGroup
     (DiscographyType Type, SpotifyArtistDiscographyReleaseWrapper[] Items);
+
+// internal delegate Task<Paged<SpotifyArtistDiscographyReleaseWrapper>> FetchDiscographyDelegate(SpotifyId Id,
+//     DiscographyType type, int offset, CancellationToken ct);
 
 /// <summary>
 /// A particular release in an artist's discography.

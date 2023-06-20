@@ -18,12 +18,16 @@ internal sealed class SpotifyConnection : IDisposable
     private readonly APWelcome _welcome;
     private readonly ChannelWriter<BoxedSpotifyPackage> _writer;
     private readonly NetworkStream _stream;
+    private readonly string _deviceId;
+    private readonly SpotifyConfig _config;
 
-    public SpotifyConnection(NetworkStream stream, SpotifyEncryptionKeys keys, APWelcome welcome)
+    public SpotifyConnection(NetworkStream stream, SpotifyEncryptionKeys keys, APWelcome welcome, string deviceId, SpotifyConfig config)
     {
         _stream = stream;
         _keys = keys;
         _welcome = welcome;
+        _deviceId = deviceId;
+        _config = config;
 
         var channels = Channel.CreateUnbounded<BoxedSpotifyPackage>();
         _writer = channels.Writer;
@@ -148,6 +152,8 @@ internal sealed class SpotifyConnection : IDisposable
     public Guid ConnectionId { get; } = Guid.NewGuid();
     public APWelcome WelcomeMessage => _welcome;
     public string? CountryCode { get; private set; }
+    public string DeviceId => _deviceId;
+    public SpotifyConfig Config => _config;
 
     internal static void Send(NetworkStream stream, SpotifyUnencryptedPackage package, ReadOnlySpan<byte> sendKey,
         int sequence)

@@ -10,6 +10,8 @@ using Wavee.Spotify.InternalApi;
 using Wavee.Spotify.InternalApi.Live;
 using Wavee.Spotify.Mercury;
 using Wavee.Spotify.Mercury.Live;
+using Wavee.Spotify.Remote;
+using Wavee.Spotify.Remote.Live;
 
 namespace Wavee.Spotify;
 
@@ -21,6 +23,7 @@ public class SpotifyClient
     {
         _conn = conn;
         Mercury = new LiveMercuryClient(_conn);
+        Remote = new SpotifyRemoteClient(() => Mercury, _conn);
     }
 
     // ReSharper disable once HeapView.BoxingAllocation
@@ -30,15 +33,16 @@ public class SpotifyClient
     public IInternalApi InternalApi => new LiveInternalApi(tokenFactory: CreateTokenFactory());
 
     public IMercuryClient Mercury { get; }
+    public ISpotifyRemoteClient Remote { get; }
 
     private Func<CancellationToken, ValueTask<string>> CreateTokenFactory()
     {
         return Mercury.GetToken;
     }
 
-    public static SpotifyClient Create(LoginCredentials credentials)
+    public static SpotifyClient Create(LoginCredentials credentials, SpotifyConfig config)
     {
-        var conn = new SpotifyConnectionAccessor(credentials);
+        var conn = new SpotifyConnectionAccessor(credentials, config);
         return new SpotifyClient(conn);
     }
 }

@@ -14,7 +14,7 @@ internal static class Auth
     public static SpotifyConnection Authenticate(NetworkStream stream,
         SpotifyEncryptionKeys keys,
         LoginCredentials credentials,
-        string deviceId)
+        string deviceId, SpotifyConfig config)
     {
         var arch = Environment.GetEnvironmentVariable("PROCESSOR_ARCHITECTURE");
         var cpu = arch switch
@@ -64,7 +64,7 @@ internal static class Auth
         switch (response.Type)
         {
             case SpotifyPacketType.APWelcome:
-                return new SpotifyConnection(stream, keys, APWelcome.Parser.ParseFrom(response.Payload));
+                return new SpotifyConnection(stream, keys, APWelcome.Parser.ParseFrom(response.Payload), deviceId, config);
                 break;
             case SpotifyPacketType.AuthFailure:
                 throw new SpotifyAuthenticationException(APLoginFailed.Parser.ParseFrom(response.Payload));

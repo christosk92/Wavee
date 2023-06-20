@@ -28,7 +28,15 @@ public sealed class Paged<T>
     /// </summary>
     public required long Total { get; init; }
 
-    internal static Paged<SpotifyArtistDiscographyGroup> ParsePagedDiscographyFrom(Stream stream,
+    public static Paged<SpotifyArtistDiscographyReleaseWrapper> Empty =
+        new Paged<SpotifyArtistDiscographyReleaseWrapper>
+        {
+            Items = Array.Empty<SpotifyArtistDiscographyReleaseWrapper>(),
+            HasNext = false,
+            Total = 0
+        };
+
+    internal static Paged<SpotifyArtistDiscographyReleaseWrapper> ParsePagedDiscographyFrom(Stream stream,
         DiscographyType discographyType, int currentOffset,
         int currentLimit)
     {
@@ -52,7 +60,7 @@ public sealed class Paged<T>
             using var items = artist.GetProperty("items").EnumerateArray();
 
             static void Parse(JsonElement item,
-                Dictionary<DiscographyType, List<SpotifyArtistDiscographyReleaseWrapper>> output)
+                List<SpotifyArtistDiscographyReleaseWrapper> output)
             {
                 using var releases = item.GetProperty("releases").GetProperty("items").EnumerateArray();
                 var release = releases.First();
@@ -73,7 +81,6 @@ public sealed class Paged<T>
                     "COMPILATION" => DiscographyType.Compilations,
                 };
 
-                var discographyGroup = output[discographyType];
                 var discographyRelease = new SpotifyArtistDiscographyRelease(
                     Id: SpotifyId.FromUri(uri),
                     Name: name,
@@ -83,28 +90,21 @@ public sealed class Paged<T>
                     Month: null,
                     Day: null
                 );
-                discographyGroup.Add(new SpotifyArtistDiscographyReleaseWrapper(
+                output.Add(new SpotifyArtistDiscographyReleaseWrapper(
                     Initialized: true,
                     Value: discographyRelease
                 ));
             }
 
-            var result = new Dictionary<DiscographyType, List<SpotifyArtistDiscographyReleaseWrapper>>();
-            result[DiscographyType.Albums] = new();
-            result[DiscographyType.Singles] = new();
-            result[DiscographyType.Compilations] = new();
-
+            var result = new List<SpotifyArtistDiscographyReleaseWrapper>();
             foreach (var item in items)
             {
                 Parse(item, result);
             }
 
-            return new Paged<SpotifyArtistDiscographyGroup>
+            return new Paged<SpotifyArtistDiscographyReleaseWrapper>
             {
-                Items = result.Select(c => new SpotifyArtistDiscographyGroup(
-                    Type: c.Key,
-                    Items: c.Value.ToArray()
-                )).ToImmutableList(),
+                Items = result,
                 HasNext = hasNext,
                 Total = totalCount
             };
