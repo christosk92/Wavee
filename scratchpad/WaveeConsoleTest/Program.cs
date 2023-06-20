@@ -31,6 +31,7 @@ var observable = client.Remote.Updates.Subscribe(x =>
     Console.WriteLine(x);
 });
 
+await client.Remote.Pause();
 var dummyId = SpotifyId.FromUri("spotify:artist:1uNFoZAHBGtllmzznpCI3s");
 var sw2 = Stopwatch.StartNew();
 var artist = await client.Artist.GetArtistAsync(dummyId, cancellationToken: CancellationToken.None);

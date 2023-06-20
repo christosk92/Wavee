@@ -18,6 +18,7 @@ internal sealed class SpotifyRemoteClient : ISpotifyRemoteClient
     private readonly SpotifyRemoteConnectionAccessor _conn;
     private readonly Subject<SpotifyRemoteState> _updates = new();
     private SpotifyRemoteState _state;
+    private TaskCompletionSource _ready;
 
     public SpotifyRemoteClient(Func<IMercuryClient> mercuryFactory, SpotifyConnectionAccessor connectionFactory,
         string deviceId, Func<CancellationToken, ValueTask<string>> tokenFactory)
@@ -34,6 +35,7 @@ internal sealed class SpotifyRemoteClient : ISpotifyRemoteClient
                 try
                 {
                     listener?.Dispose();
+                    _ready = new TaskCompletionSource();
                     var connection = await _conn.Access();
                     connected = true;
 
@@ -44,6 +46,7 @@ internal sealed class SpotifyRemoteClient : ISpotifyRemoteClient
                         {
                             _state = x;
                             _updates.OnNext(x);
+                            _ready.TrySetResult();
                         });
                     var connectionLost = await connection.Closed;
                     if (connectionLost is null)
@@ -141,7 +144,10 @@ internal sealed class SpotifyRemoteClient : ISpotifyRemoteClient
     private async Task InvokeCommand(
         string commandName,
         Dictionary<string, object> value, CancellationToken ct)
-    {
+    {        
+        var jwt = await _tokenFactory(ct);
+
+        await _ready.Task;
         //POSThttps://gae2-spclient.spotify.com/connect-state/v1/player/command/from/35ee833111913f567c4dc6ba7537cb6d089b130f/to/35ee833111913f567c4dc6ba7537cb6d089b130f
         var spClient = SpotifyConnectionAccessor.SpClient;
         var activeDevice = State.ActiveDeviceId;
@@ -204,7 +210,6 @@ internal sealed class SpotifyRemoteClient : ISpotifyRemoteClient
             command = command
         });
         using var content = new StringContent(serialized, Encoding.UTF8, "application/json");
-        var jwt = await _tokenFactory(ct);
         using var response = await HttpIO.Post(url,
             _empty,
             content,
