@@ -32,6 +32,7 @@ public class SpotifyPlaybackConfig
 {
     public SpotifyPlaybackConfig(TimeSpan crossfadeDuration, PreferredQualityType preferedQuality)
     {
+        LoginRequest
         PreferedQuality = preferedQuality;
         CrossfadeDuration = crossfadeDuration;
     }

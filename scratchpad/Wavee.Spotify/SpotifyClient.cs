@@ -43,6 +43,7 @@ public class SpotifyClient
     public static SpotifyClient Create(LoginCredentials credentials, SpotifyConfig config)
     {
         var conn = new SpotifyConnectionAccessor(credentials, config);
+        var test = conn.Access();
         return new SpotifyClient(conn);
     }
 }
