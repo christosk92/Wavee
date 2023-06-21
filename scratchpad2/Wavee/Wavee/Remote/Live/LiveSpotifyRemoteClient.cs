@@ -5,6 +5,7 @@ using System.Text.Json;
 using Eum.Spotify.connectstate;
 using LanguageExt;
 using Wavee.Infrastructure.Remote;
+using Wavee.Playback;
 
 namespace Wavee.Remote.Live;
 
@@ -56,8 +57,27 @@ internal readonly struct LiveSpotifyRemoteClient : ISpotifyRemoteClient
                      new SpotifyRemoteState());
     }
 
+    public Option<SpotifyRemoteState> LatestState
+    {
+        get
+        {
+            var parsed = SpotifyRemoteState.ParseFrom(SpotifyRemoteConnection.GetInitialRemoteState(_mainConnectionId));
+            if (parsed.HasValue)
+                return parsed.Value;
+            return Option<SpotifyRemoteState>.None;
+        }
+    }
+
     private static bool RemoteStateListenerCondition(SpotifyRemoteMessage packagetocheck)
     {
         return packagetocheck.Uri.StartsWith("hm://connect-state/v1/cluster");
     }
+
+    internal async Task PlaybackStateUpdated(SpotifyLocalPlaybackState spotifyLocalPlaybackState)
+    {
+        throw new NotImplementedException();
+    }
 }
+
+internal readonly record struct SpotifyCommand(uint MessageId, string SentByDeviceId, string Endpoint,
+    ReadOnlyMemory<byte> Data);

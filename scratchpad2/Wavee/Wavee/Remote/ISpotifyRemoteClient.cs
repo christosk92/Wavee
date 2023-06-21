@@ -1,4 +1,6 @@
-﻿namespace Wavee.Remote;
+﻿using LanguageExt;
+
+namespace Wavee.Remote;
 
 /// <summary>
 /// The interface for a Spotify remote client. 
@@ -6,4 +8,5 @@
 public interface ISpotifyRemoteClient
 {
     IObservable<SpotifyRemoteState> CreateListener();
+    Option<SpotifyRemoteState> LatestState { get; }
 }

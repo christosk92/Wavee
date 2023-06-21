@@ -4,6 +4,7 @@ using System.Reactive.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Channels;
+using CommunityToolkit.HighPerformance;
 using Eum.Spotify.connectstate;
 using Google.Protobuf;
 using LanguageExt;
@@ -125,11 +126,13 @@ internal static class SpotifyRemoteConnection
         foreach (var callback in connectionInfo.Callbacks)
         {
             if (callback.PackageReceiveCondition(new SpotifyRemoteMessage(
+                    Type: SpotifyRemoteMessageType.Message,
                     Uri: "hm://connect-state/v1/cluster",
                     Payload: ReadOnlyMemory<byte>.Empty
                 )))
             {
                 callback.Incoming(new SpotifyRemoteMessage(
+                    Type: SpotifyRemoteMessageType.Message,
                     Uri: "hm://connect-state/v1/cluster",
                     Payload: firstClusterUpdate.ToByteArray()
                 ));
@@ -223,9 +226,22 @@ internal static class SpotifyRemoteConnection
 
                                 var parsed = Parse(json);
                                 var pkg = new SpotifyRemoteMessage(
+                                    Type: SpotifyRemoteMessageType.Message,
                                     Uri: json.RootElement.GetProperty("uri").GetString()!,
                                     Payload: parsed
-                                );
+                                );  
+                                if (pkg.Uri.StartsWith("hm://connect-state/v1/cluster"))
+                                {
+                                    //update cluster
+                                    var clusterUpdate = ClusterUpdate.Parser.ParseFrom(pkg.Payload.Span);
+                                    lock (_lock)
+                                    {
+                                        Connections[connectionId] = Connections[connectionId] with
+                                        {
+                                            LatestCluster = clusterUpdate.Cluster
+                                        };
+                                    }
+                                }
                                 var wasInteresting = false;
                                 foreach (var callback in connectionInfo.Callbacks)
                                 {
@@ -241,11 +257,77 @@ internal static class SpotifyRemoteConnection
                                     Log.Logger.Debug("Received uninteresting package: {Package}", pkg);
                                     packages.Add(pkg);
                                 }
+                                
                             }
+
                             break;
                         }
                         case "request":
+                        {
+                            ReadOnlyMemory<byte> ParseFrom(JsonElement element)
+                            {
+                                ReadOnlyMemory<byte> bytes = json.RootElement.GetProperty("payload")
+                                    .GetProperty("compressed").GetBytesFromBase64();
+                                using var inputStream = bytes.AsStream();
+                                using var gzipDecoded = GzipHelpers.GzipDecompress(inputStream);
+                                gzipDecoded.Seek(0, SeekOrigin.Begin);
+                                return gzipDecoded.ToArray();
+                            }
+
+                            var request = new SpotifyRemoteMessage(
+                                Type: SpotifyRemoteMessageType.Request,
+                                Uri: string.Empty,
+                                Payload: ParseFrom(json.RootElement)
+                            );
+
+                            var wasInteresting = false;
+                            foreach (var callback in connectionInfo.Callbacks)
+                            {
+                                if (callback.PackageReceiveCondition(request))
+                                {
+                                    callback.Incoming(request);
+                                    wasInteresting = true;
+                                }
+                            }
+
+                            if (!wasInteresting)
+                            {
+                                Log.Logger.Debug("Received uninteresting request: {Request}", request);
+                                //send reply
+                                var key = json.RootElement.GetProperty("key").GetString()!;
+                                var datareply = new
+                                {
+                                    type = "reply",
+                                    key = key,
+                                    payload = new
+                                    {
+                                        success = "false"
+                                    }
+                                };
+                                
+                                ReadOnlyMemory<byte> jsonreply = JsonSerializer.SerializeToUtf8Bytes(datareply);
+                                await mainChannel.Writer.WriteAsync(jsonreply);
+                            }
+                            else
+                            {
+                                //send reply
+                                var key = json.RootElement.GetProperty("key").GetString()!;
+                                var datareply = new
+                                {
+                                    type = "reply",
+                                    key = key,
+                                    payload = new
+                                    {
+                                        success = "true"
+                                    }
+                                };
+                                
+                                ReadOnlyMemory<byte> jsonreply = JsonSerializer.SerializeToUtf8Bytes(datareply);
+                                await mainChannel.Writer.WriteAsync(jsonreply);
+                            }
+
                             break;
+                        }
                     }
                 }
             }
@@ -393,4 +475,11 @@ internal readonly record struct SpotifyRemoteMessageCallback(ChannelReader<Spoti
 
 internal delegate bool RemoteMessageReceiveCondition(SpotifyRemoteMessage packageToCheck);
 
-internal readonly record struct SpotifyRemoteMessage(string Uri, ReadOnlyMemory<byte> Payload);
+internal readonly record struct SpotifyRemoteMessage(SpotifyRemoteMessageType Type, string Uri,
+    ReadOnlyMemory<byte> Payload);
+
+internal enum SpotifyRemoteMessageType
+{
+    Message,
+    Request
+}

@@ -1,6 +1,7 @@
 ﻿using Eum.Spotify.connectstate;
 using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
+using Wavee.Player.State;
 
 namespace Wavee.Playback;
 
@@ -54,6 +55,7 @@ public readonly record struct SpotifyLocalPlaybackState(
         {
             putState.StartedPlayingAt = 0;
         }
+
         if (LastCommandId.IsSome)
         {
             putState.LastCommandMessageId = LastCommandId.ValueUnsafe();
@@ -71,6 +73,7 @@ public readonly record struct SpotifyLocalPlaybackState(
         {
             putState.LastCommandSentByDeviceId = string.Empty;
         }
+
         putState.ClientSideTimestamp = (ulong)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         return putState;
     }
@@ -129,6 +132,10 @@ public readonly record struct SpotifyLocalPlaybackState(
         };
     }
 
+    public static SpotifyLocalPlaybackState FromPlayer(Option<WaveePlayerState> waveePlayerState, bool isActive, bool activeChanged)
+    {
+        return new SpotifyLocalPlaybackState();
+    }
     // public SpotifyLocalPlaybackState FromPlayer(WaveePlayerState waveePlayerState, bool isActive, bool activeChanged)
     // {
     //     var state = this.State;

@@ -1,8 +1,15 @@
-﻿using System.Text;
+﻿using System.Reactive.Linq;
+using System.Text;
+using System.Text.Json;
 using Eum.Spotify;
+using LanguageExt;
+using LanguageExt.UnsafeValueAccess;
 using Serilog;
 using Wavee.Infrastructure.Connection;
 using Wavee.Infrastructure.Remote;
+using Wavee.Playback;
+using Wavee.Playback.Live;
+using Wavee.Player;
 using Wavee.Remote;
 using Wavee.Remote.Live;
 using Wavee.Spotify.Infrastructure.Connection;
@@ -15,10 +22,12 @@ public class SpotifyClient
 {
     private Guid _connectionId;
     private TaskCompletionSource<string> _countryCodeTask;
-    private TaskCompletionSource _waitForConnectionTask;
+    private readonly TaskCompletionSource _waitForConnectionTask;
+    private readonly IWaveePlayer _player;
 
-    public SpotifyClient(LoginCredentials credentials, SpotifyConfig config)
+    public SpotifyClient(IWaveePlayer player, LoginCredentials credentials, SpotifyConfig config)
     {
+        _player = player;
         var deviceId = Guid.NewGuid().ToString("N");
         _waitForConnectionTask = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
 
@@ -66,16 +75,96 @@ public class SpotifyClient
                 config: config
             );
             _waitForConnectionTask.TrySetResult();
+
+            //Setup remote command listener
+            var remoteCommandListener = _connectionId.CreateListener(x =>
+                x.Type is SpotifyRemoteMessageType.Request || (x.Uri.StartsWith("hm://connect-state/v1/volume")));
+
+            await Task.Factory.StartNew(async () =>
+            {
+                try
+                {
+                    await foreach (var package in remoteCommandListener.Reader.ReadAllAsync())
+                    {
+                        if (package.Type is SpotifyRemoteMessageType.Request)
+                        {
+                            using var jsondoc = JsonDocument.Parse(package.Payload);
+                            //  "{\"message_id\":1598341393,\"target_alias_id\":null,\"sent_by_device_id\":\"eae17cd4d59caffc37a401f0789e329ff154b1e5\",\"command\":{\"endpoint\":\"transfer\",\"data\":\"CgYIABABGAAS5AcIp4aK+o0xEPALGQAAAAAAAPA/IAAqzAcKABJQNjY2MTM0MzYzODM5NjMzODYxMzI2MTYyMzAzOTYxNjEzMDY2NjIzMDM5NjU2NjYxNjUzMDYxNjEzMjM5MzA2NjMxMzQzNTM5MzM2MTM1NjYaECu4D8ZsbU1EkyY75/XBYLAiMwoLZGVjaXNpb25faWQSJDA1ZmVhN2Y4ZDNkMjVhMWQ2MzZmZmEyZTMyOWQxNTEyNjg5OCJKChBpbWFnZV94bGFyZ2VfdXJsEjZzcG90aWZ5OmltYWdlOmFiNjc2MTZkMDAwMGIyNzNkMTJjNTc2ZmQwOTNiMDlmNjJhMGM1NjQiOAoQcGFnZV9pbnN0YW5jZV9pZBIkZTYwMzc3ODctZjEzOC00NjNkLWIzMDAtYzJjYTJkYmQzNTgzIg4KCWl0ZXJhdGlvbhIBMCIxCglhbGJ1bV91cmkSJHNwb3RpZnk6YWxidW06NldUVjVXY2tUUUkyRmp5STVZUDFQRyI2Cgtjb250ZXh0X3VyaRInc3BvdGlmeTpwbGF5bGlzdDozN2k5ZFFaRjFFOE5WRkhSb2xHNmpIIkAKC2FsYnVtX3RpdGxlEjFOZXZlcnRoZWxlc3MsIChPcmlnaW5hbCBEcmFtYSBTb3VuZCBUcmFjaywgUHQuIDEpIjYKDmludGVyYWN0aW9uX2lkEiQzZTMzMDMyZi0wYmVlLTRlYTgtODBkMy0zM2ZkYjRmOWM1ZDkiMwoKYXJ0aXN0X3VyaRIlc3BvdGlmeTphcnRpc3Q6MU5WUnZWMEtxYU83VnRTYVZRY20zViJJCg9pbWFnZV9sYXJnZV91cmwSNnNwb3RpZnk6aW1hZ2U6YWI2NzYxNmQwMDAwYjI3M2QxMmM1NzZmZDA5M2IwOWY2MmEwYzU2NCJJCg9pbWFnZV9zbWFsbF91cmwSNnNwb3RpZnk6aW1hZ2U6YWI2NzYxNmQwMDAwNDg1MWQxMmM1NzZmZDA5M2IwOWY2MmEwYzU2NCIVCgx0cmFja19wbGF5ZXISBWF1ZGlvIjUKCmVudGl0eV91cmkSJ3Nwb3RpZnk6cGxheWxpc3Q6MzdpOWRRWkYxRThOVkZIUm9sRzZqSCIqCiBhY3Rpb25zLnNraXBwaW5nX3ByZXZfcGFzdF90cmFjaxIGcmVzdW1lIioKIGFjdGlvbnMuc2tpcHBpbmdfbmV4dF9wYXN0X3RyYWNrEgZyZXN1bWUiQwoJaW1hZ2VfdXJsEjZzcG90aWZ5OmltYWdlOmFiNjc2MTZkMDAwMDFlMDJkMTJjNTc2ZmQwOTNiMDlmNjJhMGM1NjQazwYKSgoIcGxheWxpc3QSJXhwdWlfMjAyMy0wNi0wNV8xNjg1OTc3NzUyMTMyX2E1ODhmNzQaACIAKg9ub3dfcGxheWluZ19iYXIyAEIAEtwECidzcG90aWZ5OnBsYXlsaXN0OjM3aTlkUVpGMUU4TlZGSFJvbEc2akgSMWNvbnRleHQ6Ly9zcG90aWZ5OnBsYXlsaXN0OjM3aTlkUVpGMUU4TlZGSFJvbEc2akgaDQoJaW1hZ2VfdXJsEgAaIwoTY29udGV4dF9kZXNjcmlwdGlvbhIM7Iuc7J6RIFJhZGlvGiIKEGZvcm1hdF9saXN0X3R5cGUSDmluc3BpcmVkYnktbWl4GjwKEXplbGRhLmNvbnRleHRfdXJpEidzcG90aWZ5OnBsYXlsaXN0OjM3aTlkUVpGMUU4TlZGSFJvbEc2akgaMgoKcmVxdWVzdF9pZBIkMDVmZWE3ZjhkM2QyNWExZDYzNmZmYTJlMzI5ZDE1MTI2ODk4GmwKD21lZGlhTGlzdENvbmZpZxJZc3BvdGlmeTptZWRpYWxpc3Rjb25maWc6dHJhY2stcmFkaW8taW5zcGlyZWRieTp0ZXN0OnEzXzIwMjNfZ3BzX2JhcmJpZV8yX3JhZGlvOmRlZmF1bHRfdjMaNgoOY29ycmVsYXRpb24taWQSJDA1ZmVhN2Y4ZDNkMjVhMWQ2MzZmZmEyZTMyOWQxNTEyNjg5OBofChlwbGF5bGlzdF9udW1iZXJfb2ZfdHJhY2tzEgI1MBoYCg1jb250ZXh0X293bmVyEgdzcG90aWZ5Gi0KEG1hZGVGb3IudXNlcm5hbWUSGTd1Y2doZGdxdWY2YnlxdXNxa2xpbHR3YzIaIAobcGxheWxpc3RfbnVtYmVyX29mX2VwaXNvZGVzEgEwIgAwARpQNjY2MTM0MzYzODM5NjMzODYxMzI2MTYyMzAzOTYxNjEzMDY2NjIzMDM5NjU2NjYxNjUzMDYxNjEzMjM5MzA2NjMxMzQzNTM5MzM2MTM1NjYiACoAMkwyJDNlMzMwMzJmLTBiZWUtNGVhOC04MGQzLTMzZmRiNGY5YzVkOTokZTYwMzc3ODctZjEzOC00NjNkLWIzMDAtYzJjYTJkYmQzNTgzIgIQAA==\",\"options\":{\"restore_paused\":\"restore\",\"restore_position\":\"extrapolate\",\"restore_track\":\"always_play_something\",\"license\":\"premium\"},\"from_device_identifier\":\"eae17cd4d59caffc37a401f0789e329ff154b1e5\"}}"
+                            var messageId = jsondoc.RootElement.GetProperty("message_id").GetUInt32();
+                            var sentByDeviceId = jsondoc.RootElement.GetProperty("sent_by_device_id").GetString();
+                            var command = jsondoc.RootElement.GetProperty("command");
+                            var endpoint = command.GetProperty("endpoint").GetString();
+
+                            var remoteCommand = new SpotifyCommand(
+                                MessageId: messageId,
+                                SentByDeviceId: sentByDeviceId,
+                                Endpoint: endpoint,
+                                Data: command.GetProperty("data").GetBytesFromBase64()
+                            );
+
+                            if (Playback is LiveSpotifyPlaybackClient playback)
+                                await playback.RemoteCommand(remoteCommand);
+                        }
+                        else if (package.Uri.StartsWith("hm://connect-state/v1/volume"))
+                        {
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    Log.Logger.Error(e, "Error in remote command listener");
+                }
+                finally
+                {
+                    remoteCommandListener.onDone();
+                }
+            });
         });
+
+
+        //Setup player listener
+        var wasActive = false;
+        var playerListener = player.CreateListener()
+            .Select(x =>
+            {
+                var isNowActive = x.IsSome;
+                var activeChanged = isNowActive != wasActive;
+                if (!wasActive && !isNowActive)
+                {
+                    //do nothing
+                    return Option<SpotifyLocalPlaybackState>.None;
+                }
+
+                return SpotifyLocalPlaybackState.FromPlayer(x, isNowActive, activeChanged);
+            })
+            .SelectMany(async state =>
+            {
+                if(state.IsSome)
+                    await PlaybackStateChanged(state.ValueUnsafe());
+                return Unit.Default;
+            })
+            .Subscribe();
     }
 
     public ITokenClient Token => new LiveTokenClient(connId: _connectionId);
     public IMercuryClient Mercury => new LiveTokenClient(connId: _connectionId);
     public ISpotifyRemoteClient Remote => new LiveSpotifyRemoteClient(_connectionId, _waitForConnectionTask);
 
+    public ISpotifyPlaybackClient Playback => new LiveSpotifyPlaybackClient(_connectionId, new WeakReference<IWaveePlayer>(_player), new WeakReference<ISpotifyRemoteClient>(Remote), _waitForConnectionTask);
+
+
     public ValueTask<string> Country => _countryCodeTask.Task.IsCompleted
         ? new ValueTask<string>(_countryCodeTask.Task.Result)
         : new ValueTask<string>(_countryCodeTask.Task);
+
+
+    private async Task PlaybackStateChanged(SpotifyLocalPlaybackState obj)
+    {
+        await _waitForConnectionTask.Task;
+
+        if (Remote is LiveSpotifyRemoteClient remote)
+            await remote.PlaybackStateUpdated(obj);
+    }
 
     private static Guid ConnectionFactory(LoginCredentials credentials, SpotifyConfig config,
         string deviceId,
