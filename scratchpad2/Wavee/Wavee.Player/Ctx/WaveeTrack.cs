@@ -4,7 +4,8 @@ namespace Wavee.Player.Ctx;
 
 public class WaveeTrack
 {
-    public WaveeTrack(Stream audioStream, string title, string id, HashMap<string, object> metadata, TimeSpan duration)
+    public WaveeTrack(Stream audioStream, string title, string id, HashMap<string, object> metadata, TimeSpan duration,
+        Option<NormalisationData> normalisationData)
     {
         AudioStream = audioStream;
         Title = title;

@@ -150,12 +150,7 @@ internal static class SpotifyPlaybackHandler
             shuffling: Option<bool>.None,
             repeatState: Option<RepeatState>.None);
     }
-
-    private static Task<WaveeTrack> StreamTrack(SpotifyId id, HashMap<string, string> trackMetadata, string country,
-        CancellationToken ct)
-    {
-        throw new NotImplementedException();
-    }
+    
 
     private static async Task<Option<WaveeContext>> BuildWaveeContext(Guid connectionId, Option<string> playContextUri)
     {
@@ -188,12 +183,14 @@ internal static class SpotifyPlaybackHandler
                 {
                     var id = SpotifyId.FromUri(track.Uri);
                     var uid = track.HasUid ? track.Uid : Option<string>.None;
+                    if (uid.IsSome)
+                    {
+                        track.Metadata["uid"] = uid.ValueUnsafe();
+                    }
                     var trackMetadata = track.Metadata.ToHashMap();
-                    var client = SpotifyClient.Clients[connectionId];
-                    var country = client.Country.Result;
                     yield return new FutureWaveeTrack(id.ToString(),
                         TrackUid: uid.IfNone(id.ToBase16()),
-                        (ct) => StreamTrack(id, trackMetadata, country, ct));
+                        (ct) => SpotifyStreaming.StreamTrack(connectionId, id, trackMetadata, ct));
                 }
             }
             else

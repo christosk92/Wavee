@@ -26,6 +26,9 @@ var config = new SpotifyConfig(
     Cache: new SpotifyCacheConfig(
         CacheLocation: spotifyCacheLocation,
         MaxCacheSize: Option<long>.None
+    ),
+    playback: new SpotifyPlaybackConfig(
+        preferedQuality: PreferedQuality.Highest
     )
 );
 

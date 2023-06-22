@@ -69,17 +69,19 @@ public sealed class WaveePlayer : IWaveePlayer
                     }
 
                     var currentState = currentStateOption.ValueUnsafe();
+                    
 
+                    var track = play.Context.FutureTracks.ElementAtOrDefault(play.Index) ??
+                                play.Context.FutureTracks.ElementAtOrDefault(0);
                     var nextState = currentState.PlayContext(play.Context,
                         play.Index,
                         play.StartFrom,
                         play.Shuffling,
-                        play.RepeatState);
+                        play.RepeatState,
+                        track);
 
                     atomic(() => _state.Swap(_ => nextState));
 
-                    var track = play.Context.FutureTracks.ElementAtOrDefault(play.Index) ??
-                                play.Context.FutureTracks.ElementAtOrDefault(0);
                     if (track is null)
                     {
                         //set permanent end state
@@ -114,7 +116,7 @@ internal sealed class PlayerInternal
 {
     public void Play(WaveeTrack stream, FutureWaveeTrack futureWaveeTrack)
     {
-        throw new NotImplementedException();
+        
     }
 
     public void Pause()

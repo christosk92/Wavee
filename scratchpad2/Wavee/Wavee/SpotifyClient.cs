@@ -5,11 +5,17 @@ using Eum.Spotify;
 using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
 using Serilog;
+using Wavee.AudioKey;
+using Wavee.AudioKey.Live;
+using Wavee.Cache;
+using Wavee.Cache.Live;
 using Wavee.ContextResolve;
 using Wavee.ContextResolve.Live;
 using Wavee.Infrastructure.Connection;
 using Wavee.Infrastructure.Playback;
 using Wavee.Infrastructure.Remote;
+using Wavee.Metadata;
+using Wavee.Metadata.Live;
 using Wavee.Playback;
 using Wavee.Playback.Live;
 using Wavee.Player;
@@ -29,10 +35,15 @@ public class SpotifyClient
     private readonly IWaveePlayer _player;
 
     internal static Dictionary<Guid, SpotifyClient> Clients = new();
+    private readonly SpotifyConfig _config;
 
     public SpotifyClient(IWaveePlayer player, LoginCredentials credentials, SpotifyConfig config)
     {
         _player = player;
+        _config = config;
+        Cache = new LiveSpotifyCache(
+            Config: config.Cache
+        );
         var deviceId = Guid.NewGuid().ToString("N");
         _waitForConnectionTask = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
 
@@ -164,20 +175,20 @@ public class SpotifyClient
 
     public ITokenClient Token => new LiveTokenClient(connId: _connectionId);
     public IMercuryClient Mercury => new LiveTokenClient(connId: _connectionId);
-
-    public ISpotifyRemoteClient Remote =>
-        new LiveSpotifyRemoteClient(_connectionId, waitForConnectionTask: _waitForConnectionTask);
-
+    public ISpotifyRemoteClient Remote => new LiveSpotifyRemoteClient(_connectionId, waitForConnectionTask: _waitForConnectionTask);
     public IContextResolver ContextResolver => new LiveContextResolver(() => Mercury);
+    public ISpotifyPlaybackClient Playback => new LiveSpotifyPlaybackClient(_connectionId, remoteClient: new WeakReference<ISpotifyRemoteClient>(Remote), waitForConnectionTask: _waitForConnectionTask);
+    public ISpotifyMetadataClient Metadata => new LiveSpotifyMetadataClient(mercuryFactory: () => Mercury, _countryCodeTask.Task);
+    public ISpotifyAudioKeysClient AudioKeys => new LiveSpotifyAudioKeysClient(_connectionId);
 
-    public ISpotifyPlaybackClient Playback => new LiveSpotifyPlaybackClient(_connectionId,
-        remoteClient: new WeakReference<ISpotifyRemoteClient>(Remote),
-        waitForConnectionTask: _waitForConnectionTask);
+    public ISpotifyCache Cache { get; }
 
 
     public ValueTask<string> Country => _countryCodeTask.Task.IsCompleted
         ? new ValueTask<string>(_countryCodeTask.Task.Result)
         : new ValueTask<string>(_countryCodeTask.Task);
+
+    public SpotifyConfig Config => _config;
 
 
     private async Task PlaybackStateChanged(SpotifyLocalPlaybackState obj)

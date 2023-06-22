@@ -5,14 +5,33 @@ namespace Wavee;
 
 public sealed class SpotifyConfig
 {
-    public SpotifyConfig(SpotifyRemoteConfig Remote, SpotifyCacheConfig Cache)
+    public SpotifyConfig(SpotifyRemoteConfig Remote, SpotifyCacheConfig Cache, SpotifyPlaybackConfig playback)
     {
         this.Remote = Remote;
         this.Cache = Cache;
+        Playback = playback;
     }
 
     public SpotifyCacheConfig Cache { get; }
     public SpotifyRemoteConfig Remote { get; }
+    public SpotifyPlaybackConfig Playback { get; }
+}
+
+public sealed class SpotifyPlaybackConfig
+{
+    public SpotifyPlaybackConfig(PreferedQuality preferedQuality)
+    {
+        PreferedQuality = preferedQuality;
+    }
+
+    public PreferedQuality PreferedQuality { get; set; }
+}
+
+public enum PreferedQuality
+{
+    Normal,
+    High,
+    Highest,
 }
 
 public sealed class SpotifyCacheConfig

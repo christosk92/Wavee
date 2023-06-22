@@ -22,7 +22,8 @@ public readonly record struct WaveePlayerState(
         int playIndex,
         Option<TimeSpan> playStartFrom,
         Option<bool> playShuffling,
-        Option<RepeatState> playRepeatState)
+        Option<RepeatState> playRepeatState,
+        FutureWaveeTrack? futureWaveeTrack)
     {
         return this with
         {
@@ -32,7 +33,8 @@ public readonly record struct WaveePlayerState(
             Index = playIndex,
             StartFrom = playStartFrom.IfNone(TimeSpan.Zero),
             Shuffling = playShuffling.IfNone(this.Shuffling),
-            RepeatState = playRepeatState.IfNone(this.RepeatState)
+            RepeatState = playRepeatState.IfNone(this.RepeatState),
+            TrackId = futureWaveeTrack?.TrackId ?? Option<string>.None
         };
     }
 
