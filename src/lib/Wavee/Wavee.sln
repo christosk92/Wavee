@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Wavee", "Wavee.csproj", "{B7715E52-CB58-4862-A939-848F51AB0E11}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Wavee.Spotify.Proto", "..\Wavee.Spotify.Proto\Wavee.Spotify.Proto.csproj", "{4E66FB37-5D04-46C8-B333-DB48BFBF9563}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Wavee.Player", "..\Wavee.Player\Wavee.Player.csproj", "{45027297-A2F1-4392-9E15-B0DBE90C4448}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleTest", "..\..\ConsoleTest\ConsoleTest.csproj", "{B15D85C9-B72C-435D-AF27-AD32F63800A9}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B7715E52-CB58-4862-A939-848F51AB0E11}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B7715E52-CB58-4862-A939-848F51AB0E11}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B7715E52-CB58-4862-A939-848F51AB0E11}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B7715E52-CB58-4862-A939-848F51AB0E11}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4E66FB37-5D04-46C8-B333-DB48BFBF9563}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4E66FB37-5D04-46C8-B333-DB48BFBF9563}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4E66FB37-5D04-46C8-B333-DB48BFBF9563}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4E66FB37-5D04-46C8-B333-DB48BFBF9563}.Release|Any CPU.Build.0 = Release|Any CPU
+		{45027297-A2F1-4392-9E15-B0DBE90C4448}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{45027297-A2F1-4392-9E15-B0DBE90C4448}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{45027297-A2F1-4392-9E15-B0DBE90C4448}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{45027297-A2F1-4392-9E15-B0DBE90C4448}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B15D85C9-B72C-435D-AF27-AD32F63800A9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B15D85C9-B72C-435D-AF27-AD32F63800A9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B15D85C9-B72C-435D-AF27-AD32F63800A9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B15D85C9-B72C-435D-AF27-AD32F63800A9}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

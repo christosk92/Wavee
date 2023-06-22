@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net6.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <LangVersion>preview</LangVersion>
+    </PropertyGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\Wavee.Player\Wavee.Player.csproj" />
+        <ProjectReference Include="..\Wavee.Spotify.Proto\Wavee.Spotify.Proto.csproj" />
+    </ItemGroup>
+    <ItemGroup>
+      <PackageReference Include="BouncyCastle.Cryptography" Version="2.2.1" />
+      <PackageReference Include="CommunityToolkit.HighPerformance" Version="8.2.0" />
+      <PackageReference Include="NeoSmart.AsyncLock" Version="3.2.1" />
+      <PackageReference Include="sqlite-net-pcl" Version="1.9.141-beta" />
+    </ItemGroup>
+</Project>
