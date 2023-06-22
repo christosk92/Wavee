@@ -38,8 +38,7 @@ var client = new SpotifyClient(player, new LoginCredentials
     AuthData = ByteString.CopyFromUtf8(Environment.GetEnvironmentVariable("SPOTIFY_PASSWORD"))
 }, config);
 var countryCode = await client.Country;
-var listener = client.Remote.CreateListener()
-    .Subscribe(x => { Log.Logger.Information("Remote: {0}", x); });
+var listener = client.Remote.CreateListener().Subscribe(x => { Log.Logger.Information("Remote: {0}", x); });
 
 var tookover = await client.Playback.Takeover();
 var c = Console.ReadLine();

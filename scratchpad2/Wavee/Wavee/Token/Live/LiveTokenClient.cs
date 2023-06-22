@@ -6,6 +6,7 @@ using Eum.Spotify;
 using Google.Protobuf;
 using NeoSmart.AsyncLock;
 using Serilog;
+using Wavee.ContextResolve;
 using Wavee.Infrastructure.Connection;
 using Wavee.Infrastructure.Mercury;
 using Wavee.Spotify.Infrastructure.Connection;
@@ -30,6 +31,7 @@ internal readonly struct LiveTokenClient : ITokenClient, IMercuryClient
         var response = await MercuryParsers.GetAsync(_connId, uri, ct);
         return response;
     }
+    
 
     public async ValueTask<string> GetToken(CancellationToken ct = default)
     {

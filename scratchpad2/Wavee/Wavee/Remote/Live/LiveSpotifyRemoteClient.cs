@@ -75,7 +75,7 @@ internal readonly struct LiveSpotifyRemoteClient : ISpotifyRemoteClient
 
     internal async Task PlaybackStateUpdated(SpotifyLocalPlaybackState spotifyLocalPlaybackState)
     {
-        throw new NotImplementedException();
+        await SpotifyRemoteConnection.PutState(_mainConnectionId, spotifyLocalPlaybackState);
     }
 }
 

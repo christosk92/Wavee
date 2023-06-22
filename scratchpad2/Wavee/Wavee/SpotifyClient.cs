@@ -5,7 +5,10 @@ using Eum.Spotify;
 using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
 using Serilog;
+using Wavee.ContextResolve;
+using Wavee.ContextResolve.Live;
 using Wavee.Infrastructure.Connection;
+using Wavee.Infrastructure.Playback;
 using Wavee.Infrastructure.Remote;
 using Wavee.Playback;
 using Wavee.Playback.Live;
@@ -25,6 +28,8 @@ public class SpotifyClient
     private readonly TaskCompletionSource _waitForConnectionTask;
     private readonly IWaveePlayer _player;
 
+    internal static Dictionary<Guid, SpotifyClient> Clients = new();
+
     public SpotifyClient(IWaveePlayer player, LoginCredentials credentials, SpotifyConfig config)
     {
         _player = player;
@@ -40,6 +45,8 @@ public class SpotifyClient
                 await Task.Delay(2000);
                 CreateConnectionRecursively();
             });
+            Clients[_connectionId] = this;
+
             //setup country code
             var listener = _connectionId.CreateListener((ref SpotifyUnencryptedPackage package) =>
                 package.Type is SpotifyPacketType.CountryCode);
@@ -124,7 +131,12 @@ public class SpotifyClient
 
         //Setup player listener
         var wasActive = false;
-        var playerListener = player.CreateListener()
+
+        SpotifyLocalPlaybackState prevState = SpotifyLocalPlaybackState.Empty(
+            config: config.Remote,
+            deviceId: deviceId
+        );
+        var playerListener = SpotifyPlaybackHandler.Setup(connectionId: _connectionId, player)
             .Select(x =>
             {
                 var isNowActive = x.IsSome;
@@ -135,12 +147,16 @@ public class SpotifyClient
                     return Option<SpotifyLocalPlaybackState>.None;
                 }
 
-                return SpotifyLocalPlaybackState.FromPlayer(x, isNowActive, activeChanged);
+                return prevState.FromPlayer(x, isNowActive, activeChanged, Option<string>.None, Option<uint>.None);
             })
             .SelectMany(async state =>
             {
-                if(state.IsSome)
+                if (state.IsSome)
+                {
+                    prevState = state.ValueUnsafe();
                     await PlaybackStateChanged(state.ValueUnsafe());
+                }
+
                 return Unit.Default;
             })
             .Subscribe();
@@ -148,9 +164,15 @@ public class SpotifyClient
 
     public ITokenClient Token => new LiveTokenClient(connId: _connectionId);
     public IMercuryClient Mercury => new LiveTokenClient(connId: _connectionId);
-    public ISpotifyRemoteClient Remote => new LiveSpotifyRemoteClient(_connectionId, _waitForConnectionTask);
 
-    public ISpotifyPlaybackClient Playback => new LiveSpotifyPlaybackClient(_connectionId, new WeakReference<IWaveePlayer>(_player), new WeakReference<ISpotifyRemoteClient>(Remote), _waitForConnectionTask);
+    public ISpotifyRemoteClient Remote =>
+        new LiveSpotifyRemoteClient(_connectionId, waitForConnectionTask: _waitForConnectionTask);
+
+    public IContextResolver ContextResolver => new LiveContextResolver(() => Mercury);
+
+    public ISpotifyPlaybackClient Playback => new LiveSpotifyPlaybackClient(_connectionId,
+        remoteClient: new WeakReference<ISpotifyRemoteClient>(Remote),
+        waitForConnectionTask: _waitForConnectionTask);
 
 
     public ValueTask<string> Country => _countryCodeTask.Task.IsCompleted

@@ -1,6 +1,7 @@
 ﻿using Eum.Spotify.connectstate;
 using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
+using Wavee.Player;
 using Wavee.Player.State;
 
 namespace Wavee.Playback;
@@ -132,9 +133,101 @@ public readonly record struct SpotifyLocalPlaybackState(
         };
     }
 
-    public static SpotifyLocalPlaybackState FromPlayer(Option<WaveePlayerState> waveePlayerState, bool isActive, bool activeChanged)
+    public SpotifyLocalPlaybackState FromPlayer(Option<WaveePlayerState> waveePlayerState, bool isActive,
+        bool activeChanged,
+        Option<string> lastCommandSentBy,
+        Option<uint> lastCommandId)
     {
-        return new SpotifyLocalPlaybackState();
+        var state = BuildFreshPlayerState();
+        if (waveePlayerState.IsNone)
+            return this with
+            {
+                State = state,
+                IsActive = isActive,
+                PlayingSince = Option<DateTimeOffset>.None
+            };
+        var stateValue = waveePlayerState.ValueUnsafe();
+        state.Position = 0;
+        state.SessionId = stateValue.SessionId.IfNone(string.Empty);
+        state.PlaybackId = stateValue.PlaybackId.IfNone(string.Empty);
+        state.Timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        state.PositionAsOfTimestamp = (long)stateValue.Position.IfNone(TimeSpan.Zero).TotalMilliseconds;
+        state.Options = new ContextPlayerOptions
+        {
+            RepeatingContext = stateValue.RepeatState >= RepeatState.Context,
+            RepeatingTrack = stateValue.RepeatState >= RepeatState.Track,
+            ShufflingContext = stateValue.Shuffling
+        };
+        if (stateValue.Context.IsSome)
+        {
+            var ctx = stateValue.Context.ValueUnsafe();
+            var id = ctx.Id;
+            state.ContextUri = id;
+            state.ContextUrl = $"context://{id}";
+            state.ContextMetadata.Clear();
+            state.ContextRestrictions = new Restrictions();
+        }
+
+        switch (stateValue.State)
+        {
+            case WaveePlaybackStateType.Loading:
+                state.IsBuffering = true;
+                state.IsPlaying = true;
+                state.IsPaused = false;
+                break;
+            case WaveePlaybackStateType.Playing:
+                state.IsBuffering = false;
+                state.IsPlaying = true;
+                state.IsPaused = false;
+                break;
+            case WaveePlaybackStateType.Paused:
+                state.IsBuffering = false;
+                state.IsPlaying = true;
+                state.IsPaused = true;
+                break;
+            case WaveePlaybackStateType.PermanentEndOfContext:
+                state.IsBuffering = false;
+                state.IsPlaying = false;
+                state.IsPaused = false;
+                break;
+            default:
+                throw new ArgumentOutOfRangeException();
+        }
+
+        if (stateValue.TrackId.IsSome)
+        {
+            state.Track = new ProvidedTrack
+            {
+                Uri = stateValue.TrackId.ValueUnsafe()
+            };
+        }
+
+        if (stateValue.Track.IsSome)
+        {
+            var trackVal = stateValue.Track.ValueUnsafe();
+            state.Track = new ProvidedTrack
+            {
+                Uri = trackVal.Id,
+                Uid = trackVal.Metadata.Find("uid").IfNone(string.Empty).ToString(),
+            };
+            state.Duration = (uint)trackVal.Duration.TotalMilliseconds;
+            state.Track.Metadata.Clear();
+            foreach (var (key, value) in trackVal.Metadata)
+            {
+                state.Track.Metadata.Add(key, value.ToString());
+            }
+        }
+
+        return this with
+        {
+            State = state,
+            IsActive = isActive,
+            PlayingSince = (isActive && activeChanged)
+                ? Option<DateTimeOffset>.Some(DateTimeOffset.UtcNow)
+                : PlayingSince,
+            LastCommandId = lastCommandId,
+            LastCommandSentBy = lastCommandSentBy
+        };
     }
     // public SpotifyLocalPlaybackState FromPlayer(WaveePlayerState waveePlayerState, bool isActive, bool activeChanged)
     // {

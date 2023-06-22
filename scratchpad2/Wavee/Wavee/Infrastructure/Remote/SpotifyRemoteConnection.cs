@@ -37,6 +37,26 @@ internal static class SpotifyRemoteConnection
         return connection.Receiver(condition);
     }
 
+    public static async Task PutState(
+        Guid connectionId,
+        SpotifyLocalPlaybackState localState,
+        CancellationToken ct = default)
+    {
+        var connection = Connections[connectionId];
+        var putState = localState.BuildPutStateRequest(
+            reason: PutStateReason.PlayerStateChanged,
+            playerTime: Option<TimeSpan>.None
+        );
+        var remoteConnId = connection.RemoteConnectionId;
+        var jwt = await SpotifyClient.Clients[connectionId].Token.GetToken(ct);
+        var deviceId = localState.DeviceId;
+        await Put(
+            putState,
+            remoteConnId,
+            jwt,
+            deviceId, ct);
+    }
+
     private static void SetupConnectionListener(
         ClientWebSocket webSocket,
         Cluster firstCluster,
@@ -229,7 +249,7 @@ internal static class SpotifyRemoteConnection
                                     Type: SpotifyRemoteMessageType.Message,
                                     Uri: json.RootElement.GetProperty("uri").GetString()!,
                                     Payload: parsed
-                                );  
+                                );
                                 if (pkg.Uri.StartsWith("hm://connect-state/v1/cluster"))
                                 {
                                     //update cluster
@@ -242,6 +262,7 @@ internal static class SpotifyRemoteConnection
                                         };
                                     }
                                 }
+
                                 var wasInteresting = false;
                                 foreach (var callback in connectionInfo.Callbacks)
                                 {
@@ -257,7 +278,6 @@ internal static class SpotifyRemoteConnection
                                     Log.Logger.Debug("Received uninteresting package: {Package}", pkg);
                                     packages.Add(pkg);
                                 }
-                                
                             }
 
                             break;
@@ -304,7 +324,7 @@ internal static class SpotifyRemoteConnection
                                         success = "false"
                                     }
                                 };
-                                
+
                                 ReadOnlyMemory<byte> jsonreply = JsonSerializer.SerializeToUtf8Bytes(datareply);
                                 await mainChannel.Writer.WriteAsync(jsonreply);
                             }
@@ -321,7 +341,7 @@ internal static class SpotifyRemoteConnection
                                         success = "true"
                                     }
                                 };
-                                
+
                                 ReadOnlyMemory<byte> jsonreply = JsonSerializer.SerializeToUtf8Bytes(datareply);
                                 await mainChannel.Writer.WriteAsync(jsonreply);
                             }
@@ -359,6 +379,7 @@ internal static class SpotifyRemoteConnection
         // Connections[connectionId].Callbacks.Clear();
         // Connections.Remove(connectionId);
     }
+
 
     private static async Task<Cluster> Put(PutStateRequest request,
         string connectionId,
