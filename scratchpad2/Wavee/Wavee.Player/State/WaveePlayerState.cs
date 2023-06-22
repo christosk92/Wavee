@@ -1,5 +1,6 @@
 ﻿using LanguageExt;
 using LanguageExt.UnitsOfMeasure;
+using LanguageExt.UnsafeValueAccess;
 using Wavee.Player.Ctx;
 
 namespace Wavee.Player.State;
@@ -20,7 +21,26 @@ public readonly record struct WaveePlayerState(
 
     public async Task<WaveePlayerState> SkipNext()
     {
-        throw new NotImplementedException();
+        var currentIndex = this.Index;
+        var currentContext = this.Context.ValueUnsafe();
+        var next = currentContext.FutureTracks.Skip(currentIndex + 1).HeadOrNone();
+        if (next.IsNone)
+        {
+            return this with
+            {
+                State = WaveePlaybackStateType.PermanentEndOfContext
+            };
+        }
+        
+        var nextTrack = await next.ValueUnsafe().Factory(CancellationToken.None);
+        return this with
+        {
+            State = WaveePlaybackStateType.Playing,
+            Context = currentContext,
+            Index = currentIndex + 1,
+            Track = nextTrack,
+            TrackId = nextTrack.Id
+        };
     }
 
     public WaveePlayerState PlayContext(WaveeContext playContext,

@@ -87,7 +87,7 @@ public sealed class WaveePlayer : IWaveePlayer
                     var currentState = currentStateOption.ValueUnsafe();
                     var nextState = await currentState.SkipNext();
 
-                    var track = currentState.Track;
+                    var track = nextState.Track;
                     atomic(() => _state.Swap(_ => nextState));
                     if (track.IsNone)
                     {
@@ -263,6 +263,7 @@ internal sealed class PlayerInternal
         //Start reading samples
         bool startedCrossfadeOut = false;
         Span<float> buffer = stackalloc float[decoder.SampleSize];
+        Span<float> secondBuffer = stackalloc float[decoder.SampleSize];
         while (true)
         {
             if (crossfadeDuration.IsSome && !startedCrossfadeOut)
@@ -293,11 +294,29 @@ internal sealed class PlayerInternal
                     }
                 }
             }
-
+            
             var read = decoder.Read(buffer);
             if (read == 0)
             {
                 break;
+            }
+            if (startedCrossfadeOut && _crossfadingInStream.IsSome)
+            {
+                var crossfadingInStream = _crossfadingInStream.ValueUnsafe();
+                //read from the crossfading in stream
+                var readSecond = crossfadingInStream.Decoder.Read(secondBuffer);
+                if (readSecond == 0)
+                {
+                    //dispose
+                    crossfadingInStream.Dispose();
+                    _crossfadingInStream = None;
+                }
+            }
+            
+            //add buffers together
+            for (var i = 0; i < read; i++)
+            {
+                buffer[i] += secondBuffer[i];
             }
 
             //normalise
