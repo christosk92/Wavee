@@ -10,14 +10,22 @@ internal interface IWaveePlaybackCommand
         Option<TimeSpan> StartFrom,
         bool StartPaused,
         Option<bool> Shuffling,
-        Option<RepeatState> RepeatState) => new WaveePlaybackPlayCommand(
+        Option<RepeatState> RepeatState,
+        Ref<Option<TimeSpan>> CrossfadeDuration) => new WaveePlaybackPlayCommand(
         Context: Context,
         Index: Index,
         StartFrom: StartFrom,
         StartPaused: StartPaused,
         Shuffling: Shuffling,
-        RepeatState: RepeatState
+        RepeatState: RepeatState,
+        CrossfadeDuration: CrossfadeDuration
     );
+    
+    static WaveePlaybackSkipNextCommand SkipNext(bool crossfadeIn, Ref<Option<TimeSpan>> crossfadeDuration) =>
+        new WaveePlaybackSkipNextCommand(
+            CrossfadeIn: crossfadeIn,
+            CrossfadeDuration: crossfadeDuration
+        );
 }
 
 internal record WaveePlaybackPlayCommand(
@@ -26,5 +34,11 @@ internal record WaveePlaybackPlayCommand(
     Option<TimeSpan> StartFrom,
     bool StartPaused,
     Option<bool> Shuffling,
-    Option<RepeatState> RepeatState
+    Option<RepeatState> RepeatState,
+    Ref<Option<TimeSpan>> CrossfadeDuration
+) : IWaveePlaybackCommand;
+
+internal record WaveePlaybackSkipNextCommand(
+    bool CrossfadeIn,
+    Ref<Option<TimeSpan>> CrossfadeDuration
 ) : IWaveePlaybackCommand;

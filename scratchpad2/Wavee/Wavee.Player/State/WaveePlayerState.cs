@@ -18,6 +18,11 @@ public readonly record struct WaveePlayerState(
 {
     public Option<TimeSpan> Position => Option<TimeSpan>.None;
 
+    public async Task<WaveePlayerState> SkipNext()
+    {
+        throw new NotImplementedException();
+    }
+
     public WaveePlayerState PlayContext(WaveeContext playContext,
         int playIndex,
         Option<TimeSpan> playStartFrom,
@@ -50,7 +55,7 @@ public readonly record struct WaveePlayerState(
     {
         return this with
         {
-            State = WaveePlaybackStateType.Playing, 
+            State = WaveePlaybackStateType.Playing,
             Track = waveeTrack,
             PlaybackId = playbackId.IfNone(this.PlaybackId.IfNone(string.Empty))
         };

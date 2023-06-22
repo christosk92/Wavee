@@ -45,7 +45,8 @@ public sealed class WaveePlayer : IWaveePlayer
     public Option<WaveePlayerState> CurrentState => _state.Value;
 
     public ValueTask Play(WaveeContext ctx, int idx, Option<TimeSpan> startFrom, bool startPaused,
-        Option<bool> shuffling, Option<RepeatState> repeatState)
+        Option<bool> shuffling, Option<RepeatState> repeatState,
+        Ref<Option<TimeSpan>> crossfadeDuration)
     {
         var command = IWaveePlaybackCommand.Play(
             Context: ctx,
@@ -53,8 +54,19 @@ public sealed class WaveePlayer : IWaveePlayer
             StartFrom: startFrom,
             StartPaused: startPaused,
             Shuffling: shuffling,
-            RepeatState: repeatState
+            RepeatState: repeatState,
+            CrossfadeDuration: crossfadeDuration
         );
+        return _writer.WriteAsync(command);
+    }
+
+    public ValueTask SkipNext(bool crossfadein, Ref<Option<TimeSpan>> crossfadeDuration)
+    {
+        var command = IWaveePlaybackCommand.SkipNext(
+            crossfadeIn: crossfadein,
+            crossfadeDuration: crossfadeDuration
+        );
+
         return _writer.WriteAsync(command);
     }
 
@@ -64,6 +76,32 @@ public sealed class WaveePlayer : IWaveePlayer
         {
             switch (command)
             {
+                case WaveePlaybackSkipNextCommand skipNext:
+                {
+                    var currentStateOption = _state.Value;
+                    if (currentStateOption.IsNone)
+                    {
+                        return;
+                    }
+
+                    var currentState = currentStateOption.ValueUnsafe();
+                    var nextState = await currentState.SkipNext();
+
+                    var track = currentState.Track;
+                    atomic(() => _state.Swap(_ => nextState));
+                    if (track.IsNone)
+                    {
+                        Log.Warning("No track to skip to");
+                        return;
+                    }
+
+                    var stream = track.ValueUnsafe();
+                    player.Play(stream, skipNext.CrossfadeIn, skipNext.CrossfadeDuration,
+                        () => { SkipNext(true, skipNext.CrossfadeDuration).AsTask().Wait(); });
+                    player.Resume();
+
+                    break;
+                }
                 case WaveePlaybackPlayCommand play:
                 {
                     var currentStateOption = _state.Value;
@@ -95,7 +133,8 @@ public sealed class WaveePlayer : IWaveePlayer
 
                     var stream = await track.Factory(CancellationToken.None);
                     atomic(() => _state.Swap(_ => nextState.Playing(stream, Guid.NewGuid().ToString())));
-                    player.Play(stream, track);
+                    player.Play(stream, false, play.CrossfadeDuration.Value,
+                        () => { SkipNext(true, play.CrossfadeDuration).AsTask().Wait(); });
                     if (play.StartPaused)
                     {
                         player.Pause();
@@ -119,8 +158,12 @@ public sealed class WaveePlayer : IWaveePlayer
 internal sealed class PlayerInternal
 {
     private record CurrentTrackStream
-        (WaveeTrack Track, FutureWaveeTrack OriginatedFrom, IAudioDecoder Decoder) : IDisposable
+        (WaveeTrack Track, IAudioDecoder Decoder) : IDisposable
     {
+        private TimeSpan _crossfadeDuration = TimeSpan.Zero;
+        private bool _crossfadingOut = false;
+        private bool _crossfadingIn = false;
+
         public void Dispose()
         {
             Track.Dispose();
@@ -130,10 +173,12 @@ internal sealed class PlayerInternal
 
     private SemaphoreSlim _streamLock = new(1, 1);
     private Option<CurrentTrackStream> _currentTrackStream = None;
+    private Option<CurrentTrackStream> _crossfadingInStream = None;
 
     private readonly IWavePlayer _wavePlayer;
     private readonly WaveFormat waveFormat;
     private readonly BufferedWaveProvider _bufferedWaveProvider;
+
     public PlayerInternal()
     {
         const int sampleRate = 44100;
@@ -144,18 +189,42 @@ internal sealed class PlayerInternal
         _wavePlayer.Init(_bufferedWaveProvider);
         _wavePlayer.Volume = 1;
     }
-    
-    public void Play(WaveeTrack stream, FutureWaveeTrack futureWaveeTrack)
+
+    public void Play(WaveeTrack stream, bool crossfadingIn, Option<TimeSpan> crossfadeDuration,
+        Action crossfadeCallback)
     {
         IAudioDecoder? decoder = null;
-        _currentTrackStream.IfSome(x => x.Dispose());
+        bool didCrossfade = false;
+        if (!crossfadingIn || crossfadeDuration.IsNone)
+        {
+            _currentTrackStream.IfSome(x => x.Dispose());
+        }
+        else if (crossfadeDuration.IsSome && crossfadingIn)
+        {
+            didCrossfade = true;
+
+            _currentTrackStream.IfSome(x => x.Decoder.MarkForCrossfadeOut(crossfadeDuration.ValueUnsafe()));
+            var crossfadeInDecoder = AudioDecoderFactory.CreateDecoder(stream.AudioStream, stream.Duration);
+            _crossfadingInStream = new CurrentTrackStream(stream, crossfadeInDecoder);
+            _crossfadingInStream.IfSome(x => x.Decoder.MarkForCrossfadeIn(crossfadeDuration.ValueUnsafe()));
+            decoder = crossfadeInDecoder;
+        }
 
         _streamLock.Wait();
-        
         try
         {
-            decoder = AudioDecoderFactory.CreateDecoder(stream.AudioStream, stream.Duration);
-            _currentTrackStream = new CurrentTrackStream(stream, futureWaveeTrack, decoder);
+            //if crossfading in, swap the current track stream with the crossfading in stream
+            if (didCrossfade)
+            {
+                _currentTrackStream = _crossfadingInStream;
+                _crossfadingInStream = None;
+            }
+            else
+            {
+                _currentTrackStream = None;
+                decoder = AudioDecoderFactory.CreateDecoder(stream.AudioStream, stream.Duration);
+                _currentTrackStream = new CurrentTrackStream(stream, decoder);
+            }
         }
         catch (Exception e)
         {
@@ -173,7 +242,7 @@ internal sealed class PlayerInternal
                 try
                 {
                     await _streamLock.WaitAsync();
-                    StreamTrack(decoder, stream.NormalisationData);
+                    StreamTrack(decoder, stream.NormalisationData, crossfadeDuration, crossfadeCallback);
                 }
                 catch (Exception e)
                 {
@@ -187,18 +256,50 @@ internal sealed class PlayerInternal
         }
     }
 
-    private void StreamTrack(IAudioDecoder decoder, Option<NormalisationData> normalisationData)
+    private void StreamTrack(IAudioDecoder decoder, Option<NormalisationData> normalisationData,
+        Option<TimeSpan> crossfadeDuration,
+        Action crossfadeCallback)
     {
         //Start reading samples
+        bool startedCrossfadeOut = false;
         Span<float> buffer = stackalloc float[decoder.SampleSize];
         while (true)
         {
+            if (crossfadeDuration.IsSome && !startedCrossfadeOut)
+            {
+                //Crossfade out can either start from external (marking the decoder)
+                //or by us
+                //if the decoder is marked for crossfade out, we can start crossfading out
+                if (decoder.IsMarkedForCrossfadeOut)
+                {
+                    startedCrossfadeOut = true;
+                }
+                else
+                {
+                    //if the decoder is not marked for crossfade out, we can mark it IF we have a next track
+                    //or else we are gonna crossfade out to nothing
+                    bool reachedCrossfadeTime()
+                    {
+                        var time = decoder.CurrentTime;
+                        var duration = decoder.TotalTime;
+                        var crossfade = crossfadeDuration.ValueUnsafe();
+                        return time >= duration - crossfade;
+                    }
+
+                    if (reachedCrossfadeTime())
+                    {
+                        crossfadeCallback();
+                        startedCrossfadeOut = true;
+                    }
+                }
+            }
+
             var read = decoder.Read(buffer);
             if (read == 0)
             {
                 break;
             }
-            
+
             //normalise
             if (normalisationData.IsSome)
             {
@@ -210,10 +311,10 @@ internal sealed class PlayerInternal
                 {
                     buffer[i] *= gain;
                 }
-                
+
                 //TODO: Peak
             }
-            
+
             //cast to byte
             ReadOnlySpan<byte> samplesSpan = MemoryMarshal.Cast<float, byte>(buffer.Slice(0, read));
             var samples = ArrayPool<byte>.Shared.Rent(samplesSpan.Length);
@@ -252,5 +353,7 @@ public interface IWaveePlayer
     Option<WaveePlayerState> CurrentState { get; }
 
     ValueTask Play(WaveeContext ctx, int idx, Option<TimeSpan> startFrom, bool startPaused, Option<bool> shuffling,
-        Option<RepeatState> repeatState);
+        Option<RepeatState> repeatState, Ref<Option<TimeSpan>> crossfadeDuration);
+
+    ValueTask SkipNext(bool crossfadein, Ref<Option<TimeSpan>> crossfadeDuration);
 }

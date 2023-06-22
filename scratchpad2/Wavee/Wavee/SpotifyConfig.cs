@@ -1,5 +1,6 @@
 ﻿using Eum.Spotify.connectstate;
 using LanguageExt;
+using static LanguageExt.Prelude;
 
 namespace Wavee;
 
@@ -19,12 +20,22 @@ public sealed class SpotifyConfig
 
 public sealed class SpotifyPlaybackConfig
 {
-    public SpotifyPlaybackConfig(PreferedQuality preferedQuality)
+    private Ref<Option<TimeSpan>> _crossfadeDurationRef;
+
+    public SpotifyPlaybackConfig(PreferedQuality preferedQuality, Option<TimeSpan> crossfadeDuration)
     {
         PreferedQuality = preferedQuality;
+        _crossfadeDurationRef = Ref(crossfadeDuration);
     }
 
     public PreferedQuality PreferedQuality { get; set; }
+    public Option<TimeSpan> CrossfadeDuration
+    {
+        get => _crossfadeDurationRef.Value;
+        set { atomic(() => _crossfadeDurationRef.Swap(_ => value)); }
+    }
+
+    internal Ref<Option<TimeSpan>> CrossfadeDurationRef => _crossfadeDurationRef;
 }
 
 public enum PreferedQuality

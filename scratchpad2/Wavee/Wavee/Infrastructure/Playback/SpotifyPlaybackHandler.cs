@@ -148,9 +148,10 @@ internal static class SpotifyPlaybackHandler
             startFrom: Option<TimeSpan>.None,
             startPaused: false,
             shuffling: Option<bool>.None,
-            repeatState: Option<RepeatState>.None);
+            repeatState: Option<RepeatState>.None,
+            crossfadeDuration: play.CrossfadeDuration);
     }
-    
+
 
     private static async Task<Option<WaveeContext>> BuildWaveeContext(Guid connectionId, Option<string> playContextUri)
     {
@@ -187,6 +188,7 @@ internal static class SpotifyPlaybackHandler
                     {
                         track.Metadata["uid"] = uid.ValueUnsafe();
                     }
+
                     var trackMetadata = track.Metadata.ToHashMap();
                     yield return new FutureWaveeTrack(id.ToString(),
                         TrackUid: uid.IfNone(id.ToBase16()),

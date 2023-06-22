@@ -36,7 +36,7 @@ internal readonly struct LiveSpotifyPlaybackClient : ISpotifyPlaybackClient
 
             Log.Information("Taking over playback");
             var val = currentRemoteState.ValueUnsafe();
-            var playbackEvent = ISpotifyPlaybackCommand.Play(val);
+            var playbackEvent = ISpotifyPlaybackCommand.Play(val, SpotifyClient.Clients[_connectionId].Config.Playback.CrossfadeDurationRef);
             await SpotifyPlaybackHandler.Send(_connectionId, playbackEvent);
             return true;
             //await OnPlaybackEvent(playbackEvent, player);
