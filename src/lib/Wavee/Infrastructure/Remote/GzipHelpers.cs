@@ -1,6 +1,7 @@
 ﻿using System.IO.Compression;
 using System.Net.Http.Headers;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using CommunityToolkit.HighPerformance;
 
 namespace Wavee.Infrastructure.Remote;
@@ -16,7 +17,7 @@ public static class GzipHelpers
         }
 
         var compressedStream = new MemoryStream();
-        using (var gzipStream = new GZipStream(compressedStream, CompressionLevel.SmallestSize, true))
+        using (var gzipStream = new GZipStream(compressedStream, CompressionLevel.Fastest, true))
         {
             inputStream.CopyTo(gzipStream);
         }
@@ -53,6 +54,12 @@ public static class GzipHelpers
         stream.Position = stream.Length - 4;
         stream.Read(uncompressedLength);
         stream.Seek(0, SeekOrigin.Begin);
-        return BitConverter.ToInt32(uncompressedLength);
+        return GetInt32(uncompressedLength);
+        //return BitConverter.ToInt32(uncompressedLength);
+    }
+    private static int GetInt32(ReadOnlySpan<byte> bytes)
+    {
+        return Unsafe.ReadUnaligned<int>(ref MemoryMarshal.GetReference(bytes));
+        //return (bytes[0] << 24) | (bytes[1] << 16) | (bytes[2] << 8) | bytes[3];
     }
 }

@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Net.Http.Headers;
 using System.Text;
+using CommunityToolkit.HighPerformance;
 using Eum.Spotify.storage;
 using Google.Protobuf;
 using LanguageExt;
@@ -209,7 +210,7 @@ internal static class SpotifyStreaming
         using var resp = await HttpIO.Get(finalUri,
             _emptyMetadata, new AuthenticationHeaderValue("Bearer", jwt), ct);
         resp.EnsureSuccessStatusCode();
-        await using var stream = await resp.Content.ReadAsStreamAsync(ct);
+        using var stream = await resp.Content.ReadAsStreamAsync();
         return StorageResolveResponse.Parser.ParseFrom(stream);
     }
 

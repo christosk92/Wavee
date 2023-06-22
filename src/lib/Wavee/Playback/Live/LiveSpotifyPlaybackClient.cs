@@ -1,4 +1,5 @@
-﻿using LanguageExt.UnsafeValueAccess;
+﻿using LanguageExt;
+using LanguageExt.UnsafeValueAccess;
 using Serilog;
 using Wavee.Infrastructure.Playback;
 using Wavee.Playback.Command;
@@ -12,10 +13,10 @@ internal readonly struct LiveSpotifyPlaybackClient : ISpotifyPlaybackClient
 {
     private readonly Guid _connectionId;
     private readonly WeakReference<ISpotifyRemoteClient> _remoteClient;
-    private readonly TaskCompletionSource _waitForConnectionTask;
+    private readonly TaskCompletionSource<Unit> _waitForConnectionTask;
 
     public LiveSpotifyPlaybackClient(Guid connectionId,
-        WeakReference<ISpotifyRemoteClient> remoteClient, TaskCompletionSource waitForConnectionTask)
+        WeakReference<ISpotifyRemoteClient> remoteClient, TaskCompletionSource<Unit> waitForConnectionTask)
     {
         _connectionId = connectionId;
         _remoteClient = remoteClient;
@@ -36,7 +37,7 @@ internal readonly struct LiveSpotifyPlaybackClient : ISpotifyPlaybackClient
 
             Log.Information("Taking over playback");
             var val = currentRemoteState.ValueUnsafe();
-            var playbackEvent = ISpotifyPlaybackCommand.Play(val, SpotifyClient.Clients[_connectionId].Config.Playback.CrossfadeDurationRef);
+            var playbackEvent = SpotifyPlayCommand.From(val, SpotifyClient.Clients[_connectionId].Config.Playback.CrossfadeDurationRef);
             await SpotifyPlaybackHandler.Send(_connectionId, playbackEvent);
             return true;
             //await OnPlaybackEvent(playbackEvent, player);

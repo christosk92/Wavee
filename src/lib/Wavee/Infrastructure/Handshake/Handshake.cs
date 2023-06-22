@@ -2,10 +2,15 @@
 using System.Net.Sockets;
 using System.Numerics;
 using System.Security.Cryptography;
+using CommunityToolkit.HighPerformance;
 using Eum.Spotify;
 using Google.Protobuf;
+using Org.BouncyCastle.Math;
+using Wavee.Spotify;
+using Wavee.Spotify.Infrastructure.Handshake;
+using BigInteger = Org.BouncyCastle.Math.BigInteger;
 
-namespace Wavee.Spotify.Infrastructure.Handshake;
+namespace Wavee.Infrastructure.Handshake;
 
 /// <summary>
 /// Static class containing methods for performing the Spotify handshake.
@@ -27,7 +32,7 @@ internal static class Handshake
     /// </exception>
     public static SpotifyEncryptionKeys PerformHandshake(NetworkStream stream)
     {
-        var keys = DhLocalKeys.Random();
+        var keys = new DiffieHellman();
         var clientHello = BuildClientHello(keys);
         stream.Write(clientHello);
 
@@ -39,9 +44,9 @@ internal static class Handshake
         var apResponse = APResponseMessage.Parser.ParseFrom(payload);
 
         // Prevent man-in-the-middle attacks: check server signature
-        var n = new BigInteger(SpotifyConstants.SERVER_KEY, true, true)
-            .ToByteArray(true, true);
-        var e = new BigInteger(65537).ToByteArray(true, true);
+        var n = new BigInteger(1, SpotifyConstants.SERVER_KEY)
+            .ToByteArrayUnsigned();
+        var e = BigInteger.ValueOf(65537).ToByteArrayUnsigned();
 
 
         using var rsa = new RSACryptoServiceProvider();
@@ -56,23 +61,24 @@ internal static class Handshake
                     .Challenge
                     .LoginCryptoChallenge
                     .DiffieHellman
-                    .Gs.Span,
+                    .Gs.ToByteArray(),
                 apResponse.Challenge
                     .LoginCryptoChallenge
                     .DiffieHellman
                     .GsSignature
-                    .Span,
+                    .ToByteArray(),
                 HashAlgorithmName.SHA1, RSASignaturePadding.Pkcs1))
         {
             throw new InvalidSignatureResult();
         }
 
         var shared_secret = keys
-            .SharedSecret(apResponse
+            .ComputeSharedKey(apResponse
                 .Challenge
                 .LoginCryptoChallenge
                 .DiffieHellman
-                .Gs.Span);
+                .Gs.ToByteArray())
+            .ToByteArrayUnsigned();
         //the accumulator is a collection of:
         //1) full client hello packet
         //2) apresponse header
@@ -147,12 +153,12 @@ internal static class Handshake
             challenge);
     }
 
-    private static ReadOnlySpan<byte> BuildClientHello(DhLocalKeys keys)
+    private static ReadOnlySpan<byte> BuildClientHello(DiffieHellman keys)
     {
         Span<byte> nonce = stackalloc byte[0x10];
-        RandomNumberGenerator.Fill(nonce);
+        nonce.FillRandomBytes();
 
-        var payload = NewClientHello(keys.PublicKey, nonce);
+        var payload = NewClientHello(keys.PublicKeyArray(), nonce);
 
         //Reduce number of copy operations by writing the header and payload in one go
         Span<byte> totalPacket = new byte[2 + sizeof(uint) + payload.Length];
@@ -165,7 +171,7 @@ internal static class Handshake
         return totalPacket;
     }
 
-    private static ReadOnlySpan<byte> NewClientHello(BigInteger publicKey,
+    private static ReadOnlySpan<byte> NewClientHello(byte[] publicKey,
         ReadOnlySpan<byte> nonce)
     {
         var productFlag = ProductFlags.ProductFlagNone;
@@ -190,7 +196,7 @@ internal static class Handshake
                 {
                     DiffieHellman = new LoginCryptoDiffieHellmanHello
                     {
-                        Gc = ByteString.CopyFrom(publicKey.ToByteArray(true, true)),
+                        Gc = ByteString.CopyFrom(publicKey),
                         ServerKeysKnown = 1
                     }
                 },

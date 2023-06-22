@@ -182,7 +182,7 @@ internal static class SpotifyPlaybackHandler
             {
                 foreach (var track in page.Tracks)
                 {
-                    var id = SpotifyId.FromUri(track.Uri);
+                    var id = SpotifyId.FromUri(track.Uri.AsSpan());
                     var uid = track.HasUid ? track.Uid : Option<string>.None;
                     if (uid.IsSome)
                     {

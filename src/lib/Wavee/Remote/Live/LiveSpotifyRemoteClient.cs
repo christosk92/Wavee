@@ -12,9 +12,9 @@ namespace Wavee.Remote.Live;
 internal readonly struct LiveSpotifyRemoteClient : ISpotifyRemoteClient
 {
     private readonly Guid _mainConnectionId;
-    private readonly TaskCompletionSource _waitForConnectionTask;
+    private readonly TaskCompletionSource<Unit> _waitForConnectionTask;
 
-    public LiveSpotifyRemoteClient(Guid mainConnectionId, TaskCompletionSource waitForConnectionTask)
+    public LiveSpotifyRemoteClient(Guid mainConnectionId, TaskCompletionSource<Unit> waitForConnectionTask)
     {
         _mainConnectionId = mainConnectionId;
         _waitForConnectionTask = waitForConnectionTask;

@@ -1,4 +1,5 @@
 ﻿using System.Buffers.Binary;
+using CommunityToolkit.HighPerformance;
 using LanguageExt;
 
 namespace Wavee.Infrastructure.Playback;
@@ -48,15 +49,15 @@ public readonly record struct NormalisationData(
         Span<byte> albumPeakDb_Bytes = stackalloc byte[sizeof(float)];
 
         var read = decryptedFile.Read(trackGainDb_Bytes);
-        var trackGainDb = BinaryPrimitives.ReadSingleLittleEndian(trackGainDb_Bytes);
+        var trackGainDb = trackGainDb_Bytes.ReadSingleLittleEndian();
         
         var i = decryptedFile.Read(trackPeakDb_Bytes);
         var read1 = decryptedFile.Read(albumGainDb_Bytes);
         var i1 = decryptedFile.Read(albumPeakDb_Bytes);
 
-        var trackPeakDb = BinaryPrimitives.ReadSingleLittleEndian(trackPeakDb_Bytes);
-        var albumGainDb = BinaryPrimitives.ReadSingleLittleEndian(albumGainDb_Bytes);
-        var albumPeakDb = BinaryPrimitives.ReadSingleLittleEndian(albumPeakDb_Bytes);
+        var trackPeakDb = trackPeakDb_Bytes.ReadSingleLittleEndian();
+        var albumGainDb = albumGainDb_Bytes.ReadSingleLittleEndian();
+        var albumPeakDb = albumPeakDb_Bytes.ReadSingleLittleEndian();
 
         return new NormalisationData
         {

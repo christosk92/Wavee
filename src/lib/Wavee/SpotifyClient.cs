@@ -31,7 +31,7 @@ public class SpotifyClient
 {
     private Guid _connectionId;
     private TaskCompletionSource<string> _countryCodeTask;
-    private readonly TaskCompletionSource _waitForConnectionTask;
+    private readonly TaskCompletionSource<Unit> _waitForConnectionTask;
     private readonly IWaveePlayer _player;
 
     internal static Dictionary<Guid, SpotifyClient> Clients = new();
@@ -45,7 +45,7 @@ public class SpotifyClient
             Config: config.Cache
         );
         var deviceId = Guid.NewGuid().ToString("N");
-        _waitForConnectionTask = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        _waitForConnectionTask = new TaskCompletionSource<Unit>(TaskCreationOptions.RunContinuationsAsynchronously);
 
         void CreateConnectionRecursively()
         {
@@ -68,7 +68,7 @@ public class SpotifyClient
                     if (await listener.Reader.WaitToReadAsync())
                     {
                         var countryCode = await listener.Reader.ReadAsync();
-                        var countryCodeString = Encoding.UTF8.GetString(countryCode.Payload.Span);
+                        var countryCodeString = countryCode.Payload.Span.GetUTF8String();
                         _countryCodeTask.TrySetResult(countryCodeString);
                     }
                 }
@@ -84,7 +84,7 @@ public class SpotifyClient
         }
 
         CreateConnectionRecursively();
-        Task.Run(async () =>
+        _ = Task.Run(async () =>
         {
             await SpotifyRemoteConnection.Create(
                 deviceId: deviceId,
@@ -92,7 +92,7 @@ public class SpotifyClient
                 accessToken: Token.GetToken,
                 config: config
             );
-            _waitForConnectionTask.TrySetResult();
+            _waitForConnectionTask.TrySetResult(Unit.Default);
 
             //Setup remote command listener
             var remoteCommandListener = _connectionId.CreateListener(x =>

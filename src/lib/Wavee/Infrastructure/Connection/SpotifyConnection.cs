@@ -1,6 +1,7 @@
 ﻿using System.Buffers.Binary;
 using System.Net.Sockets;
 using System.Threading.Channels;
+using CommunityToolkit.HighPerformance;
 using Eum.Spotify;
 using Serilog;
 using Serilog.Core;
@@ -285,7 +286,7 @@ internal static class SpotifyConnection
 
         var tcp = TcpIO.Connect(host, port);
         var stream = tcp.GetStream();
-        var keys = Handshake.PerformHandshake(stream);
+        var keys = Handshake.Handshake.PerformHandshake(stream);
         var welcomeMessage = Auth.Authenticate(stream, keys, credentials, deviceId, config);
         //Setup a new connection listener
         var connectionId = persistentConnectionId ?? Guid.NewGuid();

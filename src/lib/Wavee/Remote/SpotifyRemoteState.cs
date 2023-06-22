@@ -18,7 +18,7 @@ public readonly record struct SpotifyRemoteState(
 
         var clusterValue = cluster.IfNoneUnsafe(() => throw new InvalidOperationException());
         var trackUri = clusterValue!.PlayerState?.Track?.Uri;
-        var trackId = !string.IsNullOrEmpty(trackUri) ? SpotifyId.FromUri(trackUri) : Option<SpotifyId>.None;
+        var trackId = !string.IsNullOrEmpty(trackUri) ? SpotifyId.FromUri(trackUri.AsSpan()) : Option<SpotifyId>.None;
         var trackUidStr = clusterValue!.PlayerState?.Track?.Uid;
         var trackUid = !string.IsNullOrEmpty(trackUidStr) ? trackUidStr : Option<string>.None;
 

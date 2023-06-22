@@ -6,10 +6,7 @@ namespace Wavee.Playback.Command;
 
 internal interface ISpotifyPlaybackCommand
 {
-    public static ISpotifyPlaybackCommand Play(SpotifyRemoteState spotifyRemoteState,
-        Ref<Option<TimeSpan>> crossfadeDuration) =>
-        SpotifyPlayCommand.From(spotifyRemoteState, crossfadeDuration);
-}
+   }
 
 internal record SpotifyPlayCommand(
     Option<SpotifyId> TrackId,

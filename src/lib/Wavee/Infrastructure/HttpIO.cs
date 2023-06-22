@@ -1,5 +1,5 @@
 ﻿using System.Net.Http.Headers;
-using System.Net.Http.Json;
+using System.Text.Json;
 
 namespace Wavee.Infrastructure;
 
@@ -19,7 +19,8 @@ public static class HttpIO
         }
 
         using var response = await Client.SendAsync(request, ct);
-        return await response.Content.ReadFromJsonAsync<T>(cancellationToken: ct);
+        using var stream = await response.Content.ReadAsStreamAsync();
+        return await JsonSerializer.DeserializeAsync<T>(stream, cancellationToken: ct);
     }
 
     public static async Task<HttpResponseMessage> Put(string url,

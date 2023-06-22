@@ -50,7 +50,7 @@ public readonly record struct SpotifyId(BigInteger Id, AudioItemType Type, Servi
             case ServiceType.Local:
                 //since local ids are just base64 , we can just convert it to a string
                 Span<byte> bytes = Id.ToByteArray();
-                return System.Text.Encoding.UTF8.GetString(bytes);
+                return bytes.GetUTF8String();
             case ServiceType.Spotify:
                 var value = Id;
                 var sb = new StringBuilder();
@@ -174,7 +174,7 @@ public readonly record struct SpotifyId(BigInteger Id, AudioItemType Type, Servi
         switch (serviceType)
         {
             case ServiceType.Local:
-                return new SpotifyId(new BigInteger(id), type, serviceType);
+                return new SpotifyId(new BigInteger(id.ToArray()), type, serviceType);
             case ServiceType.Spotify:
                 var result = new BigInteger();
                 foreach (var t in id)

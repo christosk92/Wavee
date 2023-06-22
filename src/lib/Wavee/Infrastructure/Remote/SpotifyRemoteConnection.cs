@@ -401,7 +401,7 @@ internal static class SpotifyRemoteConnection
         using var body = GzipHelpers.GzipCompress(request.ToByteArray().AsMemory());
         using var response = await HttpIO.Put(url, bearerHeader, headers, body, ct);
         response.EnsureSuccessStatusCode();
-        await using var responseStream = await response.Content.ReadAsStreamAsync(ct);
+        using var responseStream = await response.Content.ReadAsStreamAsync();
         using var gzip = GzipHelpers.GzipDecompress(responseStream);
         gzip.Position = 0;
         var cluster = Cluster.Parser.ParseFrom(gzip);
@@ -417,62 +417,70 @@ internal static class SpotifyRemoteConnection
     {
         async Task<Cluster> CreateConnectionRecursively()
         {
-            const string dealer = "gae2-dealer.spotify.com:443";
-            var token = await accessToken(CancellationToken.None);
-            var wss = $"wss://{dealer}?access_token={token}";
-            var clws = await WebsocketIO.Connect(wss, CancellationToken.None);
-            //read first message (which should be the remote connection id)
-            var firstMessage = await WebsocketIO.Receive(clws, CancellationToken.None);
-            using var json = JsonDocument.Parse(firstMessage);
-            var headers = new Dictionary<string, string>();
-            if (json.RootElement.TryGetProperty("headers", out var headersElement))
+            try
             {
-                using var enumerator = headersElement.EnumerateObject();
-                // headers = enumerator.Fold(headers, (acc, curr) => acc.Add(curr.Name, curr.Value.GetString()));
-                foreach (var curr in enumerator)
+                const string dealer = "gae2-dealer.spotify.com:443";
+                var token = await accessToken(CancellationToken.None);
+                var wss = $"wss://{dealer}?access_token={token}";
+                var clws = await WebsocketIO.Connect(wss, CancellationToken.None);
+                //read first message (which should be the remote connection id)
+                var firstMessage = await WebsocketIO.Receive(clws, CancellationToken.None);
+                using var json = JsonDocument.Parse(firstMessage);
+                var headers = new Dictionary<string, string>();
+                if (json.RootElement.TryGetProperty("headers", out var headersElement))
                 {
-                    headers.Add(curr.Name, curr.Value.GetString());
+                    using var enumerator = headersElement.EnumerateObject();
+                    // headers = enumerator.Fold(headers, (acc, curr) => acc.Add(curr.Name, curr.Value.GetString()));
+                    foreach (var curr in enumerator)
+                    {
+                        headers.Add(curr.Name, curr.Value.GetString());
+                    }
                 }
-            }
 
-            if (!headers.TryGetValue("Spotify-Connection-Id", out var remoteConnectionId))
-            {
-                await clws.CloseAsync(WebSocketCloseStatus.ProtocolError, "No remote connection id found",
+                if (!headers.TryGetValue("Spotify-Connection-Id", out var remoteConnectionId))
+                {
+                    await clws.CloseAsync(WebSocketCloseStatus.ProtocolError, "No remote connection id found",
+                        CancellationToken.None);
+                    throw new Exception("No remote connection id found");
+                }
+
+                //Initiate handshake
+                var newState = SpotifyLocalPlaybackState.Empty(config.Remote, deviceId);
+                var cluster = await Put(
+                    newState.BuildPutStateRequest(PutStateReason.NewDevice, Option<TimeSpan>.None),
+                    remoteConnectionId,
+                    token,
+                    deviceId,
                     CancellationToken.None);
-                throw new Exception("No remote connection id found");
-            }
-
-            //Initiate handshake
-            var newState = SpotifyLocalPlaybackState.Empty(config.Remote, deviceId);
-            var cluster = await Put(
-                newState.BuildPutStateRequest(PutStateReason.NewDevice, Option<TimeSpan>.None),
-                remoteConnectionId,
-                token,
-                deviceId,
-                CancellationToken.None);
 
 
-            SetupConnectionListener(clws, cluster, remoteConnectionId, connectionId, async exception =>
-            {
-                Log.Logger.Error(exception, "Connection lost. Reconnecting...");
-                //call self
-                while (true)
+                SetupConnectionListener(clws, cluster, remoteConnectionId, connectionId, async exception =>
                 {
-                    try
+                    Log.Logger.Error(exception, "Connection lost. Reconnecting...");
+                    //call self
+                    while (true)
                     {
-                        await Task.Delay(4000, CancellationToken.None);
-                        Log.Logger.Debug("Reconnecting...");
-                        await CreateConnectionRecursively();
-                        break;
+                        try
+                        {
+                            await Task.Delay(4000, CancellationToken.None);
+                            Log.Logger.Debug("Reconnecting...");
+                            await CreateConnectionRecursively();
+                            break;
+                        }
+                        catch (Exception e)
+                        {
+                            Log.Logger.Error(e, "Failed to reconnect. Retrying in 4 seconds...");
+                        }
                     }
-                    catch (Exception e)
-                    {
-                        Log.Logger.Error(e, "Failed to reconnect. Retrying in 4 seconds...");
-                    }
-                }
-            });
+                });
 
-            return cluster;
+                return cluster;
+            }
+            catch (Exception e)
+            {
+                Log.Logger.Error(e, "Failed to create connection");
+                throw;
+            }
         }
 
         var cluster = await CreateConnectionRecursively();
