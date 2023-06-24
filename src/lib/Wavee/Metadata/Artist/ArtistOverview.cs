@@ -1,6 +1,8 @@
 ﻿using System.Text.Json;
 using Eum.Spotify.playlist4;
+using Google.Protobuf.WellKnownTypes;
 using LanguageExt;
+using Spotify.Metadata;
 using Wavee.Id;
 using Wavee.Metadata.Common;
 
@@ -68,11 +70,120 @@ public sealed record ArtistOverview(SpotifyId Id, bool IsSaved, Uri SharingUrl, 
         {
             latestRelease = ParseRelease(potentialLatest);
         }
-        //var latest = getProperty.GetProperty("latest");
 
+        var albums = ParseDiscographyGroup(discography.GetProperty("albums"));
+        var singles = ParseDiscographyGroup(discography.GetProperty("singles"));
+        var compilations = ParseDiscographyGroup(discography.GetProperty("compilations"));
+        var topTracks = ParseTopTracks(discography.GetProperty("topTracks").GetProperty("items"));
         return new ArtistDiscography(
-            LatestRelease: latestRelease
+            LatestRelease: latestRelease,
+            Albums: albums,
+            Singles: singles,
+            Compilations: compilations,
+            TopTracks: topTracks
+        );
+    }
+
+    private static Option<ArtistDiscographyRelease>[] ParseDiscographyGroup(JsonElement group)
+    {
+        var totalCount = group.GetProperty("totalCount").GetUInt16();
+        var output = new Option<ArtistDiscographyRelease>[totalCount];
+        for (int k = 0; k < totalCount; k++)
+        {
+            output[k] = Option<ArtistDiscographyRelease>.None;
+        }
+
+        using var items = group.GetProperty("items").EnumerateArray();
+        int i = 0;
+        while (items.MoveNext())
+        {
+            var current = items.Current;
+
+            //items are wrapped inside releases array
+            using var releasesOfRelease = current.GetProperty("releases").GetProperty("items").EnumerateArray();
+            if (!releasesOfRelease.MoveNext())
+            {
+                i++;
+                continue;
+            }
+
+            var releaseOfRelease = releasesOfRelease.Current;
+
+            var parsedRelease = ParseRelease(releaseOfRelease);
+            output[i] = Option<ArtistDiscographyRelease>.Some(parsedRelease);
+
+            i++;
+        }
+
+        return output;
+    }
+
+    private static ArtistTopTrack[] ParseTopTracks(JsonElement toptracks)
+    {
+        using var items = toptracks.EnumerateArray();
+        var output = new ArtistTopTrack[toptracks.GetArrayLength()];
+        int i = 0;
+        while (items.MoveNext())
+        {
+            var current = items.Current;
+            var uid = current.GetProperty("uid").GetString()!;
+            var track = current.GetProperty("track");
+
+            var name = track.GetProperty("name").GetString()!;
+            //var playcount = track.GetProperty("playcount").tryget(out var plc) ? plc : Option<ulong>.None;
+            Option<ulong> playcount = Option<ulong>.None;
+            if (track.TryGetProperty("playcount", out var potplc) && potplc.ValueKind is not JsonValueKind.String)
+            {
+                var val = potplc.GetString();
+                if (ulong.TryParse(val, out var playcoun))
+                {
+                    playcount = playcoun;
+                }
+            }
+
+            var discNumber = track.GetProperty("discNumber").GetUInt16();
+            var duration =
+                TimeSpan.FromMilliseconds(track.GetProperty("duration").GetProperty("totalMilliseconds").GetDouble());
+
+            var artists = track.GetProperty("artists").GetProperty("items");
+            var artistsOutput = new TrackArtist[artists.GetArrayLength()];
+            using var arr = artists.EnumerateArray();
+            int j = 0;
+            while (arr.MoveNext())
+            {
+                var cr = arr.Current;
+                artistsOutput[j] = new TrackArtist(
+                    Id: SpotifyId.FromUri(cr.GetProperty("uri").GetString().AsSpan()),
+                    Name: cr.GetProperty("profile").GetProperty("name").GetString()!
+                );
+                j++;
+            }
+
+            var album = track.GetProperty("albumOfTrack");
+            var albumOutput = new TrackAlbum(
+                Id: SpotifyId.FromUri(album.GetProperty("uri").GetString().AsSpan()),
+                Images: ParseCoverArt(album.GetProperty("coverArt").GetProperty("sources"))
             );
+
+            var ctr = track.GetProperty("contentRating");
+            var ctrOutput = new ContentRating { };
+
+
+            output[i] = new ArtistTopTrack(
+                Id: SpotifyId.FromUri(track.GetProperty("uri").GetString()!.AsSpan()),
+                Uid: uid,
+                Name: name,
+                Playcount: playcount,
+                DiscNumber: discNumber,
+                Duration: duration,
+                ContentRating: ctrOutput,
+                Artists: artistsOutput,
+                Album: albumOutput
+            );
+            i++;
+        }
+
+        return output;
     }
 
     private static ArtistDiscographyRelease ParseRelease(JsonElement release)
@@ -152,7 +263,8 @@ public sealed record ArtistOverview(SpotifyId Id, bool IsSaved, Uri SharingUrl, 
             potentialPin.ValueKind is not JsonValueKind.Null)
         {
             var comment = potentialPin.GetProperty("comment").GetString();
-            using var backgroundImage = potentialPin.GetProperty("backgroundImage").GetProperty("sources").EnumerateArray();
+            using var backgroundImage =
+                potentialPin.GetProperty("backgroundImage").GetProperty("sources").EnumerateArray();
             backgroundImage.MoveNext();
             var backgroundImageUrl = backgroundImage.Current.GetProperty("url").GetString();
 
@@ -161,7 +273,7 @@ public sealed record ArtistOverview(SpotifyId Id, bool IsSaved, Uri SharingUrl, 
                 "ALBUM" => AudioItemType.Album,
                 _ => AudioItemType.Unknown
             };
-            
+
             var item = potentialPin.GetProperty("item");
             var uri = SpotifyId.FromUri(item.GetProperty("uri").GetString().AsSpan());
             var itemName = item.GetProperty("name").GetString()!;
@@ -220,6 +332,13 @@ public sealed record ArtistOverview(SpotifyId Id, bool IsSaved, Uri SharingUrl, 
     }
 }
 
+public readonly record struct ArtistTopTrack(SpotifyId Id, string Uid, string Name, Option<ulong> Playcount,
+    int DiscNumber, TimeSpan Duration, ContentRating ContentRating, TrackArtist[] Artists, TrackAlbum Album);
+
+public readonly record struct TrackAlbum(SpotifyId Id, CoverImage[] Images);
+
+public readonly record struct TrackArtist(SpotifyId Id, string Name);
+
 public readonly record struct ArtistDiscographyRelease(SpotifyId Id, string Name, ReleaseType Type,
     ReleaseCopyright[] Copyright, DiscographyReleaseDate Date, CoverImage[] Images, string Label, ushort TotalTracks);
 
@@ -250,7 +369,9 @@ public readonly record struct ArtistOverviewProfile(string Name, bool Verified,
 
 public readonly record struct ArtistVisuals(CoverImage[] AvatarImages, Option<CoverImage> HeaderImage);
 
-public readonly record struct ArtistDiscography(Option<ArtistDiscographyRelease> LatestRelease);
+public readonly record struct ArtistDiscography(Option<ArtistDiscographyRelease> LatestRelease,
+    Option<ArtistDiscographyRelease>[] Albums, Option<ArtistDiscographyRelease>[] Singles,
+    Option<ArtistDiscographyRelease>[] Compilations, ArtistTopTrack[] TopTracks);
 
 public readonly record struct ArtistStats(ulong Followers, ulong MonthlyListeners, Option<ushort> WorldRank);
 
