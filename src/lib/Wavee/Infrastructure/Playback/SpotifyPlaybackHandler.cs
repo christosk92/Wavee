@@ -61,12 +61,24 @@ internal static class SpotifyPlaybackHandler
                 case SpotifyPlayCommand play:
                     await HandlePlay(connectionId, play, player);
                     break;
+                case SpotifySkipNextCommand skip:
+                    await HandleSkipNext(connectionId, player, skip.CrossfadeDuration);
+                    break;
             }
         }
         catch (Exception e)
         {
             Log.Error(e, "Error handling playback event");
         }
+    }
+
+    private static ValueTask HandleSkipNext(Guid connectionId, IWaveePlayer player,
+        Ref<Option<TimeSpan>> crossfadeDuration)
+    {
+        return player.SkipNext(
+            false,
+            crossfadeDuration: crossfadeDuration
+        );
     }
 
     private static async Task HandlePlay(Guid connectionId, SpotifyPlayCommand play, IWaveePlayer player)

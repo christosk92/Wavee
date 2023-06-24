@@ -6,7 +6,10 @@ namespace Wavee.Playback.Command;
 
 internal interface ISpotifyPlaybackCommand
 {
-   }
+}
+
+internal readonly record struct SpotifySkipNextCommand
+    (Ref<Option<TimeSpan>> CrossfadeDuration) : ISpotifyPlaybackCommand;
 
 internal record SpotifyPlayCommand(
     Option<SpotifyId> TrackId,
@@ -16,7 +19,8 @@ internal record SpotifyPlayCommand(
     Ref<Option<TimeSpan>> CrossfadeDuration
 ) : ISpotifyPlaybackCommand
 {
-    public static SpotifyPlayCommand From(SpotifyRemoteState spotifyRemoteState, Ref<Option<TimeSpan>> crossfadeDuration)
+    public static SpotifyPlayCommand From(SpotifyRemoteState spotifyRemoteState,
+        Ref<Option<TimeSpan>> crossfadeDuration)
     {
         return new SpotifyPlayCommand(
             TrackId: spotifyRemoteState.TrackId,

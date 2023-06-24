@@ -37,7 +37,8 @@ internal readonly struct LiveSpotifyPlaybackClient : ISpotifyPlaybackClient
 
             Log.Information("Taking over playback");
             var val = currentRemoteState.ValueUnsafe();
-            var playbackEvent = SpotifyPlayCommand.From(val, SpotifyClient.Clients[_connectionId].Config.Playback.CrossfadeDurationRef);
+            var playbackEvent = SpotifyPlayCommand.From(val,
+                SpotifyClient.Clients[_connectionId].Config.Playback.CrossfadeDurationRef);
             await SpotifyPlaybackHandler.Send(_connectionId, playbackEvent);
             return true;
             //await OnPlaybackEvent(playbackEvent, player);
@@ -50,6 +51,15 @@ internal readonly struct LiveSpotifyPlaybackClient : ISpotifyPlaybackClient
 
     internal async Task RemoteCommand(SpotifyCommand remoteCommand)
     {
-        throw new NotImplementedException();
+        switch (remoteCommand.Endpoint)
+        {
+            case "transfer":
+                break;
+            case "skip_next":
+                var skpxn = new SpotifySkipNextCommand(SpotifyClient.Clients[_connectionId].Config.Playback
+                    .CrossfadeDurationRef);
+                await SpotifyPlaybackHandler.Send(_connectionId, skpxn);
+                break;
+        }
     }
 }

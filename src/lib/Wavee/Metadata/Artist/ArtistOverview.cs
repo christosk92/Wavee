@@ -166,8 +166,7 @@ public sealed record ArtistOverview(SpotifyId Id, bool IsSaved, Uri SharingUrl, 
             );
 
             var ctr = track.GetProperty("contentRating");
-            var ctrOutput = new ContentRating { };
-
+            // var ctrOutput = new ContentRating { };
 
             output[i] = new ArtistTopTrack(
                 Id: SpotifyId.FromUri(track.GetProperty("uri").GetString()!.AsSpan()),
@@ -176,7 +175,14 @@ public sealed record ArtistOverview(SpotifyId Id, bool IsSaved, Uri SharingUrl, 
                 Playcount: playcount,
                 DiscNumber: discNumber,
                 Duration: duration,
-                ContentRating: ctrOutput,
+                ContentRating: ctr.GetProperty("label")
+                        .GetString() switch
+                    {
+                        "NONE" => ContentRatingType.NOTHING,
+                        "NINETEEN_PLUS" => ContentRatingType.NINETEEN_PLUS,
+                        "EXPLICIT" => ContentRatingType.EXPLICIT,
+                        _ => ContentRatingType.UNKNOWN
+                    },
                 Artists: artistsOutput,
                 Album: albumOutput
             );
@@ -333,7 +339,15 @@ public sealed record ArtistOverview(SpotifyId Id, bool IsSaved, Uri SharingUrl, 
 }
 
 public readonly record struct ArtistTopTrack(SpotifyId Id, string Uid, string Name, Option<ulong> Playcount,
-    int DiscNumber, TimeSpan Duration, ContentRating ContentRating, TrackArtist[] Artists, TrackAlbum Album);
+    int DiscNumber, TimeSpan Duration, ContentRatingType ContentRating, TrackArtist[] Artists, TrackAlbum Album);
+
+public enum ContentRatingType
+{
+    NOTHING,
+    NINETEEN_PLUS,
+    EXPLICIT,
+    UNKNOWN
+}
 
 public readonly record struct TrackAlbum(SpotifyId Id, CoverImage[] Images);
 

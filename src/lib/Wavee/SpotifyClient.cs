@@ -119,7 +119,9 @@ public class SpotifyClient
                                 MessageId: messageId,
                                 SentByDeviceId: sentByDeviceId,
                                 Endpoint: endpoint,
-                                Data: command.GetProperty("data").GetBytesFromBase64()
+                                Data: command.TryGetProperty("data", out var dt)
+                                    ? dt.GetBytesFromBase64()
+                                    : ReadOnlyMemory<byte>.Empty
                             );
 
                             if (Playback is LiveSpotifyPlaybackClient playback)
@@ -177,12 +179,20 @@ public class SpotifyClient
 
     public ITokenClient Token => new LiveTokenClient(connId: _connectionId);
     public IMercuryClient Mercury => new LiveTokenClient(connId: _connectionId);
-    public ISpotifyRemoteClient Remote => new LiveSpotifyRemoteClient(_connectionId, waitForConnectionTask: _waitForConnectionTask);
-    public IContextResolver ContextResolver => new LiveContextResolver(() => Mercury);
-    public ISpotifyPlaybackClient Playback => new LiveSpotifyPlaybackClient(_connectionId, remoteClient: new WeakReference<ISpotifyRemoteClient>(Remote), waitForConnectionTask: _waitForConnectionTask);
-    public ISpotifyMetadataClient Metadata => new LiveSpotifyMetadataClient(mercuryFactory: () => Mercury, _countryCodeTask.Task, _graphQLQuery, Cache);
 
-    private Task<HttpResponseMessage> _graphQLQuery(IGraphQLQuery arg) => new LiveGraphQLClient(fetchAccessTokenFactory: (CancellationToken ct) => Token.GetToken(ct)).Query(arg);
+    public ISpotifyRemoteClient Remote =>
+        new LiveSpotifyRemoteClient(_connectionId, waitForConnectionTask: _waitForConnectionTask);
+
+    public IContextResolver ContextResolver => new LiveContextResolver(() => Mercury);
+
+    public ISpotifyPlaybackClient Playback => new LiveSpotifyPlaybackClient(_connectionId,
+        remoteClient: new WeakReference<ISpotifyRemoteClient>(Remote), waitForConnectionTask: _waitForConnectionTask);
+
+    public ISpotifyMetadataClient Metadata => new LiveSpotifyMetadataClient(mercuryFactory: () => Mercury,
+        _countryCodeTask.Task, _graphQLQuery, Cache);
+
+    private Task<HttpResponseMessage> _graphQLQuery(IGraphQLQuery arg) =>
+        new LiveGraphQLClient(fetchAccessTokenFactory: (CancellationToken ct) => Token.GetToken(ct)).Query(arg);
 
     public ISpotifyAudioKeysClient AudioKeys => new LiveSpotifyAudioKeysClient(_connectionId);
 
