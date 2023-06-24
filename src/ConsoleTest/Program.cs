@@ -43,6 +43,7 @@ var client = new SpotifyClient(player, new LoginCredentials
 }, config);
 var countryCode = await client.Country;
 var listener = client.Remote.CreateListener().Subscribe(x => { Log.Logger.Information("Remote: {0}", x); });
-
-var tookover = await client.Playback.Takeover();
+var artistId = SpotifyId.FromUri("spotify:artist:4XQhU3S4TyPkiPIsSu2hmA");
+var artist = await client.Metadata.GetArtistOverview(artistId, false);
+//var tookover = await client.Playback.Takeover();
 var c = Console.ReadLine();

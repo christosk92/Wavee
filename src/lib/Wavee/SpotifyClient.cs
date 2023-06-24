@@ -11,10 +11,12 @@ using Wavee.Cache;
 using Wavee.Cache.Live;
 using Wavee.ContextResolve;
 using Wavee.ContextResolve.Live;
+using Wavee.GraphQL;
 using Wavee.Infrastructure.Connection;
 using Wavee.Infrastructure.Playback;
 using Wavee.Infrastructure.Remote;
 using Wavee.Metadata;
+using Wavee.Metadata.Artist;
 using Wavee.Metadata.Live;
 using Wavee.Playback;
 using Wavee.Playback.Live;
@@ -178,7 +180,10 @@ public class SpotifyClient
     public ISpotifyRemoteClient Remote => new LiveSpotifyRemoteClient(_connectionId, waitForConnectionTask: _waitForConnectionTask);
     public IContextResolver ContextResolver => new LiveContextResolver(() => Mercury);
     public ISpotifyPlaybackClient Playback => new LiveSpotifyPlaybackClient(_connectionId, remoteClient: new WeakReference<ISpotifyRemoteClient>(Remote), waitForConnectionTask: _waitForConnectionTask);
-    public ISpotifyMetadataClient Metadata => new LiveSpotifyMetadataClient(mercuryFactory: () => Mercury, _countryCodeTask.Task);
+    public ISpotifyMetadataClient Metadata => new LiveSpotifyMetadataClient(mercuryFactory: () => Mercury, _countryCodeTask.Task, _graphQLQuery, Cache);
+
+    private Task<HttpResponseMessage> _graphQLQuery(IGraphQLQuery arg) => new LiveGraphQLClient(fetchAccessTokenFactory: (CancellationToken ct) => Token.GetToken(ct)).Query(arg);
+
     public ISpotifyAudioKeysClient AudioKeys => new LiveSpotifyAudioKeysClient(_connectionId);
 
     public ISpotifyCache Cache { get; }

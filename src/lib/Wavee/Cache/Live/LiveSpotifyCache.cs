@@ -70,4 +70,32 @@ internal sealed class LiveSpotifyCache : ISpotifyCache
                 return new FileStream(file, FileMode.Open, FileAccess.Read);
             });
     }
+
+    public Option<byte[]> GetRawEntity(string itemId)
+    {
+        return DbPath
+            .Bind(path =>
+            {
+                using var db = new SQLiteConnection(path);
+                var track = db.Find<CachedSpotifyTrack>(itemId);
+                if (track is null)
+                    return Option<byte[]>.None;
+                return track.Data;
+            });
+    }
+
+    public Unit SaveRawEntity(string itemId, byte[] data)
+    {
+       return DbPath
+            .Map(path =>
+            {
+                using var db = new SQLiteConnection(path);
+                db.InsertOrReplace(new CachedSpotifyTrack
+                {
+                    Id = itemId,
+                    Data = data
+                });
+                return Unit.Default;
+            }).IfNone(Unit.Default);
+    }
 }
