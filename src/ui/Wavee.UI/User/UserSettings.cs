@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using Eum.Spotify.connectstate;
 using Wavee.UI.Bases;
 
 namespace Wavee.UI.User;
@@ -16,6 +17,11 @@ public sealed class UserSettings : ConfigBase, IDisposable
     private double? _windowHeight;
     private AppTheme _appTheme;
     private readonly CompositeDisposable _disposables = new CompositeDisposable();
+    private string? _deviceName;
+    private DeviceType _deviceType;
+    private PreferedQuality _preferedQuality;
+    private int _crossfadeSeconds;
+
     public UserSettings() : base()
     {
     }
@@ -27,7 +33,11 @@ public sealed class UserSettings : ConfigBase, IDisposable
                 x => x.SidebarWidth,
                 x => x.ImageExpanded,
                 x => x.AppTheme,
-                (_, _, _, _) => Unit.Default)
+                x => x.DeviceName,
+                x => x.DeviceType,
+                x => x.PreferedQuality,
+                x => x.CrossfadeSeconds,
+                (_, _, _, _, _, _, _,_) => Unit.Default)
             .Throttle(TimeSpan.FromMilliseconds(500))
             .Skip(1) // Won't save on UiConfig creation.
             .ObserveOn(RxApp.MainThreadScheduler)
@@ -91,6 +101,38 @@ public sealed class UserSettings : ConfigBase, IDisposable
         set => this.RaiseAndSetIfChanged(ref _imageExpanded, value);
     }
 
+    [DefaultValue("Wavee")]
+    [JsonProperty(PropertyName = "DeviceName", DefaultValueHandling = DefaultValueHandling.Populate)]
+    public string DeviceName
+    {
+        get => _deviceName;
+        set => this.RaiseAndSetIfChanged(ref _deviceName, value);
+    }
+
+    [DefaultValue(DeviceType.Computer)]
+    [JsonProperty(PropertyName = "DeviceType", DefaultValueHandling = DefaultValueHandling.Populate)]
+    public DeviceType DeviceType
+    {
+        get => _deviceType;
+        set => this.RaiseAndSetIfChanged(ref _deviceType, value);
+    }
+
+
+    [DefaultValue(PreferedQuality.Normal)]
+    [JsonProperty(PropertyName = "PreferedQuality", DefaultValueHandling = DefaultValueHandling.Populate)]
+    public PreferedQuality PreferedQuality
+    {
+        get => _preferedQuality;
+        set => this.RaiseAndSetIfChanged(ref _preferedQuality, value);
+    }
+
+    [DefaultValue(0)]
+    [JsonProperty(PropertyName = "CrossfadeSeconds", DefaultValueHandling = DefaultValueHandling.Populate)]
+    public int CrossfadeSeconds
+    {
+        get => _crossfadeSeconds;
+        set => this.RaiseAndSetIfChanged(ref _crossfadeSeconds, value);
+    }
     public void Dispose()
     {
         _disposables.Dispose();

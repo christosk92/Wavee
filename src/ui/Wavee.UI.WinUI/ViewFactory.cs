@@ -1,10 +1,11 @@
 ﻿using Microsoft.UI.Xaml;
 using System;
-using Wavee.UI.ViewModel.Identity;
 using Wavee.UI.ViewModel.Setup;
+using Wavee.UI.ViewModel.Shell;
 using Wavee.UI.ViewModel.Wizard;
 using Wavee.UI.WinUI.View;
 using Wavee.UI.WinUI.View.Setup;
+using Wavee.UI.WinUI.View.Shell;
 
 namespace Wavee.UI.WinUI;
 public static class ViewFactory
@@ -13,7 +14,8 @@ public static class ViewFactory
     {
         return (UIElement)(viewModel switch
         {
-            IdentityViewModel id => new SignInView(id)
+            IdentityViewModel id => new SignInView(id),
+            ShellViewModel shell => new ShellView(shell),
         });
     }
 
@@ -22,6 +24,8 @@ public static class ViewFactory
         return vm switch
         {
             WelcomeViewModel => typeof(WelcomePage),
+            IdentityViewModel => typeof(SignInView),
+            SettingEverythingUpViewModel => typeof(SettingEverythingUpView),
         };
     }
 }

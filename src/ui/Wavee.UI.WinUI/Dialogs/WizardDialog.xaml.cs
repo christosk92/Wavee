@@ -1,3 +1,4 @@
+using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media.Animation;
 using Wavee.UI.ViewModel.Wizard;
@@ -32,24 +33,35 @@ public sealed partial class WizardDialog : ContentDialog
             var goingTo = ViewModel.CurrentView.Index;
             var goingBack = _previousView != null && _previousView.Index > goingTo;
 
-            var transition = goingTo == 0 ? (NavigationTransitionInfo)new EntranceNavigationTransitionInfo()
+            var transition = (goingTo == 0 && !goingBack) ? (NavigationTransitionInfo)new EntranceNavigationTransitionInfo()
                 : new SlideNavigationTransitionInfo
                 {
-                    Effect = goingBack ? SlideNavigationTransitionEffect.FromRight : SlideNavigationTransitionEffect.FromLeft
+                    Effect = goingBack ? SlideNavigationTransitionEffect.FromLeft : SlideNavigationTransitionEffect.FromRight
                 };
-            SetupFrame.Navigate(pageType, null, transition);
+            SetupFrame.Navigate(pageType, vm, transition);
         }
     }
 
     public WizardViewModel ViewModel { get; }
 
-    private void SecondaryButton_Tapped(object sender, Microsoft.UI.Xaml.Input.TappedRoutedEventArgs e)
+    public double PlusOne(double d)
     {
-
+        return d + 1;
     }
 
-    private void PrimaryButton_Tapped(object sender, Microsoft.UI.Xaml.Input.TappedRoutedEventArgs e)
+    public Visibility ToVisibility(bool b)
     {
+        return b ? Visibility.Visible : Visibility.Collapsed;
+    }
 
+    public Visibility IsNotNull(IWizardViewModel s)
+    {
+        return !string.IsNullOrEmpty(s.SecondaryActionTitle) ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    public string FormatStepOf(double d)
+    {
+        var step = (int)d + 1;
+        return $"Step {step} of {ViewModel.TotalSteps}";
     }
 }

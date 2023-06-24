@@ -11,13 +11,17 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading.Tasks;
-using Wavee.UI.User;
 using Wavee.UI.ViewModel;
 using Wavee.UI.ViewModel.Wizard;
 using Wavee.UI.WinUI.Dialogs;
 using Wavee.UI.WinUI.Providers;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using LanguageExt.UnsafeValueAccess;
+using Wavee.Id;
+using Wavee.UI.Spotify;
+using Wavee.UI.User;
+using Wavee.UI.ViewModel.Shell;
 using WinUIEx;
 using static Org.BouncyCastle.Math.EC.ECCurve;
 
@@ -42,7 +46,14 @@ namespace Wavee.UI.WinUI
 
             var globalPath = AppProviders.GetPersistentStoragePath();
             var globalSettings = LoadOrCreateUiConfig(globalPath);
-            ViewModel = new MainWindowViewModel(globalSettings);
+
+            var userManager = new UserManager(globalPath);
+
+            ViewModel = new MainWindowViewModel(globalSettings, type => type switch
+            {
+                ServiceType.Local => throw new NotImplementedException(),
+                ServiceType.Spotify => new SpotifyEnvironment(userManager)
+            });
             ViewModel.PropertyChanged += ViewModel_PropertyChangedAsync;
         }
 
@@ -67,6 +78,9 @@ namespace Wavee.UI.WinUI
             {
                 Style = (Style)Application.Current.Resources["DefaultContentDialogStyle"]
             };
+
+            dialog.Resources["ContentDialogMaxWidth"] = (double)762;
+            dialog.Resources["ContentDialogMaxHeight"] = (double)490;
             dialog.XamlRoot = this.Content.XamlRoot;
             dialog.Closing += (s, e) =>
             {
@@ -98,7 +112,11 @@ namespace Wavee.UI.WinUI
 
         private async void Dummy_Loaded(object sender, RoutedEventArgs e)
         {
-            await ViewModel.Initialize();
+            var signedin = await ViewModel.Initialize();
+            if (signedin.IsSome)
+            {
+                this.Content = (UIElement)ViewFactory.ConstructFromViewModel(new ShellViewModel(signedin.ValueUnsafe()));
+            }
         }
     }
 }

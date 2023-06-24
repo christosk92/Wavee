@@ -2,9 +2,10 @@
 public interface IWizardViewModel
 {
     string Title { get; }
+    string? SecondaryActionTitle { get; }
     IObservable<bool> CanGoNext { get; }
     bool CanGoNextVal { get; }
     double Index { get; }
-
-    Task Submit();
+    bool SecondaryActionCanInvokeOverride { get; }
+    Task<bool> Submit(int action);
 }

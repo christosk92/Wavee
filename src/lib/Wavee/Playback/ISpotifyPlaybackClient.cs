@@ -3,7 +3,7 @@
 /// <summary>
 /// A client for interacting with the Spotify playback.
 /// </summary>
-public interface ISpotifyPlaybackClient
+public interface ISpotifyPlaybackClient : IDisposable
 {
     /// <summary>
     /// Takes over the playback to this client, and returns whether or not it was successful.

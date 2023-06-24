@@ -34,9 +34,28 @@ internal static class SpotifyConnection
 
     public static void Close(Guid connectionId)
     {
+        if (Connections.TryGetValue(connectionId, out var connection))
+        {
+            connection.Sender.Complete();
+            connection.Stream.Close();
+            Connections.Remove(connectionId);
+
+            //remove all callbacks
+            foreach (var callback in connection.Callbacks)
+            {
+                callback.Reader.Writer.TryComplete();
+            }
+
+            MercuryParsers.Reset(connectionId);
+            connection.Callbacks.Clear();
+        }
+    }
+
+    public static void Dispose(Guid connectionId)
+    {
         var connection = Connections[connectionId];
         connection.Sender.Complete();
-        connection.Stream.Close();
+        connection.Stream.Dispose();
         Connections.Remove(connectionId);
 
         //remove all callbacks
@@ -277,7 +296,7 @@ internal static class SpotifyConnection
         return new SpotifyUnencryptedPackage((SpotifyPacketType)header[0], payload);
     }
 
-    public static Guid Create(LoginCredentials credentials, SpotifyConfig config, string deviceId,
+    public static (Guid connectionId, APWelcome welcomeMessage) Create(LoginCredentials credentials, SpotifyConfig config, string deviceId,
         Action<Exception> onConnectionLost,
         Guid? persistentConnectionId)
     {
@@ -293,7 +312,7 @@ internal static class SpotifyConnection
 
         SetupConnectionListener(welcomeMessage, stream, keys, connectionId, onConnectionLost);
 
-        return connectionId;
+        return (connectionId, welcomeMessage);
     }
 }
 

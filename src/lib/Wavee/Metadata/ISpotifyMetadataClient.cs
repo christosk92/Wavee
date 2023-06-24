@@ -2,6 +2,7 @@
 using Wavee.Id;
 using Wavee.Infrastructure.Mercury;
 using Wavee.Metadata.Artist;
+using Wavee.Metadata.Me;
 
 namespace Wavee.Metadata;
 
@@ -48,4 +49,15 @@ public interface ISpotifyMetadataClient
     /// A <see cref="Task{TResult}"/> that will complete with the <see cref="ArtistOverview"/> or throw a <see cref="MercuryException"/>.
     /// </returns>
     ValueTask<ArtistOverview> GetArtistOverview(SpotifyId artistId, bool destroyCache, CancellationToken ct = default);
+
+    /// <summary>
+    /// Performs an authenticated query to fetch information about the current user.
+    /// </summary>
+    /// <param name="ct">
+    /// A <see cref="CancellationToken"/> to cancel the operation.
+    /// </param>
+    /// <returns>
+    /// If successful, a <see cref="Task{TResult}"/> that will complete with the <see cref="MeUser"/> or throw a <see cref="MercuryException"/>.
+    /// </returns>
+    Task<MeUser> GetMe(CancellationToken ct = default);
 }

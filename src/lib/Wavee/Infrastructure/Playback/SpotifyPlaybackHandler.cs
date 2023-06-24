@@ -17,7 +17,11 @@ internal static class SpotifyPlaybackHandler
     private record WaveePlayerHolder(IWaveePlayer Player, ChannelWriter<ISpotifyPlaybackCommand> Writer);
 
     private static Dictionary<Guid, WaveePlayerHolder> _players = new();
-
+    public static void DisposePlayback(Guid connectionId)
+    {
+        var player = _players[connectionId];
+        player.Writer.Complete();
+    }
     public static async Task Send(Guid connectionId, ISpotifyPlaybackCommand playbackEvent)
     {
         if (_players.TryGetValue(connectionId, out var playerHolder))
@@ -240,4 +244,5 @@ internal static class SpotifyPlaybackHandler
             }
         }
     }
+
 }

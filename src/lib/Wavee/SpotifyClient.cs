@@ -29,7 +29,7 @@ using Wavee.Token.Live;
 
 namespace Wavee;
 
-public class SpotifyClient
+public class SpotifyClient : IDisposable
 {
     private Guid _connectionId;
     private TaskCompletionSource<string> _countryCodeTask;
@@ -38,6 +38,7 @@ public class SpotifyClient
 
     internal static Dictionary<Guid, SpotifyClient> Clients = new();
     private readonly SpotifyConfig _config;
+    private bool _flagForPermanentClose;
 
     public SpotifyClient(IWaveePlayer player, LoginCredentials credentials, SpotifyConfig config)
     {
@@ -52,12 +53,19 @@ public class SpotifyClient
         void CreateConnectionRecursively()
         {
             _countryCodeTask = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
-            _connectionId = ConnectionFactory(credentials, config, deviceId, async (err) =>
+            var (connId, welcomeMessage) = ConnectionFactory(credentials, config, deviceId, async (err) =>
             {
+                if (_flagForPermanentClose)
+                {
+                    Log.Logger.Information("Connection closed permanently");
+                    return;
+                }
                 Log.Logger.Error(err, "Connection lost");
                 await Task.Delay(2000);
                 CreateConnectionRecursively();
             });
+            _connectionId = connId;
+            WelcomeMessage = welcomeMessage;
             Clients[_connectionId] = this;
 
             //setup country code
@@ -189,10 +197,10 @@ public class SpotifyClient
         remoteClient: new WeakReference<ISpotifyRemoteClient>(Remote), waitForConnectionTask: _waitForConnectionTask);
 
     public ISpotifyMetadataClient Metadata => new LiveSpotifyMetadataClient(mercuryFactory: () => Mercury,
-        _countryCodeTask.Task, _graphQLQuery, Cache);
+        _countryCodeTask.Task, _graphQLQuery, Cache, Token.GetToken);
 
     private Task<HttpResponseMessage> _graphQLQuery(IGraphQLQuery arg) =>
-        new LiveGraphQLClient(fetchAccessTokenFactory: (CancellationToken ct) => Token.GetToken(ct)).Query(arg);
+        new LiveGraphQLClient(fetchAccessTokenFactory: Token.GetToken).Query(arg);
 
     public ISpotifyAudioKeysClient AudioKeys => new LiveSpotifyAudioKeysClient(_connectionId);
 
@@ -204,6 +212,7 @@ public class SpotifyClient
         : new ValueTask<string>(_countryCodeTask.Task);
 
     public SpotifyConfig Config => _config;
+    public APWelcome WelcomeMessage { get; private set; }
 
 
     private async Task PlaybackStateChanged(SpotifyLocalPlaybackState obj)
@@ -214,12 +223,23 @@ public class SpotifyClient
             await remote.PlaybackStateUpdated(obj);
     }
 
-    private static Guid ConnectionFactory(LoginCredentials credentials, SpotifyConfig config,
+    private static (Guid Value, APWelcome welcomeMessage) ConnectionFactory(LoginCredentials credentials, SpotifyConfig config,
         string deviceId,
         Action<Exception> onConnectionLost)
     {
         Guid? connectionId = null;
-        connectionId = SpotifyConnection.Create(credentials, config, deviceId, onConnectionLost, connectionId);
-        return connectionId.Value;
+        var (connId, welcomeMessage) = SpotifyConnection.Create(credentials, config, deviceId, onConnectionLost, connectionId);
+        connectionId = connId;
+        return (connectionId.Value, welcomeMessage);
+    }
+
+    public void Dispose()
+    {
+        _flagForPermanentClose = true;
+        //close connection
+        SpotifyConnection.Dispose(connectionId: _connectionId);
+
+        Remote.Dispose();
+        Playback.Dispose();
     }
 }

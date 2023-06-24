@@ -1,10 +1,15 @@
-﻿using Eum.Spotify;
+﻿using System.Net.Http.Headers;
+using System.Text.Json;
+using Eum.Spotify;
 using LanguageExt;
 using Spotify.Metadata;
 using Wavee.Cache;
 using Wavee.Id;
+using Wavee.Infrastructure;
 using Wavee.Infrastructure.Mercury;
 using Wavee.Metadata.Artist;
+using Wavee.Metadata.Common;
+using Wavee.Metadata.Me;
 using Wavee.Token.Live;
 
 namespace Wavee.Metadata.Live;
@@ -14,14 +19,16 @@ internal readonly struct LiveSpotifyMetadataClient : ISpotifyMetadataClient
     private readonly ISpotifyCache _cache;
     private readonly Func<IGraphQLQuery, Task<HttpResponseMessage>> _query;
     private readonly Func<IMercuryClient> _mercuryFactory;
+    private readonly Func<CancellationToken, ValueTask<string>> _tokenFactory;
     private readonly ValueTask<string> _country;
 
     public LiveSpotifyMetadataClient(Func<IMercuryClient> mercuryFactory, Task<string> country,
-        Func<IGraphQLQuery, Task<HttpResponseMessage>> query, ISpotifyCache cache)
+        Func<IGraphQLQuery, Task<HttpResponseMessage>> query, ISpotifyCache cache, Func<CancellationToken, ValueTask<string>> tokenFactory)
     {
         _mercuryFactory = mercuryFactory;
         _query = query;
         _cache = cache;
+        _tokenFactory = tokenFactory;
         _country = new ValueTask<string>(country);
     }
 
@@ -49,7 +56,7 @@ internal readonly struct LiveSpotifyMetadataClient : ISpotifyMetadataClient
             .Match(
                 Some: data =>
                 {
-                    var res =  new ValueTask<ArtistOverview>(ArtistOverview.ParseFrom(data));
+                    var res = new ValueTask<ArtistOverview>(ArtistOverview.ParseFrom(data));
                     return res;
                 },
                 None: () =>
@@ -79,5 +86,50 @@ internal readonly struct LiveSpotifyMetadataClient : ISpotifyMetadataClient
             );
 
         return result;
+    }
+
+    public async Task<MeUser> GetMe(CancellationToken ct = default)
+    {
+        const string endpoint = "https://api.spotify.com/v1/me";
+        var token = await _tokenFactory(ct);
+        var header = new AuthenticationHeaderValue("Bearer", token);
+        using var response = await HttpIO.Get(endpoint, new Dictionary<string, string>(), header, ct);
+        response.EnsureSuccessStatusCode();
+
+        using var stream = await response.Content.ReadAsStreamAsync();
+        using var json = await JsonDocument.ParseAsync(stream, default, ct);
+        var id = json.RootElement.GetProperty("id").GetString()!;
+        var displayName = json.RootElement.GetProperty("display_name");
+        CoverImage[] images = Array.Empty<CoverImage>();
+        if (json.RootElement.TryGetProperty("images", out var imgs) && imgs.ValueKind is not JsonValueKind.Null)
+        {
+            images = new CoverImage[imgs.GetArrayLength()];
+            using var array = imgs.EnumerateArray();
+            int i = 0;
+            while (array.MoveNext())
+            {
+                var img = array.Current;
+                var url = img.GetProperty("url").GetString()!;
+                var potentialWidth = img.TryGetProperty("width", out var wd)
+                                     && wd.ValueKind is JsonValueKind.Number
+                    ? wd.GetUInt16()
+                    : Option<ushort>.None;
+                var potentialHeight = img.TryGetProperty("height", out var ht)
+                                      && ht.ValueKind is JsonValueKind.Number
+                    ? ht.GetUInt16()
+                    : Option<ushort>.None;
+                images[i++] = new CoverImage(
+                    Url: url,
+                    Width: potentialWidth,
+                    Height: potentialHeight
+                );
+            }
+        }
+
+        return new MeUser
+        {
+            DisplayName = displayName.ValueKind is JsonValueKind.Null ? id : displayName.GetString()!,
+            Images = images
+        };
     }
 }

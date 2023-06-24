@@ -3,7 +3,9 @@ using Newtonsoft.Json;
 using ReactiveUI;
 using Wavee.UI.Bases;
 using System.Reactive.Linq;
-namespace Wavee.UI.User;
+using Wavee.Player;
+
+namespace Wavee.UI;
 
 [JsonObject(MemberSerialization.OptIn)]
 public class GlobalSettings : ConfigBase
@@ -28,5 +30,5 @@ public class GlobalSettings : ConfigBase
     {
         get => _defaultUser;
         set => this.RaiseAndSetIfChanged(ref _defaultUser, value);
-    } 
+    }
 }

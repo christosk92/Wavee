@@ -16,26 +16,53 @@ public sealed class WizardViewModel : ObservableObject, IDisposable
 
         GoNextCommand = new AsyncRelayCommand(GoNextAsync, () => CanGoNext);
         GoBackCommand = new RelayCommand(GoBack, () => CanGoBack);
+        SecondaryActionCommand = new AsyncRelayCommand(SecondaryActionAsync, () => CurrentView.SecondaryActionTitle != null);
     }
 
     private void GoBack()
     {
-        throw new NotImplementedException();
+        if (CurrentView.Index > 0)
+        {
+            if (CurrentView is IDisposable disposable)
+            {
+                disposable.Dispose();
+            }
+            CurrentView = _viewModelFactory((int)CurrentView.Index - 1);
+        }
     }
 
+    private async Task SecondaryActionAsync()
+    {
+        var go = await CurrentView.Submit(1);
+        if (go)
+        {
+            if (CurrentView.Index < TotalSteps - 1)
+            {
+                CurrentView = _viewModelFactory((int)CurrentView.Index + 1);
+            }
+            else
+            {
+                IsDone = true;
+            }
+        }
+    }
     private async Task GoNextAsync()
     {
-        await CurrentView.Submit();
-        if (CurrentView.Index < TotalSteps - 1)
+        var go = await CurrentView.Submit(0);
+
+        if (go)
         {
-            CurrentView = _viewModelFactory((int)CurrentView.Index + 1);
-        }
-        else
-        {
-            IsDone = true;
+            if (CurrentView.Index < TotalSteps - 1)
+            {
+                CurrentView = _viewModelFactory((int)CurrentView.Index + 1);
+            }
+            else
+            {
+                IsDone = true;
+            }
         }
     }
-
+    public AsyncRelayCommand SecondaryActionCommand { get; }
     public AsyncRelayCommand GoNextCommand { get; }
     public RelayCommand GoBackCommand { get; }
     public int TotalSteps { get; }
@@ -53,10 +80,14 @@ public sealed class WizardViewModel : ObservableObject, IDisposable
                     {
                         GoBackCommand.NotifyCanExecuteChanged();
                         GoNextCommand.NotifyCanExecuteChanged();
+                        SecondaryActionCommand.NotifyCanExecuteChanged();
+                        this.OnPropertyChanged(nameof(CanGoBack));
                     });
 
                 GoBackCommand.NotifyCanExecuteChanged();
                 GoNextCommand.NotifyCanExecuteChanged();
+                SecondaryActionCommand.NotifyCanExecuteChanged();
+                this.OnPropertyChanged(nameof(CanGoBack));
             }
         }
     }
@@ -64,6 +95,7 @@ public sealed class WizardViewModel : ObservableObject, IDisposable
     public bool CanGoBack => CurrentView.Index > 0;
 
     public bool IsDone { get; private set; }
+
     public void Dispose()
     {
         _listener?.Dispose();

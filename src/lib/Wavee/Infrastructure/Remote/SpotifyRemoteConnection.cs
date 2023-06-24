@@ -126,12 +126,18 @@ internal static class SpotifyRemoteConnection
             {
                 lock (lockObj)
                 {
-                    if (!alreadyReconnected)
+                    if (Connections.ContainsKey(connectionId))
                     {
+                        Log.Logger.Warning(e, "Connection {ConnectionId} lost, reconnecting", connectionId);
                         alreadyReconnected = true;
-                        CloseConnection(connectionId);
+                        CloseConnection(connectionId, false);
                         onConnectionLost(e);
                         pingPong?.Dispose();
+                    }
+                    else
+                    {
+                        pingPong?.Dispose();
+                        Log.Logger.Information("Connection {ConnectionId} permanently closed", connectionId);
                     }
                 }
             }
@@ -191,163 +197,163 @@ internal static class SpotifyRemoteConnection
                             Log.Logger.Debug("Pong received");
                             break;
                         case "message":
-                        {
-                            lock (_lock)
                             {
-                                static ReadOnlyMemory<byte> Parse(JsonDocument json)
+                                lock (_lock)
                                 {
-                                    var payloads = json.RootElement.GetProperty("payloads");
-                                    using var headersJson = json.RootElement.GetProperty("headers").EnumerateObject();
-                                    var headers = new Dictionary<string, string>();
-                                    foreach (var header in headersJson)
+                                    static ReadOnlyMemory<byte> Parse(JsonDocument json)
                                     {
-                                        headers.Add(header.Name, header.Value.GetString()!);
-                                    }
-
-                                    if (headers.ContainsKey("Transfer-Encoding") ||
-                                        headers.ContainsKey("Content-Type") &&
-                                        headers["Content-Type"] is "application/octet-stream")
-                                    {
-                                        using var enumerator = payloads.EnumerateArray();
-                                        using var buffer = new MemoryStream();
-                                        foreach (var element in enumerator)
+                                        var payloads = json.RootElement.GetProperty("payloads");
+                                        using var headersJson = json.RootElement.GetProperty("headers").EnumerateObject();
+                                        var headers = new Dictionary<string, string>();
+                                        foreach (var header in headersJson)
                                         {
-                                            ReadOnlySpan<byte> bytes = element.GetBytesFromBase64();
-                                            buffer.Write(bytes);
+                                            headers.Add(header.Name, header.Value.GetString()!);
                                         }
 
-                                        buffer.Flush();
-                                        buffer.Seek(0, SeekOrigin.Begin);
-                                        if (headers.ContainsKey("Transfer-Encoding") &&
-                                            headers["Transfer-Encoding"] is "gzip")
+                                        if (headers.ContainsKey("Transfer-Encoding") ||
+                                            headers.ContainsKey("Content-Type") &&
+                                            headers["Content-Type"] is "application/octet-stream")
                                         {
-                                            using var gzipDecoded = GzipHelpers.GzipDecompress(buffer);
-                                            gzipDecoded.Seek(0, SeekOrigin.Begin);
-                                            return gzipDecoded.ToArray();
-                                        }
+                                            using var enumerator = payloads.EnumerateArray();
+                                            using var buffer = new MemoryStream();
+                                            foreach (var element in enumerator)
+                                            {
+                                                ReadOnlySpan<byte> bytes = element.GetBytesFromBase64();
+                                                buffer.Write(bytes);
+                                            }
 
-                                        return buffer.ToArray();
+                                            buffer.Flush();
+                                            buffer.Seek(0, SeekOrigin.Begin);
+                                            if (headers.ContainsKey("Transfer-Encoding") &&
+                                                headers["Transfer-Encoding"] is "gzip")
+                                            {
+                                                using var gzipDecoded = GzipHelpers.GzipDecompress(buffer);
+                                                gzipDecoded.Seek(0, SeekOrigin.Begin);
+                                                return gzipDecoded.ToArray();
+                                            }
+
+                                            return buffer.ToArray();
+                                        }
+                                        else if (headers.ContainsKey("Content-Type") &&
+                                                 headers["Content-Type"] is "application/json")
+                                        {
+                                            return Encoding.UTF8.GetBytes(payloads.GetRawText());
+                                        }
+                                        else if (headers.ContainsKey("Content-Type") &&
+                                                 headers["Content-Type"] is "text/plain")
+                                        {
+                                            return Encoding.UTF8.GetBytes(payloads.GetRawText());
+                                        }
+                                        else
+                                        {
+                                            return Encoding.UTF8.GetBytes(payloads.GetRawText());
+                                        }
                                     }
-                                    else if (headers.ContainsKey("Content-Type") &&
-                                             headers["Content-Type"] is "application/json")
+
+                                    var parsed = Parse(json);
+                                    var pkg = new SpotifyRemoteMessage(
+                                        Type: SpotifyRemoteMessageType.Message,
+                                        Uri: json.RootElement.GetProperty("uri").GetString()!,
+                                        Payload: parsed
+                                    );
+                                    if (pkg.Uri.StartsWith("hm://connect-state/v1/cluster"))
                                     {
-                                        return Encoding.UTF8.GetBytes(payloads.GetRawText());
+                                        //update cluster
+                                        var clusterUpdate = ClusterUpdate.Parser.ParseFrom(pkg.Payload.Span);
+                                        lock (_lock)
+                                        {
+                                            Connections[connectionId] = Connections[connectionId] with
+                                            {
+                                                LatestCluster = clusterUpdate.Cluster
+                                            };
+                                        }
                                     }
-                                    else if (headers.ContainsKey("Content-Type") &&
-                                             headers["Content-Type"] is "text/plain")
+
+                                    var wasInteresting = false;
+                                    foreach (var callback in connectionInfo.Callbacks)
                                     {
-                                        return Encoding.UTF8.GetBytes(payloads.GetRawText());
+                                        if (callback.PackageReceiveCondition(pkg))
+                                        {
+                                            callback.Incoming(pkg);
+                                            wasInteresting = true;
+                                        }
                                     }
-                                    else
+
+                                    if (!wasInteresting)
                                     {
-                                        return Encoding.UTF8.GetBytes(payloads.GetRawText());
+                                        Log.Logger.Debug("Received uninteresting package: {Package}", pkg);
+                                        packages.Add(pkg);
                                     }
                                 }
 
-                                var parsed = Parse(json);
-                                var pkg = new SpotifyRemoteMessage(
-                                    Type: SpotifyRemoteMessageType.Message,
-                                    Uri: json.RootElement.GetProperty("uri").GetString()!,
-                                    Payload: parsed
+                                break;
+                            }
+                        case "request":
+                            {
+                                ReadOnlyMemory<byte> ParseFrom(JsonElement element)
+                                {
+                                    ReadOnlyMemory<byte> bytes = json.RootElement.GetProperty("payload")
+                                        .GetProperty("compressed").GetBytesFromBase64();
+                                    using var inputStream = bytes.AsStream();
+                                    using var gzipDecoded = GzipHelpers.GzipDecompress(inputStream);
+                                    gzipDecoded.Seek(0, SeekOrigin.Begin);
+                                    return gzipDecoded.ToArray();
+                                }
+
+                                var request = new SpotifyRemoteMessage(
+                                    Type: SpotifyRemoteMessageType.Request,
+                                    Uri: string.Empty,
+                                    Payload: ParseFrom(json.RootElement)
                                 );
-                                if (pkg.Uri.StartsWith("hm://connect-state/v1/cluster"))
-                                {
-                                    //update cluster
-                                    var clusterUpdate = ClusterUpdate.Parser.ParseFrom(pkg.Payload.Span);
-                                    lock (_lock)
-                                    {
-                                        Connections[connectionId] = Connections[connectionId] with
-                                        {
-                                            LatestCluster = clusterUpdate.Cluster
-                                        };
-                                    }
-                                }
 
                                 var wasInteresting = false;
                                 foreach (var callback in connectionInfo.Callbacks)
                                 {
-                                    if (callback.PackageReceiveCondition(pkg))
+                                    if (callback.PackageReceiveCondition(request))
                                     {
-                                        callback.Incoming(pkg);
+                                        callback.Incoming(request);
                                         wasInteresting = true;
                                     }
                                 }
 
                                 if (!wasInteresting)
                                 {
-                                    Log.Logger.Debug("Received uninteresting package: {Package}", pkg);
-                                    packages.Add(pkg);
-                                }
-                            }
-
-                            break;
-                        }
-                        case "request":
-                        {
-                            ReadOnlyMemory<byte> ParseFrom(JsonElement element)
-                            {
-                                ReadOnlyMemory<byte> bytes = json.RootElement.GetProperty("payload")
-                                    .GetProperty("compressed").GetBytesFromBase64();
-                                using var inputStream = bytes.AsStream();
-                                using var gzipDecoded = GzipHelpers.GzipDecompress(inputStream);
-                                gzipDecoded.Seek(0, SeekOrigin.Begin);
-                                return gzipDecoded.ToArray();
-                            }
-
-                            var request = new SpotifyRemoteMessage(
-                                Type: SpotifyRemoteMessageType.Request,
-                                Uri: string.Empty,
-                                Payload: ParseFrom(json.RootElement)
-                            );
-
-                            var wasInteresting = false;
-                            foreach (var callback in connectionInfo.Callbacks)
-                            {
-                                if (callback.PackageReceiveCondition(request))
-                                {
-                                    callback.Incoming(request);
-                                    wasInteresting = true;
-                                }
-                            }
-
-                            if (!wasInteresting)
-                            {
-                                Log.Logger.Debug("Received uninteresting request: {Request}", request);
-                                //send reply
-                                var key = json.RootElement.GetProperty("key").GetString()!;
-                                var datareply = new
-                                {
-                                    type = "reply",
-                                    key = key,
-                                    payload = new
+                                    Log.Logger.Debug("Received uninteresting request: {Request}", request);
+                                    //send reply
+                                    var key = json.RootElement.GetProperty("key").GetString()!;
+                                    var datareply = new
                                     {
-                                        success = "false"
-                                    }
-                                };
+                                        type = "reply",
+                                        key = key,
+                                        payload = new
+                                        {
+                                            success = "false"
+                                        }
+                                    };
 
-                                ReadOnlyMemory<byte> jsonreply = JsonSerializer.SerializeToUtf8Bytes(datareply);
-                                await mainChannel.Writer.WriteAsync(jsonreply);
-                            }
-                            else
-                            {
-                                //send reply
-                                var key = json.RootElement.GetProperty("key").GetString()!;
-                                var datareply = new
+                                    ReadOnlyMemory<byte> jsonreply = JsonSerializer.SerializeToUtf8Bytes(datareply);
+                                    await mainChannel.Writer.WriteAsync(jsonreply);
+                                }
+                                else
                                 {
-                                    type = "reply",
-                                    key = key,
-                                    payload = new
+                                    //send reply
+                                    var key = json.RootElement.GetProperty("key").GetString()!;
+                                    var datareply = new
                                     {
-                                        success = "true"
-                                    }
-                                };
+                                        type = "reply",
+                                        key = key,
+                                        payload = new
+                                        {
+                                            success = "true"
+                                        }
+                                    };
 
-                                ReadOnlyMemory<byte> jsonreply = JsonSerializer.SerializeToUtf8Bytes(datareply);
-                                await mainChannel.Writer.WriteAsync(jsonreply);
+                                    ReadOnlyMemory<byte> jsonreply = JsonSerializer.SerializeToUtf8Bytes(datareply);
+                                    await mainChannel.Writer.WriteAsync(jsonreply);
+                                }
+
+                                break;
                             }
-
-                            break;
-                        }
                     }
                 }
             }
@@ -357,27 +363,41 @@ internal static class SpotifyRemoteConnection
                 {
                     if (!alreadyReconnected)
                     {
-                        alreadyReconnected = true;
-                        CloseConnection(connectionId);
-                        onConnectionLost(e);
-                        pingPong?.Dispose();
+                        if (Connections.ContainsKey(connectionId))
+                        {
+                            Log.Logger.Warning(e, "Connection {ConnectionId} lost, reconnecting", connectionId);
+                            alreadyReconnected = true;
+                            CloseConnection(connectionId, false);
+                            onConnectionLost(e);
+                            pingPong?.Dispose();
+                        }
+                        else
+                        {
+                            pingPong?.Dispose();
+                            Log.Logger.Information("Connection {ConnectionId} permanently closed", connectionId);
+                        }
                     }
                 }
             }
         });
     }
 
-    private static void CloseConnection(Guid connectionId)
+    private static void CloseConnection(Guid connectionId, bool permanent)
     {
+        var connection = Connections[connectionId];
         //close connection
-        Connections[connectionId].Stream.Dispose();
-        Connections[connectionId].Sender.TryComplete();
+        if (permanent)
+        {
+           Connections.Remove(connectionId);
+        }
+        connection.Stream.Dispose();
+        connection.Sender.TryComplete();
 
-        //DO NOT COMPLETE THE CALLBACKS
-
-        // Connections[connectionId].Callbacks.ForEach(x => x.Reader.Writer.TryComplete());
-        // Connections[connectionId].Callbacks.Clear();
-        // Connections.Remove(connectionId);
+        if (permanent)
+        {
+            connection.Callbacks.ForEach(x => x.Reader.Writer.TryComplete());
+            connection.Callbacks.Clear();
+        }
     }
 
 
@@ -497,6 +517,17 @@ internal static class SpotifyRemoteConnection
         }
 
         return Option<Cluster>.None;
+    }
+
+    public static void Dispose(Guid mainConnectionId)
+    {
+        if (Connections.TryGetValue(mainConnectionId, out var connectionInfo))
+        {
+            CloseConnection(mainConnectionId, true);
+            connectionInfo.Callbacks.ForEach(x => x.Reader.Writer.TryComplete());
+            connectionInfo.Callbacks.Clear();
+            Connections.Remove(mainConnectionId);
+        }
     }
 }
 

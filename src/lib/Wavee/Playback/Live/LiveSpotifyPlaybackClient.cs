@@ -62,4 +62,9 @@ internal readonly struct LiveSpotifyPlaybackClient : ISpotifyPlaybackClient
                 break;
         }
     }
+
+    public void Dispose()
+    {
+        SpotifyPlaybackHandler.DisposePlayback(_connectionId);
+    }
 }

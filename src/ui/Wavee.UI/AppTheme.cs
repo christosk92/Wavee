@@ -1,4 +1,4 @@
-﻿namespace Wavee.UI.User;
+﻿namespace Wavee.UI;
 public enum AppTheme
 {
     System,

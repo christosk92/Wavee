@@ -77,6 +77,11 @@ internal readonly struct LiveSpotifyRemoteClient : ISpotifyRemoteClient
     {
         await SpotifyRemoteConnection.PutState(_mainConnectionId, spotifyLocalPlaybackState);
     }
+
+    public void Dispose()
+    {
+        SpotifyRemoteConnection.Dispose(_mainConnectionId);
+    }
 }
 
 internal readonly record struct SpotifyCommand(uint MessageId, string SentByDeviceId, string Endpoint,
