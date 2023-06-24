@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentDialog
+    x:Class="Wavee.UI.WinUI.Dialogs.WizardDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="using:Wavee.UI.WinUI.Dialogs"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    Title="{x:Bind ViewModel.CurrentView.Title, Mode=OneWay}"
+    HorizontalAlignment="Stretch"
+    VerticalAlignment="Stretch"
+    HorizontalContentAlignment="Stretch"
+    VerticalContentAlignment="Stretch"
+    PrimaryButtonCommand="{x:Bind ViewModel.GoBackCommand}"
+    PrimaryButtonText="Back"
+    SecondaryButtonCommand="{x:Bind ViewModel.GoNextCommand}"
+    SecondaryButtonStyle="{ThemeResource AccentButtonStyle}"
+    SecondaryButtonText="Next"
+    mc:Ignorable="d">
+    <Grid
+        x:Name="RootGrid"
+        Width="540"
+        Height="220"
+        HorizontalAlignment="Stretch"
+        VerticalAlignment="Stretch">
+        <Frame x:Name="SetupFrame" />
+        <ProgressBar
+            Margin="-24,0,-24,-24"
+            VerticalAlignment="Bottom"
+            Maximum="{x:Bind ViewModel.TotalSteps}"
+            Value="{x:Bind ViewModel.CurrentView.Index, Mode=OneWay}" />
+    </Grid>
+</ContentDialog>

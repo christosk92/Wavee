@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="ReactiveUI" Version="19.2.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\lib\Wavee.Player\Wavee.Player.csproj" />
+    <ProjectReference Include="..\..\lib\Wavee.Spotify.Proto\Wavee.Spotify.Proto.csproj" />
+    <ProjectReference Include="..\..\lib\Wavee\Wavee.csproj" />
+  </ItemGroup>
+
+</Project>

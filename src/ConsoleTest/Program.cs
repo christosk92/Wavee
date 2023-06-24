@@ -28,7 +28,7 @@ var config = new SpotifyConfig(
         MaxCacheSize: Option<long>.None
     ),
     playback: new SpotifyPlaybackConfig(
-        preferedQuality: PreferedQuality.Highest,
+        preferedQuality: PreferedQuality.High,
         crossfadeDuration: TimeSpan.FromSeconds(10)
     )
 );
