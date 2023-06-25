@@ -144,6 +144,8 @@ public sealed class UserSettings : ConfigBase, IDisposable
         set => this.RaiseAndSetIfChanged(ref _notifs, value);
     }
 
+    public const double MinimumSidebarWidth = 150;
+    public const double MaximumSidebarWidth = 400;
     //public object Notifications { get; }
 
     public void Dispose()

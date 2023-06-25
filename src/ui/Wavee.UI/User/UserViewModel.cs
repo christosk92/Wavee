@@ -1,6 +1,5 @@
 ﻿using NAudio.SoundFont;
 using Wavee.Id;
-using Wavee.UI.WinUI.Providers;
 
 namespace Wavee.UI.User;
 

@@ -1,0 +1,20 @@
+<UserControl x:Class="Wavee.UI.WinUI.View.Home.HomeView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Wavee.UI.WinUI.View.Home"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:labs="using:CommunityToolkit.Labs.WinUI"
+             mc:Ignorable="d">
+
+    <Grid Padding="48,24">
+        <StackPanel Orientation="Horizontal"
+                    Spacing="8">
+            <TextBlock Style="{ThemeResource TitleTextBlockStyle}" Text="Good evening" />
+            <labs:TokenView>
+                <labs:TokenItem Content="Music" />
+                <labs:TokenItem Content="Podcasts &amp; Shows" />
+            </labs:TokenView>
+        </StackPanel>
+    </Grid>
+</UserControl>

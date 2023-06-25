@@ -7,7 +7,6 @@ using Wavee.Id;
 using Wavee.Infrastructure.Authentication;
 using Wavee.UI.Contracts;
 using Wavee.UI.User;
-using Wavee.UI.WinUI.Providers;
 
 namespace Wavee.UI.Spotify.Authentication;
 

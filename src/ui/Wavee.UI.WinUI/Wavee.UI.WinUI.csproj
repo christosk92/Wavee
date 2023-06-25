@@ -12,16 +12,20 @@
 		<EnableMsixTooling>true</EnableMsixTooling>
 	</PropertyGroup>
 	<ItemGroup>
+		<Content Remove="Assets\Fonts\MediaPlayerIcons.ttf" />
 		<Content Remove="Assets\SettingsLottie.json" />
 	</ItemGroup>
 	<ItemGroup>
 		<None Remove="Dialogs\WizardDialog.xaml" />
+		<None Remove="Styles\PropertiesStyles.xaml" />
+		<None Remove="View\Home\HomeView.xaml" />
 		<None Remove="View\Setup\OptInView.xaml" />
 		<None Remove="View\Setup\SettingEverythingUpView.xaml" />
 		<None Remove="View\Setup\SetupPageContent.xaml" />
 		<None Remove="View\Setup\WelcomePage.xaml" />
 		<None Remove="View\Setup\YoureGoodToGoView.xaml" />
 		<None Remove="View\Shell\ShellView.xaml" />
+		<None Remove="View\Shell\SidebarControl.xaml" />
 		<None Remove="View\SignInView.xaml" />
 		<None Remove="WaveeWindow.xaml" />
 	</ItemGroup>
@@ -38,6 +42,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="CommunityToolkit.Labs.WinUI.SettingsControls" Version="0.0.18" />
+		<PackageReference Include="CommunityToolkit.Labs.WinUI.TokenView" Version="0.0.6" />
 		<PackageReference Include="Microsoft.Graphics.Win2D" Version="1.0.5.1" />
 		<PackageReference Include="Microsoft.WindowsAppSDK" Version="1.3.230602002" />
 		<PackageReference Include="ReactiveUI.WinUI" Version="19.2.1" />
@@ -69,6 +74,24 @@
 	</ItemGroup>
 	<ItemGroup>
 		<Folder Include="Providers\" />
+	</ItemGroup>
+	<ItemGroup>
+	  <None Update="Assets\Fonts\MediaPlayerIcons.ttf">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	  <Page Update="View\Home\HomeView.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </Page>
+	</ItemGroup>
+	<ItemGroup>
+	  <Page Update="Styles\PropertiesStyles.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </Page>
+	</ItemGroup>
+	<ItemGroup>
+	  <Page Update="View\Shell\SidebarControl.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </Page>
 	</ItemGroup>
 	<ItemGroup>
 	  <Page Update="View\Setup\YoureGoodToGoView.xaml">

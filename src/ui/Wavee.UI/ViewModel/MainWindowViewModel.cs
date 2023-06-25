@@ -6,7 +6,6 @@ using Wavee.UI.Contracts;
 using Wavee.UI.User;
 using Wavee.UI.ViewModel.Setup;
 using Wavee.UI.ViewModel.Wizard;
-using Wavee.UI.WinUI.Providers;
 
 namespace Wavee.UI.ViewModel;
 public sealed class MainWindowViewModel : ObservableObject

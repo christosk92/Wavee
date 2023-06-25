@@ -14,10 +14,10 @@ using System.Threading.Tasks;
 using Wavee.UI.ViewModel;
 using Wavee.UI.ViewModel.Wizard;
 using Wavee.UI.WinUI.Dialogs;
-using Wavee.UI.WinUI.Providers;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using LanguageExt.UnsafeValueAccess;
+using Microsoft.UI.Windowing;
 using Wavee.Id;
 using Wavee.UI.Spotify;
 using Wavee.UI.User;
@@ -45,6 +45,9 @@ namespace Wavee.UI.WinUI
             appWindow.TitleBar.ExtendsContentIntoTitleBar = true;
             appWindow.TitleBar.ButtonBackgroundColor = Microsoft.UI.Colors.Transparent;
             appWindow.TitleBar.ButtonInactiveBackgroundColor = Microsoft.UI.Colors.Transparent;
+            appWindow.TitleBar.PreferredHeightOption = TitleBarHeightOption.Tall;
+
+
 
             var globalPath = AppProviders.GetPersistentStoragePath();
             var globalSettings = LoadOrCreateUiConfig(globalPath);
