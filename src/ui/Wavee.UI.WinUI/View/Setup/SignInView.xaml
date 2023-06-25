@@ -10,7 +10,8 @@
       xmlns:markup="using:Wavee.UI.WinUI.Extensions.Markup"
       mc:Ignorable="d">
 
-    <Grid VerticalAlignment="Center" HorizontalAlignment="Center">
+    <Grid VerticalAlignment="Center"
+          HorizontalAlignment="Center">
         <setup:SetupPageContent x:Name="SetupRoot"
                                 Header="Connect to Spotify"
                                 IsBackButtonAutoPaddingEnabled="False">
@@ -36,7 +37,7 @@
                            Foreground="{ThemeResource ApplicationSecondaryForegroundThemeBrush}"
                            Text="Currently only password sign in is supported." />
                 <UserControl  Grid.Row="2"
-                              IsEnabled="{x:Bind ViewModel.SecondaryActionCanInvokeOverride,Mode=OneWay}">
+                              IsEnabled="{x:Bind Negate(ViewModel.IsBusy),Mode=OneWay}">
                     <Border Width="600"
                             Background="{ThemeResource LayerFillColorDefaultBrush}"
                             VerticalAlignment="Top"
@@ -57,9 +58,9 @@
                                          PlaceholderText="user@email.com" />
 
                                 <TextBlock Text="Password" />
-                                <TextBox Margin="0,8,0,4"
-                                         Text="{x:Bind ViewModel.Password, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                         PlaceholderText="pwd1234" />
+                                <PasswordBox Margin="0,8,0,4"
+                                             Password="{x:Bind ViewModel.Password, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                             PlaceholderText="pwd1234" />
                             </StackPanel>
                             <TextBlock Grid.Row="1"
                                        Margin="0,24,0,0"

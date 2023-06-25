@@ -63,6 +63,8 @@ public sealed class MainWindowViewModel : ObservableObject
             0 => new WelcomeViewModel(),
             1 => new IdentityViewModel(_environmentFactory),
             2 => new SettingEverythingUpViewModel(_environmentFactory),
+            3 => new OptInViewModel(),
+            4 => new YouAreGoodToGoViewModel(),
         };
     }
 }

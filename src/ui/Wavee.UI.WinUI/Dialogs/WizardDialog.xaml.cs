@@ -40,6 +40,14 @@ public sealed partial class WizardDialog : ContentDialog
                 };
             SetupFrame.Navigate(pageType, vm, transition);
         }
+
+        if (e.PropertyName == nameof(WizardViewModel.IsDone))
+        {
+            if (ViewModel.IsDone)
+            {
+                Hide();
+            }
+        }
     }
 
     public WizardViewModel ViewModel { get; }

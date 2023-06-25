@@ -45,7 +45,7 @@ public sealed class SettingEverythingUpViewModel : ObservableObject, IWizardView
 
     public async Task<bool> Submit(int action)
     {
-        if (action ==1 )
+        if (action == 1)
         {
             await PerformMiracle(User);
             return false;
@@ -58,12 +58,14 @@ public sealed class SettingEverythingUpViewModel : ObservableObject, IWizardView
     {
         try
         {
+            OptInViewModel.User = user;
             //dummy increase progress every 100ms
             while (ProgressPercentage < 100)
             {
-                ProgressPercentage += 0.5;
+                ProgressPercentage += 5;
                 await Task.Delay(100, _cts.Token);
             }
+            _canGoNext.OnNext(true);
         }
         catch (TaskCanceledException)
         {

@@ -9,6 +9,8 @@ public sealed class WizardViewModel : ObservableObject, IDisposable
     private readonly Func<int, IWizardViewModel> _viewModelFactory;
     private IWizardViewModel _currentView;
     private IDisposable? _listener;
+    private bool _isDone;
+
     public WizardViewModel(int totalSteps, Func<int, IWizardViewModel> viewModelFactory)
     {
         TotalSteps = totalSteps;
@@ -91,10 +93,14 @@ public sealed class WizardViewModel : ObservableObject, IDisposable
             }
         }
     }
-    public bool CanGoNext => CurrentView.Index < TotalSteps - 1 && CurrentView.CanGoNextVal;
+    public bool CanGoNext => CurrentView.CanGoNextVal;
     public bool CanGoBack => CurrentView.Index > 0;
 
-    public bool IsDone { get; private set; }
+    public bool IsDone
+    {
+        get => _isDone;
+        private set => this.SetProperty(ref _isDone, value);
+    }
 
     public void Dispose()
     {

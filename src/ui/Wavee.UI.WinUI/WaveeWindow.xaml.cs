@@ -21,7 +21,9 @@ using LanguageExt.UnsafeValueAccess;
 using Wavee.Id;
 using Wavee.UI.Spotify;
 using Wavee.UI.User;
+using Wavee.UI.ViewModel.Setup;
 using Wavee.UI.ViewModel.Shell;
+using Wavee.UI.WinUI.View.Setup;
 using WinUIEx;
 using static Org.BouncyCastle.Math.EC.ECCurve;
 
@@ -63,7 +65,8 @@ namespace Wavee.UI.WinUI
             {
                 if (ViewModel.CurrentView is WizardViewModel wizard)
                 {
-                    await ShowWizard(wizard);
+                    var user = await ShowWizard(wizard);
+                    ViewModel.CurrentView = new ShellViewModel(user);
                 }
                 else
                 {
@@ -72,7 +75,7 @@ namespace Wavee.UI.WinUI
             }
         }
 
-        private async Task ShowWizard(WizardViewModel wizard)
+        private async Task<UserViewModel> ShowWizard(WizardViewModel wizard)
         {
             var dialog = new WizardDialog(wizard)
             {
@@ -95,6 +98,8 @@ namespace Wavee.UI.WinUI
                 }
             };
             await dialog.ShowAsync();
+            var user = YouAreGoodToGoViewModel.User;
+            return user;
         }
 
         public MainWindowViewModel ViewModel { get; }
@@ -115,7 +120,14 @@ namespace Wavee.UI.WinUI
             var signedin = await ViewModel.Initialize();
             if (signedin.IsSome)
             {
-                this.Content = (UIElement)ViewFactory.ConstructFromViewModel(new ShellViewModel(signedin.ValueUnsafe()));
+                var user = signedin.ValueUnsafe();
+                this.Content = (UIElement)ViewFactory.ConstructFromViewModel(new ShellViewModel(user));
+                (this.Content as FrameworkElement)!.RequestedTheme = user.Settings.AppTheme switch
+                {
+                    AppTheme.Light => ElementTheme.Light,
+                    AppTheme.Dark => ElementTheme.Dark,
+                    AppTheme.System => ElementTheme.Default,
+                };
             }
         }
     }

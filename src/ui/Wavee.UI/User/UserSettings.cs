@@ -21,6 +21,7 @@ public sealed class UserSettings : ConfigBase, IDisposable
     private DeviceType _deviceType;
     private PreferedQuality _preferedQuality;
     private int _crossfadeSeconds;
+    private bool _notifs;
 
     public UserSettings() : base()
     {
@@ -37,7 +38,8 @@ public sealed class UserSettings : ConfigBase, IDisposable
                 x => x.DeviceType,
                 x => x.PreferedQuality,
                 x => x.CrossfadeSeconds,
-                (_, _, _, _, _, _, _,_) => Unit.Default)
+                x=> x.Notifications,
+                (_, _, _, _, _, _, _,_,_) => Unit.Default)
             .Throttle(TimeSpan.FromMilliseconds(500))
             .Skip(1) // Won't save on UiConfig creation.
             .ObserveOn(RxApp.MainThreadScheduler)
@@ -133,6 +135,17 @@ public sealed class UserSettings : ConfigBase, IDisposable
         get => _crossfadeSeconds;
         set => this.RaiseAndSetIfChanged(ref _crossfadeSeconds, value);
     }
+
+    [DefaultValue(false)]
+    [JsonProperty(PropertyName = "Notifications", DefaultValueHandling = DefaultValueHandling.Populate)]
+    public bool Notifications
+    {
+        get => _notifs;
+        set => this.RaiseAndSetIfChanged(ref _notifs, value);
+    }
+
+    //public object Notifications { get; }
+
     public void Dispose()
     {
         _disposables.Dispose();

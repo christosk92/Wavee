@@ -26,6 +26,8 @@ public static class ViewFactory
             WelcomeViewModel => typeof(WelcomePage),
             IdentityViewModel => typeof(SignInView),
             SettingEverythingUpViewModel => typeof(SettingEverythingUpView),
+            OptInViewModel => typeof(OptInView),
+            YouAreGoodToGoViewModel => typeof(YoureGoodToGoView),
         };
     }
 }

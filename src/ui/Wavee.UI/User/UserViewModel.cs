@@ -1,5 +1,6 @@
 ﻿using NAudio.SoundFont;
 using Wavee.Id;
+using Wavee.UI.WinUI.Providers;
 
 namespace Wavee.UI.User;
 
@@ -15,7 +16,10 @@ public class UserViewModel : IDisposable
     public UserViewModel(UserId id, string displayName, string? image, Action dispose)
     {
         _dispose = dispose;
-        Settings = new UserSettings();
+        var persistentPath = Path.Combine(AppProviders.GetPersistentStoragePath(), "Wavee", "UserSettings", $"{id.ToString()}.json");
+        Directory.CreateDirectory(Path.GetDirectoryName(persistentPath)!);
+        Settings = new UserSettings(persistentPath);
+        Settings.LoadFile(true);
         Info = new UserInfo
         {
             Id = id,

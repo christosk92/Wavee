@@ -59,7 +59,7 @@
                 <ProgressBar x:Name="SetupProgress"
                              Width="162"
                              HorizontalAlignment="Left"
-                             Maximum="{x:Bind PlusOne(ViewModel.TotalSteps)}"
+                             Maximum="{x:Bind ViewModel.TotalSteps}"
                              Minimum="0"
                              Value="{x:Bind PlusOne(ViewModel.CurrentView.Index), Mode=OneWay}" />
             </StackPanel>

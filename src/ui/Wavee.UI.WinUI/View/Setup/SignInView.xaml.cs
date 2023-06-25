@@ -56,5 +56,10 @@ namespace Wavee.UI.WinUI.View.Setup
             OnPropertyChanged(propertyName);
             return true;
         }
+
+        public bool Negate(bool b)
+        {
+            return !b;
+        }
     }
 }

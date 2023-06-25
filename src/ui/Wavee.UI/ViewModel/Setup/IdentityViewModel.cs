@@ -73,7 +73,9 @@ public sealed class IdentityViewModel : ObservableObject, IWizardViewModel, IDis
     public string? SecondaryActionTitle => "Skip for now";
     public IObservable<bool> CanGoNext => _canGoNextObservable;
     public double Index => 1;
-    public bool SecondaryActionCanInvokeOverride => !IsBusy;
+
+    //TODO: Local only
+    public bool SecondaryActionCanInvokeOverride => false;
 
     public string? ErrorMessage
     {
