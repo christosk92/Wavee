@@ -149,7 +149,7 @@ internal readonly struct LiveSpotifyMetadataClient : ISpotifyMetadataClient
         await Task.WhenAll(recentlyPlayedTask, responseTask);
         if (responseTask.Result.IsSuccessStatusCode)
         {
-            var stream = await responseTask.Result.Content.ReadAsByteArrayAsync();
+            ReadOnlyMemory<byte> stream = await responseTask.Result.Content.ReadAsByteArrayAsync();
             var home = SpotifyHomeView.ParseFrom(stream, recentlyPlayedTask.Result);
             return home;
         }

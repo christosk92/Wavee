@@ -34,7 +34,7 @@
             </labs:TokenView>
         </StackPanel>
 
-        <ScrollViewer Margin="0,12,-48,12"
+        <ScrollViewer Margin="0,12,-48,-24"
                       VerticalAlignment="Top"
                       Padding="0,0,48,0"
                       Grid.Row="1">
@@ -66,7 +66,9 @@
                                                             <ColumnDefinition Width="Auto" />
                                                             <ColumnDefinition Width="*" />
                                                         </Grid.ColumnDefinitions>
-                                                        <Border Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+                                                        <Border x:Name="HeartBorder"
+                                                                x:Load="{x:Bind ImageIsIcon}"
+                                                                Background="{ThemeResource AccentAcrylicBackgroundFillColorBaseBrush}">
                                                             <FontIcon FontSize="36"
                                                                       VerticalAlignment="Center"
                                                                       HorizontalAlignment="Center"
@@ -117,15 +119,13 @@
                                         </ItemsRepeater.Layout>
                                         <ItemsRepeater.ItemTemplate>
                                             <DataTemplate x:DataType="common:CardViewModel">
-                                                <components:CardView
-                                                    Id="{x:Bind Id}"
-                                                    IsArtist="{x:Bind IsArtist}"
-                                                    Title="{x:Bind Title}"
-                                                    Subtitle="{x:Bind Subtitle}"
-                                                    Image="{x:Bind Image}"
-                                                    Caption="{x:Bind Caption}"
-                                                    ImageIsIcon="{x:Bind ImageIsIcon}"
-                                                    />
+                                                <components:CardView Id="{x:Bind Id}"
+                                                                     IsArtist="{x:Bind IsArtist}"
+                                                                     Title="{x:Bind Title}"
+                                                                     Subtitle="{x:Bind Subtitle}"
+                                                                     Image="{x:Bind Image}"
+                                                                     Caption="{x:Bind Caption}"
+                                                                     ImageIsIcon="{x:Bind ImageIsIcon}" />
                                             </DataTemplate>
                                         </ItemsRepeater.ItemTemplate>
                                     </ItemsRepeater>

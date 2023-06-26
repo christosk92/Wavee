@@ -22,6 +22,16 @@
                 <RowDefinition Height="Auto" />
                 <RowDefinition />
             </Grid.RowDefinitions>
+            <Border x:Name="HeartBorder"
+                    x:Load="{x:Bind ImageIsIcon, Mode=OneWay}"
+                    Background="{ThemeResource AccentAcrylicBackgroundFillColorBaseBrush}">
+                <FontIcon FontSize="48"
+                          VerticalAlignment="Center"
+                          HorizontalAlignment="Center"
+                          FontFamily="Segoe Fluent Icons"
+                          Glyph="&#xEB52;" />
+            </Border>
+
             <controls:ConstrainedBox x:Name="NormalImageBox"
                                      x:Load="{x:Bind Negate(IsArtist),Mode=OneWay}"
                                      AspectRatio="1:1">
@@ -30,7 +40,8 @@
             <controls:ConstrainedBox x:Name="ArtistImageBox"
                                      x:Load="{x:Bind IsArtist,Mode=OneWay}"
                                      AspectRatio="1:1">
-                <Viewbox Stretch="UniformToFill" Margin="6">
+                <Viewbox Stretch="UniformToFill"
+                         Margin="6">
                     <PersonPicture DisplayName="{x:Bind Name,Mode=OneWay}"
                                    Initials="{x:Bind CalculateInitials(Name), Mode=OneWay}"
                                    ProfilePicture="{x:Bind Image, Mode=OneWay}" />
