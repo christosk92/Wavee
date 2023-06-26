@@ -12,10 +12,17 @@
 		<EnableMsixTooling>true</EnableMsixTooling>
 	</PropertyGroup>
 	<ItemGroup>
+	  <Compile Remove="Providers\**" />
+	  <EmbeddedResource Remove="Providers\**" />
+	  <None Remove="Providers\**" />
+	  <Page Remove="Providers\**" />
+	</ItemGroup>
+	<ItemGroup>
 		<Content Remove="Assets\Fonts\MediaPlayerIcons.ttf" />
 		<Content Remove="Assets\SettingsLottie.json" />
 	</ItemGroup>
 	<ItemGroup>
+		<None Remove="Components\CardView.xaml" />
 		<None Remove="Dialogs\WizardDialog.xaml" />
 		<None Remove="Styles\PropertiesStyles.xaml" />
 		<None Remove="View\Home\HomeView.xaml" />
@@ -73,12 +80,12 @@
 		</Page>
 	</ItemGroup>
 	<ItemGroup>
-		<Folder Include="Providers\" />
-	</ItemGroup>
-	<ItemGroup>
 	  <None Update="Assets\Fonts\MediaPlayerIcons.ttf">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </None>
+	  <Page Update="Components\CardView.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </Page>
 	  <Page Update="View\Home\HomeView.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </Page>
@@ -137,4 +144,7 @@
 	<PropertyGroup Condition="'$(DisableHasPackageAndPublishMenuAddedByProject)'!='true' and '$(EnableMsixTooling)'=='true'">
 		<HasPackageAndPublishMenu>true</HasPackageAndPublishMenu>
 	</PropertyGroup>
+	<ItemGroup>
+	  <PRIResource Remove="Providers\**" />
+	</ItemGroup>
 </Project>

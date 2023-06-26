@@ -37,7 +37,7 @@ public class SpotifyClient : IDisposable
     private readonly TaskCompletionSource<Unit> _waitForConnectionTask;
     private readonly IWaveePlayer _player;
 
-    internal static Dictionary<Guid, SpotifyClient> Clients = new();
+    public static Dictionary<Guid, SpotifyClient> Clients = new();
     private readonly SpotifyConfig _config;
     private bool _flagForPermanentClose;
 

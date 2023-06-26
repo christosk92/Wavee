@@ -36,7 +36,7 @@ public interface ISpotifyMetadataClient
     /// <param name="languageOverride"></param>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
-    Task<HomeView> GetHomeView(TimeZoneInfo timezone, Option<CultureInfo> languageOverride, CancellationToken cancellationToken = default);
+    Task<SpotifyHomeView> GetHomeView(TimeZoneInfo timezone, Option<CultureInfo> languageOverride, CancellationToken cancellationToken = default);
 
 
     /// <summary>

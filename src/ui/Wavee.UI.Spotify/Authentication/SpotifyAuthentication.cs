@@ -1,4 +1,5 @@
-﻿using Eum.Spotify;
+﻿using System.Globalization;
+using Eum.Spotify;
 using Eum.Spotify.connectstate;
 using Google.Protobuf;
 using LanguageExt;
@@ -46,7 +47,8 @@ internal sealed class SpotifyAuthentication : IMusicServiceAuthentication
                 ),
                 playback: new SpotifyPlaybackConfig(
                     preferedQuality: PreferedQuality.Normal,
-                    crossfadeDuration: Option<TimeSpan>.None)
+                    crossfadeDuration: Option<TimeSpan>.None),
+                locale: CultureInfo.CurrentUICulture
             );
             var spotifyClient = new SpotifyClient(Shared.Player, credentials, config);
             var user = await spotifyClient.Metadata.GetMe(ct);
@@ -106,7 +108,8 @@ internal sealed class SpotifyAuthentication : IMusicServiceAuthentication
                 ),
                 playback: new SpotifyPlaybackConfig(
                     preferedQuality: storedUserVal.Settings.PreferedQuality,
-                    crossfadeDuration: storedUserVal.Settings.CrossfadeSeconds == 0 ? Option<TimeSpan>.None : TimeSpan.FromSeconds(storedUserVal.Settings.CrossfadeSeconds))
+                    crossfadeDuration: storedUserVal.Settings.CrossfadeSeconds == 0 ? Option<TimeSpan>.None : TimeSpan.FromSeconds(storedUserVal.Settings.CrossfadeSeconds)),
+                locale: CultureInfo.CurrentUICulture
             );
 
             var spotifyClient = new SpotifyClient(Shared.Player, credentials, config);

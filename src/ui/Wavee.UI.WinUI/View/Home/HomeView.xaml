@@ -5,18 +5,140 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:labs="using:CommunityToolkit.Labs.WinUI"
+             xmlns:home="using:Wavee.Metadata.Home"
+             xmlns:home1="using:Wavee.UI.ViewModel.Home"
+             xmlns:xamlConverters="using:Wavee.UI.WinUI.XamlConverters"
+             xmlns:common="using:Wavee.UI.Common"
+             xmlns:controls="using:CommunityToolkit.WinUI.UI.Controls"
+             xmlns:panels="using:Wavee.UI.WinUI.Panels"
+             xmlns:components="using:Wavee.UI.WinUI.Components"
              mc:Ignorable="d">
 
-    <Grid Padding="48,24">
+    <UserControl.Resources>
+        <xamlConverters:EnumEqualityConverter x:Key="EnumEqualityConverter" />
+    </UserControl.Resources>
+    <Grid Padding="48,24"
+          VerticalAlignment="Top">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition />
+        </Grid.RowDefinitions>
         <StackPanel Orientation="Horizontal"
                     VerticalAlignment="Top"
-                    Spacing="8">
+                    Spacing="12">
             <TextBlock Style="{ThemeResource TitleTextBlockStyle}"
-                       Text="Good evening" />
+                       Text="{x:Bind ViewModel.Greeting, Mode=OneWay}" />
             <labs:TokenView VerticalAlignment="Bottom">
                 <labs:TokenItem Content="Music" />
                 <labs:TokenItem Content="Podcasts &amp; Shows" />
             </labs:TokenView>
         </StackPanel>
+
+        <ScrollViewer Margin="0,12,-48,12"
+                      VerticalAlignment="Top"
+                      Padding="0,0,48,0"
+                      Grid.Row="1">
+            <ItemsRepeater     VerticalAlignment="Top"
+                               ItemsSource="{x:Bind ViewModel.Sections, Mode=OneWay}">
+                <ItemsRepeater.ItemTemplate>
+                    <DataTemplate x:DataType="home1:HomeGroupSectionViewModel">
+                        <StackPanel VerticalAlignment="Top">
+                            <TextBlock Style="{ThemeResource SubtitleTextBlockStyle}"
+                                       Margin="0,0,0,12"
+                                       Text="{x:Bind Title, Mode=OneWay}" />
+
+                            <Grid VerticalAlignment="Top">
+                                <Grid x:Name="GridViewView"
+                                      VerticalAlignment="Top"
+                                      x:Load="{x:Bind Rendering, Converter={StaticResource EnumEqualityConverter}, ConverterParameter='Grid'}">
+                                    <ItemsRepeater ItemsSource="{x:Bind Items, Mode=OneWay}">
+                                        <ItemsRepeater.ItemTemplate>
+                                            <DataTemplate x:DataType="common:CardViewModel">
+                                                <Button Background="{ThemeResource LayerFillColorDefaultBrush}"
+                                                        CornerRadius="8"
+                                                        HorizontalAlignment="Stretch"
+                                                        HorizontalContentAlignment="Stretch"
+                                                        Padding="0"
+                                                        BorderThickness="1"
+                                                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
+                                                    <Grid>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="Auto" />
+                                                            <ColumnDefinition Width="*" />
+                                                        </Grid.ColumnDefinitions>
+                                                        <Border Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+                                                            <FontIcon FontSize="36"
+                                                                      VerticalAlignment="Center"
+                                                                      HorizontalAlignment="Center"
+                                                                      FontFamily="Segoe Fluent Icons"
+                                                                      Glyph="&#xEB52;" />
+                                                        </Border>
+
+                                                        <controls:ConstrainedBox AspectRatio="1:1">
+                                                            <Image Source="{x:Bind Image}"
+                                                                   Stretch="UniformToFill" />
+                                                        </controls:ConstrainedBox>
+                                                        <StackPanel Grid.Column="1"
+                                                                    VerticalAlignment="Center"
+                                                                    Margin="12,0">
+                                                            <TextBlock FontWeight="SemiBold"
+                                                                       Text="{x:Bind Title}"
+                                                                       FontSize="16" />
+                                                            <TextBlock Text="{x:Bind Subtitle}"
+                                                                       MaxLines="2"
+                                                                       x:Name="Subtitles"
+                                                                       x:Load="{x:Bind HasSubtitle}"
+                                                                       TextWrapping="WrapWholeWords"
+                                                                       TextTrimming="CharacterEllipsis"
+                                                                       Foreground="{ThemeResource ApplicationSecondaryForegroundThemeBrush}" />
+                                                        </StackPanel>
+                                                    </Grid>
+                                                </Button>
+                                            </DataTemplate>
+                                        </ItemsRepeater.ItemTemplate>
+                                        <ItemsRepeater.Layout>
+                                            <UniformGridLayout MinItemWidth="300"
+                                                               MinItemHeight="80"
+                                                               MinRowSpacing="8"
+                                                               Orientation="Horizontal"
+                                                               ItemsStretch="Fill"
+                                                               MaximumRowsOrColumns="3"
+                                                               MinColumnSpacing="8" />
+                                        </ItemsRepeater.Layout>
+                                    </ItemsRepeater>
+                                </Grid>
+                                <Grid x:Name="StackViewView"
+                                      VerticalAlignment="Top"
+                                      x:Load="{x:Bind Rendering, Converter={StaticResource EnumEqualityConverter}, ConverterParameter='HorizontalStack'}">
+                                    <ItemsRepeater VerticalAlignment="Top"
+                                                   ItemsSource="{x:Bind Items, Mode=OneWay}">
+                                        <ItemsRepeater.Layout>
+                                            <panels:HorizontalAdaptiveLayout DesiredWidth="200" />
+                                        </ItemsRepeater.Layout>
+                                        <ItemsRepeater.ItemTemplate>
+                                            <DataTemplate x:DataType="common:CardViewModel">
+                                                <components:CardView
+                                                    Id="{x:Bind Id}"
+                                                    IsArtist="{x:Bind IsArtist}"
+                                                    Title="{x:Bind Title}"
+                                                    Subtitle="{x:Bind Subtitle}"
+                                                    Image="{x:Bind Image}"
+                                                    Caption="{x:Bind Caption}"
+                                                    ImageIsIcon="{x:Bind ImageIsIcon}"
+                                                    />
+                                            </DataTemplate>
+                                        </ItemsRepeater.ItemTemplate>
+                                    </ItemsRepeater>
+                                </Grid>
+                            </Grid>
+                        </StackPanel>
+                    </DataTemplate>
+                </ItemsRepeater.ItemTemplate>
+                <ItemsRepeater.Layout>
+                    <StackLayout Orientation="Vertical"
+                                 Spacing="24" />
+                </ItemsRepeater.Layout>
+            </ItemsRepeater>
+        </ScrollViewer>
     </Grid>
 </UserControl>

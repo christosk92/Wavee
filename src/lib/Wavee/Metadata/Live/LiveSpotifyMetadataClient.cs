@@ -52,14 +52,14 @@ internal readonly struct LiveSpotifyMetadataClient : ISpotifyMetadataClient
         throw new MercuryException(response);
     }
 
-    public async Task<HomeView> GetHomeView(TimeZoneInfo timezone, Option<CultureInfo> languageOverride, CancellationToken cancellationToken = default)
+    public async Task<SpotifyHomeView> GetHomeView(TimeZoneInfo timezone, Option<CultureInfo> languageOverride, CancellationToken cancellationToken = default)
     {
         var query = new HomeQuery(timezone);
         var response = await _query(query, languageOverride.IfNone(_defaultLang));
         if (response.IsSuccessStatusCode)
         {
             var stream = await response.Content.ReadAsByteArrayAsync();
-            var home = HomeView.ParseFrom(stream);
+            var home = SpotifyHomeView.ParseFrom(stream);
             return home;
         }
 
