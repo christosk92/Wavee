@@ -9,9 +9,11 @@
 
     <Grid Padding="48,24">
         <StackPanel Orientation="Horizontal"
+                    VerticalAlignment="Top"
                     Spacing="8">
-            <TextBlock Style="{ThemeResource TitleTextBlockStyle}" Text="Good evening" />
-            <labs:TokenView>
+            <TextBlock Style="{ThemeResource TitleTextBlockStyle}"
+                       Text="Good evening" />
+            <labs:TokenView VerticalAlignment="Bottom">
                 <labs:TokenItem Content="Music" />
                 <labs:TokenItem Content="Podcasts &amp; Shows" />
             </labs:TokenView>

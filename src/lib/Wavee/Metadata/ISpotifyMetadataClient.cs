@@ -2,6 +2,7 @@
 using Wavee.Id;
 using Wavee.Infrastructure.Mercury;
 using Wavee.Metadata.Artist;
+using Wavee.Metadata.Home;
 using Wavee.Metadata.Me;
 
 namespace Wavee.Metadata;
@@ -27,6 +28,15 @@ public interface ISpotifyMetadataClient
     Task<Track> GetTrack(SpotifyId id, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Fetches the <see cref="HomeView"/> for the current user.
+    /// </summary>
+    /// <param name="timezone"></param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
+    Task<HomeView> GetHomeView(TimeZoneInfo timezone, CancellationToken cancellationToken = default);
+
+
+    /// <summary>
     /// Fetches an <see cref="ArtistOverview"/> for the given <see cref="SpotifyId"/>
     /// As seen in the Spotify Desktop Client, this is a summary of the artist, including:
     /// - Biography
@@ -49,6 +59,7 @@ public interface ISpotifyMetadataClient
     /// A <see cref="Task{TResult}"/> that will complete with the <see cref="ArtistOverview"/> or throw a <see cref="MercuryException"/>.
     /// </returns>
     ValueTask<ArtistOverview> GetArtistOverview(SpotifyId artistId, bool destroyCache, CancellationToken ct = default);
+
 
     /// <summary>
     /// Performs an authenticated query to fetch information about the current user.

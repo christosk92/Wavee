@@ -42,6 +42,7 @@ var client = new SpotifyClient(player, new LoginCredentials
     AuthData = ByteString.CopyFromUtf8(Environment.GetEnvironmentVariable("SPOTIFY_PASSWORD"))
 }, config);
 var countryCode = await client.Country;
+var response = await client.Metadata.GetHomeView(TimeZoneInfo.Local);
 var listener = client.Remote.CreateListener().Subscribe(x => { Log.Logger.Information("Remote: {0}", x); });
 var artistId = SpotifyId.FromUri("spotify:artist:0nmQIMXWTXfhgOBdNzhGOs");
 //var artist = await client.Metadata.GetArtistOverview(artistId, false);

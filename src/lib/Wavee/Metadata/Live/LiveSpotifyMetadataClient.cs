@@ -1,6 +1,7 @@
 ﻿using System.Net.Http.Headers;
 using System.Text.Json;
 using Eum.Spotify;
+using Eum.Spotify.canvaz;
 using LanguageExt;
 using Spotify.Metadata;
 using Wavee.Cache;
@@ -9,6 +10,7 @@ using Wavee.Infrastructure;
 using Wavee.Infrastructure.Mercury;
 using Wavee.Metadata.Artist;
 using Wavee.Metadata.Common;
+using Wavee.Metadata.Home;
 using Wavee.Metadata.Me;
 using Wavee.Token.Live;
 
@@ -45,6 +47,25 @@ internal readonly struct LiveSpotifyMetadataClient : ISpotifyMetadataClient
         }
 
         throw new MercuryException(response);
+    }
+
+    public async Task<HomeView> GetHomeView(TimeZoneInfo timezone, CancellationToken cancellationToken = default)
+    {
+        var query = new HomeQuery(timezone);
+        var response = await _query(query);
+        if (response.IsSuccessStatusCode)
+        {
+            var stream = await response.Content.ReadAsByteArrayAsync();
+            var home = HomeView.ParseFrom(stream);
+            return home;
+        }
+
+        throw new MercuryException(new MercuryResponse(
+            Header: new Header
+            {
+                StatusCode = (int)response.StatusCode
+            }, ReadOnlyMemory<byte>.Empty
+        ));
     }
 
     public ValueTask<ArtistOverview> GetArtistOverview(SpotifyId artistId, bool destroyCache, CancellationToken ct = default)

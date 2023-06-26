@@ -27,5 +27,6 @@ public enum AudioItemType
     /// </summary>
     PodcastEpisode,
     Unknown,
-    PodcastShow
+    PodcastShow,
+    UserCollection
 }
