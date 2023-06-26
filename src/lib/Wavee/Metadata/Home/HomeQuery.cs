@@ -1,4 +1,6 @@
-﻿using TimeZoneConverter;
+﻿using System.Globalization;
+using LanguageExt;
+using TimeZoneConverter;
 using Wavee.Metadata.Artist;
 
 namespace Wavee.Metadata.Home;
@@ -12,6 +14,6 @@ public readonly record struct HomeQuery(TimeZoneInfo Timezone) : IGraphQLQuery
 
     public object Variables => new
     {
-        timeZone = TZConvert.WindowsToIana(Timezone.Id)
+        timeZone = TZConvert.WindowsToIana(Timezone.Id),
     };
 }

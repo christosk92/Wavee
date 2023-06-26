@@ -1,4 +1,5 @@
-﻿using Eum.Spotify.connectstate;
+﻿using System.Globalization;
+using Eum.Spotify.connectstate;
 using LanguageExt;
 using static LanguageExt.Prelude;
 
@@ -6,16 +7,18 @@ namespace Wavee;
 
 public sealed class SpotifyConfig
 {
-    public SpotifyConfig(SpotifyRemoteConfig Remote, SpotifyCacheConfig Cache, SpotifyPlaybackConfig playback)
+    public SpotifyConfig(SpotifyRemoteConfig Remote, SpotifyCacheConfig Cache, SpotifyPlaybackConfig playback, CultureInfo locale)
     {
         this.Remote = Remote;
         this.Cache = Cache;
         Playback = playback;
+        Locale = locale;
     }
 
     public SpotifyCacheConfig Cache { get; }
     public SpotifyRemoteConfig Remote { get; }
     public SpotifyPlaybackConfig Playback { get; }
+    public CultureInfo Locale { get; set; }
 }
 
 public sealed class SpotifyPlaybackConfig

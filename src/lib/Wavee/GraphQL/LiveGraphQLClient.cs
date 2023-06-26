@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using System.Globalization;
 using System.Net.Http.Headers;
 using System.Security.Cryptography;
 using System.Text;
@@ -14,13 +15,12 @@ internal readonly struct LiveGraphQLClient
     private const string BaseUrl = "https://api-partner.spotify.com/pathfinder/v1/query";
     private static readonly ConcurrentDictionary<Type, string> _hashes = new();
     private readonly Func<CancellationToken, ValueTask<string>> _fetchAccessTokenFactory;
-
-    public LiveGraphQLClient(Func<CancellationToken, ValueTask<string>> fetchAccessTokenFactory)
+    private readonly CultureInfo _language;
+    public LiveGraphQLClient(Func<CancellationToken, ValueTask<string>> fetchAccessTokenFactory, CultureInfo language)
     {
         _fetchAccessTokenFactory = fetchAccessTokenFactory;
+        _language = language;
     }
-
-    private static IReadOnlyDictionary<string, string> _empty = new Dictionary<string, string>();
 
     public async Task<HttpResponseMessage> Query(IGraphQLQuery query, CancellationToken cancellationToken = default)
     {
@@ -34,7 +34,16 @@ internal readonly struct LiveGraphQLClient
         var urlEncoded = HttpUtility.UrlEncode(variablesJson);
         var url =
             $"{BaseUrl}?operationName={query.OperationName}&variables={urlEncoded}&extensions=%7B%22persistedQuery%22%3A%7B%22version%22%3A1%2C%22sha256Hash%22%3A%22{hash}%22%7D%7D";
-        var response = await HttpIO.Get(url, _empty, header, cancellationToken);
+
+        //Accept-Language
+        //ko-kr
+        //en-us 
+        var acceptLanguageHeader = new Dictionary<string, string>
+        {
+            { "Accept-Language", _language.Name }
+        };
+
+        var response = await HttpIO.Get(url, acceptLanguageHeader, header, cancellationToken);
         return response;
     }
 

@@ -1,4 +1,5 @@
-﻿using System.Net.Http.Headers;
+﻿using System.Globalization;
+using System.Net.Http.Headers;
 using System.Text.Json;
 using Eum.Spotify;
 using Eum.Spotify.canvaz;
@@ -19,18 +20,20 @@ namespace Wavee.Metadata.Live;
 internal readonly struct LiveSpotifyMetadataClient : ISpotifyMetadataClient
 {
     private readonly ISpotifyCache _cache;
-    private readonly Func<IGraphQLQuery, Task<HttpResponseMessage>> _query;
+    private readonly Func<IGraphQLQuery, CultureInfo, Task<HttpResponseMessage>> _query;
     private readonly Func<IMercuryClient> _mercuryFactory;
     private readonly Func<CancellationToken, ValueTask<string>> _tokenFactory;
     private readonly ValueTask<string> _country;
+    private readonly CultureInfo _defaultLang;
 
     public LiveSpotifyMetadataClient(Func<IMercuryClient> mercuryFactory, Task<string> country,
-        Func<IGraphQLQuery, Task<HttpResponseMessage>> query, ISpotifyCache cache, Func<CancellationToken, ValueTask<string>> tokenFactory)
+        Func<IGraphQLQuery, CultureInfo, Task<HttpResponseMessage>> query, ISpotifyCache cache, Func<CancellationToken, ValueTask<string>> tokenFactory, CultureInfo defaultLang)
     {
         _mercuryFactory = mercuryFactory;
         _query = query;
         _cache = cache;
         _tokenFactory = tokenFactory;
+        _defaultLang = defaultLang;
         _country = new ValueTask<string>(country);
     }
 
@@ -49,10 +52,10 @@ internal readonly struct LiveSpotifyMetadataClient : ISpotifyMetadataClient
         throw new MercuryException(response);
     }
 
-    public async Task<HomeView> GetHomeView(TimeZoneInfo timezone, CancellationToken cancellationToken = default)
+    public async Task<HomeView> GetHomeView(TimeZoneInfo timezone, Option<CultureInfo> languageOverride, CancellationToken cancellationToken = default)
     {
         var query = new HomeQuery(timezone);
-        var response = await _query(query);
+        var response = await _query(query, languageOverride.IfNone(_defaultLang));
         if (response.IsSuccessStatusCode)
         {
             var stream = await response.Content.ReadAsByteArrayAsync();
@@ -68,7 +71,9 @@ internal readonly struct LiveSpotifyMetadataClient : ISpotifyMetadataClient
         ));
     }
 
-    public ValueTask<ArtistOverview> GetArtistOverview(SpotifyId artistId, bool destroyCache, CancellationToken ct = default)
+    public ValueTask<ArtistOverview> GetArtistOverview(SpotifyId artistId, bool destroyCache,
+        Option<CultureInfo> languageOverride,
+        CancellationToken ct = default)
     {
         LiveSpotifyMetadataClient tmpThis = this;
         var result = tmpThis._cache
@@ -82,10 +87,10 @@ internal readonly struct LiveSpotifyMetadataClient : ISpotifyMetadataClient
                 },
                 None: () =>
                 {
-                    static async Task<ArtistOverview> Fetch(SpotifyId artistid, LiveSpotifyMetadataClient tmpthis)
+                    static async Task<ArtistOverview> Fetch(SpotifyId artistid, LiveSpotifyMetadataClient tmpthis, Option<CultureInfo> languageoverride)
                     {
                         var query = new QueryArtistOverviewQuery(artistid, false);
-                        var response = await tmpthis._query(query);
+                        var response = await tmpthis._query(query, languageoverride.IfNone(tmpthis._defaultLang));
                         if (response.IsSuccessStatusCode)
                         {
                             var stream = await response.Content.ReadAsByteArrayAsync();
@@ -102,7 +107,7 @@ internal readonly struct LiveSpotifyMetadataClient : ISpotifyMetadataClient
                         ));
                     }
 
-                    return new ValueTask<ArtistOverview>(Fetch(artistId, tmpThis));
+                    return new ValueTask<ArtistOverview>(Fetch(artistId, tmpThis, languageOverride));
                 }
             );
 

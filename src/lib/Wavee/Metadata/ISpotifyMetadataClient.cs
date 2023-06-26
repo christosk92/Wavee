@@ -1,4 +1,6 @@
-﻿using Spotify.Metadata;
+﻿using System.Globalization;
+using LanguageExt;
+using Spotify.Metadata;
 using Wavee.Id;
 using Wavee.Infrastructure.Mercury;
 using Wavee.Metadata.Artist;
@@ -31,9 +33,10 @@ public interface ISpotifyMetadataClient
     /// Fetches the <see cref="HomeView"/> for the current user.
     /// </summary>
     /// <param name="timezone"></param>
+    /// <param name="languageOverride"></param>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
-    Task<HomeView> GetHomeView(TimeZoneInfo timezone, CancellationToken cancellationToken = default);
+    Task<HomeView> GetHomeView(TimeZoneInfo timezone, Option<CultureInfo> languageOverride, CancellationToken cancellationToken = default);
 
 
     /// <summary>
@@ -47,18 +50,19 @@ public interface ISpotifyMetadataClient
     /// - Appears On
     /// </summary>
     /// <param name="artistId">
-    /// The <see cref="SpotifyId"/> of the <see cref="Artist"/> to get.
+    ///     The <see cref="SpotifyId"/> of the <see cref="Artist"/> to get.
     /// </param>
     /// <param name="destroyCache">
-    /// A boolean indicating whether or not to destroy the cache for this artist.
+    ///     A boolean indicating whether or not to destroy the cache for this artist.
     /// </param>
+    /// <param name="languageOverride"></param>
     /// <param name="ct">
-    /// A <see cref="CancellationToken"/> to cancel the operation.
+    ///     A <see cref="CancellationToken"/> to cancel the operation.
     /// </param>
     /// <returns>
     /// A <see cref="Task{TResult}"/> that will complete with the <see cref="ArtistOverview"/> or throw a <see cref="MercuryException"/>.
     /// </returns>
-    ValueTask<ArtistOverview> GetArtistOverview(SpotifyId artistId, bool destroyCache, CancellationToken ct = default);
+    ValueTask<ArtistOverview> GetArtistOverview(SpotifyId artistId, bool destroyCache, Option<CultureInfo> languageOverride, CancellationToken ct = default);
 
 
     /// <summary>

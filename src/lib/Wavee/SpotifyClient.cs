@@ -1,4 +1,5 @@
-﻿using System.Reactive.Linq;
+﻿using System.Globalization;
+using System.Reactive.Linq;
 using System.Text;
 using System.Text.Json;
 using Eum.Spotify;
@@ -197,10 +198,10 @@ public class SpotifyClient : IDisposable
         remoteClient: new WeakReference<ISpotifyRemoteClient>(Remote), waitForConnectionTask: _waitForConnectionTask);
 
     public ISpotifyMetadataClient Metadata => new LiveSpotifyMetadataClient(mercuryFactory: () => Mercury,
-        _countryCodeTask.Task, _graphQLQuery, Cache, Token.GetToken);
+        _countryCodeTask.Task, _graphQLQuery, Cache, Token.GetToken, Config.Locale);
 
-    private Task<HttpResponseMessage> _graphQLQuery(IGraphQLQuery arg) =>
-        new LiveGraphQLClient(fetchAccessTokenFactory: Token.GetToken).Query(arg);
+    private Task<HttpResponseMessage> _graphQLQuery(IGraphQLQuery arg, CultureInfo cultureInfo) =>
+        new LiveGraphQLClient(fetchAccessTokenFactory: Token.GetToken, language: cultureInfo).Query(arg);
 
     public ISpotifyAudioKeysClient AudioKeys => new LiveSpotifyAudioKeysClient(_connectionId);
 
