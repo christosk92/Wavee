@@ -1,5 +1,7 @@
 ﻿using System.Text.Json;
+using System.Xml.Linq;
 using LanguageExt;
+using LanguageExt.UnsafeValueAccess;
 using Serilog;
 using Wavee.Id;
 using Wavee.Metadata.Artist;
@@ -12,7 +14,7 @@ public sealed class SpotifyHomeView
     public required string Greeting { get; init; }
     public required IEnumerable<SpotifyHomeGroupSection> Sections { get; init; }
 
-    public static SpotifyHomeView ParseFrom(ReadOnlyMemory<byte> data)
+    public static SpotifyHomeView ParseFrom(ReadOnlyMemory<byte> data, SpotifyHomeGroupSection recentlyPlayed)
     {
         try
         {
@@ -38,40 +40,19 @@ public sealed class SpotifyHomeView
                     title = txt.GetString()!;
                 }
 
+                var sectionType = dt.GetProperty("__typename").GetString()!;
+                if (sectionType is "HomeRecentlyPlayedSectionData")
+                {
+                    recentlyPlayed.Title = title;
+                    output[i] = recentlyPlayed;
+                    continue;
+                }
+
                 var sectionItems = section.GetProperty("sectionItems");
                 var totalCount = sectionItems.GetProperty("totalCount").GetUInt32();
                 var items = sectionItems.GetProperty("items");
                 var outputItems = new ISpotifyHomeItem[items.GetArrayLength()];
                 int j = -1;
-
-                static CoverImage[] ParseImages(JsonElement sources)
-                {
-                    var output = new CoverImage[sources.GetArrayLength()];
-                    using var sourcesArr = sources.EnumerateArray();
-                    int i = 0;
-                    while (sourcesArr.MoveNext())
-                    {
-                        var source = sourcesArr.Current;
-                        var url = source.GetProperty("url").GetString()!;
-                        var potentialWidth = source.TryGetProperty("width", out var wd)
-                                             && wd.ValueKind is JsonValueKind.Number
-                            ? wd.GetUInt16()
-                            : Option<ushort>.None;
-                        var potentialHeight = source.TryGetProperty("height", out var ht)
-                                              && ht.ValueKind is JsonValueKind.Number
-                            ? ht.GetUInt16()
-                            : Option<ushort>.None;
-                        output[i] = new CoverImage
-                        {
-                            Url = url,
-                            Width = potentialWidth,
-                            Height = potentialHeight
-                        };
-                        i++;
-                    }
-
-                    return output;
-                }
 
                 using var itemsArr = items.EnumerateArray();
                 while (itemsArr.MoveNext())
@@ -88,80 +69,12 @@ public sealed class SpotifyHomeView
                     var id = SpotifyId.FromUri(uri.AsSpan());
                     var type = id.Type;
 
-                    try
+                    var item = rootItem.GetProperty("content").GetProperty("data");
+
+                    var homeitem = SpotifyItemParser.ParseFrom(item);
+                    if (homeitem.IsSome)
                     {
-                        var item = rootItem.GetProperty("content").GetProperty("data");
-                        if (item.GetProperty("__typename").GetString() is "NotFound")
-                        {
-                            Log.Warning("Item {0} not found", id);
-                            continue;
-                        }
-
-                        switch (type)
-                        {
-                            case AudioItemType.Playlist:
-                            {
-                                var name = item.GetProperty("name").GetString()!;
-                                var images = ParseImages(item.GetProperty("images").GetProperty("items")
-                                    .EnumerateArray()
-                                    .First().GetProperty("sources"));
-                                var description = item.TryGetProperty("description", out var desc) &&
-                                                  desc.ValueKind is JsonValueKind.String
-                                    ? desc.GetString()
-                                    : Option<string>.None;
-                                var ownerName = item.GetProperty("ownerV2").GetProperty("data").GetProperty("name")
-                                    .GetString()!;
-
-                                outputItems[j] = new SpotifyPlaylistHomeItem
-                                {
-                                    Id = id,
-                                    Name = name,
-                                    Description = description,
-                                    Images = images,
-                                    OwnerName = ownerName
-                                };
-                                break;
-                            }
-                            case AudioItemType.Album:
-                            {
-                                var name = item.GetProperty("name").GetString()!;
-                                var images = ParseImages(item.GetProperty("coverArt").GetProperty("sources"));
-                                var artists = item.GetProperty("artists").GetProperty("items").EnumerateArray().Select(
-                                    x =>
-                                        new TrackArtist
-                                        {
-                                            Id = SpotifyId.FromUri(x.GetProperty("uri").GetString()!.AsSpan()),
-                                            Name = x.GetProperty("profile").GetProperty("name").GetString()!
-                                        }).ToArray();
-
-                                outputItems[j] = new SpotifyAlbumHomeItem
-                                {
-                                    Id = id,
-                                    Name = name,
-                                    Artists = artists,
-                                    Images = images
-                                };
-                                break;
-                            }
-                            case AudioItemType.Artist:
-                            {
-                                var name = item.GetProperty("profile").GetProperty("name").GetString()!;
-                                var images = ParseImages(item.GetProperty("visuals").GetProperty("avatarImage")
-                                    .GetProperty("sources"));
-
-                                outputItems[j] = new SpotifyArtistHomeItem
-                                {
-                                    Id = id,
-                                    Name = name,
-                                    Images = images
-                                };
-                                break;
-                            }
-                        }
-                    }
-                    catch (KeyNotFoundException)
-                    {
-                        Log.Warning("Item {0} not found", id);
+                        outputItems[j] = homeitem.ValueUnsafe();
                     }
                 }
 

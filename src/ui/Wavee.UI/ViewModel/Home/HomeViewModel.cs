@@ -103,3 +103,4 @@ public sealed class HomeViewModel : ObservableObject
         }
     }
 }
+//"   at System.Text.Json.JsonElement.GetProperty(String propertyName)\r\n   at Wavee.Metadata.Common.SpotifyItemParser.ParseFrom(JsonElement element) in C:\\Users\\chris-pc\\Desktop\\Wavee\\Wavee\\src\\lib\\Wavee\\Metadata\\Common\\SpotifyItemParser.cs:line 14\r\n   at Wavee.Metadata.Live.LiveSpotifyMetadataClient.<GetRecentlyPlayed>d__9.MoveNext() in C:\\Users\\chris-pc\\Desktop\\Wavee\\Wavee\\src\\lib\\Wavee\\Metadata\\Live\\LiveSpotifyMetadataClient.cs:line 90\r\n   at Wavee.Metadata.Live.LiveSpotifyMetadataClient.<GetHomeView>d__10.MoveNext() in C:\\Users\\chris-pc\\Desktop\\Wavee\\Wavee\\src\\lib\\Wavee\\Metadata\\Live\\LiveSpotifyMetadataClient.cs:line 111\r\n   at Wavee.UI.ViewModel.Home.HomeViewModel.<Fetch>d__14.MoveNext() in C:\\Users\\chris-pc\\Desktop\\Wavee\\Wavee\\src\\ui\\Wavee.UI\\ViewModel\\Home\\HomeViewModel.cs:line 41"

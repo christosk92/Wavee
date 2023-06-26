@@ -29,6 +29,8 @@ public interface ISpotifyMetadataClient
     /// </returns>
     Task<Track> GetTrack(SpotifyId id, CancellationToken cancellationToken = default);
 
+    Task<SpotifyHomeGroupSection> GetRecentlyPlayed(CancellationToken cancellationToken = default);
+
     /// <summary>
     /// Fetches the <see cref="HomeView"/> for the current user.
     /// </summary>

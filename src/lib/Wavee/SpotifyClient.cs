@@ -198,7 +198,7 @@ public class SpotifyClient : IDisposable
         remoteClient: new WeakReference<ISpotifyRemoteClient>(Remote), waitForConnectionTask: _waitForConnectionTask);
 
     public ISpotifyMetadataClient Metadata => new LiveSpotifyMetadataClient(mercuryFactory: () => Mercury,
-        _countryCodeTask.Task, _graphQLQuery, Cache, Token.GetToken, Config.Locale);
+        _countryCodeTask.Task, _graphQLQuery, Cache, Token.GetToken, Config.Locale, WelcomeMessage.CanonicalUsername);
 
     private Task<HttpResponseMessage> _graphQLQuery(IGraphQLQuery arg, CultureInfo cultureInfo) =>
         new LiveGraphQLClient(fetchAccessTokenFactory: Token.GetToken, language: cultureInfo).Query(arg);

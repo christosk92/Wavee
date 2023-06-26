@@ -1,9 +1,12 @@
 ﻿using System.Globalization;
 using System.Net.Http.Headers;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using Eum.Spotify;
 using Eum.Spotify.canvaz;
+using Eum.Spotify.playlist4;
 using LanguageExt;
+using LanguageExt.UnsafeValueAccess;
 using Spotify.Metadata;
 using Wavee.Cache;
 using Wavee.Id;
@@ -25,15 +28,17 @@ internal readonly struct LiveSpotifyMetadataClient : ISpotifyMetadataClient
     private readonly Func<CancellationToken, ValueTask<string>> _tokenFactory;
     private readonly ValueTask<string> _country;
     private readonly CultureInfo _defaultLang;
+    private readonly string _userId;
 
     public LiveSpotifyMetadataClient(Func<IMercuryClient> mercuryFactory, Task<string> country,
-        Func<IGraphQLQuery, CultureInfo, Task<HttpResponseMessage>> query, ISpotifyCache cache, Func<CancellationToken, ValueTask<string>> tokenFactory, CultureInfo defaultLang)
+        Func<IGraphQLQuery, CultureInfo, Task<HttpResponseMessage>> query, ISpotifyCache cache, Func<CancellationToken, ValueTask<string>> tokenFactory, CultureInfo defaultLang, string userId)
     {
         _mercuryFactory = mercuryFactory;
         _query = query;
         _cache = cache;
         _tokenFactory = tokenFactory;
         _defaultLang = defaultLang;
+        _userId = userId;
         _country = new ValueTask<string>(country);
     }
 
@@ -52,21 +57,107 @@ internal readonly struct LiveSpotifyMetadataClient : ISpotifyMetadataClient
         throw new MercuryException(response);
     }
 
+    public async Task<SpotifyHomeGroupSection> GetRecentlyPlayed(CancellationToken cancellationToken = default)
+    {
+        //spclient -> 	/recently-played/v3/user/7ucghdgquf6byqusqkliltwc2/recently-played
+        var userId = _userId;
+        const string url = "hm://recently-played/v2/user/{0}/recently-played?format=json&limit=10";
+        var mercury = _mercuryFactory();
+        var response = await mercury.Get(string.Format(url, userId), cancellationToken);
+        using var jsonDocument = JsonDocument.Parse(response.Payload);
+        var contexts = jsonDocument.RootElement.GetProperty("playContexts");
+        var output = new string[contexts.GetArrayLength()];
+        int i = 0;
+        using var arr = contexts.EnumerateArray();
+
+        //regex for spotify:user:spotify:playlist:37i9dQZF1E8H2iOSY4VSjq , which shouldbe just spotify:playlist:...
+        //so spotify:{userId}:playlist:{playlistId}
+        var playlistRegex = new Regex(@"spotify:user:(?<userId>.+):playlist:(?<playlistId>.+)");
+        //regex for spotify:user:7ucghdgquf6byqusqkliltwc2:collection
+        //so spotify:{userId}:collection
+        var collectionRegex = new Regex(@"spotify:user:(?<userId>.+):collection");
+
+        while (arr.MoveNext())
+        {
+            var current = arr.Current;
+            var uri = current.GetProperty("uri").GetString();
+
+            //check if we match the playlist regex first
+            var playlistMatch = playlistRegex.Match(uri);
+            if (playlistMatch.Success)
+            {
+                _ = playlistMatch.Groups["userId"].Value;
+                var playlistId = playlistMatch.Groups["playlistId"].Value;
+                uri = $"spotify:playlist:{playlistId}";
+            }
+            else
+            {
+                var collectionMatch = collectionRegex.Match(uri);
+                if (collectionMatch.Success)
+                {
+                    //anonymized
+                    uri = "spotify:user:anonymized:collection";
+                }
+            }
+            output[i++] = uri;
+        }
+
+        using var entities = await _query(new FetchRecentlyPlayedQuery(output), _defaultLang);
+        using var stream = await entities.Content.ReadAsStreamAsync();
+        using var entitiesJson = await JsonDocument.ParseAsync(stream, cancellationToken: cancellationToken);
+        var entitiesArr = entitiesJson.RootElement.GetProperty("data").GetProperty("lookup");
+        var itemsOutput = new ISpotifyHomeItem[entitiesArr.GetArrayLength()];
+
+        int j = -1;
+        using var itemsArr = entitiesArr.EnumerateArray();
+        while (itemsArr.MoveNext())
+        {
+            j++;
+            var rootItem = itemsArr.Current;
+            var typeName = rootItem.GetProperty("__typename").GetString();
+            if (typeName is "UnknownTypeWrapper")
+            {
+                var uri = rootItem.GetProperty("_uri").GetString();
+                if (uri is "spotify:user:anonymized:collection")
+                {
+                    itemsOutput[j] = new SpotifyCollectionItem();
+                    continue;
+                }
+                continue;
+            }
+            var homeitem = SpotifyItemParser.ParseFrom(rootItem.GetProperty("data"));
+            if (homeitem.IsSome)
+            {
+                itemsOutput[j] = homeitem.ValueUnsafe();
+            }
+        }
+
+        return new SpotifyHomeGroupSection
+        {
+            Title = null,
+            SectionId = default,
+            TotalCount = (uint)output.Length,
+            Items = itemsOutput
+        };
+    }
+
     public async Task<SpotifyHomeView> GetHomeView(TimeZoneInfo timezone, Option<CultureInfo> languageOverride, CancellationToken cancellationToken = default)
     {
         var query = new HomeQuery(timezone);
-        var response = await _query(query, languageOverride.IfNone(_defaultLang));
-        if (response.IsSuccessStatusCode)
+        var recentlyPlayedTask = GetRecentlyPlayed(cancellationToken);
+        var responseTask = _query(query, languageOverride.IfNone(_defaultLang));
+        await Task.WhenAll(recentlyPlayedTask, responseTask);
+        if (responseTask.Result.IsSuccessStatusCode)
         {
-            var stream = await response.Content.ReadAsByteArrayAsync();
-            var home = SpotifyHomeView.ParseFrom(stream);
+            var stream = await responseTask.Result.Content.ReadAsByteArrayAsync();
+            var home = SpotifyHomeView.ParseFrom(stream, recentlyPlayedTask.Result);
             return home;
         }
 
         throw new MercuryException(new MercuryResponse(
             Header: new Header
             {
-                StatusCode = (int)response.StatusCode
+                StatusCode = (int)responseTask.Result.StatusCode
             }, ReadOnlyMemory<byte>.Empty
         ));
     }
