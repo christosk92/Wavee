@@ -158,9 +158,12 @@
                                                          Margin="0,0,0,110">
                                     <Grid>
                                         <Border x:Name="SidebarImageBorder"
-                                                Background="Blue">
-                                            <Image x:Name="SidebarImage"
-                                                   Source="https://i.scdn.co/image/ab67616d00001e02a5f5d2df443e110d9e1f2212" />
+                                                BorderThickness="1"
+                                                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                            Background="{ThemeResource LayerFillColorDefaultBrush}">
+                                            <Image x:Name="SidebarImage" 
+                                                   Loaded="SidebarImage_OnLoaded"
+                                                   />
                                         </Border>
 
                                         <Button VerticalAlignment="Top"

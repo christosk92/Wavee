@@ -151,7 +151,7 @@ namespace Wavee.UI.WinUI.View.Shell
 
                 //if our pane is open
                 //we need a drag region for the entire pane size
-                if (SidebarControl.IsPaneOpen)
+                if (SidebarControl.IsPaneOpen || SidebarControl.DisplayMode is NavigationViewDisplayMode.Expanded or NavigationViewDisplayMode.Compact)
                 {
                     //LeftPaddingColumn
                     //we need a drag rect for the entire pane size (after the left padding)
@@ -256,24 +256,5 @@ namespace Wavee.UI.WinUI.View.Shell
             }
         }
 
-        public Visibility TrueIsCollapsed(bool b)
-        {
-            return b ? Visibility.Collapsed : Visibility.Visible;
-        }
-
-        private void Image_OnPointerEntered(object sender, PointerRoutedEventArgs e)
-        {
-            ExpandImageButton.Visibility = Visibility.Visible;
-        }
-
-        private void Image_OnPointerExited(object sender, PointerRoutedEventArgs e)
-        {
-            ExpandImageButton.Visibility = Visibility.Collapsed;
-        }
-
-        private void ExpandImageButton_OnTapped(object sender, TappedRoutedEventArgs e)
-        {
-            ViewModel.User.Settings.ImageExpanded = !ViewModel.User.Settings.ImageExpanded;
-        }
     }
 }

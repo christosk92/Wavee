@@ -1,0 +1,325 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl x:Class="Wavee.UI.WinUI.View.Shell.BottomPlayerControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Wavee.UI.WinUI.View.Shell"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             DataContext="{x:Bind Playback,Mode=OneWay}"
+             mc:Ignorable="d">
+    <UserControl.Resources>
+        <Style x:Key="TransparentButtonStyle"
+               BasedOn="{StaticResource DefaultButtonStyle}"
+               TargetType="Button">
+            <Setter Property="Background"
+                    Value="Transparent" />
+            <Setter Property="BorderThickness"
+                    Value="0" />
+        </Style>
+
+        <Style x:Key="AppBarButtonCompactStyle"
+               BasedOn="{StaticResource DefaultAppBarButtonStyle}"
+               TargetType="AppBarButton">
+            <Setter Property="LabelPosition"
+                    Value="Collapsed" />
+            <Setter Property="Margin"
+                    Value="0" />
+            <Setter Property="Padding"
+                    Value="4" />
+            <Setter Property="Width"
+                    Value="40" />
+        </Style>
+
+        <Style x:Key="AppBarToggleButtonCompactStyle"
+               BasedOn="{StaticResource DefaultAppBarToggleButtonStyle}"
+               TargetType="AppBarToggleButton">
+            <Setter Property="LabelPosition"
+                    Value="Collapsed" />
+            <Setter Property="Margin"
+                    Value="0" />
+            <Setter Property="Padding"
+                    Value="4" />
+            <Setter Property="Width"
+                    Value="40" />
+        </Style>
+    </UserControl.Resources>
+
+    <Grid HorizontalAlignment="Stretch"
+          Margin="0,0,0,-1"
+          Background="{ThemeResource AcrylicBackgroundFillColorDefaultBrush}"
+          BorderThickness="1"
+          BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition />
+            <ColumnDefinition Width="1.3*" />
+            <ColumnDefinition />
+        </Grid.ColumnDefinitions>
+
+        <RelativePanel>
+            <RelativePanel.ChildrenTransitions>
+                <TransitionCollection>
+                    <RepositionThemeTransition IsStaggeringEnabled="False" />
+                </TransitionCollection>
+            </RelativePanel.ChildrenTransitions>
+            <Grid Margin="12,12,-6,12"
+                  x:Name="Image"
+                  PointerEntered="Image_OnPointerEntered"
+                  PointerExited="Image_OnPointerExited"
+                  Visibility="{x:Bind TrueIsCollapsed(User.Settings.ImageExpanded), Mode=OneWay}"
+                  RelativePanel.AlignLeftWithPanel="True"
+                  RelativePanel.AlignTopWithPanel="True"
+                  RelativePanel.AlignBottomWithPanel="True">
+                <Border BorderThickness="1"
+                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
+                    <Image Source="{Binding SmallImageUrl, Mode=OneWay}" />
+                </Border>
+                <Button VerticalAlignment="Top"
+                        Tapped="ExpandImageButton_OnTapped"
+                        x:Name="ExpandImageButton"
+                        Visibility="Collapsed"
+                        Padding="0"
+                        HorizontalAlignment="Stretch">
+                    <FontIcon FontFamily="Segoe Fluent Icons"
+                              Glyph="&#xE014;" />
+                </Button>
+            </Grid>
+
+            <StackPanel   RelativePanel.AlignVerticalCenterWith="Image"
+                          x:Name="MetadataPanel"
+                          Margin="12,0,0,0"
+                          RelativePanel.RightOf="Image">
+                <StackPanel.TranslationTransition>
+                    <Vector3Transition />
+                </StackPanel.TranslationTransition>
+
+                <TextBlock Text="{x:Bind Playback.Title, Mode=OneWay}"
+                           FontWeight="SemiBold"
+                           x:Name="SongName" />
+                <TextBlock Text="JJ Lin"
+                           Foreground="{ThemeResource ApplicationSecondaryForegroundThemeBrush}"
+                           x:Name="Artistname" />
+            </StackPanel>
+
+            <FontIcon FontFamily="Segoe Fluent Icons"
+                      Glyph="&#xEB51;"
+                      Margin="12,0"
+                      RelativePanel.AlignVerticalCenterWith="Image"
+                      RelativePanel.RightOf="MetadataPanel" />
+        </RelativePanel>
+
+        <RelativePanel Padding="12"
+                       HorizontalAlignment="Stretch"
+                       VerticalAlignment="Stretch"
+                       Grid.Column="1">
+            <StackPanel Spacing="4"
+                        Margin="0,6,0,0"
+                        RelativePanel.AlignHorizontalCenterWithPanel="True"
+                        x:Name="ActionsPanel"
+                        Orientation="Horizontal">
+                <Button Background="Transparent"
+                        BorderThickness="0">
+                    <FontIcon FontFamily="/Assets/Fonts/MediaPlayerIcons.ttf#Media Player Fluent Icons"
+                              FontSize="18"
+                              Glyph="&#xE8B1;" />
+                </Button>
+                <Button Background="Transparent"
+                        BorderThickness="0">
+                    <FontIcon FontFamily="/Assets/Fonts/MediaPlayerIcons.ttf#Media Player Fluent Icons"
+                              FontSize="18"
+                              Glyph="&#xE622;" />
+                </Button>
+                <Button Background="{ThemeResource ApplicationForegroundThemeBrush}"
+                        Foreground="{ThemeResource ApplicationPageBackgroundThemeBrush}"
+                        Padding="10"
+                        CornerRadius="100"
+                        BorderThickness="0">
+                    <FontIcon FontFamily="/Assets/Fonts/MediaPlayerIcons.ttf#Media Player Fluent Icons"
+                              FontSize="18"
+                              Glyph="&#xE62E;" />
+                </Button>
+                <Button Background="Transparent"
+                        BorderThickness="0">
+                    <FontIcon FontFamily="/Assets/Fonts/MediaPlayerIcons.ttf#Media Player Fluent Icons"
+                              FontSize="18"
+                              Glyph="&#xE623;" />
+                </Button>
+                <Button Background="Transparent"
+                        BorderThickness="0">
+                    <FontIcon FontFamily="/Assets/Fonts/MediaPlayerIcons.ttf#Media Player Fluent Icons"
+                              FontSize="18"
+                              Glyph="&#xE8EE;" />
+                </Button>
+            </StackPanel>
+
+            <Grid RelativePanel.AlignLeftWithPanel="True"
+                  x:Name="SlidersPanel"
+                  RelativePanel.AlignRightWithPanel="True"
+                  RelativePanel.AlignBottomWithPanel="True">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="38" />
+                    <ColumnDefinition />
+                    <ColumnDefinition Width="38" />
+                </Grid.ColumnDefinitions>
+
+                <TextBlock VerticalAlignment="Center"
+                           Text="1:50" />
+                <Slider Grid.Column="1"
+                        Margin="0,0,0,-3" />
+                <TextBlock Grid.Column="2"
+                           HorizontalAlignment="Right"
+                           VerticalAlignment="Center"
+                           Text="4:26" />
+
+            </Grid>
+        </RelativePanel>
+
+        <Grid Grid.Column="2">
+            <Grid.Resources>
+                <Style BasedOn="{StaticResource AppBarButtonCompactStyle}"
+                       TargetType="AppBarButton" />
+                <Style BasedOn="{StaticResource AppBarToggleButtonCompactStyle}"
+                       TargetType="AppBarToggleButton" />
+            </Grid.Resources>
+            <Grid.RowDefinitions>
+                <RowDefinition />
+                <RowDefinition />
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition />
+                <ColumnDefinition Width="200" />
+            </Grid.ColumnDefinitions>
+            <CommandBar x:Name="SecondaryMediaControlsCommandBar"
+                        Margin="0,4,0,0"
+                        Grid.ColumnSpan="2"
+                        Padding="0"
+                        VerticalAlignment="Center"
+                        DefaultLabelPosition="Collapsed"
+                        OverflowButtonVisibility="Visible">
+                <AppBarButton x:Name="LyricsButton"
+                              Visibility="Visible">
+                    <AppBarButton.Icon>
+                        <FontIcon Glyph="&#xEC72;" />
+                    </AppBarButton.Icon>
+                </AppBarButton>
+
+                <AppBarButton x:Name="QueueButton"
+                              Visibility="Visible">
+                    <AppBarButton.Icon>
+                        <FontIcon FontFamily="/Assets/Fonts/MediaPlayerIcons.ttf#Media Player Fluent Icons"
+                                  Glyph="&#xE93F;" />
+                    </AppBarButton.Icon>
+                </AppBarButton>
+
+                <AppBarButton x:Name="DevicesButton">
+                    <AppBarButton.Icon>
+                        <FontIcon FontFamily="Segoe Fluent Icons"
+                                  Glyph="&#xE772;" />
+                    </AppBarButton.Icon>
+                </AppBarButton>
+
+                <CommandBar.SecondaryCommands>
+                    <AppBarButton Label="Add to playlist"
+                                  x:Name="AddToPlaylistMenu">
+                        <AppBarButton.Icon>
+                            <FontIcon Glyph="&#xECC8;" />
+                        </AppBarButton.Icon>
+
+                        <AppBarButton.Flyout>
+                            <MenuFlyout x:Name="AddToPlaylistFlyout">
+                                <MenuFlyoutItem>
+                                    <MenuFlyoutItem.Icon>
+                                        <FontIcon Glyph="&#xE93F;" />
+                                    </MenuFlyoutItem.Icon>
+                                </MenuFlyoutItem>
+                            </MenuFlyout>
+                        </AppBarButton.Flyout>
+                    </AppBarButton>
+
+                    <AppBarButton Label="Play next"
+                                  x:Name="PlayNextButton">
+                        <AppBarButton.Icon>
+                            <FontIcon FontFamily="/Assets/Fonts/MediaPlayerIcons.ttf#Media Player Fluent Icons"
+                                      Glyph="&#xE93F;" />
+                        </AppBarButton.Icon>
+                    </AppBarButton>
+
+                    <AppBarButton Label="Append to queue"
+                                  x:Name="AppendToQueueButton">
+                        <AppBarButton.Icon>
+                            <FontIcon FontFamily="Segoe Fluent Icons"
+                                      Glyph="&#xF168;" />
+                        </AppBarButton.Icon>
+                    </AppBarButton>
+
+
+                    <AppBarSeparator />
+
+                    <AppBarButton Label="Full screen"
+                                  x:Name="FullScreenButton">
+                        <AppBarButton.Icon>
+                            <SymbolIcon x:Name="FullWindowSymbol"
+                                        Symbol="FullScreen" />
+                        </AppBarButton.Icon>
+                    </AppBarButton>
+                    <AppBarButton Label="Compact"
+                                  x:Name="CompactButton">
+                        <AppBarButton.Icon>
+                            <FontIcon FontFamily="/Assets/Fonts/MediaPlayerIcons.ttf#Media Player Fluent Icons"
+                                      Glyph="&#xE93B;" />
+                        </AppBarButton.Icon>
+                    </AppBarButton>
+
+                    <AppBarSeparator />
+
+                    <AppBarButton Label="Equalizer"
+                                  x:Name="EqualizerButton">
+                        <AppBarButton.Icon>
+                            <FontIcon Glyph="&#xE9E9;" />
+                        </AppBarButton.Icon>
+                    </AppBarButton>
+
+                    <AppBarButton Label="Track credits"
+                                  x:Name="InfoPropertiesButton">
+                        <AppBarButton.Icon>
+                            <FontIcon Glyph="&#xE946;" />
+                        </AppBarButton.Icon>
+                    </AppBarButton>
+
+                </CommandBar.SecondaryCommands>
+            </CommandBar>
+
+
+            <!--  Audio control area  -->
+            <Grid x:Name="VolumeControlGrid"
+                  Grid.Row="1"
+                  Grid.Column="1"
+                  Height="48"
+                  Margin="12,0,12,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="1*" />
+                </Grid.ColumnDefinitions>
+
+                <Button x:Name="AudioMuteButton"
+                        Width="36"
+                        Height="36"
+                        Margin="2,6"
+                        Padding="0"
+                        Style="{StaticResource TransparentButtonStyle}">
+                    <Button.Content>
+                        <FontIcon x:Name="VolumeIcon"
+                                  FontSize="16"
+                                  Glyph="&#xE995;" />
+                    </Button.Content>
+                </Button>
+
+                <Slider x:Name="VolumeSlider"
+                        Grid.Column="1"
+                        VerticalAlignment="Center"
+                        IsThumbToolTipEnabled="False"
+                        Value="50" />
+            </Grid>
+        </Grid>
+    </Grid>
+
+</UserControl>

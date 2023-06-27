@@ -2,6 +2,7 @@
 using Wavee.UI.Helpers;
 using Wavee.UI.User;
 using Wavee.UI.ViewModel.Home;
+using Wavee.UI.ViewModel.Playback;
 using Wavee.UI.ViewModel.Shell.Sidebar;
 
 namespace Wavee.UI.ViewModel.Shell;
@@ -11,13 +12,16 @@ public sealed class ShellViewModel : ObservableObject
     public ShellViewModel(UserViewModel user)
     {
         User = user;
-
+        Instance = this;
+        Playback = new PlaybackViewModel(user);
         SidebarItems = new BulkConcurrentObservableCollection<ISidebarItem>(ConstructDefaultItems(user));
     }
 
 
     public UserViewModel User { get; set; }
+    public PlaybackViewModel Playback { get; } 
     public BulkConcurrentObservableCollection<ISidebarItem> SidebarItems { get; }
+    public static ShellViewModel Instance { get; private set; }
 
     private static IEnumerable<ISidebarItem> ConstructDefaultItems(UserViewModel user)
     {

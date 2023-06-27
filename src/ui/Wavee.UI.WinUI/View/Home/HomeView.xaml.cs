@@ -5,6 +5,7 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
 using Wavee.UI.ViewModel.Home;
+using Wavee.UI.ViewModel.Shell;
 using Wavee.UI.WinUI.Navigation;
 
 namespace Wavee.UI.WinUI.View.Home;
@@ -13,7 +14,7 @@ public sealed partial class HomeView : UserControl, ICacheablePage, INavigable
 {
     public HomeView()
     {
-        ViewModel = new HomeViewModel();
+        ViewModel = new HomeViewModel(ShellViewModel.Instance.User);
         _ = ViewModel.Fetch();
         this.InitializeComponent();
     }

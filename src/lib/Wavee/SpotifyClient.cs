@@ -49,6 +49,7 @@ public class SpotifyClient : IDisposable
             Config: config.Cache
         );
         var deviceId = Guid.NewGuid().ToString("N");
+        DeviceId = deviceId;
         _waitForConnectionTask = new TaskCompletionSource<Unit>(TaskCreationOptions.RunContinuationsAsynchronously);
 
         void CreateConnectionRecursively()
@@ -214,6 +215,7 @@ public class SpotifyClient : IDisposable
 
     public SpotifyConfig Config => _config;
     public APWelcome WelcomeMessage { get; private set; }
+    public string DeviceId { get; }
 
 
     private async Task PlaybackStateChanged(SpotifyLocalPlaybackState obj)

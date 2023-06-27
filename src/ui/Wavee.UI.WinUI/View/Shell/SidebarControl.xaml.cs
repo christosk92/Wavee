@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Reactive.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using CommunityToolkit.WinUI.UI;
 using Microsoft.UI.Input;
 using System.Windows.Media;
@@ -16,9 +18,13 @@ using Windows.System;
 using Windows.UI.Core;
 using CommunityToolkit.WinUI.UI.Controls;
 using LanguageExt;
+using LanguageExt.UnsafeValueAccess;
+using Microsoft.UI.Xaml.Media.Imaging;
 using Wavee.UI.Helpers;
 using Wavee.UI.WinUI.Navigation;
 using Microsoft.VisualBasic.ApplicationServices;
+using ReactiveUI;
+using Wavee.UI.Client.Playback;
 
 namespace Wavee.UI.WinUI.View.Shell;
 
@@ -65,10 +71,10 @@ public sealed partial class SidebarControl : NavigationView, INotifyPropertyChan
 
 
     public event PropertyChangedEventHandler PropertyChanged;
-    private static void UserChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    private static async void UserChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
         var x = d as SidebarControl;
-
+        await Task.Delay(50);
         if (e.NewValue is UserViewModel user)
         {
             if (user.Settings.SidebarExpanded)
@@ -77,6 +83,11 @@ public sealed partial class SidebarControl : NavigationView, INotifyPropertyChan
                 var box = x.FindDescendant<ConstrainedBox>(x => x.Name is "SidebarImageBox");
                 if (box != null)
                     box.Visibility = Visibility.Visible;
+            }
+
+            if (user.Client.Playback.CurrentPlayback.IsSome)
+            {
+                SetImageFromPlaybackEvent(x, user.Client.Playback.CurrentPlayback.ValueUnsafe());
             }
 
             user.Settings.PropertyChanged += (s, e) =>
@@ -88,8 +99,35 @@ public sealed partial class SidebarControl : NavigationView, INotifyPropertyChan
                     x.FindDescendant<ConstrainedBox>(x => x.Name is "SidebarImageBox").Visibility = user.Settings.ImageExpanded ? Visibility.Visible : Visibility.Collapsed;
                 }
             };
+
+            user.Client.Playback.PlaybackEvents
+                .ObserveOn(RxApp.MainThreadScheduler)
+                .Subscribe(y =>
+                {
+                    SetImageFromPlaybackEvent(x, y);
+                });
         }
     }
+
+    private static string _previousId;
+    private static void SetImageFromPlaybackEvent(SidebarControl x, WaveeUIPlaybackState y)
+    {
+        if (y.Metadata.IsSome)
+        {
+            if (_previousId != y.Metadata.ValueUnsafe().Id)
+            {
+                _previousId = y.Metadata.ValueUnsafe().Id;
+                var image = x.FindDescendant<Image>(z => z.Name is "SidebarImage");
+                if (image is not null)
+                {
+                    var bmp = new BitmapImage();
+                    image.Source = bmp;
+                    bmp.UriSource = new Uri(y.Metadata.ValueUnsafe().LargeImageUrl);
+                }
+            }
+        }
+    }
+
     private void OnPropertyChanged([CallerMemberName] string propertyName = null)
     {
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
@@ -319,5 +357,15 @@ public sealed partial class SidebarControl : NavigationView, INotifyPropertyChan
         var button = box.FindDescendant<Button>(x => x.Name is "DownsizeImageButton") as Button;
         if (button != null)
             button.Visibility = Visibility.Collapsed;
+    }
+
+    private void SidebarImage_OnLoaded(object sender, RoutedEventArgs e)
+    {
+        var plb = User?.Client?.Playback?.CurrentPlayback;
+        if (plb is not null && plb.Value.IsSome)
+        {
+            var val = plb.Value.ValueUnsafe();
+            SetImageFromPlaybackEvent(this, val);
+        }
     }
 }

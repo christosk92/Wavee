@@ -1,0 +1,23 @@
+﻿using Eum.Spotify.connectstate;
+using LanguageExt;
+using NAudio.SoundFont;
+using Wavee.Id;
+
+namespace Wavee.UI.Client.Playback;
+
+public readonly record struct WaveeUIPlaybackState(WaveeUIPlayerState PlaybackState, Option<WaveeItemMetadata> Metadata,
+    TimeSpan Position, Option<RemoteState> Remote)
+{
+    public static WaveeUIPlaybackState Empty { get; } = new(WaveeUIPlayerState.NotPlayingAnything, Option<WaveeItemMetadata>.None, TimeSpan.Zero, Option<RemoteState>.None);
+}
+
+public readonly record struct RemoteState(ServiceType Service, string DeviceId, string DeviceName, DeviceType Type, bool CanControlVolume, Option<double> VolumeFraction);
+
+public readonly record struct WaveeItemMetadata(string Id, string Title, string LargeImageUrl, string SmallImageUrl, TimeSpan Duration);
+
+public enum WaveeUIPlayerState
+{
+    NotPlayingAnything,
+    Playing,
+    Paused
+}

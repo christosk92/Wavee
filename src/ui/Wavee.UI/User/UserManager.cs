@@ -28,7 +28,7 @@ public sealed class UserManager : IUserManager
                     id: user.Id,
                     displayName: user.DisplayName,
                     image: user.Image,
-                    dispose: () => { }
+                    client: null
                 )
                 {
                     ReusableCredentials = AppProviders.GetCredentialsFor(user.Id.ToString()).IfNone(string.Empty)

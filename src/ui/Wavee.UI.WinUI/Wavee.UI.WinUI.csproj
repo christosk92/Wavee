@@ -32,6 +32,7 @@
 		<None Remove="View\Setup\SetupPageContent.xaml" />
 		<None Remove="View\Setup\WelcomePage.xaml" />
 		<None Remove="View\Setup\YoureGoodToGoView.xaml" />
+		<None Remove="View\Shell\BottomPlayerControl.xaml" />
 		<None Remove="View\Shell\ShellView.xaml" />
 		<None Remove="View\Shell\SidebarControl.xaml" />
 		<None Remove="View\SignInView.xaml" />
@@ -85,6 +86,9 @@
 	  <None Update="Assets\Fonts\MediaPlayerIcons.ttf">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </None>
+	  <Page Update="View\Shell\BottomPlayerControl.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </Page>
 	  <Page Update="Components\PodcastEpisodeCardView.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </Page>

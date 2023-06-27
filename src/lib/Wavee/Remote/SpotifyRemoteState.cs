@@ -9,7 +9,9 @@ public readonly record struct SpotifyRemoteState(
     Option<SpotifyId> TrackId,
     Option<string> TrackUid,
     Option<string> ContextUri,
-    Option<int> IndexInContext)
+    Option<int> IndexInContext,
+    TimeSpan Position,
+    Option<SpotifyRemoteDeviceInfo> Device)
 {
     internal static SpotifyRemoteState? ParseFrom(Option<Cluster> cluster)
     {
@@ -29,7 +31,36 @@ public readonly record struct SpotifyRemoteState(
             TrackId: trackId,
             TrackUid: trackUid,
             ContextUri: contextUri,
-            IndexInContext: index
+            IndexInContext: index,
+            Position: CalculatePosition(clusterValue!.PlayerState),
+            Device: MutateToDevice(clusterValue)
         );
     }
+
+    private static Option<SpotifyRemoteDeviceInfo> MutateToDevice(Cluster clusterValue)
+    {
+        if(string.IsNullOrEmpty(clusterValue.ActiveDeviceId))
+            return Option<SpotifyRemoteDeviceInfo>.None;
+
+        if (clusterValue.Device.TryGetValue(clusterValue.ActiveDeviceId, out var dv))
+        {
+            return new SpotifyRemoteDeviceInfo(
+                Id: dv.DeviceId,
+                Name: dv.Name,
+                Type: dv.DeviceType,
+                Volume: dv.Capabilities.VolumeSteps is 0 ? 1 : (double)dv.Volume / dv.Capabilities.VolumeSteps,
+                CanControlVolume: !dv.Capabilities.DisableVolume
+            );
+        }
+
+        return Option<SpotifyRemoteDeviceInfo>.None;
+    }
+
+    private static TimeSpan CalculatePosition(PlayerState playerState)
+    {
+        //todO:
+        return TimeSpan.Zero;
+    }
 }
+
+public readonly record struct SpotifyRemoteDeviceInfo(string Id, string Name, DeviceType Type, double Volume, bool CanControlVolume);
