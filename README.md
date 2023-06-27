@@ -9,6 +9,11 @@ Below is a screenshot of the album page:
 ![image](https://github.com/christosk92/Wavee/assets/13438702/e7431549-f6f7-4093-a421-38e247356a20)
 
 
+https://github.com/christosk92/Wavee/assets/13438702/85b59eb9-51e2-45cb-a1b3-79656a31ec4b
+
+
+
+
 # Note 6/19/2023
 Spotify recently killed a lot of the internal APIs I relied on. 
 Specifically the main connection over TCP will be phased out soon I assume, so I will convert everything to HTTPs, inlcuding authentication which will work using oauth.
