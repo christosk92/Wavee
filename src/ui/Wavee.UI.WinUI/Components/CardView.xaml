@@ -6,6 +6,11 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:controls="using:CommunityToolkit.WinUI.UI.Controls"
+             xmlns:animations="using:CommunityToolkit.WinUI.UI.Animations"
+             xmlns:ui="using:CommunityToolkit.WinUI.UI"
+             PointerEntered="CardView_OnPointerEntered"
+             PointerExited="CardView_OnPointerExited"
+             ContextRequested="CardView_OnContextRequested"
              mc:Ignorable="d">
 
     <Button Background="{ThemeResource LayerFillColorDefaultBrush}"
@@ -22,31 +27,77 @@
                 <RowDefinition Height="Auto" />
                 <RowDefinition />
             </Grid.RowDefinitions>
-            <Border x:Name="HeartBorder"
-                    x:Load="{x:Bind ImageIsIcon, Mode=OneWay}"
-                    Background="{ThemeResource AccentAcrylicBackgroundFillColorBaseBrush}">
-                <FontIcon FontSize="48"
-                          VerticalAlignment="Center"
-                          HorizontalAlignment="Center"
-                          FontFamily="Segoe Fluent Icons"
-                          Glyph="&#xEB52;" />
-            </Border>
+            <Grid>
+                <Border x:Name="HeartBorder"
+                        Grid.ColumnSpan="2"
+                        x:Load="{x:Bind ImageIsIcon, Mode=OneWay}"
+                        Background="{ThemeResource AccentAcrylicBackgroundFillColorBaseBrush}">
+                    <FontIcon FontSize="48"
+                              VerticalAlignment="Center"
+                              HorizontalAlignment="Center"
+                              FontFamily="Segoe Fluent Icons"
+                              Glyph="&#xEB52;" />
+                </Border>
+                <controls:ConstrainedBox x:Name="NormalImageBox"
+                                         Grid.ColumnSpan="2"
+                                         x:Load="{x:Bind Negate(IsArtist),Mode=OneWay}"
+                                         AspectRatio="1:1">
+                    <Image Source="{x:Bind Image, Mode=OneWay}" />
+                </controls:ConstrainedBox>
+                <controls:ConstrainedBox x:Name="ArtistImageBox"
+                                         Grid.ColumnSpan="2"
+                                         x:Load="{x:Bind IsArtist,Mode=OneWay}"
+                                         AspectRatio="1:1">
+                    <Viewbox Stretch="UniformToFill"
+                             Margin="6">
+                        <PersonPicture DisplayName="{x:Bind Name,Mode=OneWay}"
+                                       Initials="{x:Bind CalculateInitials(Name), Mode=OneWay}"
+                                       ProfilePicture="{x:Bind Image, Mode=OneWay}" />
+                    </Viewbox>
+                </controls:ConstrainedBox>
 
-            <controls:ConstrainedBox x:Name="NormalImageBox"
-                                     x:Load="{x:Bind Negate(IsArtist),Mode=OneWay}"
-                                     AspectRatio="1:1">
-                <Image Source="{x:Bind Image, Mode=OneWay}" />
-            </controls:ConstrainedBox>
-            <controls:ConstrainedBox x:Name="ArtistImageBox"
-                                     x:Load="{x:Bind IsArtist,Mode=OneWay}"
-                                     AspectRatio="1:1">
-                <Viewbox Stretch="UniformToFill"
-                         Margin="6">
-                    <PersonPicture DisplayName="{x:Bind Name,Mode=OneWay}"
-                                   Initials="{x:Bind CalculateInitials(Name), Mode=OneWay}"
-                                   ProfilePicture="{x:Bind Image, Mode=OneWay}" />
-                </Viewbox>
-            </controls:ConstrainedBox>
+                <Border x:Name="ButtonsBorder"
+                        x:Load="{x:Bind ButtonsPanelLoaded,Mode=OneWay}"
+                        Loaded="ButtonsPanel_OnLoaded">
+                    <Grid Visibility="Collapsed"
+                          x:Name="ButtonsPanel"
+                          Padding="8"
+                          VerticalAlignment="Bottom"
+                          ui:VisualExtensions.NormalizedCenterPoint="0.5,0.5">
+                        <animations:Implicit.ShowAnimations>
+                            <animations:TranslationAnimation Duration="0:0:0.2"
+                                                             From="0, 30, 0" 
+                                                             To="0" />
+                            <animations:OpacityAnimation Duration="0:0:0.2"
+                                                         From="0"
+                                                         To="1.0" />
+                        </animations:Implicit.ShowAnimations>
+
+                        <animations:Implicit.HideAnimations>
+                            <animations:OpacityAnimation Duration="0:0:0.1"
+                                                         To="0.0" />
+                            <animations:TranslationAnimation Duration="0:0:0.2"
+                                                             From="0, 0, 0"
+                                                             To="0, 20,0" />
+                        </animations:Implicit.HideAnimations>
+
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition />
+                            <ColumnDefinition />
+                        </Grid.ColumnDefinitions>
+                        <Button  Style="{ThemeResource AccentButtonStyle}">
+                            <FontIcon FontFamily="Segoe Fluent Icons"
+                                      Glyph="&#xF5B0;" />
+                        </Button>
+                        <Button Grid.Column="1"
+                                HorizontalAlignment="Right"
+                                Style="{ThemeResource AccentButtonStyle}">
+                            <FontIcon FontFamily="Segoe Fluent Icons"
+                                      Glyph="&#xEB52;" />
+                        </Button>
+                    </Grid>
+                </Border>
+            </Grid>
 
             <StackPanel Padding="8"
                         Height="80"

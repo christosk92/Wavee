@@ -1,6 +1,15 @@
 ﻿namespace Wavee.UI.Common;
 
-public sealed class CardViewModel
+public interface ICardViewModel
+{
+    string Id { get; }
+    string Title { get; }
+    string? Image { get; }
+    bool ImageIsIcon { get; }
+    string? Subtitle { get; }
+    bool HasSubtitle { get; }
+}
+public sealed class CardViewModel : ICardViewModel
 {
     public string Id { get; init; }
     public string Title { get; init; }
@@ -10,4 +19,20 @@ public sealed class CardViewModel
     public bool ImageIsIcon { get; init; }
     public bool IsArtist { get; init; }
     public bool HasSubtitle => !string.IsNullOrEmpty(Subtitle);
+}
+
+public sealed class PodcastEpisodeCardViewModel : ICardViewModel
+{
+    public string Id { get; init; }
+    public string Title { get; init; }
+    public string? Image { get; init; }
+    public bool ImageIsIcon => false;
+    public string? Subtitle => Show;
+    public bool HasSubtitle => true;
+    public bool Started { get; init; }
+    public TimeSpan Duration { get; init; }
+    public TimeSpan Progress { get; init; }
+    public string Show { get; init; }
+    public string? PodcastDescription { get; init; }
+    public DateTimeOffset ReleaseDate { get; init; }
 }

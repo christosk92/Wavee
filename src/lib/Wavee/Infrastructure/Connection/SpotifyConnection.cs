@@ -38,7 +38,6 @@ internal static class SpotifyConnection
         {
             connection.Sender.Complete();
             connection.Stream.Close();
-            Connections.Remove(connectionId);
 
             //remove all callbacks
             foreach (var callback in connection.Callbacks)

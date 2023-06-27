@@ -12,9 +12,38 @@
              xmlns:controls="using:CommunityToolkit.WinUI.UI.Controls"
              xmlns:panels="using:Wavee.UI.WinUI.Panels"
              xmlns:components="using:Wavee.UI.WinUI.Components"
+             xmlns:templateSelectors="using:Wavee.UI.WinUI.TemplateSelectors"
              mc:Ignorable="d">
 
     <UserControl.Resources>
+        <DataTemplate x:Key="CardViewTemplate"
+                      x:DataType="common:CardViewModel">
+            <components:CardView Id="{x:Bind Id}"
+                                 IsArtist="{x:Bind IsArtist}"
+                                 Title="{x:Bind Title}"
+                                 Subtitle="{x:Bind Subtitle}"
+                                 Image="{x:Bind Image}"
+                                 Caption="{x:Bind Caption}"
+                                 ImageIsIcon="{x:Bind ImageIsIcon}" />
+        </DataTemplate>
+
+        <DataTemplate x:Key="PodcastEpisodeCardViewTemplate"
+                      x:DataType="common:PodcastEpisodeCardViewModel">
+            <components:PodcastEpisodeCardView Id="{x:Bind Id}"
+                                               Title="{x:Bind Title}"
+                                               Image="{x:Bind Image}" 
+                                               Started="{x:Bind Started}"
+                                               Duration="{x:Bind Duration}"
+                                               Progress="{x:Bind Progress}"
+                                               ShowTitle="{x:Bind Show}"
+                                               Description="{x:Bind PodcastDescription}"
+                                               ReleaseDate="{x:Bind ReleaseDate}"
+                                               />
+        </DataTemplate>
+        <templateSelectors:CardViewTemplateSelector x:Key="CardViewTemplateSelector"
+                                                    PodcastViewTemplate="{StaticResource PodcastEpisodeCardViewTemplate}"
+                                                    CardViewTemplate="{StaticResource CardViewTemplate}" />
+
         <xamlConverters:EnumEqualityConverter x:Key="EnumEqualityConverter" />
     </UserControl.Resources>
     <Grid Padding="48,24"
@@ -28,10 +57,11 @@
                     Spacing="12">
             <TextBlock Style="{ThemeResource TitleTextBlockStyle}"
                        Text="{x:Bind ViewModel.Greeting, Mode=OneWay}" />
-            <labs:TokenView VerticalAlignment="Bottom">
-                <labs:TokenItem Content="Music" />
-                <labs:TokenItem Content="Podcasts &amp; Shows" />
-            </labs:TokenView>
+            <labs:TokenView VerticalAlignment="Bottom"
+                            ItemsSource="{x:Bind ViewModel.Filters, Mode=OneWay}"
+                            SelectedItem="{x:Bind ViewModel.SelectedFilter, Mode=OneWay}"
+                            IsItemClickEnabled="True"
+                            ItemClick="FilterClicked" />
         </StackPanel>
 
         <ScrollViewer Margin="0,12,-48,-24"
@@ -53,7 +83,7 @@
                                       x:Load="{x:Bind Rendering, Converter={StaticResource EnumEqualityConverter}, ConverterParameter='Grid'}">
                                     <ItemsRepeater ItemsSource="{x:Bind Items, Mode=OneWay}">
                                         <ItemsRepeater.ItemTemplate>
-                                            <DataTemplate x:DataType="common:CardViewModel">
+                                            <DataTemplate x:DataType="common:ICardViewModel">
                                                 <Button Background="{ThemeResource LayerFillColorDefaultBrush}"
                                                         CornerRadius="8"
                                                         HorizontalAlignment="Stretch"
@@ -85,6 +115,9 @@
                                                                     Margin="12,0">
                                                             <TextBlock FontWeight="SemiBold"
                                                                        Text="{x:Bind Title}"
+                                                                       TextWrapping="WrapWholeWords"
+                                                                       MaxLines="2"
+                                                                       TextTrimming="CharacterEllipsis"
                                                                        FontSize="16" />
                                                             <TextBlock Text="{x:Bind Subtitle}"
                                                                        MaxLines="2"
@@ -113,21 +146,11 @@
                                       VerticalAlignment="Top"
                                       x:Load="{x:Bind Rendering, Converter={StaticResource EnumEqualityConverter}, ConverterParameter='HorizontalStack'}">
                                     <ItemsRepeater VerticalAlignment="Top"
+                                                   ItemTemplate="{StaticResource CardViewTemplateSelector}"
                                                    ItemsSource="{x:Bind Items, Mode=OneWay}">
                                         <ItemsRepeater.Layout>
                                             <panels:HorizontalAdaptiveLayout DesiredWidth="200" />
                                         </ItemsRepeater.Layout>
-                                        <ItemsRepeater.ItemTemplate>
-                                            <DataTemplate x:DataType="common:CardViewModel">
-                                                <components:CardView Id="{x:Bind Id}"
-                                                                     IsArtist="{x:Bind IsArtist}"
-                                                                     Title="{x:Bind Title}"
-                                                                     Subtitle="{x:Bind Subtitle}"
-                                                                     Image="{x:Bind Image}"
-                                                                     Caption="{x:Bind Caption}"
-                                                                     ImageIsIcon="{x:Bind ImageIsIcon}" />
-                                            </DataTemplate>
-                                        </ItemsRepeater.ItemTemplate>
                                     </ItemsRepeater>
                                 </Grid>
                             </Grid>

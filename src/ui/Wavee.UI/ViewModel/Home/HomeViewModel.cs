@@ -3,6 +3,7 @@ using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using LanguageExt;
 using Serilog;
+using Wavee.Id;
 using Wavee.Metadata.Home;
 using Wavee.UI.Common;
 
@@ -12,6 +13,8 @@ public sealed class HomeViewModel : ObservableObject
 {
     private string? _greeting;
     private bool _loading;
+    private string[] _filters;
+    private string? _selectedFilter;
 
     public bool Loading
     {
@@ -30,6 +33,17 @@ public sealed class HomeViewModel : ObservableObject
         set => SetProperty(ref _loading, value);
     }
 
+    public string[] Filters
+    {
+        get => _filters;
+        set => SetProperty(ref _filters, value);
+    }
+
+    public string? SelectedFilter
+    {
+        get => _selectedFilter;
+        set => SetProperty(ref _selectedFilter, value);
+    }
     public ObservableCollection<HomeGroupSectionViewModel> Sections { get; } = new();
 
     public async Task Fetch(CancellationToken ct = default)
@@ -38,13 +52,38 @@ public sealed class HomeViewModel : ObservableObject
         {
             IsBusy = true;
             var client = SpotifyClient.Clients.Head().Value;
-            var response = await client.Metadata.GetHomeView(TimeZoneInfo.Local, Option<CultureInfo>.None, ct);
+
+            //SelectedFilter -> AudioItemType
+
+            bool isPodcastsFilter = false;
+            var typeFilterType = Option<AudioItemType>.None;
+            switch (SelectedFilter)
+            {
+                case "Podcasts & Shows":
+                    typeFilterType = AudioItemType.PodcastEpisode | AudioItemType.PodcastShow;
+                    isPodcastsFilter = true;
+                    break;
+                case "Music":
+                    typeFilterType = AudioItemType.Album
+                                     | AudioItemType.Artist 
+                                     | AudioItemType.Playlist 
+                                     | AudioItemType.UserCollection
+                                     | AudioItemType.Track;
+                    isPodcastsFilter = false;
+                    break;
+            }
+            // var typeFilterType = Option<AudioItemType>.None;
+            // if (Enum.TryParse(SelectedFilter, true, out AudioItemType typeFilter))
+            // {
+            //     typeFilterType = typeFilter;
+            // }
+            var response = await Task.Run(() => client.Metadata.GetHomeView(typeFilterType,TimeZoneInfo.Local, Option<CultureInfo>.None, ct), ct);
             Greeting = response.Greeting;
             Sections.Clear();
             int sectionindex = 0;
             foreach (var section in response.Sections)
             {
-                Sections.Add(new HomeGroupSectionViewModel
+                var item = new HomeGroupSectionViewModel
                 {
                     Items = section.Items
                         .Select(c => c switch
@@ -55,7 +94,7 @@ public sealed class HomeViewModel : ObservableObject
                                 Title = "Your Library",
                                 Image = "\uEB52",
                                 ImageIsIcon = true
-                            },
+                            } as ICardViewModel,
                             SpotifyPlaylistHomeItem playlistItem => new CardViewModel
                             {
                                 Id = playlistItem.Id.ToString(),
@@ -82,14 +121,37 @@ public sealed class HomeViewModel : ObservableObject
                                 Image = artistItem.Images.HeadOrNone().Map(x => x.Url).IfNone(string.Empty),
                                 ImageIsIcon = false
                             },
+                            SpotifyPodcastEpisodeHomeItem podcastEpisode => new PodcastEpisodeCardViewModel
+                            {
+                                Id = podcastEpisode.Id.ToString(),
+                                Title = podcastEpisode.Name,
+                                Image = podcastEpisode.Images.OrderByDescending(x=> x.Width.IfNone(0)).HeadOrNone().Map(x => x.Url).IfNone(string.Empty), 
+                                Duration = podcastEpisode.Duration,
+                                Progress = podcastEpisode.Position,
+                                PodcastDescription = podcastEpisode.Description.IfNone(string.Empty),
+                                Show = podcastEpisode.PodcastName,
+                                Started = podcastEpisode.Started,
+                                ReleaseDate = podcastEpisode.ReleaseDate,
+                            },
                             _ => null
-                        }).Take((int)(sectionindex is 0 ? 6 : section.TotalCount)).Where(x=> x is not null).ToList()!,
+                        }).Take((int)((sectionindex is 0 && !isPodcastsFilter)? 6 : section.TotalCount)).Where(x => x is not null).ToList()!,
                     Title = section.Title,
                     Subtitle = null,
                     Rendering = sectionindex > 0 ? HomeGroupRenderType.HorizontalStack : HomeGroupRenderType.Grid
-                });
+                };
+                if (item.Items.Count == 0) 
+                    continue;
+                Sections.Add(item);
                 sectionindex++;
             }
+            Filters = new[]
+            {
+                "Music",
+                "Podcasts & Shows"
+            };
+            var oldFilter = SelectedFilter;
+            SelectedFilter = string.Empty;
+            SelectedFilter = oldFilter;
 
             IsBusy = false;
         }

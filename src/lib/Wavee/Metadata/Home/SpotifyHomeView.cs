@@ -14,7 +14,7 @@ public sealed class SpotifyHomeView
     public required string Greeting { get; init; }
     public required IEnumerable<SpotifyHomeGroupSection> Sections { get; init; }
 
-    public static SpotifyHomeView ParseFrom(ReadOnlyMemory<byte> data, SpotifyHomeGroupSection recentlyPlayed)
+    public static SpotifyHomeView ParseFrom(ReadOnlyMemory<byte> data, SpotifyHomeGroupSection recentlyPlayed, Option<AudioItemType> typeFilterType)
     {
         try
         {
@@ -82,7 +82,7 @@ public sealed class SpotifyHomeView
                 {
                     SectionId = sectionId,
                     TotalCount = totalCount,
-                    Items = outputItems,
+                    Items = outputItems.Where(x => x is not null && (typeFilterType.IsNone || typeFilterType.ValueUnsafe().HasFlag(x.Id.Type))),
                     Title = title
                 };
             }

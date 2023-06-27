@@ -14,9 +14,11 @@ using Wavee.UI.ViewModel.Shell.Sidebar;
 using Wavee.UI.WinUI.Helpers;
 using Windows.System;
 using Windows.UI.Core;
+using CommunityToolkit.WinUI.UI.Controls;
 using LanguageExt;
 using Wavee.UI.Helpers;
 using Wavee.UI.WinUI.Navigation;
+using Microsoft.VisualBasic.ApplicationServices;
 
 namespace Wavee.UI.WinUI.View.Shell;
 
@@ -30,7 +32,8 @@ public sealed partial class SidebarControl : NavigationView, INotifyPropertyChan
     private double originalSize = 0;
 
     private bool lockFlag = false;
-    public static readonly DependencyProperty UserProperty = DependencyProperty.Register(nameof(User), typeof(UserViewModel), typeof(SidebarControl), new PropertyMetadata(default(UserViewModel)));
+    public static readonly DependencyProperty UserProperty = DependencyProperty.Register(nameof(User), typeof(UserViewModel), typeof(SidebarControl), new PropertyMetadata(default(UserViewModel), UserChanged));
+
 
     public SidebarControl()
     {
@@ -62,7 +65,31 @@ public sealed partial class SidebarControl : NavigationView, INotifyPropertyChan
 
 
     public event PropertyChangedEventHandler PropertyChanged;
+    private static void UserChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        var x = d as SidebarControl;
 
+        if (e.NewValue is UserViewModel user)
+        {
+            if (user.Settings.SidebarExpanded)
+            {
+                x.IsPaneOpen = true;
+                var box = x.FindDescendant<ConstrainedBox>(x => x.Name is "SidebarImageBox");
+                if (box != null)
+                    box.Visibility = Visibility.Visible;
+            }
+
+            user.Settings.PropertyChanged += (s, e) =>
+            {
+                if (e.PropertyName == nameof(user.Settings.ImageExpanded))
+                {
+                    if (user.Settings.ImageExpanded)
+                        x.IsPaneOpen = true;
+                    x.FindDescendant<ConstrainedBox>(x => x.Name is "SidebarImageBox").Visibility = user.Settings.ImageExpanded ? Visibility.Visible : Visibility.Collapsed;
+                }
+            };
+        }
+    }
     private void OnPropertyChanged([CallerMemberName] string propertyName = null)
     {
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
@@ -102,7 +129,7 @@ public sealed partial class SidebarControl : NavigationView, INotifyPropertyChan
     {
         if (args.InvokedItemContainer is NavigationViewItem item)
         {
-            var data= this.MenuItemFromContainer(item);
+            var data = this.MenuItemFromContainer(item);
 
 
             Type? vm = null;
@@ -262,4 +289,35 @@ public sealed partial class SidebarControl : NavigationView, INotifyPropertyChan
             : new GridLength(200);
     }
 
+    private void DownsizeImageButton_OnTapped(object sender, TappedRoutedEventArgs e)
+    {
+        User.Settings.ImageExpanded = !User.Settings.ImageExpanded;
+    }
+
+    private void SidebarImageBox_OnLoaded(object sender, RoutedEventArgs e)
+    {
+        if (User?.Settings?.SidebarExpanded is true)
+        {
+            var box = sender as ConstrainedBox;
+            if (box != null)
+                box.Visibility = User.Settings.SidebarExpanded ? Visibility.Visible : Visibility.Collapsed;
+        }
+    }
+
+    private void SidebarImageBox_OnPointerEntered(object sender, PointerRoutedEventArgs e)
+    {
+        //DownsizeImageButton
+        var box = sender as ConstrainedBox;
+        var button = box.FindDescendant<Button>(x => x.Name is "DownsizeImageButton") as Button;
+        if (button != null)
+            button.Visibility = Visibility.Visible;
+    }
+
+    private void SidebarImageBox_OnPointerExited(object sender, PointerRoutedEventArgs e)
+    {
+        var box = sender as ConstrainedBox;
+        var button = box.FindDescendant<Button>(x => x.Name is "DownsizeImageButton") as Button;
+        if (button != null)
+            button.Visibility = Visibility.Collapsed;
+    }
 }

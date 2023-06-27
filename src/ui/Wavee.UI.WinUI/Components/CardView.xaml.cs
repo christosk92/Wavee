@@ -14,10 +14,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
-
-// To learn more about WinUI, the WinUI project structure,
-// and more about our project templates, see: http://aka.ms/winui-project-info.
-
+using Wavee.UI.WinUI.ContextFlyout;
 namespace Wavee.UI.WinUI.Components
 {
     public sealed partial class CardView : UserControl, INotifyPropertyChanged
@@ -42,6 +39,8 @@ namespace Wavee.UI.WinUI.Components
 
         public static readonly DependencyProperty IsArtistProperty = DependencyProperty.Register(nameof(IsArtist),
             typeof(bool), typeof(CardView), new PropertyMetadata(default(bool)));
+
+        private bool _buttonsPanelLoaded;
 
         public CardView()
         {
@@ -94,6 +93,12 @@ namespace Wavee.UI.WinUI.Components
             set => SetValue(IsArtistProperty, value);
         }
 
+        public bool ButtonsPanelLoaded
+        {
+            get => _buttonsPanelLoaded;
+            set => SetField(ref _buttonsPanelLoaded, value);
+        }
+
         public bool HasCaption => !string.IsNullOrEmpty(Caption);
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -119,5 +124,36 @@ namespace Wavee.UI.WinUI.Components
             .Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries)
             .Where(x => x.Length >= 1 && char.IsLetter(x[0]))
             .Select(x => char.ToUpper(x[0])));
+
+        private void CardView_OnPointerEntered(object sender, PointerRoutedEventArgs e)
+        {
+            ButtonsPanelLoaded = true;
+        }
+
+        private void CardView_OnPointerExited(object sender, PointerRoutedEventArgs e)
+        {
+            ButtonsPanel.Visibility = Visibility.Collapsed;
+            ButtonsPanelLoaded = false;
+        }
+
+        private void ButtonsPanel_OnLoaded(object sender, RoutedEventArgs e)
+        {
+            if (ButtonsPanel is not null)
+                ButtonsPanel.Visibility = Visibility.Visible;
+        }
+
+        private void CardView_OnContextRequested(UIElement sender, ContextRequestedEventArgs args)
+        {
+            Point point = new Point(0, 0);
+            var contextFlyout = ContextFlyouts.BuildFlyout(Id);
+            if (args.TryGetPosition(sender, out point))
+            {
+                contextFlyout.ShowAt(sender, point);
+            }
+            else
+            {
+                contextFlyout.ShowAt((FrameworkElement)sender);
+            }
+        }
     }
 }

@@ -57,7 +57,8 @@ internal readonly struct LiveSpotifyMetadataClient : ISpotifyMetadataClient
         throw new MercuryException(response);
     }
 
-    public async Task<SpotifyHomeGroupSection> GetRecentlyPlayed(CancellationToken cancellationToken = default)
+    public async Task<SpotifyHomeGroupSection> GetRecentlyPlayed(Option<AudioItemType> typeFilterType,
+        CancellationToken cancellationToken = default)
     {
         //spclient -> 	/recently-played/v3/user/7ucghdgquf6byqusqkliltwc2/recently-played
         var userId = _userId;
@@ -137,20 +138,21 @@ internal readonly struct LiveSpotifyMetadataClient : ISpotifyMetadataClient
             Title = null,
             SectionId = default,
             TotalCount = (uint)output.Length,
-            Items = itemsOutput
+            Items = itemsOutput.Where(x => !typeFilterType.IsSome || typeFilterType.ValueUnsafe().HasFlag(x.Id.Type)),
         };
     }
 
-    public async Task<SpotifyHomeView> GetHomeView(TimeZoneInfo timezone, Option<CultureInfo> languageOverride, CancellationToken cancellationToken = default)
+    public async Task<SpotifyHomeView> GetHomeView(Option<AudioItemType> typeFilterType, TimeZoneInfo timezone,
+        Option<CultureInfo> languageOverride, CancellationToken cancellationToken = default)
     {
         var query = new HomeQuery(timezone);
-        var recentlyPlayedTask = GetRecentlyPlayed(cancellationToken);
+        var recentlyPlayedTask = GetRecentlyPlayed(typeFilterType,cancellationToken);
         var responseTask = _query(query, languageOverride.IfNone(_defaultLang));
         await Task.WhenAll(recentlyPlayedTask, responseTask);
         if (responseTask.Result.IsSuccessStatusCode)
         {
             ReadOnlyMemory<byte> stream = await responseTask.Result.Content.ReadAsByteArrayAsync();
-            var home = SpotifyHomeView.ParseFrom(stream, recentlyPlayedTask.Result);
+            var home = SpotifyHomeView.ParseFrom(stream, recentlyPlayedTask.Result, typeFilterType);
             return home;
         }
 

@@ -255,5 +255,25 @@ namespace Wavee.UI.WinUI.View.Shell
                 appWindow.TitleBar.SetDragRectangles(dragRects);
             }
         }
+
+        public Visibility TrueIsCollapsed(bool b)
+        {
+            return b ? Visibility.Collapsed : Visibility.Visible;
+        }
+
+        private void Image_OnPointerEntered(object sender, PointerRoutedEventArgs e)
+        {
+            ExpandImageButton.Visibility = Visibility.Visible;
+        }
+
+        private void Image_OnPointerExited(object sender, PointerRoutedEventArgs e)
+        {
+            ExpandImageButton.Visibility = Visibility.Collapsed;
+        }
+
+        private void ExpandImageButton_OnTapped(object sender, TappedRoutedEventArgs e)
+        {
+            ViewModel.User.Settings.ImageExpanded = !ViewModel.User.Settings.ImageExpanded;
+        }
     }
 }

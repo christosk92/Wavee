@@ -29,16 +29,18 @@ public interface ISpotifyMetadataClient
     /// </returns>
     Task<Track> GetTrack(SpotifyId id, CancellationToken cancellationToken = default);
 
-    Task<SpotifyHomeGroupSection> GetRecentlyPlayed(CancellationToken cancellationToken = default);
+    Task<SpotifyHomeGroupSection> GetRecentlyPlayed(Option<AudioItemType> typeFilterType,CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Fetches the <see cref="HomeView"/> for the current user.
     /// </summary>
+    /// <param name="typeFilterType"></param>
     /// <param name="timezone"></param>
     /// <param name="languageOverride"></param>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
-    Task<SpotifyHomeView> GetHomeView(TimeZoneInfo timezone, Option<CultureInfo> languageOverride, CancellationToken cancellationToken = default);
+    Task<SpotifyHomeView> GetHomeView(Option<AudioItemType> typeFilterType, TimeZoneInfo timezone,
+        Option<CultureInfo> languageOverride, CancellationToken cancellationToken = default);
 
 
     /// <summary>

@@ -23,6 +23,7 @@
 	</ItemGroup>
 	<ItemGroup>
 		<None Remove="Components\CardView.xaml" />
+		<None Remove="Components\PodcastEpisodeCardView.xaml" />
 		<None Remove="Dialogs\WizardDialog.xaml" />
 		<None Remove="Styles\PropertiesStyles.xaml" />
 		<None Remove="View\Home\HomeView.xaml" />
@@ -50,6 +51,7 @@
 	<ItemGroup>
 		<PackageReference Include="CommunityToolkit.Labs.WinUI.SettingsControls" Version="0.0.18" />
 		<PackageReference Include="CommunityToolkit.Labs.WinUI.TokenView" Version="0.0.6" />
+		<PackageReference Include="CommunityToolkit.WinUI.UI.Animations" Version="7.1.2" />
 		<PackageReference Include="Microsoft.Graphics.Win2D" Version="1.0.5.1" />
 		<PackageReference Include="Microsoft.WindowsAppSDK" Version="1.3.230602002" />
 		<PackageReference Include="ReactiveUI.WinUI" Version="19.2.1" />
@@ -83,6 +85,9 @@
 	  <None Update="Assets\Fonts\MediaPlayerIcons.ttf">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </None>
+	  <Page Update="Components\PodcastEpisodeCardView.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </Page>
 	  <Page Update="Components\CardView.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </Page>

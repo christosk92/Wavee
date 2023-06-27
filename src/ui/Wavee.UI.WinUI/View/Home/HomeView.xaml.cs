@@ -1,3 +1,6 @@
+using System.Linq;
+using System.Threading.Tasks;
+using CommunityToolkit.Labs.WinUI;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
@@ -35,4 +38,20 @@ public sealed partial class HomeView : UserControl, ICacheablePage, INavigable
 
     }
 
+
+    private async void FilterClicked(object sender, ItemClickEventArgs e)
+    {
+        await Task.Delay(10);
+        var selectedItem = (sender as TokenView)?.SelectedItem;
+        if (selectedItem is null)
+        {
+            selectedItem = string.Empty;
+        }
+        if (selectedItem is string filter)
+        {
+            ViewModel.SelectedFilter = filter;
+            await ViewModel.Fetch();
+            ViewModel.SelectedFilter = filter;
+        }
+    }
 }

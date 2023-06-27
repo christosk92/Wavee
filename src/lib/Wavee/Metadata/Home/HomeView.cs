@@ -27,6 +27,19 @@ public sealed class SpotifyAlbumHomeItem : ISpotifyHomeItem
     public required CoverImage[] Images { get; init; }
 }
 
+public sealed class SpotifyPodcastEpisodeHomeItem : ISpotifyHomeItem
+{
+    public required SpotifyId Id { get; init; }
+    public required string Name { get; init; }
+    public required CoverImage[] Images { get; init; }
+    public Option<string> Description { get; init; }
+    public TimeSpan Duration { get; set; }
+    public TimeSpan Position { get; set; }
+    public bool Started { get; set; }
+    public string PodcastName { get; set; }
+    public required DateTimeOffset ReleaseDate { get; set; }
+}
+
 public sealed class SpotifyArtistHomeItem : ISpotifyHomeItem
 {
     public required SpotifyId Id { get; init; }
