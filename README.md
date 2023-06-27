@@ -1,5 +1,14 @@
 # Wavee
 
+#Note 6/27/2023
+
+I've been able to fix a lot of endpoints. The most difficult one is the artist page, because the new endpoint does not return all the albums/singles/compilations I have to page them, which is difficult because they are grouped. Moreover, each group can be in a different state (Track_List vs Grid_View)...
+Thanks for your patience!
+
+Below is a screenshot of the album page:
+![image](https://github.com/christosk92/Wavee/assets/13438702/a5682514-13f6-4182-b382-814566a9c218)
+
+
 # Note 6/19/2023
 Spotify recently killed a lot of the internal APIs I relied on. 
 Specifically the main connection over TCP will be phased out soon I assume, so I will convert everything to HTTPs, inlcuding authentication which will work using oauth.
