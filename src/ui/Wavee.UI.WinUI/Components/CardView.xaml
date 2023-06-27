@@ -65,22 +65,6 @@
                           Padding="8"
                           VerticalAlignment="Bottom"
                           ui:VisualExtensions.NormalizedCenterPoint="0.5,0.5">
-                        <animations:Implicit.ShowAnimations>
-                            <animations:TranslationAnimation Duration="0:0:0.2"
-                                                             From="0, 30, 0" 
-                                                             To="0" />
-                            <animations:OpacityAnimation Duration="0:0:0.2"
-                                                         From="0"
-                                                         To="1.0" />
-                        </animations:Implicit.ShowAnimations>
-
-                        <animations:Implicit.HideAnimations>
-                            <animations:OpacityAnimation Duration="0:0:0.1"
-                                                         To="0.0" />
-                            <animations:TranslationAnimation Duration="0:0:0.2"
-                                                             From="0, 0, 0"
-                                                             To="0, 20,0" />
-                        </animations:Implicit.HideAnimations>
 
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition />

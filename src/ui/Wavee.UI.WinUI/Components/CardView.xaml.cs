@@ -10,10 +10,12 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using CommunityToolkit.WinUI.UI.Animations;
 using Wavee.UI.WinUI.ContextFlyout;
 using Wavee.UI.WinUI.Navigation;
 using Wavee.UI.WinUI.View.Album;
@@ -135,14 +137,50 @@ namespace Wavee.UI.WinUI.Components
 
         private void CardView_OnPointerExited(object sender, PointerRoutedEventArgs e)
         {
+            if (ButtonsPanel is not null)
+            {
+                _ = AnimationBuilder.Create()
+                    .Translation(new Vector2(0, 20), duration: TimeSpan.FromMilliseconds(200))
+                    .Opacity(to: 0, from: 1, duration: TimeSpan.FromMilliseconds(100))
+                    .StartAsync((ButtonsPanel as UIElement)!);
+            }
             ButtonsPanel.Visibility = Visibility.Collapsed;
             ButtonsPanelLoaded = false;
+
+            /*
+            
+
+                        <animations:Implicit.HideAnimations>
+                            <animations:OpacityAnimation Duration="0:0:0.1"
+                                                         To="0.0" />
+                            <animations:TranslationAnimation Duration="0:0:0.2"
+                                                             From="0, 0, 0"
+                                                             To="0, 20,0" />
+                        </animations:Implicit.HideAnimations>
+             */
         }
 
         private void ButtonsPanel_OnLoaded(object sender, RoutedEventArgs e)
         {
             if (ButtonsPanel is not null)
+            {
                 ButtonsPanel.Visibility = Visibility.Visible;
+
+                /*
+                 * *   <animations:Implicit.ShowAnimations>
+                            <animations:TranslationAnimation Duration="0:0:0.2"
+                                                             From="0, 30, 0" 
+                                                             To="0" />
+                            <animations:OpacityAnimation Duration="0:0:0.2"
+                                                         From="0"
+                                                         To="1.0" />
+                        </animations:Implicit.ShowAnimations>
+                 */
+                _ = AnimationBuilder.Create()
+                    .Translation(new Vector2(0), from: new Vector2(0, 30), duration: TimeSpan.FromMilliseconds(200))
+                    .Opacity(to: 1, from: 0, duration: TimeSpan.FromMilliseconds(200))
+                    .StartAsync((ButtonsPanel as UIElement)!);
+            }
         }
 
         private void CardView_OnContextRequested(UIElement sender, ContextRequestedEventArgs args)
@@ -162,6 +200,7 @@ namespace Wavee.UI.WinUI.Components
         private void CardView_OnTapped(object sender, TappedRoutedEventArgs e)
         {
             NavigationService.Instance.Navigate(typeof(AlbumView), this.Id);
+            ButtonsPanelLoaded = false;
         }
     }
 }

@@ -12,6 +12,9 @@
              xmlns:winUi="using:Wavee.UI.WinUI"
              xmlns:album1="using:Wavee.UI.Client.Album"
              xmlns:controls="using:CommunityToolkit.WinUI.UI.Controls"
+             xmlns:panels="using:Wavee.UI.WinUI.Panels"
+             xmlns:common="using:Wavee.UI.Common"
+             xmlns:components="using:Wavee.UI.WinUI.Components"
              DataContext="{x:Bind ViewModel}"
              mc:Ignorable="d">
     <UserControl.Transitions>
@@ -359,6 +362,24 @@
                     <Run Text="{Binding Album.Artists[0].Name}" />
                 </TextBlock>
 
+                <ItemsRepeater VerticalAlignment="Top"
+                               ItemsSource="{x:Bind ViewModel.Album.MoreAlbums, Mode=OneWay}">
+                    <ItemsRepeater.Layout>
+                        <panels:HorizontalAdaptiveLayout DesiredWidth="200" />
+                    </ItemsRepeater.Layout>
+                    <ItemsRepeater.ItemTemplate>
+                        <DataTemplate x:Key="CardViewTemplate"
+                                      x:DataType="common:CardViewModel">
+                            <components:CardView Id="{x:Bind Id}"
+                                                 IsArtist="{x:Bind IsArtist}"
+                                                 Title="{x:Bind Title}"
+                                                 Subtitle="{x:Bind Subtitle}"
+                                                 Image="{x:Bind Image}"
+                                                 Caption="{x:Bind Caption}"
+                                                 ImageIsIcon="{x:Bind ImageIsIcon}" />
+                        </DataTemplate>
+                    </ItemsRepeater.ItemTemplate>
+                </ItemsRepeater>
                 <Border Height="110" />
             </StackPanel>
         </ListView.Footer>
