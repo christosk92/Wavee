@@ -24,6 +24,7 @@
 	<ItemGroup>
 		<None Remove="Components\CardView.xaml" />
 		<None Remove="Components\PodcastEpisodeCardView.xaml" />
+		<None Remove="Components\WaveformPresenterCardView.xaml" />
 		<None Remove="Dialogs\WizardDialog.xaml" />
 		<None Remove="Styles\PropertiesStyles.xaml" />
 		<None Remove="View\Album\AlbumView.xaml" />
@@ -53,6 +54,7 @@
 	<ItemGroup>
 		<PackageReference Include="CommunityToolkit.Labs.WinUI.SettingsControls" Version="0.0.18" />
 		<PackageReference Include="CommunityToolkit.Labs.WinUI.TokenView" Version="0.0.6" />
+		<PackageReference Include="CommunityToolkit.Labs.WinUI.TransitionHelper" Version="0.0.1" />
 		<PackageReference Include="CommunityToolkit.WinUI.UI.Animations" Version="7.1.2" />
 		<PackageReference Include="CommunityToolkit.WinUI.UI.Controls.Media" Version="7.1.2" />
 		<PackageReference Include="CommunityToolkit.WinUI.UI.Media" Version="7.1.2" />
@@ -73,6 +75,7 @@
 		<ProjectCapability Include="Msix" />
 	</ItemGroup>
 	<ItemGroup>
+		<ProjectReference Include="..\Wavee.AudioVisualization\Wavee.AudioVisualization.csproj" />
 		<ProjectReference Include="..\Wavee.UI.Spotify\Wavee.UI.Spotify.csproj" />
 		<ProjectReference Include="..\Wavee.UI\Wavee.UI.csproj" />
 	</ItemGroup>
@@ -90,6 +93,9 @@
 	  <None Update="Assets\Fonts\MediaPlayerIcons.ttf">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </None>
+	  <Page Update="Components\WaveformPresenterCardView.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </Page>
 	  <Page Update="View\Album\AlbumView.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </Page>
@@ -162,5 +168,10 @@
 	</PropertyGroup>
 	<ItemGroup>
 	  <PRIResource Remove="Providers\**" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Content Update="Assets\4dba53850d6bfdb9800d53d65fe2e5f1369b9040.mp3">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </Content>
 	</ItemGroup>
 </Project>

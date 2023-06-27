@@ -160,6 +160,7 @@
                 <RelativePanel Padding="24">
                     <Image ui:Effects.Shadow="{StaticResource CommonShadow}"
                            x:Name="AlbumImage"
+                           Canvas.ZIndex="1000"
                            Source="{x:Bind ViewModel.Album.LargeImage, Mode=OneWay}" />
 
                     <StackPanel RelativePanel.RightOf="AlbumImage"
@@ -177,7 +178,7 @@
                         <ItemsRepeater ItemsSource="{x:Bind ViewModel.Album.Artists, Mode=OneWay}">
                             <ItemsRepeater.ItemTemplate>
                                 <DataTemplate x:DataType="album:AlbumArtist">
-                                    <Button Width="120"
+                                    <Button MinWidth="120"
                                             HorizontalContentAlignment="Left">
                                         <StackPanel Orientation="Horizontal"
                                                     Spacing="8">

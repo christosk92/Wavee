@@ -18,13 +18,17 @@
     <UserControl.Resources>
         <DataTemplate x:Key="CardViewTemplate"
                       x:DataType="common:CardViewModel">
-            <components:CardView Id="{x:Bind Id}"
-                                 IsArtist="{x:Bind IsArtist}"
-                                 Title="{x:Bind Title}"
-                                 Subtitle="{x:Bind Subtitle}"
-                                 Image="{x:Bind Image}"
-                                 Caption="{x:Bind Caption}"
-                                 ImageIsIcon="{x:Bind ImageIsIcon}" />
+            <components:WaveformPresenterCardView>
+                <components:WaveformPresenterCardView.CardView>
+                    <components:CardView Id="{x:Bind Id}"
+                                         IsArtist="{x:Bind IsArtist}"
+                                         Title="{x:Bind Title}"
+                                         Subtitle="{x:Bind Subtitle}"
+                                         Image="{x:Bind Image}"
+                                         Caption="{x:Bind Caption}"
+                                         ImageIsIcon="{x:Bind ImageIsIcon}" />
+                </components:WaveformPresenterCardView.CardView>
+            </components:WaveformPresenterCardView>
         </DataTemplate>
 
         <DataTemplate x:Key="PodcastEpisodeCardViewTemplate"

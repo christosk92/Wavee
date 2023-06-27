@@ -8,104 +8,114 @@
              xmlns:controls="using:CommunityToolkit.WinUI.UI.Controls"
              xmlns:animations="using:CommunityToolkit.WinUI.UI.Animations"
              xmlns:ui="using:CommunityToolkit.WinUI.UI"
+             xmlns:labs="using:CommunityToolkit.Labs.WinUI"
              Tapped="CardView_OnTapped"
              PointerEntered="CardView_OnPointerEntered"
              PointerExited="CardView_OnPointerExited"
              ContextRequested="CardView_OnContextRequested"
              mc:Ignorable="d">
 
-    <Button Background="{ThemeResource LayerFillColorDefaultBrush}"
-            CornerRadius="0,0,6,6"
-            HorizontalAlignment="Stretch"
-            VerticalAlignment="Top"
-            HorizontalContentAlignment="Stretch"
-            Padding="0"
-            Margin="0,0,12,0"
-            BorderThickness="1"
-            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
-        <Grid>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition />
-            </Grid.RowDefinitions>
+    <Grid>
+        <Border  Background="{ThemeResource LayerFillColorDefaultBrush}"
+                 BorderThickness="1"
+                 labs:TransitionHelper.Id="background"
+                 BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                 Margin="0,0,12,0"
+                 CornerRadius="0,0,6,6" />
+        <Button HorizontalAlignment="Stretch"
+                CornerRadius="0"
+                VerticalAlignment="Stretch"
+                HorizontalContentAlignment="Stretch"
+                Padding="0"
+                Background="Transparent"
+                Margin="0,0,12,0"
+                BorderThickness="0">
             <Grid>
-                <Border x:Name="HeartBorder"
-                        Grid.ColumnSpan="2"
-                        x:Load="{x:Bind ImageIsIcon, Mode=OneWay}"
-                        Background="{ThemeResource AccentAcrylicBackgroundFillColorBaseBrush}">
-                    <FontIcon FontSize="48"
-                              VerticalAlignment="Center"
-                              HorizontalAlignment="Center"
-                              FontFamily="Segoe Fluent Icons"
-                              Glyph="&#xEB52;" />
-                </Border>
-                <controls:ConstrainedBox x:Name="NormalImageBox"
-                                         Grid.ColumnSpan="2"
-                                         x:Load="{x:Bind Negate(IsArtist),Mode=OneWay}"
-                                         AspectRatio="1:1">
-                    <Image Source="{x:Bind Image, Mode=OneWay}" />
-                </controls:ConstrainedBox>
-                <controls:ConstrainedBox x:Name="ArtistImageBox"
-                                         Grid.ColumnSpan="2"
-                                         x:Load="{x:Bind IsArtist,Mode=OneWay}"
-                                         AspectRatio="1:1">
-                    <Viewbox Stretch="UniformToFill"
-                             Margin="6">
-                        <PersonPicture DisplayName="{x:Bind Name,Mode=OneWay}"
-                                       Initials="{x:Bind CalculateInitials(Name), Mode=OneWay}"
-                                       ProfilePicture="{x:Bind Image, Mode=OneWay}" />
-                    </Viewbox>
-                </controls:ConstrainedBox>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition />
+                </Grid.RowDefinitions>
+                <Grid>
+                    <Border x:Name="HeartBorder"
+                            Grid.ColumnSpan="2"
+                            x:Load="{x:Bind ImageIsIcon, Mode=OneWay}"
+                            Background="{ThemeResource AccentAcrylicBackgroundFillColorBaseBrush}">
+                        <FontIcon FontSize="48"
+                                  VerticalAlignment="Center"
+                                  HorizontalAlignment="Center"
+                                  FontFamily="Segoe Fluent Icons"
+                                  Glyph="&#xEB52;" />
+                    </Border>
+                    <controls:ConstrainedBox x:Name="NormalImageBox"
+                                             Grid.ColumnSpan="2"
+                                             labs:TransitionHelper.Id="image"
+                                             x:Load="{x:Bind Negate(IsArtist),Mode=OneWay}"
+                                             AspectRatio="1:1">
+                        <Image Source="{x:Bind Image, Mode=OneWay}" />
+                    </controls:ConstrainedBox>
+                    <controls:ConstrainedBox x:Name="ArtistImageBox"
+                                             Grid.ColumnSpan="2"
+                                             x:Load="{x:Bind IsArtist,Mode=OneWay}"
+                                             AspectRatio="1:1">
+                        <Viewbox Stretch="UniformToFill"
+                                 Margin="6">
+                            <PersonPicture DisplayName="{x:Bind Name,Mode=OneWay}"
+                                           Initials="{x:Bind CalculateInitials(Name), Mode=OneWay}"
+                                           ProfilePicture="{x:Bind Image, Mode=OneWay}" />
+                        </Viewbox>
+                    </controls:ConstrainedBox>
 
-                <Border x:Name="ButtonsBorder"
-                        x:Load="{x:Bind ButtonsPanelLoaded,Mode=OneWay}"
-                        Loaded="ButtonsPanel_OnLoaded">
-                    <Grid Visibility="Collapsed"
-                          x:Name="ButtonsPanel"
-                          Padding="8"
-                          VerticalAlignment="Bottom"
-                          ui:VisualExtensions.NormalizedCenterPoint="0.5,0.5">
+                    <Border x:Name="ButtonsBorder"
+                            x:Load="{x:Bind ButtonsPanelLoaded,Mode=OneWay}"
+                            Loaded="ButtonsPanel_OnLoaded">
+                        <Grid Visibility="Collapsed"
+                              x:Name="ButtonsPanel"
+                              Padding="8"
+                              VerticalAlignment="Bottom"
+                              ui:VisualExtensions.NormalizedCenterPoint="0.5,0.5">
 
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition />
-                            <ColumnDefinition />
-                        </Grid.ColumnDefinitions>
-                        <Button  Style="{ThemeResource AccentButtonStyle}">
-                            <FontIcon FontFamily="Segoe Fluent Icons"
-                                      Glyph="&#xF5B0;" />
-                        </Button>
-                        <Button Grid.Column="1"
-                                HorizontalAlignment="Right"
-                                Style="{ThemeResource AccentButtonStyle}">
-                            <FontIcon FontFamily="Segoe Fluent Icons"
-                                      Glyph="&#xEB52;" />
-                        </Button>
-                    </Grid>
-                </Border>
-            </Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition />
+                                <ColumnDefinition />
+                            </Grid.ColumnDefinitions>
+                            <Button  Style="{ThemeResource AccentButtonStyle}">
+                                <FontIcon FontFamily="Segoe Fluent Icons"
+                                          Glyph="&#xF5B0;" />
+                            </Button>
+                            <Button Grid.Column="1"
+                                    HorizontalAlignment="Right"
+                                    Style="{ThemeResource AccentButtonStyle}">
+                                <FontIcon FontFamily="Segoe Fluent Icons"
+                                          Glyph="&#xEB52;" />
+                            </Button>
+                        </Grid>
+                    </Border>
+                </Grid>
 
-            <StackPanel Padding="8"
-                        Height="80"
-                        Grid.Row="1">
-                <TextBlock Text="{x:Bind Title, Mode=OneWay}"
-                           FontWeight="SemiBold" />
-                <TextBlock TextWrapping="Wrap"
-                           MaxLines="2"
-                           FontSize="13"
-                           Foreground="{ThemeResource ApplicationSecondaryForegroundThemeBrush}"
-                           Text="{x:Bind Subtitle, Mode=OneWay}" />
-
-                <Border  x:Name="CaptionBlock"
-                         x:Load="{x:Bind HasCaption, Mode=OneWay}">
+                <StackPanel Padding="8"
+                            Height="80"
+                            Grid.Row="1">
+                    <TextBlock Text="{x:Bind Title, Mode=OneWay}"
+                               labs:TransitionHelper.Id="name"
+                               FontWeight="SemiBold" />
                     <TextBlock TextWrapping="Wrap"
                                MaxLines="2"
-                               Margin="0,4,0,0"
-                               FontSize="12"
-                               Foreground="{ThemeResource SystemAccentColorLight1}"
-                               FontWeight="Light"
-                               Text="{x:Bind Caption, Mode=OneWay}" />
-                </Border>
-            </StackPanel>
-        </Grid>
-    </Button>
+                               FontSize="13"
+                               Foreground="{ThemeResource ApplicationSecondaryForegroundThemeBrush}"
+                               Text="{x:Bind Subtitle, Mode=OneWay}" />
+
+                    <Border  x:Name="CaptionBlock"
+                             x:Load="{x:Bind HasCaption, Mode=OneWay}">
+                        <TextBlock TextWrapping="Wrap"
+                                   MaxLines="2"
+                                   Margin="0,4,0,0"
+                                   FontSize="12"
+                                   Foreground="{ThemeResource SystemAccentColorLight1}"
+                                   FontWeight="Light"
+                                   Text="{x:Bind Caption, Mode=OneWay}" />
+                    </Border>
+                </StackPanel>
+            </Grid>
+        </Button>
+    </Grid>
 </UserControl>
