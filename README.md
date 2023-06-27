@@ -6,7 +6,7 @@ I've been able to fix a lot of endpoints. The most difficult one is the artist p
 Thanks for your patience!
 
 Below is a screenshot of the album page:
-![image](https://github.com/christosk92/Wavee/assets/13438702/a5682514-13f6-4182-b382-814566a9c218)
+![image](https://github.com/christosk92/Wavee/assets/13438702/e7431549-f6f7-4093-a421-38e247356a20)
 
 
 # Note 6/19/2023
