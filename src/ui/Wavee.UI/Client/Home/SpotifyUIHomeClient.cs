@@ -56,15 +56,16 @@ internal sealed class SpotifyUIHomeClient : IWaveeUIHomeClient
                         SpotifyCollectionItem collectionItem => new CardViewModel
                         {
                             Id = collectionItem.Id.ToString(),
-                            Title = "Your Library",
+                            Title = "Saved songs",
                             Image = "\uEB52",
-                            ImageIsIcon = true
+                            ImageIsIcon = true,
+                            Subtitle = "You can also find this in the sidebar."
                         } as ICardViewModel,
                         SpotifyPlaylistHomeItem playlistItem => new CardViewModel
                         {
                             Id = playlistItem.Id.ToString(),
                             Title = playlistItem.Name,
-                            Subtitle = playlistItem.Description.IfNone($"Playlist by {playlistItem.OwnerName}"),
+                            Subtitle = playlistItem.Description.Map(f => EscapeHtml(f)).IfNone($"Playlist by {playlistItem.OwnerName}"),
                             Image = playlistItem.Images.HeadOrNone().Map(x => x.Url).IfNone(string.Empty),
                             ImageIsIcon = false
                         },
@@ -124,5 +125,14 @@ internal sealed class SpotifyUIHomeClient : IWaveeUIHomeClient
             Greeting = greeting,
             Sections = output
         };
+    }
+
+    private static string EscapeHtml(string s)
+    {
+        //remove all html tags and get the inner text
+        var doc = new HtmlAgilityPack.HtmlDocument();
+        doc.LoadHtml(s);
+
+        return doc.DocumentNode.InnerText;
     }
 }

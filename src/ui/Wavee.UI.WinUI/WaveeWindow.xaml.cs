@@ -17,6 +17,7 @@ using Wavee.UI.WinUI.Dialogs;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using LanguageExt.UnsafeValueAccess;
+using Microsoft.UI.Dispatching;
 using Microsoft.UI.Windowing;
 using Wavee.Id;
 using Wavee.UI.Spotify;
@@ -37,9 +38,11 @@ namespace Wavee.UI.WinUI
     /// </summary>
     public sealed partial class WaveeWindow : WindowEx
     {
+        private readonly DispatcherQueue _dispatcher;
         public WaveeWindow()
         {
             this.InitializeComponent();
+            _dispatcher = this.DispatcherQueue;
             this.SystemBackdrop = new MicaBackdrop();
             var appWindow = this.AppWindow;
             appWindow.TitleBar.ExtendsContentIntoTitleBar = true;
@@ -69,7 +72,7 @@ namespace Wavee.UI.WinUI
                 if (ViewModel.CurrentView is WizardViewModel wizard)
                 {
                     var user = await ShowWizard(wizard);
-                    ViewModel.CurrentView = new ShellViewModel(user);
+                    ViewModel.CurrentView = new ShellViewModel(user, action => _dispatcher.TryEnqueue(() => action()));
                 }
                 else
                 {
@@ -120,11 +123,12 @@ namespace Wavee.UI.WinUI
 
         private async void Dummy_Loaded(object sender, RoutedEventArgs e)
         {
+            var dispatcher = this.DispatcherQueue;
             var signedin = await ViewModel.Initialize();
             if (signedin.IsSome)
             {
                 var user = signedin.ValueUnsafe();
-                this.Content = (UIElement)ViewFactory.ConstructFromViewModel(new ShellViewModel(user));
+                this.Content = (UIElement)ViewFactory.ConstructFromViewModel(new ShellViewModel(user, action => _dispatcher.TryEnqueue(() => action())));
                 (this.Content as FrameworkElement)!.RequestedTheme = user.Settings.AppTheme switch
                 {
                     AppTheme.Light => ElementTheme.Light,

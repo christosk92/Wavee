@@ -4,8 +4,10 @@ using System.Reactive.Subjects;
 using System.Text.Json;
 using Eum.Spotify.connectstate;
 using LanguageExt;
+using Wavee.Id;
 using Wavee.Infrastructure.Remote;
 using Wavee.Playback;
+using Wavee.Time;
 
 namespace Wavee.Remote.Live;
 
@@ -13,18 +15,20 @@ internal readonly struct LiveSpotifyRemoteClient : ISpotifyRemoteClient
 {
     private readonly Guid _mainConnectionId;
     private readonly TaskCompletionSource<Unit> _waitForConnectionTask;
+    private readonly ITimeProvider _timeProvider;
 
-    public LiveSpotifyRemoteClient(Guid mainConnectionId, TaskCompletionSource<Unit> waitForConnectionTask)
+    public LiveSpotifyRemoteClient(Guid mainConnectionId, TaskCompletionSource<Unit> waitForConnectionTask, ITimeProvider timeProvider)
     {
         _mainConnectionId = mainConnectionId;
         _waitForConnectionTask = waitForConnectionTask;
+        _timeProvider = timeProvider;
     }
 
     public IObservable<SpotifyRemoteState> CreateListener()
     {
         _waitForConnectionTask.Task.Wait();
-
         var reader = _mainConnectionId.CreateListener(RemoteStateListenerCondition);
+        LiveSpotifyRemoteClient tmpThis = this;
         return Observable.Create<SpotifyRemoteState>(o =>
         {
             var cancel = new CancellationDisposable();
@@ -34,15 +38,16 @@ internal readonly struct LiveSpotifyRemoteClient : ISpotifyRemoteClient
                 {
                     await foreach (var package in reader.Reader.ReadAllAsync(cancel.Token))
                     {
+
                         var clusterUpdate = ClusterUpdate.Parser.ParseFrom(package.Payload.Span);
                         if (clusterUpdate.Cluster is null)
                         {
-                            var state = SpotifyRemoteState.ParseFrom(Option<Cluster>.None);
+                            var state = SpotifyRemoteState.ParseFrom(Option<Cluster>.None, tmpThis._timeProvider);
                             o.OnNext(state ?? new SpotifyRemoteState());
                         }
                         else
                         {
-                            var state = SpotifyRemoteState.ParseFrom(clusterUpdate.Cluster);
+                            var state = SpotifyRemoteState.ParseFrom(clusterUpdate.Cluster, tmpThis._timeProvider);
                             o.OnNext(state.Value);
                         }
                     }
@@ -53,15 +58,96 @@ internal readonly struct LiveSpotifyRemoteClient : ISpotifyRemoteClient
                 }
             });
             return cancel;
-        }).StartWith(SpotifyRemoteState.ParseFrom(SpotifyRemoteConnection.GetInitialRemoteState(_mainConnectionId)) ??
+        }).StartWith(SpotifyRemoteState.ParseFrom(SpotifyRemoteConnection.GetInitialRemoteState(tmpThis._mainConnectionId), _timeProvider) ??
                      new SpotifyRemoteState());
     }
+
+    public IObservable<SpotifyLibraryNotification> CreateLibraryListener()
+    {
+        _waitForConnectionTask.Task.Wait();
+        var reader = _mainConnectionId.CreateListener(LibraryListenerCondition);
+        LiveSpotifyRemoteClient tmpThis = this;
+        return Observable.Create<SpotifyLibraryNotification>(o =>
+        {
+            var cancel = new CancellationDisposable();
+            Task.Run(async () =>
+            {
+                try
+                {
+                    await foreach (var package in reader.Reader.ReadAllAsync(cancel.Token))
+                    {
+                        var payload = package.Payload;
+                        using var jsonDoc = JsonDocument.Parse(payload);
+                        using var rootArr = jsonDoc.RootElement.EnumerateArray();
+
+
+                        var addedItems = new List<SpotifyLibraryItem>();
+                        var removedItems = new List<SpotifyLibraryItem>();
+
+                        foreach (var rootItemStr in rootArr.Select(c => c.ToString()))
+                        {
+                            using var rootItem = JsonDocument.Parse(rootItemStr);
+                            using var items = rootItem.RootElement.GetProperty("items").EnumerateArray();
+                            foreach (var item in items)
+                            {
+                                var type = item.GetProperty("type").GetString();
+                                var removed = item.GetProperty("removed").GetBoolean();
+                                var addedAt = item.GetProperty("addedAt").GetUInt64();
+                                if (removed)
+                                {
+                                    addedItems.Add(new SpotifyLibraryItem(
+                                        Id: SpotifyId.FromBase62(
+                                            base62: item.GetProperty("identifier").GetString().AsSpan(),
+                                            itemType: type switch
+                                            {
+                                                "track" => AudioItemType.Track,
+                                                "artist" => AudioItemType.Artist,
+                                                "album" => AudioItemType.Album
+                                            }, ServiceType.Spotify),
+                                        AddedAt: DateTimeOffset.FromUnixTimeSeconds((long)addedAt)));
+                                }
+                                else
+                                {
+                                    removedItems.Add(new SpotifyLibraryItem(
+                                        Id: SpotifyId.FromBase62(
+                                            base62: item.GetProperty("identifier").GetString().AsSpan(),
+                                            itemType: type switch
+                                            {
+                                                "track" => AudioItemType.Track,
+                                                "artist" => AudioItemType.Artist,
+                                                "album" => AudioItemType.Album
+                                            }, ServiceType.Spotify),
+                                        AddedAt: Option<DateTimeOffset>.None));
+                                }
+                            }
+                        }
+
+                        if (addedItems.Count > 0)
+                        {
+                            o.OnNext(new SpotifyLibraryNotification(addedItems.ToSeq(), true));
+                        }
+
+                        if (removedItems.Count > 0)
+                        {
+                            o.OnNext(new SpotifyLibraryNotification(removedItems.ToSeq(), false));
+                        }
+                    }
+                }
+                finally
+                {
+                    reader.onDone();
+                }
+            });
+            return cancel;
+        });
+    }
+
 
     public Option<SpotifyRemoteState> LatestState
     {
         get
         {
-            var parsed = SpotifyRemoteState.ParseFrom(SpotifyRemoteConnection.GetInitialRemoteState(_mainConnectionId));
+            var parsed = SpotifyRemoteState.ParseFrom(SpotifyRemoteConnection.GetInitialRemoteState(_mainConnectionId), _timeProvider);
             if (parsed.HasValue)
                 return parsed.Value;
             return Option<SpotifyRemoteState>.None;
@@ -72,7 +158,10 @@ internal readonly struct LiveSpotifyRemoteClient : ISpotifyRemoteClient
     {
         return packagetocheck.Uri.StartsWith("hm://connect-state/v1/cluster");
     }
-
+    private static bool LibraryListenerCondition(SpotifyRemoteMessage packagetocheck)
+    {
+        return packagetocheck.Uri.StartsWith("hm://collection/") && packagetocheck.Uri.EndsWith("/json");
+    }
     internal async Task PlaybackStateUpdated(SpotifyLocalPlaybackState spotifyLocalPlaybackState)
     {
         await SpotifyRemoteConnection.PutState(_mainConnectionId, spotifyLocalPlaybackState);

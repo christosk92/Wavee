@@ -1,4 +1,6 @@
 ﻿using LanguageExt;
+using System;
+using Wavee.Id;
 
 namespace Wavee.Remote;
 
@@ -8,5 +10,8 @@ namespace Wavee.Remote;
 public interface ISpotifyRemoteClient : IDisposable
 {
     IObservable<SpotifyRemoteState> CreateListener();
+    IObservable<SpotifyLibraryNotification> CreateLibraryListener();
     Option<SpotifyRemoteState> LatestState { get; }
 }
+public readonly record struct SpotifyLibraryNotification(Seq<SpotifyLibraryItem> Id, bool Added);
+public readonly record struct SpotifyLibraryItem(SpotifyId Id, Option<DateTimeOffset> AddedAt);

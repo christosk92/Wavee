@@ -5,6 +5,7 @@
              xmlns:local="using:Wavee.UI.WinUI.View.Shell"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:controls="using:CommunityToolkit.WinUI.UI.Controls"
              DataContext="{x:Bind Playback,Mode=OneWay}"
              mc:Ignorable="d">
     <UserControl.Resources>
@@ -92,12 +93,21 @@
                     <Vector3Transition />
                 </StackPanel.TranslationTransition>
 
-                <TextBlock Text="{x:Bind Playback.Title, Mode=OneWay}"
-                           FontWeight="SemiBold"
-                           x:Name="SongName" />
-                <TextBlock Text="JJ Lin"
-                           Foreground="{ThemeResource ApplicationSecondaryForegroundThemeBrush}"
-                           x:Name="Artistname" />
+                <HyperlinkButton Content="{x:Bind Playback.Title.Title, Mode=OneWay}"
+                                 FontWeight="SemiBold"
+                                 Padding="-2,0,0,0"
+                                 x:Name="SongName" />
+                <controls:MetadataControl Items="{x:Bind MapToItems(Playback.Subtitles), Mode=OneWay}">
+                    <controls:MetadataControl.TextBlockStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Foreground"
+                                    Value="{ThemeResource ApplicationSecondaryForegroundThemeBrush}"/>
+                        </Style>
+                    </controls:MetadataControl.TextBlockStyle>
+                </controls:MetadataControl>
+                <!-- <TextBlock Text="JJ Lin" -->
+                <!--            Foreground="{ThemeResource ApplicationSecondaryForegroundThemeBrush}" -->
+                <!--            x:Name="Artistname" /> -->
             </StackPanel>
 
             <FontIcon FontFamily="Segoe Fluent Icons"
@@ -162,13 +172,16 @@
                 </Grid.ColumnDefinitions>
 
                 <TextBlock VerticalAlignment="Center"
-                           Text="1:50" />
+                           Text="--:--"
+                           x:Name="PositionText"/>
                 <Slider Grid.Column="1"
+                        x:Name="PositionSlider"
+                        Maximum="{x:Bind GetTimestamp(Playback.Duration), Mode=OneWay}"
                         Margin="0,0,0,-3" />
                 <TextBlock Grid.Column="2"
                            HorizontalAlignment="Right"
                            VerticalAlignment="Center"
-                           Text="4:26" />
+                           Text="{x:Bind FormatTimestamp(Playback.Duration),Mode=OneWay}" />
 
             </Grid>
         </RelativePanel>

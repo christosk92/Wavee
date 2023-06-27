@@ -43,7 +43,7 @@ internal static class SpotifyItemParser
                         {
                             Id = id,
                             Name = name,
-                            Description = description,
+                            Description = description.Bind(x=> !string.IsNullOrEmpty(x) ? x : Option<string>.None),
                             Images = images,
                             OwnerName = ownerName
                         };

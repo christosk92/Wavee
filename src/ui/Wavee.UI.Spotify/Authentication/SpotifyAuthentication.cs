@@ -6,6 +6,7 @@ using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
 using Wavee.Id;
 using Wavee.Infrastructure.Authentication;
+using Wavee.Time.Live;
 using Wavee.UI.Client;
 using Wavee.UI.Contracts;
 using Wavee.UI.User;
@@ -46,10 +47,11 @@ internal sealed class SpotifyAuthentication : IMusicServiceAuthentication
                     CacheLocation: cachePath,
                     MaxCacheSize: Option<long>.None
                 ),
-                playback: new SpotifyPlaybackConfig(
+                Playback: new SpotifyPlaybackConfig(
                     preferedQuality: PreferedQuality.Normal,
                     crossfadeDuration: Option<TimeSpan>.None),
-                locale: CultureInfo.CurrentUICulture
+                Time: new SpotifyTimeConfig(Method: TimeSyncMethod.Melody, Option<int>.None),
+                Locale: CultureInfo.CurrentUICulture
             );
             var spotifyClient = new SpotifyClient(Shared.Player, credentials, config);
             var user = await spotifyClient.Metadata.GetMe(ct);
@@ -57,7 +59,7 @@ internal sealed class SpotifyAuthentication : IMusicServiceAuthentication
             var newUser = new UserViewModel(
                 id: new UserId(Source: ServiceType.Spotify, Id: welcomeMessage.CanonicalUsername),
                 displayName: user.DisplayName,
-                image:user.Images.HeadOrNone().Map(x => x.Url).IfNone(string.Empty),
+                image: user.Images.HeadOrNone().Map(x => x.Url).IfNone(string.Empty),
                 client: new WaveeUIClient(spotifyClient))
             {
                 ReusableCredentials = welcomeMessage.ReusableAuthCredentials.ToBase64()
@@ -107,10 +109,11 @@ internal sealed class SpotifyAuthentication : IMusicServiceAuthentication
                     CacheLocation: cachePath,
                     MaxCacheSize: Option<long>.None
                 ),
-                playback: new SpotifyPlaybackConfig(
+                Playback: new SpotifyPlaybackConfig(
                     preferedQuality: storedUserVal.Settings.PreferedQuality,
                     crossfadeDuration: storedUserVal.Settings.CrossfadeSeconds == 0 ? Option<TimeSpan>.None : TimeSpan.FromSeconds(storedUserVal.Settings.CrossfadeSeconds)),
-                locale: CultureInfo.CurrentUICulture
+                Time: new SpotifyTimeConfig(Method: TimeSyncMethod.Melody, Option<int>.None),
+                Locale: CultureInfo.CurrentUICulture
             );
 
             var spotifyClient = new SpotifyClient(Shared.Player, credentials, config);

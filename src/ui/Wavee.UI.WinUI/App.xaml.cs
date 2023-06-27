@@ -1,6 +1,7 @@
 ﻿using Microsoft.UI.Xaml;
 using Windows.Storage;
 using LanguageExt;
+using Serilog;
 
 namespace Wavee.UI.WinUI
 {
@@ -16,7 +17,10 @@ namespace Wavee.UI.WinUI
         /// </summary>
         public App()
         {
-
+            Log.Logger = new LoggerConfiguration()
+                .WriteTo.Console()
+                .MinimumLevel.Verbose()
+                .CreateLogger();
             AppProviders.GetPersistentStoragePath = () => ApplicationData.Current.LocalFolder.Path;
             AppProviders.SecurePasswordInVault = (string key, string value) =>
             {

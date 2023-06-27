@@ -1,26 +1,32 @@
 ﻿using System.Globalization;
 using Eum.Spotify.connectstate;
 using LanguageExt;
+using Wavee.Time.Live;
 using static LanguageExt.Prelude;
 
 namespace Wavee;
 
 public sealed class SpotifyConfig
 {
-    public SpotifyConfig(SpotifyRemoteConfig Remote, SpotifyCacheConfig Cache, SpotifyPlaybackConfig playback, CultureInfo locale)
+    public SpotifyConfig(SpotifyRemoteConfig Remote, SpotifyCacheConfig Cache, SpotifyPlaybackConfig Playback, 
+        SpotifyTimeConfig Time,
+        CultureInfo Locale)
     {
         this.Remote = Remote;
         this.Cache = Cache;
-        Playback = playback;
-        Locale = locale;
+        this.Playback = Playback;
+        this.Time = Time;
+        this.Locale = Locale;
     }
 
     public SpotifyCacheConfig Cache { get; }
     public SpotifyRemoteConfig Remote { get; }
     public SpotifyPlaybackConfig Playback { get; }
     public CultureInfo Locale { get; set; }
+    public SpotifyTimeConfig Time { get; set; }
 }
 
+public record SpotifyTimeConfig(TimeSyncMethod Method, Option<int> ManualCorrection);
 public sealed class SpotifyPlaybackConfig
 {
     private Ref<Option<TimeSpan>> _crossfadeDurationRef;

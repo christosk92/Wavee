@@ -145,7 +145,7 @@ public sealed class UserSettings : ConfigBase, IDisposable
     }
 
     public const double MinimumSidebarWidth = 150;
-    public const double MaximumSidebarWidth = 400;
+    public const double MaximumSidebarWidth = 600;
     //public object Notifications { get; }
 
     public void Dispose()

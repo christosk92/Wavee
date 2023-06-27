@@ -25,6 +25,8 @@ using Wavee.Player;
 using Wavee.Remote;
 using Wavee.Remote.Live;
 using Wavee.Spotify.Infrastructure.Connection;
+using Wavee.Time;
+using Wavee.Time.Live;
 using Wavee.Token;
 using Wavee.Token.Live;
 
@@ -185,13 +187,20 @@ public class SpotifyClient : IDisposable
                 return Unit.Default;
             })
             .Subscribe();
+
+        TimeProvider = new SpotifyTimeProvider(
+            timeSyncMethod: Config.Time.Method,
+            tokenFactory: Token.GetToken,
+            correctionifManual: Config.Time.ManualCorrection
+        );
     }
 
+    public ITimeProvider TimeProvider { get; }
     public ITokenClient Token => new LiveTokenClient(connId: _connectionId);
     public IMercuryClient Mercury => new LiveTokenClient(connId: _connectionId);
 
     public ISpotifyRemoteClient Remote =>
-        new LiveSpotifyRemoteClient(_connectionId, waitForConnectionTask: _waitForConnectionTask);
+        new LiveSpotifyRemoteClient(_connectionId, waitForConnectionTask: _waitForConnectionTask, TimeProvider);
 
     public IContextResolver ContextResolver => new LiveContextResolver(() => Mercury);
 

@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
+using Wavee.Id;
 
 namespace Wavee.UI.ViewModel.Shell.Sidebar;
 
@@ -37,15 +38,16 @@ public sealed class RegularSidebarItem : ISidebarItem
 public sealed class CountedSidebarItem : ObservableObject, ISidebarItem
 {
     private int _value;
-    public CountedSidebarItem()
+    public CountedSidebarItem(AudioItemType identifier)
     {
-
+        Identifier = identifier;
     }
-    public CountedSidebarItem(RegularSidebarItem inner)
+    public CountedSidebarItem(RegularSidebarItem inner, AudioItemType identifier)
     {
         Inner = inner;
+        Identifier = identifier;
     }
-
+    public AudioItemType Identifier { get; }
     public RegularSidebarItem Inner { get; }
 
     public int Value

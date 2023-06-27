@@ -8,6 +8,7 @@ using Serilog;
 using Wavee;
 using Wavee.Id;
 using Wavee.Player;
+using Wavee.Time.Live;
 
 var documents = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
 var spotifyCacheLocation = Path.Combine(documents, "Wavee");
@@ -28,11 +29,15 @@ var config = new SpotifyConfig(
         CacheLocation: spotifyCacheLocation,
         MaxCacheSize: Option<long>.None
     ),
-    playback: new SpotifyPlaybackConfig(
+    Time: new SpotifyTimeConfig(
+        Method: TimeSyncMethod.Melody,
+        Option<int>.None
+    ),
+    Playback: new SpotifyPlaybackConfig(
         preferedQuality: PreferedQuality.High,
         crossfadeDuration: TimeSpan.FromSeconds(10)
     ),
-    locale: new CultureInfo("ko-kr")
+    Locale: new CultureInfo("ko-kr")
 );
 
 var player = new WaveePlayer();
@@ -44,7 +49,7 @@ var client = new SpotifyClient(player, new LoginCredentials
     AuthData = ByteString.CopyFromUtf8(Environment.GetEnvironmentVariable("SPOTIFY_PASSWORD"))
 }, config);
 var countryCode = await client.Country;
-var response = await client.Metadata.GetHomeView(TimeZoneInfo.Local, Option<CultureInfo>.None);
+var response = await client.Metadata.GetAlbum(SpotifyId.FromUri("spotify:album:2hEnymoejldpuxSdTnkard"));
 var listener = client.Remote.CreateListener().Subscribe(x => { Log.Logger.Information("Remote: {0}", x); });
 var artistId = SpotifyId.FromUri("spotify:artist:0nmQIMXWTXfhgOBdNzhGOs");
 var artist = await client.Metadata.GetArtistOverview(artistId, false, Option<CultureInfo>.None);

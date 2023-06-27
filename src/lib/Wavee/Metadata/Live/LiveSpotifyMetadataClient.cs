@@ -12,6 +12,7 @@ using Wavee.Cache;
 using Wavee.Id;
 using Wavee.Infrastructure;
 using Wavee.Infrastructure.Mercury;
+using Wavee.Metadata.Album;
 using Wavee.Metadata.Artist;
 using Wavee.Metadata.Common;
 using Wavee.Metadata.Home;
@@ -146,7 +147,7 @@ internal readonly struct LiveSpotifyMetadataClient : ISpotifyMetadataClient
         Option<CultureInfo> languageOverride, CancellationToken cancellationToken = default)
     {
         var query = new HomeQuery(timezone);
-        var recentlyPlayedTask = GetRecentlyPlayed(typeFilterType,cancellationToken);
+        var recentlyPlayedTask = GetRecentlyPlayed(typeFilterType, cancellationToken);
         var responseTask = _query(query, languageOverride.IfNone(_defaultLang));
         await Task.WhenAll(recentlyPlayedTask, responseTask);
         if (responseTask.Result.IsSuccessStatusCode)
@@ -250,5 +251,18 @@ internal readonly struct LiveSpotifyMetadataClient : ISpotifyMetadataClient
             DisplayName = displayName.ValueKind is JsonValueKind.Null ? id : displayName.GetString()!,
             Images = images
         };
+    }
+
+    public async Task<SpotifyAlbum> GetAlbum(SpotifyId id, CancellationToken ct = default)
+    {
+        var query = new QueryAlbum(id, 0, 300);
+        var response = await _query(query, _defaultLang);
+        response.EnsureSuccessStatusCode();
+
+        using var stream = await response.Content.ReadAsStreamAsync();
+        using var json = await JsonDocument.ParseAsync(stream, default, ct);
+        var root = json.RootElement.GetProperty("data").GetProperty("albumUnion");
+
+        return SpotifyAlbum.ParseFrom(root);
     }
 }

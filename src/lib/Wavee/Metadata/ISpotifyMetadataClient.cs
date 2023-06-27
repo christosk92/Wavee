@@ -3,6 +3,7 @@ using LanguageExt;
 using Spotify.Metadata;
 using Wavee.Id;
 using Wavee.Infrastructure.Mercury;
+using Wavee.Metadata.Album;
 using Wavee.Metadata.Artist;
 using Wavee.Metadata.Home;
 using Wavee.Metadata.Me;
@@ -79,4 +80,6 @@ public interface ISpotifyMetadataClient
     /// If successful, a <see cref="Task{TResult}"/> that will complete with the <see cref="MeUser"/> or throw a <see cref="MercuryException"/>.
     /// </returns>
     Task<MeUser> GetMe(CancellationToken ct = default);
+
+    Task<SpotifyAlbum> GetAlbum(SpotifyId id, CancellationToken ct =default);
 }

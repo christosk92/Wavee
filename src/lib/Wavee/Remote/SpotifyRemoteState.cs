@@ -2,6 +2,7 @@
 using Google.Protobuf.WellKnownTypes;
 using LanguageExt;
 using Wavee.Id;
+using Wavee.Time;
 
 namespace Wavee.Remote;
 
@@ -13,7 +14,7 @@ public readonly record struct SpotifyRemoteState(
     TimeSpan Position,
     Option<SpotifyRemoteDeviceInfo> Device)
 {
-    internal static SpotifyRemoteState? ParseFrom(Option<Cluster> cluster)
+    internal static SpotifyRemoteState? ParseFrom(Option<Cluster> cluster, ITimeProvider client)
     {
         if (cluster.IsNone)
             return null;
@@ -32,7 +33,7 @@ public readonly record struct SpotifyRemoteState(
             TrackUid: trackUid,
             ContextUri: contextUri,
             IndexInContext: index,
-            Position: CalculatePosition(clusterValue!.PlayerState),
+            Position: CalculatePosition(clusterValue!.PlayerState, client.CurrentTimeMilliseconds),
             Device: MutateToDevice(clusterValue)
         );
     }
@@ -56,10 +57,10 @@ public readonly record struct SpotifyRemoteState(
         return Option<SpotifyRemoteDeviceInfo>.None;
     }
 
-    private static TimeSpan CalculatePosition(PlayerState playerState)
+    private static TimeSpan CalculatePosition(PlayerState playerState, long serverTime)
     {
-        //todO:
-        return TimeSpan.Zero;
+        var diff = serverTime - playerState.Timestamp;
+        return TimeSpan.FromMilliseconds(playerState.PositionAsOfTimestamp + diff);
     }
 }
 
