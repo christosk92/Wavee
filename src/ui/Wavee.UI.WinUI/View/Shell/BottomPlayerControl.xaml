@@ -70,7 +70,7 @@
                   RelativePanel.AlignLeftWithPanel="True"
                   RelativePanel.AlignTopWithPanel="True"
                   RelativePanel.AlignBottomWithPanel="True">
-                <Border BorderThickness="1"
+                <Border BorderThickness="4"
                         BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
                     <Image Source="{Binding SmallImageUrl, Mode=OneWay}" />
                 </Border>

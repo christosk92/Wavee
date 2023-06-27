@@ -4,6 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
+using Wavee.UI.WinUI.View.Album;
 using Wavee.UI.WinUI.View.Home;
 
 namespace Wavee.UI.WinUI.Navigation;
@@ -131,7 +132,8 @@ public sealed class NavigationService
     {
         var types = new[]
         {
-            typeof(HomeView)
+            typeof(HomeView),
+            typeof(AlbumView)
         };
 
         static void RegisterConstructor(Type type)

@@ -8,6 +8,7 @@
              xmlns:controls="using:CommunityToolkit.WinUI.UI.Controls"
              xmlns:animations="using:CommunityToolkit.WinUI.UI.Animations"
              xmlns:ui="using:CommunityToolkit.WinUI.UI"
+             Tapped="CardView_OnTapped"
              PointerEntered="CardView_OnPointerEntered"
              PointerExited="CardView_OnPointerExited"
              ContextRequested="CardView_OnContextRequested"

@@ -71,4 +71,9 @@ public sealed class LibraryViewModel : ObservableObject
                 }
             });
     }
+
+    public bool InLibrary(string id)
+    {
+        return _items.Lookup(id).HasValue;
+    }
 }

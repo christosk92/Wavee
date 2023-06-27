@@ -15,6 +15,9 @@ using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Wavee.UI.WinUI.ContextFlyout;
+using Wavee.UI.WinUI.Navigation;
+using Wavee.UI.WinUI.View.Album;
+
 namespace Wavee.UI.WinUI.Components
 {
     public sealed partial class CardView : UserControl, INotifyPropertyChanged
@@ -154,6 +157,11 @@ namespace Wavee.UI.WinUI.Components
             {
                 contextFlyout.ShowAt((FrameworkElement)sender);
             }
+        }
+
+        private void CardView_OnTapped(object sender, TappedRoutedEventArgs e)
+        {
+            NavigationService.Instance.Navigate(typeof(AlbumView), this.Id);
         }
     }
 }

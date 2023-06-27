@@ -209,7 +209,7 @@ public sealed class SpotifyAlbum
     private static Option<ulong> ParsePlaycount(JsonElement track)
     {
         Option<ulong> playcount = Option<ulong>.None;
-        if (track.TryGetProperty("playcount", out var potplc) && potplc.ValueKind is not JsonValueKind.String)
+        if (track.TryGetProperty("playcount", out var potplc) && potplc.ValueKind is JsonValueKind.String)
         {
             var val = potplc.GetString();
             if (ulong.TryParse(val, out var playcoun))
