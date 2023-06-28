@@ -96,6 +96,7 @@ namespace AudioEffectsLib
 
                 AudioClient.ReleaseBuffer(numFramesRead);
                 await Task.Delay(5);
+                GC.Collect();
             }
 
             AudioClient.ClearBuffer();

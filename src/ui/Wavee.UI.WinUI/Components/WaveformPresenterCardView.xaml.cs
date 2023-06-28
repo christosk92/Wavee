@@ -6,7 +6,9 @@ using Microsoft.UI.Xaml.Input;
 using System.Threading.Tasks;
 using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.Linq;
 using System.Numerics;
+using System.Threading;
 using Windows.Foundation;
 using Windows.System.Threading;
 using AudioEffectsLib;
@@ -40,73 +42,110 @@ public sealed partial class WaveformPresenterCardView : UserControl
     }
 
     private ConcurrentDictionary<UIElement, bool> _inRectangle = new ConcurrentDictionary<UIElement, bool>();
-
+    private CancellationTokenSource cts;
     private async void FirstControl_OnPointerEntered(object sender, PointerRoutedEventArgs e)
     {
+
         //If the pointer hovered over the card for 4 seconds, then show the tooltip
         //Otherwise, do nothing
+        cts ??= new CancellationTokenSource();
         var item = sender as UIElement;
         _inRectangle[item] = false;
-        await Task.Delay(1500);
-        if (_inRectangle.TryGetValue(item, out _))
+        try
         {
-            var transition = (TransitionHelper)this.Resources["MyTransitionHelper"];
-            transition.Source = (FrameworkElement)item;
-            transition.Target = SecondControl;
+            await Task.Delay(1000, cts.Token);
+        }
+        catch (Exception)
+        {
+            _inRectangle.TryRemove(item, out _);
+        }
 
-            _inRectangle[item] = true;
-            SecondControlPopup.IsOpen = true;
-            await transition.StartAsync();
-
-            lstBands = GenerateBands(40, 6, 5);
-            await Task.Run(async () =>
+        try
+        {
+            if (_inRectangle.TryGetValue(item, out _))
             {
-                try
+                var transition = (TransitionHelper)this.Resources["MyTransitionHelper"];
+                transition.Source = (FrameworkElement)item;
+                transition.Target = SecondControl;
+
+                _inRectangle[item] = true;
+                SecondControlPopup.IsOpen = true;
+                await transition.StartAsync();
+
+                lstBands = GenerateBands(40, 6, 5);
+                var crvd = CardView;
+                await Task.Run(async () =>
                 {
-                    if (PreviewPlayer.PlaybackState == PlaybackState.Playing)
+                    try
                     {
-                        PreviewPlayer.Stop();
+                        if (PreviewPlayer.PlaybackState == PlaybackState.Playing)
+                        {
+                            PreviewPlayer.Stop();
+                            _interveneSampleProvider?.Dispose();
+                            _interveneSampleProvider = null;
+                        }
+
+                        // var bs = System.IO.Path.Combine(AppContext.BaseDirectory, "Assets", "4dba53850d6bfdb9800d53d65fe2e5f1369b9040.mp3");
+                        //var waveProvider = new Mp3FileReader(bs);
+                        var previewStreams = await crvd.GetPreviewStreamsAsync(cts.Token);
+                        var firstStream = await Task.Run(() => previewStreams.FirstOrDefault(), cts.Token);
+                        var waveProvider = new MediaFoundationReader(firstStream);
+                        _interveneSampleProvider = new InterveneSampleProvider(waveProvider, 2, 65, 40, 20, 500, 46);
+                        InterveneSampleProvider.SpectrumDataReady += Capture_AudioDataAvailable;
+                        PreviewPlayer.Init(_interveneSampleProvider);
+                        PreviewPlayer.Play();
+                        while (PreviewPlayer.PlaybackState == PlaybackState.Playing)
+                        {
+                            await Task.Delay(100, cts.Token);
+                        }
+                    }
+                    catch (Exception x)
+                    {
+
+                    }
+                    finally
+                    {
                         _interveneSampleProvider?.Dispose();
-                        _interveneSampleProvider = null;
                     }
-                    var bs = System.IO.Path.Combine(AppContext.BaseDirectory, "Assets",
-                        "4dba53850d6bfdb9800d53d65fe2e5f1369b9040.mp3");
+                });
 
-                    var waveProvider = new Mp3FileReader(bs);
-                    _interveneSampleProvider = new InterveneSampleProvider(waveProvider, 2, 65, 40, 20, 500, 46);
-                    InterveneSampleProvider.SpectrumDataReady += Capture_AudioDataAvailable;
-                    PreviewPlayer.Init(_interveneSampleProvider);
-                    PreviewPlayer.Play();
-                    while (PreviewPlayer.PlaybackState == PlaybackState.Playing)
+                if (lstBands != null)
+                {
+                    foreach (Rectangle rect in lstBands)
                     {
-                        await Task.Delay(100);
+                        rootp.Children.Remove(rect);
                     }
-                }
-                catch (Exception x)
-                {
 
+                    lstBands.Clear();
+                    lstBands = null;
+                    GC.Collect();
                 }
-                finally
-                {
-                    _interveneSampleProvider?.Dispose();
-                }
-            });
-
-            if (lstBands != null)
-            {
-                foreach (Rectangle rect in lstBands)
-                {
-                    rootp.Children.Remove(rect);
-                }
-                lstBands.Clear();
-                lstBands = null;
-                GC.Collect();
             }
+        }
+        catch (Exception)
+        {
+            // ignored
+        }
+        finally
+        {
+
+            cts?.Dispose();
+            cts = null;
         }
     }
 
     private async void FirstControl_OnPointerExited(object sender, PointerRoutedEventArgs e)
     {
+        try
+        {
+            if (cts is not null)
+                await cts.CancelAsync();
+        }
+        catch (Exception)
+        {
+            // ignored
+        }
+
         var uiElement = sender as UIElement;
         _inRectangle.Remove(uiElement, out var transitioned);
         if (transitioned)
@@ -218,9 +257,9 @@ public sealed partial class WaveformPresenterCardView : UserControl
 
 internal class InterveneSampleProvider : IWaveProvider, IDisposable
 {
-    private readonly Mp3FileReader _toSampleProvider;
+    private readonly MediaFoundationReader _toSampleProvider;
     AudioSpectrum spectrum;
-    public InterveneSampleProvider(Mp3FileReader toSampleProvider, double attack, double decay, int bands, double freqMin, double freqMac, double sensitivy)
+    public InterveneSampleProvider(MediaFoundationReader toSampleProvider, double attack, double decay, int bands, double freqMin, double freqMac, double sensitivy)
     {
         _toSampleProvider = toSampleProvider;
         spectrum = new AudioSpectrum(WaveFormat.SampleRate, WaveFormat.BitsPerSample, WaveFormat.Channels);

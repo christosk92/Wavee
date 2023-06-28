@@ -13,9 +13,12 @@ using System.Linq;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices.WindowsRuntime;
+using System.Threading;
+using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using CommunityToolkit.WinUI.UI.Animations;
+using Wavee.UI.ViewModel.Shell;
 using Wavee.UI.WinUI.ContextFlyout;
 using Wavee.UI.WinUI.Navigation;
 using Wavee.UI.WinUI.View.Album;
@@ -46,6 +49,7 @@ namespace Wavee.UI.WinUI.Components
             typeof(bool), typeof(CardView), new PropertyMetadata(default(bool)));
 
         private bool _buttonsPanelLoaded;
+        private string _id;
 
         public CardView()
         {
@@ -55,7 +59,12 @@ namespace Wavee.UI.WinUI.Components
         public string Id
         {
             get => (string)GetValue(IdProperty);
-            set => SetValue(IdProperty, value);
+            set
+            {
+                SetValue(IdProperty, value);
+                _id = value;
+
+            }
         }
 
         public string Title
@@ -201,6 +210,13 @@ namespace Wavee.UI.WinUI.Components
         {
             NavigationService.Instance.Navigate(typeof(AlbumView), this.Id);
             ButtonsPanelLoaded = false;
+        }
+
+        public async Task<IEnumerable<Task<string>>> GetPreviewStreamsAsync(CancellationToken ct)
+        {
+            var user = ShellViewModel.Instance.User;
+            var previewStreams = await user.Client.Previews.GetPreviewStreamsForContext(_id, ct);
+            return previewStreams;
         }
     }
 }

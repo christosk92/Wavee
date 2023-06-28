@@ -77,7 +77,7 @@ public sealed partial class SidebarControl : NavigationView, INotifyPropertyChan
         await Task.Delay(50);
         if (e.NewValue is UserViewModel user)
         {
-            if (user.Settings.SidebarExpanded)
+            if (user.Settings.ImageExpanded)
             {
                 x.IsPaneOpen = true;
                 var box = x.FindDescendant<ConstrainedBox>(x => x.Name is "SidebarImageBox");

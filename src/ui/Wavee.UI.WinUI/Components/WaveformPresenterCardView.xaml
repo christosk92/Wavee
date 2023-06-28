@@ -18,7 +18,14 @@
             <labs:TransitionConfig Id="image"
                                    ScaleMode="ScaleX" />
             <labs:TransitionConfig Id="name"
-                                   ScaleMode="None" />
+                                   EnableClipAnimation="true"
+                                   ScaleMode="Scale" />
+            <labs:TransitionConfig Id="description"
+                                   EnableClipAnimation="true"
+                                   ScaleMode="Scale" />
+            <labs:TransitionConfig Id="caption"
+                                   EnableClipAnimation="true"
+                                   ScaleMode="Scale" />
         </labs:TransitionHelper>
     </UserControl.Resources>
     <Grid>
@@ -95,10 +102,11 @@
                                     Grid.Column="1">
                             <TextBlock Text="{x:Bind CardView.Title, Mode=OneWay}"
                                        FontSize="24"
+                                       labs:TransitionHelper.Id="name"
                                        FontWeight="ExtraBold" />
                             <TextBlock TextWrapping="Wrap"
                                        MaxLines="2"
-                                       labs:TransitionHelper.Id="name"
+                                       labs:TransitionHelper.Id="description"
                                        FontSize="16"
                                        FontWeight="Bold"
                                        Foreground="{ThemeResource ApplicationSecondaryForegroundThemeBrush}"
@@ -107,6 +115,7 @@
                             <Border>
                                 <TextBlock TextWrapping="Wrap"
                                            MaxLines="2"
+                                           labs:TransitionHelper.Id="caption"
                                            Margin="0,4,0,0"
                                            FontSize="12"
                                            Foreground="{ThemeResource SystemAccentColorLight1}"
