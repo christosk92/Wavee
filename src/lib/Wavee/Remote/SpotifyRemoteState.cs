@@ -7,6 +7,8 @@ using Wavee.Time;
 namespace Wavee.Remote;
 
 public readonly record struct SpotifyRemoteState(
+    bool Paused,
+    bool HasPlayback,
     Option<SpotifyId> TrackId,
     Option<string> TrackUid,
     Option<string> ContextUri,
@@ -29,18 +31,20 @@ public readonly record struct SpotifyRemoteState(
         var contextUri = !string.IsNullOrEmpty(contextUriStr) ? contextUriStr : Option<string>.None;
         var index = clusterValue!.PlayerState?.Index?.Track is not null ? (int)clusterValue!.PlayerState.Index.Track : Option<int>.None;
         return new SpotifyRemoteState(
+            Paused: clusterValue!.PlayerState?.IsPaused is true,
+            HasPlayback: clusterValue!.PlayerState?.IsPlaying is true,
             TrackId: trackId,
             TrackUid: trackUid,
             ContextUri: contextUri,
             IndexInContext: index,
-            Position: CalculatePosition(clusterValue!.PlayerState, client.CurrentTimeMilliseconds),
+            Position: CalculatePosition(clusterValue!.PlayerState, client.CurrentTimeMilliseconds, client.Offset),
             Device: MutateToDevice(clusterValue)
         );
     }
 
     private static Option<SpotifyRemoteDeviceInfo> MutateToDevice(Cluster clusterValue)
     {
-        if(string.IsNullOrEmpty(clusterValue.ActiveDeviceId))
+        if (string.IsNullOrEmpty(clusterValue.ActiveDeviceId))
             return Option<SpotifyRemoteDeviceInfo>.None;
 
         if (clusterValue.Device.TryGetValue(clusterValue.ActiveDeviceId, out var dv))
@@ -57,8 +61,12 @@ public readonly record struct SpotifyRemoteState(
         return Option<SpotifyRemoteDeviceInfo>.None;
     }
 
-    private static TimeSpan CalculatePosition(PlayerState playerState, long serverTime)
+    private static TimeSpan CalculatePosition(PlayerState playerState, long serverTime, int serverOffset)
     {
+        if (playerState.IsPaused)
+        {
+            return TimeSpan.FromMilliseconds(playerState.PositionAsOfTimestamp + serverOffset);
+        }
         var diff = serverTime - playerState.Timestamp;
         return TimeSpan.FromMilliseconds(playerState.PositionAsOfTimestamp + diff);
     }

@@ -15,6 +15,8 @@ using Wavee.ContextResolve.Live;
 using Wavee.GraphQL;
 using Wavee.Infrastructure.Connection;
 using Wavee.Infrastructure.Playback;
+using Wavee.Infrastructure.Public;
+using Wavee.Infrastructure.Public.Live;
 using Wavee.Infrastructure.Remote;
 using Wavee.Metadata;
 using Wavee.Metadata.Artist;
@@ -199,19 +201,17 @@ public class SpotifyClient : IDisposable
     public ITokenClient Token => new LiveTokenClient(connId: _connectionId);
     public IMercuryClient Mercury => new LiveTokenClient(connId: _connectionId);
 
-    public ISpotifyRemoteClient Remote =>
-        new LiveSpotifyRemoteClient(_connectionId, waitForConnectionTask: _waitForConnectionTask, TimeProvider);
+    public ISpotifyPublicClient Public => new LiveSpotifyPublicClient(tokenFactory: Token.GetToken);
+
+    public ISpotifyRemoteClient Remote => new LiveSpotifyRemoteClient(_connectionId, waitForConnectionTask: _waitForConnectionTask, TimeProvider);
 
     public IContextResolver ContextResolver => new LiveContextResolver(() => Mercury);
 
-    public ISpotifyPlaybackClient Playback => new LiveSpotifyPlaybackClient(_connectionId,
-        remoteClient: new WeakReference<ISpotifyRemoteClient>(Remote), waitForConnectionTask: _waitForConnectionTask);
+    public ISpotifyPlaybackClient Playback => new LiveSpotifyPlaybackClient(_connectionId, remoteClient: new WeakReference<ISpotifyRemoteClient>(Remote), waitForConnectionTask: _waitForConnectionTask);
 
-    public ISpotifyMetadataClient Metadata => new LiveSpotifyMetadataClient(mercuryFactory: () => Mercury,
-        _countryCodeTask.Task, _graphQLQuery, Cache, Token.GetToken, Config.Locale, WelcomeMessage.CanonicalUsername);
+    public ISpotifyMetadataClient Metadata => new LiveSpotifyMetadataClient(mercuryFactory: () => Mercury, _countryCodeTask.Task, _graphQLQuery, Cache, Token.GetToken, Config.Locale, WelcomeMessage.CanonicalUsername);
 
-    private Task<HttpResponseMessage> _graphQLQuery(IGraphQLQuery arg, CultureInfo cultureInfo) =>
-        new LiveGraphQLClient(fetchAccessTokenFactory: Token.GetToken, language: cultureInfo).Query(arg);
+    private Task<HttpResponseMessage> _graphQLQuery(IGraphQLQuery arg, CultureInfo cultureInfo) => new LiveGraphQLClient(fetchAccessTokenFactory: Token.GetToken, language: cultureInfo).Query(arg);
 
     public ISpotifyAudioKeysClient AudioKeys => new LiveSpotifyAudioKeysClient(_connectionId);
 
@@ -225,7 +225,6 @@ public class SpotifyClient : IDisposable
     public SpotifyConfig Config => _config;
     public APWelcome WelcomeMessage { get; private set; }
     public string DeviceId { get; }
-
 
     private async Task PlaybackStateChanged(SpotifyLocalPlaybackState obj)
     {

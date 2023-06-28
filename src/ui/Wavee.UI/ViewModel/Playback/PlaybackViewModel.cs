@@ -145,6 +145,11 @@ public sealed class PlaybackViewModel : ObservableObject
                     //do nothing
                 }
             }
+            //if we reached the end of the song, stop the timer
+            if (Duration is not null && theoreticalNext >= Duration.Value.TotalMilliseconds)
+            {
+                _timer.Change(Timeout.Infinite, Timeout.Infinite);
+            }
             _position = theoreticalNext;
         }
     }

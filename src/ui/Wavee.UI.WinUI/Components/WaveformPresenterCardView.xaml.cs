@@ -13,6 +13,7 @@ using Windows.Foundation;
 using Windows.System.Threading;
 using AudioEffectsLib;
 using CommunityToolkit.Labs.WinUI;
+using LanguageExt.UnsafeValueAccess;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Shapes;
@@ -42,18 +43,19 @@ public sealed partial class WaveformPresenterCardView : UserControl
     }
 
     private ConcurrentDictionary<UIElement, bool> _inRectangle = new ConcurrentDictionary<UIElement, bool>();
-    private CancellationTokenSource cts;
+    private static CancellationTokenSource cts;
     private async void FirstControl_OnPointerEntered(object sender, PointerRoutedEventArgs e)
     {
 
         //If the pointer hovered over the card for 4 seconds, then show the tooltip
         //Otherwise, do nothing
         cts ??= new CancellationTokenSource();
+        var tokenInstance = cts.Token;
         var item = sender as UIElement;
         _inRectangle[item] = false;
         try
         {
-            await Task.Delay(1000, cts.Token);
+            await Task.Delay(1000, tokenInstance);
         }
         catch (Exception)
         {
@@ -62,6 +64,7 @@ public sealed partial class WaveformPresenterCardView : UserControl
 
         try
         {
+            if (tokenInstance.IsCancellationRequested) return;
             if (_inRectangle.TryGetValue(item, out _))
             {
                 var transition = (TransitionHelper)this.Resources["MyTransitionHelper"];
@@ -74,6 +77,7 @@ public sealed partial class WaveformPresenterCardView : UserControl
 
                 lstBands = GenerateBands(40, 6, 5);
                 var crvd = CardView;
+                MediaFoundationReader? waveProvider = null;
                 await Task.Run(async () =>
                 {
                     try
@@ -87,25 +91,30 @@ public sealed partial class WaveformPresenterCardView : UserControl
 
                         // var bs = System.IO.Path.Combine(AppContext.BaseDirectory, "Assets", "4dba53850d6bfdb9800d53d65fe2e5f1369b9040.mp3");
                         //var waveProvider = new Mp3FileReader(bs);
-                        var previewStreams = await crvd.GetPreviewStreamsAsync(cts.Token);
-                        var firstStream = await Task.Run(() => previewStreams.FirstOrDefault(), cts.Token);
-                        var waveProvider = new MediaFoundationReader(firstStream);
+                        var previewStreams = await crvd.GetPreviewStreamsAsync(tokenInstance);
+                        var previewStreamUrl = previewStreams.ValueUnsafe();
+                        var firstStream = await Task.Run(() => previewStreamUrl, tokenInstance);
+                        waveProvider = new MediaFoundationReader(firstStream);
                         _interveneSampleProvider = new InterveneSampleProvider(waveProvider, 2, 65, 40, 20, 500, 46);
                         InterveneSampleProvider.SpectrumDataReady += Capture_AudioDataAvailable;
                         PreviewPlayer.Init(_interveneSampleProvider);
                         PreviewPlayer.Play();
                         while (PreviewPlayer.PlaybackState == PlaybackState.Playing)
                         {
-                            await Task.Delay(100, cts.Token);
+                            await Task.Delay(100, tokenInstance);
                         }
                     }
                     catch (Exception x)
                     {
-
+                        //"   at System.Text.Json.JsonElement.GetProperty(String propertyName)\r\n   at Wavee.Infrastructure.Public.Live.LiveSpotifyPublicClient.<DeserializePagedResponse>d__10`1.MoveNext() in C:\\Users\\chris-pc\\Desktop\\Wavee\\Wavee\\src\\lib\\Wavee\\Infrastructure\\Public\\Live\\LiveSpotifyPublicClient.cs:line 138\r\n   at LanguageExt.TaskExtensions.<MapAsync>d__23`2.MoveNext()\r\n   at LanguageExt.TaskExtensions.<Map>d__22`2.MoveNext()\r\n   at Wavee.UI.Client.Previews.SpotifyUIPreviewClient.<GetPreviewStreamsForContext>d__2.MoveNext() in C:\\Users\\chris-pc\\Desktop\\Wavee\\Wavee\\src\\ui\\Wavee.UI\\Client\\Previews\\SpotifyUIPreviewClient.cs:line 31\r\n   at Wavee.UI.WinUI.Components.CardView.<GetPreviewStreamsAsync>d__48.MoveNext() in C:\\Users\\chris-pc\\Desktop\\Wavee\\Wavee\\src\\ui\\Wavee.UI.WinUI\\Components\\CardView.xaml.cs:line 219\r\n   at Wavee.UI.WinUI.Components.WaveformPresenterCardView.<>c__DisplayClass11_1.<<FirstControl_OnPointerEntered>b__0>d.MoveNext() in C:\\Users\\chris-pc\\Desktop\\Wavee\\Wavee\\src\\ui\\Wavee.UI.WinUI\\Components\\WaveformPresenterCardView.xaml.cs:line 94"
                     }
                     finally
                     {
+                        if (waveProvider is not null)
+                            await waveProvider.DisposeAsync();
                         _interveneSampleProvider?.Dispose();
+                        InterveneSampleProvider.SpectrumDataReady -= Capture_AudioDataAvailable;
+                        PreviewPlayer.Stop();
                     }
                 });
 
@@ -128,9 +137,10 @@ public sealed partial class WaveformPresenterCardView : UserControl
         }
         finally
         {
-
             cts?.Dispose();
             cts = null;
+
+            FirstControl_OnPointerExited(sender, e);
         }
     }
 

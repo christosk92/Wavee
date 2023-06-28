@@ -18,6 +18,7 @@ using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using CommunityToolkit.WinUI.UI.Animations;
+using LanguageExt;
 using Wavee.UI.ViewModel.Shell;
 using Wavee.UI.WinUI.ContextFlyout;
 using Wavee.UI.WinUI.Navigation;
@@ -212,7 +213,7 @@ namespace Wavee.UI.WinUI.Components
             ButtonsPanelLoaded = false;
         }
 
-        public async Task<IEnumerable<Task<string>>> GetPreviewStreamsAsync(CancellationToken ct)
+        public async Task<Option<string>> GetPreviewStreamsAsync(CancellationToken ct)
         {
             var user = ShellViewModel.Instance.User;
             var previewStreams = await user.Client.Previews.GetPreviewStreamsForContext(_id, ct);

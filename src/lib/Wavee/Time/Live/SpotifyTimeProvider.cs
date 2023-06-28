@@ -28,6 +28,7 @@ internal sealed class SpotifyTimeProvider : ITimeProvider, IDisposable
     }
 
     public long CurrentTimeMilliseconds => DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() + _measuredOffset;
+    public int Offset => _measuredOffset;
 
     private async void OnTimer(object state)
     {

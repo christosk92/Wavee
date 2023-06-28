@@ -36,8 +36,8 @@
                           PointerExited="FirstControl_OnPointerExited"
                           HorizontalContentAlignment="Stretch" />
         <Popup x:Name="SecondControlPopup" 
-               VerticalOffset="-15"
-               HorizontalOffset="-100">
+               VerticalOffset="0"
+               HorizontalOffset="-120">
             <Grid x:Name="SecondControl"
                   ui:UIElementExtensions.ClipToBounds="False"
                   PointerExited="SecondControl_OnPointerExited"

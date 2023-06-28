@@ -49,7 +49,7 @@ internal readonly struct LiveTokenClient : ITokenClient, IMercuryClient
 
 
                     const string KEYMASTER_URI =
-                        "hm://keymaster/token/authenticated?scope=user-read-private,user-read-email,playlist-modify-public,ugc-image-upload,playlist-read-private,playlist-read-collaborative,playlist-read&client_id=65b708073fc0480ea92a077233ca87bd&device_id=";
+                        "hm://keymaster/token/authenticated?scope=user-library-read,user-read-private,user-read-email,playlist-modify-public,ugc-image-upload,playlist-read-private,playlist-read-collaborative,playlist-read&client_id=65b708073fc0480ea92a077233ca87bd&device_id=";
 
                     var finalData = await MercuryParsers.GetAsync(_connId, KEYMASTER_URI, ct);
 

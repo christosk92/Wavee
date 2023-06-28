@@ -1,6 +1,8 @@
-﻿namespace Wavee.UI.Client.Previews;
+﻿using LanguageExt;
+
+namespace Wavee.UI.Client.Previews;
 
 public interface IWaveeUIPreviewClient
 {
-    Task<IEnumerable<Task<string>>> GetPreviewStreamsForContext(string id, CancellationToken ct = default);
+    Task<Option<string>> GetPreviewStreamsForContext(string id, CancellationToken ct = default);
 }

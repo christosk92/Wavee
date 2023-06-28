@@ -62,13 +62,14 @@ internal sealed class SpotifyUIPlaybackClient : IWaveeUIPlaybackClient
         var images = GetCoverImages(track);
 
         return new WaveeUIPlaybackState(
-            PlaybackState: WaveeUIPlayerState.Playing,
+            PlaybackState: spotifyRemoteState.Paused ? WaveeUIPlayerState.Paused :
+            (spotifyRemoteState.HasPlayback ? WaveeUIPlayerState.Playing : WaveeUIPlayerState.NotPlayingAnything),
             Metadata: new WaveeItemMetadata(Id: trackId.ToString(),
                 Title: new ItemWithId(
                     Id: SpotifyId.FromRaw(track.Album.Gid.Span, AudioItemType.Album, ServiceType.Spotify).ToString(),
                     Title: track.Name),
                 Subtitles: track.Artist.Select(x => new ItemWithId(
-                    Id: SpotifyId.FromRaw(x.Gid.Span, AudioItemType.Artist, ServiceType.Spotify).ToString(), 
+                    Id: SpotifyId.FromRaw(x.Gid.Span, AudioItemType.Artist, ServiceType.Spotify).ToString(),
                     Title: x.Name)).ToArray(),
                 LargeImageUrl: images.OrderByDescending(x => x.Height.IfNone(0)).Head().Url,
                 SmallImageUrl: images.OrderBy(x => x.Height.IfNone(0)).Head().Url, TimeSpan.FromMilliseconds(track.Duration)),
