@@ -23,6 +23,11 @@ public readonly record struct SpotifyId(BigInteger Id, AudioItemType Type, Servi
     {
         var result = Id;
         var length = (int)Math.Ceiling(BigInteger.Log(result, 256));
+
+        const int requiredLength = 16;
+        if (length < requiredLength) length = requiredLength; // Ensure the minimum length
+
+
         Span<byte> bytes = stackalloc byte[length];
         // var bytes = new List<byte>();
         int index = 0;

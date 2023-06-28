@@ -35,97 +35,103 @@
                           PointerEntered="FirstControl_OnPointerEntered"
                           PointerExited="FirstControl_OnPointerExited"
                           HorizontalContentAlignment="Stretch" />
-        <Popup x:Name="SecondControlPopup" 
+        <Popup x:Name="SecondControlPopup"
                VerticalOffset="0"
                HorizontalOffset="-120">
-            <Grid x:Name="SecondControl"
-                  ui:UIElementExtensions.ClipToBounds="False"
-                  PointerExited="SecondControl_OnPointerExited"
-                  Width="500"
-                  Visibility="Collapsed">
-                <Border   Height="200"
-                          labs:TransitionHelper.Id="background"
-                          Width="500">
-                    <Border  Background="{ThemeResource AcrylicBackgroundFillColorDefaultBrush}"
-                             HorizontalAlignment="Stretch"
-                             VerticalAlignment="Stretch"
-                             BorderThickness="1"
-                             BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
-                             CornerRadius="6">
-                        <Border Opacity=".1"
-                                Background="#401080" />
+            <Button Background="Transparent"
+                    BorderThickness="0"
+                    x:Name="SecondControl"
+                    ui:UIElementExtensions.ClipToBounds="False"
+                    PointerExited="SecondControl_OnPointerExited"
+                    Width="500"
+                    Visibility="Collapsed"
+                    Tapped="SecondControlNavigatedionrequested"
+                    CornerRadius="0">
+                <Grid>
+                    <Border   Height="200"
+                              labs:TransitionHelper.Id="background"
+                              Width="500">
+                        <Border  Background="{ThemeResource AcrylicBackgroundFillColorDefaultBrush}"
+                                 HorizontalAlignment="Stretch"
+                                 VerticalAlignment="Stretch"
+                                 BorderThickness="1"
+                                 BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                 CornerRadius="6">
+                            <Border Opacity=".1"
+                                    Background="#401080" />
+                        </Border>
+                        <ui:Effects.Shadow>
+                            <media:AttachedCardShadow BlurRadius="8"
+                                                      CornerRadius="6"
+                                                      Color="Black"
+                                                      Offset="0,4"
+                                                      Opacity="1" />
+                        </ui:Effects.Shadow>
                     </Border>
-                    <ui:Effects.Shadow>
-                        <media:AttachedCardShadow BlurRadius="8"
-                                                  CornerRadius="6"
-                                                  Color="Black"
-                                                  Offset="0,4"
-                                                  Opacity="1" />
-                    </ui:Effects.Shadow>
-                </Border>
-                <Border Background="Transparent"
-                        HorizontalAlignment="Stretch"
-                        VerticalAlignment="Stretch"
-                        Height="220"
-                        CornerRadius="6"
-                        Width="500"
-                        Padding="0"
-                        Margin="-24,0,0,0"
-                        BorderThickness="0">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition />
-                        </Grid.ColumnDefinitions>
-                        <controls:ConstrainedBox Grid.Column="0"
-                                                 labs:TransitionHelper.Id="image"
-                                                 AspectRatio="1:1">
-                            <ui:Effects.Shadow>
-                                <media:AttachedCardShadow BlurRadius="12"
-                                                          CornerRadius="0"
-                                                          Color="Black"
-                                                          Offset="0"
-                                                          Opacity="1" />
-                            </ui:Effects.Shadow>
-                            <Image Source="{x:Bind CardView.Image, Mode=OneWay}">
-                            </Image>
-                        </controls:ConstrainedBox>
+                    <Border Background="Transparent"
+                            HorizontalAlignment="Stretch"
+                            VerticalAlignment="Stretch"
+                            Height="220"
+                            CornerRadius="6"
+                            Width="500"
+                            Padding="0"
+                            Margin="-24,0,0,0"
+                            BorderThickness="0">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition />
+                            </Grid.ColumnDefinitions>
+                            <controls:ConstrainedBox Grid.Column="0"
+                                                     labs:TransitionHelper.Id="image"
+                                                     AspectRatio="1:1">
+                                <ui:Effects.Shadow>
+                                    <media:AttachedCardShadow BlurRadius="12"
+                                                              CornerRadius="0"
+                                                              Color="Black"
+                                                              Offset="0"
+                                                              Opacity="1" />
+                                </ui:Effects.Shadow>
+                                <Image Source="{x:Bind CardView.Image, Mode=OneWay}">
+                                </Image>
+                            </controls:ConstrainedBox>
 
-                        <Grid x:Name="rootp"
-                              Margin="12,0,0,12"
-                              Grid.Column="1"
-                              VerticalAlignment="Stretch"
-                              HorizontalAlignment="Stretch" />
-                        <StackPanel Padding="8"
-                                    Height="80"
-                                    VerticalAlignment="Center"
-                                    Grid.Column="1">
-                            <TextBlock Text="{x:Bind CardView.Title, Mode=OneWay}"
-                                       FontSize="24"
-                                       labs:TransitionHelper.Id="name"
-                                       FontWeight="ExtraBold" />
-                            <TextBlock TextWrapping="Wrap"
-                                       MaxLines="2"
-                                       labs:TransitionHelper.Id="description"
-                                       FontSize="16"
-                                       FontWeight="Bold"
-                                       Foreground="{ThemeResource ApplicationSecondaryForegroundThemeBrush}"
-                                       Text="{x:Bind CardView.Subtitle, Mode=OneWay}" />
-
-                            <Border>
+                            <Grid x:Name="rootp"
+                                  Margin="12,0,0,12"
+                                  Grid.Column="1"
+                                  VerticalAlignment="Stretch"
+                                  HorizontalAlignment="Stretch" />
+                            <StackPanel Padding="8"
+                                        Height="80"
+                                        VerticalAlignment="Center"
+                                        Grid.Column="1">
+                                <TextBlock Text="{x:Bind CardView.Title, Mode=OneWay}"
+                                           FontSize="24"
+                                           labs:TransitionHelper.Id="name"
+                                           FontWeight="ExtraBold" />
                                 <TextBlock TextWrapping="Wrap"
                                            MaxLines="2"
-                                           labs:TransitionHelper.Id="caption"
-                                           Margin="0,4,0,0"
-                                           FontSize="12"
-                                           Foreground="{ThemeResource SystemAccentColorLight1}"
-                                           FontWeight="Light"
-                                           Text="{x:Bind CardView.Caption,Mode=OneWay}" />
-                            </Border>
-                        </StackPanel>
-                    </Grid>
-                </Border>
-            </Grid>
+                                           labs:TransitionHelper.Id="description"
+                                           FontSize="16"
+                                           FontWeight="Bold"
+                                           Foreground="{ThemeResource ApplicationSecondaryForegroundThemeBrush}"
+                                           Text="{x:Bind CardView.Subtitle, Mode=OneWay}" />
+
+                                <Border>
+                                    <TextBlock TextWrapping="Wrap"
+                                               MaxLines="2"
+                                               labs:TransitionHelper.Id="caption"
+                                               Margin="0,4,0,0"
+                                               FontSize="12"
+                                               Foreground="{ThemeResource SystemAccentColorLight1}"
+                                               FontWeight="Light"
+                                               Text="{x:Bind CardView.Caption,Mode=OneWay}" />
+                                </Border>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </Button>
         </Popup>
     </Grid>
 </UserControl>

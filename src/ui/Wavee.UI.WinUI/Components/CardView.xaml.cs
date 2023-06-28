@@ -209,10 +209,14 @@ namespace Wavee.UI.WinUI.Components
 
         private void CardView_OnTapped(object sender, TappedRoutedEventArgs e)
         {
+            Navigate();
+        }
+
+        public void Navigate()
+        {
             NavigationService.Instance.Navigate(typeof(AlbumView), this.Id);
             ButtonsPanelLoaded = false;
         }
-
         public async Task<Option<string>> GetPreviewStreamsAsync(CancellationToken ct)
         {
             var user = ShellViewModel.Instance.User;

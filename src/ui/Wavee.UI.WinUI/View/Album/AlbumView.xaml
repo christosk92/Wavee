@@ -161,7 +161,7 @@
                     <Image ui:Effects.Shadow="{StaticResource CommonShadow}"
                            x:Name="AlbumImage"
                            Canvas.ZIndex="1000"
-                           Source="{x:Bind ViewModel.Album.LargeImage, Mode=OneWay}" />
+                           Source="{Binding Album.LargeImage, Mode=OneWay}" />
 
                     <StackPanel RelativePanel.RightOf="AlbumImage"
                                 Margin="12,0,0,0"
@@ -176,16 +176,20 @@
                                    Padding="8"
                                    Text="{x:Bind ViewModel.Album.Name, Mode=OneWay}" />
                         <ItemsRepeater ItemsSource="{x:Bind ViewModel.Album.Artists, Mode=OneWay}">
+                            <ItemsRepeater.Layout>
+                                <StackLayout Orientation="Horizontal"
+                                             Spacing="8" />
+                            </ItemsRepeater.Layout>
                             <ItemsRepeater.ItemTemplate>
                                 <DataTemplate x:DataType="album:AlbumArtist">
                                     <Button MinWidth="120"
                                             HorizontalContentAlignment="Left">
                                         <StackPanel Orientation="Horizontal"
                                                     Spacing="8">
-                                            <PersonPicture ProfilePicture="{x:Bind Images, Converter={StaticResource GetFirstImageSafe}}"
+                                            <PersonPicture ProfilePicture="{x:Bind Images, Converter={StaticResource GetFirstImageSafe}, Mode=OneWay}"
                                                            Height="28"
                                                            Width="28" />
-                                            <TextBlock Text="{x:Bind Name}"
+                                            <TextBlock Text="{x:Bind Name, Mode=OneWay}"
                                                        FontWeight="Bold"
                                                        VerticalAlignment="Center" />
                                         </StackPanel>
@@ -339,7 +343,7 @@
             </GroupStyle>
         </ListView.GroupStyle>
         <ListView.Footer>
-            <StackPanel Padding="24"
+            <StackPanel Padding="12,0,12,24"
                         Spacing="8"
                         Orientation="Vertical">
                 <TextBlock Foreground="{ThemeResource ApplicationSecondaryForegroundThemeBrush}"

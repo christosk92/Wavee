@@ -28,7 +28,11 @@ public sealed partial class WaveformPresenterCardView : UserControl
     List<Rectangle> lstBands;
     public static readonly DependencyProperty CardViewProperty = DependencyProperty.Register(nameof(CardView), typeof(CardView), typeof(WaveformPresenterCardView), new PropertyMetadata(default(CardView)));
     private readonly DispatcherQueue _dispatcherQueue;
-    private static readonly NAudio.Wave.IWavePlayer PreviewPlayer = new WaveOutEvent();
+
+    private static readonly NAudio.Wave.IWavePlayer PreviewPlayer = new WaveOutEvent
+    {
+        Volume = 0.5f
+    };
     public WaveformPresenterCardView()
     {
         this.InitializeComponent();
@@ -42,7 +46,7 @@ public sealed partial class WaveformPresenterCardView : UserControl
         set => SetValue(CardViewProperty, value);
     }
 
-    private ConcurrentDictionary<UIElement, bool> _inRectangle = new ConcurrentDictionary<UIElement, bool>();
+    public static readonly ConcurrentDictionary<UIElement, bool> _inRectangle = new ConcurrentDictionary<UIElement, bool>();
     private static CancellationTokenSource cts;
     private async void FirstControl_OnPointerEntered(object sender, PointerRoutedEventArgs e)
     {
@@ -163,8 +167,18 @@ public sealed partial class WaveformPresenterCardView : UserControl
             var transition = (TransitionHelper)this.Resources["MyTransitionHelper"];
             _interveneSampleProvider?.Dispose();
             PreviewPlayer.Stop();
-            await transition.ReverseAsync();
-            SecondControlPopup.IsOpen = false;
+            try
+            {
+                await transition.ReverseAsync();
+            }
+            catch (Exception)
+            {
+                // ignored
+            }
+            finally
+            {
+                SecondControlPopup.IsOpen = false;
+            }
         }
     }
 
@@ -262,6 +276,41 @@ public sealed partial class WaveformPresenterCardView : UserControl
             Debug.WriteLine(ex.Message);
 
         }
+    }
+
+    private async void SecondControlNavigatedionrequested(object sender, TappedRoutedEventArgs e)
+    {
+        try
+        {
+            if (cts is not null)
+                await cts.CancelAsync();
+        }
+        catch (Exception)
+        {
+            // ignored
+        }
+
+        var uiElement = sender as UIElement;
+        _inRectangle.Remove(uiElement, out var transitioned);
+        var transition = (TransitionHelper)this.Resources["MyTransitionHelper"];
+        _interveneSampleProvider?.Dispose();
+        PreviewPlayer.Stop();
+        try
+        {
+            transition.ReverseDuration = TimeSpan.Zero;
+            await transition.ReverseAsync();
+        }
+        catch (Exception)
+        {
+            // ignored
+        }
+        finally
+        {
+            SecondControlPopup.IsOpen = false;
+        }
+
+        CardView.Navigate();
+
     }
 }
 

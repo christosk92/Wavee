@@ -32,7 +32,7 @@ internal sealed class SpotifyUIPlaybackClient : IWaveeUIPlaybackClient
         return spotifyClient
             .Remote
             .CreateListener()
-            .SelectMany((x) => SpotifyRemotePlaybackEvent(x, new WeakReference<SpotifyClient>(spotifyClient)))
+            .SelectMany((x) => Task.Run(async () => await SpotifyRemotePlaybackEvent(x, new WeakReference<SpotifyClient>(spotifyClient))))
             .Select(f =>
             {
                 CurrentPlayback = f;

@@ -47,7 +47,6 @@ internal readonly struct LiveSpotifyMetadataClient : ISpotifyMetadataClient
     {
         const string query = "hm://metadata/4/track/{0}?country={1}";
         var finalUri = string.Format(query, id.ToBase16(), await _country);
-
         var mercury = _mercuryFactory();
         var response = await mercury.Get(finalUri, cancellationToken);
         if (response.Header.StatusCode == 200)

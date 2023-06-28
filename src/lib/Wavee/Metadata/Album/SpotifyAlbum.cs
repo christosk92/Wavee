@@ -193,7 +193,7 @@ public sealed class SpotifyAlbum
                 var name = current.GetProperty("profile").GetProperty("name").GetString();
                 var image = ParseImagesOnly(
                     current.GetProperty("visuals").GetProperty("avatarImage").GetProperty("sources"));
-                output[i] = new AlbumArtist(
+                output[i++] = new AlbumArtist(
                     Id: SpotifyId.FromUri(current.GetProperty("uri").GetString().AsSpan()),
                     Name: name!,
                     Images: image

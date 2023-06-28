@@ -16,7 +16,7 @@ public class GetFirstImageSafeConverter : IValueConverter
             var url = images?.OrderBy(x=> x.Height.IfNone(0))?.FirstOrDefault().Url;
             if (string.IsNullOrEmpty(url))
             {
-                return DependencyProperty.UnsetValue;
+                return new BitmapImage();
             }
 
             var bmp = new BitmapImage
@@ -25,8 +25,7 @@ public class GetFirstImageSafeConverter : IValueConverter
             };
             return bmp;
         }
-
-        return DependencyProperty.UnsetValue;
+        return new BitmapImage();
     }
 
     public object ConvertBack(object value, Type targetType, object parameter, string language)
