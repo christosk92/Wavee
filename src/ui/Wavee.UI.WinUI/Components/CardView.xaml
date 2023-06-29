@@ -51,7 +51,7 @@
                                              labs:TransitionHelper.Id="image"
                                              x:Load="{x:Bind Negate(IsArtist),Mode=OneWay}"
                                              AspectRatio="1:1">
-                        <Image Source="{x:Bind Image, Mode=OneWay}" />
+                        <Image x:Name="NormalImageImage" Source="{x:Bind Image, Mode=OneWay}" />
                     </controls:ConstrainedBox>
                     <controls:ConstrainedBox x:Name="ArtistImageBox"
                                              Grid.ColumnSpan="2"

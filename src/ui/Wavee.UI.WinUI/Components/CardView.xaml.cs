@@ -19,10 +19,12 @@ using Windows.Foundation;
 using Windows.Foundation.Collections;
 using CommunityToolkit.WinUI.UI.Animations;
 using LanguageExt;
+using Wavee.Id;
 using Wavee.UI.ViewModel.Shell;
 using Wavee.UI.WinUI.ContextFlyout;
 using Wavee.UI.WinUI.Navigation;
 using Wavee.UI.WinUI.View.Album;
+using Microsoft.UI.Xaml.Media.Animation;
 
 namespace Wavee.UI.WinUI.Components
 {
@@ -51,6 +53,7 @@ namespace Wavee.UI.WinUI.Components
 
         private bool _buttonsPanelLoaded;
         private string _id;
+        public static readonly DependencyProperty AudioTypeProperty = DependencyProperty.Register(nameof(AudioType), typeof(AudioItemType), typeof(CardView), new PropertyMetadata(default(AudioItemType)));
 
         public CardView()
         {
@@ -115,6 +118,15 @@ namespace Wavee.UI.WinUI.Components
         }
 
         public bool HasCaption => !string.IsNullOrEmpty(Caption);
+
+        public AudioItemType AudioType
+        {
+            get => (AudioItemType)GetValue(AudioTypeProperty);
+            set => SetValue(AudioTypeProperty, value);
+        }
+
+        public event EventHandler OnNavigated;
+
         public event PropertyChangedEventHandler PropertyChanged;
 
         private void OnPropertyChanged([CallerMemberName] string propertyName = null)
@@ -153,8 +165,8 @@ namespace Wavee.UI.WinUI.Components
                     .Translation(new Vector2(0, 20), duration: TimeSpan.FromMilliseconds(200))
                     .Opacity(to: 0, from: 1, duration: TimeSpan.FromMilliseconds(100))
                     .StartAsync((ButtonsPanel as UIElement)!);
+                ButtonsPanel.Visibility = Visibility.Collapsed;
             }
-            ButtonsPanel.Visibility = Visibility.Collapsed;
             ButtonsPanelLoaded = false;
 
             /*
@@ -214,8 +226,18 @@ namespace Wavee.UI.WinUI.Components
 
         public void Navigate()
         {
-            NavigationService.Instance.Navigate(typeof(AlbumView), this.Id);
-            ButtonsPanelLoaded = false;
+            switch (AudioType)
+            {
+                case AudioItemType.Album:
+                    ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("ForwardConnectedAnimation", this.NormalImageBox);
+                    NavigationService.Instance.Navigate(typeof(AlbumView), new NavigatingWithImage(
+                        Id: this.Id,
+                        Image: this.NormalImageImage.Source
+                    ));
+                    ButtonsPanelLoaded = false;
+                    OnNavigated?.Invoke(this.NormalImageBox, EventArgs.Empty);
+                    break;
+            }
         }
         public async Task<Option<string>> GetPreviewStreamsAsync(CancellationToken ct)
         {

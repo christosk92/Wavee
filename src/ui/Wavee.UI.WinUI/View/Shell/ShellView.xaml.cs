@@ -33,11 +33,12 @@ namespace Wavee.UI.WinUI.View.Shell
         public ShellView(ShellViewModel shellViewModel)
         {
             this.InitializeComponent();
-            _ = new NavigationService(MainContent);
+            NavigationService = new NavigationService(MainContent);
 
             ViewModel = shellViewModel;
         }
         public ShellViewModel ViewModel { get; set; }
+        public NavigationService NavigationService { get; set; }
 
         private void SidebarControl_Resized(object sender, Option<double> e)
         {
@@ -256,5 +257,9 @@ namespace Wavee.UI.WinUI.View.Shell
             }
         }
 
+        private void SidebarControl_OnBackRequested(NavigationView sender, NavigationViewBackRequestedEventArgs args)
+        {
+            NavigationService.GoBack();
+        }
     }
 }

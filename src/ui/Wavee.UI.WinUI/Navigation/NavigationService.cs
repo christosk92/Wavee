@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using CommunityToolkit.Mvvm.ComponentModel;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
 using Wavee.UI.WinUI.View.Album;
@@ -10,7 +11,7 @@ using Wavee.UI.WinUI.View.Home;
 namespace Wavee.UI.WinUI.Navigation;
 public record CachedPage(WeakReference PageReference, Type Type, object? WithParameter, int InsertedAt);
 public record GeneralBackStackItem(Type Type, object? Parameter);
-public sealed class NavigationService
+public sealed class NavigationService : ObservableObject
 {
     private ContentPresenter _contentControl;
     private object? _lastPrameter;
@@ -84,6 +85,7 @@ public sealed class NavigationService
         }
         _lastPrameter = parameter;
         Navigated?.Invoke(this, (pageType, parameter));
+        this.OnPropertyChanged(nameof(CanGoBack));
     }
     private void EvaluateCache()
     {

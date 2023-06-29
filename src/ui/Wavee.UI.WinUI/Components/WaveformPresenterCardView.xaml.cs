@@ -59,7 +59,7 @@ public sealed partial class WaveformPresenterCardView : UserControl
         _inRectangle[item] = false;
         try
         {
-            await Task.Delay(1000, tokenInstance);
+            await Task.Delay(2000, tokenInstance);
         }
         catch (Exception)
         {
@@ -154,31 +154,31 @@ public sealed partial class WaveformPresenterCardView : UserControl
         {
             if (cts is not null)
                 await cts.CancelAsync();
+
+            var uiElement = sender as UIElement;
+            _inRectangle.Remove(uiElement, out var transitioned);
+            if (transitioned)
+            {
+                var transition = (TransitionHelper)this.Resources["MyTransitionHelper"];
+                _interveneSampleProvider?.Dispose();
+                PreviewPlayer.Stop();
+                try
+                {
+                    await transition.ReverseAsync(true);
+                }
+                catch (Exception)
+                {
+                    // ignored
+                }
+                finally
+                {
+                    SecondControlPopup.IsOpen = false;
+                }
+            }
         }
         catch (Exception)
         {
             // ignored
-        }
-
-        var uiElement = sender as UIElement;
-        _inRectangle.Remove(uiElement, out var transitioned);
-        if (transitioned)
-        {
-            var transition = (TransitionHelper)this.Resources["MyTransitionHelper"];
-            _interveneSampleProvider?.Dispose();
-            PreviewPlayer.Stop();
-            try
-            {
-                await transition.ReverseAsync();
-            }
-            catch (Exception)
-            {
-                // ignored
-            }
-            finally
-            {
-                SecondControlPopup.IsOpen = false;
-            }
         }
     }
 
@@ -290,8 +290,7 @@ public sealed partial class WaveformPresenterCardView : UserControl
             // ignored
         }
 
-        var uiElement = sender as UIElement;
-        _inRectangle.Remove(uiElement, out var transitioned);
+        _inRectangle.Clear();
         var transition = (TransitionHelper)this.Resources["MyTransitionHelper"];
         _interveneSampleProvider?.Dispose();
         PreviewPlayer.Stop();
@@ -311,6 +310,35 @@ public sealed partial class WaveformPresenterCardView : UserControl
 
         CardView.Navigate();
 
+    }
+
+    private void WaveformPresenterCardView_OnUnloaded(object sender, RoutedEventArgs e)
+    {
+        if (cts is not null)
+        {
+            try
+            {
+                cts.Cancel();
+            }
+            catch (Exception)
+            {
+                // ignored
+            }
+
+            try
+            {
+                cts.Dispose();
+            }
+            catch (Exception)
+            {
+                // ignored
+            }
+
+            cts = null;
+        }
+        _interveneSampleProvider?.Dispose();
+        PreviewPlayer.Stop();
+        _inRectangle.Clear();
     }
 }
 

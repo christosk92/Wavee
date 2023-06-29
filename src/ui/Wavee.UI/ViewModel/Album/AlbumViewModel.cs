@@ -62,6 +62,7 @@ public sealed class AlbumViewModel : ObservableObject
     public string TrackCountString => FormatTrackCount(Album?.Discs ?? Array.Empty<WaveeUIAlbumDisc>());
     public string DurationString => CalculateDuration(Album?.Discs ?? Array.Empty<WaveeUIAlbumDisc>());
     public string CulturedDateString => GetCulturedDateString(Album);
+    public bool SetImage { get; set; }
 
     private static string GetCulturedDateString(WaveeUIAlbumView? album)
     {
@@ -78,7 +79,7 @@ public sealed class AlbumViewModel : ObservableObject
         {
             case ReleaseDatePrecisionType.Unknown:
                 return string.Empty;
-            
+
             case ReleaseDatePrecisionType.Year:
                 return album.ReleaseDate.Year.ToString();
             case ReleaseDatePrecisionType.Month:

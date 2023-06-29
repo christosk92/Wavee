@@ -1,12 +1,15 @@
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Labs.WinUI;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Media.Animation;
 using Microsoft.UI.Xaml.Navigation;
 using Wavee.UI.ViewModel.Home;
 using Wavee.UI.ViewModel.Shell;
 using Wavee.UI.WinUI.Navigation;
+using Windows.Foundation.Metadata;
 
 namespace Wavee.UI.WinUI.View.Home;
 
@@ -31,7 +34,16 @@ public sealed partial class HomeView : UserControl, ICacheablePage, INavigable
 
     public void NavigatedTo(object parameter)
     {
-        
+        if (_stored is not null)
+        {
+            ConnectedAnimation animation = ConnectedAnimationService.GetForCurrentView().GetAnimation("BackConnectedAnimation");
+            if (animation != null && _stored != null)
+            {
+                animation.Configuration = new DirectConnectedAnimationConfiguration();
+                animation.TryStart(_stored);
+                _stored = null;
+            }
+        }
     }
 
     public void NavigatedFrom(NavigationMode mode)
@@ -54,5 +66,11 @@ public sealed partial class HomeView : UserControl, ICacheablePage, INavigable
             await ViewModel.Fetch();
             ViewModel.SelectedFilter = filter;
         }
+    }
+
+    private UIElement _stored;
+    private void CardView_OnOnNavigated(object sender, EventArgs e)
+    {
+        _stored = sender as UIElement;
     }
 }

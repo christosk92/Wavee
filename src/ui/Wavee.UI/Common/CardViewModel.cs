@@ -1,4 +1,6 @@
-﻿namespace Wavee.UI.Common;
+﻿using Wavee.Id;
+
+namespace Wavee.UI.Common;
 
 public interface ICardViewModel
 {
@@ -19,6 +21,7 @@ public sealed class CardViewModel : ICardViewModel
     public bool ImageIsIcon { get; init; }
     public bool IsArtist { get; init; }
     public bool HasSubtitle => !string.IsNullOrEmpty(Subtitle);
+    public AudioItemType Type { get; init; }
 }
 
 public sealed class PodcastEpisodeCardViewModel : ICardViewModel

@@ -351,7 +351,13 @@ public enum ContentRatingType
 
 public readonly record struct TrackAlbum(SpotifyId Id, CoverImage[] Images);
 
-public readonly record struct TrackArtist(SpotifyId Id, string Name);
+public interface ITrackArtist
+{
+    SpotifyId Id { get; }
+    string Name { get; }
+}
+
+public readonly record struct TrackArtist(SpotifyId Id, string Name) : ITrackArtist;
 
 public readonly record struct ArtistDiscographyRelease(SpotifyId Id, string Name, ReleaseType Type,
     ReleaseCopyright[] Copyright, DiscographyReleaseDate Date, CoverImage[] Images, string Label, ushort TotalTracks);

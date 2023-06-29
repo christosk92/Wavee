@@ -15,6 +15,7 @@
              xmlns:panels="using:Wavee.UI.WinUI.Panels"
              xmlns:common="using:Wavee.UI.Common"
              xmlns:components="using:Wavee.UI.WinUI.Components"
+             xmlns:tracks="using:Wavee.UI.WinUI.Components.Tracks"
              DataContext="{x:Bind ViewModel}"
              mc:Ignorable="d">
     <UserControl.Transitions>
@@ -128,7 +129,6 @@
                 </Setter.Value>
             </Setter>
         </Style>
-        <winUi:ToMetadataConverter x:Key="ToMetadata" />
     </UserControl.Resources>
     <ListView VerticalAlignment="Top"
               Padding="24"
@@ -142,20 +142,22 @@
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
-                <Border Background="{Binding ImageColor,Mode=OneWay}"
-                        Opacity=".2"
-                        CornerRadius="6,6,0,0"
-                        Margin="-2"
-                        Canvas.ZIndex="10"
-                        ui:UIElementExtensions.ClipToBounds="False"
-                        BorderThickness="1,1,1,1"
-                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
-                    <ui:Effects.Shadow>
-                        <media:AttachedCardShadow Offset="0,8"
-                                                  Color="{Binding ImageColor,Mode=OneWay}"
-                                                  Opacity=".6"
-                                                  BlurRadius="24" />
-                    </ui:Effects.Shadow>
+                <Border>
+                    <Border Background="{Binding ImageColor,Mode=OneWay}"
+                            Opacity=".2"
+                            CornerRadius="6,6,0,0"
+                            Margin="-2"
+                            Canvas.ZIndex="10"
+                            ui:UIElementExtensions.ClipToBounds="False"
+                            BorderThickness="1,1,1,1"
+                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
+                        <ui:Effects.Shadow>
+                            <media:AttachedCardShadow Offset="0,8"
+                                                      Color="{Binding ImageColor,Mode=OneWay}"
+                                                      Opacity=".6"
+                                                      BlurRadius="24" />
+                        </ui:Effects.Shadow>
+                    </Border>
                 </Border>
                 <RelativePanel Padding="24">
                     <Image ui:Effects.Shadow="{StaticResource CommonShadow}"
@@ -391,54 +393,11 @@
 
         <ListView.ItemTemplate>
             <DataTemplate x:DataType="album1:WaveeUIAlbumTrack">
-                <Grid Padding="4,12">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="72" />
-                        <ColumnDefinition Width="2*" />
-                        <ColumnDefinition Width="124" />
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="8" />
-                    </Grid.ColumnDefinitions>
-                    <StackPanel VerticalAlignment="Center"
-                                Spacing="8"
-                                HorizontalAlignment="Center"
-                                Orientation="Horizontal">
-                        <TextBlock FontSize="16"
-                                   Text="{x:Bind FormatNumber(TrackNumber)}"
-                                   FontWeight="Bold" />
-                        <FontIcon FontFamily="Segoe Fluent Icons"
-                                  Glyph="&#xEB51;" />
-                    </StackPanel>
-                    <StackPanel VerticalAlignment="Center"
-                                Grid.Column="1"
-                                Spacing="0"
-                                HorizontalAlignment="Left">
-                        <TextBlock Text="{x:Bind Name}"
-                                   FontWeight="SemiBold"
-                                   FontSize="16" />
-                        <controls:MetadataControl Separator=", "
-                                                  Items="{x:Bind Artists, Converter={StaticResource ToMetadata}}">
-                            <controls:MetadataControl.TextBlockStyle>
-                                <Style TargetType="TextBlock">
-                                    <Setter Property="FontSize"
-                                            Value="14" />
-                                </Style>
-                            </controls:MetadataControl.TextBlockStyle>
-                        </controls:MetadataControl>
-                    </StackPanel>
-
-                    <TextBlock Grid.Column="2"
-                               HorizontalTextAlignment="Right"
-                               FontSize="16"
-                               VerticalAlignment="Center"
-                               Text="{x:Bind FormatPlaycount(Playcount),Mode=OneWay}" />
-
-                    <TextBlock Grid.Column="3"
-                               HorizontalTextAlignment="Right"
-                               FontSize="16"
-                               VerticalAlignment="Center"
-                               Text="{x:Bind FormatDuration(Duration),Mode=OneWay}" />
-                </Grid>
+                <tracks:AlbumTrackView Number="{x:Bind TrackNumber}"
+                                       Title="{x:Bind Name}"
+                                       Artists="{x:Bind Artists}"
+                                       Playcount="{x:Bind Playcount}"
+                                       Duration="{x:Bind Duration}" />
             </DataTemplate>
         </ListView.ItemTemplate>
     </ListView>

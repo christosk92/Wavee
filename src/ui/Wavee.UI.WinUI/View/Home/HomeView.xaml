@@ -14,19 +14,25 @@
              xmlns:components="using:Wavee.UI.WinUI.Components"
              xmlns:templateSelectors="using:Wavee.UI.WinUI.TemplateSelectors"
              mc:Ignorable="d">
-
+    <UserControl.Transitions>
+        <TransitionCollection>
+            <EntranceThemeTransition />
+        </TransitionCollection>
+    </UserControl.Transitions>
     <UserControl.Resources>
         <DataTemplate x:Key="CardViewTemplate"
                       x:DataType="common:CardViewModel">
             <components:WaveformPresenterCardView>
                 <components:WaveformPresenterCardView.CardView>
-                    <components:CardView Id="{x:Bind Id}"
-                                         IsArtist="{x:Bind IsArtist}"
-                                         Title="{x:Bind Title}"
-                                         Subtitle="{x:Bind Subtitle}"
-                                         Image="{x:Bind Image}"
-                                         Caption="{x:Bind Caption}"
-                                         ImageIsIcon="{x:Bind ImageIsIcon}" />
+                    <components:CardView Id="{x:Bind Id,Mode=OneWay}"
+                                         OnNavigated="CardView_OnOnNavigated"
+                                         AudioType="{x:Bind Type, Mode=OneWay}"
+                                         IsArtist="{x:Bind IsArtist,Mode=OneWay}"
+                                         Title="{x:Bind Title,Mode=OneWay}"
+                                         Subtitle="{x:Bind Subtitle,Mode=OneWay}"
+                                         Image="{x:Bind Image,Mode=OneWay}"
+                                         Caption="{x:Bind Caption,Mode=OneWay}"
+                                         ImageIsIcon="{x:Bind ImageIsIcon,Mode=OneWay}" />
                 </components:WaveformPresenterCardView.CardView>
             </components:WaveformPresenterCardView>
         </DataTemplate>

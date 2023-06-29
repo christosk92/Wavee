@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<Application
-    x:Class="Wavee.UI.WinUI.App"
-    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:controls="using:Microsoft.UI.Xaml.Controls"
-    xmlns:local="using:Wavee.UI.WinUI"
-    xmlns:xaml="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
+<Application x:Class="Wavee.UI.WinUI.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="using:Microsoft.UI.Xaml.Controls"
+             xmlns:local="using:Wavee.UI.WinUI"
+             xmlns:xaml="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
 
     <Application.Resources>
         <ResourceDictionary>
@@ -18,13 +17,19 @@
                         </xaml:ResourceDictionary>
                     </XamlControlsResources.MergedDictionaries>
                 </XamlControlsResources>
+                <ResourceDictionary Source="Themes/BorderStyles.xaml" />
                 <ResourceDictionary>
-                    <SolidColorBrush x:Key="TransparentBrush" Color="Transparent" />
+                    <SolidColorBrush x:Key="TransparentBrush"
+                                     Color="Transparent" />
 
-                    <StaticResource x:Key="WindowCaptionBackground" ResourceKey="TransparentBrush" />
-                    <StaticResource x:Key="WindowCaptionBackgroundDisabled" ResourceKey="TransparentBrush" />
-                    <StaticResource x:Key="WindowCaptionForeground" ResourceKey="ApplicationForegroundThemeBrush" />
-                    <StaticResource x:Key="WindowCaptionForegroundDisabled" ResourceKey="ApplicationForegroundThemeBrush" />
+                    <StaticResource x:Key="WindowCaptionBackground"
+                                    ResourceKey="TransparentBrush" />
+                    <StaticResource x:Key="WindowCaptionBackgroundDisabled"
+                                    ResourceKey="TransparentBrush" />
+                    <StaticResource x:Key="WindowCaptionForeground"
+                                    ResourceKey="ApplicationForegroundThemeBrush" />
+                    <StaticResource x:Key="WindowCaptionForegroundDisabled"
+                                    ResourceKey="ApplicationForegroundThemeBrush" />
                 </ResourceDictionary>
 
                 <ResourceDictionary>

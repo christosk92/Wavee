@@ -478,6 +478,8 @@
     </UserControl.Resources>
     <Grid>
         <local:SidebarControl IsBackButtonVisible="Visible"
+                              BackRequested="SidebarControl_OnBackRequested"
+                              IsBackEnabled="{x:Bind NavigationService.CanGoBack,Mode=OneWay}"
                               PaneClosing="NavigationView_OnPaneClosing"
                               PaneOpening="NavigationView_OnPaneOpening"
                               DisplayModeChanged="NavigationView_OnDisplayModeChanged"

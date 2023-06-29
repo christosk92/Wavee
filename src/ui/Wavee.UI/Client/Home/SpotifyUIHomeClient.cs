@@ -59,7 +59,8 @@ internal sealed class SpotifyUIHomeClient : IWaveeUIHomeClient
                             Title = "Saved songs",
                             Image = "\uEB52",
                             ImageIsIcon = true,
-                            Subtitle = "You can also find this in the sidebar."
+                            Subtitle = "You can also find this in the sidebar.",
+                            Type = AudioItemType.UserCollection
                         } as ICardViewModel,
                         SpotifyPlaylistHomeItem playlistItem => new CardViewModel
                         {
@@ -67,7 +68,8 @@ internal sealed class SpotifyUIHomeClient : IWaveeUIHomeClient
                             Title = playlistItem.Name,
                             Subtitle = playlistItem.Description.Map(f => EscapeHtml(f)).IfNone($"Playlist by {playlistItem.OwnerName}"),
                             Image = playlistItem.Images.HeadOrNone().Map(x => x.Url).IfNone(string.Empty),
-                            ImageIsIcon = false
+                            ImageIsIcon = false,
+                            Type = AudioItemType.Playlist
                         },
                         SpotifyAlbumHomeItem albumItem => new CardViewModel
                         {
@@ -76,7 +78,8 @@ internal sealed class SpotifyUIHomeClient : IWaveeUIHomeClient
                             Subtitle = albumItem.Artists.HeadOrNone().Map(x => x.Name).IfNone(string.Empty),
                             Image = albumItem.Images.HeadOrNone().Map(x => x.Url).IfNone(string.Empty),
                             Caption = "ALBUM",
-                            ImageIsIcon = false
+                            ImageIsIcon = false,
+                            Type = AudioItemType.Album,
                         },
                         SpotifyArtistHomeItem artistItem => new CardViewModel
                         {
@@ -85,7 +88,8 @@ internal sealed class SpotifyUIHomeClient : IWaveeUIHomeClient
                             Subtitle = "Artist",
                             IsArtist = true,
                             Image = artistItem.Images.HeadOrNone().Map(x => x.Url).IfNone(string.Empty),
-                            ImageIsIcon = false
+                            ImageIsIcon = false,
+                            Type = AudioItemType.Artist
                         },
                         SpotifyPodcastEpisodeHomeItem podcastEpisode => new PodcastEpisodeCardViewModel
                         {

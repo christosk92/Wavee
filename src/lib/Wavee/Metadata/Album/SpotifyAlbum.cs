@@ -221,10 +221,10 @@ public sealed class SpotifyAlbum
         return playcount;
     }
 
-    private static TrackArtist[] ParseArtists(JsonElement getProperty)
+    private static ITrackArtist[] ParseArtists(JsonElement getProperty)
     {
         var artists = getProperty.GetProperty("items");
-        var artistsOutput = new TrackArtist[artists.GetArrayLength()];
+        var artistsOutput = new ITrackArtist[artists.GetArrayLength()];
         using var arr = artists.EnumerateArray();
         int j = 0;
         while (arr.MoveNext())
@@ -312,7 +312,7 @@ public sealed class SpotifyAlbumDisc
 
 public sealed class SpotifyAlbumTrack
 {
-    public SpotifyAlbumTrack(string uid, SpotifyId id, string name, TimeSpan duration, ushort trackNumber, ushort discNumber, ContentRatingType contentRating, TrackArtist[] artists, Option<ulong> playcount, bool saved)
+    public SpotifyAlbumTrack(string uid, SpotifyId id, string name, TimeSpan duration, ushort trackNumber, ushort discNumber, ContentRatingType contentRating, ITrackArtist[] artists, Option<ulong> playcount, bool saved)
     {
         Uid = uid;
         Id = id;
@@ -333,7 +333,7 @@ public sealed class SpotifyAlbumTrack
     public ushort DiscNumber { get; }
     public ContentRatingType ContentRating { get; }
 
-    public TrackArtist[] Artists { get; }
+    public ITrackArtist[] Artists { get; }
     public Option<ulong> Playcount { get; }
     public bool Saved { get; }
 }

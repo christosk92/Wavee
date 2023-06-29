@@ -93,15 +93,17 @@
                     <Vector3Transition />
                 </StackPanel.TranslationTransition>
 
-                <HyperlinkButton Content="{x:Bind Playback.Title.Title, Mode=OneWay}"
-                                 FontWeight="SemiBold"
+                <HyperlinkButton FontWeight="SemiBold"
                                  Padding="-2,0,0,0"
-                                 x:Name="SongName" />
+                                 x:Name="SongName">
+                    <TextBlock Text="{x:Bind Playback.Title.Title, Mode=OneWay}"
+                               TextWrapping="WrapWholeWords" />
+                </HyperlinkButton>
                 <controls:MetadataControl Items="{x:Bind MapToItems(Playback.Subtitles), Mode=OneWay}">
                     <controls:MetadataControl.TextBlockStyle>
                         <Style TargetType="TextBlock">
                             <Setter Property="Foreground"
-                                    Value="{ThemeResource ApplicationSecondaryForegroundThemeBrush}"/>
+                                    Value="{ThemeResource ApplicationSecondaryForegroundThemeBrush}" />
                         </Style>
                     </controls:MetadataControl.TextBlockStyle>
                 </controls:MetadataControl>
@@ -173,7 +175,7 @@
 
                 <TextBlock VerticalAlignment="Center"
                            Text="--:--"
-                           x:Name="PositionText"/>
+                           x:Name="PositionText" />
                 <Slider Grid.Column="1"
                         x:Name="PositionSlider"
                         Maximum="{x:Bind GetTimestamp(Playback.Duration), Mode=OneWay}"
