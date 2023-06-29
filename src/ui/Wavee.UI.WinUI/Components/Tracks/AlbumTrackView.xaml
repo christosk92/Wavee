@@ -15,7 +15,7 @@
     <local:WaveeTrackHost ShowImage="False"
                           AlternateRowColor="True"
                           Index="{x:Bind MinusOne(Number)}">
-        <Grid Padding="4,12"
+        <Grid Padding="4,6"
               x:DefaultBindMode="OneWay">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="2*" />

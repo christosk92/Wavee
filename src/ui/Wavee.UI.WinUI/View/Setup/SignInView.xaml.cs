@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Navigation;
 using Wavee.UI.ViewModel.Setup;
 
@@ -60,6 +61,10 @@ namespace Wavee.UI.WinUI.View.Setup
         public bool Negate(bool b)
         {
             return !b;
+        }
+        private async void UIElement_OnTapped(object sender, TappedRoutedEventArgs e)
+        {
+            await ViewModel.Submit(0);
         }
     }
 }

@@ -5,9 +5,11 @@ using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using System.Threading.Tasks;
 using System.Collections.Concurrent;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using Windows.Foundation;
 using Windows.System.Threading;
@@ -23,7 +25,7 @@ using UIElement = Microsoft.UI.Xaml.UIElement;
 
 namespace Wavee.UI.WinUI.Components;
 
-public sealed partial class WaveformPresenterCardView : UserControl
+public sealed partial class WaveformPresenterCardView : UserControl, INotifyPropertyChanged
 {
     List<Rectangle> lstBands;
     public static readonly DependencyProperty CardViewProperty = DependencyProperty.Register(nameof(CardView), typeof(CardView), typeof(WaveformPresenterCardView), new PropertyMetadata(default(CardView)));
@@ -46,13 +48,22 @@ public sealed partial class WaveformPresenterCardView : UserControl
         set => SetValue(CardViewProperty, value);
     }
 
+    public bool PopupLoad
+    {
+        get => _popupLoad;
+        set => SetField(ref _popupLoad, value);
+    }
+
     public static readonly ConcurrentDictionary<UIElement, bool> _inRectangle = new ConcurrentDictionary<UIElement, bool>();
     private static CancellationTokenSource cts;
+    private bool _popupLoad;
+
     private async void FirstControl_OnPointerEntered(object sender, PointerRoutedEventArgs e)
     {
 
         //If the pointer hovered over the card for 4 seconds, then show the tooltip
         //Otherwise, do nothing
+        PopupLoad = true;
         cts ??= new CancellationTokenSource();
         var tokenInstance = cts.Token;
         var item = sender as UIElement;
@@ -179,6 +190,10 @@ public sealed partial class WaveformPresenterCardView : UserControl
         catch (Exception)
         {
             // ignored
+        }
+        finally
+        {
+            PopupLoad = false;
         }
     }
 
@@ -339,6 +354,21 @@ public sealed partial class WaveformPresenterCardView : UserControl
         _interveneSampleProvider?.Dispose();
         PreviewPlayer.Stop();
         _inRectangle.Clear();
+    }
+
+    public event PropertyChangedEventHandler PropertyChanged;
+
+    private void OnPropertyChanged([CallerMemberName] string propertyName = null)
+    {
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    }
+
+    private bool SetField<T>(ref T field, T value, [CallerMemberName] string propertyName = null)
+    {
+        if (EqualityComparer<T>.Default.Equals(field, value)) return false;
+        field = value;
+        OnPropertyChanged(propertyName);
+        return true;
     }
 }
 

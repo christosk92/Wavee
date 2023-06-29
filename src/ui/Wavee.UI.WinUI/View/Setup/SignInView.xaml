@@ -79,6 +79,10 @@
                     <ProgressRing IsActive="{x:Bind ViewModel.IsBusy, Mode=OneWay}" />
                 </Grid>
 
+                <Button Grid.Row="3"
+                        Tapped="UIElement_OnTapped"
+                        IsEnabled="{x:Bind ViewModel.CanGoNextVal,Mode=OneWay}"
+                        Content="Sign In" />
             </Grid>
         </setup:SetupPageContent>
 

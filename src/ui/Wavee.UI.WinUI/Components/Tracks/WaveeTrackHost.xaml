@@ -126,7 +126,7 @@
                                    RelativePanel.AlignVerticalCenterWithPanel="True"
                                    RelativePanel.RightOf="PlaybackViewContent"
                                    x:Name="SavedButton"
-                                   Margin="0,0,6,0" />
+                                   Margin="0,0,8,0" />
 
             <Border CornerRadius="4"
                     x:Load="False"

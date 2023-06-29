@@ -93,7 +93,7 @@ internal readonly struct LiveSpotifyRemoteClient : ISpotifyRemoteClient
                                 var type = item.GetProperty("type").GetString();
                                 var removed = item.GetProperty("removed").GetBoolean();
                                 var addedAt = item.GetProperty("addedAt").GetUInt64();
-                                if (removed)
+                                if (!removed)
                                 {
                                     addedItems.Add(new SpotifyLibraryItem(
                                         Id: SpotifyId.FromBase62(
