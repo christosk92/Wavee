@@ -51,7 +51,7 @@ public sealed class LibraryViewModel : ObservableObject
                     {
                         _items.AddOrUpdate(item);
                     }
-                    var groups = _items.Items.GroupBy(x => x.Type).ToDictionary(x => x.Key, x => x.Count());
+                    var groups = notification.Ids.GroupBy(x => x.Type).ToDictionary(x => x.Key, x => x.Count());
                     foreach (var (key, value) in groups)
                     {
                         _added(key, value);
@@ -63,7 +63,7 @@ public sealed class LibraryViewModel : ObservableObject
                     {
                         _items.Remove(item);
                     }
-                    var groups = _items.Items.GroupBy(x => x.Type).ToDictionary(x => x.Key, x => x.Count());
+                    var groups = notification.Ids.GroupBy(x => x.Type).ToDictionary(x => x.Key, x => x.Count());
                     foreach (var (key, value) in groups)
                     {
                         _removed(key, value);
