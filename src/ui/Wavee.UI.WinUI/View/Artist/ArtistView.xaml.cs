@@ -19,6 +19,7 @@ public sealed partial class ArtistView : UserControl, INavigable, ICacheablePage
     private ArtistOverviewView? _overview;
     private ArtistConcertsView? _concerts;
     private ArtistAboutView? _about;
+    private ArtistRelatedView? _related;
     private bool _wasTransformed;
     private readonly TaskCompletionSource _artistFetched;
     public ArtistView()
@@ -45,6 +46,7 @@ public sealed partial class ArtistView : UserControl, INavigable, ICacheablePage
             var content = item.Tag switch
             {
                 "overview" => _overview ??= new ArtistOverviewView(ViewModel.Artist),
+                "related" => _related ??= new ArtistRelatedView(ViewModel.Artist),
                 "concerts" => _concerts ??= new ArtistConcertsView(ViewModel.Artist),
                 "about" => (_about ??= new ArtistAboutView(ViewModel.Artist)) as UIElement,
                 _ => throw new ArgumentOutOfRangeException()
@@ -82,7 +84,7 @@ public sealed partial class ArtistView : UserControl, INavigable, ICacheablePage
     {
         var frac = (sender as ScrollViewer).VerticalOffset / ImageT.Height;
         var progress = Math.Clamp(frac, 0, 1);
-        HeaderImage.BlurValue = progress * 20;
+        HeaderImage.BlurValue = progress * 5;
 
         var exponential = Math.Pow(progress, 2);
         var opacity = 1 - exponential;

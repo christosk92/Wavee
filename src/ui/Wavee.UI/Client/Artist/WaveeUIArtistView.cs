@@ -1,4 +1,5 @@
-﻿using LanguageExt;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+using LanguageExt;
 using Wavee.Metadata.Artist;
 using Wavee.Metadata.Common;
 
@@ -6,7 +7,7 @@ namespace Wavee.UI.Client.Artist;
 
 public sealed class WaveeUIArtistView
 {
-    public WaveeUIArtistView(string id, string name, CoverImage avatarImage, Option<CoverImage> headerImage, ulong monthlyListeners, ulong followers, ArtistTopTrackViewModel[] topTracks, PagedArtistDiscographyPage[] discographyPages)
+    public WaveeUIArtistView(string id, string name, ICoverImage avatarImage, Option<ICoverImage> headerImage, ulong monthlyListeners, ulong followers, ArtistTopTrackViewModel[] topTracks, PagedArtistDiscographyPage[] discographyPages)
     {
         Id = id;
         Name = name;
@@ -20,8 +21,8 @@ public sealed class WaveeUIArtistView
 
     public string Id { get; }
     public string Name { get; }
-    public CoverImage AvatarImage { get; }
-    public Option<CoverImage> HeaderImage { get; }
+    public ICoverImage AvatarImage { get; }
+    public Option<ICoverImage> HeaderImage { get; }
     public ulong MonthlyListeners { get; }
     public ulong Followers { get; }
     public ArtistTopTrackViewModel[] TopTracks { get; }
@@ -58,15 +59,23 @@ public sealed class ArtistTopTrackViewModel
 
 public sealed class PagedArtistDiscographyPage
 {
-    private readonly Func<int, int, CancellationToken, Task<IEnumerable<ArtistDiscographyRelease>>> _getReleases;
-
-    internal PagedArtistDiscographyPage(Func<int, int, CancellationToken, Task<IEnumerable<ArtistDiscographyRelease>>> getReleases)
+    private readonly GetReleases _getReleases;
+    internal PagedArtistDiscographyPage(GetReleases getReleases, ReleaseType type, bool canSwitchViews, bool hasSome)
     {
         _getReleases = getReleases;
+        Type = type;
+        CanSwitchViews = canSwitchViews;
+        HasSome = hasSome;
     }
+    public ReleaseType Type { get; }
+    public bool CanSwitchViews { get; }
 
-    public Task<IEnumerable<ArtistDiscographyRelease>> GetReleases(int offset, int limit, CancellationToken ct)
+    public Task<IEnumerable<IArtistDiscographyRelease>> GetReleases(int offset, int limit, CancellationToken ct)
     {
         return _getReleases(offset, limit, ct);
     }
+    public GetReleases GetReleasesFunc => GetReleases;
+    public bool HasSome { get; }
 }
+
+public delegate Task<IEnumerable<IArtistDiscographyRelease>> GetReleases(int offset, int limit, CancellationToken ct);

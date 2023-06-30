@@ -207,7 +207,7 @@ internal readonly struct LiveSpotifyMetadataClient : ISpotifyMetadataClient
         return result;
     }
 
-    public async ValueTask<ArtistDiscographyRelease[]> GetArtistDiscography(SpotifyId artistId, ReleaseType type, int offset,
+    public async ValueTask<IArtistDiscographyRelease[]> GetArtistDiscography(SpotifyId artistId, ReleaseType type, int offset,
         int limit,
         CancellationToken ct = default)
     {
@@ -244,7 +244,7 @@ internal readonly struct LiveSpotifyMetadataClient : ISpotifyMetadataClient
             ReleaseType.Compilation => data.GetProperty("compilations"),
         };
         var items = nextKey.GetProperty("items");
-        var output = new ArtistDiscographyRelease[items.GetArrayLength()];
+        var output = new IArtistDiscographyRelease[items.GetArrayLength()];
         using var array = items.EnumerateArray();
         var i = 0;
         while (array.MoveNext())

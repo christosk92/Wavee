@@ -64,7 +64,7 @@ public readonly record struct ArtistOverview(SpotifyId Id, bool IsSaved, Uri Sha
 
     private static ArtistDiscography ParseArtistDiscography(JsonElement discography)
     {
-        Option<ArtistDiscographyRelease> latestRelease = Option<ArtistDiscographyRelease>.None;
+        Option<IArtistDiscographyRelease> latestRelease = Option<IArtistDiscographyRelease>.None;
         if (discography.TryGetProperty("latest", out var potentialLatest) &&
             potentialLatest.ValueKind is not JsonValueKind.Null)
         {
@@ -84,13 +84,13 @@ public readonly record struct ArtistOverview(SpotifyId Id, bool IsSaved, Uri Sha
         );
     }
 
-    private static Option<ArtistDiscographyRelease>[] ParseDiscographyGroup(JsonElement group)
+    private static Option<IArtistDiscographyRelease>[] ParseDiscographyGroup(JsonElement group)
     {
         var totalCount = group.GetProperty("totalCount").GetUInt16();
-        var output = new Option<ArtistDiscographyRelease>[totalCount];
+        var output = new Option<IArtistDiscographyRelease>[totalCount];
         for (int k = 0; k < totalCount; k++)
         {
-            output[k] = Option<ArtistDiscographyRelease>.None;
+            output[k] = Option<IArtistDiscographyRelease>.None;
         }
 
         using var items = group.GetProperty("items").EnumerateArray();
@@ -110,7 +110,7 @@ public readonly record struct ArtistOverview(SpotifyId Id, bool IsSaved, Uri Sha
             var releaseOfRelease = releasesOfRelease.Current;
 
             var parsedRelease = ParseRelease(releaseOfRelease);
-            output[i] = Option<ArtistDiscographyRelease>.Some(parsedRelease);
+            output[i] = Option<IArtistDiscographyRelease>.Some(parsedRelease);
 
             i++;
         }
@@ -223,12 +223,12 @@ public readonly record struct ArtistOverview(SpotifyId Id, bool IsSaved, Uri Sha
         var tracksCount = release.GetProperty("tracks").GetProperty("totalCount").GetUInt16();
         var label = release.TryGetProperty("label", out var lbl) ? lbl.GetString()! : Option<string>.None;
 
-        var copyoutputs = Array.Empty<ReleaseCopyright>();
+        var copyoutputs = Array.Empty<IReleaseCopyright>();
 
         if (release.TryGetProperty("copyright", out var cpr))
         {
             var copyrights = cpr.GetProperty("items");
-            copyoutputs = new ReleaseCopyright[copyrights.GetArrayLength()];
+            copyoutputs = new IReleaseCopyright[copyrights.GetArrayLength()];
             using var arr = copyrights.EnumerateArray();
             int i = 0;
             while (arr.MoveNext())
@@ -261,7 +261,7 @@ public readonly record struct ArtistOverview(SpotifyId Id, bool IsSaved, Uri Sha
         var headerImages =
             visuals.TryGetProperty("headerImage", out var headerImgProp) && headerImgProp.ValueKind is not JsonValueKind.Null
                 ? ParseCoverArt(headerImgProp.GetProperty("sources"))
-                    : Array.Empty<CoverImage>();
+                    : Array.Empty<ICoverImage>();
         return new ArtistVisuals(
             AvatarImages: avatarImage,
             HeaderImage: headerImages.HeadOrNone()
@@ -292,7 +292,7 @@ public readonly record struct ArtistOverview(SpotifyId Id, bool IsSaved, Uri Sha
             var item = potentialPin.GetProperty("item");
             var uri = SpotifyId.FromUri(item.GetProperty("uri").GetString().AsSpan());
             var itemName = item.GetProperty("name").GetString()!;
-            CoverImage[] coverArt = Array.Empty<CoverImage>();
+            ICoverImage[] coverArt = Array.Empty<ICoverImage>();
             if (item.TryGetProperty("coverArt", out var coverArtProp))
             {
                 coverArt = ParseCoverArt(coverArtProp.GetProperty("sources"));
@@ -318,10 +318,10 @@ public readonly record struct ArtistOverview(SpotifyId Id, bool IsSaved, Uri Sha
         );
     }
 
-    private static CoverImage[] ParseCoverArt(JsonElement sources)
+    private static ICoverImage[] ParseCoverArt(JsonElement sources)
     {
         using var data = sources.EnumerateArray();
-        var output = new CoverImage[sources.GetArrayLength()];
+        var output = new ICoverImage[sources.GetArrayLength()];
         int i = 0;
         while (data.MoveNext())
         {
@@ -362,7 +362,7 @@ public enum ContentRatingType
     UNKNOWN
 }
 
-public readonly record struct TrackAlbum(SpotifyId Id, CoverImage[] Images);
+public readonly record struct TrackAlbum(SpotifyId Id, ICoverImage[] Images);
 
 public interface ITrackArtist
 {
@@ -372,7 +372,22 @@ public interface ITrackArtist
 
 public readonly record struct TrackArtist(SpotifyId Id, string Name) : ITrackArtist;
 
-public readonly record struct ArtistDiscographyRelease(SpotifyId Id, string Name, ReleaseType Type, ReleaseCopyright[] Copyright, DiscographyReleaseDate Date, CoverImage[] Images, Option<string> Label, ushort TotalTracks);
+public readonly record struct ArtistDiscographyRelease(SpotifyId Id, string Name, ReleaseType Type,
+        IReleaseCopyright[] Copyright, DiscographyReleaseDate Date, ICoverImage[] Images, Option<string> Label,
+        ushort TotalTracks)
+    : IArtistDiscographyRelease;
+
+public interface IArtistDiscographyRelease
+{
+    SpotifyId Id { get; }
+    string Name { get; }
+    ReleaseType Type { get; }
+    IReleaseCopyright[] Copyright { get; }
+    DiscographyReleaseDate Date { get; }
+    ICoverImage[] Images { get; }
+    Option<string> Label { get; }
+    ushort TotalTracks { get; }
+}
 
 public readonly record struct DiscographyReleaseDate(DateTime Date, ReleaseDatePrecisionType Precision);
 
@@ -384,8 +399,13 @@ public enum ReleaseDatePrecisionType
     Day = 3
 }
 
-public readonly record struct ReleaseCopyright(string Type, string Text);
+public readonly record struct ReleaseCopyright(string Type, string Text) : IReleaseCopyright;
 
+public interface IReleaseCopyright
+{
+    string Type { get; }
+    string Text { get; }
+}
 public enum ReleaseType
 {
     Album,
@@ -393,17 +413,17 @@ public enum ReleaseType
     Compilation
 }
 
-public readonly record struct ArtistOverviewPinnedItem(SpotifyId Id, string Name, CoverImage[] Images,
+public readonly record struct ArtistOverviewPinnedItem(SpotifyId Id, string Name, ICoverImage[] Images,
     AudioItemType Type, Option<string> Comment, Option<string> BackgroundImage);
 
 public readonly record struct ArtistOverviewProfile(string Name, bool Verified,
     Option<ArtistOverviewPinnedItem> PinnedItem);
 
-public readonly record struct ArtistVisuals(CoverImage[] AvatarImages, Option<CoverImage> HeaderImage);
+public readonly record struct ArtistVisuals(ICoverImage[] AvatarImages, Option<ICoverImage> HeaderImage);
 
-public readonly record struct ArtistDiscography(Option<ArtistDiscographyRelease> LatestRelease,
-    Option<ArtistDiscographyRelease>[] Albums, Option<ArtistDiscographyRelease>[] Singles,
-    Option<ArtistDiscographyRelease>[] Compilations, ArtistTopTrack[] TopTracks);
+public readonly record struct ArtistDiscography(Option<IArtistDiscographyRelease> LatestRelease,
+    Option<IArtistDiscographyRelease>[] Albums, Option<IArtistDiscographyRelease>[] Singles,
+    Option<IArtistDiscographyRelease>[] Compilations, ArtistTopTrack[] TopTracks);
 
 public readonly record struct ArtistStats(ulong Followers, ulong MonthlyListeners, Option<ushort> WorldRank);
 

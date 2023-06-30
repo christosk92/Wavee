@@ -10,6 +10,7 @@
              xmlns:ui="using:CommunityToolkit.WinUI.UI"
              xmlns:labs="using:CommunityToolkit.Labs.WinUI"
              Tapped="CardView_OnTapped"
+             DataContext="{x:Bind}"
              PointerEntered="CardView_OnPointerEntered"
              PointerExited="CardView_OnPointerExited"
              ContextRequested="CardView_OnContextRequested"
@@ -51,7 +52,13 @@
                                              labs:TransitionHelper.Id="image"
                                              x:Load="{x:Bind Negate(IsArtist),Mode=OneWay}"
                                              AspectRatio="1:1">
-                        <Image x:Name="NormalImageImage" Source="{x:Bind Image, Mode=OneWay}" />
+                        <Image x:Name="NormalImageImage">
+                            <Image.Source>
+                                <BitmapImage UriSource="{Binding Image,Mode=OneWay}"
+                                             DecodePixelHeight="250"
+                                             DecodePixelWidth="250" />
+                            </Image.Source>
+                        </Image>
                     </controls:ConstrainedBox>
                     <controls:ConstrainedBox x:Name="ArtistImageBox"
                                              Grid.ColumnSpan="2"
@@ -60,8 +67,13 @@
                         <Viewbox Stretch="UniformToFill"
                                  Margin="6">
                             <PersonPicture DisplayName="{x:Bind Name,Mode=OneWay}"
-                                           Initials="{x:Bind CalculateInitials(Name), Mode=OneWay}"
-                                           ProfilePicture="{x:Bind Image, Mode=OneWay}" />
+                                           Initials="{x:Bind CalculateInitials(Name), Mode=OneWay}">
+                                <PersonPicture.ProfilePicture>
+                                    <BitmapImage UriSource="{Binding Image,Mode=OneWay}"
+                                                 DecodePixelHeight="250"
+                                                 DecodePixelWidth="250" />
+                                </PersonPicture.ProfilePicture>
+                            </PersonPicture>
                         </Viewbox>
                     </controls:ConstrainedBox>
 

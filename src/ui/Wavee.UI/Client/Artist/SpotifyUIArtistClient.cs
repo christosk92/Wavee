@@ -73,22 +73,22 @@ internal sealed class SpotifyUIArtistClient : IWaveeUIArtistClient
             albumsPage,
             singlesPage,
             compilationsPage
-        };
+        }.Where(x => x.HasSome).ToArray();
     }
 
     private static PagedArtistDiscographyPage CreatePage(
         SpotifyId id,
         ReleaseType release,
-        Option<ArtistDiscographyRelease>[] releases,
+        Option<IArtistDiscographyRelease>[] releases,
         SpotifyClient spotifyClient)
     {
         var weakRef = new WeakReference<SpotifyClient>(spotifyClient);
 
-        static async Task<IEnumerable<ArtistDiscographyRelease>> GetPage(
+        static async Task<IEnumerable<IArtistDiscographyRelease>> GetPage(
             SpotifyId id,
             WeakReference<SpotifyClient> client,
             ReleaseType releaseType,
-            System.Collections.Generic.HashSet<ArtistDiscographyRelease> fetchedReleases,
+            System.Collections.Generic.HashSet<IArtistDiscographyRelease> fetchedReleases,
             int total,
             int offset, int limit, CancellationToken ct)
         {
@@ -136,7 +136,10 @@ internal sealed class SpotifyUIArtistClient : IWaveeUIArtistClient
                 offset: offset,
                 limit: limit,
                 ct: ct
-            ));
+            ),
+            type: release,
+            canSwitchViews: release is ReleaseType.Album or ReleaseType.Single,
+            hasSome: releases.Length > 0);
     }
 
     // private static ArtistDiscographyReleaseViewModel ToViewModel(ArtistDiscographyRelease artistDiscographyRelease)

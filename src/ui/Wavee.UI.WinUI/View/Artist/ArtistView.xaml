@@ -32,15 +32,15 @@
 
     <Grid VerticalAlignment="Top">
         <ScrollViewer VerticalAlignment="Top"
-                      ui:ScrollViewerExtensions.VerticalScrollBarMargin="0,34,0,110"
+                      ui:ScrollViewerExtensions.VerticalScrollBarMargin="0,24,0,110"
                       ViewChanged="ScrollViewer_OnViewChanged">
             <StackPanel VerticalAlignment="Top">
                 <Grid x:Name="ImageT"
                       VerticalAlignment="Top">
                     <controls:ImageTransitionControl x:Name="HeaderImage"
-                                                       Grid.ColumnSpan="2"
-                                                       VerticalAlignment="Stretch"
-                                                       Source="{x:Bind ViewModel.Header, Mode=OneWay}" />
+                                                     Grid.ColumnSpan="2"
+                                                     VerticalAlignment="Stretch"
+                                                     Source="{x:Bind ViewModel.Header, Mode=OneWay}" />
 
                     <StackPanel x:Name="MetadataPnale"
                                 Margin="24,0,0,0"
@@ -112,6 +112,8 @@
                                                     SelectionChanged="Selector_OnSelectionChanged">
                                         <labs:SegmentedItem Content="Overview"
                                                             Tag="overview" />
+                                        <labs:SegmentedItem Content="Related"
+                                                            Tag="related" />
                                         <labs:SegmentedItem Content="About"
                                                             Tag="about" />
                                         <labs:SegmentedItem Content="Concerts"

@@ -69,7 +69,7 @@ public interface ISpotifyMetadataClient
     /// </returns>
     ValueTask<ArtistOverview> GetArtistOverview(SpotifyId artistId, bool destroyCache, Option<CultureInfo> languageOverride, CancellationToken ct = default);
 
-    ValueTask<ArtistDiscographyRelease[]> GetArtistDiscography(SpotifyId artistId, ReleaseType type, int offset, int limit, CancellationToken ct = default);
+    ValueTask<IArtistDiscographyRelease[]> GetArtistDiscography(SpotifyId artistId, ReleaseType type, int offset, int limit, CancellationToken ct = default);
 
     /// <summary>
     /// Performs an authenticated query to fetch information about the current user.

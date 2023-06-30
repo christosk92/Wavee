@@ -7,16 +7,27 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:tracks="using:Wavee.UI.WinUI.Components.Tracks"
              xmlns:artist="using:Wavee.UI.Client.Artist"
+             xmlns:labs="using:CommunityToolkit.Labs.WinUI"
+             xmlns:winUi="using:Wavee.UI.WinUI"
+             xmlns:discography="using:Wavee.UI.WinUI.View.Artist.Views.Discography"
              mc:Ignorable="d">
 
-
+    <!-- -->
+    <!-- <UserControl.Resources> -->
+    <!--     <DataTemplate x:Key="GridTemplate"  -->
+    <!--     <DataTemplate x:Key="ListTemplate" /> -->
+    <!--     <winUi:DiscographyViewSelector GridTemplate="{StaticResource GridTemplate}" -->
+    <!--                                    ListTemplate="{StaticResource ListTemplate}" -->
+    <!--                                    x:Key="DiscographyViewSelector" /> -->
+    <!-- </UserControl.Resources> -->
 
     <UserControl.Transitions>
         <TransitionCollection>
             <EntranceThemeTransition />
         </TransitionCollection>
     </UserControl.Transitions>
-    <StackPanel Margin="24">
+    <StackPanel Margin="24"
+                VerticalAlignment="Top">
         <TextBlock Text="Popular songs"
                    FontWeight="SemiBold"
                    FontSize="16"
@@ -50,7 +61,53 @@
 
 
         <ItemsRepeater x:Name="MainRepeater"
-                       ItemsSource="{x:Bind ArtistView.DiscographyPages}" />
+                       VerticalAlignment="Top"
+                       Margin="0,24"
+                       ItemsSource="{x:Bind ArtistView.DiscographyPages}">
+            <ItemsRepeater.ItemTemplate>
+                <DataTemplate x:DataType="artist:PagedArtistDiscographyPage">
+                    <RelativePanel VerticalAlignment="Top">
+                        <RelativePanel x:Name="MetadataPanel"
+                                       RelativePanel.AlignLeftWithPanel="True"
+                                       RelativePanel.AlignRightWithPanel="True">
+                            <TextBlock x:Name="Title"
+                                       Height="28"
+                                       Style="{ThemeResource SubtitleTextBlockStyle}"
+                                       RelativePanel.AlignLeftWithPanel="True"
+                                       RelativePanel.AlignVerticalCenterWithPanel="True"
+                                       Text="{x:Bind Type}" />
+
+                            <labs:Segmented x:Name="Segments"
+                                            RelativePanel.AlignVerticalCenterWithPanel="True"
+                                            SelectedIndex="{Binding ElementName=DiscographyPageView, Path=CurrentViewIdx, Mode=TwoWay}"
+                                            RelativePanel.AlignRightWithPanel="True"
+                                            Visibility="{x:Bind CanSwitchViews, Converter={StaticResource TrueToVisibleConverter}}">
+                                <labs:SegmentedItem>
+                                    <labs:SegmentedItem.Icon>
+                                        <FontIcon FontFamily="Segoe Fluent Icons"
+                                                  Glyph="&#xF0E2;" />
+                                    </labs:SegmentedItem.Icon>
+                                </labs:SegmentedItem>
+                                <labs:SegmentedItem>
+                                    <labs:SegmentedItem.Icon>
+                                        <FontIcon FontFamily="Segoe Fluent Icons"
+                                                  Glyph="&#xF2C7;" />
+                                    </labs:SegmentedItem.Icon>
+                                </labs:SegmentedItem>
+                            </labs:Segmented>
+                        </RelativePanel>
+
+                        <discography:DiscographyPageView x:Name="DiscographyPageView"
+                                                         Margin="0,12"
+                                                         RelativePanel.Below="MetadataPanel"
+                                                         RelativePanel.AlignLeftWithPanel="True"
+                                                         RelativePanel.AlignRightWithPanel="True"
+                                                         GetReleasesFunc="{x:Bind  GetReleasesFunc}"
+                                                         VerticalAlignment="Top" />
+                    </RelativePanel>
+                </DataTemplate>
+            </ItemsRepeater.ItemTemplate>
+        </ItemsRepeater>
         <Border Height="80" />
     </StackPanel>
 </UserControl>

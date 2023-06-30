@@ -39,6 +39,10 @@
 		<None Remove="View\Artist\Views\ArtistAboutView.xaml" />
 		<None Remove="View\Artist\Views\ArtistConcertsView.xaml" />
 		<None Remove="View\Artist\Views\ArtistOverviewView.xaml" />
+		<None Remove="View\Artist\Views\ArtistRelatedView.xaml" />
+		<None Remove="View\Artist\Views\Discography\DiscographyPageGridView.xaml" />
+		<None Remove="View\Artist\Views\Discography\DiscographyPageListView.xaml" />
+		<None Remove="View\Artist\Views\Discography\DiscographyPageView.xaml" />
 		<None Remove="View\Home\HomeView.xaml" />
 		<None Remove="View\Setup\OptInView.xaml" />
 		<None Remove="View\Setup\SettingEverythingUpView.xaml" />
@@ -108,6 +112,18 @@
 	  <None Update="Assets\Fonts\MediaPlayerIcons.ttf">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </None>
+	  <Page Update="View\Artist\Views\Discography\DiscographyPageListView.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </Page>
+	  <Page Update="View\Artist\Views\Discography\DiscographyPageGridView.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </Page>
+	  <Page Update="View\Artist\Views\Discography\DiscographyPageView.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </Page>
+	  <Page Update="View\Artist\Views\ArtistRelatedView.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </Page>
 	  <Page Update="Components\Tracks\TopTrackView.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </Page>
