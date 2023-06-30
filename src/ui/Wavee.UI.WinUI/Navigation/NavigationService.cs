@@ -59,11 +59,11 @@ public sealed class NavigationService : ObservableObject
         {
             // Use the page from the cache
             _contentControl.Content = null;
-            GC.Collect();
             if (cachedPage.PageReference.Target is INavigable navigablePage)
                 navigablePage.NavigatedTo(parameter);
 
             _contentControl.Content = cachedPage.PageReference.Target;
+            GC.Collect();
 
             // Remove the old cache entry
             _cachedPages.Remove(cachedPage);
@@ -72,14 +72,13 @@ public sealed class NavigationService : ObservableObject
         else
         {
             _contentControl.Content = null;
-            GC.Collect();
             var constructor = _constructors.GetValueOrDefault(pageType);
 
             var page = constructor.DynamicInvoke();
             if (page is INavigable navigablePage)
                 navigablePage.NavigatedTo(parameter);
             _contentControl.Content = page;
-
+            GC.Collect();
             if (page is ICacheablePage cacheablePage)
             {
                 _cachedPages.Add(new CachedPage(new WeakReference(cacheablePage), pageType, parameter, _backStack.Count));

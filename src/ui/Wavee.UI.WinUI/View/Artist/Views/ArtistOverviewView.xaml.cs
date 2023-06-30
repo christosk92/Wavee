@@ -12,6 +12,7 @@ using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using LanguageExt.UnsafeValueAccess;
 using Wavee.UI.Client.Artist;
 using Spotify.Metadata;
 
@@ -26,6 +27,15 @@ namespace Wavee.UI.WinUI.View.Artist.Views
         {
             ArtistView = waveeUiArtistView;
             this.InitializeComponent();
+
+            if (ArtistView.PreReleaseItem.IsSome)
+            {
+                PreReleaseOrPinnedItem.Content = ArtistView.PreReleaseItem.ValueUnsafe();
+            }
+            else if (ArtistView.PinnedItem.IsSome)
+            {
+                PreReleaseOrPinnedItem.Content = ArtistView.PinnedItem.ValueUnsafe();
+            }
         }
         public WaveeUIArtistView ArtistView { get; set; }
         private void TopTracksGrid_OnLoaded(object sender, RoutedEventArgs e)

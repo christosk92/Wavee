@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using CommunityToolkit.Labs.WinUI;
 using LanguageExt.Pretty;
+using LanguageExt.UnsafeValueAccess;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media.Imaging;
@@ -115,7 +116,6 @@ public sealed partial class ArtistView : UserControl, INavigable, ICacheablePage
             await ViewModel.Fetch(id, CancellationToken.None);
             _artistFetched.TrySetResult();
         }
-
         MetadataPnale.Visibility = Visibility.Visible;
         _ = ShowPanelAnim.StartAsync();
         if (!string.IsNullOrEmpty(ViewModel.Artist.AvatarImage.Url))

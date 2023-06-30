@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl x:Class="Wavee.UI.WinUI.View.Artist.Views.SpotifyPreReleaseControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Wavee.UI.WinUI.View.Artist.Views"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:controls="using:Wavee.UI.WinUI.Controls"
+             mc:Ignorable="d">
+
+    <Grid x:DefaultBindMode="OneWay">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="300" />
+            <ColumnDefinition />
+        </Grid.ColumnDefinitions>
+        <StackPanel HorizontalAlignment="Left">
+            <TextBlock    Style="{ThemeResource SubtitleTextBlockStyle}"
+                          x:Name="PreReleaseTitle"
+                          Margin="0,0"
+                          Text="Upcoming release" />
+            <Grid RelativePanel.Below="PreReleaseTitle"
+                  Margin="0,18,0,0"
+                  CornerRadius="8"
+                  BorderThickness="1"
+                  BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
+                <controls:ImageTransitionControl Height="200"
+                                                 Width="300"
+                                                 Source="{x:Bind GetImage(Images),Mode=OneWay}" />
+                <StackPanel Orientation="Vertical"
+                            Margin="12,0,0,12"
+                            VerticalAlignment="Bottom">
+                    <TextBlock Text="{x:Bind Title}"
+                               TextWrapping="WrapWholeWords"
+                               MaxWidth="300"
+                               FontSize="24"
+                               FontWeight="Bold" />
+                    <TextBlock Text="{x:Bind GetRealReleaseString(ReleaseDate),Mode=OneWay}"
+                               FontWeight="SemiBold"
+                               Foreground="{ThemeResource ApplicationSecondaryForegroundThemeBrush}" />
+                </StackPanel>
+
+            </Grid>
+        </StackPanel>
+
+        <controls:CalendarControl Until="{x:Bind ReleaseDate}"
+                                  Margin="24,42,0,0"
+                                  VerticalAlignment="Stretch"
+                                  Grid.Column="1" />
+    </Grid>
+</UserControl>

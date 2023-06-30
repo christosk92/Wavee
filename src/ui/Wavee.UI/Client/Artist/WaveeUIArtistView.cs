@@ -7,7 +7,7 @@ namespace Wavee.UI.Client.Artist;
 
 public sealed class WaveeUIArtistView
 {
-    public WaveeUIArtistView(string id, string name, ICoverImage avatarImage, Option<ICoverImage> headerImage, ulong monthlyListeners, ulong followers, ArtistTopTrackViewModel[] topTracks, PagedArtistDiscographyPage[] discographyPages)
+    public WaveeUIArtistView(string id, string name, ICoverImage avatarImage, Option<ICoverImage> headerImage, ulong monthlyListeners, ulong followers, ArtistTopTrackViewModel[] topTracks, PagedArtistDiscographyPage[] discographyPages, Option<IArtistOverviewPinnedItem> pinnedItem, Option<IArtistPreReleaseItem> preReleaseItem)
     {
         Id = id;
         Name = name;
@@ -17,12 +17,16 @@ public sealed class WaveeUIArtistView
         Followers = followers;
         TopTracks = topTracks;
         DiscographyPages = discographyPages;
+        PinnedItem = pinnedItem;
+        PreReleaseItem = preReleaseItem;
     }
 
     public string Id { get; }
     public string Name { get; }
     public ICoverImage AvatarImage { get; }
     public Option<ICoverImage> HeaderImage { get; }
+    public Option<IArtistOverviewPinnedItem> PinnedItem { get; }
+    public Option<IArtistPreReleaseItem> PreReleaseItem { get; }
     public ulong MonthlyListeners { get; }
     public ulong Followers { get; }
     public ArtistTopTrackViewModel[] TopTracks { get; }

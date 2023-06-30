@@ -2,6 +2,7 @@
 using static System.Collections.Specialized.BitVector32;
 using System.Globalization;
 using Wavee.Id;
+using Wavee.Metadata.Common;
 using Wavee.Metadata.Home;
 using Wavee.UI.Common;
 using Wavee.UI.ViewModel.Home;
@@ -48,6 +49,20 @@ internal sealed class SpotifyUIHomeClient : IWaveeUIHomeClient
         var output = new List<HomeGroupSectionViewModel>();
         foreach (var section in response.Sections)
         {
+            static string GetMediumImage(CoverImage[] imgs)
+            {
+                //usually around ~300 pixels
+                //so get image where difference between width and 300 is smallest
+                const int targetWidth = 300;
+                var best = imgs
+                    .OrderBy(x => Math.Abs(x.Width.IfNone(0) - targetWidth))
+                    .HeadOrNone()
+                    .Map(x => x.Url)
+                    .IfNone(string.Empty);
+                return best;
+            }
+
+
             var item = new HomeGroupSectionViewModel
             {
                 Items = section.Items
@@ -67,7 +82,7 @@ internal sealed class SpotifyUIHomeClient : IWaveeUIHomeClient
                             Id = playlistItem.Id.ToString(),
                             Title = playlistItem.Name,
                             Subtitle = playlistItem.Description.Map(f => EscapeHtml(f)).IfNone($"Playlist by {playlistItem.OwnerName}"),
-                            Image = playlistItem.Images.HeadOrNone().Map(x => x.Url).IfNone(string.Empty),
+                            Image = GetMediumImage(playlistItem.Images),
                             ImageIsIcon = false,
                             Type = AudioItemType.Playlist
                         },
@@ -76,7 +91,7 @@ internal sealed class SpotifyUIHomeClient : IWaveeUIHomeClient
                             Id = albumItem.Id.ToString(),
                             Title = albumItem.Name,
                             Subtitle = albumItem.Artists.HeadOrNone().Map(x => x.Name).IfNone(string.Empty),
-                            Image = albumItem.Images.HeadOrNone().Map(x => x.Url).IfNone(string.Empty),
+                            Image = GetMediumImage(albumItem.Images),
                             Caption = "ALBUM",
                             ImageIsIcon = false,
                             Type = AudioItemType.Album,
@@ -87,7 +102,7 @@ internal sealed class SpotifyUIHomeClient : IWaveeUIHomeClient
                             Title = artistItem.Name,
                             Subtitle = "Artist",
                             IsArtist = true,
-                            Image = artistItem.Images.HeadOrNone().Map(x => x.Url).IfNone(string.Empty),
+                            Image = GetMediumImage(artistItem.Images),
                             ImageIsIcon = false,
                             Type = AudioItemType.Artist
                         },
@@ -95,8 +110,7 @@ internal sealed class SpotifyUIHomeClient : IWaveeUIHomeClient
                         {
                             Id = podcastEpisode.Id.ToString(),
                             Title = podcastEpisode.Name,
-                            Image = podcastEpisode.Images.OrderByDescending(x => x.Width.IfNone(0)).HeadOrNone()
-                                .Map(x => x.Url).IfNone(string.Empty),
+                            Image = GetMediumImage(podcastEpisode.Images),
                             Duration = podcastEpisode.Duration,
                             Progress = podcastEpisode.Position,
                             PodcastDescription = podcastEpisode.Description.IfNone(string.Empty),

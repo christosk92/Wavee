@@ -26,6 +26,7 @@ internal sealed class SpotifyUIArtistClient : IWaveeUIArtistClient
             artistId: SpotifyId.FromUri(id),
             destroyCache: false,
             languageOverride: Option<CultureInfo>.None,
+            includePrerelease: true,
             ct: ct);
 
         return new WaveeUIArtistView(
@@ -37,7 +38,9 @@ internal sealed class SpotifyUIArtistClient : IWaveeUIArtistClient
             followers: artistResponse.Statistics.Followers,
             topTracks: artistResponse.Discography.TopTracks
                 .Select(ToArtistTopTrackViewModel).ToArray(),
-            discographyPages: ConvertToPaged(artistResponse.Id, artistResponse.Discography, spotifyClient)
+            discographyPages: ConvertToPaged(artistResponse.Id, artistResponse.Discography, spotifyClient),
+            preReleaseItem: artistResponse.PreRelease,
+            pinnedItem: artistResponse.Profile.PinnedItem
         );
     }
 

@@ -35,6 +35,7 @@ namespace Wavee.UI.WinUI.View.Album
             });
         }
         public AlbumViewModel ViewModel { get; }
+        private bool _traveledWithImage;
         public async void NavigatedTo(object parameter)
         {
             if (parameter is string id)
@@ -48,6 +49,7 @@ namespace Wavee.UI.WinUI.View.Album
             }
             else if (parameter is NavigatingWithImage img)
             {
+                _traveledWithImage = true;
                 var anim = ConnectedAnimationService.GetForCurrentView().GetAnimation("ForwardConnectedAnimation");
                 anim.Configuration = new DirectConnectedAnimationConfiguration();
                 if (anim != null)
@@ -68,7 +70,7 @@ namespace Wavee.UI.WinUI.View.Album
 
         public void NavigatedFrom(NavigationMode mode)
         {
-            if (mode is NavigationMode.Back)
+            if (mode is NavigationMode.Back && _traveledWithImage)
             {
                 ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("BackConnectedAnimation", this.AlbumImage);
             }

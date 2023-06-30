@@ -9,6 +9,8 @@
              xmlns:components="using:Wavee.UI.WinUI.Components"
              xmlns:animations="using:CommunityToolkit.WinUI.UI.Animations"
              xmlns:controls="using:Wavee.UI.WinUI.Controls"
+             xmlns:winUi="using:Wavee.UI.WinUI"
+             xmlns:artist="using:Wavee.Metadata.Artist"
              Loaded="ArtistPage_OnLoaded"
              SizeChanged="ArtistPage_OnSizeChanged"
              mc:Ignorable="d">

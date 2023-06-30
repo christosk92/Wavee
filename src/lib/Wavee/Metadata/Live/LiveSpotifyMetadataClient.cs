@@ -166,6 +166,7 @@ internal readonly struct LiveSpotifyMetadataClient : ISpotifyMetadataClient
 
     public ValueTask<ArtistOverview> GetArtistOverview(SpotifyId artistId, bool destroyCache,
         Option<CultureInfo> languageOverride,
+        bool includePrerelease,
         CancellationToken ct = default)
     {
         LiveSpotifyMetadataClient tmpThis = this;
@@ -180,15 +181,15 @@ internal readonly struct LiveSpotifyMetadataClient : ISpotifyMetadataClient
                 },
                 None: () =>
                 {
-                    static async Task<ArtistOverview> Fetch(SpotifyId artistid, LiveSpotifyMetadataClient tmpthis, Option<CultureInfo> languageoverride)
+                    static async Task<ArtistOverview> Fetch(SpotifyId artistid, LiveSpotifyMetadataClient tmpthis, Option<CultureInfo> languageoverride, bool preRelease)
                     {
-                        var query = new QueryArtistOverviewQuery(artistid, false);
+                        var query = new QueryArtistOverviewQuery(artistid, preRelease);
                         var response = await tmpthis._query(query, languageoverride.IfNone(tmpthis._defaultLang));
                         if (response.IsSuccessStatusCode)
                         {
                             var stream = await response.Content.ReadAsByteArrayAsync();
                             var artistOverview = ArtistOverview.ParseFrom(stream);
-                            tmpthis._cache.SaveRawEntity(artistid.ToString(), stream);
+                            tmpthis._cache.SaveRawEntity(artistid.ToString(), stream, DateTimeOffset.Now.AddMinutes(30));
                             return artistOverview;
                         }
 
@@ -200,7 +201,7 @@ internal readonly struct LiveSpotifyMetadataClient : ISpotifyMetadataClient
                         ));
                     }
 
-                    return new ValueTask<ArtistOverview>(Fetch(artistId, tmpThis, languageOverride));
+                    return new ValueTask<ArtistOverview>(Fetch(artistId, tmpThis, languageOverride, includePrerelease));
                 }
             );
 

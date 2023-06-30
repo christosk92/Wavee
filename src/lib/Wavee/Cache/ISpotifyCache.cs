@@ -11,5 +11,5 @@ public interface ISpotifyCache
     Unit SetTrack(SpotifyId id, Track track);
     Option<FileStream> File(AudioFile format);
     Option<byte[]> GetRawEntity(string itemId);
-    Unit SaveRawEntity(string itemId, byte[] data);
+    Unit SaveRawEntity(string itemId, byte[] data, DateTimeOffset expiration);
 }

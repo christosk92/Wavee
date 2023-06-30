@@ -69,9 +69,7 @@
                             <PersonPicture DisplayName="{x:Bind Name,Mode=OneWay}"
                                            Initials="{x:Bind CalculateInitials(Name), Mode=OneWay}">
                                 <PersonPicture.ProfilePicture>
-                                    <BitmapImage UriSource="{Binding Image,Mode=OneWay}"
-                                                 DecodePixelHeight="250"
-                                                 DecodePixelWidth="250" />
+                                    <BitmapImage UriSource="{Binding Image,Mode=OneWay}" />
                                 </PersonPicture.ProfilePicture>
                             </PersonPicture>
                         </Viewbox>

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl x:Class="Wavee.UI.WinUI.Controls.CalendarControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Wavee.UI.WinUI.Controls"
+             Unloaded="CalendarControl_OnUnloaded"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             Loaded="CalendarControl_OnLoaded"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d">
+
+    <ItemsRepeater x:Name="data"
+                   VerticalAlignment="Center"
+                   ItemsSource="{x:Bind CountdownKeys}">
+        <ItemsRepeater.ItemTemplate>
+            <DataTemplate x:DataType="local:CountdownKey">
+                <local:CalendarBadgeItem Key="{x:Bind Key,Mode=OneWay}"
+                                         Number="{x:Bind Value,Mode=OneWay}" />
+            </DataTemplate>
+        </ItemsRepeater.ItemTemplate>
+        <ItemsRepeater.Layout>
+            <UniformGridLayout Orientation="Horizontal"
+                               MinItemWidth="140"
+                               MinColumnSpacing="12"
+                               MinRowSpacing="12"
+                               ItemsStretch="Uniform"
+                               MinItemHeight="160" />
+        </ItemsRepeater.Layout>
+    </ItemsRepeater>
+</UserControl>

@@ -67,7 +67,7 @@ public interface ISpotifyMetadataClient
     /// <returns>
     /// A <see cref="Task{TResult}"/> that will complete with the <see cref="ArtistOverview"/> or throw a <see cref="MercuryException"/>.
     /// </returns>
-    ValueTask<ArtistOverview> GetArtistOverview(SpotifyId artistId, bool destroyCache, Option<CultureInfo> languageOverride, CancellationToken ct = default);
+    ValueTask<ArtistOverview> GetArtistOverview(SpotifyId artistId, bool destroyCache, Option<CultureInfo> languageOverride, bool includePrerelease, CancellationToken ct = default);
 
     ValueTask<IArtistDiscographyRelease[]> GetArtistDiscography(SpotifyId artistId, ReleaseType type, int offset, int limit, CancellationToken ct = default);
 

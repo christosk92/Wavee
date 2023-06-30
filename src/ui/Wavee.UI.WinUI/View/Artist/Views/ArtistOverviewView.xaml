@@ -10,16 +10,34 @@
              xmlns:labs="using:CommunityToolkit.Labs.WinUI"
              xmlns:winUi="using:Wavee.UI.WinUI"
              xmlns:discography="using:Wavee.UI.WinUI.View.Artist.Views.Discography"
+             xmlns:artist1="using:Wavee.Metadata.Artist"
+             xmlns:controls="using:Wavee.UI.WinUI.Controls"
              mc:Ignorable="d">
 
-    <!-- -->
-    <!-- <UserControl.Resources> -->
-    <!--     <DataTemplate x:Key="GridTemplate"  -->
-    <!--     <DataTemplate x:Key="ListTemplate" /> -->
-    <!--     <winUi:DiscographyViewSelector GridTemplate="{StaticResource GridTemplate}" -->
-    <!--                                    ListTemplate="{StaticResource ListTemplate}" -->
-    <!--                                    x:Key="DiscographyViewSelector" /> -->
-    <!-- </UserControl.Resources> -->
+    <UserControl.Resources>
+        <DataTemplate x:Key="PinnedConcert"
+                      x:DataType="artist1:ArtistOverviewPinnedConcert">
+            <Grid>
+
+            </Grid>
+        </DataTemplate>
+        <DataTemplate x:Key="PinnedRelease"
+                      x:DataType="artist1:ArtistOverviewPinnedItem">
+            <Grid>
+
+            </Grid>
+        </DataTemplate>
+        <DataTemplate x:Key="PreRelease"
+                      x:DataType="artist1:IArtistPreReleaseItem">
+            <local:SpotifyPreReleaseControl Images="{x:Bind Images}"
+                                            Title="{x:Bind Name}"
+                                            ReleaseDate="{x:Bind ReleaseDate}" />
+        </DataTemplate>
+        <winUi:ArtistSpecialTemplateSelector PinnedConcertTemplate="{StaticResource PinnedConcert}"
+                                             PinnedReleaseTemplate="{StaticResource PinnedRelease}"
+                                             PreReleaseTemplate="{StaticResource PreRelease}"
+                                             x:Key="ArtistSpecialTemplateSelector" />
+    </UserControl.Resources>
 
     <UserControl.Transitions>
         <TransitionCollection>
@@ -28,9 +46,10 @@
     </UserControl.Transitions>
     <StackPanel Margin="24"
                 VerticalAlignment="Top">
+
+
         <TextBlock Text="Popular songs"
-                   FontWeight="SemiBold"
-                   FontSize="16"
+                   Style="{ThemeResource SubtitleTextBlockStyle}"
                    Margin="0,8" />
         <ListView SelectionMode="Extended"
                   SizeChanged="ArtistOverview_OnSizeChanged"
@@ -59,6 +78,13 @@
             </ListView.ItemsPanel>
         </ListView>
 
+        <ContentControl x:Name="PreReleaseOrPinnedItem"
+                        VerticalAlignment="Top"
+                        Margin="0,24"
+                        ContentTemplateSelector="{StaticResource ArtistSpecialTemplateSelector}"
+                        HorizontalAlignment="Stretch"
+                        HorizontalContentAlignment="Stretch"
+                        VerticalContentAlignment="Stretch" />
 
         <ItemsRepeater x:Name="MainRepeater"
                        VerticalAlignment="Top"

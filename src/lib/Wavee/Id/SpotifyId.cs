@@ -137,6 +137,7 @@ public readonly record struct SpotifyId(BigInteger Id, AudioItemType Type, Servi
             playlist => AudioItemType.Playlist,
             episode => AudioItemType.PodcastEpisode,
             collection => AudioItemType.UserCollection,
+            prerelease => AudioItemType.Prerelease,
             _ => AudioItemType.Unknown
         };
     }
@@ -151,6 +152,7 @@ public readonly record struct SpotifyId(BigInteger Id, AudioItemType Type, Servi
             AudioItemType.Playlist => playlist,
             AudioItemType.PodcastEpisode => episode,
             AudioItemType.UserCollection => collection,
+            AudioItemType.Prerelease => prerelease,
             AudioItemType.Unknown => unknown,
             _ => unknown
         };
@@ -175,6 +177,7 @@ public readonly record struct SpotifyId(BigInteger Id, AudioItemType Type, Servi
     const string playlist = "playlist";
     const string episode = "episode";
     const string collection = "collection";
+    const string prerelease = "prerelease";
     const string unknown = "unknown";
 
     public static SpotifyId FromRaw(ReadOnlySpan<byte> id, AudioItemType type, ServiceType serviceType)

@@ -52,7 +52,8 @@ internal sealed class LiveSpotifyCache : ISpotifyCache
                 db.InsertOrReplace(new CachedSpotifyTrack
                 {
                     Id = id.ToString(),
-                    Data = track.ToByteArray()
+                    Data = track.ToByteArray(),
+                    Expiration = DateTimeOffset.MaxValue
                 });
                 return Unit.Default;
             }).IfNone(Unit.Default);
@@ -78,24 +79,25 @@ internal sealed class LiveSpotifyCache : ISpotifyCache
             {
                 using var db = new SQLiteConnection(path);
                 var track = db.Find<CachedSpotifyTrack>(itemId);
-                if (track is null)
+                if (track is null || DateTimeOffset.UtcNow >= track.Expiration)
                     return Option<byte[]>.None;
                 return track.Data;
             });
     }
 
-    public Unit SaveRawEntity(string itemId, byte[] data)
+    public Unit SaveRawEntity(string itemId, byte[] data, DateTimeOffset expiration)
     {
-       return DbPath
-            .Map(path =>
-            {
-                using var db = new SQLiteConnection(path);
-                db.InsertOrReplace(new CachedSpotifyTrack
-                {
-                    Id = itemId,
-                    Data = data
-                });
-                return Unit.Default;
-            }).IfNone(Unit.Default);
+        return DbPath
+             .Map(path =>
+             {
+                 using var db = new SQLiteConnection(path);
+                 db.InsertOrReplace(new CachedSpotifyTrack
+                 {
+                     Id = itemId,
+                     Data = data,
+                     Expiration = expiration
+                 });
+                 return Unit.Default;
+             }).IfNone(Unit.Default);
     }
 }

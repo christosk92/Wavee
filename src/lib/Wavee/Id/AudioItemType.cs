@@ -29,5 +29,7 @@ public enum AudioItemType
     PodcastEpisode = 8,
     Unknown = 16,
     PodcastShow = 32,
-    UserCollection = 64
+    UserCollection = 64,
+    Prerelease = 128,
+    Concert = 256,
 }

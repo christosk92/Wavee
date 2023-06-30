@@ -15,7 +15,7 @@ public class HumanizeDateTimeStringConverter : IValueConverter
             {
                 ReleaseDatePrecisionType.Year => dc.Date.Year.ToString(),
                 ReleaseDatePrecisionType.Month => $"{dc.Date:MMMM} {dc.Date.Year}",
-                ReleaseDatePrecisionType.Day => $"{dc.Date.Day}, {dc.Date:MMMM} {dc.Date.Year}",
+                ReleaseDatePrecisionType.Day => $"{dc.Date.Day} {dc.Date:MMMM}, {dc.Date.Year}",
                 _ => throw new ArgumentOutOfRangeException()
             };
         }

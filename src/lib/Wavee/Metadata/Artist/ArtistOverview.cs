@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System;
+using System.Text.Json;
 using Eum.Spotify.playlist4;
 using Google.Protobuf.WellKnownTypes;
 using LanguageExt;
@@ -8,7 +9,9 @@ using Wavee.Metadata.Common;
 
 namespace Wavee.Metadata.Artist;
 
-public readonly record struct ArtistOverview(SpotifyId Id, bool IsSaved, Uri SharingUrl, ArtistOverviewProfile Profile,
+public readonly record struct ArtistOverview(SpotifyId Id, bool IsSaved,
+    Option<IArtistPreReleaseItem> PreRelease,
+    Uri SharingUrl, ArtistOverviewProfile Profile,
     ArtistVisuals Visuals, ArtistDiscography Discography, ArtistStats Statistics, ArtistRelatedContent RelatedContent,
     ArtistGoods Goods)
 {
@@ -19,6 +22,31 @@ public readonly record struct ArtistOverview(SpotifyId Id, bool IsSaved, Uri Sha
         var uri = SpotifyId.FromUri(artist.GetProperty("uri").GetString().AsSpan());
         var saved = artist.GetProperty("saved").GetBoolean();
         var sharingUrl = artist.GetProperty("sharingInfo").GetProperty("shareUrl").GetString()!;
+        Option<IArtistPreReleaseItem> prerelease = Option<IArtistPreReleaseItem>.None;
+        if (artist.TryGetProperty("preRelease", out var prl)
+            && prl.ValueKind is not JsonValueKind.Null)
+        {
+            var preReleaseUri = SpotifyId.FromUri(prl.GetProperty("uri").GetString().AsSpan());
+            var releaseDate = prl.GetProperty("releaseDate").GetProperty("isoString").GetDateTimeOffset();
+            var preReleaseContent = prl.GetProperty("preReleaseContent");
+            var name = preReleaseContent.GetProperty("name").GetString()!;
+            var type = preReleaseContent.GetProperty("type").GetString()!;
+            var preReleaseCoverArt = ParseCoverArt(preReleaseContent.GetProperty("coverArt").GetProperty("sources"));
+
+            prerelease = new SpotifyPreReleaseItem(
+                Id: preReleaseUri,
+                Name: name,
+                Type: type switch
+                {
+                    "ALBUM" => ReleaseType.Album,
+                    "EP" or "SINGLE" => ReleaseType.Single,
+                    "COMPILATION" => ReleaseType.Compilation,
+                    _ => ReleaseType.Album
+                },
+                ReleaseDate: releaseDate,
+                Images: preReleaseCoverArt
+            );
+        }
 
         var profile = ParseArtistProfile(artist.GetProperty("profile"));
         var visuals = ParseArtistVisuals(artist.GetProperty("visuals"));
@@ -30,6 +58,7 @@ public readonly record struct ArtistOverview(SpotifyId Id, bool IsSaved, Uri Sha
         return new ArtistOverview(
             Id: uri,
             IsSaved: saved,
+            PreRelease: prerelease,
             SharingUrl: new Uri(sharingUrl),
             Profile: profile,
             Visuals: visuals,
@@ -273,7 +302,7 @@ public readonly record struct ArtistOverview(SpotifyId Id, bool IsSaved, Uri Sha
         var name = profile.GetProperty("name").GetString()!;
         var verified = profile.GetProperty("verified").GetBoolean();
 
-        Option<ArtistOverviewPinnedItem> pinnedItem = Option<ArtistOverviewPinnedItem>.None;
+        Option<IArtistOverviewPinnedItem> pinnedItem = Option<IArtistOverviewPinnedItem>.None;
         if (profile.TryGetProperty("pinnedItem", out var potentialPin) &&
             potentialPin.ValueKind is not JsonValueKind.Null)
         {
@@ -286,29 +315,56 @@ public readonly record struct ArtistOverview(SpotifyId Id, bool IsSaved, Uri Sha
             var itemType = potentialPin.GetProperty("type").GetString() switch
             {
                 "ALBUM" => AudioItemType.Album,
+                "CONCERT" => AudioItemType.Concert,
                 _ => AudioItemType.Unknown
             };
-
             var item = potentialPin.GetProperty("item");
-            var uri = SpotifyId.FromUri(item.GetProperty("uri").GetString().AsSpan());
-            var itemName = item.GetProperty("name").GetString()!;
-            ICoverImage[] coverArt = Array.Empty<ICoverImage>();
-            if (item.TryGetProperty("coverArt", out var coverArtProp))
+
+            if (itemType is AudioItemType.Concert)
             {
-                coverArt = ParseCoverArt(coverArtProp.GetProperty("sources"));
+                var concertId = item.GetProperty("id").GetString();
+                var title = item.GetProperty("title").GetString();
+                var date = item.GetProperty("date").GetProperty("isoString").GetDateTimeOffset();
+                var venue = item.GetProperty("venue");
+                var venueName = venue.GetProperty("name").GetString();
+                var venueLocaiton = venue.GetProperty("location").GetProperty("name").GetString();
+                pinnedItem = new ArtistOverviewPinnedConcert(
+                    ConcertId: concertId,
+                    Name: title,
+                    Type: itemType,
+                    Date: date,
+                    Venue: new ConcertVenueDetails(Name: venueName, Location: venueLocaiton),
+                    Comment: !string.IsNullOrEmpty(comment)
+                        ? comment
+                        : Option<string>.None,
+                    BackgroundImage: !string.IsNullOrEmpty(backgroundImageUrl)
+                        ? backgroundImageUrl
+                        : Option<string>.None
+                );
             }
-            pinnedItem = new ArtistOverviewPinnedItem(
-                Id: uri,
-                Name: itemName,
-                Images: coverArt,
-                Type: itemType,
-                Comment: !string.IsNullOrEmpty(comment)
-                    ? comment
-                    : Option<string>.None,
-                BackgroundImage: !string.IsNullOrEmpty(backgroundImageUrl)
-                    ? backgroundImageUrl
-                    : Option<string>.None
-            );
+            else
+            {
+                var uri = SpotifyId.FromUri(item.GetProperty("uri").GetString().AsSpan());
+                var itemName = item.GetProperty("name").GetString()!;
+                ICoverImage[] coverArt = Array.Empty<ICoverImage>();
+                if (item.TryGetProperty("coverArt", out var coverArtProp))
+                {
+                    coverArt = ParseCoverArt(coverArtProp.GetProperty("sources"));
+                }
+
+                pinnedItem = new ArtistOverviewPinnedItem(
+                    Id: uri,
+                    Name: itemName,
+                    Images: coverArt,
+                    Type: itemType,
+                    Comment: !string.IsNullOrEmpty(comment)
+                        ? comment
+                        : Option<string>.None,
+                    BackgroundImage: !string.IsNullOrEmpty(backgroundImageUrl)
+                        ? backgroundImageUrl
+                        : Option<string>.None
+                );
+            }
         }
 
         return new ArtistOverviewProfile(
@@ -351,6 +407,18 @@ public readonly record struct ArtistOverview(SpotifyId Id, bool IsSaved, Uri Sha
     }
 }
 
+public readonly record struct SpotifyPreReleaseItem(SpotifyId Id, ReleaseType Type, DateTimeOffset ReleaseDate,
+        string Name, ICoverImage[] Images)
+    : IArtistPreReleaseItem;
+
+public interface IArtistPreReleaseItem
+{
+    SpotifyId Id { get; }
+    ReleaseType Type { get; }
+    DateTimeOffset ReleaseDate { get; }
+    string Name { get; }
+    ICoverImage[] Images { get; }
+}
 public readonly record struct ArtistTopTrack(SpotifyId Id, string Uid, string Name, Option<ulong> Playcount,
     int DiscNumber, TimeSpan Duration, ContentRatingType ContentRating, TrackArtist[] Artists, TrackAlbum Album);
 
@@ -414,10 +482,23 @@ public enum ReleaseType
 }
 
 public readonly record struct ArtistOverviewPinnedItem(SpotifyId Id, string Name, ICoverImage[] Images,
-    AudioItemType Type, Option<string> Comment, Option<string> BackgroundImage);
+    AudioItemType Type, Option<string> Comment, Option<string> BackgroundImage) : IArtistOverviewPinnedItem;
 
+public readonly record struct ArtistOverviewPinnedConcert(string ConcertId, string Name, DateTimeOffset Date,
+    ConcertVenueDetails Venue,
+    AudioItemType Type,
+    Option<string> Comment, Option<string> BackgroundImage) : IArtistOverviewPinnedItem;
+
+public readonly record struct ConcertVenueDetails(string Name, string Location);
+public interface IArtistOverviewPinnedItem
+{
+    AudioItemType Type { get; }
+    string Name { get; }
+    Option<string> Comment { get; }
+    Option<string> BackgroundImage { get; }
+}
 public readonly record struct ArtistOverviewProfile(string Name, bool Verified,
-    Option<ArtistOverviewPinnedItem> PinnedItem);
+    Option<IArtistOverviewPinnedItem> PinnedItem);
 
 public readonly record struct ArtistVisuals(ICoverImage[] AvatarImages, Option<ICoverImage> HeaderImage);
 
