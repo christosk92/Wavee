@@ -11,7 +11,8 @@
     <ItemsRepeater VerticalAlignment="Top"
                    ItemsSource="{x:Bind Releases, Mode=OneWay}">
         <ItemsRepeater.Layout>
-            <StackLayout Orientation="Vertical" Spacing="48" />
+            <StackLayout Orientation="Vertical"
+                         Spacing="48" />
         </ItemsRepeater.Layout>
         <ItemsRepeater.ItemTemplate>
             <DataTemplate x:DataType="artist:IArtistDiscographyRelease">
@@ -19,6 +20,7 @@
                                                       Title="{x:Bind Name, Mode=OneWay}"
                                                       Images="{x:Bind Images, Mode=OneWay}"
                                                       ReleaseDate="{x:Bind Date, Mode=OneWay}"
+                                                      x:Phase="1"
                                                       TrackCount="{x:Bind TotalTracks, Mode=OneWay}" />
             </DataTemplate>
         </ItemsRepeater.ItemTemplate>

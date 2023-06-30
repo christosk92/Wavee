@@ -10,8 +10,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
+using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using CommunityToolkit.WinUI.UI;
 using LanguageExt.UnsafeValueAccess;
 using Wavee.UI.Client.Artist;
 using Spotify.Metadata;
@@ -83,5 +85,27 @@ namespace Wavee.UI.WinUI.View.Artist.Views
                 SetStretchHorizontalAndNoWrap(panel, e.NewSize.Width);
             }
         }
+
+        private double _currentScrollPosition = 0;
+        private async void Segments_OnTapped(object sender, TappedRoutedEventArgs e)
+        {
+            //if we tapped, we want to ignore the next scroll event
+            var scroller = this.FindAscendant<ScrollViewer>();
+            var offset = scroller.VerticalOffset;
+            _currentScrollPosition = offset;
+            scroller.VerticalScrollMode = ScrollMode.Disabled;
+            scroller.VerticalScrollBarVisibility = ScrollBarVisibility.Hidden;
+            scroller.ChangeView(null, _currentScrollPosition, null);
+
+            // _currentScrollPosition = scroller.VerticalOffset;
+            // //scroller.ViewChanged += ScrollerOnViewChanged;
+            // scroller.ViewChanging += ScrollerOnViewChanging;
+            await Task.Delay(100);
+            scroller.VerticalScrollMode = ScrollMode.Enabled;
+            scroller.VerticalScrollBarVisibility = ScrollBarVisibility.Visible;
+            scroller.ChangeView(null, _currentScrollPosition, null);
+        }
+
+
     }
 }

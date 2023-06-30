@@ -100,6 +100,8 @@
                                        Text="{x:Bind Type}" />
 
                             <labs:Segmented x:Name="Segments"
+                                            CanBeScrollAnchor="True"
+                                            Tapped="Segments_OnTapped"
                                             RelativePanel.AlignVerticalCenterWithPanel="True"
                                             SelectedIndex="{Binding ElementName=DiscographyPageView, Path=CurrentViewIdx, Mode=TwoWay}"
                                             RelativePanel.AlignRightWithPanel="True"
@@ -123,6 +125,8 @@
                                                          Margin="0,12"
                                                          RelativePanel.Below="MetadataPanel"
                                                          RelativePanel.AlignLeftWithPanel="True"
+                                                         RelativePanel.AlignTopWithPanel="True"
+                                                         VerticalContentAlignment="Top"
                                                          RelativePanel.AlignRightWithPanel="True"
                                                          GetReleasesFunc="{x:Bind  GetReleasesFunc}"
                                                          VerticalAlignment="Top" />
