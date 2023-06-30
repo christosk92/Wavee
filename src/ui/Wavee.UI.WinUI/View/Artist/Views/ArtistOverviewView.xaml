@@ -88,7 +88,7 @@
                        ItemsSource="{x:Bind ArtistView.DiscographyPages}">
             <ItemsRepeater.ItemTemplate>
                 <DataTemplate x:DataType="artist:PagedArtistDiscographyPage">
-                    <RelativePanel VerticalAlignment="Top">
+                    <Grid VerticalAlignment="Top">
                         <RelativePanel x:Name="MetadataPanel"
                                        RelativePanel.AlignLeftWithPanel="True"
                                        RelativePanel.AlignRightWithPanel="True">
@@ -122,15 +122,11 @@
                         </RelativePanel>
 
                         <discography:DiscographyPageView x:Name="DiscographyPageView"
-                                                         Margin="0,12"
-                                                         RelativePanel.Below="MetadataPanel"
-                                                         RelativePanel.AlignLeftWithPanel="True"
-                                                         RelativePanel.AlignTopWithPanel="True"
+                                                         Margin="0,28"
                                                          VerticalContentAlignment="Top"
-                                                         RelativePanel.AlignRightWithPanel="True"
                                                          GetReleasesFunc="{x:Bind  GetReleasesFunc}"
                                                          VerticalAlignment="Top" />
-                    </RelativePanel>
+                    </Grid>
                 </DataTemplate>
             </ItemsRepeater.ItemTemplate>
         </ItemsRepeater>
