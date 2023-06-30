@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Windows.Input;
 using Windows.System;
 using CommunityToolkit.WinUI.UI.Controls;
 using Microsoft.UI.Xaml;
@@ -11,6 +12,11 @@ using Wavee.UI.User;
 using Wavee.UI.ViewModel.Playback;
 using DispatcherQueue = Microsoft.UI.Dispatching.DispatcherQueue;
 using System.Windows.Threading;
+using CommunityToolkit.Mvvm.Input;
+using Wavee.Id;
+using Wavee.UI.WinUI.Navigation;
+using Wavee.UI.WinUI.View.Album;
+using Wavee.UI.WinUI.View.Artist;
 using DispatcherQueuePriority = Microsoft.UI.Dispatching.DispatcherQueuePriority;
 
 // To learn more about WinUI, the WinUI project structure,
@@ -25,9 +31,23 @@ namespace Wavee.UI.WinUI.View.Shell
         public static readonly DependencyProperty PlaybackProperty = DependencyProperty.Register(nameof(Playback), typeof(PlaybackViewModel), typeof(BottomPlayerControl), new PropertyMetadata(default(PlaybackViewModel), PlaybackViewModelChanged));
         private readonly DispatcherQueue _dispatcher;
         public BottomPlayerControl()
-        {
+        { 
             this.InitializeComponent();
             _dispatcher = this.DispatcherQueue;
+            NavigateToCommand = new RelayCommand<ItemWithId>(id =>
+            {
+                switch (id.Type)
+                {
+                    case AudioItemType.Album:
+                        NavigationService.Instance.Navigate(typeof(AlbumView), id.Id);
+                        break;
+                    case AudioItemType.Artist:
+                        NavigationService.Instance.Navigate(typeof(ArtistView), id.Id);
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
+            });
         }
 
         private static void PlaybackViewModelChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
@@ -80,9 +100,13 @@ namespace Wavee.UI.WinUI.View.Shell
         {
             return itemWithIds?.Select(x => new MetadataItem
             {
-                Label = x.Title
+                Label = x.Title,
+                Command = NavigateToCommand,
+                CommandParameter = x
             }) ?? Enumerable.Empty<MetadataItem>();
         }
+
+        public ICommand NavigateToCommand { get;  }
 
         public double GetTimestamp(TimeSpan? timeSpan)
         {
@@ -103,6 +127,17 @@ namespace Wavee.UI.WinUI.View.Shell
                 PositionSlider.Value = position.TotalMilliseconds;
                 PositionText.Text = FormatTimestamp(position);
             });
+        }
+
+        private void SongName_OnTapped(object sender, TappedRoutedEventArgs e)
+        {
+            var titleId = Playback.Title;
+            switch (titleId.Type)
+            {
+                case AudioItemType.Album:
+                    NavigationService.Instance.Navigate(typeof(AlbumView), titleId.Id);
+                    break;
+            }
         }
     }
 }

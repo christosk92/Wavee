@@ -8,7 +8,7 @@ using Wavee.Metadata.Common;
 
 namespace Wavee.Metadata.Artist;
 
-public sealed record ArtistOverview(SpotifyId Id, bool IsSaved, Uri SharingUrl, ArtistOverviewProfile Profile,
+public readonly record struct ArtistOverview(SpotifyId Id, bool IsSaved, Uri SharingUrl, ArtistOverviewProfile Profile,
     ArtistVisuals Visuals, ArtistDiscography Discography, ArtistStats Statistics, ArtistRelatedContent RelatedContent,
     ArtistGoods Goods)
 {
@@ -177,12 +177,12 @@ public sealed record ArtistOverview(SpotifyId Id, bool IsSaved, Uri SharingUrl, 
                 Duration: duration,
                 ContentRating: ctr.GetProperty("label")
                         .GetString() switch
-                    {
-                        "NONE" => ContentRatingType.NOTHING,
-                        "NINETEEN_PLUS" => ContentRatingType.NINETEEN_PLUS,
-                        "EXPLICIT" => ContentRatingType.EXPLICIT,
-                        _ => ContentRatingType.UNKNOWN
-                    },
+                {
+                    "NONE" => ContentRatingType.NOTHING,
+                    "NINETEEN_PLUS" => ContentRatingType.NINETEEN_PLUS,
+                    "EXPLICIT" => ContentRatingType.EXPLICIT,
+                    _ => ContentRatingType.UNKNOWN
+                },
                 Artists: artistsOutput,
                 Album: albumOutput
             );
@@ -192,7 +192,7 @@ public sealed record ArtistOverview(SpotifyId Id, bool IsSaved, Uri SharingUrl, 
         return output;
     }
 
-    private static ArtistDiscographyRelease ParseRelease(JsonElement release)
+    internal static ArtistDiscographyRelease ParseRelease(JsonElement release)
     {
         var id = SpotifyId.FromUri(release.GetProperty("uri").GetString().AsSpan());
         var name = release.GetProperty("name").GetString()!;
@@ -203,13 +203,13 @@ public sealed record ArtistOverview(SpotifyId Id, bool IsSaved, Uri SharingUrl, 
             "COMPILATION" => ReleaseType.Compilation
         };
         var dt = release.GetProperty("date");
-        var precision = dt.GetProperty("precision").GetString() switch
+        var precision = dt.TryGetProperty("precision", out var prec) ? prec.GetString() switch
         {
             "DAY" => ReleaseDatePrecisionType.Day,
             "MONTH" => ReleaseDatePrecisionType.Month,
             "YEAR" => ReleaseDatePrecisionType.Year,
             _ => ReleaseDatePrecisionType.Unknown
-        };
+        } : ReleaseDatePrecisionType.Year;
         var date = new DiscographyReleaseDate(
             new DateTime(
                 year: precision >= ReleaseDatePrecisionType.Year ? dt.GetProperty("year").GetInt32() : 0,
@@ -221,20 +221,25 @@ public sealed record ArtistOverview(SpotifyId Id, bool IsSaved, Uri SharingUrl, 
 
         var coverArts = ParseCoverArt(release.GetProperty("coverArt").GetProperty("sources"));
         var tracksCount = release.GetProperty("tracks").GetProperty("totalCount").GetUInt16();
-        var label = release.GetProperty("label").GetString()!;
+        var label = release.TryGetProperty("label", out var lbl) ? lbl.GetString()! : Option<string>.None;
 
-        var copyrights = release.GetProperty("copyright").GetProperty("items");
-        var copyoutputs = new ReleaseCopyright[copyrights.GetArrayLength()];
-        using var arr = copyrights.EnumerateArray();
-        int i = 0;
-        while (arr.MoveNext())
+        var copyoutputs = Array.Empty<ReleaseCopyright>();
+
+        if (release.TryGetProperty("copyright", out var cpr))
         {
-            var c = arr.Current;
-            copyoutputs[i] = new ReleaseCopyright(
-                Type: c.GetProperty("type").GetString()!,
-                Text: c.GetProperty("text").GetString()!
-            );
-            i++;
+            var copyrights = cpr.GetProperty("items");
+            copyoutputs = new ReleaseCopyright[copyrights.GetArrayLength()];
+            using var arr = copyrights.EnumerateArray();
+            int i = 0;
+            while (arr.MoveNext())
+            {
+                var c = arr.Current;
+                copyoutputs[i] = new ReleaseCopyright(
+                    Type: c.GetProperty("type").GetString()!,
+                    Text: c.GetProperty("text").GetString()!
+                );
+                i++;
+            }
         }
 
         return new ArtistDiscographyRelease(
@@ -283,7 +288,11 @@ public sealed record ArtistOverview(SpotifyId Id, bool IsSaved, Uri SharingUrl, 
             var item = potentialPin.GetProperty("item");
             var uri = SpotifyId.FromUri(item.GetProperty("uri").GetString().AsSpan());
             var itemName = item.GetProperty("name").GetString()!;
-            var coverArt = ParseCoverArt(item.GetProperty("coverArt").GetProperty("sources"));
+            CoverImage[] coverArt = Array.Empty<CoverImage>();
+            if (item.TryGetProperty("coverArt", out var coverArtProp))
+            {
+                coverArt = ParseCoverArt(coverArtProp.GetProperty("sources"));
+            }
             pinnedItem = new ArtistOverviewPinnedItem(
                 Id: uri,
                 Name: itemName,
@@ -359,8 +368,7 @@ public interface ITrackArtist
 
 public readonly record struct TrackArtist(SpotifyId Id, string Name) : ITrackArtist;
 
-public readonly record struct ArtistDiscographyRelease(SpotifyId Id, string Name, ReleaseType Type,
-    ReleaseCopyright[] Copyright, DiscographyReleaseDate Date, CoverImage[] Images, string Label, ushort TotalTracks);
+public readonly record struct ArtistDiscographyRelease(SpotifyId Id, string Name, ReleaseType Type, ReleaseCopyright[] Copyright, DiscographyReleaseDate Date, CoverImage[] Images, Option<string> Label, ushort TotalTracks);
 
 public readonly record struct DiscographyReleaseDate(DateTime Date, ReleaseDatePrecisionType Precision);
 

@@ -1,7 +1,9 @@
-﻿using System.Globalization;
+﻿using System.Diagnostics;
+using System.Globalization;
 using System.Reactive.Linq;
 using System.Text;
 using System.Text.Json;
+using System.Xml;
 using Eum.Spotify;
 using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
@@ -76,16 +78,48 @@ public class SpotifyClient : IDisposable
 
             //setup country code
             var listener = _connectionId.CreateListener((ref SpotifyUnencryptedPackage package) =>
-                package.Type is SpotifyPacketType.CountryCode);
+                package.Type is SpotifyPacketType.CountryCode or SpotifyPacketType.ProductInfo);
             Task.Run(async () =>
             {
                 try
                 {
-                    if (await listener.Reader.WaitToReadAsync())
+                    while (true)
                     {
-                        var countryCode = await listener.Reader.ReadAsync();
-                        var countryCodeString = countryCode.Payload.Span.GetUTF8String();
-                        _countryCodeTask.TrySetResult(countryCodeString);
+                        if (await listener.Reader.WaitToReadAsync())
+                        {
+                            var countryCode = await listener.Reader.ReadAsync();
+                            var countryCodeString = countryCode.Payload.Span.GetUTF8String();
+                            if (countryCode.Type is SpotifyPacketType.CountryCode)
+                            {
+                                _countryCodeTask.TrySetResult(countryCodeString);
+                            }
+                            else if (countryCode.Type is SpotifyPacketType.ProductInfo)
+                            {
+                                var xml = new XmlDocument();
+                                xml.LoadXml(countryCodeString);
+
+                                var products = xml.SelectNodes("products");
+                                var dc = new Dictionary<string, string>();
+                                if (products != null && products.Count > 0)
+                                {
+                                    var firstItemAsProducts = products[0];
+
+                                    var product = firstItemAsProducts.ChildNodes[0];
+
+                                    var properties = product.ChildNodes;
+                                    for (var i = 0; i < properties.Count; i++)
+                                    {
+                                        var node = properties.Item(i);
+                                        dc.Add(node.Name, node.InnerText);
+                                    }
+                                }
+
+                            }
+                        }
+                        else
+                        {
+                            break;
+                        }
                     }
                 }
                 catch (Exception e)

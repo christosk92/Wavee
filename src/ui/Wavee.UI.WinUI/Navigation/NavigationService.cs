@@ -6,6 +6,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
 using Wavee.UI.WinUI.View.Album;
+using Wavee.UI.WinUI.View.Artist;
 using Wavee.UI.WinUI.View.Home;
 
 namespace Wavee.UI.WinUI.Navigation;
@@ -58,6 +59,7 @@ public sealed class NavigationService : ObservableObject
         {
             // Use the page from the cache
             _contentControl.Content = null;
+            GC.Collect();
             if (cachedPage.PageReference.Target is INavigable navigablePage)
                 navigablePage.NavigatedTo(parameter);
 
@@ -70,7 +72,7 @@ public sealed class NavigationService : ObservableObject
         else
         {
             _contentControl.Content = null;
-
+            GC.Collect();
             var constructor = _constructors.GetValueOrDefault(pageType);
 
             var page = constructor.DynamicInvoke();
@@ -135,7 +137,8 @@ public sealed class NavigationService : ObservableObject
         var types = new[]
         {
             typeof(HomeView),
-            typeof(AlbumView)
+            typeof(AlbumView),
+            typeof(ArtistView)
         };
 
         static void RegisterConstructor(Type type)

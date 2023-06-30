@@ -6,7 +6,9 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Navigation;
+using Wavee.UI.ViewModel;
 using Wavee.UI.ViewModel.Setup;
+using Wavee.UI.ViewModel.Shell;
 
 namespace Wavee.UI.WinUI.View.Setup
 {
@@ -64,7 +66,13 @@ namespace Wavee.UI.WinUI.View.Setup
         }
         private async void UIElement_OnTapped(object sender, TappedRoutedEventArgs e)
         {
-            await ViewModel.Submit(0);
+            var didIt = await ViewModel.Submit(0);
+            if (didIt)
+            {
+                //go to shell
+                App.MainWindow.ViewModel.CurrentView = new ShellViewModel(ViewModel.User,
+                    action => App.MainWindow.DispatcherQueue.TryEnqueue(() => action()));
+            }
         }
     }
 }

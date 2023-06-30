@@ -67,9 +67,11 @@ internal sealed class SpotifyUIPlaybackClient : IWaveeUIPlaybackClient
             Metadata: new WaveeItemMetadata(Id: trackId.ToString(),
                 Title: new ItemWithId(
                     Id: SpotifyId.FromRaw(track.Album.Gid.Span, AudioItemType.Album, ServiceType.Spotify).ToString(),
+                    Type: AudioItemType.Album,
                     Title: track.Name),
                 Subtitles: track.Artist.Select(x => new ItemWithId(
                     Id: SpotifyId.FromRaw(x.Gid.Span, AudioItemType.Artist, ServiceType.Spotify).ToString(),
+                    Type: AudioItemType.Artist,
                     Title: x.Name)).ToArray(),
                 LargeImageUrl: images.OrderByDescending(x => x.Height.IfNone(0)).Head().Url,
                 SmallImageUrl: images.OrderBy(x => x.Height.IfNone(0)).Head().Url, TimeSpan.FromMilliseconds(track.Duration)),

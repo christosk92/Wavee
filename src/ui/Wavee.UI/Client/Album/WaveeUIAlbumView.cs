@@ -12,7 +12,7 @@ public sealed class WaveeUIAlbumView
     public required ServiceType Source { get; init; }
     public required string Id { get; init; } = string.Empty;
     public required string Name { get; init; } = string.Empty;
-    public required AlbumArtist[] Artists { get; init; } = Array.Empty<AlbumArtist>();
+    public required SpotifyAlbumArtist[] Artists { get; init; } = Array.Empty<SpotifyAlbumArtist>();
     public required DateTime ReleaseDate { get; init; }
     public required ReleaseDatePrecisionType ReleaseDatePrecision { get; init; }
     public required string LargeImage { get; init; }

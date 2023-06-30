@@ -71,6 +71,7 @@ public sealed partial class HomeView : UserControl, ICacheablePage, INavigable
     private UIElement _stored;
     private void CardView_OnOnNavigated(object sender, EventArgs e)
     {
-        _stored = sender as UIElement;
+        if (_stored is not null)
+            _stored = sender as UIElement;
     }
 }

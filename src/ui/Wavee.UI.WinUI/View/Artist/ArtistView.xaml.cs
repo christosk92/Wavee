@@ -1,28 +1,40 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
-using Microsoft.UI.Xaml;
+using System.Threading;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Controls.Primitives;
-using Microsoft.UI.Xaml.Data;
-using Microsoft.UI.Xaml.Input;
-using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Navigation;
+using Wavee.UI.ViewModel.Artist;
+using Wavee.UI.ViewModel.Shell;
+using Wavee.UI.WinUI.Navigation;
 
-// To learn more about WinUI, the WinUI project structure,
-// and more about our project templates, see: http://aka.ms/winui-project-info.
+namespace Wavee.UI.WinUI.View.Artist;
 
-namespace Wavee.UI.WinUI.View.Artist
+public sealed partial class ArtistView : UserControl, INavigable, ICacheablePage
 {
-    public sealed partial class ArtistView : UserControl
+    public ArtistView()
     {
-        public ArtistView()
+        this.InitializeComponent();
+        ViewModel = new ArtistViewModel(ShellViewModel.Instance.User);
+    }
+    public ArtistViewModel ViewModel { get; }
+    public async void NavigatedTo(object parameter)
+    {
+        if (parameter is string id)
         {
-            this.InitializeComponent();
+            await ViewModel.Fetch(id, CancellationToken.None);
         }
+    }
+
+    public void NavigatedFrom(NavigationMode mode)
+    {
+
+    }
+
+    public bool ShouldKeepInCache(int currentDepth)
+    {
+        return currentDepth <= 2;
+    }
+
+    public void RemovedFromCache()
+    {
+
     }
 }

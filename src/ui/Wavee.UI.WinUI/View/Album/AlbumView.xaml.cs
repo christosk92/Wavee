@@ -6,6 +6,7 @@ using System.Text;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Data;
+using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media.Animation;
 using Microsoft.UI.Xaml.Navigation;
 using Wavee.Id;
@@ -14,6 +15,7 @@ using Wavee.UI.User;
 using Wavee.UI.ViewModel.Album;
 using Wavee.UI.ViewModel.Shell;
 using Wavee.UI.WinUI.Navigation;
+using Wavee.UI.WinUI.View.Artist;
 
 namespace Wavee.UI.WinUI.View.Album
 {
@@ -113,6 +115,12 @@ namespace Wavee.UI.WinUI.View.Album
             }
 
             return null;
+        }
+
+        private void AlbumArtistTapped(object sender, TappedRoutedEventArgs e)
+        {
+            var id = (SpotifyId)((FrameworkElement)sender).Tag;
+            NavigationService.Instance.Navigate(typeof(ArtistView), id.ToString());
         }
     }
 }

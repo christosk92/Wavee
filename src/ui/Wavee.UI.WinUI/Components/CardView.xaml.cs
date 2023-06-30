@@ -25,6 +25,7 @@ using Wavee.UI.WinUI.ContextFlyout;
 using Wavee.UI.WinUI.Navigation;
 using Wavee.UI.WinUI.View.Album;
 using Microsoft.UI.Xaml.Media.Animation;
+using Wavee.UI.WinUI.View.Artist;
 
 namespace Wavee.UI.WinUI.Components
 {
@@ -236,6 +237,11 @@ namespace Wavee.UI.WinUI.Components
                     ));
                     ButtonsPanelLoaded = false;
                     OnNavigated?.Invoke(this.NormalImageBox, EventArgs.Empty);
+                    break;
+                case AudioItemType.Artist:
+                    NavigationService.Instance.Navigate(typeof(ArtistView), this.Id);
+                    ButtonsPanelLoaded = false;
+                    OnNavigated?.Invoke(null, EventArgs.Empty);
                     break;
             }
         }

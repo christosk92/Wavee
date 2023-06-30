@@ -83,6 +83,8 @@ public sealed class IdentityViewModel : ObservableObject, IWizardViewModel, IDis
         private set => SetProperty(ref _errorMessage, value);
     }
 
+    public UserViewModel User { get; set; }
+
     public async Task<bool> Submit(int action)
     {
         if (action == 1)
@@ -101,6 +103,7 @@ public sealed class IdentityViewModel : ObservableObject, IWizardViewModel, IDis
                 password: _password,
                 CancellationToken.None);
             SettingEverythingUpViewModel.User = result;
+            User = result;
             if (result is not null)
             {
                 return true;

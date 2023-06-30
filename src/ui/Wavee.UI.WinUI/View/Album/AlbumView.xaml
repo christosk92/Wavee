@@ -183,8 +183,9 @@
                                              Spacing="8" />
                             </ItemsRepeater.Layout>
                             <ItemsRepeater.ItemTemplate>
-                                <DataTemplate x:DataType="album:AlbumArtist">
-                                    <Button MinWidth="120"
+                                <DataTemplate x:DataType="album:SpotifyAlbumArtist">
+                                    <Button MinWidth="120" Tag="{x:Bind Id}"
+                                            Tapped="AlbumArtistTapped"
                                             HorizontalContentAlignment="Left">
                                         <StackPanel Orientation="Horizontal"
                                                     Spacing="8">
@@ -378,6 +379,7 @@
                         <DataTemplate x:Key="CardViewTemplate"
                                       x:DataType="common:CardViewModel">
                             <components:CardView Id="{x:Bind Id}"
+                                                 AudioType="{x:Bind Type, Mode=OneWay}"
                                                  IsArtist="{x:Bind IsArtist}"
                                                  Title="{x:Bind Title}"
                                                  Subtitle="{x:Bind Subtitle}"

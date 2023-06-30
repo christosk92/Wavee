@@ -94,6 +94,7 @@
                 </StackPanel.TranslationTransition>
 
                 <HyperlinkButton FontWeight="SemiBold"
+                                 Tapped="SongName_OnTapped"
                                  Padding="-2,0,0,0"
                                  x:Name="SongName">
                     <TextBlock Text="{x:Bind Playback.Title.Title, Mode=OneWay}"

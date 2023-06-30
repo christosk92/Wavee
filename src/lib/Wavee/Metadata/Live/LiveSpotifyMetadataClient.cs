@@ -138,7 +138,7 @@ internal readonly struct LiveSpotifyMetadataClient : ISpotifyMetadataClient
             Title = null,
             SectionId = default,
             TotalCount = (uint)output.Length,
-            Items = itemsOutput.Where(x => !typeFilterType.IsSome || typeFilterType.ValueUnsafe().HasFlag(x.Id.Type)),
+            Items = itemsOutput.Where(x => x is not null && (!typeFilterType.IsSome || typeFilterType.ValueUnsafe().HasFlag(x.Id.Type))),
         };
     }
 
@@ -205,6 +205,58 @@ internal readonly struct LiveSpotifyMetadataClient : ISpotifyMetadataClient
             );
 
         return result;
+    }
+
+    public async ValueTask<ArtistDiscographyRelease[]> GetArtistDiscography(SpotifyId artistId, ReleaseType type, int offset,
+        int limit,
+        CancellationToken ct = default)
+    {
+        //GET
+        //https://api-partner.spotify.com/pathfinder/v1/query?operationName=queryArtistDiscographyAlbums&variables={"uri":"spotify:artist:4XQhU3S4TyPkiPIsSu2hmA","offset":0,"limit":9}&extensions={"persistedQuery":{"version":1,"sha256Hash":"983072ae655f5de212747a41be0d7c4cc49559aa9fe8e32836369b6f130cac33"}}
+        const string albumQuery = "queryArtistDiscographyAlbums";
+        const string singleQuery = "queryArtistDiscographySingles";
+        const string compilationQuery = "queryArtistDiscographyCompilations";
+
+        const string albumQueryHash = "983072ae655f5de212747a41be0d7c4cc49559aa9fe8e32836369b6f130cac33";
+        const string singleQueryHash = "e02547d028482cec098d8d31899afcf488026d5dbdc2fcb973f05657c9cd6797";
+        const string compilationQueryHash = "6702dd8b0d793fdb981e1ce508bce717e06e81b60d2a6fb7c1b79843ca55e901";
+
+        //const string url = "https://api-partner.spotify.com/pathfinder/v1/query?operationName={0}&variables={{\"uri\":\"{1}\",\"offset\":{2},\"limit\":{3}}}&extensions={{\"persistedQuery\":{{\"version\":1,\"sha256Hash\":\"{4}\"}}}}";
+        var query = type switch
+        {
+            ReleaseType.Album => new AlbumDiscographyQuery(albumQuery, artistId, offset, limit, albumQueryHash),
+            ReleaseType.Single => new AlbumDiscographyQuery(singleQuery, artistId, offset, limit, singleQueryHash),
+            ReleaseType.Compilation => new AlbumDiscographyQuery(compilationQuery, artistId, offset, limit,
+                compilationQueryHash),
+            _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
+        };
+
+        var response = await _query(query, _defaultLang);
+        response.EnsureSuccessStatusCode();
+
+        using var stream = await response.Content.ReadAsStreamAsync();
+        using var json = await JsonDocument.ParseAsync(stream, default, ct);
+        var data = json.RootElement.GetProperty("data").GetProperty("artistUnion").GetProperty("discography");
+        var nextKey = type switch
+        {
+            ReleaseType.Album => data.GetProperty("albums"),
+            ReleaseType.Single => data.GetProperty("singles"),
+            ReleaseType.Compilation => data.GetProperty("compilations"),
+        };
+        var items = nextKey.GetProperty("items");
+        var output = new ArtistDiscographyRelease[items.GetArrayLength()];
+        using var array = items.EnumerateArray();
+        var i = 0;
+        while (array.MoveNext())
+        {
+            var item = array.Current;
+            //Nested releases, just get the first one
+            var firstRelease = item.GetProperty("releases").GetProperty("items").EnumerateArray().First();
+            var parsed = ArtistOverview.ParseRelease(firstRelease);
+            output[i++] = parsed;
+        }
+
+        return output;
     }
 
     public async Task<MeUser> GetMe(CancellationToken ct = default)

@@ -11,7 +11,7 @@ namespace Wavee.Metadata.Album;
 
 public sealed class SpotifyAlbum
 {
-    public SpotifyAlbum(SpotifyId id, string name, AlbumArtist[] artists, DateTime releaseDate,
+    public SpotifyAlbum(SpotifyId id, string name, SpotifyAlbumArtist[] artists, DateTime releaseDate,
         ReleaseDatePrecisionType releaseDatePrecision, CoverImage[] images, Option<SpotifyColors> colors,
         SpotifyAlbumDisc[] discs, SpotifyAlbum[] moreAlbums, string[] copyrights)
     {
@@ -26,9 +26,10 @@ public sealed class SpotifyAlbum
         MoreAlbums = moreAlbums;
         Copyrights = copyrights;
     }
+
     public SpotifyId Id { get; }
     public string Name { get; }
-    public AlbumArtist[] Artists { get; }
+    public SpotifyAlbumArtist[] Artists { get; }
     public DateTime ReleaseDate { get; }
     public ReleaseDatePrecisionType ReleaseDatePrecision { get; }
     public CoverImage[] Images { get; }
@@ -71,10 +72,12 @@ public sealed class SpotifyAlbum
                         uid: uid!,
                         id: SpotifyId.FromUri(actualTrack.GetProperty("uri").GetString().AsSpan()),
                         name: actualTrack.GetProperty("name").GetString()!,
-                        duration: TimeSpan.FromMilliseconds(actualTrack.GetProperty("duration").GetProperty("totalMilliseconds").GetUInt32()!),
+                        duration: TimeSpan.FromMilliseconds(actualTrack.GetProperty("duration")
+                            .GetProperty("totalMilliseconds").GetUInt32()!),
                         trackNumber: actualTrack.GetProperty("trackNumber").GetUInt16()!,
                         discNumber: actualTrack.GetProperty("discNumber").GetUInt16()!,
-                        contentRating: ParseContentRating(actualTrack.GetProperty("contentRating").GetProperty("label").GetString()!),
+                        contentRating: ParseContentRating(actualTrack.GetProperty("contentRating").GetProperty("label")
+                            .GetString()!),
                         artists: ParseArtists(actualTrack.GetProperty("artists")),
                         playcount: ParsePlaycount(actualTrack),
                         saved: actualTrack.GetProperty("saved").GetBoolean()
@@ -123,7 +126,8 @@ public sealed class SpotifyAlbum
                 var rootDiscography = moreAlbumsRoot.GetProperty("items");
                 if (rootDiscography.GetArrayLength() > 0)
                 {
-                    var moreAlbums = rootDiscography[0].GetProperty("discography").GetProperty("popularReleasesAlbums").GetProperty("items");
+                    var moreAlbums = rootDiscography[0].GetProperty("discography").GetProperty("popularReleasesAlbums")
+                        .GetProperty("items");
                     var moreAlbumsOutput = new SpotifyAlbum[moreAlbums.GetArrayLength()];
                     int i = 0;
                     using var arr = moreAlbums.EnumerateArray();
@@ -140,6 +144,7 @@ public sealed class SpotifyAlbum
 
             return Array.Empty<SpotifyAlbum>();
         }
+
         var moreAlbums = ParseMoreAlbums(root);
         var artists = ParseAlbumArtists(root);
         var copyrights = ParseCopyrights(root);
@@ -179,12 +184,12 @@ public sealed class SpotifyAlbum
         return Array.Empty<string>();
     }
 
-    private static AlbumArtist[] ParseAlbumArtists(JsonElement root)
+    private static SpotifyAlbumArtist[] ParseAlbumArtists(JsonElement root)
     {
         if (root.TryGetProperty("artists", out var artists))
         {
             var items = artists.GetProperty("items");
-            var output = new AlbumArtist[items.GetArrayLength()];
+            var output = new SpotifyAlbumArtist[items.GetArrayLength()];
             int i = 0;
             using var arr = items.EnumerateArray();
             while (arr.MoveNext())
@@ -193,7 +198,7 @@ public sealed class SpotifyAlbum
                 var name = current.GetProperty("profile").GetProperty("name").GetString();
                 var image = ParseImagesOnly(
                     current.GetProperty("visuals").GetProperty("avatarImage").GetProperty("sources"));
-                output[i++] = new AlbumArtist(
+                output[i++] = new SpotifyAlbumArtist(
                     Id: SpotifyId.FromUri(current.GetProperty("uri").GetString().AsSpan()),
                     Name: name!,
                     Images: image
@@ -203,7 +208,7 @@ public sealed class SpotifyAlbum
             return output;
         }
 
-        return Array.Empty<AlbumArtist>();
+        return Array.Empty<SpotifyAlbumArtist>();
     }
 
     private static Option<ulong> ParsePlaycount(JsonElement track)
@@ -296,7 +301,7 @@ public sealed class SpotifyAlbum
     }
 }
 
-public readonly record struct AlbumArtist(SpotifyId Id, string Name, CoverImage[] Images);
+public readonly record struct SpotifyAlbumArtist(SpotifyId Id, string Name, CoverImage[] Images);
 
 public sealed class SpotifyAlbumDisc
 {
@@ -312,7 +317,8 @@ public sealed class SpotifyAlbumDisc
 
 public sealed class SpotifyAlbumTrack
 {
-    public SpotifyAlbumTrack(string uid, SpotifyId id, string name, TimeSpan duration, ushort trackNumber, ushort discNumber, ContentRatingType contentRating, ITrackArtist[] artists, Option<ulong> playcount, bool saved)
+    public SpotifyAlbumTrack(string uid, SpotifyId id, string name, TimeSpan duration, ushort trackNumber,
+        ushort discNumber, ContentRatingType contentRating, ITrackArtist[] artists, Option<ulong> playcount, bool saved)
     {
         Uid = uid;
         Id = id;
@@ -325,6 +331,7 @@ public sealed class SpotifyAlbumTrack
         Playcount = playcount;
         Saved = saved;
     }
+
     public string Uid { get; }
     public SpotifyId Id { get; }
     public string Name { get; }

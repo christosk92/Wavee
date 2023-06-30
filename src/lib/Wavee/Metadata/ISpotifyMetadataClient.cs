@@ -30,7 +30,7 @@ public interface ISpotifyMetadataClient
     /// </returns>
     Task<Track> GetTrack(SpotifyId id, CancellationToken cancellationToken = default);
 
-    Task<SpotifyHomeGroupSection> GetRecentlyPlayed(Option<AudioItemType> typeFilterType,CancellationToken cancellationToken = default);
+    Task<SpotifyHomeGroupSection> GetRecentlyPlayed(Option<AudioItemType> typeFilterType, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Fetches the <see cref="HomeView"/> for the current user.
@@ -69,6 +69,7 @@ public interface ISpotifyMetadataClient
     /// </returns>
     ValueTask<ArtistOverview> GetArtistOverview(SpotifyId artistId, bool destroyCache, Option<CultureInfo> languageOverride, CancellationToken ct = default);
 
+    ValueTask<ArtistDiscographyRelease[]> GetArtistDiscography(SpotifyId artistId, ReleaseType type, int offset, int limit, CancellationToken ct = default);
 
     /// <summary>
     /// Performs an authenticated query to fetch information about the current user.
@@ -81,5 +82,5 @@ public interface ISpotifyMetadataClient
     /// </returns>
     Task<MeUser> GetMe(CancellationToken ct = default);
 
-    Task<SpotifyAlbum> GetAlbum(SpotifyId id, CancellationToken ct =default);
+    Task<SpotifyAlbum> GetAlbum(SpotifyId id, CancellationToken ct = default);
 }
