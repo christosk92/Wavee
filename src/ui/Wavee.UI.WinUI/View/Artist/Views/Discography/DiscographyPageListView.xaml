@@ -5,6 +5,22 @@
              xmlns:local="using:Wavee.UI.WinUI.View.Artist.Views.Discography"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:artist="using:Wavee.Metadata.Artist"
+             Loaded="DiscographyPageGridView_OnLoaded"
              mc:Ignorable="d">
-
+    <ItemsRepeater VerticalAlignment="Top"
+                   ItemsSource="{x:Bind Releases, Mode=OneWay}">
+        <ItemsRepeater.Layout>
+            <StackLayout Orientation="Vertical" Spacing="48" />
+        </ItemsRepeater.Layout>
+        <ItemsRepeater.ItemTemplate>
+            <DataTemplate x:DataType="artist:IArtistDiscographyRelease">
+                <local:ArtistDiscographyTrackListView Id="{x:Bind Id.ToString(), Mode=OneWay}"
+                                                      Title="{x:Bind Name, Mode=OneWay}"
+                                                      Images="{x:Bind Images, Mode=OneWay}"
+                                                      ReleaseDate="{x:Bind Date, Mode=OneWay}"
+                                                      TrackCount="{x:Bind TotalTracks, Mode=OneWay}" />
+            </DataTemplate>
+        </ItemsRepeater.ItemTemplate>
+    </ItemsRepeater>
 </UserControl>

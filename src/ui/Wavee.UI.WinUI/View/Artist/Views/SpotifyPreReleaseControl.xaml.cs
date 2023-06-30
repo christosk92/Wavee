@@ -50,7 +50,8 @@ namespace Wavee.UI.WinUI.View.Artist.Views
 
         public string GetRealReleaseString(DateTimeOffset dateTimeOffset)
         {
-            return $"{dateTimeOffset.Day} {dateTimeOffset:MMMM} at {dateTimeOffset:t}";
+            var toLocalDate = dateTimeOffset.ToLocalTime();
+            return $"{toLocalDate.Day} {toLocalDate:MMMM} at {toLocalDate:t} (Local time)";
         }
 
         public string GetImage(ICoverImage[] coverImages)

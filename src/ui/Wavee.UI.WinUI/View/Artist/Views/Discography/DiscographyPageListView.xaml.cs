@@ -1,21 +1,10 @@
+using System;
+using CommunityToolkit.WinUI.UI;
+using CommunityToolkit.WinUI;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Controls.Primitives;
-using Microsoft.UI.Xaml.Data;
-using Microsoft.UI.Xaml.Input;
-using Microsoft.UI.Xaml.Media;
-using Microsoft.UI.Xaml.Navigation;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
+using Wavee.Metadata.Artist;
 using Wavee.UI.Client.Artist;
-
-// To learn more about WinUI, the WinUI project structure,
-// and more about our project templates, see: http://aka.ms/winui-project-info.
 
 namespace Wavee.UI.WinUI.View.Artist.Views.Discography
 {
@@ -24,6 +13,34 @@ namespace Wavee.UI.WinUI.View.Artist.Views.Discography
         public DiscographyPageListView(GetReleases getReleasesFunc)
         {
             this.InitializeComponent();
+            Releases = new IncrementalLoadingCollection<DiscographyReleasesSource, IArtistDiscographyRelease>(
+                new DiscographyReleasesSource(getReleasesFunc));
+            _ = Releases.LoadMoreItemsAsync(2);
+            this.InitializeComponent();
+        }
+
+        public IncrementalLoadingCollection<DiscographyReleasesSource, IArtistDiscographyRelease> Releases { get; }
+
+        private async void Scroller_ViewChanged(object sender, ScrollViewerViewChangedEventArgs e)
+        {
+            if (!e.IsIntermediate)
+            {
+                var scroller = (ScrollViewer)sender;
+                var distanceToEnd = scroller.ExtentHeight - (scroller.VerticalOffset + scroller.ViewportHeight);
+
+                // trigger if within 2 viewports of the end
+                if (distanceToEnd <= 2.0 * scroller.ViewportHeight
+                    && Releases.HasMoreItems && !Releases.IsLoading)
+                {
+                    await Releases.LoadMoreItemsAsync(2);
+                }
+            }
+        }
+
+        private void DiscographyPageGridView_OnLoaded(object sender, RoutedEventArgs e)
+        {
+            var scroller = this.FindAscendant<ScrollViewer>();
+            scroller.ViewChanged += Scroller_ViewChanged;
         }
     }
 }

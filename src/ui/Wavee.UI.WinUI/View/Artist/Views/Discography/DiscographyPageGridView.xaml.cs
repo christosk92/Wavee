@@ -1,8 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
-using CommunityToolkit.Common.Collections;
 using CommunityToolkit.WinUI;
 using CommunityToolkit.WinUI.UI;
 using Microsoft.UI.Xaml;
@@ -43,21 +39,3 @@ public sealed partial class DiscographyPageGridView : UserControl
         scroller.ViewChanged += Scroller_ViewChanged;
     }
 }
-
-public sealed class DiscographyReleasesSource : IIncrementalSource<IArtistDiscographyRelease>
-{
-    private readonly GetReleases _getReleasesFunc;
-    public DiscographyReleasesSource(GetReleases getReleasesFunc)
-    {
-        _getReleasesFunc = getReleasesFunc;
-    }
-
-    public Task<IEnumerable<IArtistDiscographyRelease>> GetPagedItemsAsync(int pageIndex, 
-        int pageSize, CancellationToken cancellationToken = new CancellationToken())
-    {
-        var offset = pageIndex * pageSize;
-        var limit = pageSize;
-        return _getReleasesFunc(offset, limit, cancellationToken);
-    }
-}
-

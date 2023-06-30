@@ -17,15 +17,11 @@
     <UserControl.Resources>
         <DataTemplate x:Key="PinnedConcert"
                       x:DataType="artist1:ArtistOverviewPinnedConcert">
-            <Grid>
-
-            </Grid>
+            <Grid />
         </DataTemplate>
         <DataTemplate x:Key="PinnedRelease"
                       x:DataType="artist1:ArtistOverviewPinnedItem">
-            <Grid>
-
-            </Grid>
+            <Grid />
         </DataTemplate>
         <DataTemplate x:Key="PreRelease"
                       x:DataType="artist1:IArtistPreReleaseItem">

@@ -5,7 +5,8 @@
              xmlns:controls="using:Microsoft.UI.Xaml.Controls"
              xmlns:local="using:Wavee.UI.WinUI"
              xmlns:xaml="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:converters="using:CommunityToolkit.WinUI.UI.Converters">
+             xmlns:converters="using:CommunityToolkit.WinUI.UI.Converters"
+             xmlns:themes="using:Wavee.UI.WinUI.Themes">
 
     <Application.Resources>
         <ResourceDictionary>
@@ -20,6 +21,7 @@
                 </XamlControlsResources>
                 <ResourceDictionary Source="Themes/BorderStyles.xaml" />
                 <ResourceDictionary Source="Themes/ListViewItemStyles.xaml" />
+                <themes:AlbumArtistPageTrackTemplates/>
                 <ResourceDictionary>
                     <SolidColorBrush x:Key="TransparentBrush"
                                      Color="Transparent" />

@@ -34,6 +34,7 @@
 		<None Remove="Controls\ImageTransitionControl.xaml" />
 		<None Remove="Dialogs\WizardDialog.xaml" />
 		<None Remove="Styles\PropertiesStyles.xaml" />
+		<None Remove="Themes\AlbumArtistPageTrackTemplates.xaml" />
 		<None Remove="Themes\BorderStyles.xaml" />
 		<None Remove="Themes\ListViewItemStyles.xaml" />
 		<None Remove="View\Album\AlbumView.xaml" />
@@ -42,6 +43,7 @@
 		<None Remove="View\Artist\Views\ArtistConcertsView.xaml" />
 		<None Remove="View\Artist\Views\ArtistOverviewView.xaml" />
 		<None Remove="View\Artist\Views\ArtistRelatedView.xaml" />
+		<None Remove="View\Artist\Views\Discography\ArtistDiscographyTrackListView.xaml" />
 		<None Remove="View\Artist\Views\Discography\DiscographyPageGridView.xaml" />
 		<None Remove="View\Artist\Views\Discography\DiscographyPageListView.xaml" />
 		<None Remove="View\Artist\Views\Discography\DiscographyPageView.xaml" />
@@ -72,6 +74,7 @@
 	<ItemGroup>
 		<PackageReference Include="CommunityToolkit.Labs.WinUI.SegmentedControl" Version="0.0.3" />
 		<PackageReference Include="CommunityToolkit.Labs.WinUI.SettingsControls" Version="0.0.18" />
+		<PackageReference Include="CommunityToolkit.Labs.WinUI.Shimmer" Version="0.0.1" />
 		<PackageReference Include="CommunityToolkit.Labs.WinUI.TokenView" Version="0.0.6" />
 		<PackageReference Include="CommunityToolkit.Labs.WinUI.TransitionHelper" Version="0.0.1" />
 		<PackageReference Include="CommunityToolkit.WinUI.UI.Animations" Version="7.1.2" />
@@ -115,6 +118,12 @@
 	  <None Update="Assets\Fonts\MediaPlayerIcons.ttf">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </None>
+	  <Page Update="Themes\AlbumArtistPageTrackTemplates.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </Page>
+	  <Page Update="View\Artist\Views\Discography\ArtistDiscographyTrackListView.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </Page>
 	  <Page Update="View\Artist\Views\SpotifyPreReleaseControl.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </Page>

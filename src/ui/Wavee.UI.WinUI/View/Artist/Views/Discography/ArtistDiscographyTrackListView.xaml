@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl x:Class="Wavee.UI.WinUI.View.Artist.Views.Discography.ArtistDiscographyTrackListView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Wavee.UI.WinUI.View.Artist.Views.Discography"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d">
+
+    <RelativePanel VerticalAlignment="Top">
+        <Image RelativePanel.AlignLeftWithPanel="True"
+               Height="160"
+               Width="160"
+               RelativePanel.AlignTopWithPanel="True"
+               x:Name="AlbumImage">
+            <Image.Source>
+                <BitmapImage UriSource="{x:Bind GetImage(Images),Mode=OneWay}"
+                             DecodePixelHeight="200"
+                             DecodePixelWidth="200" />
+            </Image.Source>
+        </Image>
+
+        <TextBlock Text="{x:Bind Title, Mode=OneWay}"
+                   x:Name="AlbumTitle"
+                   MaxWidth="160"
+                   Margin="0,8"
+                   TextWrapping="WrapWholeWords"
+                   RelativePanel.AlignLeftWithPanel="True"
+                   RelativePanel.Below="AlbumImage" />
+
+        <Grid   RelativePanel.Below="AlbumTitle"
+                ColumnSpacing="4"
+                RelativePanel.AlignLeftWithPanel="True"
+                Width="160">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition />
+                <ColumnDefinition />
+            </Grid.ColumnDefinitions>
+            <Button Content="Play"
+                    HorizontalAlignment="Stretch"
+                    Style="{ThemeResource AccentButtonStyle}"
+                    x:Name="PlayButton" />
+            <Button Content="Save"
+                    HorizontalAlignment="Stretch"
+                    Grid.Column="1" />
+        </Grid>
+
+        <ListView RelativePanel.RightOf="AlbumImage"
+                  RelativePanel.AlignTopWithPanel="True"
+                  x:Name="TracksS"
+                  Margin="12,0,0,0"
+                  ItemContainerStyle="{StaticResource DefaultListViewItemStyle}"
+                  ItemTemplateSelector="{StaticResource AlbumPageTrackTemplateSelector}"
+                  RelativePanel.AlignBottomWithPanel="True"
+                  RelativePanel.AlignRightWithPanel="True"/>
+    </RelativePanel>
+</UserControl>
