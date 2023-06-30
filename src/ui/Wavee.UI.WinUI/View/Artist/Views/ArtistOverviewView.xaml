@@ -90,8 +90,7 @@
                 <DataTemplate x:DataType="artist:PagedArtistDiscographyPage">
                     <Grid VerticalAlignment="Top">
                         <RelativePanel x:Name="MetadataPanel"
-                                       RelativePanel.AlignLeftWithPanel="True"
-                                       RelativePanel.AlignRightWithPanel="True">
+                                       VerticalAlignment="Top">
                             <TextBlock x:Name="Title"
                                        Height="28"
                                        Style="{ThemeResource SubtitleTextBlockStyle}"
@@ -122,7 +121,7 @@
                         </RelativePanel>
 
                         <discography:DiscographyPageView x:Name="DiscographyPageView"
-                                                         Margin="0,28"
+                                                         Margin="0,38"
                                                          VerticalContentAlignment="Top"
                                                          GetReleasesFunc="{x:Bind  GetReleasesFunc}"
                                                          VerticalAlignment="Top" />
