@@ -18,6 +18,7 @@
                     </XamlControlsResources.MergedDictionaries>
                 </XamlControlsResources>
                 <ResourceDictionary Source="Themes/BorderStyles.xaml" />
+                <ResourceDictionary Source="Themes/ListViewItemStyles.xaml" />
                 <ResourceDictionary>
                     <SolidColorBrush x:Key="TransparentBrush"
                                      Color="Transparent" />

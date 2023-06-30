@@ -130,7 +130,7 @@
 
             <Border CornerRadius="4"
                     x:Load="False"
-                    Height="28"
+                    Height="32"
                     VerticalAlignment="Center"
                     RelativePanel.AlignVerticalCenterWithPanel="True"
                     RelativePanel.RightOf="SavedButton"

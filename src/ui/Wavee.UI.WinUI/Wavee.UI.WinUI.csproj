@@ -26,14 +26,19 @@
 		<None Remove="Components\CardView.xaml" />
 		<None Remove="Components\PodcastEpisodeCardView.xaml" />
 		<None Remove="Components\Tracks\AlbumTrackView.xaml" />
+		<None Remove="Components\Tracks\TopTrackView.xaml" />
 		<None Remove="Components\Tracks\WaveeTrackHost.xaml" />
 		<None Remove="Components\WaveformPresenterCardView.xaml" />
 		<None Remove="Controls\ImageTransitionControl.xaml" />
 		<None Remove="Dialogs\WizardDialog.xaml" />
 		<None Remove="Styles\PropertiesStyles.xaml" />
 		<None Remove="Themes\BorderStyles.xaml" />
+		<None Remove="Themes\ListViewItemStyles.xaml" />
 		<None Remove="View\Album\AlbumView.xaml" />
 		<None Remove="View\Artist\ArtistView.xaml" />
+		<None Remove="View\Artist\Views\ArtistAboutView.xaml" />
+		<None Remove="View\Artist\Views\ArtistConcertsView.xaml" />
+		<None Remove="View\Artist\Views\ArtistOverviewView.xaml" />
 		<None Remove="View\Home\HomeView.xaml" />
 		<None Remove="View\Setup\OptInView.xaml" />
 		<None Remove="View\Setup\SettingEverythingUpView.xaml" />
@@ -103,6 +108,21 @@
 	  <None Update="Assets\Fonts\MediaPlayerIcons.ttf">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </None>
+	  <Page Update="Components\Tracks\TopTrackView.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </Page>
+	  <Page Update="Themes\ListViewItemStyles.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </Page>
+	  <Page Update="View\Artist\Views\ArtistAboutView.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </Page>
+	  <Page Update="View\Artist\Views\ArtistConcertsView.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </Page>
+	  <Page Update="View\Artist\Views\ArtistOverviewView.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </Page>
 	  <Page Update="Controls\ImageTransitionControl.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </Page>

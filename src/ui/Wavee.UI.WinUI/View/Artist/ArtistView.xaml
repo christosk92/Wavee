@@ -8,6 +8,7 @@
              xmlns:ui="using:CommunityToolkit.WinUI.UI"
              xmlns:components="using:Wavee.UI.WinUI.Components"
              xmlns:animations="using:CommunityToolkit.WinUI.UI.Animations"
+             xmlns:controls="using:Wavee.UI.WinUI.Controls"
              Loaded="ArtistPage_OnLoaded"
              SizeChanged="ArtistPage_OnSizeChanged"
              mc:Ignorable="d">
@@ -36,13 +37,13 @@
             <StackPanel VerticalAlignment="Top">
                 <Grid x:Name="ImageT"
                       VerticalAlignment="Top">
-                    <components:ImageTransitionControl x:Name="HeaderImage"
+                    <controls:ImageTransitionControl x:Name="HeaderImage"
                                                        Grid.ColumnSpan="2"
                                                        VerticalAlignment="Stretch"
                                                        Source="{x:Bind ViewModel.Header, Mode=OneWay}" />
 
                     <StackPanel x:Name="MetadataPnale"
-                                Margin="24,0,0,-12"
+                                Margin="24,0,0,0"
                                 VerticalAlignment="Bottom"
                                 labs:TransitionHelper.Id="background"
                                 ui:VisualExtensions.NormalizedCenterPoint="0.5"

@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl x:Class="Wavee.UI.WinUI.Components.Tracks.TopTrackView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Wavee.UI.WinUI.Components.Tracks"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:controls="using:CommunityToolkit.WinUI.UI.Controls"
+             xmlns:winUi="using:Wavee.UI.WinUI"
+             mc:Ignorable="d">
+    <UserControl.Resources>
+        <winUi:ToMetadataConverter x:Key="ToMetadata" />
+    </UserControl.Resources>
+    <local:WaveeTrackHost ShowImage="True"
+                          Image="{x:Bind GetSmallestImage(Images),Mode=OneWay}"
+                          AlternateRowColor="True"
+                          Index="{x:Bind Number,Mode=OneWay}">
+        <Grid Padding="4,6"
+              x:DefaultBindMode="OneWay">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="2*" />
+                <ColumnDefinition Width="124" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="8" />
+            </Grid.ColumnDefinitions>
+            <StackPanel VerticalAlignment="Center"
+                        Grid.Column="0"
+                        Spacing="0"
+                        HorizontalAlignment="Left">
+                <TextBlock Text="{x:Bind Title}"
+                           VerticalAlignment="Center"
+                           FontWeight="SemiBold"
+                           FontSize="16" />
+                <controls:MetadataControl Separator=", "
+                                          Items="{x:Bind Artists, Converter={StaticResource ToMetadata}}">
+                    <controls:MetadataControl.TextBlockStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="FontSize"
+                                    Value="14" />
+                        </Style>
+                    </controls:MetadataControl.TextBlockStyle>
+                </controls:MetadataControl>
+            </StackPanel>
+
+            <TextBlock Grid.Column="1"
+                       HorizontalTextAlignment="Right"
+                       FontSize="16"
+                       Opacity=".8"
+                       VerticalAlignment="Center"
+                       Text="{x:Bind FormatPlaycount(Playcount),Mode=OneWay}" />
+
+            <TextBlock Grid.Column="2"
+                       HorizontalTextAlignment="Right"
+                       FontSize="16"
+                       FontWeight="SemiBold"
+                       VerticalAlignment="Center"
+                       Text="{x:Bind FormatDuration(Duration),Mode=OneWay}" />
+        </Grid>
+    </local:WaveeTrackHost>
+</UserControl>

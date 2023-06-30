@@ -3,6 +3,7 @@ using Microsoft.UI.Xaml.Controls;
 using System.Xml.Linq;
 using Microsoft.UI.Xaml.Markup;
 using System;
+using Microsoft.UI.Xaml.Media.Imaging;
 
 namespace Wavee.UI.WinUI.Components.Tracks;
 
@@ -13,6 +14,8 @@ public sealed partial class WaveeTrackHost : UserControl
     public static readonly DependencyProperty IndexProperty = DependencyProperty.Register(nameof(Index), typeof(ushort), typeof(WaveeTrackHost), new PropertyMetadata(default(ushort), UIPropertyChanged));
     public static readonly DependencyProperty AlternateRowColorProperty = DependencyProperty.Register(nameof(AlternateRowColor), typeof(bool), typeof(WaveeTrackHost), new PropertyMetadata(default(bool), UIPropertyChanged));
     public static readonly DependencyProperty ShowImageProperty = DependencyProperty.Register(nameof(ShowImage), typeof(bool), typeof(WaveeTrackHost), new PropertyMetadata(default(bool), UIPropertyChanged));
+    public static readonly DependencyProperty ImageProperty = DependencyProperty.Register(nameof(Image), typeof(string), typeof(WaveeTrackHost), new PropertyMetadata(default(string?), UIPropertyChanged));
+
     public WaveeTrackHost()
     {
         this.InitializeComponent();
@@ -42,6 +45,12 @@ public sealed partial class WaveeTrackHost : UserControl
         set => SetValue(ShowImageProperty, value);
     }
 
+    public string? Image
+    {
+        get => (string?)GetValue(ImageProperty);
+        set => SetValue(ImageProperty, value);
+    }
+
     private static void UIPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
         var x = (WaveeTrackHost)d;
@@ -50,7 +59,37 @@ public sealed partial class WaveeTrackHost : UserControl
 
     private void UpdateUI()
     {
+        if (ShowImage)
+        {
+            var buttonsPanel = this.FindName("ImageBorder") as FrameworkElement;
+            if (buttonsPanel != null)
+            {
+                buttonsPanel.Visibility = Visibility.Visible;
+                buttonsPanel.Width = 28;
+            }
 
+            if (!string.IsNullOrEmpty(Image))
+            {
+                var bitmapImage = new BitmapImage();
+                AlbumImage.Source = bitmapImage;
+                bitmapImage.DecodePixelHeight = 32;
+                bitmapImage.DecodePixelWidth = 32;
+                bitmapImage.UriSource = new System.Uri(Image, UriKind.RelativeOrAbsolute);
+
+                RelativePanel.SetRightOf(MainContent, "ImageBorder");
+            }
+        }
+        else
+        {
+            //   var buttonsPanel = this.FindName("ButtonsPanel") as UIElement;
+            if (ImageBorder != null)
+            {
+                ImageBorder.Visibility = Visibility.Collapsed;
+                AlbumImage.Source = null;
+                Microsoft.UI.Xaml.Markup.XamlMarkupHelper.UnloadObject(ImageBorder);
+                RelativePanel.SetRightOf(MainContent, "SavedButton");
+            }
+        }
     }
 
     public string FormatNumber(ushort x)

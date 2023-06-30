@@ -132,7 +132,7 @@ public readonly record struct ArtistOverview(SpotifyId Id, bool IsSaved, Uri Sha
             var name = track.GetProperty("name").GetString()!;
             //var playcount = track.GetProperty("playcount").tryget(out var plc) ? plc : Option<ulong>.None;
             Option<ulong> playcount = Option<ulong>.None;
-            if (track.TryGetProperty("playcount", out var potplc) && potplc.ValueKind is not JsonValueKind.String)
+            if (track.TryGetProperty("playcount", out var potplc) && potplc.ValueKind is JsonValueKind.String)
             {
                 var val = potplc.GetString();
                 if (ulong.TryParse(val, out var playcoun))
@@ -257,11 +257,11 @@ public readonly record struct ArtistOverview(SpotifyId Id, bool IsSaved, Uri Sha
     private static ArtistVisuals ParseArtistVisuals(JsonElement visuals)
     {
         var avatarImage = ParseCoverArt(visuals.GetProperty("avatarImage").GetProperty("sources"));
-        var headerImages =
-            visuals.TryGetProperty("headerImage", out var hdr) ?
-            ParseCoverArt(hdr.GetProperty("sources"))
-                : Array.Empty<CoverImage>();
 
+        var headerImages =
+            visuals.TryGetProperty("headerImage", out var headerImgProp) && headerImgProp.ValueKind is not JsonValueKind.Null
+                ? ParseCoverArt(headerImgProp.GetProperty("sources"))
+                    : Array.Empty<CoverImage>();
         return new ArtistVisuals(
             AvatarImages: avatarImage,
             HeaderImage: headerImages.HeadOrNone()

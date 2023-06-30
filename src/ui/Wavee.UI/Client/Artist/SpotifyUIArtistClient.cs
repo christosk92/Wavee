@@ -3,6 +3,7 @@ using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
 using Wavee.Id;
 using Wavee.Metadata.Artist;
+using Wavee.Metadata.Common;
 
 namespace Wavee.UI.Client.Artist;
 
@@ -35,8 +36,24 @@ internal sealed class SpotifyUIArtistClient : IWaveeUIArtistClient
             monthlyListeners: artistResponse.Statistics.MonthlyListeners,
             followers: artistResponse.Statistics.Followers,
             topTracks: artistResponse.Discography.TopTracks
-                .Select(f => new ArtistTopTrackViewModel()).ToArray(),
+                .Select(ToArtistTopTrackViewModel).ToArray(),
             discographyPages: ConvertToPaged(artistResponse.Id, artistResponse.Discography, spotifyClient)
+        );
+    }
+
+    private ArtistTopTrackViewModel ToArtistTopTrackViewModel(ArtistTopTrack artistTopTrack, int i)
+    {
+        return new ArtistTopTrackViewModel(
+            id: artistTopTrack.Id.ToString(),
+            uid: artistTopTrack.Uid,
+            name: artistTopTrack.Name,
+            playcount: artistTopTrack.Playcount,
+            duration: artistTopTrack.Duration,
+            contentRating: artistTopTrack.ContentRating,
+            artists: artistTopTrack.Artists.Cast<ITrackArtist>().ToArray(),
+            albumId: artistTopTrack.Album.Id.ToString(),
+            albumImages: artistTopTrack.Album.Images.Cast<ICoverImage>().ToArray(),
+            index: (ushort)i
         );
     }
 

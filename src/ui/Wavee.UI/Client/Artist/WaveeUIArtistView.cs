@@ -30,6 +30,30 @@ public sealed class WaveeUIArtistView
 
 public sealed class ArtistTopTrackViewModel
 {
+    public ArtistTopTrackViewModel(string id, Option<string> uid, string name, Option<ulong> playcount, TimeSpan duration, ContentRatingType contentRating, ITrackArtist[] artists, string albumId, ICoverImage[] albumImages, ushort index)
+    {
+        Id = id;
+        Uid = uid;
+        Name = name;
+        Playcount = playcount;
+        Duration = duration;
+        ContentRating = contentRating;
+        Artists = artists;
+        AlbumId = albumId;
+        AlbumImages = albumImages;
+        Index = index;
+    }
+
+    public string Id { get; }
+    public Option<string> Uid { get; }
+    public string Name { get; }
+    public Option<ulong> Playcount { get; }
+    public TimeSpan Duration { get; }
+    public ContentRatingType ContentRating { get; }
+    public ITrackArtist[] Artists { get; }
+    public string AlbumId { get; }
+    public ICoverImage[] AlbumImages { get; }
+    public ushort Index { get; }
 }
 
 public sealed class PagedArtistDiscographyPage

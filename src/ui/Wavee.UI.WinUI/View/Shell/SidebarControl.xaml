@@ -133,8 +133,8 @@
 
                                 <!--  File Area  -->
                                 <Grid x:Name="ContentRoot"
-                                      Grid.Row="1"
-                                      Grid.RowSpan="2"
+                                      Grid.Row="0"
+                                      Grid.RowSpan="3"
                                       Grid.ColumnSpan="2"
                                       Background="Transparent">
                                     <Grid.RenderTransform>

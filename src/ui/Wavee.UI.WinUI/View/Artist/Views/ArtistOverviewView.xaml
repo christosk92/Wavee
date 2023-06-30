@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl x:Class="Wavee.UI.WinUI.View.Artist.Views.ArtistOverviewView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Wavee.UI.WinUI.View.Artist.Views"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:tracks="using:Wavee.UI.WinUI.Components.Tracks"
+             xmlns:artist="using:Wavee.UI.Client.Artist"
+             mc:Ignorable="d">
+
+
+
+    <UserControl.Transitions>
+        <TransitionCollection>
+            <EntranceThemeTransition />
+        </TransitionCollection>
+    </UserControl.Transitions>
+    <StackPanel Margin="24">
+        <TextBlock Text="Popular songs"
+                   FontWeight="SemiBold"
+                   FontSize="16"
+                   Margin="0,8" />
+        <ListView SelectionMode="Extended"
+                  SizeChanged="ArtistOverview_OnSizeChanged"
+                  HorizontalContentAlignment="Stretch"
+                  ItemContainerStyle="{StaticResource DefaultListViewItemStyle}"
+                  x:Name="TopTracksGrid"
+                  Loaded="TopTracksGrid_OnLoaded"
+                  ContainerContentChanging="TopTracksContentContainerChanging"
+                  ChoosingItemContainer="TopTracksChoosingItemContainer"
+                  ItemsSource="{x:Bind ArtistView.TopTracks}">
+            <ListView.ItemTemplate>
+                <DataTemplate x:DataType="artist:ArtistTopTrackViewModel">
+                    <tracks:TopTrackView Number="{x:Bind Index}"
+                                         Images="{x:Bind AlbumImages}"
+                                         Artists="{x:Bind Artists}"
+                                         Title="{x:Bind Name}"
+                                         Playcount="{x:Bind Playcount}"
+                                         Duration="{x:Bind Duration}" />
+                </DataTemplate>
+            </ListView.ItemTemplate>
+            <ListView.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <ItemsWrapGrid Orientation="Horizontal"
+                                   MaximumRowsOrColumns="2" />
+                </ItemsPanelTemplate>
+            </ListView.ItemsPanel>
+        </ListView>
+
+
+        <ItemsRepeater x:Name="MainRepeater"
+                       ItemsSource="{x:Bind ArtistView.DiscographyPages}" />
+        <Border Height="80" />
+    </StackPanel>
+</UserControl>

@@ -148,7 +148,7 @@ public sealed partial class SidebarControl : NavigationView, INotifyPropertyChan
 
     private void SidebarControl_DisplayModeChanged(NavigationView sender, NavigationViewDisplayModeChangedEventArgs args)
     {
-
+        //never allow minimal mode
     }
 
     private void NavigationView_Expanding(NavigationView sender, NavigationViewItemExpandingEventArgs args)
