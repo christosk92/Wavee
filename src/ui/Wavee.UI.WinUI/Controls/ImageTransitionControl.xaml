@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl x:Class="Wavee.UI.WinUI.Components.ImageTransitionControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Wavee.UI.WinUI.Components"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:ui="using:CommunityToolkit.WinUI.UI"
+             mc:Ignorable="d">
+
+    <Grid Background="Transparent">
+        <Border x:Name="Image"
+                Loaded="Image_OnLoaded"
+                ui:VisualExtensions.NormalizedCenterPoint="0.5"
+                HorizontalAlignment="{Binding HorizontalAlignment, ElementName=rootElement}"
+                VerticalAlignment="{Binding VerticalAlignment, ElementName=rootElement}"
+                Opacity="1">
+            <Border.Background>
+                <local:ImageOpacityBrush x:Name="Br"
+                                         OffsetY="{x:Bind OffsetY,Mode=OneWay}"
+                                         x:FieldModifier="public"
+                                         Opened="Br_OnOpened"
+                                         Stretch="UniformToFill" />
+            </Border.Background>
+        </Border>
+    </Grid>
+</UserControl>

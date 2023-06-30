@@ -257,7 +257,11 @@ public readonly record struct ArtistOverview(SpotifyId Id, bool IsSaved, Uri Sha
     private static ArtistVisuals ParseArtistVisuals(JsonElement visuals)
     {
         var avatarImage = ParseCoverArt(visuals.GetProperty("avatarImage").GetProperty("sources"));
-        var headerImages = ParseCoverArt(visuals.GetProperty("headerImage").GetProperty("sources"));
+        var headerImages =
+            visuals.TryGetProperty("headerImage", out var hdr) ?
+            ParseCoverArt(hdr.GetProperty("sources"))
+                : Array.Empty<CoverImage>();
+
         return new ArtistVisuals(
             AvatarImages: avatarImage,
             HeaderImage: headerImages.HeadOrNone()

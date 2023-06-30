@@ -18,6 +18,7 @@
 	  <Page Remove="Providers\**" />
 	</ItemGroup>
 	<ItemGroup>
+		<Content Remove="Assets\amb.png" />
 		<Content Remove="Assets\Fonts\MediaPlayerIcons.ttf" />
 		<Content Remove="Assets\SettingsLottie.json" />
 	</ItemGroup>
@@ -27,6 +28,7 @@
 		<None Remove="Components\Tracks\AlbumTrackView.xaml" />
 		<None Remove="Components\Tracks\WaveeTrackHost.xaml" />
 		<None Remove="Components\WaveformPresenterCardView.xaml" />
+		<None Remove="Controls\ImageTransitionControl.xaml" />
 		<None Remove="Dialogs\WizardDialog.xaml" />
 		<None Remove="Styles\PropertiesStyles.xaml" />
 		<None Remove="Themes\BorderStyles.xaml" />
@@ -56,6 +58,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<PackageReference Include="CommunityToolkit.Labs.WinUI.SegmentedControl" Version="0.0.3" />
 		<PackageReference Include="CommunityToolkit.Labs.WinUI.SettingsControls" Version="0.0.18" />
 		<PackageReference Include="CommunityToolkit.Labs.WinUI.TokenView" Version="0.0.6" />
 		<PackageReference Include="CommunityToolkit.Labs.WinUI.TransitionHelper" Version="0.0.1" />
@@ -94,9 +97,15 @@
 		</Page>
 	</ItemGroup>
 	<ItemGroup>
+	  <None Update="Assets\amb.png">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
 	  <None Update="Assets\Fonts\MediaPlayerIcons.ttf">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </None>
+	  <Page Update="Controls\ImageTransitionControl.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </Page>
 	  <Page Update="View\Artist\ArtistView.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </Page>
