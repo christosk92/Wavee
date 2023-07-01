@@ -8,6 +8,8 @@
              xmlns:artist="using:Wavee.Metadata.Artist"
              xmlns:components="using:Wavee.UI.WinUI.Components"
              xmlns:winUi="using:Wavee.UI.WinUI"
+             VerticalAlignment="Top"
+             VerticalContentAlignment="Top"
              xmlns:controls="using:CommunityToolkit.WinUI.UI.Controls"
              xmlns:panels="using:Wavee.UI.WinUI.Panels"
              Loaded="DiscographyPageGridView_OnLoaded"
@@ -18,17 +20,15 @@
         <winUi:HumanizeDateTimeStringConverter x:Key="HumanizeDateTimeStringConverter" />
     </UserControl.Resources>
     <ItemsRepeater VerticalAlignment="Top"
+                   HorizontalAlignment="Left"
                    ItemsSource="{x:Bind Releases, Mode=OneWay}">
         <ItemsRepeater.Layout>
-            <panels:UniformGridLayoutPanel MinColumnSpacing="8"
-                                           MinRowSpacing="12"
-                                           MinItemHeight="240"
-                                           MinItemWidth="200"
-                                           ItemsJustification="Start"
-                                           ItemsStretch="Uniform" />
-            <!-- <controls:WrapLayout HorizontalSpacing="8" -->
-            <!--                      VerticalSpacing="12"  -->
-            <!--                      Orientation="Horizontal" /> -->
+            <UniformGridLayout MinColumnSpacing="8"
+                               MinRowSpacing="12"
+                               MinItemHeight="240"
+                               MinItemWidth="200"
+                               ItemsJustification="Start"
+                               ItemsStretch="Uniform" />
         </ItemsRepeater.Layout>
         <ItemsRepeater.ItemTemplate>
             <DataTemplate x:DataType="artist:IArtistDiscographyRelease">

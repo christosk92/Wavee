@@ -75,6 +75,8 @@
 
         <ScrollViewer Margin="0,12,-48,-24"
                       VerticalAlignment="Top"
+                      x:Name="LoadedView"
+                      x:Load="{x:Bind Negate(ViewModel.Loading),Mode=OneWay}"
                       Padding="0,0,48,0"
                       Grid.Row="1">
             <StackPanel VerticalAlignment="Top">
@@ -175,5 +177,61 @@
                 <Border Height="110" />
             </StackPanel>
         </ScrollViewer>
+
+        <Grid Grid.Row="1"
+              x:Load="{x:Bind ViewModel.Loading,Mode=OneWay}"
+              x:Name="FakeShimmerGrid"
+              IsHitTestVisible="False">
+            <ItemsRepeater x:Name="ShimmerFakeItems"
+                           ItemsSource="{x:Bind ViewModel.ShimmerItems}">
+                <ItemsRepeater.ItemTemplate>
+                    <DataTemplate x:DataType="home1:ShimmerGroup">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition />
+                            </Grid.RowDefinitions>
+                            <Grid Margin="0,0,0,8"
+                                  Width="100"
+                                  HorizontalAlignment="Left">
+                                <TextBlock Height="28" />
+                                <labs:Shimmer Visibility="Visible" />
+                            </Grid>
+
+                            <ItemsRepeater Margin="-30,0,0,24"
+                                           Grid.Row="1"
+                                           ItemsSource="{x:Bind Items}">
+                                <ItemsRepeater.Layout>
+                                    <panels:HorizontalAdaptiveLayout DesiredWidth="220" />
+                                </ItemsRepeater.Layout>
+                                <ItemsRepeater.ItemTemplate>
+                                    <DataTemplate x:DataType="home1:ShimmerItem">
+                                        <Grid Width="200">
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="180" />
+                                                <RowDefinition Height="40" />
+                                            </Grid.RowDefinitions>
+                                            <Grid>
+                                                <Border Width="180"
+                                                        Height="180"
+                                                        CornerRadius="4" />
+
+                                                <labs:Shimmer Visibility="Visible" />
+                                            </Grid>
+
+                                            <Grid Grid.Row="1"
+                                                  Margin="0,4,0,4">
+                                                <Border />
+                                                <labs:Shimmer Visibility="Visible" />
+                                            </Grid>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsRepeater.ItemTemplate>
+                            </ItemsRepeater>
+                        </Grid>
+                    </DataTemplate>
+                </ItemsRepeater.ItemTemplate>
+            </ItemsRepeater>
+        </Grid>
     </Grid>
 </UserControl>

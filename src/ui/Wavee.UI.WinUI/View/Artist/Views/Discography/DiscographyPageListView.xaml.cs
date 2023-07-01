@@ -8,6 +8,7 @@ using Wavee.UI.Client.Artist;
 using CommunityToolkit.Common.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using System.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -56,12 +57,23 @@ public sealed partial class DiscographyPageListView : UserControl
 
     private async void ItemsRepeater_OnElementPrepared(ItemsRepeater sender, ItemsRepeaterElementPreparedEventArgs args)
     {
-        var element = args.Index;
-        var itemInview = Releases.ElementAtOrDefault(element);
-        //try to access ArtistDiscographyReleaseViewModel
-        if (itemInview is not null)
+        try
         {
-            await itemInview.LoadTracks();
+            var element = args.Index;
+            var itemInview = Releases.ElementAtOrDefault(element);
+            //try to access ArtistDiscographyReleaseViewModel
+            if (itemInview is not null)
+            {
+                await itemInview.LoadTracks();
+            }
+        }
+        catch (COMException x)
+        {
+
+        }
+        catch (Exception ex)
+        {
+
         }
     }
 }

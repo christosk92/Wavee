@@ -106,7 +106,7 @@ namespace Wavee.UI.WinUI.Panels.Flow
             Generate(GenerateDirection.Backward, anchorIndex, availableSize, minItemSpacing, lineSpacing, maxItemsPerLine, disableVirtualization, layoutId);
             if (isWrapping && IsReflowRequired())
             {
-                if (++_reflowCount > 100) // or whatever limit makes sense in your case
+                if (++_reflowCount > 20) // or whatever limit makes sense in your case
                 {
                     //potential loop detected, break out of the loop
                     return availableSize;

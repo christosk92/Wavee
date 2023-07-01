@@ -12,16 +12,23 @@ namespace Wavee.UI.ViewModel.Home;
 
 public sealed class HomeViewModel : ObservableObject
 {
+    private static readonly IReadOnlyList<ShimmerGroup> _shimmerItems;
     private readonly UserViewModel _user;
     private string? _greeting;
     private bool _loading;
     private string[] _filters;
     private string? _selectedFilter;
 
+    static HomeViewModel()
+    {
+        _shimmerItems = Enumerable.Range(0, 10)
+            .Select(i => new ShimmerGroup(Enumerable.Range(0, 10).Select(j => new ShimmerItem()).ToList())).ToList();
+    }
     public HomeViewModel(UserViewModel user)
     {
         _user = user;
     }
+    public IReadOnlyList<ShimmerGroup> ShimmerItems => _shimmerItems;
 
     public bool Loading
     {
@@ -32,12 +39,6 @@ public sealed class HomeViewModel : ObservableObject
     {
         get => _greeting;
         set => SetProperty(ref _greeting, value);
-    }
-
-    public bool IsBusy
-    {
-        get => _loading;
-        set => SetProperty(ref _loading, value);
     }
 
     public string[] Filters
@@ -57,7 +58,7 @@ public sealed class HomeViewModel : ObservableObject
     {
         try
         {
-            IsBusy = true;
+            Loading = true;
             Sections.Clear();
             var home = await _user.Client.Home.GetHome(SelectedFilter, ct);
 
@@ -72,7 +73,7 @@ public sealed class HomeViewModel : ObservableObject
             SelectedFilter = string.Empty;
             SelectedFilter = oldFilter;
 
-            IsBusy = false;
+            Loading = false;
         }
         catch (Exception e)
         {
@@ -80,8 +81,18 @@ public sealed class HomeViewModel : ObservableObject
         }
         finally
         {
-            IsBusy = false;
+            Loading = false;
         }
     }
 }
-//"   at System.Text.Json.JsonElement.GetProperty(String propertyName)\r\n   at Wavee.Metadata.Common.SpotifyItemParser.ParseFrom(JsonElement element) in C:\\Users\\chris-pc\\Desktop\\Wavee\\Wavee\\src\\lib\\Wavee\\Metadata\\Common\\SpotifyItemParser.cs:line 14\r\n   at Wavee.Metadata.Live.LiveSpotifyMetadataClient.<GetRecentlyPlayed>d__9.MoveNext() in C:\\Users\\chris-pc\\Desktop\\Wavee\\Wavee\\src\\lib\\Wavee\\Metadata\\Live\\LiveSpotifyMetadataClient.cs:line 90\r\n   at Wavee.Metadata.Live.LiveSpotifyMetadataClient.<GetHomeView>d__10.MoveNext() in C:\\Users\\chris-pc\\Desktop\\Wavee\\Wavee\\src\\lib\\Wavee\\Metadata\\Live\\LiveSpotifyMetadataClient.cs:line 111\r\n   at Wavee.UI.ViewModel.Home.HomeViewModel.<Fetch>d__14.MoveNext() in C:\\Users\\chris-pc\\Desktop\\Wavee\\Wavee\\src\\ui\\Wavee.UI\\ViewModel\\Home\\HomeViewModel.cs:line 41"
+public class ShimmerGroup
+{
+    public ShimmerGroup(IReadOnlyList<ShimmerItem> items)
+    {
+        Items = items;
+    }
+
+    public IReadOnlyList<ShimmerItem> Items { get; }
+}
+
+public class ShimmerItem { }

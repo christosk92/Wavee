@@ -41,9 +41,8 @@
         </TransitionCollection>
     </UserControl.Transitions>
     <StackPanel Margin="24"
+                HorizontalAlignment="Left"
                 VerticalAlignment="Top">
-
-
         <TextBlock Text="Popular songs"
                    Style="{ThemeResource SubtitleTextBlockStyle}"
                    Margin="0,8" />
@@ -60,7 +59,6 @@
                 <DataTemplate x:DataType="artist:ArtistTopTrackViewModel">
                     <tracks:TopTrackView Number="{x:Bind Index}"
                                          Id="{x:Bind Id}"
-
                                          Images="{x:Bind AlbumImages}"
                                          Artists="{x:Bind Artists}"
                                          Title="{x:Bind Name}"
@@ -87,10 +85,12 @@
         <ItemsRepeater x:Name="MainRepeater"
                        VerticalAlignment="Top"
                        Margin="0,24"
+                       HorizontalAlignment="Left"
                        ItemsSource="{x:Bind ArtistView.DiscographyPages}">
             <ItemsRepeater.ItemTemplate>
                 <DataTemplate x:DataType="artist:PagedArtistDiscographyPage">
-                    <Grid VerticalAlignment="Top">
+                    <Grid VerticalAlignment="Top"
+                          HorizontalAlignment="Left">
                         <RelativePanel x:Name="MetadataPanel"
                                        VerticalAlignment="Top">
                             <TextBlock x:Name="Title"
@@ -125,6 +125,7 @@
                         <discography:DiscographyPageView x:Name="DiscographyPageView"
                                                          Margin="0,38"
                                                          VerticalContentAlignment="Top"
+                                                         HorizontalAlignment="Left"
                                                          GetReleasesFunc="{x:Bind  GetReleasesFunc}"
                                                          VerticalAlignment="Top" />
                     </Grid>

@@ -74,4 +74,10 @@ public sealed partial class HomeView : UserControl, ICacheablePage, INavigable
         if (_stored is not null)
             _stored = sender as UIElement;
     }
+
+    public bool Negate(bool b)
+    {
+        //TODO:
+        return !b;
+    }
 }

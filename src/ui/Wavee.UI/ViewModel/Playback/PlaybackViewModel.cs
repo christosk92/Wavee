@@ -1,11 +1,14 @@
-﻿using System.Reactive.Linq;
+﻿using System.Reactive.Disposables;
+using System.Reactive.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using ReactiveUI;
 using Wavee.UI.Client.Playback;
 using Wavee.UI.User;
 using ReactiveUI;
-using System.Reactive;
+using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
+using Unit = System.Reactive.Unit;
+using LanguageExt.Pipes;
 
 namespace Wavee.UI.ViewModel.Playback;
 
@@ -13,7 +16,9 @@ namespace Wavee.UI.ViewModel.Playback;
 public sealed class PlaybackViewModel : ObservableObject
 {
     private readonly object _lock = new();
+
     private record PositionCallback(Guid Id, int Difference, Action<int> PositionChanged, int PreviousMeasuredTime);
+
     private readonly List<PositionCallback> _positionCallbacks = new();
     private readonly Timer _timer;
     private const int TimerInterval = 10;
@@ -27,9 +32,13 @@ public sealed class PlaybackViewModel : ObservableObject
     private TimeSpan? _duration;
     private int _position;
     private string _itemId;
+    private Option<string> _uid;
+    private bool _paused;
+    private readonly UserViewModel _user;
 
     public PlaybackViewModel(UserViewModel user)
     {
+        _user = user;
         _subscription = user.Client.Playback
             .PlaybackEvents
             .ObserveOn(RxApp.MainThreadScheduler)
@@ -51,6 +60,13 @@ public sealed class PlaybackViewModel : ObservableObject
         get => _itemId;
         set => SetProperty(ref _itemId, value);
     }
+
+    public Option<string> Uid
+    {
+        get => _uid;
+        set => SetProperty(ref _uid, value);
+    }
+
     public ItemWithId Title
     {
         get => _title;
@@ -81,6 +97,13 @@ public sealed class PlaybackViewModel : ObservableObject
         set => SetProperty(ref _duration, value);
     }
 
+    public bool Paused
+    {
+        get => _paused;
+        set => SetProperty(ref _paused, value);
+    }
+
+
     private Unit OnPlaybackEvent(WaveeUIPlaybackState state)
     {
         HasPlayback = state.PlaybackState > 0;
@@ -93,7 +116,9 @@ public sealed class PlaybackViewModel : ObservableObject
             SmallImageUrl = metadata.SmallImageUrl;
             Duration = metadata.Duration;
             ItemId = metadata.Id;
+            Uid = metadata.Uid;
         }
+
         switch (state.PlaybackState)
         {
             case WaveeUIPlayerState.NotPlayingAnything:
@@ -102,14 +127,17 @@ public sealed class PlaybackViewModel : ObservableObject
             case WaveeUIPlayerState.Playing:
                 HasPlayback = true;
                 _timer.Change(0, TimerInterval);
+                Paused = false;
                 break;
             case WaveeUIPlayerState.Paused:
                 HasPlayback = true;
                 _timer.Change(Timeout.Infinite, Timeout.Infinite);
+                Paused = true;
                 break;
             default:
                 throw new ArgumentOutOfRangeException();
         }
+
         SetPosition((int)state.Position.TotalMilliseconds);
         return Unit.Default;
     }
@@ -129,6 +157,7 @@ public sealed class PlaybackViewModel : ObservableObject
             }
         }
     }
+
     private void MainPositionCallback(object? state)
     {
         lock (_lock)
@@ -152,11 +181,13 @@ public sealed class PlaybackViewModel : ObservableObject
                     //do nothing
                 }
             }
+
             //if we reached the end of the song, stop the timer
             if (Duration is not null && theoreticalNext >= Duration.Value.TotalMilliseconds)
             {
                 _timer.Change(Timeout.Infinite, Timeout.Infinite);
             }
+
             _position = theoreticalNext;
         }
     }
@@ -181,5 +212,13 @@ public sealed class PlaybackViewModel : ObservableObject
             _positionCallbacks.Add(positionCallback);
             return positionCallback.Id;
         }
+    }
+
+    public IObservable<WaveeUIPlaybackState> CreateListener()
+    {
+        return _user.Client.Playback
+            .PlaybackEvents
+            .StartWith(_user.Client.Playback.CurrentPlayback)
+            .ObserveOn(RxApp.MainThreadScheduler);
     }
 }

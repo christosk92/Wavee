@@ -8,6 +8,7 @@
              mc:Ignorable="d">
     <ContentPresenter VerticalContentAlignment="Top"
                       VerticalAlignment="Top"
-                      HorizontalContentAlignment="Stretch"
+                      HorizontalAlignment="Left"
+                      HorizontalContentAlignment="Left"
                       x:Name="Presenter" />
 </UserControl>

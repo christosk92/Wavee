@@ -1,6 +1,8 @@
 ﻿using Microsoft.UI.Xaml.Controls;
 using System;
 using System.Collections.Specialized;
+using System.Diagnostics;
+using System.Runtime.InteropServices;
 using Windows.Foundation;
 using Microsoft.UI.Xaml;
 using Wavee.UI.WinUI.Panels.Flow;
@@ -326,40 +328,64 @@ public class UniformGridLayoutPanel : VirtualizingLayout, IFlowLayoutAlgorithmDe
         gridState.UninitializeForContext(context);
     }
 
+
     protected override Size MeasureOverride(VirtualizingLayoutContext context, Size availableSize)
     {
-        // Set the width and height on the grid state. If the user already set them then use the preset. 
-        // If not, we have to measure the first element and get back a size which we're going to be using for the rest of the items.
-        var gridState = (UniformGridLayoutState)context.LayoutState!;
-        gridState.EnsureElementSize(availableSize, context, MinItemWidth, MinItemHeight, ItemsStretch, Orientation, MinRowSpacing, MinColumnSpacing, MaximumRowsOrColumnns);
+        try
+        {
+            // Set the width and height on the grid state. If the user already set them then use the preset. 
+            // If not, we have to measure the first element and get back a size which we're going to be using for the rest of the items.
+            var gridState = (UniformGridLayoutState)context.LayoutState!;
+            gridState.EnsureElementSize(availableSize, context, MinItemWidth, MinItemHeight, ItemsStretch, Orientation,
+                MinRowSpacing, MinColumnSpacing, MaximumRowsOrColumnns);
 
-        var desiredSize = GetFlowAlgorithm(context).Measure(
-            availableSize,
-            context,
-            true,
-            MinColumnSpacing,
-            MinRowSpacing,
-            MaximumRowsOrColumnns,
-            _orientation.ScrollOrientation,
-            false,
-            LayoutId);
+            var desiredSize = GetFlowAlgorithm(context).Measure(
+                availableSize,
+                context,
+                true,
+                MinColumnSpacing,
+                MinRowSpacing,
+                MaximumRowsOrColumnns,
+                _orientation.ScrollOrientation,
+                false,
+                LayoutId);
 
-        // If after Measure the first item is in the realization rect, then we revoke grid state's ownership,
-        // and only use the layout when to clear it when it's done.
-        gridState.EnsureFirstElementOwnership(context);
+            // If after Measure the first item is in the realization rect, then we revoke grid state's ownership,
+            // and only use the layout when to clear it when it's done.
+            gridState.EnsureFirstElementOwnership(context);
 
-        return desiredSize;
+            return desiredSize;
+        }
+        catch (COMException c)
+        {
+            return new Size(0, 0);
+        }
+        catch (Exception e)
+        {
+            return new Size(0, 0);
+        }
     }
 
     protected override Size ArrangeOverride(VirtualizingLayoutContext context, Size finalSize)
     {
-        var value = GetFlowAlgorithm(context).Arrange(
-            finalSize,
-            context,
-            true,
-            (FlowLayoutAlgorithm.LineAlignment)ItemsJustification,
-            LayoutId);
-        return new Size(value.Width, value.Height);
+        try
+        {
+            var value = GetFlowAlgorithm(context).Arrange(
+                finalSize,
+                context,
+                true,
+                (FlowLayoutAlgorithm.LineAlignment)ItemsJustification,
+                LayoutId);
+            return new Size(value.Width, value.Height);
+        }
+        catch (COMException c)
+        {
+            return new Size(0, 0);
+        }
+        catch (Exception e)
+        {
+            return new Size(0, 0);
+        }
     }
 
 
@@ -435,6 +461,7 @@ public class UniformGridLayoutState
     internal FlowLayoutAlgorithm FlowAlgorithm { get; } = new FlowLayoutAlgorithm();
     internal double EffectiveItemWidth { get; private set; }
     internal double EffectiveItemHeight { get; private set; }
+    public int MeasureCount { get; set; }
 
     internal void InitializeForContext(VirtualizingLayoutContext context, IFlowLayoutAlgorithmDelegates callbacks)
     {

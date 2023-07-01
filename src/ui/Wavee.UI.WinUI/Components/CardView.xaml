@@ -12,12 +12,17 @@
              Tapped="CardView_OnTapped"
              DataContext="{x:Bind}"
              VerticalAlignment="Top"
+             VerticalContentAlignment="Top"
              PointerEntered="CardView_OnPointerEntered"
              PointerExited="CardView_OnPointerExited"
              ContextRequested="CardView_OnContextRequested"
-             mc:Ignorable="d">
+             mc:Ignorable="d"
+             MaxWidth="400"
+             MaxHeight="400">
 
-    <Grid VerticalAlignment="Top">
+    <Grid VerticalAlignment="Top"
+          MaxWidth="400"
+          MaxHeight="400">
         <Border  Background="{ThemeResource LayerFillColorDefaultBrush}"
                  BorderThickness="1"
                  labs:TransitionHelper.Id="background"
@@ -29,16 +34,21 @@
                 VerticalAlignment="Stretch"
                 HorizontalContentAlignment="Stretch"
                 Padding="0"
+                MaxHeight="400"
+                MaxWidth="400"
                 Background="Transparent"
                 Margin="0,0,12,0"
                 BorderThickness="0">
             <Grid>
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
+                    <RowDefinition  MaxHeight="400"
+                                    Height="Auto" />
                     <RowDefinition />
                 </Grid.RowDefinitions>
                 <Grid>
                     <Border x:Name="HeartBorder"
+                            MaxHeight="400"
+                            MaxWidth="400"
                             Grid.ColumnSpan="2"
                             x:Load="{x:Bind ImageIsIcon, Mode=OneWay}"
                             Background="{ThemeResource AccentAcrylicBackgroundFillColorBaseBrush}">
@@ -49,6 +59,8 @@
                                   Glyph="&#xEB52;" />
                     </Border>
                     <controls:ConstrainedBox x:Name="NormalImageBox"
+                                             MaxHeight="400"
+                                             MaxWidth="400"
                                              Grid.ColumnSpan="2"
                                              labs:TransitionHelper.Id="image"
                                              x:Load="{x:Bind Negate(IsArtist),Mode=OneWay}"
@@ -63,6 +75,8 @@
                     </controls:ConstrainedBox>
                     <controls:ConstrainedBox x:Name="ArtistImageBox"
                                              Grid.ColumnSpan="2"
+                                             MaxHeight="400"
+                                             MaxWidth="400"
                                              x:Load="{x:Bind IsArtist,Mode=OneWay}"
                                              AspectRatio="1:1">
                         <Viewbox Stretch="UniformToFill"

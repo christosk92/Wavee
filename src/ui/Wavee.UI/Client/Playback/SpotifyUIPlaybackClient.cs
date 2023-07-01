@@ -65,6 +65,7 @@ internal sealed class SpotifyUIPlaybackClient : IWaveeUIPlaybackClient
             PlaybackState: spotifyRemoteState.Paused ? WaveeUIPlayerState.Paused :
             (spotifyRemoteState.HasPlayback ? WaveeUIPlayerState.Playing : WaveeUIPlayerState.NotPlayingAnything),
             Metadata: new WaveeItemMetadata(Id: trackId.ToString(),
+                Uid: spotifyRemoteState.TrackUid,
                 Title: new ItemWithId(
                     Id: SpotifyId.FromRaw(track.Album.Gid.Span, AudioItemType.Album, ServiceType.Spotify).ToString(),
                     Type: AudioItemType.Album,

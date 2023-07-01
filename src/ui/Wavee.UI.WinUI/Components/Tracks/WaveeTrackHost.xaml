@@ -6,6 +6,10 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:animatedVisuals="using:AnimatedVisuals"
+             PointerEntered="WaveeTrackHost_OnPointerEntered"
+             PointerExited="WaveeTrackHost_OnPointerExited"
+             Unloaded="WaveeTrackHost_OnUnloaded"
+             Loading="WaveeTrackHost_OnLoading"
              xmlns:components="using:Wavee.UI.WinUI.Components"
              mc:Ignorable="d">
 
