@@ -6,23 +6,66 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:artist="using:Wavee.Metadata.Artist"
+             xmlns:panels="using:Wavee.UI.WinUI.Panels"
              Loaded="DiscographyPageGridView_OnLoaded"
              mc:Ignorable="d">
     <ItemsRepeater VerticalAlignment="Top"
                    VerticalCacheLength="1"
+                   ElementPrepared="ItemsRepeater_OnElementPrepared"
                    ItemsSource="{x:Bind Releases, Mode=OneWay}">
         <ItemsRepeater.Layout>
             <StackLayout Orientation="Vertical"
                          Spacing="48" />
         </ItemsRepeater.Layout>
         <ItemsRepeater.ItemTemplate>
-            <DataTemplate x:DataType="artist:IArtistDiscographyRelease">
-                <local:ArtistDiscographyTrackListView Id="{x:Bind Id.ToString(), Mode=OneWay}"
-                                                      Title="{x:Bind Name, Mode=OneWay}"
-                                                      x:Phase="1"
-                                                      Images="{x:Bind Images, Mode=OneWay}"
-                                                      ReleaseDate="{x:Bind Date, Mode=OneWay}"
-                                                      TrackCount="{x:Bind TotalTracks, Mode=OneWay}" />
+            <DataTemplate x:DataType="local:ArtistDiscographyReleaseViewModel">
+                <RelativePanel HorizontalAlignment="Left"
+                               VerticalAlignment="Top">
+                    <Image RelativePanel.AlignLeftWithPanel="True"
+                           Height="160"
+                           Width="160"
+                           x:Phase="1"
+                           Source="{x:Bind GetImage(Release.Images),Mode=OneWay}"
+                           RelativePanel.AlignTopWithPanel="True"
+                           x:Name="AlbumImage" />
+
+                    <TextBlock Text="{x:Bind Release.Name, Mode=OneWay}"
+                               x:Name="AlbumTitle"
+                               MaxWidth="160"
+                               x:Phase="0"
+                               Margin="0,8"
+                               TextWrapping="WrapWholeWords"
+                               RelativePanel.AlignLeftWithPanel="True"
+                               RelativePanel.Below="AlbumImage" />
+
+                    <Grid   RelativePanel.Below="AlbumTitle"
+                            ColumnSpacing="4"
+                            RelativePanel.AlignLeftWithPanel="True"
+                            Width="160">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition />
+                            <ColumnDefinition />
+                        </Grid.ColumnDefinitions>
+                        <Button Content="Play"
+                                HorizontalAlignment="Stretch"
+                                Style="{ThemeResource AccentButtonStyle}"
+                                x:Name="PlayButton" />
+                        <Button Content="Save"
+                                HorizontalAlignment="Stretch"
+                                Grid.Column="1" />
+                    </Grid>
+
+                    <ItemsRepeater RelativePanel.RightOf="AlbumImage"
+                                   RelativePanel.AlignTopWithPanel="True"
+                                   x:Name="TracksS"
+                                   x:Phase="2"
+                                   ItemsSource="{x:Bind Items}"
+                                   VerticalAlignment="Top"
+                                   Margin="12,0,0,0"
+                                   ItemTemplate="{StaticResource AlbumPageTrackTemplate}"
+                                   RelativePanel.AlignBottomWithPanel="True"
+                                   RelativePanel.AlignRightWithPanel="True" />
+                </RelativePanel>
             </DataTemplate>
         </ItemsRepeater.ItemTemplate>
     </ItemsRepeater>

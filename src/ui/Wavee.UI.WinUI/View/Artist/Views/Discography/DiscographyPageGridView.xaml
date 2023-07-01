@@ -11,6 +11,7 @@
              xmlns:controls="using:CommunityToolkit.WinUI.UI.Controls"
              xmlns:panels="using:Wavee.UI.WinUI.Panels"
              Loaded="DiscographyPageGridView_OnLoaded"
+             Unloaded="DiscographyPageGridView_OnUnloaded"
              mc:Ignorable="d">
 
     <UserControl.Resources>

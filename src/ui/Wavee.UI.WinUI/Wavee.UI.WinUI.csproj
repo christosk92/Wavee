@@ -43,7 +43,6 @@
 		<None Remove="View\Artist\Views\ArtistConcertsView.xaml" />
 		<None Remove="View\Artist\Views\ArtistOverviewView.xaml" />
 		<None Remove="View\Artist\Views\ArtistRelatedView.xaml" />
-		<None Remove="View\Artist\Views\Discography\ArtistDiscographyTrackListView.xaml" />
 		<None Remove="View\Artist\Views\Discography\DiscographyPageGridView.xaml" />
 		<None Remove="View\Artist\Views\Discography\DiscographyPageListView.xaml" />
 		<None Remove="View\Artist\Views\Discography\DiscographyPageView.xaml" />
@@ -119,9 +118,6 @@
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </None>
 	  <Page Update="Themes\AlbumArtistPageTrackTemplates.xaml">
-	    <Generator>MSBuild:Compile</Generator>
-	  </Page>
-	  <Page Update="View\Artist\Views\Discography\ArtistDiscographyTrackListView.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </Page>
 	  <Page Update="View\Artist\Views\SpotifyPreReleaseControl.xaml">

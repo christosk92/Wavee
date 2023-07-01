@@ -11,9 +11,11 @@ public sealed partial class DiscographyPageGridView : UserControl
 {
     public DiscographyPageGridView(GetReleases getReleasesFunc)
     {
-        Releases = new IncrementalLoadingCollection<DiscographyReleasesSource, IArtistDiscographyRelease>(new DiscographyReleasesSource(getReleasesFunc));
-        _ = Releases.LoadMoreItemsAsync(10);
+        Releases = new IncrementalLoadingCollection<DiscographyReleasesSource, IArtistDiscographyRelease>(
+            new DiscographyReleasesSource(getReleasesFunc),
+            itemsPerPage: 50);
         this.InitializeComponent();
+        _ = Releases.LoadMoreItemsAsync(10);
     }
 
     public IncrementalLoadingCollection<DiscographyReleasesSource, IArtistDiscographyRelease> Releases { get; }
@@ -37,5 +39,12 @@ public sealed partial class DiscographyPageGridView : UserControl
     {
         var scroller = this.FindAscendant<ScrollViewer>();
         scroller.ViewChanged += Scroller_ViewChanged;
+    }
+
+    private void DiscographyPageGridView_OnUnloaded(object sender, RoutedEventArgs e)
+    {
+        var scroller = this.FindAscendant<ScrollViewer>();
+        if (scroller is not null)
+            scroller.ViewChanged -= Scroller_ViewChanged;
     }
 }

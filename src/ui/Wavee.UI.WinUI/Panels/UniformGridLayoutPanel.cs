@@ -370,7 +370,7 @@ public class UniformGridLayoutPanel : VirtualizingLayout, IFlowLayoutAlgorithmDe
         InvalidateLayout();
 
         var gridState = (UniformGridLayoutState)context.LayoutState!;
-        gridState.ClearElementOnDataSourceChange(context, args);
+        gridState?.ClearElementOnDataSourceChange(context, args);
     }
 
 
@@ -416,7 +416,8 @@ public class UniformGridLayoutPanel : VirtualizingLayout, IFlowLayoutAlgorithmDe
 
     private void InvalidateLayout() => InvalidateMeasure();
 
-    private static FlowLayoutAlgorithm GetFlowAlgorithm(VirtualizingLayoutContext context) => ((UniformGridLayoutState)context.LayoutState!).FlowAlgorithm;
+    private static FlowLayoutAlgorithm GetFlowAlgorithm(VirtualizingLayoutContext context) => ((UniformGridLayoutState)context.LayoutState!)?.FlowAlgorithm
+    ?? new FlowLayoutAlgorithm();
 }
 
 /// <summary>

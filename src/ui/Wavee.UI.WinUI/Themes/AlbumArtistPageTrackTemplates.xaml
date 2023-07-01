@@ -5,42 +5,44 @@
                     xmlns:winUi="using:Wavee.UI.WinUI"
                     xmlns:tracks="using:Wavee.UI.WinUI.Components.Tracks"
                     xmlns:album="using:Wavee.UI.Client.Album"
-                    xmlns:labs="using:CommunityToolkit.Labs.WinUI">
-    <DataTemplate x:Key="ShimmerTrack">
-        <Grid Padding="4,6"
-              Height="48"
-              ColumnSpacing="8"
-              x:DefaultBindMode="OneWay">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="74" />
-                <ColumnDefinition Width="2*" />
-                <ColumnDefinition Width="124" />
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="8" />
-            </Grid.ColumnDefinitions>
+                    xmlns:labs="using:CommunityToolkit.Labs.WinUI"
+                    xmlns:discography="using:Wavee.UI.WinUI.View.Artist.Views.Discography">
+    <DataTemplate x:Key="AlbumPageTrackTemplate"
+                  x:DataType="discography:LoadingWaveeUIAlbumTrack">
+        <Grid>
+            <Grid Padding="4,6"
+                  Height="48"
+                  x:Name="LoadingGrid"
+                  x:Load="{x:Bind Loading,Mode=OneWay}"
+                  ColumnSpacing="8"
+                  x:DefaultBindMode="OneWay">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="74" />
+                    <ColumnDefinition Width="2*" />
+                    <ColumnDefinition Width="124" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="8" />
+                </Grid.ColumnDefinitions>
 
-            <labs:Shimmer
-                Margin="8,0,0,0"
-                IsActive="True" />
-            <labs:Shimmer Grid.Column="1"
-                          IsActive="True" />
-            <labs:Shimmer  Grid.Column="2"
-                           IsActive="True" />
-            <labs:Shimmer  Grid.Column="3"
-                           IsActive="True" />
+                <labs:Shimmer Margin="8,0,0,0"
+                              IsActive="True" />
+                <labs:Shimmer Grid.Column="1"
+                              IsActive="True" />
+                <labs:Shimmer  Grid.Column="2"
+                               IsActive="True" />
+                <labs:Shimmer  Grid.Column="3"
+                               IsActive="True" />
+            </Grid>
+
+            <tracks:AlbumTrackView Number="{x:Bind Track.TrackNumber}"
+                                   Title="{x:Bind Track.Name}"
+                                   x:Name="TrackGrid"
+                                   x:Load="{x:Bind Negate(Loading),Mode=OneWay}"
+                                   Id="{x:Bind Track.Id}"
+                                   Artists="{x:Bind Track.Artists}"
+                                   WithCheckbox="True"
+                                   Playcount="{x:Bind Track.Playcount}"
+                                   Duration="{x:Bind Track.Duration}" />
         </Grid>
     </DataTemplate>
-    <DataTemplate x:Key="AlbumPageTrackTemplate"
-                  x:DataType="album:WaveeUIAlbumTrack">
-        <tracks:AlbumTrackView Number="{x:Bind TrackNumber}"
-                               Title="{x:Bind Name}"
-                               Id="{x:Bind Id}"
-                               Artists="{x:Bind Artists}"
-                               WithCheckbox="True"
-                               Playcount="{x:Bind Playcount}"
-                               Duration="{x:Bind Duration}" />
-    </DataTemplate>
-    <winUi:AlbumPageTrackTemplateSelector ShimmerTrackTemplate="{StaticResource ShimmerTrack}"
-                                          TrackTemplate="{StaticResource AlbumPageTrackTemplate}"
-                                          x:Key="AlbumPageTrackTemplateSelector" />
 </ResourceDictionary>

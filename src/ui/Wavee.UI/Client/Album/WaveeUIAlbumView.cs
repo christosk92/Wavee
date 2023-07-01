@@ -26,11 +26,11 @@ public sealed class WaveeUIAlbumView
 
 public sealed class WaveeUIAlbumDisc
 {
-    public required IReadOnlyCollection<WaveeUIAlbumTrack> Tracks { get; init; } = Array.Empty<WaveeUIAlbumTrack>();
+    public required IReadOnlyCollection<IWaveeUIAlbumTrack> Tracks { get; init; } = Array.Empty<IWaveeUIAlbumTrack>();
     public required int DiscNumber { get; init; }
 }
 
-public sealed class WaveeUIAlbumTrack
+public sealed class WaveeUIAlbumTrack : IWaveeUIAlbumTrack
 {
     public required Option<string> Uid { get; init; }
     public required ServiceType Source { get; init; }
@@ -42,4 +42,18 @@ public sealed class WaveeUIAlbumTrack
     public required Option<ulong> Playcount { get; init; }
     public required bool InLibrary { get; init; }
     public required ushort TrackNumber { get; init; }
+}
+
+public interface IWaveeUIAlbumTrack
+{
+    Option<string> Uid { get; }
+    ServiceType Source { get; }
+    string Id { get; }
+    string Name { get; }
+    ContentRatingType ContentRating { get; }
+    ITrackArtist[] Artists { get; }
+    TimeSpan Duration { get; }
+    Option<ulong> Playcount { get; }
+    bool InLibrary { get; }
+    ushort TrackNumber { get; }
 }

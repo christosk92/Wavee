@@ -95,17 +95,15 @@ namespace Wavee.UI.WinUI.View.Artist.Views
             _currentScrollPosition = offset;
             scroller.VerticalScrollMode = ScrollMode.Disabled;
             scroller.VerticalScrollBarVisibility = ScrollBarVisibility.Hidden;
-            scroller.ChangeView(null, _currentScrollPosition, null);
+            //scroller.ChangeView(null, _currentScrollPosition, null);
 
             // _currentScrollPosition = scroller.VerticalOffset;
             // //scroller.ViewChanged += ScrollerOnViewChanged;
             // scroller.ViewChanging += ScrollerOnViewChanging;
-            await Task.Delay(100);
+            await Task.Delay(500);
             scroller.VerticalScrollMode = ScrollMode.Enabled;
             scroller.VerticalScrollBarVisibility = ScrollBarVisibility.Visible;
-            scroller.ChangeView(null, _currentScrollPosition, null);
+            //scroller.ChangeView(null, _currentScrollPosition, null);
         }
-
-
     }
 }
