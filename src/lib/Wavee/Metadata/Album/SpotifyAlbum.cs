@@ -65,23 +65,7 @@ public sealed class SpotifyAlbum
                 while (j < tracksCount && allTracks.MoveNext())
                 {
                     var track = allTracks.Current;
-                    var uid = track.GetProperty("uid").GetString();
-                    var actualTrack = track.GetProperty("track");
-                    //TODO:
-                    tracks[j++] = new SpotifyAlbumTrack(
-                        uid: uid!,
-                        id: SpotifyId.FromUri(actualTrack.GetProperty("uri").GetString().AsSpan()),
-                        name: actualTrack.GetProperty("name").GetString()!,
-                        duration: TimeSpan.FromMilliseconds(actualTrack.GetProperty("duration")
-                            .GetProperty("totalMilliseconds").GetUInt32()!),
-                        trackNumber: actualTrack.GetProperty("trackNumber").GetUInt16()!,
-                        discNumber: actualTrack.GetProperty("discNumber").GetUInt16()!,
-                        contentRating: ParseContentRating(actualTrack.GetProperty("contentRating").GetProperty("label")
-                            .GetString()!),
-                        artists: ParseArtists(actualTrack.GetProperty("artists")),
-                        playcount: ParsePlaycount(actualTrack),
-                        saved: actualTrack.GetProperty("saved").GetBoolean()
-                    );
+                    tracks[j++] = ParseTrack(track);
                 }
 
                 discList[disc_i++] = new SpotifyAlbumDisc(
@@ -160,6 +144,27 @@ public sealed class SpotifyAlbum
             discs: discs,
             moreAlbums: moreAlbums,
             copyrights: copyrights
+        );
+    }
+
+    public static SpotifyAlbumTrack ParseTrack(JsonElement track)
+    {
+        var uid = track.GetProperty("uid").GetString();
+        var actualTrack = track.GetProperty("track");
+        //TODO:
+        return new SpotifyAlbumTrack(
+            uid: uid!,
+            id: SpotifyId.FromUri(actualTrack.GetProperty("uri").GetString().AsSpan()),
+            name: actualTrack.GetProperty("name").GetString()!,
+            duration: TimeSpan.FromMilliseconds(actualTrack.GetProperty("duration")
+                .GetProperty("totalMilliseconds").GetUInt32()!),
+            trackNumber: actualTrack.GetProperty("trackNumber").GetUInt16()!,
+            discNumber: actualTrack.GetProperty("discNumber").GetUInt16()!,
+            contentRating: ParseContentRating(actualTrack.GetProperty("contentRating").GetProperty("label")
+                .GetString()!),
+            artists: ParseArtists(actualTrack.GetProperty("artists")),
+            playcount: ParsePlaycount(actualTrack),
+            saved: actualTrack.GetProperty("saved").GetBoolean()
         );
     }
 

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Wavee.Metadata.Artist;
 using Wavee.Metadata.Common;
+using Wavee.UI.ViewModel.Shell;
 using Wavee.UI.WinUI.Models;
 
 
@@ -64,7 +65,10 @@ namespace Wavee.UI.WinUI.View.Artist.Views.Discography
         }
         private async Task LoadTracks(string id)
         {
-
+            var client = ShellViewModel.Instance.User.Client.Album;
+            var response = await client.GetAlbumTracks(id);
+            var allTracks = response.SelectMany(f=> f.Tracks);
+            TracksS.ItemsSource = allTracks;
         }
         public Uri? GetImage(ICoverImage[] images)
         {

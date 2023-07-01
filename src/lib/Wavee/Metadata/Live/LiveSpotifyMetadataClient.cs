@@ -153,6 +153,7 @@ internal readonly struct LiveSpotifyMetadataClient : ISpotifyMetadataClient
         {
             ReadOnlyMemory<byte> stream = await responseTask.Result.Content.ReadAsByteArrayAsync();
             var home = SpotifyHomeView.ParseFrom(stream, recentlyPlayedTask.Result, typeFilterType);
+            responseTask.Result.Dispose();
             return home;
         }
 
@@ -232,7 +233,7 @@ internal readonly struct LiveSpotifyMetadataClient : ISpotifyMetadataClient
             _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
         };
 
-        var response = await _query(query, _defaultLang);
+        using var response = await _query(query, _defaultLang);
         response.EnsureSuccessStatusCode();
 
         using var stream = await response.Content.ReadAsStreamAsync();
@@ -308,7 +309,7 @@ internal readonly struct LiveSpotifyMetadataClient : ISpotifyMetadataClient
     public async Task<SpotifyAlbum> GetAlbum(SpotifyId id, CancellationToken ct = default)
     {
         var query = new QueryAlbum(id, 0, 300);
-        var response = await _query(query, _defaultLang);
+        using var response = await _query(query, _defaultLang);
         response.EnsureSuccessStatusCode();
 
         using var stream = await response.Content.ReadAsStreamAsync();
@@ -316,5 +317,33 @@ internal readonly struct LiveSpotifyMetadataClient : ISpotifyMetadataClient
         var root = json.RootElement.GetProperty("data").GetProperty("albumUnion");
 
         return SpotifyAlbum.ParseFrom(root);
+    }
+
+    public async Task<SpotifyAlbumDisc[]> GetAlbumTracks(SpotifyId id, CancellationToken ct = default)
+    {
+        var query = new QueryAlbumTracks(id: id);
+        var response = await _query(query, _defaultLang);
+        response.EnsureSuccessStatusCode();
+
+        using var stream = await response.Content.ReadAsStreamAsync();
+        using var json = await JsonDocument.ParseAsync(stream, default, ct);
+        var root = json.RootElement.GetProperty("data").GetProperty("albumUnion").GetProperty("tracks");
+        var totalCount = root.GetProperty("totalCount").GetInt32();
+        var output = new SpotifyAlbumTrack[totalCount];
+        var items = root.GetProperty("items");
+        using var array = items.EnumerateArray();
+        int i = 0;
+        while (array.MoveNext())
+        {
+            var item = array.Current;
+            var parsed = SpotifyAlbum.ParseTrack(item);
+            output[i++] = parsed;
+        }
+
+        return output.GroupBy(x => x.DiscNumber)
+            .Select(f => new SpotifyAlbumDisc(
+                number: f.Key,
+                tracks: f.ToArray()
+            )).ToArray();
     }
 }

@@ -1,4 +1,5 @@
-﻿using Wavee.Id;
+﻿using LanguageExt;
+using Wavee.Id;
 using Wavee.Metadata.Album;
 using Wavee.Metadata.Artist;
 using Wavee.UI.Common;
@@ -23,6 +24,17 @@ internal sealed class SpotifyUIAlbumClient : IWaveeUIAlbumClient
 
         var album = await spotifyClient.Metadata.GetAlbum(SpotifyId.FromUri(id), cancellationToken);
         return ParseFrom(album);
+    }
+
+    public Task<WaveeUIAlbumDisc[]> GetAlbumTracks(string id, CancellationToken ct = default)
+    {
+        if (!_spotifyClient.TryGetTarget(out var spotifyClient))
+        {
+            throw new InvalidOperationException("SpotifyClient is not available");
+        }
+
+        return spotifyClient.Metadata.GetAlbumTracks(SpotifyId.FromUri(id), ct)
+            .Map(f => f.Select(ParseToDisc).ToArray());
     }
 
     private static WaveeUIAlbumView ParseFrom(SpotifyAlbum album)

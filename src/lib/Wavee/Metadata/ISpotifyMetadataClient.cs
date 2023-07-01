@@ -40,8 +40,7 @@ public interface ISpotifyMetadataClient
     /// <param name="languageOverride"></param>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
-    Task<SpotifyHomeView> GetHomeView(Option<AudioItemType> typeFilterType, TimeZoneInfo timezone,
-        Option<CultureInfo> languageOverride, CancellationToken cancellationToken = default);
+    Task<SpotifyHomeView> GetHomeView(Option<AudioItemType> typeFilterType, TimeZoneInfo timezone, Option<CultureInfo> languageOverride, CancellationToken cancellationToken = default);
 
 
     /// <summary>
@@ -83,4 +82,7 @@ public interface ISpotifyMetadataClient
     Task<MeUser> GetMe(CancellationToken ct = default);
 
     Task<SpotifyAlbum> GetAlbum(SpotifyId id, CancellationToken ct = default);
+
+
+    Task<SpotifyAlbumDisc[]> GetAlbumTracks(SpotifyId id, CancellationToken ct = default);
 }
