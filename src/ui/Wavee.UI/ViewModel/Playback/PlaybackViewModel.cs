@@ -1,5 +1,6 @@
 ﻿using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using CommunityToolkit.Mvvm.ComponentModel;
 using ReactiveUI;
 using Wavee.UI.Client.Playback;
@@ -35,6 +36,7 @@ public sealed class PlaybackViewModel : ObservableObject
     private Option<string> _uid;
     private bool _paused;
     private readonly UserViewModel _user;
+    private readonly Subject<WaveeUIPlaybackState> _playbackEvent = new Subject<WaveeUIPlaybackState>();
 
     public PlaybackViewModel(UserViewModel user)
     {
@@ -139,6 +141,7 @@ public sealed class PlaybackViewModel : ObservableObject
         }
 
         SetPosition((int)state.Position.TotalMilliseconds);
+        _playbackEvent.OnNext(state);
         return Unit.Default;
     }
 
@@ -216,8 +219,7 @@ public sealed class PlaybackViewModel : ObservableObject
 
     public IObservable<WaveeUIPlaybackState> CreateListener()
     {
-        return _user.Client.Playback
-            .PlaybackEvents
+        return _playbackEvent
             .StartWith(_user.Client.Playback.CurrentPlayback)
             .ObserveOn(RxApp.MainThreadScheduler);
     }

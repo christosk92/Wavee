@@ -272,6 +272,12 @@ internal static class SpotifyRemoteConnection
                                     var wasInteresting = false;
                                     foreach (var callback in connectionInfo.Callbacks)
                                     {
+                                        if (callback.PackageReceiveCondition is null)
+                                        {
+                                            //remove callback, kinda hacky
+                                            connectionInfo.Callbacks.Remove(callback);
+                                            continue;
+                                        }
                                         if (callback.PackageReceiveCondition(pkg))
                                         {
                                             callback.Incoming(pkg);
