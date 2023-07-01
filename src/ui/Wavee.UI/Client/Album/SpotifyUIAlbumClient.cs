@@ -46,18 +46,19 @@ internal sealed class SpotifyUIAlbumClient : IWaveeUIAlbumClient
             Artists = album.Artists,
             ReleaseDate = album.ReleaseDate,
             ReleaseDatePrecision = album.ReleaseDatePrecision,
-            LargeImage = album.Images.OrderByDescending(x=> x.Height.IfNone(0)).HeadOrNone().Map(f=> f.Url).IfNone(string.Empty),
-            DarkColor = album.Colors.Map(x=> x.ColorDark),
-            LightColor = album.Colors.Map(f=> f.ColorLight),
-            MoreAlbums = album.MoreAlbums.Select(x=> new CardViewModel
+            LargeImage = album.Images.OrderByDescending(x => x.Height.IfNone(0)).HeadOrNone().Map(f => f.Url).IfNone(string.Empty),
+            DarkColor = album.Colors.Map(x => x.ColorDark),
+            LightColor = album.Colors.Map(f => f.ColorLight),
+            MoreAlbums = album.MoreAlbums.Select(x => new CardViewModel
             {
                 Title = x.Name,
                 Id = x.Id.ToString(),
-                Image = x.Images.OrderByDescending(x=> x.Height.IfNone(0)).HeadOrNone().Map(f=> f.Url).IfNone(string.Empty),
+                Type = x.Id.Type,
+                Image = x.Images.OrderByDescending(x => x.Height.IfNone(0)).HeadOrNone().Map(f => f.Url).IfNone(string.Empty),
                 Subtitle = x.ReleaseDate.Year.ToString(),
             }).ToArray(),
             Copyrights = album.Copyrights,
-            Discs = album.Discs.Select(x=> ParseToDisc(x)).ToArray()
+            Discs = album.Discs.Select(x => ParseToDisc(x)).ToArray()
         };
     }
 
@@ -65,7 +66,7 @@ internal sealed class SpotifyUIAlbumClient : IWaveeUIAlbumClient
     {
         return new WaveeUIAlbumDisc
         {
-            Tracks = spotifyAlbumDisc.Tracks.Select(f=> new WaveeUIAlbumTrack
+            Tracks = spotifyAlbumDisc.Tracks.Select(f => new WaveeUIAlbumTrack
             {
                 Uid = f.Uid,
                 Source = f.Id.Service,

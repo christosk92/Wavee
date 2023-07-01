@@ -216,12 +216,14 @@
                         VerticalAlignment="Center"
                         DefaultLabelPosition="Collapsed"
                         OverflowButtonVisibility="Visible">
-                <AppBarButton x:Name="LyricsButton"
-                              Visibility="Visible">
-                    <AppBarButton.Icon>
+                <AppBarToggleButton x:Name="LyricsButton"
+                                    Tapped="LyricsButton_OnTapped"
+                                    IsChecked="{x:Bind RightSidebar.IsInLyricsView,Mode=OneWay}"
+                                    Visibility="Visible">
+                    <AppBarToggleButton.Icon>
                         <FontIcon Glyph="&#xEC72;" />
-                    </AppBarButton.Icon>
-                </AppBarButton>
+                    </AppBarToggleButton.Icon>
+                </AppBarToggleButton>
 
                 <AppBarButton x:Name="QueueButton"
                               Visibility="Visible">

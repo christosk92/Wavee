@@ -225,4 +225,9 @@ public sealed class PlaybackViewModel : ObservableObject
             .StartWith(_user.Client.Playback.CurrentPlayback)
             .ObserveOn(RxApp.MainThreadScheduler);
     }
+
+    public double GetPosition()
+    {
+        return _position;
+    }
 }

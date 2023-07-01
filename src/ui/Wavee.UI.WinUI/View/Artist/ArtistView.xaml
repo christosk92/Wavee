@@ -12,6 +12,7 @@
              xmlns:winUi="using:Wavee.UI.WinUI"
              xmlns:artist="using:Wavee.Metadata.Artist"
              xmlns:converters="using:CommunityToolkit.WinUI.UI.Converters"
+             xmlns:media="using:CommunityToolkit.WinUI.UI.Media"
              Loaded="ArtistPage_OnLoaded"
              SizeChanged="ArtistPage_OnSizeChanged"
              mc:Ignorable="d">
@@ -35,8 +36,8 @@
             <converters:BoolToObjectConverter.TrueValue>
                 <StackPanel>
                     <TextBlock Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"
-                        FontWeight="Bold"
-                        Text="FOLLOWING" />
+                               FontWeight="Bold"
+                               Text="FOLLOWING" />
                 </StackPanel>
             </converters:BoolToObjectConverter.TrueValue>
             <converters:BoolToObjectConverter.FalseValue>
@@ -59,7 +60,6 @@
                                                      Grid.ColumnSpan="2"
                                                      VerticalAlignment="Stretch"
                                                      Source="{x:Bind ViewModel.Header, Mode=OneWay}" />
-
                     <StackPanel x:Name="MetadataPnale"
                                 Margin="24,0,0,0"
                                 VerticalAlignment="Bottom"
@@ -67,14 +67,16 @@
                                 ui:VisualExtensions.NormalizedCenterPoint="0.5"
                                 Orientation="Horizontal"
                                 Visibility="Collapsed">
-                        <PersonPicture x:Name="AlternativeArtistImage"
-                                       Grid.Column="0"
-                                       Width="150"
-                                       Height="150"
-                                       Margin="0,0,24,0"
-                                       VerticalAlignment="Bottom"
-                                       labs:TransitionHelper.Id="image"
-                                       Visibility="Collapsed" />
+                        <Grid x:Name="AlternativeArtistGrid"
+                              Margin="0,0,24,0"
+                              VerticalAlignment="Bottom"
+                              Visibility="Collapsed">
+                            <PersonPicture x:Name="AlternativeArtistPicture"
+                                           Grid.Column="0"
+                                           Width="200"
+                                           Height="200"
+                                           labs:TransitionHelper.Id="image" />
+                        </Grid>
                         <StackPanel>
                             <animations:Explicit.Animations>
                                 <animations:AnimationSet x:Name="ShowPanelAnim">

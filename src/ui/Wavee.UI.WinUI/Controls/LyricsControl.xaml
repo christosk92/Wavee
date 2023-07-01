@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl x:Class="Wavee.UI.WinUI.Controls.LyricsControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Wavee.UI.WinUI.Controls"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:lyrics="using:Wavee.UI.ViewModel.Shell.Lyrics"
+             mc:Ignorable="d">
+
+    <Grid Margin="0,30,0,0">
+        <ListView ItemsSource="{x:Bind ViewModel.Lyrics, Mode=OneWay}"
+                  x:Name="Lyrics"
+                  SelectionMode="Single"
+                  IsHitTestVisible="False"
+                  IsItemClickEnabled="False"
+                  SelectionChanged="Lyrics_OnSelectionChanged"
+                  ScrollViewer.VerticalScrollBarVisibility="Visible"
+                  SelectedItem="{x:Bind ViewModel.ActiveLyricsLine, Mode=OneWay}"
+                  Visibility="{x:Bind ViewModel.HasLyrics, Mode=OneWay, Converter={StaticResource TrueToVisibleConverter}}">
+            <ListView.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <StackPanel />
+                </ItemsPanelTemplate>
+            </ListView.ItemsPanel>
+            <ListView.ItemContainerStyle>
+                <Style TargetType="ListViewItem"
+                       BasedOn="{StaticResource DefaultListViewItemStyle}">
+                    <Setter Property="Margin"
+                            Value="0,6" />
+                    <Setter Property="Padding"
+                            Value="16,12" />
+                </Style>
+            </ListView.ItemContainerStyle>
+            <ListView.ItemTemplate>
+                <DataTemplate x:DataType="lyrics:LyricsLineViewModel">
+                    <TextBlock FontSize="{x:Bind ToFontSize(IsActive, 24, '16'), Mode=OneWay}"
+                               TextWrapping="Wrap"
+                               MinHeight="40"
+                               FontWeight="SemiBold"
+                               Opacity="{x:Bind ToFontSize(IsActive, 1, '0.5'), Mode=OneWay}"
+                               Text="{x:Bind Words}" />
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+        <ProgressRing x:Name="Loading"
+                      VerticalAlignment="Center"
+                      HorizontalAlignment="Center"
+                      x:Load="{x:Bind ViewModel.Loading, Mode=OneWay}" />
+        <TextBlock  VerticalAlignment="Center"
+                    x:Name="NoData"
+                    x:Load="{x:Bind Negate(ViewModel.HasLyrics), Mode=OneWay}"
+                    HorizontalTextAlignment="Center"
+                    FontWeight="SemiBold"
+                    FontSize="16"
+                    Text="You caught us on this one... &#x0a;Lyrics are not available."
+                    TextWrapping="Wrap" />
+    </Grid>
+</UserControl>

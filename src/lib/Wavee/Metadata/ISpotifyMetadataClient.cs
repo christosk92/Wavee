@@ -85,4 +85,6 @@ public interface ISpotifyMetadataClient
 
 
     ValueTask<SpotifyAlbumDisc[]> GetAlbumTracks(SpotifyId id, CancellationToken ct = default);
+    ValueTask<LyricsLine[]> GetLyrics(SpotifyId trackId, CancellationToken ct = default);
 }
+public readonly record struct LyricsLine(string Words, double StartTimeMs);

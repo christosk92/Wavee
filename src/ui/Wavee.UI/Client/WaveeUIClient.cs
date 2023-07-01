@@ -2,6 +2,7 @@
 using Wavee.UI.Client.Artist;
 using Wavee.UI.Client.Home;
 using Wavee.UI.Client.Library;
+using Wavee.UI.Client.Lyrics;
 using Wavee.UI.Client.Playback;
 using Wavee.UI.Client.Previews;
 
@@ -16,6 +17,7 @@ public class WaveeUIClient : IDisposable
     private readonly Func<IWaveeUIAlbumClient> _albumFactory;
     private readonly Func<IWaveeUIPreviewClient> _previewFactory;
     private readonly Func<IWaveeUIArtistClient> _artistFactory;
+    private readonly Func<IWaveeUILyricsClient> _lyricsFactory;
     public WaveeUIClient(SpotifyClient spotifyClient)
     {
         _disposable = spotifyClient;
@@ -26,6 +28,7 @@ public class WaveeUIClient : IDisposable
         _albumFactory = () => new SpotifyUIAlbumClient(spotifyClient);
         _previewFactory = () => new SpotifyUIPreviewClient(spotifyClient);
         _artistFactory = () => new SpotifyUIArtistClient(spotifyClient);
+        _lyricsFactory = () => new SpotifyUILyricsClient(spotifyClient);
     }
 
     public IWaveeUIHomeClient Home => _homeFactory();
@@ -34,6 +37,7 @@ public class WaveeUIClient : IDisposable
     public IWaveeUIAlbumClient Album => _albumFactory();
     public IWaveeUIPreviewClient Previews => _previewFactory();
     public IWaveeUIArtistClient Artist => _artistFactory();
+    public IWaveeUILyricsClient Lyrics => _lyricsFactory();
 
     public void Dispose()
     {

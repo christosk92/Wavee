@@ -132,14 +132,14 @@ public sealed partial class ArtistView : UserControl, INavigable, ICacheablePage
         {
             //show picture
             HeaderImage.Visibility = Visibility.Collapsed;
-            AlternativeArtistImage.Visibility = Visibility.Visible;
+            AlternativeArtistGrid.Visibility = Visibility.Visible;
             if (!string.IsNullOrEmpty(ViewModel.Artist.AvatarImage.Url))
             {
-                AlternativeArtistImage.ProfilePicture = SecondPersonPicture.ProfilePicture;
+                AlternativeArtistPicture.ProfilePicture = SecondPersonPicture.ProfilePicture;
             }
             else
             {
-                AlternativeArtistImage.DisplayName = SecondPersonPicture.DisplayName;
+                AlternativeArtistPicture.DisplayName = SecondPersonPicture.DisplayName;
             }
         }
 

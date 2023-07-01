@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows.Input;
 using Windows.System;
 using CommunityToolkit.WinUI.UI.Controls;
@@ -14,6 +15,7 @@ using DispatcherQueue = Microsoft.UI.Dispatching.DispatcherQueue;
 using System.Windows.Threading;
 using CommunityToolkit.Mvvm.Input;
 using Wavee.Id;
+using Wavee.UI.ViewModel.Shell;
 using Wavee.UI.WinUI.Navigation;
 using Wavee.UI.WinUI.View.Album;
 using Wavee.UI.WinUI.View.Artist;
@@ -30,6 +32,8 @@ namespace Wavee.UI.WinUI.View.Shell
         public static readonly DependencyProperty UserProperty = DependencyProperty.Register(nameof(User), typeof(UserViewModel), typeof(BottomPlayerControl), new PropertyMetadata(default(UserViewModel)));
         public static readonly DependencyProperty PlaybackProperty = DependencyProperty.Register(nameof(Playback), typeof(PlaybackViewModel), typeof(BottomPlayerControl), new PropertyMetadata(default(PlaybackViewModel), PlaybackViewModelChanged));
         private readonly DispatcherQueue _dispatcher;
+        public static readonly DependencyProperty RightSidebarProperty = DependencyProperty.Register(nameof(RightSidebar), typeof(RightSidebarViewModel), typeof(BottomPlayerControl), new PropertyMetadata(default(RightSidebarViewModel)));
+
         public BottomPlayerControl()
         { 
             this.InitializeComponent();
@@ -108,6 +112,12 @@ namespace Wavee.UI.WinUI.View.Shell
 
         public ICommand NavigateToCommand { get;  }
 
+        public RightSidebarViewModel RightSidebar
+        {
+            get => (RightSidebarViewModel)GetValue(RightSidebarProperty);
+            set => SetValue(RightSidebarProperty, value);
+        }
+
         public double GetTimestamp(TimeSpan? timeSpan)
         {
            return timeSpan?.TotalMilliseconds ?? 0;
@@ -137,6 +147,21 @@ namespace Wavee.UI.WinUI.View.Shell
                 case AudioItemType.Album:
                     NavigationService.Instance.Navigate(typeof(AlbumView), titleId.Id);
                     break;
+            }
+        }
+
+        private async void LyricsButton_OnTapped(object sender, TappedRoutedEventArgs e)
+        {
+            //wait 50 ms for toggle to complete
+            await Task.Delay(50);
+            var isChecked = LyricsButton.IsChecked;
+            if (isChecked.HasValue && isChecked.Value)
+            {
+                RightSidebar.ShowView(RightSidebarView.Lyrics);
+            }
+            else
+            {
+                RightSidebar.Hide();
             }
         }
     }

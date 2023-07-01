@@ -32,6 +32,7 @@
 		<None Remove="Controls\CalendarBadgeItem.xaml" />
 		<None Remove="Controls\CalendarControl.xaml" />
 		<None Remove="Controls\ImageTransitionControl.xaml" />
+		<None Remove="Controls\LyricsControl.xaml" />
 		<None Remove="Dialogs\WizardDialog.xaml" />
 		<None Remove="Styles\PropertiesStyles.xaml" />
 		<None Remove="Themes\AlbumArtistPageTrackTemplates.xaml" />
@@ -54,6 +55,7 @@
 		<None Remove="View\Setup\WelcomePage.xaml" />
 		<None Remove="View\Setup\YoureGoodToGoView.xaml" />
 		<None Remove="View\Shell\BottomPlayerControl.xaml" />
+		<None Remove="View\Shell\RightSidebarControl.xaml" />
 		<None Remove="View\Shell\ShellView.xaml" />
 		<None Remove="View\Shell\SidebarControl.xaml" />
 		<None Remove="View\SignInView.xaml" />
@@ -117,6 +119,12 @@
 	  <None Update="Assets\Fonts\MediaPlayerIcons.ttf">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </None>
+	  <Page Update="View\Shell\RightSidebarControl.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </Page>
+	  <Page Update="Controls\LyricsControl.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </Page>
 	  <Page Update="Themes\AlbumArtistPageTrackTemplates.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </Page>

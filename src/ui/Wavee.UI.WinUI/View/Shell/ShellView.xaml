@@ -489,12 +489,25 @@
                               Resized="SidebarControl_Resized"
                               SidebarItems="{x:Bind ViewModel.SidebarItems}"
                               User="{x:Bind ViewModel.User}">
-            <ContentPresenter x:Name="MainContent"
-                              VerticalContentAlignment="Stretch"
-                              HorizontalContentAlignment="Stretch" />
+
+            <SplitView PaneBackground="{ThemeResource LayerFillColorDefaultBrush}"
+                       DisplayMode="Inline"
+                       Style="{StaticResource DefaultSplitViewStyle}"
+                       OpenPaneLength="280"
+                       PanePlacement="Right"
+                       IsPaneOpen="{x:Bind ViewModel.RightSidebar.Show, Mode=OneWay}"
+                       x:Name="Spl">
+                <ContentPresenter x:Name="MainContent"
+                                  VerticalContentAlignment="Stretch"
+                                  HorizontalContentAlignment="Stretch" />
+                <SplitView.Pane>
+                    <local:RightSidebarControl ViewModel="{x:Bind ViewModel.RightSidebar,Mode=OneWay}" />
+                </SplitView.Pane>
+            </SplitView>
         </local:SidebarControl>
 
         <local:BottomPlayerControl VerticalAlignment="Bottom"
+                                   RightSidebar="{x:Bind ViewModel.RightSidebar,Mode=OneWay}"
                                    User="{x:Bind ViewModel.User,Mode=OneWay}"
                                    Playback="{x:Bind ViewModel.Playback}"
                                    Height="110" />

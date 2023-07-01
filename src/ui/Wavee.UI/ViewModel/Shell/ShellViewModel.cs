@@ -21,7 +21,7 @@ public sealed class ShellViewModel : ObservableObject
         Library = new LibraryViewModel(user, Added, Removed);
         Playback = new PlaybackViewModel(user);
         SidebarItems = new BulkConcurrentObservableCollection<ISidebarItem>(ConstructDefaultItems(user));
-
+        RightSidebar = new RightSidebarViewModel(user);
         Task.Run(async () =>
         {
             await Library.Initialize();
@@ -54,7 +54,9 @@ public sealed class ShellViewModel : ObservableObject
 
     public LibraryViewModel Library { get; }
     public UserViewModel User { get; set; }
-    public PlaybackViewModel Playback { get; } 
+    public PlaybackViewModel Playback { get; }
+    public RightSidebarViewModel RightSidebar { get; }
+
     public BulkConcurrentObservableCollection<ISidebarItem> SidebarItems { get; }
     public static ShellViewModel Instance { get; private set; }
 

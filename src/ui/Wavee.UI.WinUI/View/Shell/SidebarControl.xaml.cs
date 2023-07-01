@@ -25,6 +25,7 @@ using Wavee.UI.WinUI.Navigation;
 using Microsoft.VisualBasic.ApplicationServices;
 using ReactiveUI;
 using Wavee.UI.Client.Playback;
+using Wavee.UI.ViewModel.Shell;
 
 namespace Wavee.UI.WinUI.View.Shell;
 
@@ -87,7 +88,7 @@ public sealed partial class SidebarControl : NavigationView, INotifyPropertyChan
 
             if (user.Client.Playback.CurrentPlayback.IsSome)
             {
-                SetImageFromPlaybackEvent(x, user.Client.Playback.CurrentPlayback.ValueUnsafe());
+                SetImageFromPlaybackEvent(x, ShellViewModel.Instance.Playback._lastReceivedState);
             }
 
             user.Settings.PropertyChanged += (s, e) =>
@@ -96,7 +97,7 @@ public sealed partial class SidebarControl : NavigationView, INotifyPropertyChan
                 {
                     if (user.Settings.ImageExpanded)
                     {
-                        SetImageFromPlaybackEvent(x, user.Client.Playback.CurrentPlayback.ValueUnsafe());
+                        SetImageFromPlaybackEvent(x, ShellViewModel.Instance.Playback._lastReceivedState);
                         x.IsPaneOpen = true;
                     }
 
@@ -104,7 +105,8 @@ public sealed partial class SidebarControl : NavigationView, INotifyPropertyChan
                 }
             };
 
-            user.Client.Playback.PlaybackEvents
+            ShellViewModel.Instance.Playback
+                .CreateListener()
                 .ObserveOn(RxApp.MainThreadScheduler)
                 .Subscribe(y =>
                 {
