@@ -84,5 +84,5 @@ public interface ISpotifyMetadataClient
     Task<SpotifyAlbum> GetAlbum(SpotifyId id, CancellationToken ct = default);
 
 
-    Task<SpotifyAlbumDisc[]> GetAlbumTracks(SpotifyId id, CancellationToken ct = default);
+    ValueTask<SpotifyAlbumDisc[]> GetAlbumTracks(SpotifyId id, CancellationToken ct = default);
 }

@@ -45,35 +45,63 @@ public sealed class LibraryViewModel : ObservableObject
             .ObserveOn(RxApp.MainThreadScheduler)
             .Subscribe(notification =>
             {
-                if (notification.Added)
+                _items.Edit((x) =>
                 {
-                    foreach (var item in notification.Ids)
+                    if (notification.Added)
                     {
-                        _items.AddOrUpdate(item);
+                        foreach (var item in notification.Ids)
+                        {
+                            x.AddOrUpdate(item);
+                        }
+
+                        var groups = notification.Ids.GroupBy(x => x.Type).ToDictionary(x => x.Key, x => x.Count());
+                        foreach (var (key, value) in groups)
+                        {
+                            _added(key, value);
+                        }
                     }
-                    var groups = notification.Ids.GroupBy(x => x.Type).ToDictionary(x => x.Key, x => x.Count());
-                    foreach (var (key, value) in groups)
+                    else
                     {
-                        _added(key, value);
+                        foreach (var item in notification.Ids)
+                        {
+                            x.Remove(item);
+                        }
+
+                        var groups = notification.Ids.GroupBy(x => x.Type).ToDictionary(x => x.Key, x => x.Count());
+                        foreach (var (key, value) in groups)
+                        {
+                            _removed(key, value);
+                        }
                     }
-                }
-                else
-                {
-                    foreach (var item in notification.Ids)
-                    {
-                        _items.Remove(item);
-                    }
-                    var groups = notification.Ids.GroupBy(x => x.Type).ToDictionary(x => x.Key, x => x.Count());
-                    foreach (var (key, value) in groups)
-                    {
-                        _removed(key, value);
-                    }
-                }
+                });
             });
     }
 
     public bool InLibrary(string id)
     {
         return _items.Lookup(id).HasValue;
+    }
+
+    public IObservable<bool> CreateListener(string id)
+    {
+        //create listener for added/removed
+        return _items
+            .Connect()
+            .Filter(x => string.Equals(x.Id, id, StringComparison.InvariantCultureIgnoreCase))
+            .Select(changes =>
+            {
+                foreach (var change in changes)
+                {
+                    switch (change.Reason)
+                    {
+                        case ChangeReason.Add:
+                            return true;
+                        case ChangeReason.Remove:
+                            return false;
+                            break;
+                    }
+                }
+                return false;
+            });
     }
 }

@@ -9,6 +9,7 @@
              Loaded="DiscographyPageGridView_OnLoaded"
              mc:Ignorable="d">
     <ItemsRepeater VerticalAlignment="Top"
+                   VerticalCacheLength="1"
                    ItemsSource="{x:Bind Releases, Mode=OneWay}">
         <ItemsRepeater.Layout>
             <StackLayout Orientation="Vertical"
@@ -18,9 +19,9 @@
             <DataTemplate x:DataType="artist:IArtistDiscographyRelease">
                 <local:ArtistDiscographyTrackListView Id="{x:Bind Id.ToString(), Mode=OneWay}"
                                                       Title="{x:Bind Name, Mode=OneWay}"
+                                                      x:Phase="1"
                                                       Images="{x:Bind Images, Mode=OneWay}"
                                                       ReleaseDate="{x:Bind Date, Mode=OneWay}"
-                                                      x:Phase="1"
                                                       TrackCount="{x:Bind TotalTracks, Mode=OneWay}" />
             </DataTemplate>
         </ItemsRepeater.ItemTemplate>

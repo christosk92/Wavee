@@ -114,6 +114,7 @@ public sealed partial class ArtistView : UserControl, INavigable, ICacheablePage
         if (parameter is string id)
         {
             await ViewModel.Fetch(id, CancellationToken.None);
+            ViewModel.CreateListener();
             _artistFetched.TrySetResult();
         }
         MetadataPnale.Visibility = Visibility.Visible;
@@ -147,7 +148,7 @@ public sealed partial class ArtistView : UserControl, INavigable, ICacheablePage
 
     public void NavigatedFrom(NavigationMode mode)
     {
-
+        ViewModel.Destroy();
     }
 
     public bool ShouldKeepInCache(int currentDepth)

@@ -26,6 +26,7 @@ public sealed class PlaybackViewModel : ObservableObject
     private ItemWithId[] _subtitles;
     private TimeSpan? _duration;
     private int _position;
+    private string _itemId;
 
     public PlaybackViewModel(UserViewModel user)
     {
@@ -45,6 +46,11 @@ public sealed class PlaybackViewModel : ObservableObject
         set => SetProperty(ref _hasPlayback, value);
     }
 
+    public string ItemId
+    {
+        get => _itemId;
+        set => SetProperty(ref _itemId, value);
+    }
     public ItemWithId Title
     {
         get => _title;
@@ -86,6 +92,7 @@ public sealed class PlaybackViewModel : ObservableObject
             LargeImageUrl = metadata.LargeImageUrl;
             SmallImageUrl = metadata.SmallImageUrl;
             Duration = metadata.Duration;
+            ItemId = metadata.Id;
         }
         switch (state.PlaybackState)
         {

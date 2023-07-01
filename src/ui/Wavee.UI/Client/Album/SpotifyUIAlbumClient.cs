@@ -26,13 +26,12 @@ internal sealed class SpotifyUIAlbumClient : IWaveeUIAlbumClient
         return ParseFrom(album);
     }
 
-    public Task<WaveeUIAlbumDisc[]> GetAlbumTracks(string id, CancellationToken ct = default)
+    public ValueTask<WaveeUIAlbumDisc[]> GetAlbumTracks(string id, CancellationToken ct = default)
     {
         if (!_spotifyClient.TryGetTarget(out var spotifyClient))
         {
             throw new InvalidOperationException("SpotifyClient is not available");
         }
-
         return spotifyClient.Metadata.GetAlbumTracks(SpotifyId.FromUri(id), ct)
             .Map(f => f.Select(ParseToDisc).ToArray());
     }

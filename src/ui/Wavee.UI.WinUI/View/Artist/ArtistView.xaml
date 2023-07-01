@@ -11,6 +11,7 @@
              xmlns:controls="using:Wavee.UI.WinUI.Controls"
              xmlns:winUi="using:Wavee.UI.WinUI"
              xmlns:artist="using:Wavee.Metadata.Artist"
+             xmlns:converters="using:CommunityToolkit.WinUI.UI.Converters"
              Loaded="ArtistPage_OnLoaded"
              SizeChanged="ArtistPage_OnSizeChanged"
              mc:Ignorable="d">
@@ -30,6 +31,21 @@
             <labs:TransitionConfig Id="image"
                                    ScaleMode="Scale" />
         </labs:TransitionHelper>
+        <converters:BoolToObjectConverter x:Key="FollowingToObjectConverter">
+            <converters:BoolToObjectConverter.TrueValue>
+                <StackPanel>
+                    <TextBlock Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"
+                        FontWeight="Bold"
+                        Text="FOLLOWING" />
+                </StackPanel>
+            </converters:BoolToObjectConverter.TrueValue>
+            <converters:BoolToObjectConverter.FalseValue>
+                <Grid>
+                    <TextBlock FontWeight="Bold"
+                               Text="FOLLOW" />
+                </Grid>
+            </converters:BoolToObjectConverter.FalseValue>
+        </converters:BoolToObjectConverter>
     </UserControl.Resources>
 
     <Grid VerticalAlignment="Top">
@@ -101,7 +117,7 @@
                                 <Button x:Name="FollowButton"
                                         Padding="8"
                                         BorderThickness="1"
-                                        Content="{x:Bind FollowingToContent(ViewModel.IsFollowing), Mode=OneWay}" />
+                                        Content="{x:Bind ViewModel.IsFollowing, Mode=OneWay, Converter={StaticResource FollowingToObjectConverter}}" />
 
 
                                 <Border Margin="0,4,12,0"

@@ -65,13 +65,13 @@ public sealed class NavigationService : ObservableObject
                 navigablePage.NavigatedTo(parameter);
 
             _contentControl.Content = cachedPage.PageReference.Target;
-            Task.Run(() =>
-            {
-                GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
-                GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced, true, true);
-                GC.WaitForPendingFinalizers();
-                GC.Collect();
-            });
+            // Task.Run(() =>
+            // {
+            //     GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
+            //     GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced, true, true);
+            //     GC.WaitForPendingFinalizers();
+            //     GC.Collect();
+            // });
 
             // Remove the old cache entry
             _cachedPages.Remove(cachedPage);
@@ -86,13 +86,13 @@ public sealed class NavigationService : ObservableObject
             if (page is INavigable navigablePage)
                 navigablePage.NavigatedTo(parameter);
             _contentControl.Content = page;
-            Task.Run(() =>
-            {
-                GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
-                GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced, true, true);
-                GC.WaitForPendingFinalizers();
-                GC.Collect();
-            });
+            // Task.Run(() =>
+            // {
+            //     GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
+            //     GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced, true, true);
+            //     GC.WaitForPendingFinalizers();
+            //     GC.Collect();
+            // });
 
             if (page is ICacheablePage cacheablePage)
             {

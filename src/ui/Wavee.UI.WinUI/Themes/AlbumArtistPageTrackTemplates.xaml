@@ -34,7 +34,9 @@
                   x:DataType="album:WaveeUIAlbumTrack">
         <tracks:AlbumTrackView Number="{x:Bind TrackNumber}"
                                Title="{x:Bind Name}"
+                               Id="{x:Bind Id}"
                                Artists="{x:Bind Artists}"
+                               WithCheckbox="True"
                                Playcount="{x:Bind Playcount}"
                                Duration="{x:Bind Duration}" />
     </DataTemplate>

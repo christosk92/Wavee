@@ -18,6 +18,7 @@ namespace Wavee.UI.WinUI.Components.Tracks
         public static readonly DependencyProperty DurationProperty = DependencyProperty.Register(nameof(Duration), typeof(TimeSpan), typeof(AlbumTrackView), new PropertyMetadata(default(TimeSpan)));
         public static readonly DependencyProperty ArtistsProperty = DependencyProperty.Register(nameof(Artists), typeof(ITrackArtist[]), typeof(TopTrackView), new PropertyMetadata(default(ITrackArtist[])));
         public static readonly DependencyProperty ImagesProperty = DependencyProperty.Register(nameof(Images), typeof(ICoverImage[]), typeof(TopTrackView), new PropertyMetadata(default(ICoverImage[])));
+        public static readonly DependencyProperty IdProperty = DependencyProperty.Register(nameof(Id), typeof(string), typeof(TopTrackView), new PropertyMetadata(default(string)));
 
         public TopTrackView()
         {
@@ -57,6 +58,12 @@ namespace Wavee.UI.WinUI.Components.Tracks
         {
             get => (ICoverImage[])GetValue(ImagesProperty);
             set => SetValue(ImagesProperty, value);
+        }
+
+        public string Id
+        {
+            get => (string)GetValue(IdProperty);
+            set => SetValue(IdProperty, value);
         }
 
 

@@ -1,7 +1,10 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿using System.Reactive.Linq;
+using CommunityToolkit.Mvvm.ComponentModel;
 using LanguageExt.UnsafeValueAccess;
+using ReactiveUI;
 using Wavee.UI.Client.Artist;
 using Wavee.UI.User;
+using Wavee.UI.ViewModel.Shell;
 
 namespace Wavee.UI.ViewModel.Artist;
 
@@ -10,7 +13,7 @@ public sealed class ArtistViewModel : ObservableObject
     private readonly UserViewModel _userViewModel;
     private WaveeUIArtistView? _artist;
     private bool _following;
-
+    private IDisposable? _disposable;
     public ArtistViewModel(UserViewModel userViewModel)
     {
         _userViewModel = userViewModel;
@@ -53,5 +56,21 @@ public sealed class ArtistViewModel : ObservableObject
     {
         var client = _userViewModel.Client.Artist;
         Artist = await client.GetArtist(id, ct);
+        IsFollowing = ShellViewModel.Instance.Library.InLibrary(Artist.Id);
+    }
+
+    public void CreateListener()
+    {
+        _disposable = ShellViewModel.Instance.Library
+            .CreateListener(Artist!.Id)
+            .ObserveOn(RxApp.MainThreadScheduler)
+            .Subscribe(v =>
+            {
+                IsFollowing = v;
+            });
+    }
+    public void Destroy()
+    {
+        _disposable?.Dispose();
     }
 }

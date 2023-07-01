@@ -116,7 +116,8 @@
                 <!--            x:Name="Artistname" /> -->
             </StackPanel>
 
-            <components:StarButton FontSize="20"
+            <components:StarButton FontSize="24"
+                                   Id="{x:Bind Playback.ItemId, Mode=OneWay}"
                                    Margin="12,0"
                                    RelativePanel.AlignVerticalCenterWith="Image"
                                    RelativePanel.AlignRightWithPanel="True"

@@ -319,31 +319,70 @@ internal readonly struct LiveSpotifyMetadataClient : ISpotifyMetadataClient
         return SpotifyAlbum.ParseFrom(root);
     }
 
-    public async Task<SpotifyAlbumDisc[]> GetAlbumTracks(SpotifyId id, CancellationToken ct = default)
+    public ValueTask<SpotifyAlbumDisc[]> GetAlbumTracks(SpotifyId id, CancellationToken ct = default)
     {
-        var query = new QueryAlbumTracks(id: id);
-        var response = await _query(query, _defaultLang);
-        response.EnsureSuccessStatusCode();
-
-        using var stream = await response.Content.ReadAsStreamAsync();
-        using var json = await JsonDocument.ParseAsync(stream, default, ct);
-        var root = json.RootElement.GetProperty("data").GetProperty("albumUnion").GetProperty("tracks");
-        var totalCount = root.GetProperty("totalCount").GetInt32();
-        var output = new SpotifyAlbumTrack[totalCount];
-        var items = root.GetProperty("items");
-        using var array = items.EnumerateArray();
-        int i = 0;
-        while (array.MoveNext())
+        static SpotifyAlbumDisc[] Parse(ReadOnlyMemory<byte> data)
         {
-            var item = array.Current;
-            var parsed = SpotifyAlbum.ParseTrack(item);
-            output[i++] = parsed;
+            using var json = JsonDocument.Parse(data);
+            var root = json.RootElement.GetProperty("data").GetProperty("albumUnion").GetProperty("tracks");
+            var totalCount = root.GetProperty("totalCount").GetInt32();
+            var output = new SpotifyAlbumTrack[totalCount];
+            var items = root.GetProperty("items");
+            using var array = items.EnumerateArray();
+            int i = 0;
+            while (array.MoveNext())
+            {
+                var item = array.Current;
+                var parsed = SpotifyAlbum.ParseTrack(item);
+                output[i++] = parsed;
+            }
+
+            return output.GroupBy(x => x.DiscNumber)
+                .Select(f => new SpotifyAlbumDisc(
+                    number: f.Key,
+                    tracks: f.ToArray()
+                )).ToArray();
         }
 
-        return output.GroupBy(x => x.DiscNumber)
-            .Select(f => new SpotifyAlbumDisc(
-                number: f.Key,
-                tracks: f.ToArray()
-            )).ToArray();
+
+        var key = $"{id.ToString()}-tracks";
+        LiveSpotifyMetadataClient tmpThis = this;
+        var result = tmpThis._cache
+            .GetRawEntity(key)
+            .Bind(f => Option<ReadOnlyMemory<byte>>.Some(f))
+            .Match(
+                Some: data =>
+                {
+                    var res = new ValueTask<SpotifyAlbumDisc[]>(Parse(data));
+                    return res;
+                },
+                None: () =>
+                {
+                    static async Task<SpotifyAlbumDisc[]> Fetch(SpotifyId albumId, LiveSpotifyMetadataClient tmpthis, string key)
+                    {
+                        var query = new QueryAlbumTracks(id: albumId);
+                        var response = await tmpthis._query(query, tmpthis._defaultLang);
+                        response.EnsureSuccessStatusCode();
+                        var stream = await response.Content.ReadAsByteArrayAsync();
+                        if (response.IsSuccessStatusCode)
+                        {
+                            var data = Parse(stream); 
+                            tmpthis._cache.SaveRawEntity(key, stream, DateTimeOffset.Now.AddDays(1));
+                            return data;
+                        }
+
+                        throw new MercuryException(new MercuryResponse(
+                            Header: new Header
+                            {
+                                StatusCode = (int)response.StatusCode
+                            }, ReadOnlyMemory<byte>.Empty
+                        ));
+                    }
+
+                    return new ValueTask<SpotifyAlbumDisc[]>(Fetch(id, tmpThis, key));
+                }
+            );
+
+        return result;
     }
 }

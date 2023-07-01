@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Reactive.Linq;
 using Windows.UI;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -7,6 +8,8 @@ using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Animation;
 using Microsoft.UI.Xaml.Shapes;
+using ReactiveUI;
+using Wavee.UI.ViewModel.Shell;
 
 // The Templated Control item template is documented at https://go.microsoft.com/fwlink/?LinkId=234235
 
@@ -14,22 +17,22 @@ namespace Wavee.UI.WinUI.Components
 {
     public sealed class StarButton : ToggleButton
     {
-
+        private IDisposable? subscription;
         public StarButton()
         {
             DefaultStyleKey = typeof(StarButton);
-            Loaded += StarButton_Loaded;
-            Unloaded += StarButton_Unloaded;
+            this.Loaded += StarButton_Loaded;
+            this.Unloaded += StarButton_Unloaded;
         }
 
         private void StarButton_Unloaded(object sender, RoutedEventArgs e)
         {
-            Loaded -= StarButton_Loaded;
-            Unloaded -= StarButton_Unloaded;
+            ClearSubscription();
         }
 
         private void StarButton_Loaded(object sender, RoutedEventArgs e)
         {
+            UpdateSubscriptions();
         }
 
         private FontIcon Icon;
@@ -69,9 +72,49 @@ namespace Wavee.UI.WinUI.Components
             get { return (string)GetValue(IconSymbolProperty); }
             set { SetValue(IconSymbolProperty, value); }
         }
+
+        public string Id
+        {
+            get => (string)GetValue(IdProperty);
+            set => SetValue(IdProperty, value);
+        }
+
         // Using a DependencyProperty as the backing store for IconSymbol.  This enables animation, styling, binding, etc...
         public static readonly DependencyProperty IconSymbolProperty =
             DependencyProperty.Register("IconSymbol", typeof(string), typeof(StarButton), new PropertyMetadata("\uE00B", OnIconSymbolChanged));
+
+        public static readonly DependencyProperty IdProperty = DependencyProperty.Register(nameof(Id), typeof(string), typeof(StarButton), new PropertyMetadata(default(string), IdPropertyChanged));
+
+        private static void IdPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            var x = d as StarButton;
+            x.UpdateSubscriptions();
+        }
+
+        private void UpdateSubscriptions()
+        {
+            ClearSubscription();
+
+            if (!string.IsNullOrEmpty(Id))
+            {
+                subscription = ShellViewModel.Instance.Library
+                    .CreateListener(Id)
+                    .ObserveOn(RxApp.MainThreadScheduler)
+                    .Subscribe(x => { IsChecked = x; });
+            }
+            else
+            {
+                subscription?.Dispose();
+                subscription = null;
+            }
+        }
+
+        private void ClearSubscription()
+        {
+            subscription?.Dispose();
+            subscription = null;
+        }
+
         private static void OnIconSymbolChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             var btn = d as StarButton;

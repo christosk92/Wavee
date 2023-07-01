@@ -297,6 +297,8 @@
             <DataTemplate x:DataType="album1:WaveeUIAlbumTrack">
                 <tracks:AlbumTrackView Number="{x:Bind TrackNumber}"
                                        Title="{x:Bind Name}"
+                                       Id="{x:Bind Id}"
+                                       Uid="{x:Bind Uid}"
                                        Artists="{x:Bind Artists}"
                                        Playcount="{x:Bind Playcount}"
                                        Duration="{x:Bind Duration}" />

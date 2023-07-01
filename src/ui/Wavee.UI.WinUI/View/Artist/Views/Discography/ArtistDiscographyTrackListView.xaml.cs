@@ -65,9 +65,8 @@ namespace Wavee.UI.WinUI.View.Artist.Views.Discography
         }
         private async Task LoadTracks(string id)
         {
-            var client = ShellViewModel.Instance.User.Client.Album;
-            var response = await client.GetAlbumTracks(id);
-            var allTracks = response.SelectMany(f=> f.Tracks);
+            var response = await Task.Run(async () => await ShellViewModel.Instance.User.Client.Album.GetAlbumTracks(id));
+            var allTracks = response.SelectMany(f => f.Tracks);
             TracksS.ItemsSource = allTracks;
         }
         public Uri? GetImage(ICoverImage[] images)

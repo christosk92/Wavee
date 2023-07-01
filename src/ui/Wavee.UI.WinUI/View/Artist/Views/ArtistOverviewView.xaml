@@ -59,6 +59,8 @@
             <ListView.ItemTemplate>
                 <DataTemplate x:DataType="artist:ArtistTopTrackViewModel">
                     <tracks:TopTrackView Number="{x:Bind Index}"
+                                         Id="{x:Bind Id}"
+
                                          Images="{x:Bind AlbumImages}"
                                          Artists="{x:Bind Artists}"
                                          Title="{x:Bind Name}"

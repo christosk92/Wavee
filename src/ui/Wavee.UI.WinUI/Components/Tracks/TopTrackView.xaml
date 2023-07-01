@@ -14,6 +14,7 @@
     <local:WaveeTrackHost ShowImage="True"
                           Image="{x:Bind GetSmallestImage(Images),Mode=OneWay}"
                           AlternateRowColor="True"
+                          Id="{x:Bind Id,Mode=OneWay}"
                           Index="{x:Bind Number,Mode=OneWay}">
         <Grid Padding="4,6"
               x:DefaultBindMode="OneWay">

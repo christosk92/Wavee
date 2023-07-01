@@ -106,7 +106,16 @@
 
             </VisualStateGroup>
         </VisualStateManager.VisualStateGroups>
-        <RelativePanel>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <Border x:Name="CheckboxBorder"
+                Width="34"
+                x:Load="{x:Bind WithCheckbox, Mode=OneWay}">
+            <CheckBox  />
+        </Border>
+        <RelativePanel Grid.Column="1">
             <ContentControl x:Name="PlaybackViewContent"
                             Margin="9,0,3,0"
                             RelativePanel.AlignVerticalCenterWithPanel="True"
@@ -123,6 +132,7 @@
 
 
             <components:StarButton FontSize="20"
+                                   Id="{x:Bind Id,Mode=OneWay}"
                                    RelativePanel.AlignVerticalCenterWithPanel="True"
                                    RelativePanel.RightOf="PlaybackViewContent"
                                    x:Name="SavedButton"

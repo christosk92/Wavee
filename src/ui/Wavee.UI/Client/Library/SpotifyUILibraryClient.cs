@@ -27,7 +27,7 @@ internal sealed class SpotifyUILibraryClient : IWaveeUILibraryClient
         return client.Remote.CreateLibraryListener()
             .Select((x) => new WaveeUILibraryNotification(
                 Ids: x.Id.Select(f => new WaveeUILibraryItem(
-                    Id: f.ToString(),
+                    Id: f.Id.ToString(),
                     Type: f.Id.Type,
                     Source: f.Id.Service,
                     AddedAt: f.AddedAt

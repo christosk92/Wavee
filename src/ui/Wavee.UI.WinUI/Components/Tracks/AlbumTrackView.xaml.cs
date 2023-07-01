@@ -27,6 +27,9 @@ namespace Wavee.UI.WinUI.Components.Tracks
         public static readonly DependencyProperty ArtistsProperty = DependencyProperty.Register(nameof(Artists), typeof(ITrackArtist[]), typeof(AlbumTrackView), new PropertyMetadata(default(ITrackArtist[])));
         public static readonly DependencyProperty PlaycountProperty = DependencyProperty.Register(nameof(Playcount), typeof(Option<ulong>), typeof(AlbumTrackView), new PropertyMetadata(default(Option<ulong>)));
         public static readonly DependencyProperty DurationProperty = DependencyProperty.Register(nameof(Duration), typeof(TimeSpan), typeof(AlbumTrackView), new PropertyMetadata(default(TimeSpan)));
+        public static readonly DependencyProperty IdProperty = DependencyProperty.Register(nameof(Id), typeof(string), typeof(AlbumTrackView), new PropertyMetadata(default(string)));
+        public static readonly DependencyProperty UidProperty = DependencyProperty.Register(nameof(Uid), typeof(Option<string>), typeof(AlbumTrackView), new PropertyMetadata(default(Option<string>)));
+        public static readonly DependencyProperty WithCheckboxProperty = DependencyProperty.Register(nameof(WithCheckbox), typeof(bool), typeof(AlbumTrackView), new PropertyMetadata(default(bool)));
 
         public AlbumTrackView()
         {
@@ -61,6 +64,24 @@ namespace Wavee.UI.WinUI.Components.Tracks
         {
             get => (TimeSpan)GetValue(DurationProperty);
             set => SetValue(DurationProperty, value);
+        }
+
+        public string Id
+        {
+            get => (string)GetValue(IdProperty);
+            set => SetValue(IdProperty, value);
+        }
+
+        public Option<string> Uid
+        {
+            get => (Option<string>)GetValue(UidProperty);
+            set => SetValue(UidProperty, value);
+        }
+
+        public bool WithCheckbox
+        {
+            get => (bool)GetValue(WithCheckboxProperty);
+            set => SetValue(WithCheckboxProperty, value);
         }
 
 

@@ -15,6 +15,8 @@ public sealed partial class WaveeTrackHost : UserControl
     public static readonly DependencyProperty AlternateRowColorProperty = DependencyProperty.Register(nameof(AlternateRowColor), typeof(bool), typeof(WaveeTrackHost), new PropertyMetadata(default(bool), UIPropertyChanged));
     public static readonly DependencyProperty ShowImageProperty = DependencyProperty.Register(nameof(ShowImage), typeof(bool), typeof(WaveeTrackHost), new PropertyMetadata(default(bool), UIPropertyChanged));
     public static readonly DependencyProperty ImageProperty = DependencyProperty.Register(nameof(Image), typeof(string), typeof(WaveeTrackHost), new PropertyMetadata(default(string?), UIPropertyChanged));
+    public static readonly DependencyProperty IdProperty = DependencyProperty.Register(nameof(Id), typeof(string), typeof(WaveeTrackHost), new PropertyMetadata(default(string)));
+    public static readonly DependencyProperty WithCheckboxProperty = DependencyProperty.Register(nameof(WithCheckbox), typeof(bool), typeof(WaveeTrackHost), new PropertyMetadata(default(bool)));
 
     public WaveeTrackHost()
     {
@@ -49,6 +51,18 @@ public sealed partial class WaveeTrackHost : UserControl
     {
         get => (string?)GetValue(ImageProperty);
         set => SetValue(ImageProperty, value);
+    }
+
+    public string Id
+    {
+        get => (string)GetValue(IdProperty);
+        set => SetValue(IdProperty, value);
+    }
+
+    public bool WithCheckbox
+    {
+        get => (bool)GetValue(WithCheckboxProperty);
+        set => SetValue(WithCheckboxProperty, value);
     }
 
     private static void UIPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
