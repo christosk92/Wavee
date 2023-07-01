@@ -3,6 +3,7 @@ using Microsoft.UI.Xaml.Controls;
 using System.Xml.Linq;
 using Microsoft.UI.Xaml.Markup;
 using System;
+using System.Reactive.Linq;
 using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
 using Microsoft.UI.Input;
@@ -156,6 +157,7 @@ public sealed partial class WaveeTrackHost : UserControl
             _subscrption?.Dispose();
             _subscrption = null;
             _subscrption = ShellViewModel.Instance.Playback.CreateListener()
+                .StartWith(ShellViewModel.Instance.Playback._lastReceivedState)
                 .Subscribe(PlaybackChanged);
         }
     }
@@ -276,7 +278,12 @@ public sealed partial class WaveeTrackHost : UserControl
 
     private void WaveeTrackHost_OnLoading(FrameworkElement sender, object args)
     {
-        
+        if (!string.IsNullOrEmpty(Id))
+        {
+            _subscrption?.Dispose();
+            _subscrption = null;
+            UpdateUI();
+        }
     }
 }
 public enum TrackPlaybackState

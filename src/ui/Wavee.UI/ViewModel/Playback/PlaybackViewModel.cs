@@ -37,6 +37,7 @@ public sealed class PlaybackViewModel : ObservableObject
     private bool _paused;
     private readonly UserViewModel _user;
     private readonly Subject<WaveeUIPlaybackState> _playbackEvent = new Subject<WaveeUIPlaybackState>();
+    public WaveeUIPlaybackState _lastReceivedState;
 
     public PlaybackViewModel(UserViewModel user)
     {
@@ -142,6 +143,7 @@ public sealed class PlaybackViewModel : ObservableObject
 
         SetPosition((int)state.Position.TotalMilliseconds);
         _playbackEvent.OnNext(state);
+        _lastReceivedState = state;
         return Unit.Default;
     }
 
