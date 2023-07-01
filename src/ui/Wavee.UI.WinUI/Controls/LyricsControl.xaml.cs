@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using CommunityToolkit.WinUI.UI;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
@@ -41,13 +42,21 @@ public sealed partial class LyricsControl : UserControl
 
         if (Lyrics.SelectedItem != null)
         {
-            try
+            int iteration = 0;
+            while (true)
             {
-                await ListViewExtensions.SmoothScrollIntoViewWithItemAsync(Lyrics, Lyrics.SelectedItem, ScrollItemPlacement.Top, false, true, 0, 0);
-            }
-            catch (Exception x)
-            {
-
+                try
+                {
+                    await ListViewExtensions.SmoothScrollIntoViewWithItemAsync(Lyrics, Lyrics.SelectedItem, ScrollItemPlacement.Top, false, true, 0, 0);
+                    break;
+                }
+                catch (Exception x)
+                {
+                    await Task.Delay(10);
+                    if (iteration > 10)
+                        break;
+                    iteration++;
+                }
             }
         }
     }

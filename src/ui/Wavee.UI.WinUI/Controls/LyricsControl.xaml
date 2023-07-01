@@ -27,7 +27,7 @@
                 <Style TargetType="ListViewItem"
                        BasedOn="{StaticResource DefaultListViewItemStyle}">
                     <Setter Property="Margin"
-                            Value="0,6" />
+                            Value="0,0" />
                     <Setter Property="Padding"
                             Value="16,12" />
                 </Style>
