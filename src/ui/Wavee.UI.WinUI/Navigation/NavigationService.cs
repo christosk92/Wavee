@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Runtime;
+using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
@@ -63,7 +65,13 @@ public sealed class NavigationService : ObservableObject
                 navigablePage.NavigatedTo(parameter);
 
             _contentControl.Content = cachedPage.PageReference.Target;
-            GC.Collect();
+            Task.Run(() =>
+            {
+                GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
+                GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced, true, true);
+                GC.WaitForPendingFinalizers();
+                GC.Collect();
+            });
 
             // Remove the old cache entry
             _cachedPages.Remove(cachedPage);
@@ -78,7 +86,14 @@ public sealed class NavigationService : ObservableObject
             if (page is INavigable navigablePage)
                 navigablePage.NavigatedTo(parameter);
             _contentControl.Content = page;
-            GC.Collect();
+            Task.Run(() =>
+            {
+                GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
+                GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced, true, true);
+                GC.WaitForPendingFinalizers();
+                GC.Collect();
+            });
+
             if (page is ICacheablePage cacheablePage)
             {
                 _cachedPages.Add(new CachedPage(new WeakReference(cacheablePage), pageType, parameter, _backStack.Count));
