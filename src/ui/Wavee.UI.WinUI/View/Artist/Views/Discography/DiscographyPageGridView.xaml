@@ -8,6 +8,8 @@
              xmlns:artist="using:Wavee.Metadata.Artist"
              xmlns:components="using:Wavee.UI.WinUI.Components"
              xmlns:winUi="using:Wavee.UI.WinUI"
+             xmlns:controls="using:CommunityToolkit.WinUI.UI.Controls"
+             xmlns:panels="using:Wavee.UI.WinUI.Panels"
              Loaded="DiscographyPageGridView_OnLoaded"
              mc:Ignorable="d">
 
@@ -15,16 +17,17 @@
         <winUi:HumanizeDateTimeStringConverter x:Key="HumanizeDateTimeStringConverter" />
     </UserControl.Resources>
     <ItemsRepeater VerticalAlignment="Top"
-                   MaxHeight="10000000"
-                   MaxWidth="10000000"
                    ItemsSource="{x:Bind Releases, Mode=OneWay}">
         <ItemsRepeater.Layout>
-            <UniformGridLayout MinColumnSpacing="8"
-                               MinRowSpacing="12"
-                               MinItemHeight="240"
-                               MinItemWidth="200"
-                               ItemsJustification="Start"
-                               ItemsStretch="Uniform" />
+            <panels:UniformGridLayoutPanel MinColumnSpacing="8"
+                                           MinRowSpacing="12"
+                                           MinItemHeight="240"
+                                           MinItemWidth="200"
+                                           ItemsJustification="Start"
+                                           ItemsStretch="Uniform" />
+            <!-- <controls:WrapLayout HorizontalSpacing="8" -->
+            <!--                      VerticalSpacing="12"  -->
+            <!--                      Orientation="Horizontal" /> -->
         </ItemsRepeater.Layout>
         <ItemsRepeater.ItemTemplate>
             <DataTemplate x:DataType="artist:IArtistDiscographyRelease">
@@ -34,6 +37,7 @@
                                      AudioType="Album"
                                      MaxHeight="400"
                                      MaxWidth="400"
+                                     VerticalContentAlignment="Top"
                                      VerticalAlignment="Top"
                                      Subtitle="{x:Bind Date,Mode=OneWay, Converter={StaticResource HumanizeDateTimeStringConverter}}"
                                      Image="{x:Bind Images[0].Url,Mode=OneWay}" />

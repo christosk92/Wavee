@@ -11,12 +11,13 @@
              xmlns:labs="using:CommunityToolkit.Labs.WinUI"
              Tapped="CardView_OnTapped"
              DataContext="{x:Bind}"
+             VerticalAlignment="Top"
              PointerEntered="CardView_OnPointerEntered"
              PointerExited="CardView_OnPointerExited"
              ContextRequested="CardView_OnContextRequested"
              mc:Ignorable="d">
 
-    <Grid>
+    <Grid VerticalAlignment="Top">
         <Border  Background="{ThemeResource LayerFillColorDefaultBrush}"
                  BorderThickness="1"
                  labs:TransitionHelper.Id="background"
