@@ -6,6 +6,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:controls="using:CommunityToolkit.WinUI.UI.Controls"
+             xmlns:components="using:Wavee.UI.WinUI.Components"
              DataContext="{x:Bind Playback,Mode=OneWay}"
              mc:Ignorable="d">
     <UserControl.Resources>
@@ -87,7 +88,7 @@
 
             <StackPanel   RelativePanel.AlignVerticalCenterWith="Image"
                           x:Name="MetadataPanel"
-                          Margin="12,0,0,0"
+                          Margin="12,0,28,0"
                           RelativePanel.RightOf="Image">
                 <StackPanel.TranslationTransition>
                     <Vector3Transition />
@@ -105,6 +106,8 @@
                         <Style TargetType="TextBlock">
                             <Setter Property="Foreground"
                                     Value="{ThemeResource ApplicationSecondaryForegroundThemeBrush}" />
+                            <Setter Property="TextWrapping"
+                                    Value="WrapWholeWords" />
                         </Style>
                     </controls:MetadataControl.TextBlockStyle>
                 </controls:MetadataControl>
@@ -113,11 +116,12 @@
                 <!--            x:Name="Artistname" /> -->
             </StackPanel>
 
-            <FontIcon FontFamily="Segoe Fluent Icons"
-                      Glyph="&#xEB51;"
-                      Margin="12,0"
-                      RelativePanel.AlignVerticalCenterWith="Image"
-                      RelativePanel.RightOf="MetadataPanel" />
+            <components:StarButton FontSize="20"
+                                   Margin="12,0"
+                                   RelativePanel.AlignVerticalCenterWith="Image"
+                                   RelativePanel.AlignRightWithPanel="True"
+                                   x:Name="SavedButton"
+                                   Canvas.ZIndex="100" />
         </RelativePanel>
 
         <RelativePanel Padding="12"

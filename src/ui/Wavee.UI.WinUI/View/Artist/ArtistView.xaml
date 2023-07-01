@@ -34,7 +34,7 @@
 
     <Grid VerticalAlignment="Top">
         <ScrollViewer VerticalAlignment="Top"
-                      ui:ScrollViewerExtensions.VerticalScrollBarMargin="0,24,0,110"
+                      ui:ScrollViewerExtensions.VerticalScrollBarMargin="0,0,0,110"
                       ViewChanged="ScrollViewer_OnViewChanged">
             <StackPanel VerticalAlignment="Top">
                 <Grid x:Name="ImageT"

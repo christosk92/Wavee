@@ -95,7 +95,11 @@ public sealed partial class SidebarControl : NavigationView, INotifyPropertyChan
                 if (e.PropertyName == nameof(user.Settings.ImageExpanded))
                 {
                     if (user.Settings.ImageExpanded)
+                    {
+                        SetImageFromPlaybackEvent(x, user.Client.Playback.CurrentPlayback.ValueUnsafe());
                         x.IsPaneOpen = true;
+                    }
+
                     x.FindDescendant<ConstrainedBox>(x => x.Name is "SidebarImageBox").Visibility = user.Settings.ImageExpanded ? Visibility.Visible : Visibility.Collapsed;
                 }
             };
