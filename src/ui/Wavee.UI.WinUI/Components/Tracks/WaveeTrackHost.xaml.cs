@@ -24,11 +24,11 @@ public sealed partial class WaveeTrackHost : UserControl
     public static readonly DependencyProperty AlternateRowColorProperty = DependencyProperty.Register(nameof(AlternateRowColor), typeof(bool), typeof(WaveeTrackHost), new PropertyMetadata(default(bool), UIPropertyChanged));
     public static readonly DependencyProperty ShowImageProperty = DependencyProperty.Register(nameof(ShowImage), typeof(bool), typeof(WaveeTrackHost), new PropertyMetadata(default(bool), UIPropertyChanged));
     public static readonly DependencyProperty ImageProperty = DependencyProperty.Register(nameof(Image), typeof(string), typeof(WaveeTrackHost), new PropertyMetadata(default(string?), UIPropertyChanged));
-    public static readonly DependencyProperty IdProperty = DependencyProperty.Register(nameof(Id), typeof(string), typeof(WaveeTrackHost), new PropertyMetadata(default(string)));
+    public static readonly DependencyProperty IdProperty = DependencyProperty.Register(nameof(Id), typeof(string), typeof(WaveeTrackHost), new PropertyMetadata(default(string), UIPropertyChanged));
     public static readonly DependencyProperty WithCheckboxProperty = DependencyProperty.Register(nameof(WithCheckbox), typeof(bool), typeof(WaveeTrackHost), new PropertyMetadata(default(bool)));
     public static readonly DependencyProperty PlaybackStateProperty = DependencyProperty.Register(nameof(PlaybackState), typeof(TrackPlaybackState), typeof(WaveeTrackHost), new PropertyMetadata(default(TrackPlaybackState), PlaybackStateChanged));
     private IDisposable? _subscrption;
-    public static readonly DependencyProperty UidProperty = DependencyProperty.Register(nameof(Uid), typeof(Option<string>), typeof(WaveeTrackHost), new PropertyMetadata(default(Option<string>)));
+    public static readonly DependencyProperty UidProperty = DependencyProperty.Register(nameof(Uid), typeof(Option<string>), typeof(WaveeTrackHost), new PropertyMetadata(default(Option<string>), UIPropertyChanged));
 
     public WaveeTrackHost()
     {
