@@ -20,6 +20,7 @@
         <ItemsRepeater.ItemTemplate>
             <DataTemplate x:DataType="local:ArtistDiscographyReleaseViewModel">
                 <RelativePanel HorizontalAlignment="Left"
+                               Tag="{x:Bind}"
                                VerticalAlignment="Top">
                     <Image RelativePanel.AlignLeftWithPanel="True"
                            Height="160"
@@ -59,7 +60,7 @@
                                    RelativePanel.AlignTopWithPanel="True"
                                    x:Name="TracksS"
                                    x:Phase="2"
-                                   ItemsSource="{x:Bind Items}"
+                                   ItemsSource="{x:Bind Items,Mode=OneWay}"
                                    VerticalAlignment="Top"
                                    Margin="12,0,0,0"
                                    ItemTemplate="{StaticResource AlbumPageTrackTemplate}"

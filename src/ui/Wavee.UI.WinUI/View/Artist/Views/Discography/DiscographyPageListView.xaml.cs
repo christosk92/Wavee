@@ -7,6 +7,7 @@ using Wavee.Metadata.Artist;
 using Wavee.UI.Client.Artist;
 using CommunityToolkit.Common.Collections;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
@@ -59,11 +60,12 @@ public sealed partial class DiscographyPageListView : UserControl
     {
         try
         {
-            var element = args.Index;
-            var itemInview = Releases.ElementAtOrDefault(element);
-            //try to access ArtistDiscographyReleaseViewModel
-            if (itemInview is not null)
+            //var element = args.Index;
+            var uiElementinView = args.Element;
+            if (uiElementinView is FrameworkElement ff &&
+                ff.Tag is ArtistDiscographyReleaseViewModel itemInview)
             {
+                //try to access ArtistDiscographyReleaseViewModel
                 await itemInview.LoadTracks();
             }
         }
@@ -80,10 +82,10 @@ public sealed partial class DiscographyPageListView : UserControl
 
 public class ArtistDiscographyReleaseViewModel
 {
-    private IList<LoadingWaveeUIAlbumTrack> _items;
+    private ObservableCollection<LoadingWaveeUIAlbumTrack> _items;
     public IArtistDiscographyRelease Release { get; set; }
 
-    public IList<LoadingWaveeUIAlbumTrack> Items
+    public ObservableCollection<LoadingWaveeUIAlbumTrack> Items
     {
         get => _items;
         set => _items = value;
@@ -95,10 +97,17 @@ public class ArtistDiscographyReleaseViewModel
         var response = await Task.Run(async () => await ShellViewModel.Instance.User.Client.Album.GetAlbumTracks(id));
         var allTracks = response.SelectMany(f => f.Tracks);
         //= allTracks;
-        foreach (var track in allTracks)
+        //check if release is still the same
+
+        if (Release.Id.ToString() == id)
         {
-            var index = track.TrackNumber - 1;
-            Items[index].Track = track;
+            Items.Clear();
+            foreach (var track in allTracks)
+            {
+                var index = track.TrackNumber - 1;
+                //Items[index].Track = track;
+                Items.Add(new LoadingWaveeUIAlbumTrack { Track = track });
+            }
         }
     }
     public ImageSource? GetImage(ICoverImage[] images)
@@ -180,9 +189,9 @@ public sealed class DiscographyReleasesVmSource : IIncrementalSource<ArtistDisco
             .Map(x => x.Select(y => new ArtistDiscographyReleaseViewModel
             {
                 Release = y,
-                Items = Enumerable.Range(0, y.TotalTracks)
-                    .Select(_ => new LoadingWaveeUIAlbumTrack())
-                    .ToList()
+                Items = new ObservableCollection<LoadingWaveeUIAlbumTrack>(Enumerable.Range(0, y.TotalTracks)
+                    .Select(_ => new LoadingWaveeUIAlbumTrack()))
+
             }));
     }
 }

@@ -73,8 +73,8 @@
                               Visibility="Collapsed">
                             <PersonPicture x:Name="AlternativeArtistPicture"
                                            Grid.Column="0"
-                                           Width="200"
-                                           Height="200"
+                                           Width="150"
+                                           Height="150"
                                            labs:TransitionHelper.Id="image" />
                         </Grid>
                         <StackPanel>

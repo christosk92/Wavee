@@ -79,24 +79,26 @@ public partial class LyricsViewModel : ObservableObject
         }
     }
 
-    private static int CalculateMinimumDifference(List<LyricsLineViewModel> lines)
-    {
-        double min = double.MaxValue;
-        for (int i = 0; i < lines.Count; i++)
-        {
-            double endTime = (i < lines.Count - 1) ? lines[i + 1].StartsAt : double.MaxValue;
-            var diff = endTime - lines[i].StartsAt;
-            min = Math.Min(min, diff);
-        }
-
-        //since the main timer ticks every 10ms
-        //we need to find the smallest difference that is divisible by 10
-        //so we can use it as the timer interval
-        // Convert min to an integer, rounding up to the nearest multiple of 10
-        int roundedMin = (int)Math.Ceiling(min / 10) * 10;
-
-        return roundedMin;
-    }
+    // private static int CalculateMinimumDifference(List<LyricsLineViewModel> lines)
+    // {
+    //     double min = double.MaxValue;
+    //     for (int i = 0; i < lines.Count; i++)
+    //     {
+    //         double nextStart = (i < lines.Count - 1) ? lines[i + 1].StartsAt : double.MaxValue;
+    //         var diff = nextStart - lines[i].StartsAt;
+    //         min = Math.Min(min, diff);
+    //     }
+    //
+    //     min = Math.Max(min - 10, 0);
+    //     min = min / 2;
+    //     //since the main timer ticks every 10ms
+    //     //we need to find the smallest difference that is divisible by 10
+    //     //so we can use it as the timer interval
+    //     // Convert min to an integer, rounding up to the nearest multiple of 10
+    //     int roundedMin = (int)Math.Ceiling(min / 10) * 10;
+    //
+    //     return roundedMin;
+    // }
     public async Task<Unit> OnPlaybackEvent(WaveeUIPlaybackState state)
     {
         using (await _lock.LockAsync())
@@ -119,7 +121,8 @@ public partial class LyricsViewModel : ObservableObject
                     return Unit.Default;
                 }
             }
-            var minDiff = CalculateMinimumDifference(Lyrics);
+
+            const int minDiff = 50;
             _positioncallbackId = playbackViewModel.RegisterPositionCallback(minDiff, Callback);
 
             //TODO: invoke to go to accurate lyrics line
