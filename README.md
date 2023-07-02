@@ -5,6 +5,9 @@
 I've been able to fix a lot of endpoints. The most difficult one is the artist page, because the new endpoint does not return all the albums/singles/compilations I have to page them, which is difficult because they are grouped. Moreover, each group can be in a different state (Track_List vs Grid_View)...
 Thanks for your patience!
 
+![image](https://github.com/christosk92/Wavee/assets/13438702/f5c071fa-93b9-48ef-b0a5-a9ba17e88c77)
+
+
 ![image](https://github.com/christosk92/Wavee/assets/13438702/e8702d96-8768-4c1a-bd6c-1396fb07584e)
 
 ![image](https://github.com/christosk92/Wavee/assets/13438702/e7431549-f6f7-4093-a421-38e247356a20)
