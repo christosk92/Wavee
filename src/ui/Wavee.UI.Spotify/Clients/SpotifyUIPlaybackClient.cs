@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using System.Reactive.Linq;
+﻿using System.Reactive.Linq;
 using System.Text;
 using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
@@ -8,8 +7,9 @@ using Spotify.Metadata;
 using Wavee.Id;
 using Wavee.Metadata.Common;
 using Wavee.Remote;
+using Wavee.UI.Client.Playback;
 
-namespace Wavee.UI.Client.Playback;
+namespace Wavee.UI.Spotify.Clients;
 
 internal sealed class SpotifyUIPlaybackClient : IWaveeUIPlaybackClient
 {

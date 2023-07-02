@@ -5,9 +5,10 @@ using Wavee.Id;
 using Wavee.Metadata.Artist;
 using Wavee.Metadata.Common;
 using Wavee.Metadata.Home;
+using Wavee.UI.Client.Artist;
 using Wavee.UI.Common;
 
-namespace Wavee.UI.Client.Artist;
+namespace Wavee.UI.Spotify.Clients;
 
 internal sealed class SpotifyUIArtistClient : IWaveeUIArtistClient
 {

@@ -1,13 +1,11 @@
-﻿using LanguageExt;
-using static System.Collections.Specialized.BitVector32;
-using System.Globalization;
+﻿using System.Globalization;
+using LanguageExt;
 using Wavee.Id;
-using Wavee.Metadata.Common;
-using Wavee.Metadata.Home;
+using Wavee.UI.Client.Home;
 using Wavee.UI.Common;
 using Wavee.UI.ViewModel.Home;
 
-namespace Wavee.UI.Client.Home;
+namespace Wavee.UI.Spotify.Clients;
 
 internal sealed class SpotifyUIHomeClient : IWaveeUIHomeClient
 {

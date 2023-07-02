@@ -5,9 +5,9 @@ using ReactiveUI;
 using Wavee.Id;
 using Wavee.Remote;
 using Wavee.Token.Live;
-using Wavee.UI.Client.Home;
+using Wavee.UI.Client.Library;
 using static LanguageExt.Prelude;
-namespace Wavee.UI.Client.Library;
+namespace Wavee.UI.Spotify.Clients;
 
 internal sealed class SpotifyUILibraryClient : IWaveeUILibraryClient
 {

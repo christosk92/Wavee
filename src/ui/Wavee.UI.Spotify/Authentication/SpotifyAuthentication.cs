@@ -9,6 +9,7 @@ using Wavee.Infrastructure.Authentication;
 using Wavee.Time.Live;
 using Wavee.UI.Client;
 using Wavee.UI.Contracts;
+using Wavee.UI.Spotify.Clients;
 using Wavee.UI.User;
 
 namespace Wavee.UI.Spotify.Authentication;
@@ -60,7 +61,7 @@ internal sealed class SpotifyAuthentication : IMusicServiceAuthentication
                 id: new UserId(Source: ServiceType.Spotify, Id: welcomeMessage.CanonicalUsername),
                 displayName: user.DisplayName,
                 image: user.Images.HeadOrNone().Map(x => x.Url).IfNone(string.Empty),
-                client: new WaveeUIClient(spotifyClient))
+                client: new SpotifyWaveeUIClient(spotifyClient))
             {
                 ReusableCredentials = welcomeMessage.ReusableAuthCredentials.ToBase64()
             };
@@ -123,7 +124,7 @@ internal sealed class SpotifyAuthentication : IMusicServiceAuthentication
                 id: new UserId(Source: ServiceType.Spotify, Id: welcomeMessage.CanonicalUsername),
                 displayName: user.DisplayName,
                 image: user.Images.HeadOrNone().Map(x => x.Url).IfNone(string.Empty),
-                client: new WaveeUIClient(spotifyClient))
+                client: new SpotifyWaveeUIClient(spotifyClient))
             {
                 ReusableCredentials = welcomeMessage.ReusableAuthCredentials.ToBase64()
             };

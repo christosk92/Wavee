@@ -80,7 +80,8 @@ public sealed class ArtistTopTrackViewModel
 public sealed class PagedArtistDiscographyPage
 {
     private readonly GetReleases _getReleases;
-    internal PagedArtistDiscographyPage(GetReleases getReleases, ReleaseType type, bool canSwitchViews, bool hasSome)
+
+    public PagedArtistDiscographyPage(GetReleases getReleases, ReleaseType type, bool canSwitchViews, bool hasSome)
     {
         _getReleases = getReleases;
         Type = type;

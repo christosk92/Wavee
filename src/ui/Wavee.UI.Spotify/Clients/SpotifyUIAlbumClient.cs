@@ -1,10 +1,10 @@
 ﻿using LanguageExt;
 using Wavee.Id;
 using Wavee.Metadata.Album;
-using Wavee.Metadata.Artist;
+using Wavee.UI.Client.Album;
 using Wavee.UI.Common;
 
-namespace Wavee.UI.Client.Album;
+namespace Wavee.UI.Spotify.Clients;
 
 internal sealed class SpotifyUIAlbumClient : IWaveeUIAlbumClient
 {

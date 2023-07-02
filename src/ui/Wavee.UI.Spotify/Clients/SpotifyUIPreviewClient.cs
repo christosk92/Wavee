@@ -1,13 +1,11 @@
-﻿using Eum.Spotify.context;
+﻿using System.Text;
 using Google.Protobuf;
-using Org.BouncyCastle.Utilities;
-using System.Text;
 using LanguageExt;
 using Wavee.Id;
-using Wavee.Infrastructure;
 using Wavee.Infrastructure.Public.Response;
+using Wavee.UI.Client.Previews;
 
-namespace Wavee.UI.Client.Previews;
+namespace Wavee.UI.Spotify.Clients;
 
 internal sealed class SpotifyUIPreviewClient : IWaveeUIPreviewClient
 {

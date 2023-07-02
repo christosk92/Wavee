@@ -1,7 +1,8 @@
 ﻿using Wavee.Id;
 using Wavee.Metadata;
+using Wavee.UI.Client.Lyrics;
 
-namespace Wavee.UI.Client.Lyrics;
+namespace Wavee.UI.Spotify.Clients;
 
 internal sealed class SpotifyUILyricsClient : IWaveeUILyricsClient
 {

@@ -12,7 +12,7 @@ public sealed class UserInfo
 }
 public class UserViewModel : IDisposable
 {
-    public UserViewModel(UserId id, string displayName, string? image, WaveeUIClient client)
+    public UserViewModel(UserId id, string displayName, string? image, IWaveeUIClient client)
     {
         Client = client;
         var persistentPath = Path.Combine(AppProviders.GetPersistentStoragePath(), "Wavee", "UserSettings", $"{id.ToString()}.json");
@@ -26,7 +26,7 @@ public class UserViewModel : IDisposable
             Image = image
         };
     }
-    public WaveeUIClient Client { get; }
+    public IWaveeUIClient Client { get; }
     public UserId Id => Info.Id;
     public UserSettings Settings { get; }
     public UserInfo Info { get; }
