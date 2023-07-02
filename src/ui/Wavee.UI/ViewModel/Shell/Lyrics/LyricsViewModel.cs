@@ -19,11 +19,13 @@ using Timer = System.Threading.Timer;
 using ReactiveUI;
 using System.Reactive.Linq;
 using System.Security.Cryptography;
+using NeoSmart.AsyncLock;
 
 namespace Wavee.UI.ViewModel.Shell.Lyrics;
 
 public partial class LyricsViewModel : ObservableObject
 {
+    private AsyncLock _lock = new();
     private Guid _positioncallbackId;
     [ObservableProperty] private bool _hasLyrics;
     [ObservableProperty] private bool _loading;
@@ -53,7 +55,6 @@ public partial class LyricsViewModel : ObservableObject
             .ObserveOn(RxApp.MainThreadScheduler)
             .SelectMany(async t => await OnPlaybackEvent(t))
             .Subscribe();
-        _positioncallbackId = playbackViewModel.RegisterPositionCallback(10, Callback);
     }
 
     public void Destroy()
@@ -69,7 +70,8 @@ public partial class LyricsViewModel : ObservableObject
         var different = closestLyrics != _activeLyricsLine;
         if (different)
         {
-            Debug.WriteLine($"Callback: {state}, startat: {closestLyrics.StartsAt}, words: {closestLyrics?.Words}");
+            if (closestLyrics is not null)
+                Debug.WriteLine($"Callback: {state}, startat: {closestLyrics.StartsAt}, words: {closestLyrics?.Words}");
             _invokeOnUiThread(() =>
             {
                 SeekToLyrics(closestLyrics);
@@ -79,30 +81,34 @@ public partial class LyricsViewModel : ObservableObject
 
     public async Task<Unit> OnPlaybackEvent(WaveeUIPlaybackState state)
     {
-        if (state.Metadata.IsNone || state.PlaybackState is WaveeUIPlayerState.NotPlayingAnything)
+        using (await _lock.LockAsync())
         {
-            //clear
-            return Unit.Default;
-        }
-        var metadata = state.Metadata.ValueUnsafe();
-        if (!string.Equals(metadata.Id, _currentTrackId))
-        {
-            _currentTrackId = metadata.Id;
-            var result = await TryFetchLyrics(metadata.Id, CancellationToken.None);
-            if (result is null or false)
+            _playbackViewModel.ClearPositionCallback(_positioncallbackId);
+
+            if (state.Metadata.IsNone || state.PlaybackState is WaveeUIPlayerState.NotPlayingAnything)
             {
+                //clear
                 return Unit.Default;
             }
+
+            var metadata = state.Metadata.ValueUnsafe();
+            if (!string.Equals(metadata.Id, _currentTrackId))
+            {
+                _currentTrackId = metadata.Id;
+                var result = await TryFetchLyrics(metadata.Id, CancellationToken.None);
+                if (result is null or false)
+                {
+                    return Unit.Default;
+                }
+            }
+            _positioncallbackId = playbackViewModel.RegisterPositionCallback(10, Callback);
+
+            //TODO: invoke to go to accurate lyrics line
+            var closestLyrics = FindClosestLyricsLine(state.Position.TotalMilliseconds);
+
+            _invokeOnUiThread(() => { SeekToLyrics(closestLyrics); });
+            return Unit.Default;
         }
-
-        //TODO: invoke to go to accurate lyrics line
-        var closestLyrics = FindClosestLyricsLine(state.Position.TotalMilliseconds);
-
-        _invokeOnUiThread(() =>
-        {
-            SeekToLyrics(closestLyrics);
-        });
-        return Unit.Default;
     }
 
 
