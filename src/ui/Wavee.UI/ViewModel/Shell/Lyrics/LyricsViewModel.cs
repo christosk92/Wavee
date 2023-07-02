@@ -79,6 +79,24 @@ public partial class LyricsViewModel : ObservableObject
         }
     }
 
+    private static int CalculateMinimumDifference(List<LyricsLineViewModel> lines)
+    {
+        double min = double.MaxValue;
+        for (int i = 0; i < lines.Count; i++)
+        {
+            double endTime = (i < lines.Count - 1) ? lines[i + 1].StartsAt : double.MaxValue;
+            var diff = endTime - lines[i].StartsAt;
+            min = Math.Min(min, diff);
+        }
+
+        //since the main timer ticks every 10ms
+        //we need to find the smallest difference that is divisible by 10
+        //so we can use it as the timer interval
+        // Convert min to an integer, rounding up to the nearest multiple of 10
+        int roundedMin = (int)Math.Ceiling(min / 10) * 10;
+
+        return roundedMin;
+    }
     public async Task<Unit> OnPlaybackEvent(WaveeUIPlaybackState state)
     {
         using (await _lock.LockAsync())
@@ -101,7 +119,8 @@ public partial class LyricsViewModel : ObservableObject
                     return Unit.Default;
                 }
             }
-            _positioncallbackId = playbackViewModel.RegisterPositionCallback(10, Callback);
+            var minDiff = CalculateMinimumDifference(Lyrics);
+            _positioncallbackId = playbackViewModel.RegisterPositionCallback(minDiff, Callback);
 
             //TODO: invoke to go to accurate lyrics line
             var closestLyrics = FindClosestLyricsLine(state.Position.TotalMilliseconds);
