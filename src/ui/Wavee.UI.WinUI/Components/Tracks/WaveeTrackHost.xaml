@@ -37,7 +37,7 @@
                         <Setter Target="PlaybackViewContent.Content">
                             <Setter.Value>
                                 <Button x:Name="PlaButton"
-                                        Margin="-4,0,-3,0"
+                                        Margin="-4,0,4,0"
                                         Padding="8,8"
                                         VerticalAlignment="Center">
                                     <FontIcon FontSize="12"
@@ -55,7 +55,7 @@
                                 <UserControl>
                                     <AnimatedVisualPlayer  AutoPlay="True"
                                                            Width="34"
-                                                           Margin="-8,0,-1,0"
+                                                           Margin="-8,0,4,0"
                                                            Loaded="FrameworkElement_OnLoaded"
                                                            Height="34"
                                                            PlaybackRate="2">
@@ -76,7 +76,7 @@
                             <Setter.Value>
                                 <Button Padding="8,8"
                                         x:Name="PauseButton"
-                                        Margin="-4,0,-3,0"
+                                        Margin="-4,0,4,0"
                                         VerticalAlignment="Center">
                                     <FontIcon FontSize="12"
                                               FontFamily="Segoe Fluent Icons"

@@ -15,7 +15,8 @@ internal static class SpotifyItemParser
     {
         try
         {
-            if (item.GetProperty("__typename").GetString() is "NotFound" or "RestrictedContent")
+            if (item.TryGetProperty("__typename", out var tpName) 
+                && tpName.GetString() is "NotFound" or "RestrictedContent")
             {
                 Log.Warning("Item not found");
                 return Option<ISpotifyHomeItem>.None;
@@ -43,7 +44,7 @@ internal static class SpotifyItemParser
                         {
                             Id = id,
                             Name = name,
-                            Description = description.Bind(x=> !string.IsNullOrEmpty(x) ? x : Option<string>.None),
+                            Description = description.Bind(x => !string.IsNullOrEmpty(x) ? x : Option<string>.None),
                             Images = images,
                             OwnerName = ownerName
                         };

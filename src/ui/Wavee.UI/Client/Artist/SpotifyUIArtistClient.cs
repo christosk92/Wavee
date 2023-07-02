@@ -4,6 +4,8 @@ using LanguageExt.UnsafeValueAccess;
 using Wavee.Id;
 using Wavee.Metadata.Artist;
 using Wavee.Metadata.Common;
+using Wavee.Metadata.Home;
+using Wavee.UI.Common;
 
 namespace Wavee.UI.Client.Artist;
 
@@ -32,7 +34,7 @@ internal sealed class SpotifyUIArtistClient : IWaveeUIArtistClient
         return new WaveeUIArtistView(
             id: artistResponse.Id.ToString(),
             name: artistResponse.Profile.Name,
-            avatarImage: artistResponse.Visuals.AvatarImages.FirstOrDefault(),
+            avatarImage: artistResponse.Visuals.AvatarImages.FirstOrDefault()!,
             headerImage: artistResponse.Visuals.HeaderImage,
             monthlyListeners: artistResponse.Statistics.MonthlyListeners,
             followers: artistResponse.Statistics.Followers,
@@ -40,9 +42,29 @@ internal sealed class SpotifyUIArtistClient : IWaveeUIArtistClient
                 .Select(ToArtistTopTrackViewModel).ToArray(),
             discographyPages: ConvertToPaged(artistResponse.Id, artistResponse.Discography, spotifyClient),
             preReleaseItem: artistResponse.PreRelease,
-            pinnedItem: artistResponse.Profile.PinnedItem
+            pinnedItem: artistResponse.Profile.PinnedItem,
+            appearsOn: artistResponse.Discography.AppearsOn.Select(ToCardViewModel).ToArray()!,
+            relatedArtists: artistResponse.Profile.Related.Select(ToCardViewModel).ToArray()!,
+            artistPlaylists: artistResponse.Profile.Playlists.Select(ToCardViewModel).ToArray()!,
+            discoveredOn: artistResponse.Profile.DiscoveredOn.Select(ToCardViewModel).ToArray()!
         );
     }
+
+    private Option<ICardViewModel> ToCardViewModel(Option<SpotifyArtistHomeItem> arg) => arg.Bind(x => CardViewModel.From(x) switch
+    {
+        { } some => Option<ICardViewModel>.Some(some),
+        null => Option<ICardViewModel>.None
+    });
+    private Option<ICardViewModel> ToCardViewModel(Option<SpotifyPlaylistHomeItem> arg) => arg.Bind(x => CardViewModel.From(x) switch
+    {
+        { } some => Option<ICardViewModel>.Some(some),
+        null => Option<ICardViewModel>.None
+    });
+    private Option<ICardViewModel> ToCardViewModel(Option<SpotifyAlbumHomeItem> arg) => arg.Bind(x => CardViewModel.From(x) switch
+    {
+        { } some => Option<ICardViewModel>.Some(some),
+        null => Option<ICardViewModel>.None
+    });
 
     private ArtistTopTrackViewModel ToArtistTopTrackViewModel(ArtistTopTrack artistTopTrack, int i)
     {
@@ -70,7 +92,6 @@ internal sealed class SpotifyUIArtistClient : IWaveeUIArtistClient
         var albumsPage = CreatePage(id, ReleaseType.Album, artistResponseDiscography.Albums, spotifyClient);
         var singlesPage = CreatePage(id, ReleaseType.Single, artistResponseDiscography.Singles, spotifyClient);
         var compilationsPage = CreatePage(id, ReleaseType.Compilation, artistResponseDiscography.Compilations, spotifyClient);
-
         return new[]
         {
             albumsPage,

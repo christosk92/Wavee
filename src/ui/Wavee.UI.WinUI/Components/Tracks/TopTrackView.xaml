@@ -17,11 +17,12 @@
                           Id="{x:Bind Id,Mode=OneWay}"
                           Index="{x:Bind Number,Mode=OneWay}">
         <Grid Padding="4,6"
+              ColumnSpacing="4"
               x:DefaultBindMode="OneWay">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="2*" />
-                <ColumnDefinition Width="124" />
-                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="50" />
                 <ColumnDefinition Width="8" />
             </Grid.ColumnDefinitions>
             <StackPanel VerticalAlignment="Center"
@@ -30,6 +31,7 @@
                         HorizontalAlignment="Left">
                 <TextBlock Text="{x:Bind Title}"
                            VerticalAlignment="Center"
+                           TextTrimming="CharacterEllipsis"
                            FontWeight="SemiBold"
                            FontSize="16" />
                 <controls:MetadataControl Separator=", "
@@ -38,6 +40,7 @@
                         <Style TargetType="TextBlock">
                             <Setter Property="FontSize"
                                     Value="14" />
+                            <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
                         </Style>
                     </controls:MetadataControl.TextBlockStyle>
                 </controls:MetadataControl>

@@ -3,16 +3,21 @@ using System.Text.Json;
 using Eum.Spotify.playlist4;
 using Google.Protobuf.WellKnownTypes;
 using LanguageExt;
+using LanguageExt.UnsafeValueAccess;
 using Spotify.Metadata;
 using Wavee.Id;
 using Wavee.Metadata.Common;
+using Wavee.Metadata.Home;
 
 namespace Wavee.Metadata.Artist;
 
 public readonly record struct ArtistOverview(SpotifyId Id, bool IsSaved,
     Option<IArtistPreReleaseItem> PreRelease,
-    Uri SharingUrl, ArtistOverviewProfile Profile,
-    ArtistVisuals Visuals, ArtistDiscography Discography, ArtistStats Statistics, ArtistRelatedContent RelatedContent,
+    Uri SharingUrl,
+    ArtistOverviewProfile Profile,
+    ArtistVisuals Visuals,
+    ArtistDiscography Discography,
+    ArtistStats Statistics,
     ArtistGoods Goods)
 {
     internal static ArtistOverview ParseFrom(ReadOnlyMemory<byte> data)
@@ -48,11 +53,11 @@ public readonly record struct ArtistOverview(SpotifyId Id, bool IsSaved,
             );
         }
 
-        var profile = ParseArtistProfile(artist.GetProperty("profile"));
+        var relatedContent = artist.GetProperty("relatedContent");
+        var profile = ParseArtistProfile(artist.GetProperty("profile"), relatedContent);
         var visuals = ParseArtistVisuals(artist.GetProperty("visuals"));
-        var discography = ParseArtistDiscography(artist.GetProperty("discography"));
+        var discography = ParseArtistDiscography(artist.GetProperty("discography"), relatedContent);
         var stats = ParseArtistStats(artist.GetProperty("stats"));
-        var relatedContent = ParseArtistRelatedContent(artist.GetProperty("relatedContent"));
         var goods = ParseArtistGoods(artist.GetProperty("goods"));
 
         return new ArtistOverview(
@@ -64,15 +69,10 @@ public readonly record struct ArtistOverview(SpotifyId Id, bool IsSaved,
             Visuals: visuals,
             Discography: discography,
             Statistics: stats,
-            RelatedContent: relatedContent,
             Goods: goods
         );
     }
 
-    private static ArtistRelatedContent ParseArtistRelatedContent(JsonElement getProperty)
-    {
-        return new ArtistRelatedContent();
-    }
 
     private static ArtistGoods ParseArtistGoods(JsonElement getProperty)
     {
@@ -91,7 +91,7 @@ public readonly record struct ArtistOverview(SpotifyId Id, bool IsSaved,
         );
     }
 
-    private static ArtistDiscography ParseArtistDiscography(JsonElement discography)
+    private static ArtistDiscography ParseArtistDiscography(JsonElement discography, JsonElement relatedContent)
     {
         Option<IArtistDiscographyRelease> latestRelease = Option<IArtistDiscographyRelease>.None;
         if (discography.TryGetProperty("latest", out var potentialLatest) &&
@@ -104,13 +104,49 @@ public readonly record struct ArtistOverview(SpotifyId Id, bool IsSaved,
         var singles = ParseDiscographyGroup(discography.GetProperty("singles"));
         var compilations = ParseDiscographyGroup(discography.GetProperty("compilations"));
         var topTracks = ParseTopTracks(discography.GetProperty("topTracks").GetProperty("items"));
+        var appearsOn = ParseAppearsOn(relatedContent.GetProperty("appearsOn"));
         return new ArtistDiscography(
             LatestRelease: latestRelease,
             Albums: albums,
             Singles: singles,
             Compilations: compilations,
-            TopTracks: topTracks
+            TopTracks: topTracks,
+            AppearsOn: appearsOn
         );
+    }
+
+    private static Option<SpotifyAlbumHomeItem>[] ParseAppearsOn(JsonElement getProperty)
+    {
+        var totalCount = getProperty.GetProperty("totalCount").GetUInt16();
+        var output = new Option<SpotifyAlbumHomeItem>[totalCount];
+        using var items = getProperty.GetProperty("items").EnumerateArray();
+        int i = -1;
+        for (int x = 0; x < totalCount; x++)
+        {
+            i++;
+            if (!items.MoveNext())
+            {
+                output[i] = Option<SpotifyAlbumHomeItem>.None;
+                continue;
+            }
+
+            var current = items.Current;
+            //nested releases, get first
+            using var releases = current.GetProperty("releases").GetProperty("items").EnumerateArray();
+            releases.MoveNext();
+
+            var item = SpotifyItemParser.ParseFrom(releases.Current);
+            if (item.IsSome && item.ValueUnsafe() is SpotifyAlbumHomeItem pl)
+            {
+                output[i] = pl;
+            }
+            else
+            {
+                output[i] = Option<SpotifyAlbumHomeItem>.None;
+            }
+        }
+
+        return output;
     }
 
     private static Option<IArtistDiscographyRelease>[] ParseDiscographyGroup(JsonElement group)
@@ -297,7 +333,7 @@ public readonly record struct ArtistOverview(SpotifyId Id, bool IsSaved,
         );
     }
 
-    private static ArtistOverviewProfile ParseArtistProfile(JsonElement profile)
+    private static ArtistOverviewProfile ParseArtistProfile(JsonElement profile, JsonElement relatedContent)
     {
         var name = profile.GetProperty("name").GetString()!;
         var verified = profile.GetProperty("verified").GetBoolean();
@@ -367,10 +403,87 @@ public readonly record struct ArtistOverview(SpotifyId Id, bool IsSaved,
             }
         }
 
+        var playlists = profile.GetProperty("playlistsV2");
+        var totalCount = playlists.GetProperty("totalCount").GetUInt16();
+        using var playlistData = playlists.GetProperty("items").EnumerateArray();
+        var playlistsOutput = new Option<SpotifyPlaylistHomeItem>[totalCount];
+        int i = -1;
+        for (int x = 0; x < totalCount; x++)
+        {
+            i++;
+            if (!playlistData.MoveNext())
+            {
+                playlistsOutput[i] = Option<SpotifyPlaylistHomeItem>.None;
+                continue;
+            }
+
+            var parsedItem = SpotifyItemParser.ParseFrom(playlistData.Current.GetProperty("data"));
+            if (parsedItem.IsSome && parsedItem.ValueUnsafe() is SpotifyPlaylistHomeItem playlist)
+            {
+                playlistsOutput[i] = playlist;
+            }
+        }
+
+
+        var relatedArtists = relatedContent.GetProperty("relatedArtists");
+        var relatedArtistsCount = relatedArtists.GetProperty("totalCount").GetUInt16();
+        using var relatedArtistsData = relatedArtists.GetProperty("items").EnumerateArray();
+        var related = new Option<SpotifyArtistHomeItem>[relatedArtistsCount];
+        int j = -1;
+
+        for (int x = 0; x < relatedArtistsCount; x++)
+        {
+            j++;
+            if (!relatedArtistsData.MoveNext())
+            {
+                related[j] = Option<SpotifyArtistHomeItem>.None;
+                continue;
+            }
+
+            var parsedItem = SpotifyItemParser.ParseFrom(relatedArtistsData.Current);
+            if (parsedItem.IsSome && parsedItem.ValueUnsafe() is SpotifyArtistHomeItem artist)
+            {
+                related[j] = artist;
+            }
+            else
+            {
+                related[j] = Option<SpotifyArtistHomeItem>.None;
+            }
+        }
+
+
+        var discoveredOn = relatedContent.GetProperty("discoveredOnV2");
+        var discoveredOnCount = discoveredOn.GetProperty("totalCount").GetUInt16();
+        using var discoveredOnData = discoveredOn.GetProperty("items").EnumerateArray();
+        var discoveredOnOutput = new Option<SpotifyPlaylistHomeItem>[discoveredOnCount];
+        int k = -1;
+        for (int x = 0; x < discoveredOnCount; x++)
+        {
+            k++;
+            if (!discoveredOnData.MoveNext())
+            {
+                discoveredOnOutput[k] = Option<SpotifyPlaylistHomeItem>.None;
+                continue;
+            }
+
+            var parsedItem = SpotifyItemParser.ParseFrom(discoveredOnData.Current.GetProperty("data"));
+            if (parsedItem.IsSome && parsedItem.ValueUnsafe() is SpotifyPlaylistHomeItem playlist)
+            {
+                discoveredOnOutput[k] = playlist;
+            }
+            else
+            {
+                discoveredOnOutput[k] = Option<SpotifyPlaylistHomeItem>.None;
+            }
+        }
+
         return new ArtistOverviewProfile(
             Name: name,
             Verified: verified,
-            PinnedItem: pinnedItem
+            PinnedItem: pinnedItem,
+            Related: related,
+            Playlists: playlistsOutput,
+            DiscoveredOn: discoveredOnOutput
         );
     }
 
@@ -498,16 +611,22 @@ public interface IArtistOverviewPinnedItem
     Option<string> BackgroundImage { get; }
 }
 public readonly record struct ArtistOverviewProfile(string Name, bool Verified,
-    Option<IArtistOverviewPinnedItem> PinnedItem);
+    Option<IArtistOverviewPinnedItem> PinnedItem,
+    Option<SpotifyArtistHomeItem>[] Related,
+    Option<SpotifyPlaylistHomeItem>[] Playlists,
+    Option<SpotifyPlaylistHomeItem>[] DiscoveredOn
+    );
 
 public readonly record struct ArtistVisuals(ICoverImage[] AvatarImages, Option<ICoverImage> HeaderImage);
 
 public readonly record struct ArtistDiscography(Option<IArtistDiscographyRelease> LatestRelease,
-    Option<IArtistDiscographyRelease>[] Albums, Option<IArtistDiscographyRelease>[] Singles,
-    Option<IArtistDiscographyRelease>[] Compilations, ArtistTopTrack[] TopTracks);
+    Option<IArtistDiscographyRelease>[] Albums,
+    Option<IArtistDiscographyRelease>[] Singles,
+    Option<IArtistDiscographyRelease>[] Compilations,
+    Option<SpotifyAlbumHomeItem>[] AppearsOn,
+    ArtistTopTrack[] TopTracks);
 
 public readonly record struct ArtistStats(ulong Followers, ulong MonthlyListeners, Option<ushort> WorldRank);
 
-public readonly record struct ArtistRelatedContent;
 
 public readonly record struct ArtistGoods;

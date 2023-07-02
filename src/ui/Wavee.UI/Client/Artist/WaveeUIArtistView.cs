@@ -2,12 +2,20 @@
 using LanguageExt;
 using Wavee.Metadata.Artist;
 using Wavee.Metadata.Common;
+using Wavee.UI.Common;
 
 namespace Wavee.UI.Client.Artist;
 
 public sealed class WaveeUIArtistView
 {
-    public WaveeUIArtistView(string id, string name, ICoverImage avatarImage, Option<ICoverImage> headerImage, ulong monthlyListeners, ulong followers, ArtistTopTrackViewModel[] topTracks, PagedArtistDiscographyPage[] discographyPages, Option<IArtistOverviewPinnedItem> pinnedItem, Option<IArtistPreReleaseItem> preReleaseItem)
+    public WaveeUIArtistView(string id, string name, ICoverImage avatarImage, Option<ICoverImage> headerImage,
+        ulong monthlyListeners, ulong followers, ArtistTopTrackViewModel[] topTracks,
+        PagedArtistDiscographyPage[] discographyPages, Option<IArtistOverviewPinnedItem> pinnedItem,
+        Option<IArtistPreReleaseItem> preReleaseItem,
+        Option<ICardViewModel>[] appearsOn,
+        Option<ICardViewModel>[] relatedArtists,
+        Option<ICardViewModel>[] artistPlaylists,
+        Option<ICardViewModel>[] discoveredOn)
     {
         Id = id;
         Name = name;
@@ -19,6 +27,10 @@ public sealed class WaveeUIArtistView
         DiscographyPages = discographyPages;
         PinnedItem = pinnedItem;
         PreReleaseItem = preReleaseItem;
+        AppearsOn = appearsOn;
+        RelatedArtists = relatedArtists;
+        ArtistPlaylists = artistPlaylists;
+        DiscoveredOn = discoveredOn;
     }
 
     public string Id { get; }
@@ -27,8 +39,12 @@ public sealed class WaveeUIArtistView
     public Option<ICoverImage> HeaderImage { get; }
     public Option<IArtistOverviewPinnedItem> PinnedItem { get; }
     public Option<IArtistPreReleaseItem> PreReleaseItem { get; }
+    public Option<ICardViewModel>[] AppearsOn { get; }
     public ulong MonthlyListeners { get; }
     public ulong Followers { get; }
+    public Option<ICardViewModel>[] RelatedArtists { get; }
+    public Option<ICardViewModel>[] ArtistPlaylists { get; }
+    public Option<ICardViewModel>[] DiscoveredOn { get; }
     public ArtistTopTrackViewModel[] TopTracks { get; }
     public PagedArtistDiscographyPage[] DiscographyPages { get; }
 }
