@@ -199,7 +199,7 @@ public sealed partial class WaveeTrackHost : UserControl
 
     public string FormatIndex(ushort @ushort)
     {
-        return $"{@ushort:D2}.";
+        return $"{(@ushort + 1):D2}.";
     }
 
     private async void FrameworkElement_OnLoaded(object sender, RoutedEventArgs e)

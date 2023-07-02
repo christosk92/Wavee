@@ -53,6 +53,7 @@ public partial class LyricsViewModel : ObservableObject
         _subscription = playbackViewModel
             .CreateListener()
             .ObserveOn(RxApp.MainThreadScheduler)
+            .StartWith(playbackViewModel._lastReceivedState)
             .SelectMany(async t => await OnPlaybackEvent(t))
             .Subscribe();
     }

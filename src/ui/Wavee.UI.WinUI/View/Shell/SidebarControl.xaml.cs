@@ -86,43 +86,43 @@ public sealed partial class SidebarControl : NavigationView, INotifyPropertyChan
                     box.Visibility = Visibility.Visible;
             }
 
-            if (user.Client.Playback.CurrentPlayback.IsSome)
-            {
-                SetImageFromPlaybackEvent(x, ShellViewModel.Instance.Playback._lastReceivedState);
-            }
-
-            user.Settings.PropertyChanged += (s, e) =>
+            user.Settings.PropertyChanged += async (s, e) =>
             {
                 if (e.PropertyName == nameof(user.Settings.ImageExpanded))
                 {
                     if (user.Settings.ImageExpanded)
                     {
-                        SetImageFromPlaybackEvent(x, ShellViewModel.Instance.Playback._lastReceivedState);
                         x.IsPaneOpen = true;
+                        await SetImageFromPlaybackEvent(x, ShellViewModel.Instance.Playback._lastReceivedState);
                     }
 
                     x.FindDescendant<ConstrainedBox>(x => x.Name is "SidebarImageBox").Visibility = user.Settings.ImageExpanded ? Visibility.Visible : Visibility.Collapsed;
                 }
             };
 
+
             ShellViewModel.Instance.Playback
                 .CreateListener()
                 .ObserveOn(RxApp.MainThreadScheduler)
-                .Subscribe(y =>
+                .StartWith(ShellViewModel.Instance.Playback._lastReceivedState)
+                .SelectMany(async y =>
                 {
-                    SetImageFromPlaybackEvent(x, y);
-                });
+                    await SetImageFromPlaybackEvent(x, y);
+                    return Unit.Default;
+                })
+                .Subscribe();
         }
     }
 
     private static string _previousId;
-    private static void SetImageFromPlaybackEvent(SidebarControl x, WaveeUIPlaybackState y)
+    private static async Task SetImageFromPlaybackEvent(SidebarControl x, WaveeUIPlaybackState y)
     {
         if (y.Metadata.IsSome)
         {
             if (_previousId != y.Metadata.ValueUnsafe().Id)
             {
                 _previousId = y.Metadata.ValueUnsafe().Id;
+                await Task.Delay(50);
                 var image = x.FindDescendant<Image>(z => z.Name is "SidebarImage");
                 if (image is not null)
                 {
