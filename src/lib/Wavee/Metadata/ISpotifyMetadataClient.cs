@@ -8,6 +8,8 @@ using Wavee.Metadata.Album;
 using Wavee.Metadata.Artist;
 using Wavee.Metadata.Home;
 using Wavee.Metadata.Me;
+using Wavee.Sqlite.Entities;
+using Wavee.Sqlite.Repository;
 
 namespace Wavee.Metadata;
 
@@ -90,5 +92,9 @@ public interface ISpotifyMetadataClient
     Task<SpotifyAlbumDisc[]> GetAlbumTracks(SpotifyId id, CancellationToken ct = default);
     Task<LyricsLine[]> GetLyrics(SpotifyId trackId, CancellationToken ct = default);
     Task<SelectedListContent?> GetPlaylist(SpotifyId spotifyId, CancellationToken ct = default);
+
+    Task<Dictionary<string, Option<Either<TrackWithExpiration, EpisodeWithExpiration>>>> GetExtendedMetadataForItems(
+        IGrouping<AudioItemType, string>[] items, CancellationToken ct);
+
 }
 public readonly record struct LyricsLine(string Words, double StartTimeMs);

@@ -1,4 +1,5 @@
-﻿using LanguageExt;
+﻿using Google.Protobuf.WellKnownTypes;
+using LanguageExt;
 using Microsoft.EntityFrameworkCore;
 using Spotify.Metadata;
 using Wavee.Sqlite.Entities;
@@ -51,4 +52,55 @@ public sealed class TracksRepository
         await db.SaveChangesAsync(ct);
         return Unit.Default;
     }
+
+    public async Task<Dictionary<string, Option<CachedTrack>>> GetTracks(string[] ids)
+    {
+        if (string.IsNullOrWhiteSpace(_cachePath))
+        {
+            var emptyOutput = new Dictionary<string, Option<CachedTrack>>(ids.Length);
+            foreach (var id in ids)
+            {
+                emptyOutput.Add(id, Option<CachedTrack>.None);
+            }
+            return emptyOutput;
+        }
+
+        var output = new Dictionary<string, Option<CachedTrack>>(ids.Length);
+        await using var db = LocalDbFactory.Create(_cachePath);
+        var tracks = await db.Tracks.Where(x => ids.Contains(x.Id))
+            .ToDictionaryAsync(
+                keySelector: x => x.Id,
+                elementSelector: x => x
+            );
+        foreach (var id in ids)
+        {
+            if (tracks.TryGetValue(id, out var track))
+            {
+                output[id] = track;
+            }
+            else
+            {
+                output[id] = Option<CachedTrack>.None;
+            }
+        }
+
+        return output;
+    }
+
+    public async Task<Unit> InsertTracks(Dictionary<string, TrackWithExpiration> newTracks)
+    {
+        if (string.IsNullOrWhiteSpace(_cachePath))
+        {
+            return Unit.Default;
+        }
+
+        await using var db = LocalDbFactory.Create(_cachePath);
+        var cachedTracks = newTracks.Select(x => x.Value.Track.ToCachedTrack(x.Key, x.Value.Expiration));
+        await db.Tracks.AddRangeAsync(cachedTracks);
+        await db.SaveChangesAsync();
+        return Unit.Default;
+    }
 }
+
+public readonly record struct TrackWithExpiration(Track Track, DateTimeOffset Expiration);
+public readonly record struct EpisodeWithExpiration(Episode Track, DateTimeOffset Expiration);

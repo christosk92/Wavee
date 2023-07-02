@@ -2,6 +2,10 @@
 
 namespace Wavee.Sqlite.Entities;
 
+public class CachedEpisode
+{
+
+}
 public class CachedTrack
 {
     [Key]

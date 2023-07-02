@@ -104,4 +104,30 @@ internal sealed class LiveSpotifyCache : ISpotifyCache
 
         return _playlistRepository().SetPlaylist(playlist);
     }
+
+    public Task<Dictionary<string, Option<CachedTrack>>> GetTracksFromCache(string[] ids)
+    {
+       return _tracksRepository().GetTracks(ids);
+    }
+
+    public Task<Dictionary<string, Option<CachedEpisode>>> GetEpisodesFromCache(string[] ids)
+    {
+        var output = new Dictionary<string, Option<CachedEpisode>>();
+        foreach (var id in ids)
+        {
+            output.Add(id, Option<CachedEpisode>.None);
+        }
+        return Task.FromResult(output);
+    }
+
+    public Task<Unit> AddTracksToCache(Dictionary<string, TrackWithExpiration> newTracks)
+    {
+        return _tracksRepository().InsertTracks(newTracks);
+    }
+
+    public Task<Unit> AddEpisodesToCache(Dictionary<string, EpisodeWithExpiration> newTracks)
+    {
+        return Task.FromResult(Unit.Default);
+    }
+
 }

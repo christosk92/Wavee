@@ -1,5 +1,6 @@
 ﻿using Wavee.UI.Client.Album;
 using Wavee.UI.Client.Artist;
+using Wavee.UI.Client.ExtendedMetadata;
 using Wavee.UI.Client.Home;
 using Wavee.UI.Client.Library;
 using Wavee.UI.Client.Lyrics;
@@ -19,4 +20,5 @@ public interface IWaveeUIClient : IDisposable
     IWaveeUIArtistClient Artist { get; }
     IWaveeUILyricsClient Lyrics { get; }
     IWaveeUIPlaylistClient Playlist { get; }
+    IWaveeUIExtendedMetadataClient ExtendedMetadata { get; }
 }

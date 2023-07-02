@@ -8,6 +8,7 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media.Imaging;
 using Microsoft.UI.Xaml.Navigation;
+using Serilog;
 using Wavee.UI.ViewModel.Artist;
 using Wavee.UI.ViewModel.Shell;
 using Wavee.UI.WinUI.Navigation;
@@ -111,39 +112,52 @@ public sealed partial class ArtistView : UserControl, INavigable, ICacheablePage
 
     public async void NavigatedTo(object parameter)
     {
-        if (parameter is string id)
+        ViewModel.Loading = true;
+        try
         {
-            await ViewModel.Fetch(id, CancellationToken.None);
-            ViewModel.CreateListener();
-            _artistFetched.TrySetResult();
-        }
-        MetadataPnale.Visibility = Visibility.Visible;
-        _ = ShowPanelAnim.StartAsync();
-        if (!string.IsNullOrEmpty(ViewModel.Artist?.AvatarImage.Url))
-        {
-            SecondPersonPicture.ProfilePicture = new BitmapImage(new Uri(ViewModel.Artist.AvatarImage.Url));
-        }
-        else
-        {
-            SecondPersonPicture.DisplayName = ViewModel.Artist.Name;
-        }
-
-        if (string.IsNullOrEmpty(ViewModel.Header))
-        {
-            //show picture
-            HeaderImage.Visibility = Visibility.Collapsed;
-            AlternativeArtistGrid.Visibility = Visibility.Visible;
-            if (!string.IsNullOrEmpty(ViewModel.Artist.AvatarImage.Url))
+            if (parameter is string id)
             {
-                AlternativeArtistPicture.ProfilePicture = SecondPersonPicture.ProfilePicture;
+                await ViewModel.Fetch(id, CancellationToken.None);
+                ViewModel.CreateListener();
+                _artistFetched.TrySetResult();
+            }
+
+            MetadataPnale.Visibility = Visibility.Visible;
+            _ = ShowPanelAnim.StartAsync();
+            if (!string.IsNullOrEmpty(ViewModel.Artist?.AvatarImage.Url))
+            {
+                SecondPersonPicture.ProfilePicture = new BitmapImage(new Uri(ViewModel.Artist.AvatarImage.Url));
             }
             else
             {
-                AlternativeArtistPicture.DisplayName = SecondPersonPicture.DisplayName;
+                SecondPersonPicture.DisplayName = ViewModel.Artist.Name;
             }
-        }
 
-        ArtistPage_OnSizeChanged(this, null);
+            if (string.IsNullOrEmpty(ViewModel.Header))
+            {
+                //show picture
+                HeaderImage.Visibility = Visibility.Collapsed;
+                AlternativeArtistGrid.Visibility = Visibility.Visible;
+                if (!string.IsNullOrEmpty(ViewModel.Artist.AvatarImage.Url))
+                {
+                    AlternativeArtistPicture.ProfilePicture = SecondPersonPicture.ProfilePicture;
+                }
+                else
+                {
+                    AlternativeArtistPicture.DisplayName = SecondPersonPicture.DisplayName;
+                }
+            }
+
+            ArtistPage_OnSizeChanged(this, null);
+        }
+        catch (Exception e)
+        {
+            Log.Error(e, "Failed to fetch artist");
+        }
+        finally
+        {
+            ViewModel.Loading = false;
+        }
     }
 
     public void NavigatedFrom(NavigationMode mode)
@@ -159,5 +173,15 @@ public sealed partial class ArtistView : UserControl, INavigable, ICacheablePage
     public void RemovedFromCache()
     {
 
+    }
+
+    public Visibility TrueToCollapsed(bool o)
+    {
+        return o ? Visibility.Collapsed : Visibility.Visible;
+    }
+
+    public Visibility TrueToVisible(bool b)     
+    {
+        return b ? Visibility.Visible : Visibility.Collapsed;
     }
 }

@@ -34,7 +34,6 @@ public class PlaylistRepository
     {
         await using var db = LocalDbFactory.Create(_cachePath);
         var playlist = await db.Playlists
-            .Include(x => x.PlaylistTracks)
             .FirstOrDefaultAsync(x => x.Id == id);
 
         return playlist;

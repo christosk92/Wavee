@@ -4,7 +4,9 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using Eum.Spotify;
 using Eum.Spotify.canvaz;
+using Eum.Spotify.extendedmetadata;
 using Eum.Spotify.playlist4;
+using Google.Protobuf;
 using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
@@ -18,6 +20,7 @@ using Wavee.Metadata.Artist;
 using Wavee.Metadata.Common;
 using Wavee.Metadata.Home;
 using Wavee.Metadata.Me;
+using Wavee.Sqlite.Repository;
 using Wavee.Token.Live;
 
 namespace Wavee.Metadata.Live;
@@ -61,7 +64,7 @@ internal readonly struct LiveSpotifyMetadataClient : ISpotifyMetadataClient
         var response = await mercury.Get(finalUri, cancellationToken);
         if (response.Header.StatusCode == 200)
         {
-            var result =  Track.Parser.ParseFrom(response.Payload.Span);
+            var result = Track.Parser.ParseFrom(response.Payload.Span);
             await cache.SetTrack(id, result);
             return result;
         }
@@ -475,6 +478,120 @@ internal readonly struct LiveSpotifyMetadataClient : ISpotifyMetadataClient
         }
 
         return null;
+    }
+
+    public async Task<Dictionary<string, Option<Either<TrackWithExpiration, EpisodeWithExpiration>>>> GetExtendedMetadataForItems(IGrouping<AudioItemType, string>[] items, CancellationToken ct)
+    {
+        const string spclient = "gae2-spclient.spotify.com:443";
+        const string url = "/extended-metadata/v0/extended-metadata";
+
+        var finalUrl = $"https://{spclient}{url}";
+        var token = await _tokenFactory(ct);
+        var tokenHeader = new AuthenticationHeaderValue("Bearer", token);
+        var request = new BatchedEntityRequest();
+        foreach (var group in items)
+        {
+            switch (group.Key)
+            {
+                case AudioItemType.Track:
+                    request.EntityRequest.AddRange(group.Select(a => new EntityRequest
+                    {
+                        EntityUri = a,
+                        Query =
+                        {
+                            new ExtensionQuery
+                            {
+                                ExtensionKind = ExtensionKind.TrackV4
+                            }
+                        }
+                    }));
+                    break;
+                case AudioItemType.PodcastEpisode:
+                    request.EntityRequest.AddRange(group.Select(a => new EntityRequest
+                    {
+                        EntityUri = a,
+                        Query =
+                        {
+                            new ExtensionQuery
+                            {
+                                ExtensionKind = ExtensionKind.EpisodeV4
+                            }
+                        }
+                    }));
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
+        request.Header = new BatchedEntityRequestHeader
+        {
+            Catalogue = "premium",
+            Country = _country.Result
+        };
+
+        using var stream = new MemoryStream();
+        request.WriteTo(stream);
+        stream.Position = 0;
+        using var streamContent = new StreamContent(stream);
+        using var response = await HttpIO.Post(finalUrl, new Dictionary<string, string>(), streamContent, tokenHeader, ct);
+        response.EnsureSuccessStatusCode();
+        await using var responseStream = await response.Content.ReadAsStreamAsync(ct);
+        var data = BatchedExtensionResponse.Parser.ParseFrom(responseStream);
+        var result = new Dictionary<string, Option<Either<TrackWithExpiration, EpisodeWithExpiration>>>();
+        foreach (var metadata in data.ExtendedMetadata)
+        {
+            switch (metadata.ExtensionKind)
+            {
+                case ExtensionKind.EpisodeV4:
+                    {
+                        foreach (var item in metadata.ExtensionData)
+                        {
+                            if (item.Header.StatusCode is 200)
+                            {
+                                var episode = Episode.Parser.ParseFrom(item.ExtensionData.Value);
+                                result[item.EntityUri] =
+                                    Option<Either<TrackWithExpiration, EpisodeWithExpiration>>.Some(
+                                        Either<TrackWithExpiration, EpisodeWithExpiration>.Right(
+                                            new EpisodeWithExpiration(
+                                                Track: episode,
+                                                Expiration: DateTimeOffset.UtcNow.AddSeconds(item.Header
+                                                    .OfflineTtlInSeconds)
+                                            )));
+                            }
+                            else
+                            {
+                                result[item.EntityUri] =
+                                    Option<Either<TrackWithExpiration, EpisodeWithExpiration>>.None;
+                            }
+                        }
+
+                        break;
+                    }
+                case ExtensionKind.TrackV4:
+                    {
+                        foreach (var item in metadata.ExtensionData)
+                        {
+                            if (item.Header.StatusCode is 200)
+                            {
+                                var track = Track.Parser.ParseFrom(item.ExtensionData.Value);
+                                //result.Add(Option<Either<Track, Episode>>.Some(Either<Track, Episode>.Left(track)));
+                                result[item.EntityUri] = Option<Either<TrackWithExpiration, EpisodeWithExpiration>>.Some(Either<TrackWithExpiration, EpisodeWithExpiration>.Left(new TrackWithExpiration(
+                                    Track: track,
+                                    Expiration: DateTimeOffset.UtcNow.AddSeconds(item.Header.OfflineTtlInSeconds)
+                                    )));
+                            }
+                            else
+                            {
+                                result[item.EntityUri] = Option<Either<TrackWithExpiration, EpisodeWithExpiration>>.None;
+                                //   result.Add(Option<Either<Track, Episode>>.None);
+                            }
+                        }
+                        break;
+                    }
+            }
+        }
+
+        return result;
     }
 
     private static LyricsLine[] Parse(ReadOnlyMemory<byte> data)

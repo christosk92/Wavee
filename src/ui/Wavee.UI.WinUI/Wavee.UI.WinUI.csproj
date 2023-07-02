@@ -20,6 +20,7 @@
 	<ItemGroup>
 		<Content Remove="Assets\amb.png" />
 		<Content Remove="Assets\Fonts\MediaPlayerIcons.ttf" />
+		<Content Remove="Assets\kakao-ryan-typing.gif" />
 		<Content Remove="Assets\SettingsLottie.json" />
 	</ItemGroup>
 	<ItemGroup>
@@ -118,6 +119,9 @@
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </None>
 	  <None Update="Assets\Fonts\MediaPlayerIcons.ttf">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	  <None Update="Assets\kakao-ryan-typing.gif">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </None>
 	  <Page Update="View\Playlist\PlaylistView.xaml">

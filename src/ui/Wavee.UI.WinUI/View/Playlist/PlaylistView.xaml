@@ -11,7 +11,7 @@
 
 
     <Grid>
-        <ListView ItemsSource="{x:Bind ViewModel.Tracks,Mode=OneWay}">
+        <ListView ItemsSource="{x:Bind IncrementalLoadingCollection,Mode=OneWay}">
             <ListView.ItemTemplate>
                 <DataTemplate x:DataType="playlist:PlaylistTrackViewModel">
                     <Grid>
@@ -39,7 +39,10 @@
                         </Grid>
 
                         <Grid x:Name="LoadedGrid"
-                              x:Load="{x:Bind Negate(Loading),Mode=OneWay}" />
+                              x:Load="{x:Bind Negate(Loading),Mode=OneWay}">
+                            <TextBlock Text="{x:Bind Track.Name,Mode=OneWay}"
+                                       VerticalAlignment="Center" />
+                        </Grid>
                     </Grid>
                 </DataTemplate>
             </ListView.ItemTemplate>

@@ -14,6 +14,8 @@ public sealed class ArtistViewModel : ObservableObject
     private WaveeUIArtistView? _artist;
     private bool _following;
     private IDisposable? _disposable;
+    private bool _loading;
+
     public ArtistViewModel(UserViewModel userViewModel)
     {
         _userViewModel = userViewModel;
@@ -52,10 +54,16 @@ public sealed class ArtistViewModel : ObservableObject
         set => SetProperty(ref _following, value);
     }
 
+    public bool Loading
+    {
+        get => _loading;
+        set => SetProperty(ref _loading, value);
+    }
+
     public async Task Fetch(string id, CancellationToken ct)
     {
         var client = _userViewModel.Client.Artist;
-        Artist = await client.GetArtist(id, ct);
+        Artist = await Task.Run(async () => await client.GetArtist(id, ct), ct);
         IsFollowing = ShellViewModel.Instance.Library.InLibrary(Artist.Id);
     }
 

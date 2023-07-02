@@ -364,16 +364,6 @@ public class ImageOpacityBrush : XamlCompositionBrushBase, IDisposable
 
             _surface = null;
         }
-
-        //Source = null;
-        Task.Run(() =>
-        {
-            GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
-            GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced, true, true);
-            GC.WaitForPendingFinalizers();
-            GC.Collect();
-        });
-        //GC.Collect();
     }
 
     //// Helper to allow XAML developer to use XAML stretch property rather than another enum.

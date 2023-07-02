@@ -1,6 +1,10 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using Eum.Spotify.playlist4;
 using LanguageExt;
+using Serilog;
+using Spotify.Metadata;
+using Wavee.Metadata.Artist;
+using Wavee.UI.Client.Playback;
 using Wavee.UI.Client.Playlist.Models;
 using Wavee.UI.User;
 
@@ -11,11 +15,12 @@ public sealed class PlaylistViewModel : ObservableObject
     private readonly UserViewModel _user;
     private PlaylistRevisionId _revision;
     private string _id;
-    private PlaylistTrackViewModel[] _tracks;
+    private WaveeUIPlaylistTrackInfo[] _tracks;
 
     public PlaylistViewModel(UserViewModel user)
     {
         _user = user;
+        WaitForTracks = new TaskCompletionSource<Unit>(TaskCreationOptions.RunContinuationsAsynchronously);
     }
 
     public PlaylistRevisionId Revision
@@ -28,19 +33,82 @@ public sealed class PlaylistViewModel : ObservableObject
         get => _id;
         set => SetProperty(ref _id, value);
     }
+    public TaskCompletionSource<Unit> FetchedAllTracks { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+    public TaskCompletionSource<Unit> WaitForTracks { get; }
 
-    public PlaylistTrackViewModel[] Tracks
-    {
-        get => _tracks;
-        set => SetProperty(ref _tracks, value);
-    }
+
     public async Task Initialize(string id, CancellationToken cancellationToken)
     {
         Id = id;
         var client = _user.Client.Playlist;
         var playlist = await client.GetPlaylist(id, cancellationToken);
         Revision = playlist.Revision;
-        Tracks = playlist.Tracks.Select(x => new PlaylistTrackViewModel(x)).ToArray();
+        _tracks = playlist.Tracks;
+        WaitForTracks.TrySetResult(Unit.Default);
+        //Tracks = playlist.Tracks.Select(x => new PlaylistTrackViewModel(x)).ToArray();
+        await FetchTracksOnlyForSorting(cancellationToken);
+    }
+
+    private async Task FetchTracksOnlyForSorting(CancellationToken cancellationToken)
+    {
+        var trckUris = _tracks.Select(x => x.Id).ToArray();
+        var batches = trckUris.Chunk(2000);
+        foreach (var batch in batches)
+        {
+            const int maxRetries = 5;
+            int retryCount = 0;
+            while (true)
+            {
+                try
+                {
+                    _ = await _user.Client.ExtendedMetadata.GetTracks(batch, false, cancellationToken);
+                    break;
+                }
+                catch (Exception e)
+                {
+                    retryCount++;
+                    Log.Error(e,
+                        "An error occurred while trying to fetch tracks. retrying in 2 secs. Try {try} out of {maxRetries}",
+                        retryCount, maxRetries);
+                    await Task.Delay(2000, cancellationToken);
+                    if (retryCount - 1 == maxRetries)
+                        break;
+                    continue;
+                }
+            }
+        }
+    }
+
+    public Dictionary<string, PlaylistTrackViewModel> Generate(int offset, int limit) => _tracks.Skip(offset)
+        .Take(limit).Select(x => new PlaylistTrackViewModel(x))
+        .ToDictionary(x => x.Id, x => x);
+    public async Task FetchAndSetTracks(Dictionary<string, PlaylistTrackViewModel> fill,
+        Action<Action> invokeOnUithread,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var trackUris = fill.Keys.ToArray();
+            var tracks = await _user.Client.ExtendedMetadata.GetTracks(trackUris, true, cancellationToken);
+
+            invokeOnUithread(() =>
+            {
+                foreach (var track in _tracks)
+                {
+                    if (tracks.TryGetValue(track.Id, out var t))
+                    {
+                        _ = t.Match(
+                            Left: episode => throw new NotImplementedException(),
+                            Right: tr => fill[track.Id].Track = tr
+                        );
+                    }
+                }
+            });
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+        }
     }
 }
 
@@ -81,4 +149,17 @@ public sealed class PlaylistTrackViewModel : ObservableObject
 
 public class WaveeUITrack
 {
+    public string Id { get; set; }
+    public string Name { get; set; }
+    public ITrackArtist[] Artists { get; set; }
+    public TrackAlbum Album { get; set; }
+    public int DurationMs { get; set; }
+    public int TrackNumber { get; set; }
+    public int DiscNumber { get; set; }
+    public string AlbumName { get; set; }
+}
+
+public class WaveeUIEpisode
+{
+
 }

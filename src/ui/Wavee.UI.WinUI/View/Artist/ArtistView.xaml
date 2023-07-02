@@ -49,7 +49,7 @@
         </converters:BoolToObjectConverter>
     </UserControl.Resources>
 
-    <Grid VerticalAlignment="Top">
+    <Grid VerticalAlignment="Stretch">
         <ScrollViewer VerticalAlignment="Top"
                       ui:ScrollViewerExtensions.VerticalScrollBarMargin="0,0,0,110"
                       ViewChanged="ScrollViewer_OnViewChanged">
@@ -153,6 +153,14 @@
                                   VerticalContentAlignment="Top" />
             </StackPanel>
         </ScrollViewer>
+
+        <Image Source="ms-appx:///Assets/kakao-ryan-typing.gif"
+               x:Name="LoadingImage"
+               Height="88"
+               Width="88"
+               VerticalAlignment="Center"
+               HorizontalAlignment="Center"
+               Visibility="{x:Bind TrueToVisible(ViewModel.Loading),Mode=OneWay}" />
 
         <Border x:Name="SecondMetadataPanel"
                 Height="100"

@@ -34,6 +34,10 @@ internal static class TrackMapping
 
     private static string GetImage(ImageGroup albumCoverGroup, Image.Types.Size size)
     {
+        if (albumCoverGroup is null)
+        {
+            return string.Empty;
+        }
         var requestedSize = albumCoverGroup.Image.FirstOrDefault(x => x.Size == size);
         if (requestedSize != null)
         {
