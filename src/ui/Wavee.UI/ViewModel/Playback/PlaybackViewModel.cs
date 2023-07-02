@@ -1,4 +1,5 @@
-﻿using System.Reactive.Disposables;
+﻿using System.Diagnostics;
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -130,11 +131,13 @@ public sealed class PlaybackViewModel : ObservableObject
             case WaveeUIPlayerState.Playing:
                 HasPlayback = true;
                 _timer.Change(0, TimerInterval);
+                inaccuracyReader = Stopwatch.StartNew();
                 Paused = false;
                 break;
             case WaveeUIPlayerState.Paused:
                 HasPlayback = true;
                 _timer.Change(Timeout.Infinite, Timeout.Infinite);
+                inaccuracyReader = Stopwatch.StartNew();
                 Paused = true;
                 break;
             default:
@@ -163,38 +166,40 @@ public sealed class PlaybackViewModel : ObservableObject
         }
     }
 
+    private Stopwatch inaccuracyReader = new Stopwatch();
     private void MainPositionCallback(object? state)
     {
-        lock (_lock)
+        var elapsed = inaccuracyReader.ElapsedMilliseconds;
+        var inaccuracy = (int)(TimerInterval - elapsed);
+
+        var currentPos = _position;
+        var theoreticalNext = currentPos + TimerInterval - inaccuracy;
+
+        for (var index = 0; index < _positionCallbacks.Count; index++)
         {
-            var currentPos = _position;
-            var theoreticalNext = currentPos + TimerInterval;
-
-            for (var index = 0; index < _positionCallbacks.Count; index++)
+            var callback = _positionCallbacks[index];
+            //check if we reached the difference 
+            var diff = Math.Abs(currentPos - callback.PreviousMeasuredTime);
+            if (diff >= callback.Difference)
             {
-                var callback = _positionCallbacks[index];
-                //check if we reached the difference 
-                var diff = Math.Abs(currentPos - callback.PreviousMeasuredTime);
-                if (diff >= callback.Difference)
-                {
-                    callback.PositionChanged(theoreticalNext);
-                    //store the new position
-                    _positionCallbacks[index] = callback with { PreviousMeasuredTime = theoreticalNext };
-                }
-                else
-                {
-                    //do nothing
-                }
+                callback.PositionChanged(theoreticalNext);
+                //store the new position
+                _positionCallbacks[index] = callback with { PreviousMeasuredTime = theoreticalNext };
             }
-
-            //if we reached the end of the song, stop the timer
-            if (Duration is not null && theoreticalNext >= Duration.Value.TotalMilliseconds)
+            else
             {
-                _timer.Change(Timeout.Infinite, Timeout.Infinite);
+                //do nothing
             }
-
-            _position = theoreticalNext;
         }
+
+        //if we reached the end of the song, stop the timer
+        if (Duration is not null && theoreticalNext >= Duration.Value.TotalMilliseconds)
+        {
+            _timer.Change(Timeout.Infinite, Timeout.Infinite);
+        }
+
+        _position = theoreticalNext;
+        inaccuracyReader = Stopwatch.StartNew();
     }
 
     public void ClearPositionCallback(Guid positionCallbackGuid)

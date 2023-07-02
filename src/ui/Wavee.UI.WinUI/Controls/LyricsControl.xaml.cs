@@ -28,7 +28,7 @@ public sealed partial class LyricsControl : UserControl
 
     private void InvokeOnUiThread(Action obj)
     {
-        _dispatcherQueue.TryEnqueue(DispatcherQueuePriority.Normal, () =>
+        _dispatcherQueue.TryEnqueue(DispatcherQueuePriority.High, () =>
         {
             obj();
         });

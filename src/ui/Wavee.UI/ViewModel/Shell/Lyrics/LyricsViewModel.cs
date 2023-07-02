@@ -3,6 +3,7 @@ using Eum.Spotify.playlist4;
 using Serilog;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Linq;
@@ -23,7 +24,7 @@ namespace Wavee.UI.ViewModel.Shell.Lyrics;
 
 public partial class LyricsViewModel : ObservableObject
 {
-    private const int Interval = 20;
+    private Guid _positioncallbackId;
     [ObservableProperty] private bool _hasLyrics;
     [ObservableProperty] private bool _loading;
     [ObservableProperty] private List<LyricsLineViewModel> _lyrics;
@@ -32,8 +33,6 @@ public partial class LyricsViewModel : ObservableObject
     private readonly IWaveeUILyricsClient _lyricsClient;
     private readonly Action<Action> _invokeOnUiThread;
     private string? _currentTrackId;
-    private Timer _timer;
-    private double _ms;
     private IDisposable _subscription;
     private readonly PlaybackViewModel playbackViewModel;
     public LyricsViewModel(IWaveeUILyricsClient lyricsProvider, PlaybackViewModel playbackViewModel,
@@ -43,7 +42,6 @@ public partial class LyricsViewModel : ObservableObject
         this.playbackViewModel = playbackViewModel;
         _playbackViewModel = playbackViewModel;
         this._invokeOnUiThread = _invokeOnUiThread;
-        _timer = new Timer(Callback);
         //TimeSpan.FromMilliseconds(20)
     }
 
@@ -55,21 +53,23 @@ public partial class LyricsViewModel : ObservableObject
             .ObserveOn(RxApp.MainThreadScheduler)
             .SelectMany(async t => await OnPlaybackEvent(t))
             .Subscribe();
+        _positioncallbackId = playbackViewModel.RegisterPositionCallback(10, Callback);
     }
 
     public void Destroy()
     {
         _subscription?.Dispose();
+        _playbackViewModel.ClearPositionCallback(_positioncallbackId);
         //clear lyrics
-        _timer.Change(Timeout.Infinite, Timeout.Infinite);
         Lyrics = new List<LyricsLineViewModel>(0);
     }
-    private void Callback(object? state)
+    private void Callback(int state)
     {
-        _ms += 20;
-        if (ShouldChangeLyricsLine(_ms))
+        var closestLyrics = FindClosestLyricsLine(state);
+        var different = closestLyrics != _activeLyricsLine;
+        if (different)
         {
-            var closestLyrics = FindClosestLyricsLine(_ms);
+            Debug.WriteLine($"Callback: {state}, startat: {closestLyrics.StartsAt}, words: {closestLyrics?.Words}");
             _invokeOnUiThread(() =>
             {
                 SeekToLyrics(closestLyrics);
@@ -95,16 +95,6 @@ public partial class LyricsViewModel : ObservableObject
             }
         }
 
-        if (state.PlaybackState is WaveeUIPlayerState.Paused)
-        {
-            _timer.Change(Timeout.Infinite, Timeout.Infinite);
-        }
-        else if (state.PlaybackState is WaveeUIPlayerState.Playing)
-        {
-            _timer.Change(0, Interval);
-        }
-
-        _ms = state.Position.TotalMilliseconds;
         //TODO: invoke to go to accurate lyrics line
         var closestLyrics = FindClosestLyricsLine(state.Position.TotalMilliseconds);
 
@@ -118,7 +108,6 @@ public partial class LyricsViewModel : ObservableObject
 
     public async Task<bool?> TryFetchLyrics(string actualId, CancellationToken ct = default)
     {
-        _timer.Change(Timeout.Infinite, Timeout.Infinite);
         Loading = true;
         try
         {
@@ -132,12 +121,6 @@ public partial class LyricsViewModel : ObservableObject
                     StartsAt = a.StartTimeMs,
                 }).ToList();
                 HasLyrics = true;
-                _ms = _playbackViewModel.GetPosition();
-                if (!_playbackViewModel.Paused)
-                {
-                    _timer.Change(0, Interval);
-                    // _timer.Start();
-                }
 
                 return true;
             }
@@ -158,34 +141,45 @@ public partial class LyricsViewModel : ObservableObject
             Loading = false;
         }
     }
+    //
+    // private bool ShouldChangeLyricsLine(double ms)
+    // {
+    //     //check if the current line is the last one
+    //     if (_lyrics == null || _lyrics.Count == 0 || _activeLyricsLine == _lyrics[^1])
+    //     {
+    //         return false;
+    //     }
+    //
+    //     //We advance to the next lyrics line if the current one is over with a small margin of 10ms.
+    //     //get the next line and compare the start time with the current time
+    //     var nextLine = _lyrics[_lyrics.IndexOf(_activeLyricsLine) + 1];
+    //     //if the small margin exceeds the difference, just say yes (but only if > 0)
+    //     if (nextLine.StartsAt - ms < 10)
+    //     {
+    //         return true;
+    //     }
+    //     return false;
+    // }
 
-    private bool ShouldChangeLyricsLine(double ms)
+    private LyricsLineViewModel? FindClosestLyricsLine(double ms)
     {
-        //check if the current line is the last one
-        if (_lyrics == null || _activeLyricsLine == _lyrics[^1])
+        LyricsLineViewModel? currentLine = null;
+
+        for (int i = 0; i < _lyrics.Count; i++)
         {
-            return false;
+            double endTime = (i < _lyrics.Count - 1) ? _lyrics[i + 1].StartsAt : double.MaxValue;
+
+            if (_lyrics[i].StartsAt <= ms && endTime > ms)
+            {
+                currentLine = _lyrics[i];
+                break;
+            }
         }
 
-        //We advance to the next lyrics line if the current one is over with a small margin of 10ms.
-        //get the next line and compare the start time with the current time
-        var nextLine = _lyrics[_lyrics.IndexOf(_activeLyricsLine) + 1];
-        //if the small margin exceeds the difference, just say yes (but only if > 0)
-        if (nextLine.StartsAt - ms < 10)
-        {
-            return true;
-        }
-        return false;
+        return currentLine;
     }
 
-    private LyricsLineViewModel FindClosestLyricsLine(double ms)
-    {
-        //with a margin of 10ms
-        var closest = _lyrics.OrderBy(x => Math.Abs(x.StartsAt - ms)).First();
-        return closest;
-    }
-
-    private void SeekToLyrics(LyricsLineViewModel l)
+    private void SeekToLyrics(LyricsLineViewModel? l)
     {
         foreach (var lr in Lyrics)
         {

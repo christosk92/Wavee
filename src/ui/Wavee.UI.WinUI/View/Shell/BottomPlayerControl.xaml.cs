@@ -65,7 +65,7 @@ namespace Wavee.UI.WinUI.View.Shell
 
             if (e.NewValue is PlaybackViewModel newPlaybackViewModel)
             {
-                x._positionCallbackGuid = newPlaybackViewModel.RegisterPositionCallback(1000, x.PositionChanged);
+                x._positionCallbackGuid = newPlaybackViewModel.RegisterPositionCallback(500, x.PositionChanged);
             }
         }
         public UserViewModel User
