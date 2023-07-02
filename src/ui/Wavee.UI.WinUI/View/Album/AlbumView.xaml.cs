@@ -51,9 +51,10 @@ namespace Wavee.UI.WinUI.View.Album
             {
                 _traveledWithImage = true;
                 var anim = ConnectedAnimationService.GetForCurrentView().GetAnimation("ForwardConnectedAnimation");
-                anim.Configuration = new DirectConnectedAnimationConfiguration();
                 if (anim != null)
-                {
+                {        
+                    anim.Configuration = new DirectConnectedAnimationConfiguration();
+
                     anim.TryStart(AlbumImage);
                 }
 

@@ -12,6 +12,7 @@ public interface ICardViewModel
     bool ImageIsIcon { get; }
     string? Subtitle { get; }
     bool HasSubtitle { get; }
+    string? Caption { get; }
 }
 public sealed class CardViewModel : ICardViewModel
 {
@@ -114,6 +115,7 @@ public sealed class PodcastEpisodeCardViewModel : ICardViewModel
     public bool ImageIsIcon => false;
     public string? Subtitle => Show;
     public bool HasSubtitle => true;
+    public string? Caption { get; }
     public bool Started { get; init; }
     public TimeSpan Duration { get; init; }
     public TimeSpan Progress { get; init; }

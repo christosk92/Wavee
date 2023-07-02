@@ -119,7 +119,7 @@ public sealed partial class ArtistView : UserControl, INavigable, ICacheablePage
         }
         MetadataPnale.Visibility = Visibility.Visible;
         _ = ShowPanelAnim.StartAsync();
-        if (!string.IsNullOrEmpty(ViewModel.Artist.AvatarImage.Url))
+        if (!string.IsNullOrEmpty(ViewModel.Artist?.AvatarImage.Url))
         {
             SecondPersonPicture.ProfilePicture = new BitmapImage(new Uri(ViewModel.Artist.AvatarImage.Url));
         }
