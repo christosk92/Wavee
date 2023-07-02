@@ -1,62 +1,46 @@
-﻿using Google.Protobuf;
+﻿using System.Diagnostics;
+using System.Text.Json;
+using Eum.Spotify.playlist4;
+using Google.Protobuf;
+using Google.Protobuf.WellKnownTypes;
 using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
-using Serilog;
 using Spotify.Metadata;
 using SQLite;
-using Wavee.Cache.Entities;
 using Wavee.Id;
+using Wavee.Sqlite;
+using Wavee.Sqlite.Entities;
+using Wavee.Sqlite.Repository;
 
 namespace Wavee.Cache.Live;
 
 internal sealed class LiveSpotifyCache : ISpotifyCache
 {
+    private readonly Func<TracksRepository> _tracksRepository;
+    private readonly Func<RawEntityRepository> _rawEntityRepository;
+    private readonly Func<PlaylistRepository> _playlistRepository;
     private readonly SpotifyCacheConfig _config;
     private Option<string> DbPath => _config.CacheLocation.Map(x => Path.Combine(x, "spotify.db"));
     private Option<string> FileCachePath => _config.CacheLocation.Map(x => Path.Combine(x, "files"));
     public LiveSpotifyCache(SpotifyCacheConfig Config)
     {
         _config = Config;
-        if (DbPath.IsSome)
-        {
-            try
-            {
-                using var db = new SQLiteConnection(DbPath.ValueUnsafe());
-                db.CreateTable<CachedSpotifyTrack>();
-            }
-            catch (Exception e)
-            {
-            }
-        }
+        _tracksRepository = () => new TracksRepository(DbPath.IfNone(string.Empty));
+        _rawEntityRepository = () => new RawEntityRepository(DbPath.IfNone(string.Empty));
+        _playlistRepository = () => new PlaylistRepository(DbPath.IfNone(string.Empty));
     }
 
-    public Option<Track> GetTrack(SpotifyId id)
+    public async Task<Option<Track>> GetTrack(SpotifyId id)
     {
-        return DbPath
-            .Bind(path =>
-            {
-                using var db = new SQLiteConnection(path);
-                var track = db.Find<CachedSpotifyTrack>(id.ToString());
-                if (track is null)
-                    return Option<Track>.None;
-                return Track.Parser.ParseFrom(track.Data);
-            });
+        var result = await _tracksRepository().GetTrack(id.ToString());
+        if (result is null) return Option<Track>.None;
+        return result;
     }
 
-    public Unit SetTrack(SpotifyId id, Track track)
+    public async Task<Unit> SetTrack(SpotifyId id, Track track)
     {
-        return DbPath
-            .Map(path =>
-            {
-                using var db = new SQLiteConnection(path);
-                db.InsertOrReplace(new CachedSpotifyTrack
-                {
-                    Id = id.ToString(),
-                    Data = track.ToByteArray(),
-                    Expiration = DateTimeOffset.MaxValue
-                });
-                return Unit.Default;
-            }).IfNone(Unit.Default);
+        var result = await _tracksRepository().InsertTrack(id.ToString(), track, DateTimeOffset.MaxValue);
+        return result;
     }
 
     public Option<FileStream> File(AudioFile format)
@@ -72,32 +56,52 @@ internal sealed class LiveSpotifyCache : ISpotifyCache
             });
     }
 
-    public Option<byte[]> GetRawEntity(string itemId)
+    public async Task<Option<ReadOnlyMemory<byte>>> GetRawEntity(string itemId)
     {
-        return DbPath
-            .Bind(path =>
-            {
-                using var db = new SQLiteConnection(path);
-                var track = db.Find<CachedSpotifyTrack>(itemId);
-                if (track is null || DateTimeOffset.UtcNow >= track.Expiration)
-                    return Option<byte[]>.None;
-                return track.Data;
-            });
+        var result = await _rawEntityRepository().GetEntity(itemId, CancellationToken.None);
+        if (result is null) return Option<ReadOnlyMemory<byte>>.None;
+        return result.Value;
     }
 
-    public Unit SaveRawEntity(string itemId, byte[] data, DateTimeOffset expiration)
+    public async Task<Unit> SaveRawEntity(string itemId, byte[] data, DateTimeOffset expiration)
     {
-        return DbPath
-             .Map(path =>
-             {
-                 using var db = new SQLiteConnection(path);
-                 db.InsertOrReplace(new CachedSpotifyTrack
-                 {
-                     Id = itemId,
-                     Data = data,
-                     Expiration = expiration
-                 });
-                 return Unit.Default;
-             }).IfNone(Unit.Default);
+        await _rawEntityRepository().SetEntity(itemId, data, expiration, CancellationToken.None);
+        return Unit.Default;
+    }
+
+    public async Task<Option<CachedPlaylist>> TryGetPlaylist(SpotifyId spotifyId, CancellationToken ct = default)
+    {
+        var result = await _playlistRepository().GetPlaylist(spotifyId.ToString());
+        return result ?? Option<CachedPlaylist>.None;
+    }
+
+    public Task SavePlaylist(SpotifyId spotifyId, SelectedListContent playlistResult,
+        CancellationToken ct = default)
+    {
+        var idStr = spotifyId.ToString();
+        var playlist = new CachedPlaylist
+        {
+            Id = idStr,
+            Data = playlistResult.ToByteArray(),
+            Name = playlistResult.Attributes.Name ?? "Unknown playlist",
+            PlaylistTracks = playlistResult.Contents.Items
+                .Select(x =>
+                {
+                    var uid = x.Attributes.HasItemId ? x.Attributes.ItemId.ToBase64() : string.Empty;
+                    if (string.IsNullOrEmpty(uid))
+                        Debugger.Break();
+                    return new CachedPlaylistTrack
+                    {
+                        Id = x.Uri,
+                        Track = null,
+                        Uid = uid,
+                        MetadataJson = JsonSerializer.Serialize(x.Attributes),
+                        PlaylistIdTrackIdCompositeKey = $"{uid}-{idStr}",
+                        // CachedPlaylistId = spotifyId.ToString()
+                    };
+                }).ToList()
+        };
+
+        return _playlistRepository().SetPlaylist(playlist);
     }
 }

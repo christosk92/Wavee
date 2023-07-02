@@ -26,7 +26,7 @@ internal sealed class SpotifyUIAlbumClient : IWaveeUIAlbumClient
         return ParseFrom(album);
     }
 
-    public ValueTask<WaveeUIAlbumDisc[]> GetAlbumTracks(string id, CancellationToken ct = default)
+    public Task<WaveeUIAlbumDisc[]> GetAlbumTracks(string id, CancellationToken ct = default)
     {
         if (!_spotifyClient.TryGetTarget(out var spotifyClient))
         {

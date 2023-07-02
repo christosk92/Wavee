@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>netstandard2.0</TargetFramework>
+        <TargetFramework>net7.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <LangVersion>preview</LangVersion>
@@ -10,6 +10,7 @@
     <ItemGroup>
         <ProjectReference Include="..\Wavee.Player\Wavee.Player.csproj" />
         <ProjectReference Include="..\Wavee.Spotify.Proto\Wavee.Spotify.Proto.csproj" />
+        <ProjectReference Include="..\Wavee.Sqlite\Wavee.Sqlite.csproj" />
     </ItemGroup>
     <ItemGroup>
       <PackageReference Include="BouncyCastle.Cryptography" Version="2.2.1" />
@@ -18,10 +19,6 @@
       <PackageReference Include="LanguageExt.Core" Version="4.4.3" />
       <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="8.0.0-preview.5.23280.8" />
       <PackageReference Include="NeoSmart.AsyncLock" Version="3.2.1" />
-      <PackageReference Include="PolySharp" Version="1.13.2">
-        <PrivateAssets>all</PrivateAssets>
-        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-      </PackageReference>
       <PackageReference Include="sqlite-net-pcl" Version="1.9.141-beta" />
       <PackageReference Include="System.Runtime.Numerics" Version="4.3.0" />
       <PackageReference Include="System.Text.Json" Version="8.0.0-preview.5.23280.8" />

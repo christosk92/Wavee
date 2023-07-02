@@ -21,7 +21,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Wavee.UI", "src\ui\Wavee.UI
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Wavee.UI.Spotify", "src\ui\Wavee.UI.Spotify\Wavee.UI.Spotify.csproj", "{142922D8-2433-432C-A40B-8BE3CC98FE38}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Wavee.AudioVisualization", "src\ui\Wavee.AudioVisualization\Wavee.AudioVisualization.csproj", "{1DB3D811-3C17-42C4-83B8-258AF086267E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Wavee.AudioVisualization", "src\ui\Wavee.AudioVisualization\Wavee.AudioVisualization.csproj", "{1DB3D811-3C17-42C4-83B8-258AF086267E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Wavee.Sqlite", "src\lib\Wavee.Sqlite\Wavee.Sqlite.csproj", "{AE29D745-560B-454B-A1F3-E632D9F91FE5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -207,6 +209,26 @@ Global
 		{1DB3D811-3C17-42C4-83B8-258AF086267E}.Release|x64.Build.0 = Release|Any CPU
 		{1DB3D811-3C17-42C4-83B8-258AF086267E}.Release|x86.ActiveCfg = Release|Any CPU
 		{1DB3D811-3C17-42C4-83B8-258AF086267E}.Release|x86.Build.0 = Release|Any CPU
+		{AE29D745-560B-454B-A1F3-E632D9F91FE5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AE29D745-560B-454B-A1F3-E632D9F91FE5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AE29D745-560B-454B-A1F3-E632D9F91FE5}.Debug|ARM.ActiveCfg = Debug|Any CPU
+		{AE29D745-560B-454B-A1F3-E632D9F91FE5}.Debug|ARM.Build.0 = Debug|Any CPU
+		{AE29D745-560B-454B-A1F3-E632D9F91FE5}.Debug|ARM64.ActiveCfg = Debug|Any CPU
+		{AE29D745-560B-454B-A1F3-E632D9F91FE5}.Debug|ARM64.Build.0 = Debug|Any CPU
+		{AE29D745-560B-454B-A1F3-E632D9F91FE5}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{AE29D745-560B-454B-A1F3-E632D9F91FE5}.Debug|x64.Build.0 = Debug|Any CPU
+		{AE29D745-560B-454B-A1F3-E632D9F91FE5}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{AE29D745-560B-454B-A1F3-E632D9F91FE5}.Debug|x86.Build.0 = Debug|Any CPU
+		{AE29D745-560B-454B-A1F3-E632D9F91FE5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AE29D745-560B-454B-A1F3-E632D9F91FE5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AE29D745-560B-454B-A1F3-E632D9F91FE5}.Release|ARM.ActiveCfg = Release|Any CPU
+		{AE29D745-560B-454B-A1F3-E632D9F91FE5}.Release|ARM.Build.0 = Release|Any CPU
+		{AE29D745-560B-454B-A1F3-E632D9F91FE5}.Release|ARM64.ActiveCfg = Release|Any CPU
+		{AE29D745-560B-454B-A1F3-E632D9F91FE5}.Release|ARM64.Build.0 = Release|Any CPU
+		{AE29D745-560B-454B-A1F3-E632D9F91FE5}.Release|x64.ActiveCfg = Release|Any CPU
+		{AE29D745-560B-454B-A1F3-E632D9F91FE5}.Release|x64.Build.0 = Release|Any CPU
+		{AE29D745-560B-454B-A1F3-E632D9F91FE5}.Release|x86.ActiveCfg = Release|Any CPU
+		{AE29D745-560B-454B-A1F3-E632D9F91FE5}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -220,6 +242,7 @@ Global
 		{6DE9880C-8F78-4974-B116-479C4E0FB4CB} = {80DB3D5D-3E79-4DCA-A639-49CE9FA6F06E}
 		{142922D8-2433-432C-A40B-8BE3CC98FE38} = {80DB3D5D-3E79-4DCA-A639-49CE9FA6F06E}
 		{1DB3D811-3C17-42C4-83B8-258AF086267E} = {A19592E6-AD07-4C3E-93BA-B796094F31ED}
+		{AE29D745-560B-454B-A1F3-E632D9F91FE5} = {A19592E6-AD07-4C3E-93BA-B796094F31ED}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {666D8C34-F2E0-47CC-B2E4-8A44AAEC0842}

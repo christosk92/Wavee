@@ -1,4 +1,5 @@
 ﻿using System.Globalization;
+using Eum.Spotify.playlist4;
 using LanguageExt;
 using Spotify.Metadata;
 using Wavee.Id;
@@ -60,13 +61,15 @@ public interface ISpotifyMetadataClient
     ///     A boolean indicating whether or not to destroy the cache for this artist.
     /// </param>
     /// <param name="languageOverride"></param>
+    /// <param name="includePrerelease"></param>
     /// <param name="ct">
     ///     A <see cref="CancellationToken"/> to cancel the operation.
     /// </param>
     /// <returns>
     /// A <see cref="Task{TResult}"/> that will complete with the <see cref="ArtistOverview"/> or throw a <see cref="MercuryException"/>.
     /// </returns>
-    ValueTask<ArtistOverview> GetArtistOverview(SpotifyId artistId, bool destroyCache, Option<CultureInfo> languageOverride, bool includePrerelease, CancellationToken ct = default);
+    Task<ArtistOverview> GetArtistOverview(SpotifyId artistId, bool destroyCache, Option<CultureInfo> languageOverride,
+        bool includePrerelease, CancellationToken ct = default);
 
     ValueTask<IArtistDiscographyRelease[]> GetArtistDiscography(SpotifyId artistId, ReleaseType type, int offset, int limit, CancellationToken ct = default);
 
@@ -84,7 +87,8 @@ public interface ISpotifyMetadataClient
     Task<SpotifyAlbum> GetAlbum(SpotifyId id, CancellationToken ct = default);
 
 
-    ValueTask<SpotifyAlbumDisc[]> GetAlbumTracks(SpotifyId id, CancellationToken ct = default);
-    ValueTask<LyricsLine[]> GetLyrics(SpotifyId trackId, CancellationToken ct = default);
+    Task<SpotifyAlbumDisc[]> GetAlbumTracks(SpotifyId id, CancellationToken ct = default);
+    Task<LyricsLine[]> GetLyrics(SpotifyId trackId, CancellationToken ct = default);
+    Task<SelectedListContent?> GetPlaylist(SpotifyId spotifyId, CancellationToken ct = default);
 }
 public readonly record struct LyricsLine(string Words, double StartTimeMs);

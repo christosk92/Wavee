@@ -135,8 +135,10 @@ namespace Wavee.UI.WinUI.View.Shell
 
                 var rightPadding = new GridLength(appWindow.TitleBar.RightInset * scaleAdjustment);
 
-                LeftPaddingColumn.Width = new GridLength(appWindow.TitleBar.LeftInset * scaleAdjustment);
-                RightPaddingColumn.Width = new GridLength(appWindow.TitleBar.RightInset / scaleAdjustment, GridUnitType.Pixel);
+                var leftInset = appWindow.TitleBar.LeftInset is 0 ? 24 : appWindow.TitleBar.LeftInset;
+                var rightInset = appWindow.TitleBar.RightInset is 0 ? 24 : appWindow.TitleBar.RightInset;
+                LeftPaddingColumn.Width = new GridLength(leftInset * scaleAdjustment);
+                RightPaddingColumn.Width = new GridLength(rightInset / scaleAdjustment, GridUnitType.Pixel);
 
 
                 List<RectInt32> dragRectsList = new();
@@ -213,7 +215,7 @@ namespace Wavee.UI.WinUI.View.Shell
                     paneSizeRect.X = (int)(leftinset * scaleAdjustment); // inset from left
                     paneSizeRect.Y = 0;
 
-                    paneSizeRect.Width = (int)((LeftDragColumn.ActualWidth- leftinset) * scaleAdjustment); // minus the offset we just added
+                    paneSizeRect.Width = (int)((LeftDragColumn.ActualWidth - leftinset) * scaleAdjustment); // minus the offset we just added
                     paneSizeRect.Height = (int)(AppTitleBar.ActualHeight * scaleAdjustment);
                     dragRectsList.Add(paneSizeRect);
 

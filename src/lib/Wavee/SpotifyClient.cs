@@ -88,7 +88,8 @@ public class SpotifyClient : IDisposable
                         if (await listener.Reader.WaitToReadAsync())
                         {
                             var countryCode = await listener.Reader.ReadAsync();
-                            var countryCodeString = countryCode.Payload.Span.GetUTF8String();
+                            //var countryCodeString = countryCode.Payload.Span.GetUTF8String();
+                            var countryCodeString = Encoding.UTF8.GetString(countryCode.Payload.Span);
                             if (countryCode.Type is SpotifyPacketType.CountryCode)
                             {
                                 _countryCodeTask.TrySetResult(countryCodeString);

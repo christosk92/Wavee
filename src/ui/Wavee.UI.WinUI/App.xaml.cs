@@ -2,6 +2,7 @@
 using Windows.Storage;
 using LanguageExt;
 using Serilog;
+using Wavee.UI.Client.Playlist.Models;
 
 namespace Wavee.UI.WinUI
 {

@@ -12,7 +12,7 @@ internal sealed class SpotifyUILyricsClient : IWaveeUILyricsClient
         _spotifyClient = new WeakReference<SpotifyClient>(spotifyClient);
     }
 
-    public ValueTask<LyricsLine[]> GetLyrics(string trackId, CancellationToken ct)
+    public Task<LyricsLine[]> GetLyrics(string trackId, CancellationToken ct)
     {
         if (!_spotifyClient.TryGetTarget(out var spotifyClient))
         {

@@ -49,6 +49,7 @@
 		<None Remove="View\Artist\Views\Discography\DiscographyPageView.xaml" />
 		<None Remove="View\Artist\Views\SpotifyPreReleaseControl.xaml" />
 		<None Remove="View\Home\HomeView.xaml" />
+		<None Remove="View\Playlist\PlaylistView.xaml" />
 		<None Remove="View\Setup\OptInView.xaml" />
 		<None Remove="View\Setup\SettingEverythingUpView.xaml" />
 		<None Remove="View\Setup\SetupPageContent.xaml" />
@@ -119,6 +120,9 @@
 	  <None Update="Assets\Fonts\MediaPlayerIcons.ttf">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </None>
+	  <Page Update="View\Playlist\PlaylistView.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </Page>
 	  <Page Update="View\Shell\RightSidebarControl.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </Page>

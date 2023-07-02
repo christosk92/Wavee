@@ -3,5 +3,5 @@
 public interface IWaveeUIAlbumClient
 {
     Task<WaveeUIAlbumView> GetAlbum(string id, CancellationToken cancellationToken);
-    ValueTask<WaveeUIAlbumDisc[]> GetAlbumTracks(string id, CancellationToken ct = default);
+    Task<WaveeUIAlbumDisc[]> GetAlbumTracks(string id, CancellationToken ct = default);
 }

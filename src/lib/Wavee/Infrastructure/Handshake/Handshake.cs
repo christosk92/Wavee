@@ -156,7 +156,8 @@ internal static class Handshake
     private static ReadOnlySpan<byte> BuildClientHello(DiffieHellman keys)
     {
         Span<byte> nonce = stackalloc byte[0x10];
-        nonce.FillRandomBytes();
+        // nonce.FillRandomBytes();
+        RandomNumberGenerator.Fill(nonce);
 
         var payload = NewClientHello(keys.PublicKeyArray(), nonce);
 

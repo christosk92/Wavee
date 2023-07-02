@@ -7,6 +7,7 @@ using Eum.Spotify.canvaz;
 using Eum.Spotify.playlist4;
 using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Spotify.Metadata;
 using Wavee.Cache;
 using Wavee.Id;
@@ -46,13 +47,23 @@ internal readonly struct LiveSpotifyMetadataClient : ISpotifyMetadataClient
 
     public async Task<Track> GetTrack(SpotifyId id, CancellationToken cancellationToken = default)
     {
+        var cache = _cache;
+        var track = await cache.GetTrack(id);
+        if (track.IsSome)
+        {
+            return track.ValueUnsafe();
+        }
+
+
         const string query = "hm://metadata/4/track/{0}?country={1}";
         var finalUri = string.Format(query, id.ToBase16(), await _country);
         var mercury = _mercuryFactory();
         var response = await mercury.Get(finalUri, cancellationToken);
         if (response.Header.StatusCode == 200)
         {
-            return Track.Parser.ParseFrom(response.Payload.Span);
+            var result =  Track.Parser.ParseFrom(response.Payload.Span);
+            await cache.SetTrack(id, result);
+            return result;
         }
 
         throw new MercuryException(response);
@@ -170,7 +181,7 @@ internal readonly struct LiveSpotifyMetadataClient : ISpotifyMetadataClient
         ));
     }
 
-    public ValueTask<ArtistOverview> GetArtistOverview(SpotifyId artistId, bool destroyCache,
+    public Task<ArtistOverview> GetArtistOverview(SpotifyId artistId, bool destroyCache,
         Option<CultureInfo> languageOverride,
         bool includePrerelease,
         CancellationToken ct = default)
@@ -178,7 +189,8 @@ internal readonly struct LiveSpotifyMetadataClient : ISpotifyMetadataClient
         LiveSpotifyMetadataClient tmpThis = this;
         var result = tmpThis._cache
             .GetRawEntity(artistId.ToString())
-            .Bind(f => destroyCache ? Option<ReadOnlyMemory<byte>>.None : Option<ReadOnlyMemory<byte>>.Some(f))
+            .BindAsync(f => destroyCache ? Option<ReadOnlyMemory<byte>>.None :
+                (f.Length > 0 ? Option<ReadOnlyMemory<byte>>.Some(f) : Option<ReadOnlyMemory<byte>>.None))
             .Match(
                 Some: data =>
                 {
@@ -196,7 +208,7 @@ internal readonly struct LiveSpotifyMetadataClient : ISpotifyMetadataClient
                         {
                             var stream = await response.Content.ReadAsByteArrayAsync();
                             var artistOverview = ArtistOverview.ParseFrom(stream);
-                            tmpthis._cache.SaveRawEntity(artistid.ToString(), stream,
+                            await tmpthis._cache.SaveRawEntity(artistid.ToString(), stream,
                                 DateTimeOffset.Now.AddMinutes(30));
                             return artistOverview;
                         }
@@ -211,7 +223,8 @@ internal readonly struct LiveSpotifyMetadataClient : ISpotifyMetadataClient
 
                     return new ValueTask<ArtistOverview>(Fetch(artistId, tmpThis, languageOverride, includePrerelease));
                 }
-            );
+            )
+            .MapAsync(async x => await x);
 
         return result;
     }
@@ -327,7 +340,7 @@ internal readonly struct LiveSpotifyMetadataClient : ISpotifyMetadataClient
         return SpotifyAlbum.ParseFrom(root);
     }
 
-    public ValueTask<SpotifyAlbumDisc[]> GetAlbumTracks(SpotifyId id, CancellationToken ct = default)
+    public Task<SpotifyAlbumDisc[]> GetAlbumTracks(SpotifyId id, CancellationToken ct = default)
     {
         static SpotifyAlbumDisc[] Parse(ReadOnlyMemory<byte> data)
         {
@@ -352,12 +365,10 @@ internal readonly struct LiveSpotifyMetadataClient : ISpotifyMetadataClient
                 )).ToArray();
         }
 
-
         var key = $"{id.ToString()}-tracks";
         LiveSpotifyMetadataClient tmpThis = this;
         var result = tmpThis._cache
             .GetRawEntity(key)
-            .Bind(f => Option<ReadOnlyMemory<byte>>.Some(f))
             .Match(
                 Some: data =>
                 {
@@ -367,16 +378,16 @@ internal readonly struct LiveSpotifyMetadataClient : ISpotifyMetadataClient
                 None: () =>
                 {
                     static async Task<SpotifyAlbumDisc[]> Fetch(SpotifyId albumId, LiveSpotifyMetadataClient tmpthis,
-                        string key)
+                        string key, CancellationToken ct)
                     {
                         var query = new QueryAlbumTracks(id: albumId);
                         var response = await tmpthis._query(query, tmpthis._defaultLang);
                         response.EnsureSuccessStatusCode();
-                        var stream = await response.Content.ReadAsByteArrayAsync();
+                        var stream = await response.Content.ReadAsByteArrayAsync(ct);
                         if (response.IsSuccessStatusCode)
                         {
                             var data = Parse(stream);
-                            tmpthis._cache.SaveRawEntity(key, stream, DateTimeOffset.Now.AddDays(1));
+                            await tmpthis._cache.SaveRawEntity(key, stream, DateTimeOffset.Now.AddDays(1));
                             return data;
                         }
 
@@ -388,14 +399,15 @@ internal readonly struct LiveSpotifyMetadataClient : ISpotifyMetadataClient
                         ));
                     }
 
-                    return new ValueTask<SpotifyAlbumDisc[]>(Fetch(id, tmpThis, key));
+                    return new ValueTask<SpotifyAlbumDisc[]>(Fetch(id, tmpThis, key, ct));
                 }
-            );
+            )
+            .MapAsync(async x => await x);
 
         return result;
     }
 
-    public ValueTask<LyricsLine[]> GetLyrics(SpotifyId trackId, CancellationToken ct = default)
+    public Task<LyricsLine[]> GetLyrics(SpotifyId trackId, CancellationToken ct = default)
     {
         //https://spclient.wg.spotify.com/color-lyrics/v2/track/0mvkwaZMP2gAy2ApQLtZRv/image/https%3A%2F%2Fi.scdn.co%2Fimage%2Fab67616d0000b273051ae642ad4a0c1329b41d99?format=json&vocalRemoval=false&market=from_token
         const string spclient = "gae2-spclient.spotify.com:443";
@@ -404,7 +416,6 @@ internal readonly struct LiveSpotifyMetadataClient : ISpotifyMetadataClient
         LiveSpotifyMetadataClient tmpThis = this;
         var result = tmpThis._cache
             .GetRawEntity(key)
-            .Bind(f => Option<ReadOnlyMemory<byte>>.Some(f))
             .Match(
                 Some: data =>
                 {
@@ -428,7 +439,7 @@ internal readonly struct LiveSpotifyMetadataClient : ISpotifyMetadataClient
                         if (response.IsSuccessStatusCode)
                         {
                             var data = Parse(stream);
-                            tmpthis._cache.SaveRawEntity(key, stream, DateTimeOffset.Now.AddDays(1));
+                            await tmpthis._cache.SaveRawEntity(key, stream, DateTimeOffset.Now.AddDays(1));
                             return data;
                         }
 
@@ -442,8 +453,28 @@ internal readonly struct LiveSpotifyMetadataClient : ISpotifyMetadataClient
 
                     return new ValueTask<LyricsLine[]>(Fetch(trackId, tmpThis, key, ct));
                 }
-            );
+            )
+            .MapAsync(async x => await x);
         return result;
+    }
+
+    public async Task<SelectedListContent?> GetPlaylist(SpotifyId spotifyId, CancellationToken ct = default)
+    {
+        const string spclient = "gae2-spclient.spotify.com:443";
+        const string url = "/playlist/v2/playlist/{0}";
+        var finalUrl = string.Format($"https://{spclient}{url}", spotifyId.ToBase62());
+
+        var token = await _tokenFactory(ct);
+        var tokenHeader = new AuthenticationHeaderValue("Bearer", token);
+        var response = await HttpIO.Get(finalUrl, new Dictionary<string, string>(), tokenHeader, ct);
+        response.EnsureSuccessStatusCode();
+        await using var stream = await response.Content.ReadAsStreamAsync(ct);
+        if (response.IsSuccessStatusCode)
+        {
+            return SelectedListContent.Parser.ParseFrom(stream);
+        }
+
+        return null;
     }
 
     private static LyricsLine[] Parse(ReadOnlyMemory<byte> data)
