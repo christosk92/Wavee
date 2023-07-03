@@ -50,13 +50,6 @@ namespace Wavee.UI.WinUI.View.Album
             else if (parameter is NavigatingWithImage img)
             {
                 _traveledWithImage = true;
-                var anim = ConnectedAnimationService.GetForCurrentView().GetAnimation("ForwardConnectedAnimation");
-                if (anim != null)
-                {        
-                    anim.Configuration = new DirectConnectedAnimationConfiguration();
-
-                    anim.TryStart(AlbumImage);
-                }
 
                 AlbumImage.Source = img.Image;
                 ViewModel.SetImage = true;
@@ -71,10 +64,7 @@ namespace Wavee.UI.WinUI.View.Album
 
         public void NavigatedFrom(NavigationMode mode)
         {
-            if (mode is NavigationMode.Back && _traveledWithImage)
-            {
-                ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("BackConnectedAnimation", this.AlbumImage);
-            }
+         
         }
 
         public bool ShouldKeepInCache(int currentDepth)

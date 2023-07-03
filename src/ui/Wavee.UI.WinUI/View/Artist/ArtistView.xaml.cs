@@ -172,7 +172,7 @@ public sealed partial class ArtistView : UserControl, INavigable, ICacheablePage
 
     public void RemovedFromCache()
     {
-
+        ViewModel?.Destroy();
     }
 
     public Visibility TrueToCollapsed(bool o)
@@ -180,7 +180,7 @@ public sealed partial class ArtistView : UserControl, INavigable, ICacheablePage
         return o ? Visibility.Collapsed : Visibility.Visible;
     }
 
-    public Visibility TrueToVisible(bool b)     
+    public Visibility TrueToVisible(bool b)
     {
         return b ? Visibility.Visible : Visibility.Collapsed;
     }

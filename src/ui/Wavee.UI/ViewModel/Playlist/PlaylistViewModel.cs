@@ -7,6 +7,7 @@ using Wavee.Metadata.Artist;
 using Wavee.UI.Client.Playback;
 using Wavee.UI.Client.Playlist.Models;
 using Wavee.UI.User;
+using Wavee.UI.ViewModel.Playlist.Headers;
 
 namespace Wavee.UI.ViewModel.Playlist;
 
@@ -16,6 +17,7 @@ public sealed class PlaylistViewModel : ObservableObject
     private PlaylistRevisionId _revision;
     private string _id;
     private WaveeUIPlaylistTrackInfo[] _tracks;
+    private IPlaylistHeader _header = new LoadingPlaylistHeader();
 
     public PlaylistViewModel(UserViewModel user)
     {
@@ -36,6 +38,12 @@ public sealed class PlaylistViewModel : ObservableObject
     public TaskCompletionSource<Unit> FetchedAllTracks { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
     public TaskCompletionSource<Unit> WaitForTracks { get; }
 
+    public IPlaylistHeader Header
+    {
+        get => _header;
+        set => this.SetProperty(ref _header, value);
+    }
+
 
     public async Task Initialize(string id, CancellationToken cancellationToken)
     {
@@ -43,6 +51,7 @@ public sealed class PlaylistViewModel : ObservableObject
         var client = _user.Client.Playlist;
         var playlist = await client.GetPlaylist(id, cancellationToken);
         Revision = playlist.Revision;
+        Header = playlist.Header;
         _tracks = playlist.Tracks;
         WaitForTracks.TrySetResult(Unit.Default);
         //Tracks = playlist.Tracks.Select(x => new PlaylistTrackViewModel(x)).ToArray();
@@ -80,7 +89,7 @@ public sealed class PlaylistViewModel : ObservableObject
     }
 
     public Dictionary<string, PlaylistTrackViewModel> Generate(int offset, int limit) => _tracks.Skip(offset)
-        .Take(limit).Select(x => new PlaylistTrackViewModel(x))
+        .Take(limit).Select((x, i) => new PlaylistTrackViewModel(x, (ushort)(i + offset)))
         .ToDictionary(x => x.Id, x => x);
     public async Task FetchAndSetTracks(Dictionary<string, PlaylistTrackViewModel> fill,
         Action<Action> invokeOnUithread,
@@ -116,12 +125,13 @@ public sealed class PlaylistTrackViewModel : ObservableObject
 {
     private WaveeUITrack? _track;
 
-    public PlaylistTrackViewModel(WaveeUIPlaylistTrackInfo waveeUiPlaylistTrackInfo)
+    public PlaylistTrackViewModel(WaveeUIPlaylistTrackInfo waveeUiPlaylistTrackInfo, ushort index)
     {
         Uid = waveeUiPlaylistTrackInfo.Uid.IfNone(waveeUiPlaylistTrackInfo.Id);
         Id = waveeUiPlaylistTrackInfo.Id;
         AddedAt = waveeUiPlaylistTrackInfo.AddedAt;
         AddedBy = waveeUiPlaylistTrackInfo.AddedBy;
+        Index = index;
     }
     public string Uid { get; }
     public string Id { get; }
@@ -140,6 +150,7 @@ public sealed class PlaylistTrackViewModel : ObservableObject
         }
     }
     public bool Loading => Track is null;
+    public ushort Index { get; }
 
     public bool Negate(bool b)
     {

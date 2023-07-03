@@ -10,7 +10,7 @@ namespace Wavee.UI.ViewModel.Artist;
 
 public sealed class ArtistViewModel : ObservableObject
 {
-    private readonly UserViewModel _userViewModel;
+    private UserViewModel _userViewModel;
     private WaveeUIArtistView? _artist;
     private bool _following;
     private IDisposable? _disposable;
@@ -80,5 +80,6 @@ public sealed class ArtistViewModel : ObservableObject
     public void Destroy()
     {
         _disposable?.Dispose();
+        _userViewModel = null!;
     }
 }

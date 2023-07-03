@@ -50,6 +50,9 @@
 		<None Remove="View\Artist\Views\Discography\DiscographyPageView.xaml" />
 		<None Remove="View\Artist\Views\SpotifyPreReleaseControl.xaml" />
 		<None Remove="View\Home\HomeView.xaml" />
+		<None Remove="View\Playlist\Headers\PlaylistBigHeaderView.xaml" />
+		<None Remove="View\Playlist\Headers\PlaylistRegularHeaderView.xaml" />
+		<None Remove="View\Playlist\PlaylistSortButtons.xaml" />
 		<None Remove="View\Playlist\PlaylistView.xaml" />
 		<None Remove="View\Setup\OptInView.xaml" />
 		<None Remove="View\Setup\SettingEverythingUpView.xaml" />
@@ -124,6 +127,15 @@
 	  <None Update="Assets\kakao-ryan-typing.gif">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </None>
+	  <Page Update="View\Playlist\PlaylistSortButtons.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </Page>
+	  <Page Update="View\Playlist\Headers\PlaylistRegularHeaderView.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </Page>
+	  <Page Update="View\Playlist\Headers\PlaylistBigHeaderView.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </Page>
 	  <Page Update="View\Playlist\PlaylistView.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </Page>

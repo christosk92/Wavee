@@ -5,12 +5,16 @@ using System.Threading;
 using System.Threading.Tasks;
 using CommunityToolkit.Common.Collections;
 using CommunityToolkit.WinUI;
+using CommunityToolkit.WinUI.UI;
 using Microsoft.UI.Dispatching;
+using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
 using Microsoft.VisualBasic.Logging;
 using Wavee.UI.ViewModel.Playlist;
+using Wavee.UI.ViewModel.Playlist.Headers;
 using Wavee.UI.ViewModel.Shell;
+using Wavee.UI.WinUI.Controls;
 using Wavee.UI.WinUI.Navigation;
 using Log = Serilog.Log;
 
@@ -77,6 +81,44 @@ public sealed partial class PlaylistView : UserControl, INavigable, ICacheablePa
 
     public void RemovedFromCache()
     {
+    }
+
+    private void PlaylistView_OnSizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        //BigHeaderImage
+        if (ViewModel.Header is PlaylistBigHeader)
+        {
+            double wantHeight = 0;
+            var bigHeader = this.FindDescendant<ImageTransitionControl>(x => x.Name is "BigHeaderImage");
+            if (bigHeader is not null)
+            {
+                //2:1 ratio of height 
+                var thisSize = this.ActualSize;
+                var height = thisSize.Y;
+                wantHeight = height * .75;
+                bigHeader.Height = wantHeight;
+            }
+
+            var bigHeaderGrid = this.FindDescendant<Grid>(x => x.Name is "BigHeaderGrid");
+            if ((bigHeaderGrid is not null))
+            {
+                //pull it up by wantHeight
+                double pullUp = wantHeight * .3;
+                bigHeaderGrid.Margin = new Thickness(0, 0, 0, -pullUp);
+            }
+
+            var bigHeaderMetadataPanel = this.FindDescendant<StackPanel>(x => x.Name is "BigHeaderMetadataPanel");
+            if (((bigHeaderMetadataPanel is not null)))
+            {
+                double pullUp = (wantHeight / 2) * 0.5;
+                bigHeaderMetadataPanel.Margin = new Thickness(0, -pullUp, 0, 0);
+            }
+        }
+    }
+
+    private void BigHeaderImage_OnLoaded(object sender, RoutedEventArgs e)
+    {
+        PlaylistView_OnSizeChanged(this, null);
     }
 }
 

@@ -193,8 +193,8 @@ public sealed partial class WaveeTrackHost : UserControl
         //OddBorderStyleGrid
         return
             !AlternateRowColor || (i % 2 == 0)
-                ? (Style)Application.Current.Resources["OddBorderStyleGrid"]
-                : (Style)Application.Current.Resources["EvenBorderStyleGrid"];
+                ? (Style)Application.Current.Resources["EvenBorderStyleGrid"]
+                : (Style)Application.Current.Resources["OddBorderStyleGrid"];
     }
 
     public string FormatIndex(ushort @ushort)

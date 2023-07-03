@@ -7,11 +7,110 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:playlist="using:Wavee.UI.ViewModel.Playlist"
              xmlns:labs="using:CommunityToolkit.Labs.WinUI"
+             xmlns:winUi="using:Wavee.UI.WinUI"
+             xmlns:headers="using:Wavee.UI.ViewModel.Playlist.Headers"
+             xmlns:controls="using:Wavee.UI.WinUI.Controls"
+             xmlns:tracks="using:Wavee.UI.WinUI.Components.Tracks"
+             SizeChanged="PlaylistView_OnSizeChanged"
              mc:Ignorable="d">
 
 
+    <UserControl.Resources>
+        <DataTemplate x:Key="LoadingHeader">
+            <TextBlock Text="I am loading" />
+        </DataTemplate>
+        <DataTemplate x:Key="RegularHeader"
+                      x:DataType="headers:RegularPlaylistHeader">
+            <Grid>
+
+            </Grid>
+        </DataTemplate>
+        <DataTemplate x:Key="BigHeader"
+                      x:DataType="headers:PlaylistBigHeader">
+            <Grid x:Name="BigHeaderGrid">
+                <controls:ImageTransitionControl Source="{x:Bind HeaderImage}"
+                                                 x:Name="BigHeaderImage"
+                                                 Loaded="BigHeaderImage_OnLoaded"
+                                                 Height="400" />
+                <StackPanel Orientation="Vertical"
+                            x:Name="BigHeaderMetadataPanel"
+                            VerticalAlignment="Center"
+                            HorizontalAlignment="Center">
+                    <TextBlock Text="A CURATED PLAYLIST BY SPOTIFY"
+                               FontWeight="ExtraBold"
+                               Opacity=".7"
+                               HorizontalAlignment="Center" />
+                    <TextBlock Text="{x:Bind Name}"
+                               HorizontalAlignment="Center"
+                               FontWeight="Bold"
+                               FontSize="76" />
+                    <TextBlock HorizontalAlignment="Center"
+                               TextAlignment="Center"
+                               FontSize="18"
+                               MaxWidth="500"
+                               FontWeight="SemiBold"
+                               TextWrapping="WrapWholeWords"
+                               Text="{x:Bind Description}" />
+
+                    <StackPanel HorizontalAlignment="Center"
+                                Spacing="8"
+                                Margin="0,18,0,0"
+                                Orientation="Horizontal">
+                        <Button Style="{ThemeResource AccentButtonStyle}">
+                            <StackPanel Spacing="8"
+                                        Orientation="Horizontal">
+                                <FontIcon FontFamily="Segoe Fluent Icons"
+                                          Glyph="&#xF5B0;" />
+                                <TextBlock Text="Play" />
+                            </StackPanel>
+                        </Button>
+
+                        <Button>
+                            <StackPanel Spacing="8"
+                                        Orientation="Horizontal">
+                                <FontIcon FontFamily="Segoe Fluent Icons"
+                                          Glyph="&#xE14B;" />
+                                <TextBlock Text="Shuffle" />
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </StackPanel>
+            </Grid>
+        </DataTemplate>
+        <winUi:PlaylistHeaderTemplateSelector LoadingHeaderTemplate="{StaticResource LoadingHeader}"
+                                              RegularHeaderTemplate="{StaticResource RegularHeader}"
+                                              BigHeaderTemplate="{StaticResource BigHeader}"
+                                              x:Key="PlaylistHeaderTemplateSelector" />
+    </UserControl.Resources>
     <Grid>
         <ListView ItemsSource="{x:Bind IncrementalLoadingCollection,Mode=OneWay}">
+            <ListView.ItemContainerStyle>
+                <Style BasedOn="{StaticResource DefaultListViewItemStyle}"
+                       TargetType="ListViewItem">
+                    <Setter Property="Margin"
+                            Value="24,0" />
+                    <Setter Property="Padding"
+                            Value="4,0" />
+                </Style>
+            </ListView.ItemContainerStyle>
+            <ListView.Header>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <ContentControl ContentTemplateSelector="{StaticResource PlaylistHeaderTemplateSelector}"
+                                    HorizontalContentAlignment="Stretch"
+                                    VerticalContentAlignment="Stretch"
+                                    Content="{x:Bind ViewModel.Header,Mode=OneWay}" />
+
+                    <local:PlaylistSortButtons Grid.Row="1"
+                                               Margin="24,12"
+                                               ShowAlbum="True"
+                                               ShowArtists="True"
+                                               ShowDate="True" />
+                </Grid>
+            </ListView.Header>
             <ListView.ItemTemplate>
                 <DataTemplate x:DataType="playlist:PlaylistTrackViewModel">
                     <Grid>
@@ -38,11 +137,44 @@
                                            IsActive="True" />
                         </Grid>
 
-                        <Grid x:Name="LoadedGrid"
-                              x:Load="{x:Bind Negate(Loading),Mode=OneWay}">
-                            <TextBlock Text="{x:Bind Track.Name,Mode=OneWay}"
-                                       VerticalAlignment="Center" />
-                        </Grid>
+                        <Border x:Name="LoadedGrid"
+                                x:Load="{x:Bind Negate(Loading),Mode=OneWay}">
+                            <tracks:WaveeTrackHost AlternateRowColor="True"
+                                                   Height="48"
+                                                   Index="{x:Bind Index,Mode=OneWay}">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="6" />
+                                        <ColumnDefinition Width="2*" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="150" />
+                                        <ColumnDefinition Width="100" />
+                                        <ColumnDefinition Width="24" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="1"
+                                               FontSize="16"
+                                               Text="{x:Bind Track.Name,Mode=OneWay}" />
+
+                                    <TextBlock Text="{x:Bind Track.Artists[0].Name, Mode=OneWay}"
+                                               Grid.Column="2"
+                                               FontSize="16" />
+
+                                    <TextBlock Grid.Column="3"
+                                               FontSize="16"
+                                               Text="{x:Bind Track.AlbumName, Mode=OneWay}" />
+
+                                    <TextBlock Grid.Column="4"
+                                               FontSize="16"
+                                               Text="{x:Bind  AddedAt, Mode=OneWay}" />
+
+                                    <TextBlock Grid.Column="5"
+                                               FontSize="16"
+                                               HorizontalAlignment="Right"
+                                               Text="{x:Bind  Track.DurationMs, Mode=OneWay}" />
+                                </Grid>
+                            </tracks:WaveeTrackHost>
+                        </Border>
                     </Grid>
                 </DataTemplate>
             </ListView.ItemTemplate>

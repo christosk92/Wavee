@@ -1,4 +1,5 @@
 ﻿using LanguageExt;
+using Wavee.UI.ViewModel.Playlist.Headers;
 
 namespace Wavee.UI.Client.Playlist.Models;
 
@@ -12,6 +13,7 @@ public sealed class WaveeUIPlaylist
     public required string Owner { get; init; }
     public required bool FromCache { get; init; }
     public required WaveeUIPlaylistTrackInfo[] Tracks { get; init; }
+    public required IPlaylistHeader Header { get; init; }
 }
 
 public readonly record struct WaveeUIPlaylistTrackInfo(string Id, Option<string> Uid, Option<DateTimeOffset> AddedAt, Option<string> AddedBy, HashMap<string, string> Metadata);

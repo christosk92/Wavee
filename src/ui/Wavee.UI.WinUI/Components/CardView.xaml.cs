@@ -231,7 +231,6 @@ namespace Wavee.UI.WinUI.Components
             switch (AudioType)
             {
                 case AudioItemType.Album:
-                    ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("ForwardConnectedAnimation", this.NormalImageBox);
                     NavigationService.Instance.Navigate(typeof(AlbumView), new NavigatingWithImage(
                         Id: this.Id,
                         Image: this.NormalImageImage.Source
