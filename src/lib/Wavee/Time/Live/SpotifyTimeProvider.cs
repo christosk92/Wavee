@@ -44,6 +44,7 @@ internal sealed class SpotifyTimeProvider : ITimeProvider, IDisposable
     }
 
     private static readonly HttpClient _melodyHttpClient = new HttpClient();
+
     private async Task UpdateWithMelody()
     {
         const string spclient = "gae2-spclient.spotify.com:443";
@@ -52,6 +53,7 @@ internal sealed class SpotifyTimeProvider : ITimeProvider, IDisposable
         int minusSomething = 0;
         //lets do a head request first;
         var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var responseSw = Stopwatch.StartNew();
         try
         {
             var tokenSw = Stopwatch.StartNew();
@@ -89,11 +91,14 @@ internal sealed class SpotifyTimeProvider : ITimeProvider, IDisposable
             using var jsondocument = await JsonDocument.ParseAsync(stream);
             var serverTime = jsondocument.RootElement.GetProperty("timestamp").GetInt64();
             deserializationTime.Stop();
+            responseSw.Stop();
             minusSomething += (int)deserializationTime.ElapsedMilliseconds;
-            var diff = serverTime - now - minusSomething;
+            var diff = serverTime - now - minusSomething + responseSw.ElapsedMilliseconds;
             _measuredOffset = (int)diff;
 
-            Log.Information("Measured offset: {Offset}ms. Took {Time}ms to get token and {DeserializationTime}ms to deserialize", diff, minusSomething, deserializationTime.ElapsedMilliseconds);
+            Log.Information(
+                "Measured offset: {Offset}ms. Respone took {resposneMs} while {Time}ms to get token and {DeserializationTime}ms to deserialize",
+                responseSw.Elapsed, diff, minusSomething, deserializationTime.ElapsedMilliseconds);
             _timer.Change(TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(1));
         }
         catch (Exception e)
@@ -122,10 +127,12 @@ public enum TimeSyncMethod
     /// Measures the offset between the local system time a NTP server.
     /// </summary>
     Ntp,
+
     /// <summary>
     /// Measures the offset between the local system time and the Spotify server time (recommended).
     /// </summary>
     Melody,
+
     /// <summary>
     /// Measures the offset between the local system time and the Spotify server time.
     /// </summary>

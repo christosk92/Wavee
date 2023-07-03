@@ -45,8 +45,8 @@ var player = new WaveePlayer();
 var client = new SpotifyClient(player, new LoginCredentials
 {
     Typ = AuthenticationType.AuthenticationUserPass,
-    Username = "tak123chris@gmail.com",
-    AuthData = ByteString.CopyFromUtf8("FUd*hrtJB4JRQTT9_Zs")
+    Username = "",
+    AuthData = ByteString.CopyFromUtf8("")
 }, config);
 var countryCode = await client.Country;
 var response = await client.Metadata.GetAlbum(SpotifyId.FromUri("spotify:album:2hEnymoejldpuxSdTnkard"));
