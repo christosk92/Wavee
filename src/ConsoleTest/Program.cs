@@ -45,13 +45,11 @@ var player = new WaveePlayer();
 var client = new SpotifyClient(player, new LoginCredentials
 {
     Typ = AuthenticationType.AuthenticationUserPass,
-    Username = Environment.GetEnvironmentVariable("SPOTIFY_USERNAME"),
-    AuthData = ByteString.CopyFromUtf8(Environment.GetEnvironmentVariable("SPOTIFY_PASSWORD"))
+    Username = "tak123chris@gmail.com",
+    AuthData = ByteString.CopyFromUtf8("FUd*hrtJB4JRQTT9_Zs")
 }, config);
 var countryCode = await client.Country;
 var response = await client.Metadata.GetAlbum(SpotifyId.FromUri("spotify:album:2hEnymoejldpuxSdTnkard"));
 var listener = client.Remote.CreateListener().Subscribe(x => { Log.Logger.Information("Remote: {0}", x); });
-var artistId = SpotifyId.FromUri("spotify:artist:0nmQIMXWTXfhgOBdNzhGOs");
-var artist = await client.Metadata.GetArtistOverview(artistId, false, Option<CultureInfo>.None);
 var tookover = await client.Playback.Takeover();
 var c = Console.ReadLine();

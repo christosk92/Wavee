@@ -9,7 +9,8 @@
     <ItemGroup>
         <PackageReference Include="LanguageExt.Core" Version="4.4.3" />
         <PackageReference Include="LanguageExt.Rx" Version="4.4.3" />
-        <PackageReference Include="NAudio" Version="2.1.0" />
+        <PackageReference Include="LibVLCSharp" Version="3.7.0" />
+        <PackageReference Include="ReactiveUI" Version="19.2.1" />
         <PackageReference Include="Serilog" Version="3.0.0" />
         <PackageReference Include="System.Memory" Version="4.5.5" />
         <PackageReference Include="System.Threading.Channels" Version="8.0.0-preview.5.23280.8" />

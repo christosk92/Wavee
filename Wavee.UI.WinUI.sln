@@ -23,6 +23,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Wavee.AudioVisualization", 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Wavee.Sqlite", "src\lib\Wavee.Sqlite\Wavee.Sqlite.csproj", "{AE29D745-560B-454B-A1F3-E632D9F91FE5}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleTest", "src\ConsoleTest\ConsoleTest.csproj", "{B7396ED4-AC48-448E-910E-7080769C9A85}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -207,6 +209,26 @@ Global
 		{AE29D745-560B-454B-A1F3-E632D9F91FE5}.Release|x64.Build.0 = Release|Any CPU
 		{AE29D745-560B-454B-A1F3-E632D9F91FE5}.Release|x86.ActiveCfg = Release|Any CPU
 		{AE29D745-560B-454B-A1F3-E632D9F91FE5}.Release|x86.Build.0 = Release|Any CPU
+		{B7396ED4-AC48-448E-910E-7080769C9A85}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B7396ED4-AC48-448E-910E-7080769C9A85}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B7396ED4-AC48-448E-910E-7080769C9A85}.Debug|ARM.ActiveCfg = Debug|Any CPU
+		{B7396ED4-AC48-448E-910E-7080769C9A85}.Debug|ARM.Build.0 = Debug|Any CPU
+		{B7396ED4-AC48-448E-910E-7080769C9A85}.Debug|ARM64.ActiveCfg = Debug|Any CPU
+		{B7396ED4-AC48-448E-910E-7080769C9A85}.Debug|ARM64.Build.0 = Debug|Any CPU
+		{B7396ED4-AC48-448E-910E-7080769C9A85}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{B7396ED4-AC48-448E-910E-7080769C9A85}.Debug|x64.Build.0 = Debug|Any CPU
+		{B7396ED4-AC48-448E-910E-7080769C9A85}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{B7396ED4-AC48-448E-910E-7080769C9A85}.Debug|x86.Build.0 = Debug|Any CPU
+		{B7396ED4-AC48-448E-910E-7080769C9A85}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B7396ED4-AC48-448E-910E-7080769C9A85}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B7396ED4-AC48-448E-910E-7080769C9A85}.Release|ARM.ActiveCfg = Release|Any CPU
+		{B7396ED4-AC48-448E-910E-7080769C9A85}.Release|ARM.Build.0 = Release|Any CPU
+		{B7396ED4-AC48-448E-910E-7080769C9A85}.Release|ARM64.ActiveCfg = Release|Any CPU
+		{B7396ED4-AC48-448E-910E-7080769C9A85}.Release|ARM64.Build.0 = Release|Any CPU
+		{B7396ED4-AC48-448E-910E-7080769C9A85}.Release|x64.ActiveCfg = Release|Any CPU
+		{B7396ED4-AC48-448E-910E-7080769C9A85}.Release|x64.Build.0 = Release|Any CPU
+		{B7396ED4-AC48-448E-910E-7080769C9A85}.Release|x86.ActiveCfg = Release|Any CPU
+		{B7396ED4-AC48-448E-910E-7080769C9A85}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

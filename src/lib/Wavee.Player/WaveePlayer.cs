@@ -1,10 +1,9 @@
-﻿using System.Buffers;
-using System.Reactive.Linq;
-using System.Runtime.InteropServices;
+﻿using System.Reactive.Linq;
 using System.Threading.Channels;
 using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
-using NAudio.Wave;
+using LibVLCSharp.Shared;
+using ReactiveUI;
 using Serilog;
 using Wavee.Player.Command;
 using Wavee.Player.Ctx;
@@ -177,19 +176,22 @@ internal sealed class PlayerInternal
     private Option<CurrentTrackStream> _currentTrackStream = None;
     private Option<CurrentTrackStream> _crossfadingInStream = None;
 
-    private readonly IWavePlayer _wavePlayer;
-    private readonly WaveFormat waveFormat;
-    private readonly BufferedWaveProvider _bufferedWaveProvider;
+    // private readonly IWavePlayer _wavePlayer;
+    // private readonly WaveFormat waveFormat;
+    // private readonly BufferedWaveProvider _bufferedWaveProvider;
+    private readonly LibVLC _libVlc;
 
     public PlayerInternal()
     {
-        const int sampleRate = 44100;
-        const int channels = 2;
-        _wavePlayer = new WaveOutEvent();
-        waveFormat = WaveFormat.CreateIeeeFloatWaveFormat(sampleRate, channels);
-        _bufferedWaveProvider = new BufferedWaveProvider(waveFormat);
-        _wavePlayer.Init(_bufferedWaveProvider);
-        _wavePlayer.Volume = 1;
+        _libVlc = new LibVLC();
+        // const int sampleRate = 44100;
+        // const int channels = 2;
+        // _wavePlayer = new WaveOutEvent();
+        // waveFormat = WaveFormat.CreateIeeeFloatWaveFormat(sampleRate, channels);
+        // _bufferedWaveProvider = new BufferedWaveProvider(waveFormat);
+        //
+        // _wavePlayer.Init(_bufferedWaveProvider);
+        // _wavePlayer.Volume = 1;
     }
 
     public void Play(WaveeTrack stream, bool crossfadingIn, Option<TimeSpan> crossfadeDuration,
@@ -197,6 +199,9 @@ internal sealed class PlayerInternal
     {
         IAudioDecoder? decoder = null;
         bool didCrossfade = false;
+
+        //If we are not crossfading in, and OR we do not have a cross fade in duration
+        //Immediately dispose of the current track
         if (!crossfadingIn || crossfadeDuration.IsNone)
         {
             _currentTrackStream.IfSome(x => x.Dispose());
@@ -244,7 +249,7 @@ internal sealed class PlayerInternal
                 try
                 {
                     await _streamLock.WaitAsync();
-                    StreamTrack(decoder, stream.NormalisationData, crossfadeDuration, crossfadeCallback);
+                    await StreamTrack(decoder, stream.NormalisationData, crossfadeDuration, crossfadeCallback);
                 }
                 catch (Exception e)
                 {
@@ -258,113 +263,73 @@ internal sealed class PlayerInternal
         }
     }
 
-    private void StreamTrack(IAudioDecoder decoder, Option<NormalisationData> normalisationData,
+    private async Task StreamTrack(IAudioDecoder decoder,
+        Option<NormalisationData> normalisationData,
         Option<TimeSpan> crossfadeDuration,
         Action crossfadeCallback)
     {
         //Start reading samples
         bool startedCrossfadeOut = false;
-        Span<float> buffer = stackalloc float[decoder.SampleSize];
-        Span<float> secondBuffer = stackalloc float[decoder.SampleSize];
-        while (true)
-        {
-            if (crossfadeDuration.IsSome && !startedCrossfadeOut)
+        bool startedCrossfadeoutTrack = false;
+        var endOfTrackTask = new TaskCompletionSource<Unit>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var timeSubscriptionToMainTrack = decoder.TimeChanged
+            .ObserveOn(RxApp.TaskpoolScheduler)
+            .Subscribe(x =>
             {
-                //Crossfade out can either start from external (marking the decoder)
-                //or by us
-                //if the decoder is marked for crossfade out, we can start crossfading out
-                if (decoder.IsMarkedForCrossfadeOut)
+                if (crossfadeDuration.IsSome && !startedCrossfadeOut)
                 {
-                    startedCrossfadeOut = true;
-                }
-                else
-                {
-                    //if the decoder is not marked for crossfade out, we can mark it IF we have a next track
-                    //or else we are gonna crossfade out to nothing
-                    bool reachedCrossfadeTime()
+                    //Crossfade out can either start from external (marking the decoder)
+                    //or by us
+                    //if the decoder is marked for crossfade out, we can start crossfading out
+                    if (decoder.IsMarkedForCrossfadeOut)
                     {
-                        var time = decoder.CurrentTime;
-                        var duration = decoder.TotalTime;
-                        var crossfade = crossfadeDuration.ValueUnsafe();
-                        return time >= duration - crossfade;
-                    }
-
-                    if (reachedCrossfadeTime())
-                    {
-                        crossfadeCallback();
                         startedCrossfadeOut = true;
                     }
+                    else
+                    {
+                        //if the decoder is not marked for crossfade out, we can mark it IF we have a next track
+                        //or else we are gonna crossfade out to nothing
+                        bool reachedCrossfadeTime()
+                        {
+                            var time = decoder.CurrentTime;
+                            var duration = decoder.TotalTime;
+                            var crossfade = crossfadeDuration.ValueUnsafe();
+                            return time >= duration - crossfade;
+                        }
+
+                        if (reachedCrossfadeTime())
+                        {
+                            crossfadeCallback();
+                            startedCrossfadeOut = true;
+                        }
+                    }
                 }
-            }
-            
-            var read = decoder.Read(buffer);
-            if (read == 0)
-            {
-                break;
-            }
-            if (startedCrossfadeOut && _crossfadingInStream.IsSome)
-            {
-                var crossfadingInStream = _crossfadingInStream.ValueUnsafe();
-                //read from the crossfading in stream
-                var readSecond = crossfadingInStream.Decoder.Read(secondBuffer);
-                if (readSecond == 0)
+
+                if (startedCrossfadeOut && _crossfadingInStream.IsSome && !startedCrossfadeoutTrack)
                 {
-                    //dispose
-                    crossfadingInStream.Dispose();
-                    _crossfadingInStream = None;
+                    var crossfadingInStream = _crossfadingInStream.ValueUnsafe();
+                    //read from the crossfading in stream
+                    crossfadingInStream.Decoder.Resume();
+                    startedCrossfadeoutTrack = true;
                 }
-            }
-            
-            //add buffers together
-            for (var i = 0; i < read; i++)
-            {
-                buffer[i] += secondBuffer[i];
-            }
+            });
 
-            //normalise
-            // if (normalisationData.IsSome)
-            // {
-            //     var (trackGainDb, trackPeak, albumGainDb, albumPeak) = normalisationData.ValueUnsafe();
-            //     var trackGain = MathF.Pow(10, (float)(trackGainDb / 20));
-            //     var albumGain = MathF.Pow(10, (float)(albumGainDb / 20));
-            //     var gain = trackGain * albumGain;
-            //     for (var i = 0; i < read; i++)
-            //     {
-            //         buffer[i] *= gain;
-            //     }
-            //
-            //     //TODO: Peak
-            // }
+        var trackEndedSubscription = decoder.TrackEnded
+            .ObserveOn(RxApp.TaskpoolScheduler)
+            .Subscribe(x => { endOfTrackTask.TrySetResult(Unit.Default); });
+        await endOfTrackTask.Task;
 
-            //cast to byte
-            ReadOnlySpan<byte> samplesSpan = MemoryMarshal.Cast<float, byte>(buffer.Slice(0, read));
-            var samples = ArrayPool<byte>.Shared.Rent(samplesSpan.Length);
-            try
-            {
-                samplesSpan.CopyTo(samples);
-
-                _bufferedWaveProvider.AddSamples(samples, 0, samplesSpan.Length);
-
-                while (_bufferedWaveProvider.BufferedDuration.TotalSeconds > 0.5)
-                {
-                    Thread.Sleep(1);
-                }
-            }
-            finally
-            {
-                ArrayPool<byte>.Shared.Return(samples);
-            }
-        }
+        timeSubscriptionToMainTrack.Dispose();
+        trackEndedSubscription.Dispose();
     }
 
     public void Pause()
     {
-        throw new NotImplementedException();
     }
 
     public void Resume()
     {
-        _wavePlayer.Play();
+        _currentTrackStream.IfSome(x => x.Decoder.Resume());
     }
 }
 
