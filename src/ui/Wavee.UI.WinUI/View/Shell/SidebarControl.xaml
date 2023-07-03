@@ -173,7 +173,7 @@
                                                 Visibility="Collapsed"
                                                 HorizontalAlignment="Stretch"
                                                 x:Name="DownsizeImageButton">
-                                            <FontIcon FontFamily="Segoe Fluent Icons"
+                                            <FontIcon FontFamily="{StaticResource SegoeFluent}"
                                                       Glyph="&#xE015;" />
                                         </Button>
                                     </Grid>

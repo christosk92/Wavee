@@ -81,7 +81,7 @@
                         Visibility="Collapsed"
                         Padding="0"
                         HorizontalAlignment="Stretch">
-                    <FontIcon FontFamily="Segoe Fluent Icons"
+                    <FontIcon FontFamily="{StaticResource SegoeFluent}"
                               Glyph="&#xE014;" />
                 </Button>
             </Grid>
@@ -235,7 +235,7 @@
 
                 <AppBarButton x:Name="DevicesButton">
                     <AppBarButton.Icon>
-                        <FontIcon FontFamily="Segoe Fluent Icons"
+                        <FontIcon FontFamily="{StaticResource SegoeFluent}"
                                   Glyph="&#xE772;" />
                     </AppBarButton.Icon>
                 </AppBarButton>
@@ -269,7 +269,7 @@
                     <AppBarButton Label="Append to queue"
                                   x:Name="AppendToQueueButton">
                         <AppBarButton.Icon>
-                            <FontIcon FontFamily="Segoe Fluent Icons"
+                            <FontIcon FontFamily="{StaticResource SegoeFluent}"
                                       Glyph="&#xF168;" />
                         </AppBarButton.Icon>
                     </AppBarButton>

@@ -129,14 +129,14 @@
                                                       Offset="2,4"
                                                       Opacity="1" />
                         </ui:Effects.Shadow>
-                        <FontIcon FontFamily="Segoe Fluent Icons"
+                        <FontIcon FontFamily="{StaticResource SegoeFluent}"
                                   Glyph="&#xF5B0;" />
                     </Button>
 
-                    <FontIcon FontFamily="Segoe Fluent Icons"
+                    <FontIcon FontFamily="{StaticResource SegoeFluent}"
                               Glyph="&#xEB51;" />
 
-                    <FontIcon FontFamily="Segoe Fluent Icons"
+                    <FontIcon FontFamily="{StaticResource SegoeFluent}"
                               Glyph="&#xE10C;" />
                 </StackPanel>
 
@@ -170,7 +170,7 @@
                                Foreground="{ThemeResource ApplicationSecondaryForegroundThemeBrush}"
                                Text="PLAYS" />
 
-                    <FontIcon FontFamily="Segoe Fluent Icons"
+                    <FontIcon FontFamily="{StaticResource SegoeFluent}"
                               Grid.Column="3"
                               HorizontalAlignment="Right"
                               Foreground="{ThemeResource ApplicationSecondaryForegroundThemeBrush}"
@@ -227,7 +227,7 @@
                         <Border AutomationProperties.AccessibilityView="Raw">
                             <StackPanel Orientation="Horizontal"
                                         Spacing="8">
-                                <FontIcon FontFamily="Segoe Fluent Icons"
+                                <FontIcon FontFamily="{StaticResource SegoeFluent}"
                                           FontWeight="Bold"
                                           Foreground="{ThemeResource ApplicationSecondaryForegroundThemeBrush}"
                                           Glyph="&#xE958;" />

@@ -41,7 +41,7 @@
                                         Padding="8,8"
                                         VerticalAlignment="Center">
                                     <FontIcon FontSize="12"
-                                              FontFamily="Segoe Fluent Icons"
+                                              FontFamily="{StaticResource SegoeFluent}"
                                               Glyph="&#xF5B0;" />
                                 </Button>
                             </Setter.Value>
@@ -79,7 +79,7 @@
                                         Margin="-4,0,4,0"
                                         VerticalAlignment="Center">
                                     <FontIcon FontSize="12"
-                                              FontFamily="Segoe Fluent Icons"
+                                              FontFamily="{StaticResource SegoeFluent}"
                                               Glyph="&#xE103;" />
                                 </Button>
                             </Setter.Value>
@@ -100,7 +100,7 @@
                                         x:Name="ResumeButton"
                                         VerticalAlignment="Center">
                                     <FontIcon FontSize="12"
-                                              FontFamily="Segoe Fluent Icons"
+                                              FontFamily="{StaticResource SegoeFluent}"
                                               Glyph="&#xF5B0;" />
                                 </Button>
                             </Setter.Value>

@@ -77,7 +77,7 @@ public sealed class ShellViewModel : ObservableObject
 
 
         //
-        const string fluentIcons = "Segoe Fluent Icons";
+        const string fluentIcons = "/Assets/Fonts/SegoeFluentIcons.ttf#Segoe Fluent Icons";
         const string mediaPlayerIcons = "/Assets/Fonts/MediaPlayerIcons.ttf#Media Player Fluent Icons";
 
         //For You:

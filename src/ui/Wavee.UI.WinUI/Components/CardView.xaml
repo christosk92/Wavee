@@ -55,7 +55,7 @@
                         <FontIcon FontSize="48"
                                   VerticalAlignment="Center"
                                   HorizontalAlignment="Center"
-                                  FontFamily="Segoe Fluent Icons"
+                                  FontFamily="{StaticResource SegoeFluent}"
                                   Glyph="&#xEB52;" />
                     </Border>
                     <controls:ConstrainedBox x:Name="NormalImageBox"
@@ -104,13 +104,13 @@
                                 <ColumnDefinition />
                             </Grid.ColumnDefinitions>
                             <Button  Style="{ThemeResource AccentButtonStyle}">
-                                <FontIcon FontFamily="Segoe Fluent Icons"
+                                <FontIcon FontFamily="{StaticResource SegoeFluent}"
                                           Glyph="&#xF5B0;" />
                             </Button>
                             <Button Grid.Column="1"
                                     HorizontalAlignment="Right"
                                     Style="{ThemeResource AccentButtonStyle}">
-                                <FontIcon FontFamily="Segoe Fluent Icons"
+                                <FontIcon FontFamily="{StaticResource SegoeFluent}"
                                           Glyph="&#xEB52;" />
                             </Button>
                         </Grid>

@@ -550,7 +550,7 @@
                 <Button Background="Transparent"
                         BorderThickness="0">
                     <Grid>
-                        <FontIcon FontFamily="Segoe Fluent Icons"
+                        <FontIcon FontFamily="{StaticResource SegoeFluent}"
                                   FontSize="18"
                                   Glyph="&#xE206;" />
                         <InfoBadge Width="14"

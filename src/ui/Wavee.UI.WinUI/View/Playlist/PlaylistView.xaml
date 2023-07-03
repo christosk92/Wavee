@@ -59,7 +59,7 @@
                         <Button Style="{ThemeResource AccentButtonStyle}">
                             <StackPanel Spacing="8"
                                         Orientation="Horizontal">
-                                <FontIcon FontFamily="Segoe Fluent Icons"
+                                <FontIcon FontFamily="{StaticResource SegoeFluent}"
                                           Glyph="&#xF5B0;" />
                                 <TextBlock Text="Play" />
                             </StackPanel>
@@ -68,7 +68,7 @@
                         <Button>
                             <StackPanel Spacing="8"
                                         Orientation="Horizontal">
-                                <FontIcon FontFamily="Segoe Fluent Icons"
+                                <FontIcon FontFamily="{StaticResource SegoeFluent}"
                                           Glyph="&#xE14B;" />
                                 <TextBlock Text="Shuffle" />
                             </StackPanel>

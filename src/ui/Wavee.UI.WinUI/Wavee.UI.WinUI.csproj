@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<OutputType>WinExe</OutputType>
-		<TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+		<TargetFramework>net7.0-windows10.0.19041.0</TargetFramework>
 		<TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
 		<RootNamespace>Wavee.UI.WinUI</RootNamespace>
 		<ApplicationManifest>app.manifest</ApplicationManifest>
@@ -20,6 +20,7 @@
 	<ItemGroup>
 		<Content Remove="Assets\amb.png" />
 		<Content Remove="Assets\Fonts\MediaPlayerIcons.ttf" />
+		<Content Remove="Assets\Fonts\SegoeFluentIcons.ttf" />
 		<Content Remove="Assets\kakao-ryan-typing.gif" />
 		<Content Remove="Assets\SettingsLottie.json" />
 	</ItemGroup>
@@ -122,6 +123,9 @@
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </None>
 	  <None Update="Assets\Fonts\MediaPlayerIcons.ttf">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	  <None Update="Assets\Fonts\SegoeFluentIcons.ttf">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </None>
 	  <None Update="Assets\kakao-ryan-typing.gif">

@@ -48,7 +48,7 @@
                        Foreground="{ThemeResource ApplicationSecondaryForegroundThemeBrush}"
                        Text="DATE" />
 
-            <FontIcon FontFamily="Segoe Fluent Icons"
+            <FontIcon FontFamily="{StaticResource SegoeFluent}"
                       Grid.Column="5"
                       HorizontalAlignment="Center"
                       Foreground="{ThemeResource ApplicationSecondaryForegroundThemeBrush}"

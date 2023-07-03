@@ -109,13 +109,13 @@
                                             Visibility="{x:Bind CanSwitchViews, Converter={StaticResource TrueToVisibleConverter}}">
                                 <labs:SegmentedItem>
                                     <labs:SegmentedItem.Icon>
-                                        <FontIcon FontFamily="Segoe Fluent Icons"
+                                        <FontIcon FontFamily="{StaticResource SegoeFluent}"
                                                   Glyph="&#xF0E2;" />
                                     </labs:SegmentedItem.Icon>
                                 </labs:SegmentedItem>
                                 <labs:SegmentedItem>
                                     <labs:SegmentedItem.Icon>
-                                        <FontIcon FontFamily="Segoe Fluent Icons"
+                                        <FontIcon FontFamily="{StaticResource SegoeFluent}"
                                                   Glyph="&#xF2C7;" />
                                     </labs:SegmentedItem.Icon>
                                 </labs:SegmentedItem>

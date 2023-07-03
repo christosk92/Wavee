@@ -112,7 +112,7 @@
                                         Padding="9"
                                         CornerRadius="100"
                                         Style="{ThemeResource AccentButtonStyle}">
-                                    <FontIcon FontFamily="Segoe Fluent Icons"
+                                    <FontIcon FontFamily="{StaticResource SegoeFluent}"
                                               Glyph="&#xE102;" />
                                 </Button>
 
@@ -193,7 +193,7 @@
                         labs:TransitionHelper.Id="buttonspanel"
                         CornerRadius="50"
                         Style="{ThemeResource AccentButtonStyle}">
-                    <FontIcon FontFamily="Segoe Fluent Icons"
+                    <FontIcon FontFamily="{StaticResource SegoeFluent}"
                               Glyph="&#xE102;" />
                 </Button>
             </StackPanel>

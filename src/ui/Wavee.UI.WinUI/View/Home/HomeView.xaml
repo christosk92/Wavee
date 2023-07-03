@@ -114,7 +114,7 @@
                                                                 <FontIcon FontSize="36"
                                                                           VerticalAlignment="Center"
                                                                           HorizontalAlignment="Center"
-                                                                          FontFamily="Segoe Fluent Icons"
+                                                                          FontFamily="{StaticResource SegoeFluent}"
                                                                           Glyph="&#xEB52;" />
                                                             </Border>
 

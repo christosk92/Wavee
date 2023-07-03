@@ -25,7 +25,6 @@
                 <ResourceDictionary>
                     <SolidColorBrush x:Key="TransparentBrush"
                                      Color="Transparent" />
-
                     <StaticResource x:Key="WindowCaptionBackground"
                                     ResourceKey="TransparentBrush" />
                     <StaticResource x:Key="WindowCaptionBackgroundDisabled"
@@ -70,6 +69,8 @@
                 </ResourceDictionary>
 
             </ResourceDictionary.MergedDictionaries>
+            <FontFamily x:Key="SegoeFluent">/Assets/Fonts/SegoeFluentIcons.ttf#Segoe Fluent Icons</FontFamily>
+
             <converters:BoolToVisibilityConverter TrueValue="Visible"
                                                   FalseValue="Collapsed"
                                                   x:Key="TrueToVisibleConverter" />

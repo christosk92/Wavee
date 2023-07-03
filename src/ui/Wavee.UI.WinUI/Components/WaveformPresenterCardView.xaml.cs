@@ -164,7 +164,7 @@ public sealed partial class WaveformPresenterCardView : UserControl, INotifyProp
         try
         {
             if (cts is not null)
-                await cts.CancelAsync();
+                cts.Cancel();
 
             var uiElement = sender as UIElement;
             _inRectangle.Remove(uiElement, out var transitioned);
@@ -298,7 +298,7 @@ public sealed partial class WaveformPresenterCardView : UserControl, INotifyProp
         try
         {
             if (cts is not null)
-                await cts.CancelAsync();
+                cts.Cancel();
         }
         catch (Exception)
         {
