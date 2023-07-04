@@ -15,11 +15,11 @@
         <Grid RowSpacing="8">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="72" />
-                <ColumnDefinition Width="2*" />
+                <ColumnDefinition Width="1.5*" />
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="150" />
-                <ColumnDefinition Width="100" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="50" />
                 <ColumnDefinition Width="24" />
             </Grid.ColumnDefinitions>
             <TextBlock HorizontalAlignment="Left"
@@ -50,7 +50,7 @@
 
             <FontIcon FontFamily="{StaticResource SegoeFluent}"
                       Grid.Column="5"
-                      HorizontalAlignment="Center"
+                      HorizontalAlignment="Right"
                       Foreground="{ThemeResource ApplicationSecondaryForegroundThemeBrush}"
                       Glyph="&#xE916;" />
         </Grid>

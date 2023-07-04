@@ -2,6 +2,7 @@
 using LanguageExt;
 using Serilog;
 using Wavee.Metadata.Artist;
+using Wavee.Metadata.Common;
 using Wavee.UI.Client.Playlist.Models;
 using Wavee.UI.User;
 using Wavee.UI.ViewModel.Playlist.Headers;
@@ -15,6 +16,7 @@ public sealed class PlaylistViewModel : ObservableObject
     private string _id;
     private WaveeUIPlaylistTrackInfo[] _tracks;
     private IPlaylistHeader _header = new LoadingPlaylistHeader();
+    private bool _tracksHaveDate;
 
     public PlaylistViewModel(UserViewModel user)
     {
@@ -41,6 +43,12 @@ public sealed class PlaylistViewModel : ObservableObject
         set => this.SetProperty(ref _header, value);
     }
 
+    public bool TracksHaveDate
+    {
+        get => _tracksHaveDate;
+        set => this.SetProperty(ref _tracksHaveDate, value);
+    }
+
 
     public async Task Initialize(string id, CancellationToken cancellationToken)
     {
@@ -50,12 +58,14 @@ public sealed class PlaylistViewModel : ObservableObject
         Revision = playlist.Revision;
         Header = playlist.Header;
         _tracks = playlist.Tracks;
+        TracksHaveDate = _tracks.Any(x => x.AddedAt.IsSome);
         WaitForTracks.TrySetResult(Unit.Default);
         //Tracks = playlist.Tracks.Select(x => new PlaylistTrackViewModel(x)).ToArray();
-        await FetchTracksOnlyForSorting(cancellationToken);
+        await FetchTracksOnlyForSorting(playlist.FutureTracks, cancellationToken);
     }
 
-    private async Task FetchTracksOnlyForSorting(CancellationToken cancellationToken)
+    private async Task FetchTracksOnlyForSorting(TaskCompletionSource<Seq<Either<WaveeUIEpisode, WaveeUITrack>>> playlistFutureTracks,
+        CancellationToken cancellationToken)
     {
         var trckUris = _tracks.Select(x => x.Id).ToArray();
         var batches = trckUris.Chunk(2000);
@@ -67,7 +77,8 @@ public sealed class PlaylistViewModel : ObservableObject
             {
                 try
                 {
-                    _ = await _user.Client.ExtendedMetadata.GetTracks(batch, false, cancellationToken);
+                    var tracks = await _user.Client.ExtendedMetadata.GetTracks(batch, true, cancellationToken);
+                    playlistFutureTracks.TrySetResult(tracks.Values.ToSeq());
                     break;
                 }
                 catch (Exception e)
@@ -130,6 +141,7 @@ public sealed class PlaylistTrackViewModel : ObservableObject
         AddedBy = waveeUiPlaylistTrackInfo.AddedBy;
         Index = index;
     }
+    public bool HasDate => AddedAt.IsSome;
     public string Uid { get; }
     public string Id { get; }
     public Option<DateTimeOffset> AddedAt { get; }
@@ -165,9 +177,10 @@ public class WaveeUITrack
     public int TrackNumber { get; set; }
     public int DiscNumber { get; set; }
     public string AlbumName { get; set; }
+    public CoverImage[] Covers { get; set; }
 }
 
 public class WaveeUIEpisode
 {
-
+    public CoverImage[] Covers { get; set; }
 }

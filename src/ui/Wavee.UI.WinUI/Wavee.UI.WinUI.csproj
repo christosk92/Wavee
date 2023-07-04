@@ -35,6 +35,7 @@
 		<None Remove="Controls\CalendarControl.xaml" />
 		<None Remove="Controls\ImageTransitionControl.xaml" />
 		<None Remove="Controls\LyricsControl.xaml" />
+		<None Remove="Controls\MozaicImageControl.xaml" />
 		<None Remove="View\Dialogs\WizardDialog.xaml" />
 		<None Remove="Themes\AlbumArtistPageTrackTemplates.xaml" />
 		<None Remove="Themes\BorderStyles.xaml" />
@@ -131,6 +132,9 @@
 	  <None Update="Assets\kakao-ryan-typing.gif">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </None>
+	  <Page Update="Controls\MozaicImageControl.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </Page>
 	  <Page Update="View\Playlist\PlaylistSortButtons.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </Page>

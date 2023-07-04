@@ -1,4 +1,6 @@
-﻿using LanguageExt;
+﻿using System;
+using System.Text;
+using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
 using Spotify.Metadata;
 using Wavee.Id;
@@ -103,14 +105,20 @@ internal sealed class SpotifyUIExtendedMetadataClient : IWaveeUIExtendedMetadata
         return new Dictionary<string, Either<WaveeUIEpisode, WaveeUITrack>>(0);
     }
 
-    private static WaveeUIEpisode ToWaveUIEpisode(string episodeKey, Episode track)
+    private static WaveeUIEpisode ToWaveUIEpisode(string episodeKey, Episode episode)
     {
-        return new WaveeUIEpisode();
+        return new WaveeUIEpisode
+        {
+            Covers = GetCoverImages(episode),
+        };
     }
 
     private static WaveeUIEpisode ToWaveUIEpisode(string episodeKey, CachedEpisode tr)
     {
-        return new WaveeUIEpisode();
+        return new WaveeUIEpisode
+        {
+            Covers = Array.Empty<CoverImage>()
+        };
     }
 
     private static WaveeUITrack ToWaveUITrack(string trackKey, CachedTrack track)
@@ -136,7 +144,44 @@ internal sealed class SpotifyUIExtendedMetadataClient : IWaveeUIExtendedMetadata
             AlbumName = track.Album.Name,
             DurationMs = track.Duration,
             TrackNumber = track.Number,
-            DiscNumber = track.DiscNumber
+            DiscNumber = track.DiscNumber,
+            Covers = GetCoverImages(track),
         };
+    }
+    private static CoverImage[] GetCoverImages(Episode episode)
+    {
+        const string cdnUrlImage = "https://i.scdn.co/image/{0}";
+        return episode.CoverImage.Image
+            .Select(x => new CoverImage(
+                Url: CalculateUrl(x, cdnUrlImage),
+                Width: x.HasWidth ? (ushort)x.Width : Option<ushort>.None,
+                Height: x.HasHeight ? (ushort)x.Height : Option<ushort>.None
+            ))
+            .ToArray();
+    }
+
+    private static CoverImage[] GetCoverImages(Track track)
+    {
+        const string cdnUrlImage = "https://i.scdn.co/image/{0}";
+        return track.Album.CoverGroup.Image
+            .Select(x => new CoverImage(
+                Url: CalculateUrl(x, cdnUrlImage),
+                Width: x.HasWidth ? (ushort)x.Width : Option<ushort>.None,
+                Height: x.HasHeight ? (ushort)x.Height : Option<ushort>.None
+            ))
+            .ToArray();
+    }
+
+    private static string CalculateUrl(Image image, string httpsIScdnCoImage)
+    {
+        //convert to hex id
+        var sb = new StringBuilder();
+        ReadOnlySpan<byte> span = image.FileId.Span;
+        foreach (var b in span)
+        {
+            sb.Append(b.ToString("x2"));
+        }
+
+        return string.Format(httpsIScdnCoImage, sb.ToString());
     }
 }

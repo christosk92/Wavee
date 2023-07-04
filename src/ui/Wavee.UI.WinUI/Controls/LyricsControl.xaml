@@ -42,6 +42,9 @@
                                Text="{x:Bind Words}" />
                 </DataTemplate>
             </ListView.ItemTemplate>
+            <ListView.Footer>
+                <Border Height="100"/>
+            </ListView.Footer>
         </ListView>
         <ProgressRing x:Name="Loading"
                       VerticalAlignment="Center"

@@ -120,6 +120,11 @@ public sealed partial class PlaylistView : UserControl, INavigable, ICacheablePa
     {
         PlaylistView_OnSizeChanged(this, null);
     }
+
+    private void AlbumImage_OnImageOpened(object sender, RoutedEventArgs e)
+    {
+        (ViewModel.Header as RegularPlaylistHeader)!.MozaicCreated = true;
+    }
 }
 
 public class PlaylistTrackSource : IIncrementalSource<PlaylistTrackViewModel>

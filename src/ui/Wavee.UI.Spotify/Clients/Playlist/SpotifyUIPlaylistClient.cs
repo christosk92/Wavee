@@ -5,6 +5,7 @@ using Wavee.Id;
 using Wavee.Sqlite.Entities;
 using Wavee.UI.Client.Playlist;
 using Wavee.UI.Client.Playlist.Models;
+using Wavee.UI.ViewModel.Playlist;
 using Wavee.UI.ViewModel.Playlist.Headers;
 
 namespace Wavee.UI.Spotify.Clients.Playlist;
@@ -53,6 +54,7 @@ internal sealed class SpotifyUIPlaylistClient : IWaveeUIPlaylistClient
             }
 
             var isBigHeader = listContent.Attributes.FormatAttributes.Any(x => x.Key is "header_image_url_desktop");
+            var futureMozaicTracks = new TaskCompletionSource<Seq<Either<WaveeUIEpisode, WaveeUITrack>>>(TaskCreationOptions.RunContinuationsAsynchronously);
 
             return new WaveeUIPlaylist
             {
@@ -60,7 +62,8 @@ internal sealed class SpotifyUIPlaylistClient : IWaveeUIPlaylistClient
                 Id = id,
                 FromCache = fromCache,
                 Tracks = tracks,
-                Header = isBigHeader ? new PlaylistBigHeader(listContent) : new RegularPlaylistHeader(listContent),
+                FutureTracks = futureMozaicTracks,
+                Header = isBigHeader ? new PlaylistBigHeader(listContent) : new RegularPlaylistHeader(listContent, futureMozaicTracks),
                 Name = listContent.Attributes.Name,
                 ImageId = Option<string>.None,
                 Description = listContent.Attributes.HasDescription ? listContent.Attributes.Description

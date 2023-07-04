@@ -1,12 +1,18 @@
-﻿using Eum.Spotify.playlist4;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+using Eum.Spotify.playlist4;
+using LanguageExt;
 
 namespace Wavee.UI.ViewModel.Playlist.Headers;
 
-public sealed class RegularPlaylistHeader : IPlaylistHeader
+public sealed class RegularPlaylistHeader : ObservableObject, IPlaylistHeader
 {
-    public RegularPlaylistHeader(SelectedListContent listContent)
+    private bool _mozaicCreated;
+
+    public RegularPlaylistHeader(SelectedListContent listContent, TaskCompletionSource<Seq<Either<WaveeUIEpisode, WaveeUITrack>>> futureTracks)
     {
-        ImageUrl = listContent.Attributes.FormatAttributes.SingleOrDefault(x => x.Key is "image_url")?.Value;
+        FutureTracks = futureTracks;
+        ImageUrl = listContent.Attributes.PictureSize.SingleOrDefault(x => x.TargetName is "large")?.Url
+                   ?? listContent.Attributes.PictureSize.SingleOrDefault(x => x.TargetName is "default")?.Url;
         ShouldShowMozaic = string.IsNullOrEmpty(ImageUrl);
 
         Name = listContent.Attributes.Name;
@@ -37,4 +43,24 @@ public sealed class RegularPlaylistHeader : IPlaylistHeader
     public bool ShouldShowMadeFor { get; }
 
     public bool IsCollab { get; }
+    public TaskCompletionSource<Seq<Either<WaveeUIEpisode, WaveeUITrack>>> FutureTracks { get; }
+
+    public bool MozaicCreated
+    {
+        get => _mozaicCreated;
+        set => SetProperty(ref _mozaicCreated, value);
+    }
+
+    public bool Negate(bool b)
+    {
+        return !b;
+    }
+
+    public string HtmlEscape(string s)
+    {
+        var doc = new HtmlAgilityPack.HtmlDocument();
+        doc.LoadHtml(s);
+
+        return doc.DocumentNode.InnerText;
+    }
 }

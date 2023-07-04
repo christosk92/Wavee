@@ -36,7 +36,7 @@
         <ListView.Header>
             <Grid Margin="-24,-24,-24,0">
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="280" />
+                    <RowDefinition Height="300" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
@@ -74,8 +74,9 @@
                         <TextBlock Style="{ThemeResource TitleTextBlockStyle}"
                                    FontWeight="Bold"
                                    Padding="8"
+                                   FontSize="58"
                                    Text="{x:Bind ViewModel.Album.Name, Mode=OneWay}" />
-                        <ItemsRepeater ItemsSource="{x:Bind ViewModel.Album.Artists, Mode=OneWay}">
+                        <ItemsRepeater Margin="8,0" ItemsSource="{x:Bind ViewModel.Album.Artists, Mode=OneWay}">
                             <ItemsRepeater.Layout>
                                 <StackLayout Orientation="Horizontal"
                                              Spacing="8" />
@@ -99,7 +100,7 @@
                             </ItemsRepeater.ItemTemplate>
                         </ItemsRepeater>
 
-                        <TextBlock Padding="8">
+                        <TextBlock Padding="8" Margin="4,0">
                 <Run FontWeight="Bold"
                             Text="{x:Bind ViewModel.Album.ReleaseDate.Year,Mode=OneWay}" />
                 <Run FontWeight="Bold"
