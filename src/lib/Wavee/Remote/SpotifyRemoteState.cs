@@ -61,8 +61,10 @@ public readonly record struct SpotifyRemoteState(
         return Option<SpotifyRemoteDeviceInfo>.None;
     }
 
-    private static TimeSpan CalculatePosition(PlayerState playerState, long serverTime, int serverOffset)
+    private static TimeSpan CalculatePosition(PlayerState? playerState, long serverTime, int serverOffset)
     {
+        if(playerState is null) return TimeSpan.Zero;
+        
         if (playerState.IsPaused)
         {
             return TimeSpan.FromMilliseconds(playerState.PositionAsOfTimestamp + serverOffset);

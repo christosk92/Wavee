@@ -71,7 +71,6 @@ public readonly record struct SpotifyId(BigInteger Id, AudioItemType Type, Servi
                     sb.Insert(0, '0');
                 }
                 return sb.ToString();
-                break;
             default:
                 throw new ArgumentOutOfRangeException();
         }
@@ -194,7 +193,6 @@ public readonly record struct SpotifyId(BigInteger Id, AudioItemType Type, Servi
                 }
 
                 return new SpotifyId(result, type, serviceType);
-                break;
         }
 
         return new SpotifyId();

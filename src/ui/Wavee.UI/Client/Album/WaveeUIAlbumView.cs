@@ -2,7 +2,6 @@
 using Wavee.Id;
 using Wavee.Metadata.Album;
 using Wavee.Metadata.Artist;
-using Wavee.Metadata.Common;
 using Wavee.UI.Common;
 
 namespace Wavee.UI.Client.Album;

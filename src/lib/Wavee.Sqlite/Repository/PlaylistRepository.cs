@@ -54,6 +54,7 @@ public class PlaylistRepository
             await db.Playlists.AddAsync(playlist);
            // await db.PlaylistTracks.BulkUpdateAsync(playlist.PlaylistTracks);
         }
+
         await db.SaveChangesAsync();
     }
 

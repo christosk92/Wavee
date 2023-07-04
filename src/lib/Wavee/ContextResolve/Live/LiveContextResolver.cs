@@ -39,7 +39,7 @@ internal readonly struct LiveContextResolver : IContextResolver
     {
         var metadata = jsonDocument.RootElement.TryGetProperty("metadata", out var metadataElement)
             ? metadataElement.EnumerateObject().Fold(new HashMap<string, string>(),
-                (acc, x) => acc.Add(x.Name, x.Value.GetString()))
+                (acc, x) => acc.Add(x.Name, x.Value.GetString()!))
             : Empty;
 
 
@@ -66,6 +66,6 @@ internal readonly struct LiveContextResolver : IContextResolver
             ? restrictionsElement.EnumerateObject().Fold(new HashMap<string, Seq<string>>(),
                 (acc, x) => acc.Add(x.Name, x.Value.Clone().EnumerateArray().Select(y => y.GetString()).ToSeq()!))
             : Empty;
-        return new SpotifyContext(url, metadata, pages, restrictions);
+        return new SpotifyContext(url!, metadata, pages, restrictions);
     }
 }

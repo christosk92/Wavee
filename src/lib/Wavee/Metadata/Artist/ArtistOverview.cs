@@ -265,7 +265,8 @@ public readonly record struct ArtistOverview(SpotifyId Id, bool IsSaved,
         {
             "SINGLE" or "EP" => ReleaseType.Single,
             "ALBUM" => ReleaseType.Album,
-            "COMPILATION" => ReleaseType.Compilation
+            "COMPILATION" => ReleaseType.Compilation,
+            _ => throw new ArgumentOutOfRangeException()
         };
         var dt = release.GetProperty("date");
         var precision = dt.TryGetProperty("precision", out var prec) ? prec.GetString() switch
@@ -365,11 +366,11 @@ public readonly record struct ArtistOverview(SpotifyId Id, bool IsSaved,
                 var venueName = venue.GetProperty("name").GetString();
                 var venueLocaiton = venue.GetProperty("location").GetProperty("name").GetString();
                 pinnedItem = new ArtistOverviewPinnedConcert(
-                    ConcertId: concertId,
-                    Name: title,
+                    ConcertId: concertId!,
+                    Name: title!,
                     Type: itemType,
                     Date: date,
-                    Venue: new ConcertVenueDetails(Name: venueName, Location: venueLocaiton),
+                    Venue: new ConcertVenueDetails(Name: venueName!, Location: venueLocaiton!),
                     Comment: !string.IsNullOrEmpty(comment)
                         ? comment
                         : Option<string>.None,

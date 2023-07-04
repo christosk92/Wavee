@@ -7,7 +7,7 @@ using System.Runtime.InteropServices;
 using Microsoft.UI.Input;
 using Microsoft.UI.Xaml;
 
-namespace Wavee.UI.WinUI.Helpers
+namespace Wavee.UI.WinUI.Extensions
 {
     public static class InteropHelpers
     {
@@ -19,13 +19,13 @@ namespace Wavee.UI.WinUI.Helpers
         public static extern bool GetCursorPos(out POINT point);
 
         [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
-        public static extern IntPtr CreateEvent(IntPtr lpEventAttributes, bool bManualReset, bool bInitialState, string lpName);
+        public static extern nint CreateEvent(nint lpEventAttributes, bool bManualReset, bool bInitialState, string lpName);
 
         [DllImport("kernel32.dll")]
-        public static extern bool SetEvent(IntPtr hEvent);
+        public static extern bool SetEvent(nint hEvent);
 
         [DllImport("ole32.dll")]
-        public static extern uint CoWaitForMultipleObjects(uint dwFlags, uint dwMilliseconds, ulong nHandles, IntPtr[] pHandles, out uint dwIndex);
+        public static extern uint CoWaitForMultipleObjects(uint dwFlags, uint dwMilliseconds, ulong nHandles, nint[] pHandles, out uint dwIndex);
 
         [StructLayout(LayoutKind.Sequential)]
         public struct POINT
@@ -56,8 +56,8 @@ namespace Wavee.UI.WinUI.Helpers
     [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
     interface IDataTransferManagerInterop
     {
-        IntPtr GetForWindow([In] IntPtr appWindow, [In] ref Guid riid);
+        nint GetForWindow([In] nint appWindow, [In] ref Guid riid);
 
-        void ShowShareUIForWindow(IntPtr appWindow);
+        void ShowShareUIForWindow(nint appWindow);
     }
 }

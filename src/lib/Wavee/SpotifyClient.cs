@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using System.Globalization;
+﻿using System.Globalization;
 using System.Reactive.Linq;
 using System.Text;
 using System.Text.Json;
@@ -39,7 +38,7 @@ namespace Wavee;
 public class SpotifyClient : IDisposable
 {
     private Guid _connectionId;
-    private TaskCompletionSource<string> _countryCodeTask;
+    private TaskCompletionSource<string> _countryCodeTask = null!;
     private readonly TaskCompletionSource<Unit> _waitForConnectionTask;
     private readonly IWaveePlayer _player;
 
@@ -105,13 +104,13 @@ public class SpotifyClient : IDisposable
                                 {
                                     var firstItemAsProducts = products[0];
 
-                                    var product = firstItemAsProducts.ChildNodes[0];
+                                    var product = firstItemAsProducts!.ChildNodes[0];
 
-                                    var properties = product.ChildNodes;
+                                    var properties = product!.ChildNodes;
                                     for (var i = 0; i < properties.Count; i++)
                                     {
                                         var node = properties.Item(i);
-                                        dc.Add(node.Name, node.InnerText);
+                                        dc.Add(node!.Name, node.InnerText);
                                     }
                                 }
 
@@ -166,8 +165,8 @@ public class SpotifyClient : IDisposable
 
                             var remoteCommand = new SpotifyCommand(
                                 MessageId: messageId,
-                                SentByDeviceId: sentByDeviceId,
-                                Endpoint: endpoint,
+                                SentByDeviceId: sentByDeviceId!,
+                                Endpoint: endpoint!,
                                 Data: command.TryGetProperty("data", out var dt)
                                     ? dt.GetBytesFromBase64()
                                     : ReadOnlyMemory<byte>.Empty
@@ -258,7 +257,7 @@ public class SpotifyClient : IDisposable
         : new ValueTask<string>(_countryCodeTask.Task);
 
     public SpotifyConfig Config => _config;
-    public APWelcome WelcomeMessage { get; private set; }
+    public APWelcome WelcomeMessage { get; private set; } = null!;
     public string DeviceId { get; }
 
     private async Task PlaybackStateChanged(SpotifyLocalPlaybackState obj)

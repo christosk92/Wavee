@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using Windows.Foundation;
 using Microsoft.UI.Xaml;
 
-namespace Wavee.UI.WinUI.Panels;
+namespace Wavee.UI.WinUI.UI.Panels;
 internal sealed class HorizontalAdaptiveLayout : NonVirtualizingLayout
 {
     public static readonly DependencyProperty DesiredWidthProperty = DependencyProperty.Register(nameof(DesiredWidth),
@@ -70,7 +70,7 @@ internal sealed class HorizontalAdaptiveLayout : NonVirtualizingLayout
         var availableWidth = availableSize.Width;
         var fitItems = (int)Math.Floor(availableWidth / DesiredWidth);
         var resize =
-            availableWidth - (fitItems * DesiredWidth);
+            availableWidth - fitItems * DesiredWidth;
         var resizePerItem =
             fitItems > items ? 0 : resize / fitItems;
 

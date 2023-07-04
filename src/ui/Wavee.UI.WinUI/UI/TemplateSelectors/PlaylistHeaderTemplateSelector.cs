@@ -2,7 +2,7 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Wavee.UI.ViewModel.Playlist.Headers;
 
-namespace Wavee.UI.WinUI;
+namespace Wavee.UI.WinUI.UI.TemplateSelectors;
 
 public class PlaylistHeaderTemplateSelector : DataTemplateSelector
 {

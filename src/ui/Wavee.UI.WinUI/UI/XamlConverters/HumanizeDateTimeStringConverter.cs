@@ -3,7 +3,7 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Data;
 using Wavee.Metadata.Artist;
 
-namespace Wavee.UI.WinUI;
+namespace Wavee.UI.WinUI.UI.XamlConverters;
 
 public class HumanizeDateTimeStringConverter : IValueConverter
 {

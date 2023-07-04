@@ -1209,7 +1209,7 @@
             </Style>
 
             <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="ms-appx:///Styles/PropertiesStyles.xaml" />
+                <ResourceDictionary Source="ms-appx:///Themes/PropertiesStyles.xaml" />
             </ResourceDictionary.MergedDictionaries>
             <ResourceDictionary.ThemeDictionaries>
                 <ResourceDictionary x:Key="Light">

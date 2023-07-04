@@ -5,7 +5,7 @@ using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Data;
 using Wavee.Metadata.Artist;
 
-namespace Wavee.UI.WinUI;
+namespace Wavee.UI.WinUI.UI.TemplateSelectors;
 
 public class ArtistSpecialTemplateSelector : DataTemplateSelector
 {

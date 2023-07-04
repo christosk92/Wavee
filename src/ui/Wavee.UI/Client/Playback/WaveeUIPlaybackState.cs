@@ -1,6 +1,5 @@
 ﻿using Eum.Spotify.connectstate;
 using LanguageExt;
-using NAudio.SoundFont;
 using Wavee.Id;
 
 namespace Wavee.UI.Client.Playback;

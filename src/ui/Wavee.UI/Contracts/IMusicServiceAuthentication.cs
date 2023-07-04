@@ -1,5 +1,4 @@
-﻿using Google.Protobuf;
-using Wavee.UI.User;
+﻿using Wavee.UI.User;
 
 namespace Wavee.UI.Contracts;
 

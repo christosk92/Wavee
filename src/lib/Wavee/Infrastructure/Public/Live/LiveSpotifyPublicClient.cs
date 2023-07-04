@@ -41,7 +41,8 @@ internal readonly struct LiveSpotifyPublicClient : ISpotifyPublicClient
         var additionalTypes = types.Map(f => string.Join(",", f.Select(y => y switch
         {
             AudioItemType.PodcastEpisode => "episode",
-            AudioItemType.Track => "track"
+            AudioItemType.Track => "track",
+            _ => throw new ArgumentOutOfRangeException(nameof(y), y, null)
         }))).IfNone("track,episode");
         var finalUrl = string.Format(url, spotifyId.ToBase62(), offset, limit, additionalTypes);
 
@@ -56,6 +57,7 @@ internal readonly struct LiveSpotifyPublicClient : ISpotifyPublicClient
                     {
                         AudioItemType.Track => ParsePublicPlaylistTrack(elem, track),
                         AudioItemType.PodcastEpisode => ParsePublicPlaylistPodcastEpisode(elem, track),
+                        _ => throw new ArgumentOutOfRangeException()
                     };
                 }, ct);
             });

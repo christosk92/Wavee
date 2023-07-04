@@ -3,7 +3,6 @@ using Newtonsoft.Json;
 using ReactiveUI;
 using Wavee.UI.Bases;
 using System.Reactive.Linq;
-using Wavee.Player;
 
 namespace Wavee.UI;
 

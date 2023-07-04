@@ -1,4 +1,5 @@
-﻿using System.Net.WebSockets;
+﻿using System.Diagnostics;
+using System.Net.WebSockets;
 
 namespace Wavee.Infrastructure;
 
@@ -21,6 +22,7 @@ public static class WebsocketIO
         do
         {
             result = await ws.ReceiveAsync(buffer, ct);
+            Debug.Assert(buffer.Array != null, "buffer.Array != null");
             ms.Write(buffer.Array, buffer.Offset, result.Count);
         } while (!result.EndOfMessage);
 

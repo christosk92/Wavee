@@ -1,28 +1,19 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
-using Eum.Spotify.playlist4;
 using Serilog;
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
+using System.Diagnostics.CodeAnalysis;
 using System.Reactive;
 using System.Reactive.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Timers;
 using LanguageExt.UnsafeValueAccess;
 using ReactiveUI;
 using Wavee.UI.Client.Lyrics;
 using Wavee.UI.Client.Playback;
 using Wavee.UI.ViewModel.Playback;
-using Timer = System.Threading.Timer;
-using ReactiveUI;
-using System.Reactive.Linq;
-using System.Security.Cryptography;
 using NeoSmart.AsyncLock;
 
 namespace Wavee.UI.ViewModel.Shell.Lyrics;
 
+[SuppressMessage("CommunityToolkit.Mvvm.SourceGenerators.ObservablePropertyGenerator", "MVVMTK0034:Direct field reference to [ObservableProperty] backing field")]
 public partial class LyricsViewModel : ObservableObject
 {
     private AsyncLock _lock = new();

@@ -1,11 +1,6 @@
 ﻿using System.Collections.ObjectModel;
-using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
-using LanguageExt;
 using Serilog;
-using Wavee.Id;
-using Wavee.Metadata.Home;
-using Wavee.UI.Common;
 using Wavee.UI.User;
 
 namespace Wavee.UI.ViewModel.Home;

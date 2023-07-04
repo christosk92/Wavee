@@ -1,10 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
-using Eum.Spotify.playlist4;
 using LanguageExt;
 using Serilog;
-using Spotify.Metadata;
 using Wavee.Metadata.Artist;
-using Wavee.UI.Client.Playback;
 using Wavee.UI.Client.Playlist.Models;
 using Wavee.UI.User;
 using Wavee.UI.ViewModel.Playlist.Headers;

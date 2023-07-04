@@ -48,7 +48,7 @@ internal readonly struct LiveSpotifyRemoteClient : ISpotifyRemoteClient
                         else
                         {
                             var state = SpotifyRemoteState.ParseFrom(clusterUpdate.Cluster, tmpThis._timeProvider);
-                            o.OnNext(state.Value);
+                            o.OnNext(state!.Value); //Not null because of the if above
                         }
                     }
                 }
@@ -102,7 +102,8 @@ internal readonly struct LiveSpotifyRemoteClient : ISpotifyRemoteClient
                                             {
                                                 "track" => AudioItemType.Track,
                                                 "artist" => AudioItemType.Artist,
-                                                "album" => AudioItemType.Album
+                                                "album" => AudioItemType.Album,
+                                                _ => throw new ArgumentOutOfRangeException()
                                             }, ServiceType.Spotify),
                                         AddedAt: DateTimeOffset.FromUnixTimeSeconds((long)addedAt)));
                                 }
@@ -115,7 +116,8 @@ internal readonly struct LiveSpotifyRemoteClient : ISpotifyRemoteClient
                                             {
                                                 "track" => AudioItemType.Track,
                                                 "artist" => AudioItemType.Artist,
-                                                "album" => AudioItemType.Album
+                                                "album" => AudioItemType.Album,
+                                                _ => throw new ArgumentOutOfRangeException()
                                             }, ServiceType.Spotify),
                                         AddedAt: Option<DateTimeOffset>.None));
                                 }

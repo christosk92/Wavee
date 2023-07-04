@@ -45,7 +45,9 @@ internal static class SpotifyStreaming
                 None: async () =>
                 {
                     var track = await client.Metadata.GetTrack(id, cancellationToken);
-                    cache.SetTrack(id, track);
+                    _ = Task.Run(async () => await cache.SetTrack(id, track));
+
+
                     return track;
                 }
             );
@@ -122,7 +124,8 @@ internal static class SpotifyStreaming
             _emptyMetadata,
             null);
         var firstChunkBytes = await firstChunk.Content.ReadAsByteArrayAsync();
-        var numberOfChunks = (int)Math.Ceiling((double)firstChunk.Content.Headers.ContentRange?.Length / chunkSize);
+        var numberOfChunks =
+            (int)Math.Ceiling((double)firstChunk.Content.Headers.ContentRange!.Length!.Value / chunkSize);
 
         var requested = new TaskCompletionSource<byte[]>[numberOfChunks];
         requested[0] = new TaskCompletionSource<byte[]>();
@@ -149,7 +152,7 @@ internal static class SpotifyStreaming
                     .MapAsync(x => x.Content.ReadAsByteArrayAsync())
                     .ContinueWith(x =>
                     {
-                        requested[index].SetResult(x.Result);
+                        requested[index].TrySetResult(x.Result);
                         return x.Result;
                     }));
             }

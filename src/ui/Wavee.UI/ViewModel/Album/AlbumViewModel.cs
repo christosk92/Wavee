@@ -10,7 +10,7 @@ namespace Wavee.UI.ViewModel.Album;
 public sealed class AlbumViewModel : ObservableObject
 {
     private readonly UserViewModel _user;
-    private WaveeUIAlbumView _album;
+    private WaveeUIAlbumView? _album;
     private bool _saved;
     private AppTheme _theme;
 
@@ -19,7 +19,7 @@ public sealed class AlbumViewModel : ObservableObject
         _user = user;
     }
 
-    public WaveeUIAlbumView Album
+    public WaveeUIAlbumView? Album
     {
         get => _album;
         set
@@ -86,13 +86,12 @@ public sealed class AlbumViewModel : ObservableObject
                 var month = album.ReleaseDate.ToString("MMMM");
                 var year = album.ReleaseDate.Year;
                 return $"{month} {year}";
-                break;
             case ReleaseDatePrecisionType.Day:
                 var day = album.ReleaseDate.Day;
                 var month2 = album.ReleaseDate.ToString("MMMM");
                 var year2 = album.ReleaseDate.Year;
                 return $"{month2} {day}, {year2}";
-                break;
+            
             default:
                 throw new ArgumentOutOfRangeException();
         }

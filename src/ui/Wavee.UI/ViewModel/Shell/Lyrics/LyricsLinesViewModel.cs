@@ -1,5 +1,4 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
-using System;
 using System.Globalization;
 
 namespace Wavee.UI.ViewModel.Shell.Lyrics;

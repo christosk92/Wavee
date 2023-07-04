@@ -5,7 +5,7 @@ using Microsoft.UI.Xaml.Data;
 using Microsoft.UI.Xaml.Media.Imaging;
 using Wavee.Metadata.Common;
 
-namespace Wavee.UI.WinUI;
+namespace Wavee.UI.WinUI.UI.XamlConverters;
 
 public class GetFirstImageSafeConverter : IValueConverter
 {
@@ -13,7 +13,7 @@ public class GetFirstImageSafeConverter : IValueConverter
     {
         if (value is CoverImage[] images)
         {
-            var url = images?.OrderBy(x=> x.Height.IfNone(0))?.FirstOrDefault().Url;
+            var url = images?.OrderBy(x => x.Height.IfNone(0))?.FirstOrDefault().Url;
             if (string.IsNullOrEmpty(url))
             {
                 return new BitmapImage();

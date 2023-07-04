@@ -1,5 +1,4 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
-using LanguageExt;
+﻿using LanguageExt;
 using Wavee.Metadata.Artist;
 using Wavee.Metadata.Common;
 using Wavee.UI.Common;

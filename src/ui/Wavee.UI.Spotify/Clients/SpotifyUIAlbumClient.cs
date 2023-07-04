@@ -15,7 +15,7 @@ internal sealed class SpotifyUIAlbumClient : IWaveeUIAlbumClient
         _spotifyClient = new WeakReference<SpotifyClient>(spotifyClient);
     }
 
-    public async Task<WaveeUIAlbumView> GetAlbum(string id, CancellationToken cancellationToken)
+    public async Task<WaveeUIAlbumView?> GetAlbum(string id, CancellationToken cancellationToken)
     {
         if (!_spotifyClient.TryGetTarget(out var spotifyClient))
         {
@@ -36,7 +36,7 @@ internal sealed class SpotifyUIAlbumClient : IWaveeUIAlbumClient
             .Map(f => f.Select(ParseToDisc).ToArray());
     }
 
-    private static WaveeUIAlbumView ParseFrom(SpotifyAlbum album)
+    private static WaveeUIAlbumView? ParseFrom(SpotifyAlbum album)
     {
         return new WaveeUIAlbumView
         {

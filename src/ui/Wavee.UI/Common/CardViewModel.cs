@@ -119,7 +119,7 @@ public sealed class PodcastEpisodeCardViewModel : ICardViewModel
     public bool Started { get; init; }
     public TimeSpan Duration { get; init; }
     public TimeSpan Progress { get; init; }
-    public string Show { get; init; }
+    public string? Show { get; init; }
     public string? PodcastDescription { get; init; }
     public DateTimeOffset ReleaseDate { get; init; }
 }

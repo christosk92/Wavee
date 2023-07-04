@@ -3,7 +3,7 @@ using Microsoft.UI.Xaml.Controls;
 using Wavee.UI.Common;
 using Wavee.UI.WinUI.Components;
 
-namespace Wavee.UI.WinUI.TemplateSelectors;
+namespace Wavee.UI.WinUI.UI.TemplateSelectors;
 
 public sealed class CardViewTemplateSelector : DataTemplateSelector
 {

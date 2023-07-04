@@ -15,12 +15,13 @@ internal static class SpotifyItemParser
     {
         try
         {
-            if (item.TryGetProperty("__typename", out var tpName) 
+            if (item.TryGetProperty("__typename", out var tpName)
                 && tpName.GetString() is "NotFound" or "RestrictedContent")
             {
                 Log.Warning("Item not found");
                 return Option<ISpotifyHomeItem>.None;
             }
+
             var uri = item.GetProperty("uri").GetString();
             var id = SpotifyId.FromUri(uri.AsSpan());
 
@@ -48,7 +49,6 @@ internal static class SpotifyItemParser
                             Images = images,
                             OwnerName = ownerName
                         };
-                        break;
                     }
                 case AudioItemType.Album:
                     {
@@ -69,13 +69,15 @@ internal static class SpotifyItemParser
                             Artists = artists,
                             Images = images
                         };
-                        break;
                     }
                 case AudioItemType.Artist:
                     {
                         var name = item.GetProperty("profile").GetProperty("name").GetString()!;
-                        var images = ParseImages(item.GetProperty("visuals").GetProperty("avatarImage")
-                            .GetProperty("sources"));
+                        var avatarImage = item.GetProperty("visuals").GetProperty("avatarImage");
+                        var images =
+                            avatarImage.ValueKind is not JsonValueKind.Null ?
+                            ParseImages(avatarImage.GetProperty("sources"))
+                                : Array.Empty<CoverImage>();
 
                         return new SpotifyArtistHomeItem
                         {
@@ -83,7 +85,6 @@ internal static class SpotifyItemParser
                             Name = name,
                             Images = images
                         };
-                        break;
                     }
                 case AudioItemType.PodcastEpisode:
                     {
@@ -100,7 +101,8 @@ internal static class SpotifyItemParser
                         bool started = playedState.GetProperty("state").GetString() is not "NOT_STARTED";
 
 
-                        var podcastName = item.GetProperty("podcastV2").GetProperty("data").GetProperty("name").GetString()!;
+                        var podcastName = item.GetProperty("podcastV2").GetProperty("data").GetProperty("name")
+                            .GetString()!;
                         var releaseDateProp = item.GetProperty("releaseDate");
                         var isoString = releaseDateProp.GetProperty("isoString").GetString()!;
                         var isoReleaseDateParsed = DateTimeOffset.Parse(isoString, CultureInfo.InvariantCulture);
@@ -118,13 +120,22 @@ internal static class SpotifyItemParser
                             PodcastName = podcastName,
                             ReleaseDate = isoReleaseDateParsed
                         };
-                        break;
                     }
                 case AudioItemType.PodcastShow:
 
                     break;
             }
 
+            return Option<ISpotifyHomeItem>.None;
+        }
+        catch (InvalidOperationException invalidop)
+        {
+            Log.Warning("Could not parse json: {json}", invalidop);
+            return Option<ISpotifyHomeItem>.None;
+        }
+        catch (JsonException js)
+        {
+            Log.Warning("Could not parse json: {json}", js);
             return Option<ISpotifyHomeItem>.None;
         }
         catch (KeyNotFoundException k)

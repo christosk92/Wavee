@@ -5,12 +5,14 @@ using Google.Protobuf;
 using Google.Protobuf.WellKnownTypes;
 using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
+using Serilog;
 using Spotify.Metadata;
 using SQLite;
 using Wavee.Id;
 using Wavee.Sqlite;
 using Wavee.Sqlite.Entities;
 using Wavee.Sqlite.Repository;
+using Exception = System.Exception;
 
 namespace Wavee.Cache.Live;
 
@@ -39,8 +41,16 @@ internal sealed class LiveSpotifyCache : ISpotifyCache
 
     public async Task<Unit> SetTrack(SpotifyId id, Track track)
     {
-        var result = await _tracksRepository().InsertTrack(id.ToString(), track, DateTimeOffset.MaxValue);
-        return result;
+        try
+        {
+            var result = await _tracksRepository().InsertTrack(id.ToString(), track, DateTimeOffset.MaxValue);
+            return result;
+        }
+        catch (Exception x)
+        {
+            Log.Error(x, "Failed to set track");
+            return Unit.Default;
+        }
     }
 
     public Option<FileStream> File(AudioFile format)

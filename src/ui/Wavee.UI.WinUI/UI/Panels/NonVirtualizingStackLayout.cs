@@ -3,7 +3,7 @@ using Microsoft.UI.Xaml.Controls;
 using System;
 using Windows.Foundation;
 
-namespace Wavee.UI.WinUI.Panels;
+namespace Wavee.UI.WinUI.UI.Panels;
 
 public class NonVirtualizingStackLayout : NonVirtualizingLayout
 {

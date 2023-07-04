@@ -9,7 +9,7 @@ namespace Wavee.UI.Helpers
 {
     public class GroupedCollection<T> : BulkConcurrentObservableCollection<T>, IGroupedCollectionHeader
     {
-        public GroupedHeaderViewModel Model { get; set; }
+        public GroupedHeaderViewModel? Model { get; set; }
 
         public GroupedCollection(IEnumerable<T> items) : base(items)
         {
@@ -41,11 +41,12 @@ namespace Wavee.UI.Helpers
             PropertyChanged += GroupedCollection_PropertyChanged;
         }
 
-        private void GroupedCollection_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        private void GroupedCollection_PropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
             if (e.PropertyName == nameof(Count))
             {
-                Model.CountText = string.Format(Count > 1 ? $"{Count} items" : $"{Count} item", Count);
+                if (Model != null)
+                    Model.CountText = string.Format(Count > 1 ? $"{Count} items" : $"{Count} item", Count);
             }
         }
 
@@ -56,26 +57,29 @@ namespace Wavee.UI.Helpers
                 return;
             }
 
-            Model.ResumePropertyChangedNotifications(false);
+            Model?.ResumePropertyChangedNotifications(false);
 
             GetExtendedGroupHeaderInfo.Invoke(this);
-            Model.Initialized = true;
-            if (isBulkOperationStarted)
+            if (Model != null)
             {
-                Model.PausePropertyChangedNotifications();
+                Model.Initialized = true;
+                if (IsBulkOperationStarted)
+                {
+                    Model.PausePropertyChangedNotifications();
+                }
             }
         }
 
         public override void BeginBulkOperation()
         {
             base.BeginBulkOperation();
-            Model.PausePropertyChangedNotifications();
+            Model?.PausePropertyChangedNotifications();
         }
 
         public override void EndBulkOperation()
         {
             base.EndBulkOperation();
-            Model.ResumePropertyChangedNotifications();
+            Model?.ResumePropertyChangedNotifications();
         }
     }
 
@@ -87,16 +91,16 @@ namespace Wavee.UI.Helpers
     /// </summary>
     public interface IGroupedCollectionHeader
     {
-        public GroupedHeaderViewModel Model { get; set; }
+        public GroupedHeaderViewModel? Model { get; set; }
     }
 
     public class GroupedHeaderViewModel : ObservableObject
     {
-        public string Key { get; set; }
+        public string Key { get; set; } = null!;
         public bool Initialized { get; set; }
         public int SortIndexOverride { get; set; }
 
-        private string text;
+        private string? text;
 
         public string Text
         {
@@ -104,17 +108,17 @@ namespace Wavee.UI.Helpers
             set => SetPropertyWithUpdateDelay(ref text, value);
         }
 
-        private string subtext;
+        private string? subtext;
 
-        public string Subtext
+        public string? Subtext
         {
             get => subtext;
             set => SetPropertyWithUpdateDelay(ref subtext, value);
         }
 
-        private string countText;
+        private string? countText;
 
-        public string CountText
+        public string? CountText
         {
             get => countText;
             set => SetPropertyWithUpdateDelay(ref countText, value);
@@ -128,15 +132,15 @@ namespace Wavee.UI.Helpers
             set => SetProperty(ref showCountTextBelow, value);
         }
 
-        private string icon;
+        private string? icon;
 
-        public string Icon
+        public string? Icon
         {
             get => icon;
             set => SetPropertyWithUpdateDelay(ref icon, value);
         }
 
-        private void SetPropertyWithUpdateDelay<T>(ref T field, T newVal, [CallerMemberName] string propName = null)
+        private void SetPropertyWithUpdateDelay<T>(ref T field, T newVal, [CallerMemberName] string? propName = null)
         {
             if (propName is null)
             {
@@ -179,7 +183,7 @@ namespace Wavee.UI.Helpers
             }
         }
 
-        private List<string> changedPropQueue = new List<string>();
+        private List<string?> changedPropQueue = new List<string?>();
 
         // This is true by default to make it easier to initialize groups from a different thread
         private bool deferPropChangedNotifs = true;

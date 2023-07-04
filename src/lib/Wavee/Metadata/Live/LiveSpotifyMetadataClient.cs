@@ -99,7 +99,7 @@ internal readonly struct LiveSpotifyMetadataClient : ISpotifyMetadataClient
             var uri = current.GetProperty("uri").GetString();
 
             //check if we match the playlist regex first
-            var playlistMatch = playlistRegex.Match(uri);
+            var playlistMatch = playlistRegex.Match(uri!);
             if (playlistMatch.Success)
             {
                 _ = playlistMatch.Groups["userId"].Value;
@@ -108,7 +108,7 @@ internal readonly struct LiveSpotifyMetadataClient : ISpotifyMetadataClient
             }
             else
             {
-                var collectionMatch = collectionRegex.Match(uri);
+                var collectionMatch = collectionRegex.Match(uri!);
                 if (collectionMatch.Success)
                 {
                     //anonymized
@@ -116,7 +116,7 @@ internal readonly struct LiveSpotifyMetadataClient : ISpotifyMetadataClient
                 }
             }
 
-            output[i++] = uri;
+            output[i++] = uri!;
         }
 
         using var entities = await _query(new FetchRecentlyPlayedQuery(output), _defaultLang);
@@ -268,6 +268,7 @@ internal readonly struct LiveSpotifyMetadataClient : ISpotifyMetadataClient
             ReleaseType.Album => data.GetProperty("albums"),
             ReleaseType.Single => data.GetProperty("singles"),
             ReleaseType.Compilation => data.GetProperty("compilations"),
+            _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
         };
         var items = nextKey.GetProperty("items");
         var output = new IArtistDiscographyRelease[items.GetArrayLength()];

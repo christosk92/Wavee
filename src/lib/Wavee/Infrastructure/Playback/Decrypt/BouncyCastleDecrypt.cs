@@ -9,14 +9,14 @@ internal sealed class BouncyCastleDecrypt : IAudioDecrypt
 {
     private readonly IBufferedCipher _cipher;
     private readonly KeyParameter _spec;
-    private static BigInteger IvInt;
+    private static BigInteger _ivInt = null!;
     private readonly int _chunkSize;
     private static readonly BigInteger IvDiff = BigInteger.ValueOf(0x100);
     
     public BouncyCastleDecrypt(byte[] key, byte[] iv, int chunkSize)
     {
         _chunkSize = chunkSize;
-        IvInt = new BigInteger(1, iv);
+        _ivInt = new BigInteger(1, iv);
         _spec = ParameterUtilities.CreateKeyParameter("AES", key);
         _cipher = CipherUtilities.GetCipher("AES/CTR/NoPadding");
     }
@@ -24,7 +24,7 @@ internal sealed class BouncyCastleDecrypt : IAudioDecrypt
     
     public void Decrypt(int chunkIndex, byte[] chunk)
     {
-        var iv = IvInt.Add(
+        var iv = _ivInt!.Add(
             BigInteger.ValueOf(_chunkSize * chunkIndex / 16));
         for (var i = 0; i < chunk.Length; i += 4096)
         {

@@ -7,7 +7,7 @@ using Windows.Foundation;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 
-namespace Wavee.UI.WinUI.Panels.Flow
+namespace Wavee.UI.WinUI.UI.Panels.Flow
 {
     internal struct FlowLayoutAnchorInfo
     {
@@ -25,10 +25,10 @@ namespace Wavee.UI.WinUI.Panels.Flow
         Rect Algorithm_GetExtent(
             Size availableSize,
             VirtualizingLayoutContext context,
-            UIElement? firstRealized,
+            UIElement firstRealized,
             int firstRealizedItemIndex,
             Rect firstRealizedLayoutBounds,
-            UIElement? lastRealized,
+            UIElement lastRealized,
             int lastRealizedItemIndex,
             Rect lastRealizedLayoutBounds);
         void Algorithm_OnElementMeasured(

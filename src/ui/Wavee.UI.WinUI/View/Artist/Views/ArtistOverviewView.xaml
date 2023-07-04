@@ -6,30 +6,29 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:tracks="using:Wavee.UI.WinUI.Components.Tracks"
-             xmlns:artist="using:Wavee.UI.Client.Artist"
              xmlns:labs="using:CommunityToolkit.Labs.WinUI"
-             xmlns:winUi="using:Wavee.UI.WinUI"
+             xmlns:artist="using:Wavee.Metadata.Artist"
+             xmlns:templateSelectors="using:Wavee.UI.WinUI.UI.TemplateSelectors"
+             xmlns:artistItems="using:Wavee.UI.Client.Artist"
              xmlns:discography="using:Wavee.UI.WinUI.View.Artist.Views.Discography"
-             xmlns:artist1="using:Wavee.Metadata.Artist"
-             xmlns:controls="using:Wavee.UI.WinUI.Controls"
              mc:Ignorable="d">
 
     <UserControl.Resources>
         <DataTemplate x:Key="PinnedConcert"
-                      x:DataType="artist1:ArtistOverviewPinnedConcert">
+                      x:DataType="artist:ArtistOverviewPinnedConcert">
             <Grid />
         </DataTemplate>
         <DataTemplate x:Key="PinnedRelease"
-                      x:DataType="artist1:ArtistOverviewPinnedItem">
+                      x:DataType="artist:ArtistOverviewPinnedItem">
             <Grid />
         </DataTemplate>
         <DataTemplate x:Key="PreRelease"
-                      x:DataType="artist1:IArtistPreReleaseItem">
+                      x:DataType="artist:IArtistPreReleaseItem">
             <local:SpotifyPreReleaseControl Images="{x:Bind Images}"
                                             Title="{x:Bind Name}"
                                             ReleaseDate="{x:Bind ReleaseDate}" />
         </DataTemplate>
-        <winUi:ArtistSpecialTemplateSelector PinnedConcertTemplate="{StaticResource PinnedConcert}"
+        <templateSelectors:ArtistSpecialTemplateSelector PinnedConcertTemplate="{StaticResource PinnedConcert}"
                                              PinnedReleaseTemplate="{StaticResource PinnedRelease}"
                                              PreReleaseTemplate="{StaticResource PreRelease}"
                                              x:Key="ArtistSpecialTemplateSelector" />
@@ -56,7 +55,7 @@
                   ChoosingItemContainer="TopTracksChoosingItemContainer"
                   ItemsSource="{x:Bind ArtistView.TopTracks}">
             <ListView.ItemTemplate>
-                <DataTemplate x:DataType="artist:ArtistTopTrackViewModel">
+                <DataTemplate x:DataType="artistItems:ArtistTopTrackViewModel">
                     <tracks:TopTrackView Number="{x:Bind Index}"
                                          Id="{x:Bind Id}"
                                          Images="{x:Bind AlbumImages}"
@@ -88,7 +87,7 @@
                        HorizontalAlignment="Left"
                        ItemsSource="{x:Bind ArtistView.DiscographyPages}">
             <ItemsRepeater.ItemTemplate>
-                <DataTemplate x:DataType="artist:PagedArtistDiscographyPage">
+                <DataTemplate x:DataType="artistItems:PagedArtistDiscographyPage">
                     <Grid VerticalAlignment="Top"
                           HorizontalAlignment="Left">
                         <RelativePanel x:Name="MetadataPanel"
@@ -116,14 +115,14 @@
                                 <labs:SegmentedItem>
                                     <labs:SegmentedItem.Icon>
                                         <FontIcon FontFamily="{StaticResource SegoeFluent}"
-                                                  Glyph="&#xF2C7;" />
+                                                  Glyph="&#xE8FD;" />
                                     </labs:SegmentedItem.Icon>
                                 </labs:SegmentedItem>
                             </labs:Segmented>
                         </RelativePanel>
 
                         <discography:DiscographyPageView x:Name="DiscographyPageView"
-                                                         Margin="0,38"
+                                                         Margin="0,48,0,24"
                                                          VerticalContentAlignment="Top"
                                                          HorizontalAlignment="Left"
                                                          GetReleasesFunc="{x:Bind  GetReleasesFunc}"

@@ -2,7 +2,6 @@
 using System.Threading.Channels;
 using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
-using LibVLCSharp.Shared;
 using ReactiveUI;
 using Serilog;
 using Wavee.Player.Command;
@@ -162,8 +161,8 @@ internal sealed class PlayerInternal
         (WaveeTrack Track, IAudioDecoder Decoder) : IDisposable
     {
         private TimeSpan _crossfadeDuration = TimeSpan.Zero;
-        private bool _crossfadingOut = false;
-        private bool _crossfadingIn = false;
+        // private bool _crossfadingOut = false;
+        // private bool _crossfadingIn = false;
 
         public void Dispose()
         {
@@ -179,11 +178,8 @@ internal sealed class PlayerInternal
     // private readonly IWavePlayer _wavePlayer;
     // private readonly WaveFormat waveFormat;
     // private readonly BufferedWaveProvider _bufferedWaveProvider;
-    private readonly LibVLC _libVlc;
-
     public PlayerInternal()
     {
-        _libVlc = new LibVLC();
         // const int sampleRate = 44100;
         // const int channels = 2;
         // _wavePlayer = new WaveOutEvent();
@@ -258,6 +254,7 @@ internal sealed class PlayerInternal
                 finally
                 {
                     _streamLock.Release();
+                    decoder.Dispose();
                 }
             });
         }
@@ -316,7 +313,10 @@ internal sealed class PlayerInternal
 
         var trackEndedSubscription = decoder.TrackEnded
             .ObserveOn(RxApp.TaskpoolScheduler)
-            .Subscribe(x => { endOfTrackTask.TrySetResult(Unit.Default); });
+            .Subscribe(x =>
+            {
+                endOfTrackTask.TrySetResult(Unit.Default);
+            });
         await endOfTrackTask.Task;
 
         timeSubscriptionToMainTrack.Dispose();

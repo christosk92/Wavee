@@ -7,7 +7,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:components="using:Wavee.UI.WinUI.Components"
              xmlns:common="using:Wavee.UI.Common"
-             xmlns:panels="using:Wavee.UI.WinUI.Panels"
+             xmlns:panels="using:Wavee.UI.WinUI.UI.Panels"
              VerticalAlignment="Top"
              VerticalContentAlignment="Top"
              mc:Ignorable="d">

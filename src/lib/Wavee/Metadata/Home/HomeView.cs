@@ -38,7 +38,7 @@ public sealed class SpotifyPodcastEpisodeHomeItem : ISpotifyHomeItem
     public TimeSpan Duration { get; set; }
     public TimeSpan Position { get; set; }
     public bool Started { get; set; }
-    public string PodcastName { get; set; }
+    public string? PodcastName { get; set; }
     public required DateTimeOffset ReleaseDate { get; set; }
 }
 

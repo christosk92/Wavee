@@ -2,13 +2,11 @@
 using System.Net.Sockets;
 using System.Numerics;
 using System.Security.Cryptography;
-using CommunityToolkit.HighPerformance;
 using Eum.Spotify;
 using Google.Protobuf;
-using Org.BouncyCastle.Math;
+using Wavee.Infrastructure.Connection;
 using Wavee.Spotify;
 using Wavee.Spotify.Infrastructure.Handshake;
-using BigInteger = Org.BouncyCastle.Math.BigInteger;
 
 namespace Wavee.Infrastructure.Handshake;
 
@@ -32,7 +30,7 @@ internal static class Handshake
     /// </exception>
     public static SpotifyEncryptionKeys PerformHandshake(NetworkStream stream)
     {
-        var keys = new DiffieHellman();
+        var keys = DhLocalKeys.Random();
         var clientHello = BuildClientHello(keys);
         stream.Write(clientHello);
 
@@ -44,9 +42,9 @@ internal static class Handshake
         var apResponse = APResponseMessage.Parser.ParseFrom(payload);
 
         // Prevent man-in-the-middle attacks: check server signature
-        var n = new BigInteger(1, SpotifyConstants.SERVER_KEY)
-            .ToByteArrayUnsigned();
-        var e = BigInteger.ValueOf(65537).ToByteArrayUnsigned();
+        var n = new BigInteger(SpotifyConstants.SERVER_KEY, true, true)
+            .ToByteArray(true, true);
+        var e = new BigInteger(65537).ToByteArray(true, true);
 
 
         using var rsa = new RSACryptoServiceProvider();
@@ -73,12 +71,11 @@ internal static class Handshake
         }
 
         var shared_secret = keys
-            .ComputeSharedKey(apResponse
+            .SharedSecret(apResponse
                 .Challenge
                 .LoginCryptoChallenge
                 .DiffieHellman
-                .Gs.ToByteArray())
-            .ToByteArrayUnsigned();
+                .Gs.Span);
         //the accumulator is a collection of:
         //1) full client hello packet
         //2) apresponse header
@@ -87,7 +84,6 @@ internal static class Handshake
             clientHello,
             header,
             payload);
-
 
         ReadOnlySpan<byte> packet = new ClientResponsePlaintext
         {
@@ -153,13 +149,12 @@ internal static class Handshake
             challenge);
     }
 
-    private static ReadOnlySpan<byte> BuildClientHello(DiffieHellman keys)
+    private static ReadOnlySpan<byte> BuildClientHello(DhLocalKeys keys)
     {
         Span<byte> nonce = stackalloc byte[0x10];
-        // nonce.FillRandomBytes();
         RandomNumberGenerator.Fill(nonce);
 
-        var payload = NewClientHello(keys.PublicKeyArray(), nonce);
+        var payload = NewClientHello(keys.PublicKey, nonce);
 
         //Reduce number of copy operations by writing the header and payload in one go
         Span<byte> totalPacket = new byte[2 + sizeof(uint) + payload.Length];
@@ -172,7 +167,7 @@ internal static class Handshake
         return totalPacket;
     }
 
-    private static ReadOnlySpan<byte> NewClientHello(byte[] publicKey,
+    private static ReadOnlySpan<byte> NewClientHello(BigInteger publicKey,
         ReadOnlySpan<byte> nonce)
     {
         var productFlag = ProductFlags.ProductFlagNone;
@@ -197,7 +192,7 @@ internal static class Handshake
                 {
                     DiffieHellman = new LoginCryptoDiffieHellmanHello
                     {
-                        Gc = ByteString.CopyFrom(publicKey),
+                        Gc = ByteString.CopyFrom(publicKey.ToByteArray(true, true)),
                         ServerKeysKnown = 1
                     }
                 },
@@ -205,6 +200,7 @@ internal static class Handshake
             }
             .ToByteArray();
     }
+
 
     public readonly struct SpotifyAuthenticationKeys
     {

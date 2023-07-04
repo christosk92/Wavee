@@ -10,14 +10,14 @@ using Windows.Foundation;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 
-namespace Wavee.UI.WinUI.Panels.Flow
+namespace Wavee.UI.WinUI.UI.Panels.Flow
 {
     internal class ElementManager
     {
-        private readonly List<UIElement?> _realizedElements = new List<UIElement?>();
+        private readonly List<UIElement> _realizedElements = new List<UIElement>();
         private readonly List<Rect> _realizedElementLayoutBounds = new List<Rect>();
         private int _firstRealizedDataIndex;
-        private VirtualizingLayoutContext? _context;
+        private VirtualizingLayoutContext _context;
 
         private bool IsVirtualizingContext
         {
@@ -73,7 +73,7 @@ namespace Wavee.UI.WinUI.Panels.Flow
 
         public UIElement GetAt(int realizedIndex)
         {
-            UIElement? element;
+            UIElement element;
 
             if (IsVirtualizingContext)
             {
@@ -112,7 +112,7 @@ namespace Wavee.UI.WinUI.Panels.Flow
             _realizedElementLayoutBounds.Add(default);
         }
 
-        public void Insert(int realizedIndex, int dataIndex, UIElement? element)
+        public void Insert(int realizedIndex, int dataIndex, UIElement element)
         {
             if (realizedIndex == 0)
             {
@@ -131,7 +131,7 @@ namespace Wavee.UI.WinUI.Panels.Flow
             {
                 // Clear from the edges so that ItemsRepeater can optimize on maintaining
                 // realized indices without walking through all the children every time.
-                int index = realizedIndex == 0 ? realizedIndex + i : (realizedIndex + count - 1) - i;
+                int index = realizedIndex == 0 ? realizedIndex + i : realizedIndex + count - 1 - i;
                 var elementRef = _realizedElements[index];
 
                 if (elementRef != null)
@@ -209,7 +209,7 @@ namespace Wavee.UI.WinUI.Panels.Flow
 
         public bool IsIndexValidInData(int currentIndex) => (uint)currentIndex < _context!.ItemCount;
 
-        public UIElement? GetRealizedElement(int dataIndex)
+        public UIElement GetRealizedElement(int dataIndex)
         {
             return IsVirtualizingContext ?
                 GetAt(GetRealizedRangeIndexFromDataIndex(dataIndex)) :
@@ -218,7 +218,7 @@ namespace Wavee.UI.WinUI.Panels.Flow
                     ElementRealizationOptions.ForceCreate | ElementRealizationOptions.SuppressAutoRecycle);
         }
 
-        public void EnsureElementRealized(bool forward, int dataIndex, string? layoutId)
+        public void EnsureElementRealized(bool forward, int dataIndex, string layoutId)
         {
             if (IsDataIndexRealized(dataIndex) == false)
             {
@@ -249,7 +249,7 @@ namespace Wavee.UI.WinUI.Panels.Flow
                 var lastElementBounds = GetLayoutBoundsForRealizedIndex(GetRealizedElementCount() - 1);
 
                 var effectiveOrientation = scrollOrientationSameAsFlow ?
-                    (orientation == ScrollOrientation.Vertical ? ScrollOrientation.Horizontal : ScrollOrientation.Vertical) :
+                    orientation == ScrollOrientation.Vertical ? ScrollOrientation.Horizontal : ScrollOrientation.Vertical :
                     orientation;
 
                 var windowStart = effectiveOrientation == ScrollOrientation.Vertical ? window.Y : window.X;
@@ -265,7 +265,7 @@ namespace Wavee.UI.WinUI.Panels.Flow
             return intersects;
         }
 
-        public void DataSourceChanged(object? source, NotifyCollectionChangedEventArgs args)
+        public void DataSourceChanged(object source, NotifyCollectionChangedEventArgs args)
         {
             if (_realizedElements.Count > 0)
             {
@@ -448,7 +448,7 @@ namespace Wavee.UI.WinUI.Panels.Flow
             int lastRealizedDataIndex = _firstRealizedDataIndex + _realizedElements.Count - 1;
             int startIndex = Math.Max(_firstRealizedDataIndex, index);
             int endIndex = Math.Min(lastRealizedDataIndex, index + count - 1);
-            bool removeAffectsFirstRealizedDataIndex = (index <= _firstRealizedDataIndex);
+            bool removeAffectsFirstRealizedDataIndex = index <= _firstRealizedDataIndex;
 
             if (endIndex >= startIndex)
             {

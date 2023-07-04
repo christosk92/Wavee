@@ -6,6 +6,8 @@
         <Nullable>enable</Nullable>
         <LangVersion>preview</LangVersion>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+        <WarningLevel>3</WarningLevel>
     </PropertyGroup>
     <ItemGroup>
         <ProjectReference Include="..\Wavee.Player\Wavee.Player.csproj" />

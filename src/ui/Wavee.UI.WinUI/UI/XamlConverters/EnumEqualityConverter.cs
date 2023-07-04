@@ -1,7 +1,7 @@
 ﻿using System;
 using Microsoft.UI.Xaml.Data;
 
-namespace Wavee.UI.WinUI.XamlConverters;
+namespace Wavee.UI.WinUI.UI.XamlConverters;
 
 internal sealed class EnumEqualityConverter : IValueConverter
 {

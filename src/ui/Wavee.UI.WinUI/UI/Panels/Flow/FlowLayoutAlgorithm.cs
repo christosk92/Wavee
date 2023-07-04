@@ -12,7 +12,7 @@ using Rect = Windows.Foundation.Rect;
 using Size = Windows.Foundation.Size;
 using UIElement = Microsoft.UI.Xaml.UIElement;
 
-namespace Wavee.UI.WinUI.Panels.Flow
+namespace Wavee.UI.WinUI.UI.Panels.Flow
 {
     internal class FlowLayoutAlgorithm
     {
@@ -21,8 +21,8 @@ namespace Wavee.UI.WinUI.Panels.Flow
         private Size _lastAvailableSize;
         private double _lastItemSpacing;
         private bool _collectionChangePending;
-        private VirtualizingLayoutContext? _context;
-        private IFlowLayoutAlgorithmDelegates? _algorithmCallbacks;
+        private VirtualizingLayoutContext _context;
+        private IFlowLayoutAlgorithmDelegates _algorithmCallbacks;
         private Rect _lastExtent;
         private int _firstRealizedDataIndexInsideRealizationWindow = -1;
         private int _lastRealizedDataIndexInsideRealizationWindow = -1;
@@ -81,7 +81,7 @@ namespace Wavee.UI.WinUI.Panels.Flow
             int maxItemsPerLine,
             ScrollOrientation orientation,
             bool disableVirtualization,
-            string? layoutId)
+            string layoutId)
         {
             _orientation.ScrollOrientation = orientation;
 
@@ -134,7 +134,7 @@ namespace Wavee.UI.WinUI.Panels.Flow
             VirtualizingLayoutContext context,
             bool isWrapping,
             LineAlignment lineAlignment,
-            string? layoutId)
+            string layoutId)
         {
             ArrangeVirtualizingLayout(finalSize, lineAlignment, isWrapping, layoutId);
 
@@ -144,7 +144,7 @@ namespace Wavee.UI.WinUI.Panels.Flow
         }
 
         public void OnItemsSourceChanged(
-            object? source,
+            object source,
             NotifyCollectionChangedEventArgs args,
             VirtualizingLayoutContext context)
         {
@@ -170,7 +170,7 @@ namespace Wavee.UI.WinUI.Panels.Flow
             Size availableSize,
             bool isWrapping,
             double minItemSpacing,
-            string? layoutId)
+            string layoutId)
         {
             int anchorIndex = -1;
             var anchorPosition = new Point();
@@ -292,11 +292,11 @@ namespace Wavee.UI.WinUI.Panels.Flow
             double lineSpacing,
             int maxItemsPerLine,
             bool disableVirtualization,
-            string? layoutId)
+            string layoutId)
         {
             if (anchorIndex != -1)
             {
-                int step = (direction == GenerateDirection.Forward) ? 1 : -1;
+                int step = direction == GenerateDirection.Forward ? 1 : -1;
 
 
                 int previousIndex = anchorIndex;
@@ -487,18 +487,18 @@ namespace Wavee.UI.WinUI.Panels.Flow
                 // Ensure that both minor and major directions are taken into consideration so that if the scrolling direction
                 // is the same as the flow direction we still stop at the end of the viewport rectangle.
                 shouldContinue =
-                    (direction == GenerateDirection.Forward && elementMajorStart < rectMajorEnd && elementMinorStart < rectMinorEnd) ||
-                    (direction == GenerateDirection.Backward && elementMajorEnd > rectMajorStart && elementMinorEnd > rectMinorStart);
+                    direction == GenerateDirection.Forward && elementMajorStart < rectMajorEnd && elementMinorStart < rectMinorEnd ||
+                    direction == GenerateDirection.Backward && elementMajorEnd > rectMajorStart && elementMinorEnd > rectMinorStart;
             }
 
             return shouldContinue;
         }
 
-        private Rect EstimateExtent(Size availableSize, string? layoutId)
+        private Rect EstimateExtent(Size availableSize, string layoutId)
         {
-            UIElement? firstRealizedElement = null;
+            UIElement firstRealizedElement = null;
             Rect firstBounds = new Rect();
-            UIElement? lastRealizedElement = null;
+            UIElement lastRealizedElement = null;
             Rect lastBounds = new Rect();
             int firstDataIndex = -1;
             int lastDataIndex = -1;
@@ -567,7 +567,7 @@ namespace Wavee.UI.WinUI.Panels.Flow
             Size finalSize,
             LineAlignment lineAlignment,
             bool isWrapping,
-            string? layoutId)
+            string layoutId)
         {
             // Walk through the realized elements one line at a time and 
             // align them, Then call element.Arrange with the arranged bounds.
@@ -619,7 +619,7 @@ namespace Wavee.UI.WinUI.Panels.Flow
             LineAlignment lineAlignment,
             bool isWrapping,
             Size finalSize,
-            string? layoutId)
+            string layoutId)
         {
             for (int rangeIndex = lineStartIndex; rangeIndex < lineStartIndex + countInLine; ++rangeIndex)
             {
@@ -649,7 +649,7 @@ namespace Wavee.UI.WinUI.Panels.Flow
 
                             case LineAlignment.Center:
                                 {
-                                    _orientation.SetMinorStart(ref bounds, (minorStart - spaceAtLineStart) + (totalSpace / 2));
+                                    _orientation.SetMinorStart(ref bounds, minorStart - spaceAtLineStart + totalSpace / 2);
                                     break;
                                 }
 
@@ -658,7 +658,7 @@ namespace Wavee.UI.WinUI.Panels.Flow
                                     var interItemSpace = countInLine >= 1 ? totalSpace / (countInLine * 2) : 0;
                                     _orientation.SetMinorStart(
                                         ref bounds,
-                                        (minorStart - spaceAtLineStart) + (interItemSpace * ((rangeIndex - lineStartIndex + 1) * 2 - 1)));
+                                        minorStart - spaceAtLineStart + interItemSpace * ((rangeIndex - lineStartIndex + 1) * 2 - 1));
                                     break;
                                 }
 
@@ -667,7 +667,7 @@ namespace Wavee.UI.WinUI.Panels.Flow
                                     var interItemSpace = countInLine > 1 ? totalSpace / (countInLine - 1) : 0;
                                     _orientation.SetMinorStart(
                                         ref bounds,
-                                        (minorStart - spaceAtLineStart) + (interItemSpace * (rangeIndex - lineStartIndex)));
+                                        minorStart - spaceAtLineStart + interItemSpace * (rangeIndex - lineStartIndex));
                                     break;
                                 }
 
@@ -676,7 +676,7 @@ namespace Wavee.UI.WinUI.Panels.Flow
                                     var interItemSpace = countInLine >= 1 ? totalSpace / (countInLine + 1) : 0;
                                     _orientation.SetMinorStart(
                                         ref bounds,
-                                        (minorStart - spaceAtLineStart) + (interItemSpace * (rangeIndex - lineStartIndex + 1)));
+                                        minorStart - spaceAtLineStart + interItemSpace * (rangeIndex - lineStartIndex + 1));
                                     break;
                                 }
                         }
@@ -706,7 +706,7 @@ namespace Wavee.UI.WinUI.Panels.Flow
             }
         }
 
-        public UIElement? GetElementIfRealized(int dataIndex)
+        public UIElement GetElementIfRealized(int dataIndex)
         {
             if (_elementManager.IsDataIndexRealized(dataIndex))
             {

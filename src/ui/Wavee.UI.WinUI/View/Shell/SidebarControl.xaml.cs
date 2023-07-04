@@ -13,7 +13,6 @@ using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Input;
 using Wavee.UI.User;
 using Wavee.UI.ViewModel.Shell.Sidebar;
-using Wavee.UI.WinUI.Helpers;
 using Windows.System;
 using Windows.UI.Core;
 using CommunityToolkit.WinUI.UI.Controls;
@@ -26,6 +25,7 @@ using Microsoft.VisualBasic.ApplicationServices;
 using ReactiveUI;
 using Wavee.UI.Client.Playback;
 using Wavee.UI.ViewModel.Shell;
+using Wavee.UI.WinUI.Extensions;
 
 namespace Wavee.UI.WinUI.View.Shell;
 

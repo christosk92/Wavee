@@ -8,7 +8,7 @@ namespace Wavee.Time.Live;
 
 internal sealed class SpotifyTimeProvider : ITimeProvider, IDisposable
 {
-    private readonly Timer _timer;
+    private readonly Timer? _timer;
     private readonly TimeSyncMethod _timeSyncMethod;
     private int _measuredOffset;
     private readonly Func<CancellationToken, ValueTask<string>> _tokenFactory;
@@ -30,7 +30,7 @@ internal sealed class SpotifyTimeProvider : ITimeProvider, IDisposable
     public long CurrentTimeMilliseconds => DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() + _measuredOffset;
     public int Offset => _measuredOffset;
 
-    private async void OnTimer(object state)
+    private async void OnTimer(object? state)
     {
         switch (_timeSyncMethod)
         {
@@ -69,7 +69,7 @@ internal sealed class SpotifyTimeProvider : ITimeProvider, IDisposable
         {
             Log.Error(e, "Failed notifying server of time request. Retrying in 10 seconds");
             //change timer to 10 seconds
-            _timer.Change(TimeSpan.FromSeconds(10), TimeSpan.FromMinutes(1));
+            _timer?.Change(TimeSpan.FromSeconds(10), TimeSpan.FromMinutes(1));
             return;
         }
 
@@ -93,24 +93,24 @@ internal sealed class SpotifyTimeProvider : ITimeProvider, IDisposable
             deserializationTime.Stop();
             responseSw.Stop();
             minusSomething += (int)deserializationTime.ElapsedMilliseconds;
-            var diff = serverTime - now - minusSomething + responseSw.ElapsedMilliseconds;
+            var diff = serverTime - now - minusSomething ;
             _measuredOffset = (int)diff;
 
             Log.Information(
-                "Measured offset: {Offset}ms. Respone took {resposneMs} while {Time}ms to get token and {DeserializationTime}ms to deserialize",
-                responseSw.Elapsed, diff, minusSomething, deserializationTime.ElapsedMilliseconds);
-            _timer.Change(TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(1));
+                "Measured offset: {Offset}ms. OFfsets: {Time}ms to get token and {DeserializationTime}ms to deserialize", 
+                diff, minusSomething, deserializationTime.ElapsedMilliseconds);
+            _timer?.Change(TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(1));
         }
         catch (Exception e)
         {
             Log.Error(e, "Failed getting time from server. Retrying in 10 seconds");
             //change timer to 10 seconds
-            _timer.Change(TimeSpan.FromSeconds(10), TimeSpan.FromMinutes(1));
+            _timer?.Change(TimeSpan.FromSeconds(10), TimeSpan.FromMinutes(1));
             return;
         }
     }
 
-    private async Task UpdateWithNtp()
+    private Task UpdateWithNtp()
     {
         throw new NotImplementedException();
     }

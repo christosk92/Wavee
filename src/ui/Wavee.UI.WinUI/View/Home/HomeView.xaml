@@ -5,14 +5,13 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:labs="using:CommunityToolkit.Labs.WinUI"
-             xmlns:home="using:Wavee.Metadata.Home"
-             xmlns:home1="using:Wavee.UI.ViewModel.Home"
-             xmlns:xamlConverters="using:Wavee.UI.WinUI.XamlConverters"
              xmlns:common="using:Wavee.UI.Common"
-             xmlns:controls="using:CommunityToolkit.WinUI.UI.Controls"
-             xmlns:panels="using:Wavee.UI.WinUI.Panels"
              xmlns:components="using:Wavee.UI.WinUI.Components"
-             xmlns:templateSelectors="using:Wavee.UI.WinUI.TemplateSelectors"
+             xmlns:templateSelectors="using:Wavee.UI.WinUI.UI.TemplateSelectors"
+             xmlns:xamlConverters="using:Wavee.UI.WinUI.UI.XamlConverters"
+             xmlns:home="using:Wavee.UI.ViewModel.Home"
+             xmlns:controls="using:CommunityToolkit.WinUI.UI.Controls"
+             xmlns:panels="using:Wavee.UI.WinUI.UI.Panels"
              mc:Ignorable="d">
     <UserControl.Transitions>
         <TransitionCollection>
@@ -83,7 +82,7 @@
                 <ItemsRepeater     VerticalAlignment="Top"
                                    ItemsSource="{x:Bind ViewModel.Sections, Mode=OneWay}">
                     <ItemsRepeater.ItemTemplate>
-                        <DataTemplate x:DataType="home1:HomeGroupSectionViewModel">
+                        <DataTemplate x:DataType="home:HomeGroupSectionViewModel">
                             <StackPanel VerticalAlignment="Top">
                                 <TextBlock Style="{ThemeResource SubtitleTextBlockStyle}"
                                            Margin="0,0,0,12"
@@ -185,7 +184,7 @@
             <ItemsRepeater x:Name="ShimmerFakeItems"
                            ItemsSource="{x:Bind ViewModel.ShimmerItems}">
                 <ItemsRepeater.ItemTemplate>
-                    <DataTemplate x:DataType="home1:ShimmerGroup">
+                    <DataTemplate x:DataType="home:ShimmerGroup">
                         <Grid>
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
@@ -205,7 +204,7 @@
                                     <panels:HorizontalAdaptiveLayout DesiredWidth="220" />
                                 </ItemsRepeater.Layout>
                                 <ItemsRepeater.ItemTemplate>
-                                    <DataTemplate x:DataType="home1:ShimmerItem">
+                                    <DataTemplate x:DataType="home:ShimmerItem">
                                         <Grid Width="200">
                                             <Grid.RowDefinitions>
                                                 <RowDefinition Height="180" />

@@ -5,7 +5,7 @@
 
 using Windows.Foundation;
 
-namespace Wavee.UI.WinUI.Panels.Flow
+namespace Wavee.UI.WinUI.UI.Panels.Flow
 {
     internal enum ScrollOrientation
     {

@@ -74,7 +74,7 @@ internal static class MercuryParsers
                 done = true;
                 return await completionTask;
             }
-            catch (OperationCanceledException canceled)
+            catch (OperationCanceledException)
             {
                 if (cancellationToken.IsCancellationRequested)
                 {
@@ -112,7 +112,7 @@ internal static class MercuryParsers
         }
     }
 
-    private static void SendInternal(Guid connectionId, ulong seq, string uri, MercuryMethod method, string contentType)
+    private static void SendInternal(Guid connectionId, ulong seq, string uri, MercuryMethod method, string? contentType)
     {
         var toSend = MercuryRequests.Build(
             seq,

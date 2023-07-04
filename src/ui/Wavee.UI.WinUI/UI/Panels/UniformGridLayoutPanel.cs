@@ -5,9 +5,9 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Windows.Foundation;
 using Microsoft.UI.Xaml;
-using Wavee.UI.WinUI.Panels.Flow;
+using Wavee.UI.WinUI.UI.Panels.Flow;
 
-namespace Wavee.UI.WinUI.Panels;
+namespace Wavee.UI.WinUI.UI.Panels;
 
 /// <summary>
 /// Defines constants that specify how items are aligned on the non-scrolling or non-virtualizing axis.
@@ -82,7 +82,7 @@ public class UniformGridLayoutPanel : VirtualizingLayout, IFlowLayoutAlgorithmDe
     public static readonly DependencyProperty MinRowSpacingProperty = DependencyProperty.Register(nameof(MinRowSpacing), typeof(double), typeof(UniformGridLayoutPanel), new PropertyMetadata(default(double), PropertyChangedCallback));
     public static readonly DependencyProperty ItemsJustificationProperty = DependencyProperty.Register(nameof(ItemsJustification), typeof(UniformGridLayoutItemsJustification), typeof(UniformGridLayoutPanel), new PropertyMetadata(default(UniformGridLayoutItemsJustification), PropertyChangedCallback));
     public static readonly DependencyProperty MinColumnSpacingProperty = DependencyProperty.Register(nameof(MinColumnSpacing), typeof(double), typeof(UniformGridLayoutPanel), new PropertyMetadata(default(double), PropertyChangedCallback));
-    public static readonly DependencyProperty OrientationProperty = DependencyProperty.Register(nameof(Orientation), typeof(Orientation), typeof(UniformGridLayoutPanel), new PropertyMetadata(Microsoft.UI.Xaml.Controls.Orientation.Horizontal, PropertyChangedCallback));
+    public static readonly DependencyProperty OrientationProperty = DependencyProperty.Register(nameof(Orientation), typeof(Orientation), typeof(UniformGridLayoutPanel), new PropertyMetadata(Orientation.Horizontal, PropertyChangedCallback));
 
     private readonly OrientationBasedMeasures _orientation = new OrientationBasedMeasures();
     public static readonly DependencyProperty MaximumRowsOrColumnnsProperty = DependencyProperty.Register(nameof(MaximumRowsOrColumnns), typeof(int), typeof(UniformGridLayoutPanel), new PropertyMetadata(int.MaxValue, PropertyChangedCallback));
@@ -95,7 +95,7 @@ public class UniformGridLayoutPanel : VirtualizingLayout, IFlowLayoutAlgorithmDe
         if (e.Property == OrientationProperty)
         {
             var orientation = (Orientation)e.NewValue;
-            var scrollOrientation = (orientation == Orientation.Horizontal) ? ScrollOrientation.Vertical : ScrollOrientation.Horizontal;
+            var scrollOrientation = orientation == Orientation.Horizontal ? ScrollOrientation.Vertical : ScrollOrientation.Horizontal;
             c._orientation.ScrollOrientation = scrollOrientation;
         }
 
@@ -110,7 +110,7 @@ public class UniformGridLayoutPanel : VirtualizingLayout, IFlowLayoutAlgorithmDe
     {
         LayoutId = "UniformGridLayout";
     }
-    public string? LayoutId { get; set; }
+    public string LayoutId { get; set; }
 
     public double MinItemWidth
     {
@@ -197,9 +197,9 @@ public class UniformGridLayoutPanel : VirtualizingLayout, IFlowLayoutAlgorithmDe
             var itemsPerLine = Math.Min( // note use of unsigned ints
                 Math.Max(1u, (uint)(_orientation.Minor(availableSize) / GetMinorSizeWithSpacing(context))),
                 Math.Max(1u, (uint)MaximumRowsOrColumnns));
-            var majorSize = (itemsCount / itemsPerLine) * GetMajorSizeWithSpacing(context);
+            var majorSize = itemsCount / itemsPerLine * GetMajorSizeWithSpacing(context);
             var realizationWindowStartWithinExtent = _orientation.MajorStart(realizationRect) - _orientation.MajorStart(lastExtent);
-            if ((realizationWindowStartWithinExtent + _orientation.MajorSize(realizationRect)) >= 0 && realizationWindowStartWithinExtent <= majorSize)
+            if (realizationWindowStartWithinExtent + _orientation.MajorSize(realizationRect) >= 0 && realizationWindowStartWithinExtent <= majorSize)
             {
                 double offset = Math.Max(0.0, _orientation.MajorStart(realizationRect) - _orientation.MajorStart(lastExtent));
                 int anchorRowIndex = (int)(offset / GetMajorSizeWithSpacing(context));
@@ -229,7 +229,7 @@ public class UniformGridLayoutPanel : VirtualizingLayout, IFlowLayoutAlgorithmDe
             int itemsPerLine = (int)Math.Min( // note use of unsigned ints
                 Math.Max(1u, (uint)(_orientation.Minor(availableSize) / GetMinorSizeWithSpacing(context))),
                 Math.Max(1u, MaximumRowsOrColumnns));
-            int indexOfFirstInLine = (targetIndex / itemsPerLine) * itemsPerLine;
+            int indexOfFirstInLine = targetIndex / itemsPerLine * itemsPerLine;
             index = indexOfFirstInLine;
             var state = (UniformGridLayoutState)context.LayoutState!;
             offset = _orientation.MajorStart(GetLayoutRectForDataIndex(availableSize, indexOfFirstInLine, state.FlowAlgorithm.LastExtent, context));
@@ -245,10 +245,10 @@ public class UniformGridLayoutPanel : VirtualizingLayout, IFlowLayoutAlgorithmDe
     Rect IFlowLayoutAlgorithmDelegates.Algorithm_GetExtent(
         Size availableSize,
         VirtualizingLayoutContext context,
-        UIElement? firstRealized,
+        UIElement firstRealized,
         int firstRealizedItemIndex,
         Rect firstRealizedLayoutBounds,
-        UIElement? lastRealized,
+        UIElement lastRealized,
         int lastRealizedItemIndex,
         Rect lastRealizedLayoutBounds)
     {
@@ -275,17 +275,17 @@ public class UniformGridLayoutPanel : VirtualizingLayout, IFlowLayoutAlgorithmDe
                 Math.Max(0.0, itemsPerLine * GetMinorSizeWithSpacing(context) - (double)MinColumnSpacing));
             _orientation.SetMajorSize(
                 ref extent,
-                Math.Max(0.0, (itemsCount / itemsPerLine) * lineSize - (double)MinRowSpacing));
+                Math.Max(0.0, itemsCount / itemsPerLine * lineSize - (double)MinRowSpacing));
 
             if (firstRealized != null)
             {
                 _orientation.SetMajorStart(
                     ref extent,
-                    _orientation.MajorStart(firstRealizedLayoutBounds) - (firstRealizedItemIndex / itemsPerLine) * lineSize);
+                    _orientation.MajorStart(firstRealizedLayoutBounds) - firstRealizedItemIndex / itemsPerLine * lineSize);
                 int remainingItems = itemsCount - lastRealizedItemIndex - 1;
                 _orientation.SetMajorSize(
                     ref extent,
-                    _orientation.MajorEnd(lastRealizedLayoutBounds) - _orientation.MajorStart(extent) + (remainingItems / itemsPerLine) * lineSize);
+                    _orientation.MajorEnd(lastRealizedLayoutBounds) - _orientation.MajorStart(extent) + remainingItems / itemsPerLine * lineSize);
             }
             else
             {
@@ -389,7 +389,7 @@ public class UniformGridLayoutPanel : VirtualizingLayout, IFlowLayoutAlgorithmDe
     }
 
 
-    protected override void OnItemsChangedCore(VirtualizingLayoutContext context, object? source, NotifyCollectionChangedEventArgs args)
+    protected override void OnItemsChangedCore(VirtualizingLayoutContext context, object source, NotifyCollectionChangedEventArgs args)
     {
         GetFlowAlgorithm(context).OnItemsSourceChanged(source, args, context);
         // Always invalidate layout to keep the view accurate.
@@ -427,8 +427,8 @@ public class UniformGridLayoutPanel : VirtualizingLayout, IFlowLayoutAlgorithmDe
         int itemsPerLine = (int)Math.Min( //note use of unsigned ints
             Math.Max(1u, (uint)(_orientation.Minor(availableSize) / GetMinorSizeWithSpacing(context))),
             Math.Max(1u, MaximumRowsOrColumnns));
-        int rowIndex = (int)(index / itemsPerLine);
-        int indexInRow = index - (rowIndex * itemsPerLine);
+        int rowIndex = index / itemsPerLine;
+        int indexInRow = index - rowIndex * itemsPerLine;
 
         var gridState = (UniformGridLayoutState)context.LayoutState!;
         Rect bounds = _orientation.MinorMajorRect(
@@ -456,7 +456,7 @@ public class UniformGridLayoutState
     // If it does not, then we need to do context.GetElement(0) at which point we have requested an element and are on point to clear it.
     // If we are responsible for clearing element 0 we keep m_cachedFirstElement valid. 
     // If we are not (because FlowLayoutAlgorithm is holding it for us) then we just null out this field and use the one from FlowLayoutAlgorithm.
-    private UIElement? _cachedFirstElement;
+    private UIElement _cachedFirstElement;
 
     internal FlowLayoutAlgorithm FlowAlgorithm { get; } = new FlowLayoutAlgorithm();
     internal double EffectiveItemWidth { get; private set; }
@@ -545,8 +545,8 @@ public class UniformGridLayoutState
             maxItemsPerLine = 1;
         }
 
-        EffectiveItemWidth = (double.IsNaN(layoutItemWidth) ? element.DesiredSize.Width : layoutItemWidth);
-        EffectiveItemHeight = (double.IsNaN(layoutItemHeight) ? element.DesiredSize.Height : layoutItemHeight);
+        EffectiveItemWidth = double.IsNaN(layoutItemWidth) ? element.DesiredSize.Width : layoutItemWidth;
+        EffectiveItemHeight = double.IsNaN(layoutItemHeight) ? element.DesiredSize.Height : layoutItemHeight;
 
         var availableSizeMinor = orientation == Orientation.Horizontal ? availableSize.Width : availableSize.Height;
         var minorItemSpacing = orientation == Orientation.Vertical ? minRowSpacing : minColumnSpacing;
@@ -559,7 +559,7 @@ public class UniformGridLayoutState
             var numItemsPerColumn = (int)Math.Min(
                 maxItemsPerLine,
                 Math.Max(1.0, availableSizeMinor / (itemSizeMinor + minorItemSpacing)));
-            var usedSpace = (numItemsPerColumn * (itemSizeMinor + minorItemSpacing)) - minorItemSpacing;
+            var usedSpace = numItemsPerColumn * (itemSizeMinor + minorItemSpacing) - minorItemSpacing;
             var remainingSpace = availableSizeMinor - usedSpace;
             extraMinorPixelsForEachItem = (int)(remainingSpace / numItemsPerColumn);
         }

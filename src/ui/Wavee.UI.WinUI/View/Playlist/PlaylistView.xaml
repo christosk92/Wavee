@@ -7,22 +7,48 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:playlist="using:Wavee.UI.ViewModel.Playlist"
              xmlns:labs="using:CommunityToolkit.Labs.WinUI"
-             xmlns:winUi="using:Wavee.UI.WinUI"
              xmlns:headers="using:Wavee.UI.ViewModel.Playlist.Headers"
              xmlns:controls="using:Wavee.UI.WinUI.Controls"
+             xmlns:templateSelectors="using:Wavee.UI.WinUI.UI.TemplateSelectors"
              xmlns:tracks="using:Wavee.UI.WinUI.Components.Tracks"
              SizeChanged="PlaylistView_OnSizeChanged"
              mc:Ignorable="d">
 
-
+    <UserControl.Transitions>
+        <TransitionCollection>
+            <EntranceThemeTransition />
+        </TransitionCollection>
+    </UserControl.Transitions>
     <UserControl.Resources>
         <DataTemplate x:Key="LoadingHeader">
-            <TextBlock Text="I am loading" />
+            <Grid Padding="34,34,34,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+
+                <labs:Shimmer Width="250" Height="250"/>
+
+                <StackPanel Spacing="8" Margin="12,0" VerticalAlignment="Bottom" Grid.Column="1">
+                    <labs:Shimmer Height="100" />
+                    <labs:Shimmer Height="50" />
+                </StackPanel>
+            </Grid>
         </DataTemplate>
         <DataTemplate x:Key="RegularHeader"
                       x:DataType="headers:RegularPlaylistHeader">
-            <Grid>
+            <Grid Padding="34,34,34,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
 
+                <labs:Shimmer Width="250" Height="250"/>
+
+                <StackPanel Spacing="8" Margin="12,0" VerticalAlignment="Bottom" Grid.Column="1">
+                    <labs:Shimmer Height="100" />
+                    <labs:Shimmer Height="50" />
+                </StackPanel>
             </Grid>
         </DataTemplate>
         <DataTemplate x:Key="BigHeader"
@@ -77,7 +103,7 @@
                 </StackPanel>
             </Grid>
         </DataTemplate>
-        <winUi:PlaylistHeaderTemplateSelector LoadingHeaderTemplate="{StaticResource LoadingHeader}"
+        <templateSelectors:PlaylistHeaderTemplateSelector LoadingHeaderTemplate="{StaticResource LoadingHeader}"
                                               RegularHeaderTemplate="{StaticResource RegularHeader}"
                                               BigHeaderTemplate="{StaticResource BigHeader}"
                                               x:Key="PlaylistHeaderTemplateSelector" />
@@ -88,7 +114,7 @@
                 <Style BasedOn="{StaticResource DefaultListViewItemStyle}"
                        TargetType="ListViewItem">
                     <Setter Property="Margin"
-                            Value="24,0" />
+                            Value="28,0" />
                     <Setter Property="Padding"
                             Value="4,0" />
                 </Style>
@@ -105,7 +131,7 @@
                                     Content="{x:Bind ViewModel.Header,Mode=OneWay}" />
 
                     <local:PlaylistSortButtons Grid.Row="1"
-                                               Margin="24,12"
+                                               Margin="34,12"
                                                ShowAlbum="True"
                                                ShowArtists="True"
                                                ShowDate="True" />

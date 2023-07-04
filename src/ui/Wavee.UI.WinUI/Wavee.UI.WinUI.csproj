@@ -35,8 +35,7 @@
 		<None Remove="Controls\CalendarControl.xaml" />
 		<None Remove="Controls\ImageTransitionControl.xaml" />
 		<None Remove="Controls\LyricsControl.xaml" />
-		<None Remove="Dialogs\WizardDialog.xaml" />
-		<None Remove="Styles\PropertiesStyles.xaml" />
+		<None Remove="View\Dialogs\WizardDialog.xaml" />
 		<None Remove="Themes\AlbumArtistPageTrackTemplates.xaml" />
 		<None Remove="Themes\BorderStyles.xaml" />
 		<None Remove="Themes\ListViewItemStyles.xaml" />
@@ -91,6 +90,7 @@
 		<PackageReference Include="Microsoft.WindowsAppSDK" Version="1.3.230602002" />
 		<PackageReference Include="ReactiveUI.WinUI" Version="19.2.1" />
 		<PackageReference Include="Serilog.Sinks.Console" Version="4.1.1-dev-00910" />
+		<PackageReference Include="VideoLAN.LibVLC.Windows" Version="4.0.0-alpha-20230704" />
 		<PackageReference Include="WinUIEx" Version="2.2.0" />
 		<Manifest Include="$(ApplicationManifest)" />
 	</ItemGroup>
@@ -259,11 +259,6 @@
 	</ItemGroup>
 	<ItemGroup>
 		<Page Update="View\Setup\WelcomePage.xaml">
-			<Generator>MSBuild:Compile</Generator>
-		</Page>
-	</ItemGroup>
-	<ItemGroup>
-		<Page Update="Dialogs\WizardDialog.xaml">
 			<Generator>MSBuild:Compile</Generator>
 		</Page>
 	</ItemGroup>

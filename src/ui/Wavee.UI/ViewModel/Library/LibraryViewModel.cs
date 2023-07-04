@@ -1,8 +1,6 @@
 ﻿using System.Reactive.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using DynamicData;
-using Eum.Spotify;
-using LanguageExt;
 using ReactiveUI;
 using Wavee.Id;
 using Wavee.UI.Client.Library;

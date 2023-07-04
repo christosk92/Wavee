@@ -13,6 +13,6 @@
 
     <ItemGroup>
         <PackageReference Include="Serilog.Sinks.Console" Version="4.1.1-dev-00910" />
-        <PackageReference Include="VideoLAN.LibVLC.Windows" Version="3.0.18" />
+        <PackageReference Include="VideoLAN.LibVLC.Windows" Version="4.0.0-alpha-20230704" />
     </ItemGroup>
 </Project>

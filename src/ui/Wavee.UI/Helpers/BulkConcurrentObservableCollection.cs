@@ -13,9 +13,9 @@ namespace Wavee.UI.Helpers
     [DebuggerDisplay("Count = {Count}")]
     public class BulkConcurrentObservableCollection<T> : INotifyCollectionChanged, INotifyPropertyChanged, ICollection<T>, IList<T>, ICollection, IList
     {
-        protected bool isBulkOperationStarted;
-        private readonly object syncRoot = new object();
-        private readonly List<T> collection = new List<T>();
+        protected bool IsBulkOperationStarted;
+        private readonly object _syncRoot = new object();
+        private readonly List<T> _collection = new List<T>();
 
         // When 'GroupOption' is set to 'None' or when a folder is opened, 'GroupedCollection' is assigned 'null' by 'ItemGroupKeySelector'
         public BulkConcurrentObservableCollection<GroupedCollection<T>>? GroupedCollection { get; private set; }
@@ -25,9 +25,9 @@ namespace Wavee.UI.Helpers
         {
             get
             {
-                lock (syncRoot)
+                lock (_syncRoot)
                 {
-                    return collection.Count;
+                    return _collection.Count;
                 }
             }
         }
@@ -38,7 +38,7 @@ namespace Wavee.UI.Helpers
 
         public bool IsSynchronized => true;
 
-        public object SyncRoot => syncRoot;
+        public object SyncRoot => _syncRoot;
 
         public bool IsGrouped => ItemGroupKeySelector is not null;
 
@@ -59,18 +59,18 @@ namespace Wavee.UI.Helpers
         {
             get
             {
-                lock (syncRoot)
+                lock (_syncRoot)
                 {
-                    return collection[index];
+                    return _collection[index];
                 }
             }
             set
             {
                 T item;
-                lock (syncRoot)
+                lock (_syncRoot)
                 {
-                    item = collection[index];
-                    collection[index] = value;
+                    item = _collection[index];
+                    _collection[index] = value;
                 }
 
                 OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Replace, value, item, index), false);
@@ -118,14 +118,14 @@ namespace Wavee.UI.Helpers
 
         public virtual void BeginBulkOperation()
         {
-            isBulkOperationStarted = true;
+            IsBulkOperationStarted = true;
             GroupedCollection?.ForEach(gp => gp.BeginBulkOperation());
             GroupedCollection?.BeginBulkOperation();
         }
 
         protected void OnCollectionChanged(NotifyCollectionChangedEventArgs e, bool countChanged = true)
         {
-            if (!isBulkOperationStarted)
+            if (!IsBulkOperationStarted)
             {
                 if (countChanged)
                     PropertyChanged?.Invoke(this, EventArgsCache.CountPropertyChanged);
@@ -150,9 +150,9 @@ namespace Wavee.UI.Helpers
                 return;
 
             // Prevents any unwanted errors caused by bindings updating
-            GroupedCollection?.ForEach(x => x.Model.PausePropertyChangedNotifications());
+            GroupedCollection?.ForEach(x => x.Model?.PausePropertyChangedNotifications());
             GroupedCollection?.Clear();
-            AddItemsToGroup(collection, token);
+            AddItemsToGroup(_collection, token);
         }
 
         private void AddItemsToGroup(IEnumerable<T> items, CancellationToken token = default)
@@ -169,7 +169,7 @@ namespace Wavee.UI.Helpers
                 if (key is null)
                     continue;
 
-                var groups = GroupedCollection?.Where(x => x.Model.Key == key);
+                var groups = GroupedCollection?.Where(x => x.Model?.Key == key);
                 if (item is IGroupableItem groupable)
                     groupable.Key = key;
 
@@ -203,7 +203,7 @@ namespace Wavee.UI.Helpers
             {
                 var key = GetGroupKeyForItem(item);
 
-                var group = GroupedCollection?.Where(x => x.Model.Key == key).FirstOrDefault();
+                var group = GroupedCollection?.Where(x => x.Model?.Key == key).FirstOrDefault();
                 if (group is not null)
                 {
                     group.Remove(item);
@@ -220,10 +220,10 @@ namespace Wavee.UI.Helpers
 
         public virtual void EndBulkOperation()
         {
-            if (!isBulkOperationStarted)
+            if (!IsBulkOperationStarted)
                 return;
 
-            isBulkOperationStarted = false;
+            IsBulkOperationStarted = false;
             GroupedCollection?.ForEach(gp => gp.EndBulkOperation());
             GroupedCollection?.EndBulkOperation();
 
@@ -237,19 +237,19 @@ namespace Wavee.UI.Helpers
             if (item is null)
                 return;
 
-            lock (syncRoot)
+            lock (_syncRoot)
             {
-                collection.Add(item);
+                _collection.Add(item);
             }
 
-            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, item, collection.Count - 1));
+            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, item, _collection.Count - 1));
         }
 
         public void Clear()
         {
-            lock (syncRoot)
+            lock (_syncRoot)
             {
-                collection.Clear();
+                _collection.Clear();
             }
             GroupedCollection?.Clear();
 
@@ -261,17 +261,17 @@ namespace Wavee.UI.Helpers
             if (item is null)
                 return false;
 
-            lock (syncRoot)
+            lock (_syncRoot)
             {
-                return collection.Contains(item);
+                return _collection.Contains(item);
             }
         }
 
         public void CopyTo(T[] array, int arrayIndex)
         {
-            lock (syncRoot)
+            lock (_syncRoot)
             {
-                collection.CopyTo(array, arrayIndex);
+                _collection.CopyTo(array, arrayIndex);
             }
         }
 
@@ -282,14 +282,14 @@ namespace Wavee.UI.Helpers
 
             int index;
 
-            lock (syncRoot)
+            lock (_syncRoot)
             {
-                index = collection.IndexOf(item);
+                index = _collection.IndexOf(item);
 
                 if (index == -1)
                     return false;
 
-                collection.RemoveAt(index);
+                _collection.RemoveAt(index);
             }
 
             OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, item, index));
@@ -298,7 +298,7 @@ namespace Wavee.UI.Helpers
 
         public IEnumerator<T> GetEnumerator()
         {
-            return new BlockingListEnumerator<T>(collection, syncRoot);
+            return new BlockingListEnumerator<T>(_collection, _syncRoot);
         }
 
         IEnumerator IEnumerable.GetEnumerator()
@@ -311,9 +311,9 @@ namespace Wavee.UI.Helpers
             if (item is null)
                 return -1;
 
-            lock (syncRoot)
+            lock (_syncRoot)
             {
-                return collection.IndexOf(item);
+                return _collection.IndexOf(item);
             }
         }
 
@@ -322,9 +322,9 @@ namespace Wavee.UI.Helpers
             if (item is null)
                 return;
 
-            lock (syncRoot)
+            lock (_syncRoot)
             {
-                collection.Insert(index, item);
+                _collection.Insert(index, item);
             }
 
             OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, item, index));
@@ -334,10 +334,10 @@ namespace Wavee.UI.Helpers
         {
             T item;
 
-            lock (syncRoot)
+            lock (_syncRoot)
             {
-                item = collection[index];
-                collection.RemoveAt(index);
+                item = _collection[index];
+                _collection.RemoveAt(index);
             }
 
             OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, item, index));
@@ -348,12 +348,12 @@ namespace Wavee.UI.Helpers
             if (!items.Any())
                 return;
 
-            lock (syncRoot)
+            lock (_syncRoot)
             {
-                collection.AddRange(items);
+                _collection.AddRange(items);
             }
 
-            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, items.ToList(), collection.Count - items.Count()));
+            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, items.ToList(), _collection.Count - items.Count()));
         }
 
         public void InsertRange(int index, IEnumerable<T> items)
@@ -361,9 +361,9 @@ namespace Wavee.UI.Helpers
             if (!items.Any())
                 return;
 
-            lock (syncRoot)
+            lock (_syncRoot)
             {
-                collection.InsertRange(index, items);
+                _collection.InsertRange(index, items);
             }
 
             OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, items.ToList(), index));
@@ -376,10 +376,10 @@ namespace Wavee.UI.Helpers
 
             List<T> items;
 
-            lock (syncRoot)
+            lock (_syncRoot)
             {
-                items = collection.Skip(index).Take(count).ToList();
-                collection.RemoveRange(index, count);
+                items = _collection.Skip(index).Take(count).ToList();
+                _collection.RemoveRange(index, count);
             }
 
             OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, items, index));
@@ -395,12 +395,12 @@ namespace Wavee.UI.Helpers
             List<T> oldItems;
             List<T> newItems;
 
-            lock (syncRoot)
+            lock (_syncRoot)
             {
-                oldItems = collection.Skip(index).Take(count).ToList();
+                oldItems = _collection.Skip(index).Take(count).ToList();
                 newItems = items.ToList();
-                collection.InsertRange(index, newItems);
-                collection.RemoveRange(index + count, count);
+                _collection.InsertRange(index, newItems);
+                _collection.RemoveRange(index + count, count);
             }
 
             OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Replace, newItems, oldItems, index), false);
@@ -408,26 +408,26 @@ namespace Wavee.UI.Helpers
 
         public void Sort()
         {
-            lock (syncRoot)
+            lock (_syncRoot)
             {
-                collection.Sort();
+                _collection.Sort();
             }
         }
 
         public void Sort(Comparison<T> comparison)
         {
-            lock (syncRoot)
+            lock (_syncRoot)
             {
-                collection.Sort(comparison);
+                _collection.Sort(comparison);
             }
         }
 
         public void Order(Func<List<T>, IEnumerable<T>> func)
         {
             IEnumerable<T> result;
-            lock (syncRoot)
+            lock (_syncRoot)
             {
-                result = func.Invoke(collection);
+                result = func.Invoke(_collection);
             }
 
             ReplaceRange(0, result);
@@ -436,9 +436,9 @@ namespace Wavee.UI.Helpers
         public void OrderOne(Func<List<T>, IEnumerable<T>> func, T item)
         {
             IList<T> result;
-            lock (syncRoot)
+            lock (_syncRoot)
             {
-                result = func.Invoke(collection).ToList();
+                result = func.Invoke(_collection).ToList();
             }
 
             Remove(item);
@@ -454,12 +454,12 @@ namespace Wavee.UI.Helpers
 
             int index;
 
-            lock (syncRoot)
+            lock (_syncRoot)
             {
-                index = ((IList)collection).Add((T)value);
+                index = ((IList)_collection).Add((T)value);
             }
 
-            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, value, collection.Count - 1));
+            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, value, _collection.Count - 1));
             return index;
         }
 

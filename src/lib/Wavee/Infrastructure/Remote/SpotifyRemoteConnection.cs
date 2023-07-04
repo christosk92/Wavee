@@ -170,13 +170,21 @@ internal static class SpotifyRemoteConnection
             .Timer(TimeSpan.Zero, TimeSpan.FromSeconds(30))
             .SelectMany(async _ =>
             {
-                var ping = new
+                try
                 {
-                    type = "ping"
-                };
-                ReadOnlyMemory<byte> json = JsonSerializer.SerializeToUtf8Bytes(ping);
-                await mainChannel.Writer.WriteAsync(json);
-                return Unit.Default;
+                    var ping = new
+                    {
+                        type = "ping"
+                    };
+                    ReadOnlyMemory<byte> json = JsonSerializer.SerializeToUtf8Bytes(ping);
+                    await mainChannel.Writer.WriteAsync(json);
+                    return Unit.Default;
+                }
+                catch (Exception e)
+                {
+                    Log.Logger.Warning(e, "Ping failed");
+                    return Unit.Default;
+                }
             })
             .Subscribe();
 
@@ -459,7 +467,7 @@ internal static class SpotifyRemoteConnection
                     // headers = enumerator.Fold(headers, (acc, curr) => acc.Add(curr.Name, curr.Value.GetString()));
                     foreach (var curr in enumerator)
                     {
-                        headers.Add(curr.Name, curr.Value.GetString());
+                        headers.Add(curr.Name, curr.Value.GetString()!);
                     }
                 }
 
