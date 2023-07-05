@@ -1,6 +1,8 @@
-﻿using System.Globalization;
+﻿using System.Diagnostics;
+using System.Globalization;
 using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
+using Serilog;
 using Wavee.Id;
 using Wavee.Metadata.Artist;
 using Wavee.Metadata.Common;
@@ -25,6 +27,9 @@ internal sealed class SpotifyUIArtistClient : IWaveeUIArtistClient
             throw new ObjectDisposedException(nameof(SpotifyUIArtistClient));
         }
 
+        Log.Debug($"Fetching artist {id} from Spotify");
+        var sw = Stopwatch.StartNew();
+
         var artistResponse = await spotifyClient.Metadata.GetArtistOverview(
             artistId: SpotifyId.FromUri(id),
             destroyCache: false,
@@ -32,7 +37,9 @@ internal sealed class SpotifyUIArtistClient : IWaveeUIArtistClient
             includePrerelease: true,
             ct: ct);
 
-        return new WaveeUIArtistView(
+        var fetchTime = sw.Elapsed;
+
+        var result = new WaveeUIArtistView(
             id: artistResponse.Id.ToString(),
             name: artistResponse.Profile.Name,
             avatarImage: artistResponse.Visuals.AvatarImages.FirstOrDefault()!,
@@ -40,7 +47,7 @@ internal sealed class SpotifyUIArtistClient : IWaveeUIArtistClient
             monthlyListeners: artistResponse.Statistics.MonthlyListeners,
             followers: artistResponse.Statistics.Followers,
             topTracks: artistResponse.Discography.TopTracks
-                .Select(ToArtistTopTrackViewModel).ToArray(),
+                .Select(((track, i) => ToArtistTopTrackViewModel(artistResponse.Id.ToString(), track, i))).ToArray(),
             discographyPages: ConvertToPaged(artistResponse.Id, artistResponse.Discography, spotifyClient),
             preReleaseItem: artistResponse.PreRelease,
             pinnedItem: artistResponse.Profile.PinnedItem,
@@ -49,6 +56,14 @@ internal sealed class SpotifyUIArtistClient : IWaveeUIArtistClient
             artistPlaylists: artistResponse.Profile.Playlists.Select(ToCardViewModel).ToArray()!,
             discoveredOn: artistResponse.Profile.DiscoveredOn.Select(ToCardViewModel).ToArray()!
         );
+
+        var projectionTime = sw.Elapsed - fetchTime;
+        Log.Debug("Fetched artist {id} from Spotify in {totalTime}. Took {fetchTime} ms to fetch, and another {deserializeTime} ms to project.",
+            id,
+            sw.Elapsed,
+            fetchTime.TotalMilliseconds,
+            projectionTime.TotalMilliseconds);
+        return result;
     }
 
     private Option<ICardViewModel> ToCardViewModel(Option<SpotifyArtistHomeItem> arg) => arg.Bind(x => CardViewModel.From(x) switch
@@ -67,8 +82,16 @@ internal sealed class SpotifyUIArtistClient : IWaveeUIArtistClient
         null => Option<ICardViewModel>.None
     });
 
-    private ArtistTopTrackViewModel ToArtistTopTrackViewModel(ArtistTopTrack artistTopTrack, int i)
+    private ArtistTopTrackViewModel ToArtistTopTrackViewModel(
+        string artistId,
+        ArtistTopTrack artistTopTrack, int i)
     {
+        var playParameter = new SpotifyPlayParameter(
+            Index: i,
+            Id: artistTopTrack.Id,
+            Uid: artistTopTrack.Uid,
+            Contextid: SpotifyId.FromUri(artistId)
+        );
         return new ArtistTopTrackViewModel(
             id: artistTopTrack.Id.ToString(),
             uid: artistTopTrack.Uid,
@@ -79,7 +102,9 @@ internal sealed class SpotifyUIArtistClient : IWaveeUIArtistClient
             artists: artistTopTrack.Artists.Cast<ITrackArtist>().ToArray(),
             albumId: artistTopTrack.Album.Id.ToString(),
             albumImages: artistTopTrack.Album.Images.Cast<ICoverImage>().ToArray(),
-            index: (ushort)i
+            index: (ushort)i,
+            playcommand: SpotifyPlayCommands.FromArtistTopTrack,
+            playParameter: playParameter
         );
     }
 

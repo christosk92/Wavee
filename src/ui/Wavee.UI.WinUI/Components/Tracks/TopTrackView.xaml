@@ -11,8 +11,12 @@
         <winUi:ToMetadataConverter x:Key="ToMetadata" />
     </UserControl.Resources>
     <local:WaveeTrackHost ShowImage="True"
+                          x:Name="TrackHost"
                           Image="{x:Bind GetSmallestImage(Images),Mode=OneWay}"
                           AlternateRowColor="True"
+                          Playparameter="{x:Bind PlayParameter, Mode=OneWay}"
+                          Playcommand="{x:Bind Playcommand,Mode=OneWay}"
+                          Uid="{x:Bind Uid,Mode=OneWay}"
                           Id="{x:Bind Id,Mode=OneWay}"
                           Index="{x:Bind Number,Mode=OneWay}">
         <Grid Padding="4,6"

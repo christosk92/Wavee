@@ -58,6 +58,9 @@
                 <DataTemplate x:DataType="artistItems:ArtistTopTrackViewModel">
                     <tracks:TopTrackView Number="{x:Bind Index}"
                                          Id="{x:Bind Id}"
+                                         Uid="{x:Bind Uid}"
+                                         Playcommand="{x:Bind Playcommand}"
+                                         PlayParameter="{x:Bind PlayParameter}"
                                          Images="{x:Bind AlbumImages}"
                                          Artists="{x:Bind Artists}"
                                          Title="{x:Bind Name}"

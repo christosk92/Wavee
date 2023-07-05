@@ -158,6 +158,8 @@ public sealed class PlaylistTrackViewModel : ObservableObject
             }
         }
     }
+
+
     public bool Loading => Track is null;
     public ushort Index { get; }
 
@@ -183,4 +185,5 @@ public class WaveeUITrack
 public class WaveeUIEpisode
 {
     public CoverImage[] Covers { get; set; }
+    public string Id { get; set; }
 }

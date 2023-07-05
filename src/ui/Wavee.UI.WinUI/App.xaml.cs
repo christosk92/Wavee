@@ -20,8 +20,10 @@ namespace Wavee.UI.WinUI
         {
             Log.Logger = new LoggerConfiguration()
                 .WriteTo.Console()
+                .WriteTo.Debug()
                 .MinimumLevel.Verbose()
                 .CreateLogger();
+
             AppProviders.GetPersistentStoragePath = () => ApplicationData.Current.LocalFolder.Path;
             AppProviders.SecurePasswordInVault = (string key, string value) =>
             {

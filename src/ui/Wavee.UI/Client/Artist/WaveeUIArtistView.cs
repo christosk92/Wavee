@@ -1,4 +1,6 @@
-﻿using LanguageExt;
+﻿using CommunityToolkit.Mvvm.Input;
+using LanguageExt;
+using Wavee.Id;
 using Wavee.Metadata.Artist;
 using Wavee.Metadata.Common;
 using Wavee.UI.Common;
@@ -50,7 +52,13 @@ public sealed class WaveeUIArtistView
 
 public sealed class ArtistTopTrackViewModel
 {
-    public ArtistTopTrackViewModel(string id, Option<string> uid, string name, Option<ulong> playcount, TimeSpan duration, ContentRatingType contentRating, ITrackArtist[] artists, string albumId, ICoverImage[] albumImages, ushort index)
+    public ArtistTopTrackViewModel(
+        string id, 
+        Option<string> uid, string name, Option<ulong> playcount, TimeSpan duration,
+        ContentRatingType contentRating,
+        ITrackArtist[] artists, string albumId, ICoverImage[] albumImages, ushort index, 
+        AsyncRelayCommand<IPlayParameter> playcommand,
+        IPlayParameter playParameter)
     {
         Id = id;
         Uid = uid;
@@ -62,6 +70,8 @@ public sealed class ArtistTopTrackViewModel
         AlbumId = albumId;
         AlbumImages = albumImages;
         Index = index;
+        Playcommand = playcommand;
+        PlayParameter = playParameter;
     }
 
     public string Id { get; }
@@ -74,6 +84,8 @@ public sealed class ArtistTopTrackViewModel
     public string AlbumId { get; }
     public ICoverImage[] AlbumImages { get; }
     public ushort Index { get; }
+    public AsyncRelayCommand<IPlayParameter> Playcommand { get; }
+    public IPlayParameter PlayParameter { get; }
 }
 
 public sealed class PagedArtistDiscographyPage

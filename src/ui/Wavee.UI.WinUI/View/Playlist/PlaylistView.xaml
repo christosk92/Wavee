@@ -64,8 +64,11 @@
                         <Image ui:Effects.Shadow="{StaticResource CommonShadow}"
                                x:Name="AlbumImage"
                                ImageOpened="AlbumImage_OnImageOpened"
-                               Canvas.ZIndex="1000"
-                               Source="{x:Bind ImageUrl, Mode=OneWay}" />
+                               Canvas.ZIndex="1000">
+                            <Image.Source>
+                                <BitmapImage UriSource="{x:Bind ImageUrl, Mode=OneWay}"/>
+                            </Image.Source>
+                        </Image>
                     </Grid>
                 </Grid>
 

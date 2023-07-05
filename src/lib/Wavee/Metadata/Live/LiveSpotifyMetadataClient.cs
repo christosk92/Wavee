@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using System.Diagnostics;
+using System.Globalization;
 using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -10,6 +11,7 @@ using Google.Protobuf;
 using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using Serilog;
 using Spotify.Metadata;
 using Wavee.Cache;
 using Wavee.Id;
@@ -203,16 +205,23 @@ internal readonly struct LiveSpotifyMetadataClient : ISpotifyMetadataClient
                 None: () =>
                 {
                     static async Task<ArtistOverview> Fetch(SpotifyId artistid, LiveSpotifyMetadataClient tmpthis,
-                        Option<CultureInfo> languageoverride, bool preRelease)
+                        Option<CultureInfo> languageoverride, bool preRelease, CancellationToken ct)
                     {
+                        var sw = Stopwatch.StartNew();
+                        Log.Debug("Fetching artist overview for {0}", artistid);
                         var query = new QueryArtistOverviewQuery(artistid, preRelease);
                         var response = await tmpthis._query(query, languageoverride.IfNone(tmpthis._defaultLang));
+                        var resposneTime = sw.ElapsedMilliseconds;
+                        Log.Debug("Fetched artist overview for {0} in {1}ms", artistid, resposneTime);
                         if (response.IsSuccessStatusCode)
                         {
-                            var stream = await response.Content.ReadAsByteArrayAsync();
+                            Log.Debug("Parsing artist overview for {0}", artistid);
+                            var stream = await response.Content.ReadAsByteArrayAsync(ct);
                             var artistOverview = ArtistOverview.ParseFrom(stream);
-                            await tmpthis._cache.SaveRawEntity(artistid.ToString(), stream,
-                                DateTimeOffset.Now.AddMinutes(30));
+                            _ = Task.Run(async () => await tmpthis._cache.SaveRawEntity(artistid.ToString(), stream,
+                                DateTimeOffset.Now.AddMinutes(30)));
+                            var took = sw.ElapsedMilliseconds - resposneTime;
+                            Log.Debug("Parsed artist overview for {0} in {1}ms", artistid, took);
                             return artistOverview;
                         }
 
@@ -224,7 +233,7 @@ internal readonly struct LiveSpotifyMetadataClient : ISpotifyMetadataClient
                         ));
                     }
 
-                    return new ValueTask<ArtistOverview>(Fetch(artistId, tmpThis, languageOverride, includePrerelease));
+                    return new ValueTask<ArtistOverview>(Fetch(artistId, tmpThis, languageOverride, includePrerelease, ct));
                 }
             )
             .MapAsync(async x => await x);

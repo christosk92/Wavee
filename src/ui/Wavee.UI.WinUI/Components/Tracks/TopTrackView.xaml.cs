@@ -6,12 +6,15 @@ using Wavee.Metadata.Artist;
 using Duration = LanguageExt.Duration;
 using System;
 using System.Linq;
+using CommunityToolkit.Mvvm.Input;
 using Wavee.Metadata.Common;
+using Wavee.Player.Ctx;
 
 namespace Wavee.UI.WinUI.Components.Tracks
 {
     public sealed partial class TopTrackView : UserControl
     {
+
         public static readonly DependencyProperty NumberProperty = DependencyProperty.Register(nameof(Number), typeof(ushort), typeof(AlbumTrackView), new PropertyMetadata(default(ushort)));
         public static readonly DependencyProperty TitleProperty = DependencyProperty.Register(nameof(Title), typeof(string), typeof(AlbumTrackView), new PropertyMetadata(default(string)));
         public static readonly DependencyProperty PlaycountProperty = DependencyProperty.Register(nameof(Playcount), typeof(Option<ulong>), typeof(AlbumTrackView), new PropertyMetadata(default(Option<ulong>)));
@@ -19,6 +22,9 @@ namespace Wavee.UI.WinUI.Components.Tracks
         public static readonly DependencyProperty ArtistsProperty = DependencyProperty.Register(nameof(Artists), typeof(ITrackArtist[]), typeof(TopTrackView), new PropertyMetadata(default(ITrackArtist[])));
         public static readonly DependencyProperty ImagesProperty = DependencyProperty.Register(nameof(Images), typeof(ICoverImage[]), typeof(TopTrackView), new PropertyMetadata(default(ICoverImage[])));
         public static readonly DependencyProperty IdProperty = DependencyProperty.Register(nameof(Id), typeof(string), typeof(TopTrackView), new PropertyMetadata(default(string)));
+        public static readonly DependencyProperty UidProperty = DependencyProperty.Register(nameof(Uid), typeof(Option<string>), typeof(TopTrackView), new PropertyMetadata(default(Option<string>)));
+        public static readonly DependencyProperty PlaycommandProperty = DependencyProperty.Register(nameof(Playcommand), typeof(AsyncRelayCommand<IPlayParameter>), typeof(TopTrackView), new PropertyMetadata(default(AsyncRelayCommand<IPlayParameter>)));
+        public static readonly DependencyProperty PlayParameterProperty = DependencyProperty.Register(nameof(PlayParameter), typeof(IPlayParameter), typeof(TopTrackView), new PropertyMetadata(default(IPlayParameter)));
 
         public TopTrackView()
         {
@@ -64,6 +70,24 @@ namespace Wavee.UI.WinUI.Components.Tracks
         {
             get => (string)GetValue(IdProperty);
             set => SetValue(IdProperty, value);
+        }
+
+        public Option<string> Uid
+        {
+            get => (Option<string>)GetValue(UidProperty);
+            set => SetValue(UidProperty, value);
+        }
+
+        public AsyncRelayCommand<IPlayParameter> Playcommand
+        {
+            get => (AsyncRelayCommand<IPlayParameter>)GetValue(PlaycommandProperty);
+            set => SetValue(PlaycommandProperty, value);
+        }
+
+        public IPlayParameter PlayParameter
+        {
+            get => (IPlayParameter)GetValue(PlayParameterProperty);
+            set => SetValue(PlayParameterProperty, value);
         }
 
 

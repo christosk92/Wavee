@@ -4,6 +4,7 @@ using System.Xml.Linq;
 using Microsoft.UI.Xaml.Markup;
 using System;
 using System.Reactive.Linq;
+using CommunityToolkit.Mvvm.Input;
 using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
 using Microsoft.UI.Input;
@@ -19,6 +20,8 @@ namespace Wavee.UI.WinUI.Components.Tracks;
 [ContentProperty(Name = "MContent")]
 public sealed partial class WaveeTrackHost : UserControl
 {
+    private static IPlayParameter? _invokedWith;
+
     public static readonly DependencyProperty MContentProperty = DependencyProperty.Register(nameof(MContent), typeof(object), typeof(WaveeTrackHost), new PropertyMetadata(default(object)));
     public static readonly DependencyProperty IndexProperty = DependencyProperty.Register(nameof(Index), typeof(ushort), typeof(WaveeTrackHost), new PropertyMetadata(default(ushort), UIPropertyChanged));
     public static readonly DependencyProperty AlternateRowColorProperty = DependencyProperty.Register(nameof(AlternateRowColor), typeof(bool), typeof(WaveeTrackHost), new PropertyMetadata(default(bool), UIPropertyChanged));
@@ -29,6 +32,10 @@ public sealed partial class WaveeTrackHost : UserControl
     public static readonly DependencyProperty PlaybackStateProperty = DependencyProperty.Register(nameof(PlaybackState), typeof(TrackPlaybackState), typeof(WaveeTrackHost), new PropertyMetadata(default(TrackPlaybackState), PlaybackStateChanged));
     private IDisposable? _subscrption;
     public static readonly DependencyProperty UidProperty = DependencyProperty.Register(nameof(Uid), typeof(Option<string>), typeof(WaveeTrackHost), new PropertyMetadata(default(Option<string>), UIPropertyChanged));
+    public static readonly DependencyProperty PlaycommandProperty = DependencyProperty.Register(nameof(Playcommand), typeof(AsyncRelayCommand<IPlayParameter>), typeof(WaveeTrackHost), new PropertyMetadata(default(AsyncRelayCommand<IPlayParameter>)));
+
+
+    public static readonly DependencyProperty PlayparameterProperty = DependencyProperty.Register(nameof(Playparameter), typeof(IPlayParameter), typeof(WaveeTrackHost), new PropertyMetadata(default(IPlayParameter)));
 
     public WaveeTrackHost()
     {
@@ -88,6 +95,18 @@ public sealed partial class WaveeTrackHost : UserControl
         set => SetValue(UidProperty, value);
     }
 
+    public AsyncRelayCommand<IPlayParameter> Playcommand
+    {
+        get => (AsyncRelayCommand<IPlayParameter>)GetValue(PlaycommandProperty);
+        set => SetValue(PlaycommandProperty, value);
+    }
+
+    public IPlayParameter Playparameter
+    {
+        get => (IPlayParameter)GetValue(PlayparameterProperty);
+        set => SetValue(PlayparameterProperty, value);
+    }
+
 
     private static void UIPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
@@ -99,7 +118,18 @@ public sealed partial class WaveeTrackHost : UserControl
         switch (state)
         {
             case TrackPlaybackState.None:
-                VisualStateManager.GoToState(this, "NoPlayback", true);
+                if (Playcommand is
+                    {
+                        IsRunning: true
+                    } && _invokedWith?.Equals(Playparameter) is true)
+                {
+                    VisualStateManager.GoToState(this, "LoadingState", true);
+                }
+                else
+                {
+                    VisualStateManager.GoToState(this, "NoPlayback", true);
+                }
+
                 break;
             case TrackPlaybackState.Playing:
                 VisualStateManager.GoToState(this, "PlayingPlayback", true);
@@ -187,7 +217,7 @@ public sealed partial class WaveeTrackHost : UserControl
         return $"{(x + 1):D2}.";
     }
 
-    public Style GetStyleFor(int i)
+    public Style GetStyleFor(ushort i)
     {
         //EvenBorderStyleGrid
         //OddBorderStyleGrid
@@ -229,7 +259,17 @@ public sealed partial class WaveeTrackHost : UserControl
         switch (PlaybackState)
         {
             case TrackPlaybackState.None:
-                VisualStateManager.GoToState(this, "NoPlaybackHover", true);
+                if (Playcommand is
+                    {
+                        IsRunning: true
+                    } && _invokedWith?.Equals(Playparameter) is true)
+                {
+                    VisualStateManager.GoToState(this, "LoadingState", true);
+                }
+                else
+                {
+                    VisualStateManager.GoToState(this, "NoPlaybackHover", true);
+                }
                 break;
             case TrackPlaybackState.Playing:
                 VisualStateManager.GoToState(this, "PlayingPlaybackHover", true);
@@ -251,7 +291,17 @@ public sealed partial class WaveeTrackHost : UserControl
         switch (PlaybackState)
         {
             case TrackPlaybackState.None:
-                VisualStateManager.GoToState(this, "NoPlayback", true);
+                if (Playcommand is
+                    {
+                        IsRunning: true
+                    } && _invokedWith?.Equals(Playparameter) is true)
+                {
+                    VisualStateManager.GoToState(this, "LoadingState", true);
+                }
+                else
+                {
+                    VisualStateManager.GoToState(this, "NoPlayback", true);
+                }
                 break;
             case TrackPlaybackState.Playing:
                 // PlaybackViewContent.Content = new AnimatedVisualPlayer
@@ -284,6 +334,17 @@ public sealed partial class WaveeTrackHost : UserControl
             _subscrption = null;
             UpdateUI();
         }
+    }
+
+    public Visibility TrueToCollapsed(bool b)
+    {
+        return b ? Visibility.Collapsed : Visibility.Visible;
+    }
+
+    private void PlaButton_OnTapped(object sender, TappedRoutedEventArgs e)
+    {
+        VisualStateManager.GoToState(this, "LoadingState", true);
+        _invokedWith = Playparameter;
     }
 }
 public enum TrackPlaybackState

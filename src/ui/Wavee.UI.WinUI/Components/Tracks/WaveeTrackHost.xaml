@@ -37,6 +37,9 @@
                         <Setter Target="PlaybackViewContent.Content">
                             <Setter.Value>
                                 <Button x:Name="PlaButton"
+                                        Tapped="PlaButton_OnTapped"
+                                        Command="{x:Bind Playcommand, Mode=OneWay}"
+                                        CommandParameter="{x:Bind Playparameter, Mode=OneWay}"
                                         Margin="-4,0,4,0"
                                         Padding="8,8"
                                         VerticalAlignment="Center">
@@ -44,6 +47,21 @@
                                               FontFamily="{StaticResource SegoeFluent}"
                                               Glyph="&#xF5B0;" />
                                 </Button>
+                            </Setter.Value>
+                        </Setter>
+                    </VisualState.Setters>
+                </VisualState>
+                <VisualState x:Name="LoadingState">
+                    <VisualState.Setters>
+                        <Setter Target="PlaybackViewContent.Content">
+                            <Setter.Value>
+                                <ProgressRing IsIndeterminate="True" 
+                                              x:Name="LoadingBar"
+                                              Width="24"
+                                              Background="Transparent"
+                                              Height="24"
+                                              Margin="0,0,8,0"
+                                              IsActive="{x:Bind Playcommand.IsRunning, Mode=OneWay}"/>
                             </Setter.Value>
                         </Setter>
                     </VisualState.Setters>
