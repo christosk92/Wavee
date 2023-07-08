@@ -3,6 +3,7 @@ using LanguageExt;
 using Serilog;
 using Spotify.Metadata;
 using System;
+using System.Collections.Immutable;
 using System.Text;
 using LanguageExt.UnsafeValueAccess;
 using Wavee.Metadata.Artist;
@@ -75,6 +76,7 @@ public sealed class PlaylistViewModel : ObservableObject
         WaitForTracks.TrySetResult(Unit.Default);
         //Tracks = playlist.Tracks.Select(x => new PlaylistTrackViewModel(x)).ToArray();
         await FetchTracksOnlyForSorting(playlist.FutureTracks, cancellationToken);
+        FetchedAllTracks.TrySetResult(Unit.Default);
     }
 
     private async Task FetchTracksOnlyForSorting(
@@ -146,30 +148,50 @@ public sealed class PlaylistViewModel : ObservableObject
 
         return sb.ToString();
     }
-    public Dictionary<string, PlaylistTrackViewModel> Generate(int offset, int limit) => _tracks.Skip(offset)
-        .Take(limit).Select((x, i) => new PlaylistTrackViewModel(x, (ushort)(i + offset)))
-        .ToDictionary(x => x.Id, x => x);
+
+    public ImmutableArray<PlaylistTrackViewModel> Generate(int offset, int limit) => _tracks.Skip(offset)
+        .Take(limit)
+        .Select((x, i) => new PlaylistTrackViewModel(x, (ushort)(i + offset)))
+        .ToImmutableArray();
     public async Task FetchAndSetTracks(Dictionary<string, PlaylistTrackViewModel> fill,
         Action<Action> invokeOnUithread,
         CancellationToken cancellationToken)
     {
         try
         {
-            var trackUris = fill.Keys.ToArray();
+            var trackUris = fill.Values.Select(x => x.Id).ToArray();
+            await FetchedAllTracks.Task;
             var tracks = await _user.Client.ExtendedMetadata.GetTracks(trackUris, true, cancellationToken);
 
             invokeOnUithread(() =>
             {
-                foreach (var track in _tracks)
+                foreach (var item in fill)
                 {
-                    if (tracks.TryGetValue(track.Id, out var t))
+                    var id = item.Value.Id;
+                    if (tracks.TryGetValue(id, out var t))
                     {
                         _ = t.Match(
-                            Left: episode => fill[episode.Id].Episode = episode,
-                            Right: tr => fill[track.Id].Track = tr
-                        );
+                                Left: episode => item.Value.Episode = episode,
+                                Right: tr => item.Value.Track = tr);
                     }
                 }
+                // foreach (var track in _tracks)
+                // {
+                //     if (tracks.TryGetValue(track.Id, out var t))
+                //     {
+                //         // _ = t.Match(
+                //         //     Left: episode =>
+                //         //     {
+                //         //         //key is the UID (which is not the id)
+                //         //         var uid = fill
+                //         //         //fill[episode.Id].Episode = episode;
+                //         //     },
+                //         //     Right: tr =>
+                //         //     {
+                //         //         fill[track.Id].Track = tr;
+                //         //     });
+                //     }
+                // }
             });
         }
         catch (Exception e)
@@ -288,11 +310,10 @@ public class WaveeUITrack
     public string Id { get; set; }
     public string Name { get; set; }
     public ITrackArtist[] Artists { get; set; }
-    public TrackAlbum Album { get; set; }
+    public ITrackAlbum Album { get; set; }
     public int DurationMs { get; set; }
     public int TrackNumber { get; set; }
     public int DiscNumber { get; set; }
-    public string AlbumName { get; set; }
     public CoverImage[] Covers { get; set; }
 }
 

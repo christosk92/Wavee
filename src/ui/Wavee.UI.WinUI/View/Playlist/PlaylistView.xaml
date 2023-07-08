@@ -15,6 +15,8 @@
     xmlns:templateSelectors="using:Wavee.UI.WinUI.UI.TemplateSelectors"
     xmlns:tracks="using:Wavee.UI.WinUI.Components.Tracks"
     xmlns:ui="using:CommunityToolkit.WinUI.UI"
+    xmlns:controls1="using:CommunityToolkit.WinUI.UI.Controls"
+    xmlns:winUi="using:Wavee.UI.WinUI"
     SizeChanged="PlaylistView_OnSizeChanged"
     mc:Ignorable="d">
     <UserControl.Transitions>
@@ -244,6 +246,7 @@
             BigHeaderTemplate="{StaticResource BigHeader}"
             LoadingHeaderTemplate="{StaticResource LoadingHeader}"
             RegularHeaderTemplate="{StaticResource RegularHeader}" />
+        <winUi:TrackArtistToMetadataItem x:Key="TrackArtistToMetadataItem" />
     </UserControl.Resources>
     <Grid>
         <ListView ItemsSource="{x:Bind IncrementalLoadingCollection, Mode=OneWay}">
@@ -318,19 +321,29 @@
                                         Text="{x:Bind Track.Name, Mode=OneWay}"
                                         TextTrimming="CharacterEllipsis" />
 
-                                    <TextBlock
+                                    <controls1:MetadataControl
                                         Grid.Column="2"
-                                        Margin="0,0,8,0"
-                                        FontSize="16"
-                                        Text="{x:Bind Track.Artists[0].Name, Mode=OneWay}"
-                                        TextTrimming="CharacterEllipsis" />
+                                        Items="{x:Bind Track.Artists, Mode=OneWay, Converter={StaticResource TrackArtistToMetadataItem}}"
+                                        Margin="0,0,8,0">
+                                        <controls1:MetadataControl.TextBlockStyle>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="FontSize" Value="16"/>
+                                                <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+                                            </Style>
+                                        </controls1:MetadataControl.TextBlockStyle>
+                                    </controls1:MetadataControl>
 
-                                    <TextBlock
+                                    <controls1:MetadataControl
                                         Grid.Column="3"
                                         Margin="0,0,8,0"
-                                        FontSize="16"
-                                        Text="{x:Bind Track.AlbumName, Mode=OneWay}"
-                                        TextTrimming="CharacterEllipsis" />
+                                        Items="{x:Bind Track.Album, Mode=OneWay, Converter={StaticResource TrackArtistToMetadataItem}}">
+                                        <controls1:MetadataControl.TextBlockStyle>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="FontSize" Value="16"/>
+                                                <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+                                            </Style>
+                                        </controls1:MetadataControl.TextBlockStyle>
+                                    </controls1:MetadataControl>
 
                                     <TextBlock
                                         x:Name="DateAdded"

@@ -229,7 +229,8 @@ public readonly record struct ArtistOverview(SpotifyId Id, bool IsSaved,
 
             var album = track.GetProperty("albumOfTrack");
             var albumOutput = new TrackAlbum(
-                Id: SpotifyId.FromUri(album.GetProperty("uri").GetString().AsSpan()),
+                Id: album.GetProperty("uri").GetString()!,
+                Name: string.Empty, 
                 Images: ParseCoverArt(album.GetProperty("coverArt").GetProperty("sources"))
             );
 
@@ -547,8 +548,14 @@ public enum ContentRatingType
     UNKNOWN
 }
 
-public readonly record struct TrackAlbum(SpotifyId Id, ICoverImage[] Images);
+public readonly record struct TrackAlbum(string Id, string Name, ICoverImage[] Images) : ITrackAlbum;
 
+public interface ITrackAlbum
+{
+    string Id { get; }
+    string Name { get; }
+    ICoverImage[] Images { get; }
+}
 public interface ITrackArtist
 {
     SpotifyId Id { get; }

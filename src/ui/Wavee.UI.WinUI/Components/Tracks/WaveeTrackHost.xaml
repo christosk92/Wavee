@@ -139,6 +139,7 @@
         </Border>
         <RelativePanel Grid.Column="1">
             <ContentControl x:Name="PlaybackViewContent"
+                            MinWidth="30"
                             Margin="9,0,3,0"
                             RelativePanel.AlignVerticalCenterWithPanel="True"
                             RelativePanel.AlignLeftWithPanel="True"

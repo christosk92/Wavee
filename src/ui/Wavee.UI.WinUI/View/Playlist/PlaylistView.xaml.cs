@@ -139,17 +139,26 @@ public class PlaylistTrackSource : IIncrementalSource<PlaylistTrackViewModel>
 
     public async Task<IEnumerable<PlaylistTrackViewModel>> GetPagedItemsAsync(int pageIndex, int pageSize, CancellationToken cancellationToken = new CancellationToken())
     {
-        await _viewModel.WaitForTracks.Task;
-        var items = _viewModel.Generate(offset: pageIndex * pageSize, limit: pageSize);
-        //10 ms delay to trick the UI into thinking it's loading
-        await Task.Delay(10, cancellationToken);
-        //start a task to fill the next page
-        _ = Task.Run(async () =>
+        try
         {
-            await _viewModel.FetchAndSetTracks(items,
-                (action) => _dispatcherQueue.TryEnqueue(DispatcherQueuePriority.Normal, () => action()),
-                cancellationToken);
-        }, cancellationToken);
-        return items.Values;
+            await _viewModel.WaitForTracks.Task;
+            var items = _viewModel.Generate(offset: pageIndex * pageSize, limit: pageSize);
+            //10 ms delay to trick the UI into thinking it's loading
+            await Task.Delay(10, cancellationToken);
+            //start a task to fill the next page
+            _ = Task.Run(async () =>
+            {
+                await _viewModel.FetchAndSetTracks(items
+                        .ToDictionary(x=> x.Uid, x=> x),
+                    (action) => _dispatcherQueue.TryEnqueue(DispatcherQueuePriority.Normal, () => action()),
+                    cancellationToken);
+            }, cancellationToken);
+            return items;
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "An error occurred while trying to fetch page");
+            return Enumerable.Empty<PlaylistTrackViewModel>();
+        }
     }
 }

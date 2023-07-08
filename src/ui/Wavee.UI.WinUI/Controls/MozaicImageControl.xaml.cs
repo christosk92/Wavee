@@ -98,7 +98,6 @@ namespace Wavee.UI.WinUI.Controls
 
         private void ConstructSingleMozaic(Seq<Either<WaveeUIEpisode, WaveeUITrack>> tracks)
         {
-
         }
 
         private async Task ConstructGridMozaic(Seq<Either<WaveeUIEpisode, WaveeUITrack>> firstFourTracks)

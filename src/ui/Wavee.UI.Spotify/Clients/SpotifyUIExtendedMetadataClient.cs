@@ -140,10 +140,10 @@ internal sealed class SpotifyUIExtendedMetadataClient : IWaveeUIExtendedMetadata
                         Name: x.Name))
                 .Cast<ITrackArtist>().ToArray(),
             Album = new TrackAlbum(
-                Id: SpotifyId.FromRaw(track.Album.Gid.Span, AudioItemType.Album, ServiceType.Spotify),
+                Id: SpotifyId.FromRaw(track.Album.Gid.Span, AudioItemType.Album, ServiceType.Spotify).ToString(),
+                Name: track.Album.Name,
                 Images: Array.Empty<ICoverImage>()
-            ),
-            AlbumName = track.Album.Name,
+              ),
             DurationMs = track.Duration,
             TrackNumber = track.Number,
             DiscNumber = track.DiscNumber,

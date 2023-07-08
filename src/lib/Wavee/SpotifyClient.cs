@@ -56,11 +56,11 @@ public class SpotifyClient : IDisposable
         var deviceId = Guid.NewGuid().ToString("N");
         DeviceId = deviceId;
         _waitForConnectionTask = new TaskCompletionSource<Unit>(TaskCreationOptions.RunContinuationsAsynchronously);
-
+        _connectionId = Guid.NewGuid();
         void CreateConnectionRecursively()
         {
             _countryCodeTask = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
-            var (connId, welcomeMessage) = ConnectionFactory(credentials, config, deviceId, async (err) =>
+            var welcomeMessage = ConnectionFactory(_connectionId, credentials, config, deviceId, async (err) =>
             {
                 if (_flagForPermanentClose)
                 {
@@ -71,7 +71,6 @@ public class SpotifyClient : IDisposable
                 await Task.Delay(2000);
                 CreateConnectionRecursively();
             });
-            _connectionId = connId;
             WelcomeMessage = welcomeMessage;
             Clients[_connectionId] = this;
 
@@ -268,14 +267,14 @@ public class SpotifyClient : IDisposable
             await remote.PlaybackStateUpdated(obj);
     }
 
-    private static (Guid Value, APWelcome welcomeMessage) ConnectionFactory(LoginCredentials credentials, SpotifyConfig config,
+    private static APWelcome ConnectionFactory(
+        Guid connectionId,
+        LoginCredentials credentials, SpotifyConfig config,
         string deviceId,
         Action<Exception> onConnectionLost)
     {
-        Guid? connectionId = null;
-        var (connId, welcomeMessage) = SpotifyConnection.Create(credentials, config, deviceId, onConnectionLost, connectionId);
-        connectionId = connId;
-        return (connectionId.Value, welcomeMessage);
+        var welcomeMessage = SpotifyConnection.Create(connectionId,credentials, config, deviceId, onConnectionLost);
+        return welcomeMessage;
     }
 
     public void Dispose()

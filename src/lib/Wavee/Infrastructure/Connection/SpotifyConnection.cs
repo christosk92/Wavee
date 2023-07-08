@@ -295,9 +295,10 @@ internal static class SpotifyConnection
         return new SpotifyUnencryptedPackage((SpotifyPacketType)header[0], payload);
     }
 
-    public static (Guid connectionId, APWelcome welcomeMessage) Create(LoginCredentials credentials, SpotifyConfig config, string deviceId,
-        Action<Exception> onConnectionLost,
-        Guid? persistentConnectionId)
+    public static APWelcome Create(
+        Guid connectionId,
+        LoginCredentials credentials, SpotifyConfig config, string deviceId,
+        Action<Exception> onConnectionLost)
     {
         const string host = "ap-gae2.spotify.com";
         const ushort port = 4070;
@@ -306,12 +307,9 @@ internal static class SpotifyConnection
         var stream = tcp.GetStream();
         var keys = Handshake.Handshake.PerformHandshake(stream);
         var welcomeMessage = Auth.Authenticate(stream, keys, credentials, deviceId, config);
-        //Setup a new connection listener
-        var connectionId = persistentConnectionId ?? Guid.NewGuid();
-
         SetupConnectionListener(welcomeMessage, stream, keys, connectionId, onConnectionLost);
 
-        return (connectionId, welcomeMessage);
+        return welcomeMessage;
     }
 }
 

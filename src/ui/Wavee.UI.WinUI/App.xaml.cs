@@ -53,6 +53,12 @@ namespace Wavee.UI.WinUI
                 }
             };
             this.InitializeComponent();
+            this.UnhandledException += OnUnhandledException;
+        }
+
+        private void OnUnhandledException(object sender, UnhandledExceptionEventArgs e)
+        {
+            
         }
 
         public static WaveeWindow MainWindow { get; private set; }

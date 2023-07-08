@@ -53,7 +53,7 @@ public sealed partial class SpotifySearchSource : ReactiveObject, ISearchSource,
             for (var i = 0; i < total; i++)
             {
                 var categoryName = categoriesOrder[i].GetString();
-                var category = rresultsoot.GetProperty(categoryName!);
+                var category = results.GetProperty(categoryName!);
 
                 MutateItemsFromCategory(category, categoryName, output);
             }
