@@ -33,11 +33,31 @@
         </labs:Segmented>
 
         <TextBlock
+            x:Name="NoResults"
             Grid.Row="2"
             HorizontalAlignment="Center"
             VerticalAlignment="Center"
             Text="It's kinda empty here... Try another keyword"
-            Visibility="{x:Bind ViewModel.HasResults, Converter={StaticResource TrueToCollapsedConverter}, Mode=OneWay}" />
-        <ItemsRepeater Grid.Row="2" ItemsSource="{x:Bind ViewModel.Groups, Mode=OneWay}" />
+            Visibility="{x:Bind ViewModel.HasResultsVal, Mode=OneWay, Converter={StaticResource TrueToCollapsedConverter}}" />
+        <ItemsRepeater Grid.Row="2" ItemsSource="{x:Bind ViewModel.Groups, Mode=OneWay}">
+            <ItemsRepeater.ItemTemplate>
+                <DataTemplate x:DataType="search:SearchItemGroup">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition />
+                        </Grid.RowDefinitions>
+                        <TextBlock Text="{x:Bind Title, Mode=OneWay}" />
+                        <ItemsRepeater Grid.Row="1" ItemsSource="{x:Bind Items, Mode=OneWay}">
+                            <ItemsRepeater.ItemTemplate>
+                                <DataTemplate x:DataType="search:ISearchItem">
+                                    <TextBlock Text="{x:Bind Name}" />
+                                </DataTemplate>
+                            </ItemsRepeater.ItemTemplate>
+                        </ItemsRepeater>
+                    </Grid>
+                </DataTemplate>
+            </ItemsRepeater.ItemTemplate>
+        </ItemsRepeater>
     </Grid>
 </UserControl>

@@ -31,7 +31,7 @@ internal readonly struct LiveTokenClient : ITokenClient, IMercuryClient
         var response = await MercuryParsers.GetAsync(_connId, uri, ct);
         return response;
     }
-    
+
 
     public async ValueTask<string> GetToken(CancellationToken ct = default)
     {
@@ -63,15 +63,16 @@ internal readonly struct LiveTokenClient : ITokenClient, IMercuryClient
                     if (canceled.CancellationToken == ct)
                         throw;
                 }
-                catch (Exception)
+                catch (Exception f)
                 {
-                    Debug.WriteLine("Failed to get token, retrying...");
+                    Debug.WriteLine(
+                                                   $"Failed to get token, retrying... {f.Message} {f.StackTrace} {f.InnerException?.Message} {f.InnerException?.StackTrace}");
                     await Task.Delay(3000, ct);
                 }
             }
         }
     }
-    
+
     internal readonly record struct MercuryTokenData(
         [property: JsonPropertyName("accessToken")]
         string AccessToken,

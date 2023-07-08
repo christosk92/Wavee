@@ -7,6 +7,7 @@ using Wavee.UI.Client.Lyrics;
 using Wavee.UI.Client.Playback;
 using Wavee.UI.Client.Playlist;
 using Wavee.UI.Client.Previews;
+using Wavee.UI.Client.Search;
 
 namespace Wavee.UI.Client;
 
@@ -21,4 +22,5 @@ public interface IWaveeUIClient : IDisposable
     IWaveeUILyricsClient Lyrics { get; }
     IWaveeUIPlaylistClient Playlist { get; }
     IWaveeUIExtendedMetadataClient ExtendedMetadata { get; }
+    IWaveeUISearchClient Search { get; }
 }

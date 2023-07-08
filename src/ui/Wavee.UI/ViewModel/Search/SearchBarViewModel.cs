@@ -4,6 +4,7 @@ using ReactiveUI;
 using System.Reactive.Linq;
 using Wavee.UI.ViewModel.Search.Patterns;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Reactive.Disposables;
 using System.Windows.Input;
 using Wavee.UI.Common;
@@ -29,14 +30,23 @@ public class SearchBarViewModel : ReactiveObject
             .Subscribe();
 
         HasResults = itemsObservable
-            .Count()
+            .Do(_ => Debug.WriteLine("Item changed in source observable"))
+            .Catch((Exception ex) =>
+            {
+                Debug.WriteLine($"Error in observable sequence: {ex}");
+                return Observable.Empty<IChangeSet<ISearchItem, ComposedKey>>();  // replace T with the appropriate type
+            })
+            .Scan(0, (count, _) => count + 1)
+            .DistinctUntilChanged()
             .Select(i => i > 0)
+            .Do(hasResults => Debug.WriteLine($"HasResults (before replay): {hasResults}"))
             .Replay(1)
-            .ReplayLastActive();
+            .RefCount()
+            .Do(hasResults => Debug.WriteLine($"HasResults (after replay): {hasResults}"));
 
-        //bind hasresults to a property so we can use it in the view
         HasResults
             .ObserveOn(RxApp.MainThreadScheduler)
+            .Do(hasResults => Debug.WriteLine($"HasResults (on main thread): {hasResults}"))
             .BindTo(this, x => x.HasResultsVal);
 
         ResetCommand = ReactiveCommand.Create(ClearAndHideSearchList);
