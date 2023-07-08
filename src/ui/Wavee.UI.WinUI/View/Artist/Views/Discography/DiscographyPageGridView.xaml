@@ -22,7 +22,7 @@
         <ItemsRepeater.Layout>
             <UniformGridLayout MinColumnSpacing="8"
                                MinRowSpacing="12"
-                               MinItemHeight="240"
+                               MinItemHeight="250"
                                MinItemWidth="200"
                                ItemsJustification="Start"
                                ItemsStretch="Uniform" />

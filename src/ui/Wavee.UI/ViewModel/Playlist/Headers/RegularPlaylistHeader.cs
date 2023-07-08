@@ -8,10 +8,10 @@ namespace Wavee.UI.ViewModel.Playlist.Headers;
 public sealed class RegularPlaylistHeader : ObservableObject, IPlaylistHeader
 {
     private bool _mozaicCreated;
+    private FutereTracksHolder _futureTracks;
 
-    public RegularPlaylistHeader(SelectedListContent listContent, TaskCompletionSource<Seq<Either<WaveeUIEpisode, WaveeUITrack>>> futureTracks, ObservableStringHolder tracksDurationStirng, ObservableStringHolder tracksCountString)
+    public RegularPlaylistHeader(SelectedListContent listContent, ObservableStringHolder tracksDurationStirng, ObservableStringHolder tracksCountString)
     {
-        FutureTracks = futureTracks;
         TracksDurationStirng = tracksDurationStirng;
         TracksCountString = tracksCountString;
         ImageUrl = listContent.Attributes.PictureSize.SingleOrDefault(x => x.TargetName is "large")?.Url
@@ -46,7 +46,12 @@ public sealed class RegularPlaylistHeader : ObservableObject, IPlaylistHeader
     public bool ShouldShowMadeFor { get; }
 
     public bool IsCollab { get; }
-    public TaskCompletionSource<Seq<Either<WaveeUIEpisode, WaveeUITrack>>> FutureTracks { get; }
+
+    public FutereTracksHolder FutureTracks
+    {
+        get => _futureTracks;
+        set => SetProperty(ref _futureTracks, value);
+    }
 
     public bool MozaicCreated
     {
@@ -69,6 +74,27 @@ public sealed class RegularPlaylistHeader : ObservableObject, IPlaylistHeader
 
     public ObservableStringHolder TracksDurationStirng { get; }
     public ObservableStringHolder TracksCountString { get; }
+    public bool HasDescription => !string.IsNullOrEmpty(Description);
+
+    public void MozaicImageControl_OnImageLoadedChanged(object? sender, bool e)
+    {
+        MozaicCreated = e;
+    }
+}
+
+public class FutereTracksHolder
+{
+    public FutereTracksHolder(TaskCompletionSource<Seq<Either<WaveeUIEpisode, WaveeUITrack>>> Trakcs)
+    {
+        this.Trakcs = Trakcs;
+    }
+
+    public TaskCompletionSource<Seq<Either<WaveeUIEpisode, WaveeUITrack>>> Trakcs { get; init; }
+
+    public void Deconstruct(out TaskCompletionSource<Seq<Either<WaveeUIEpisode, WaveeUITrack>>> Trakcs)
+    {
+        Trakcs = this.Trakcs;
+    }
 }
 
 public sealed class ObservableStringHolder : ObservableObject

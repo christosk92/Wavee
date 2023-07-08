@@ -125,6 +125,8 @@ public sealed partial class PlaylistView : UserControl, INavigable, ICacheablePa
     {
         (ViewModel.Header as RegularPlaylistHeader)!.MozaicCreated = true;
     }
+
+    
 }
 
 public class PlaylistTrackSource : IIncrementalSource<PlaylistTrackViewModel>

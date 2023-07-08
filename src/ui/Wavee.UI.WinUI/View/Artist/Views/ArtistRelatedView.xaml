@@ -13,8 +13,10 @@
              mc:Ignorable="d">
 
     <StackPanel Margin="28"
+
                 VerticalAlignment="Top">
         <TextBlock Text="Related artists"
+                   VerticalAlignment="Top"
                    Margin="0,0,0,12"
                    Style="{ThemeResource SubtitleTextBlockStyle}" />
         <ItemsRepeater VerticalAlignment="Top"
@@ -23,7 +25,7 @@
             <ItemsRepeater.Layout>
                 <UniformGridLayout MinColumnSpacing="8"
                                    MinRowSpacing="12"
-                                   MinItemHeight="240"
+                                   MinItemHeight="260"
                                    MinItemWidth="200"
                                    ItemsJustification="Start"
                                    ItemsStretch="Uniform" />
@@ -34,7 +36,9 @@
                                          AudioType="Artist"
                                          IsArtist="True"
                                          MaxHeight="400"
-                                         MaxWidth="400"
+                                         MaxWidth="400" 
+                                         VerticalAlignment="Top"
+                                         VerticalContentAlignment="Top"
                                          Title="{x:Bind Title,Mode=OneWay}"
                                          Subtitle="{x:Bind Subtitle,Mode=OneWay}"
                                          Image="{x:Bind Image,Mode=OneWay}"
@@ -45,6 +49,7 @@
 
 
         <TextBlock Text="Featuring"
+                   VerticalAlignment="Top"
                    Margin="0,48,0,12"
                    Style="{ThemeResource SubtitleTextBlockStyle}" />
         <ItemsRepeater VerticalAlignment="Top"
@@ -57,6 +62,8 @@
                 <DataTemplate x:DataType="common:ICardViewModel">
                     <components:CardView Id="{x:Bind Id,Mode=OneWay}"
                                          AudioType="Playlist"
+                                         VerticalAlignment="Top"
+                                         VerticalContentAlignment="Top"
                                          IsArtist="False"
                                          MaxHeight="400"
                                          MaxWidth="400"
@@ -84,6 +91,8 @@
                                          AudioType="Album"
                                          IsArtist="False"
                                          MaxHeight="400"
+                                         VerticalAlignment="Top"
+                                         VerticalContentAlignment="Top"
                                          MaxWidth="400"
                                          Title="{x:Bind Title,Mode=OneWay}"
                                          Caption="{x:Bind Caption,Mode=OneWay}"
@@ -94,6 +103,5 @@
             </ItemsRepeater.ItemTemplate>
         </ItemsRepeater>
 
-        <Border Height="100" />
     </StackPanel>
 </UserControl>

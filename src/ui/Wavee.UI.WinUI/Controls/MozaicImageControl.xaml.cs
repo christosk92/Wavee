@@ -30,6 +30,7 @@ using Spotify.Metadata;
 using Wavee.Metadata.Common;
 using Image = Microsoft.UI.Xaml.Controls.Image;
 using System.Text;
+using Wavee.UI.ViewModel.Playlist.Headers;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -38,7 +39,7 @@ namespace Wavee.UI.WinUI.Controls
 {
     public sealed partial class MozaicImageControl : UserControl
     {
-        public static readonly DependencyProperty FutureTracksProperty = DependencyProperty.Register(nameof(FutureTracks), typeof(TaskCompletionSource<Seq<Either<WaveeUIEpisode, WaveeUITrack>>>), typeof(MozaicImageControl), new PropertyMetadata(default(TaskCompletionSource<Seq<Either<WaveeUIEpisode, WaveeUITrack>>>), TracksChanged));
+        public static readonly DependencyProperty FutureTracksProperty = DependencyProperty.Register(nameof(FutureTracks), typeof(FutereTracksHolder), typeof(MozaicImageControl), new PropertyMetadata(default(FutereTracksHolder), TracksChanged));
 
         private static async void TracksChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
@@ -46,37 +47,22 @@ namespace Wavee.UI.WinUI.Controls
             await x.TracksChanged(e.NewValue);
         }
 
-        public static readonly DependencyProperty ImageLoadedProperty = DependencyProperty.Register(nameof(ImageLoaded), typeof(bool), typeof(MozaicImageControl), new PropertyMetadata(default(bool)));
-
         public MozaicImageControl()
         {
             this.InitializeComponent();
         }
 
-        public TaskCompletionSource<Seq<Either<WaveeUIEpisode, WaveeUITrack>>> FutureTracks
-        {
-            get => (TaskCompletionSource<Seq<Either<WaveeUIEpisode, WaveeUITrack>>>)GetValue(FutureTracksProperty);
-            set
-            {
-                SetValue(FutureTracksProperty, value);
-                _ = TracksChanged(value);
-            }
-        }
 
-        public bool ImageLoaded
-        {
-            get => (bool)GetValue(ImageLoadedProperty);
-            set => SetValue(ImageLoadedProperty, value);
-        }
+        public event EventHandler<bool> ImageLoadedChanged;
 
         private async Task TracksChanged(object eNewValue)
         {
-            ImageLoaded = false;
-            if (eNewValue is not TaskCompletionSource<Seq<Either<WaveeUIEpisode, WaveeUITrack>>> tcs)
+            ImageLoadedChanged?.Invoke(this, false);
+            if (eNewValue is not FutereTracksHolder tcs)
                 return;
             try
             {
-                var tracks = await tcs.Task;
+                var tracks = await tcs.Trakcs.Task;
                 //Mozaic is created by either a grid of 4 tracks or more or 1 track
                 //nothing in between
                 var firstFourTracks = tracks.Take(4);
@@ -168,7 +154,7 @@ namespace Wavee.UI.WinUI.Controls
 
             MainControl.Child = grid;
             await Task.WhenAll(firstImageLoaded.Task, secondImageLoaded.Task, thirdImageLoaded.Task, fourthImageLoaded.Task);
-            ImageLoaded = true;
+            ImageLoadedChanged?.Invoke(this, true);
         }
 
         private static BitmapImage GetImage(Either<WaveeUIEpisode, WaveeUITrack> firstTrack)
@@ -192,10 +178,18 @@ namespace Wavee.UI.WinUI.Controls
             return image;
         }
 
-        private async void MozaicImageControl_OnLoaded(object sender, RoutedEventArgs e)
+        private void MozaicImageControl_OnLoaded(object sender, RoutedEventArgs e)
         {
-            if (FutureTracks is not null)
-                await TracksChanged(FutureTracks);
+            if ((sender as FrameworkElement).DataContext is RegularPlaylistHeader p)
+            {
+                FutureTracks = p.FutureTracks;
+            }
+        }
+
+        public FutereTracksHolder FutureTracks
+        {
+            get => (FutereTracksHolder)GetValue(FutureTracksProperty);
+            set => SetValue(FutureTracksProperty, value);
         }
     }
 }

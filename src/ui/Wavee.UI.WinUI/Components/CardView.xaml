@@ -25,12 +25,15 @@
           MaxHeight="400">
         <Border  Background="{ThemeResource LayerFillColorDefaultBrush}"
                  BorderThickness="1"
+                 MaxWidth="400"
+                 MaxHeight="400"
                  labs:TransitionHelper.Id="background"
                  BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                  Margin="0,0,12,0"
                  CornerRadius="0,0,6,6" />
         <Button HorizontalAlignment="Stretch"
                 CornerRadius="0"
+
                 VerticalAlignment="Stretch"
                 HorizontalContentAlignment="Stretch"
                 Padding="0"
@@ -43,9 +46,13 @@
                 <Grid.RowDefinitions>
                     <RowDefinition  MaxHeight="400"
                                     Height="Auto" />
-                    <RowDefinition />
+                    <RowDefinition 
+                                    MaxHeight="400"/>
                 </Grid.RowDefinitions>
-                <Grid>
+                <Grid  
+                    MaxWidth="400"
+                       MaxHeight="400"
+                       VerticalAlignment="Top">
                     <Border x:Name="HeartBorder"
                             MaxHeight="400"
                             MaxWidth="400"
@@ -60,12 +67,17 @@
                     </Border>
                     <controls:ConstrainedBox x:Name="NormalImageBox"
                                              MaxHeight="400"
+                                             VerticalAlignment="Top"
                                              MaxWidth="400"
                                              Grid.ColumnSpan="2"
                                              labs:TransitionHelper.Id="image"
                                              x:Load="{x:Bind Negate(IsArtist),Mode=OneWay}"
                                              AspectRatio="1:1">
-                        <Image x:Name="NormalImageImage">
+                        <Image x:Name="NormalImageImage" 
+                               
+                               MaxWidth="400"
+                               MaxHeight="400"
+                               VerticalAlignment="Top">
                             <Image.Source>
                                 <BitmapImage UriSource="{Binding Image,Mode=OneWay}"
                                              DecodePixelHeight="250"
@@ -118,10 +130,13 @@
                 </Grid>
 
                 <StackPanel Padding="8"
-                            Height="80"
+                            Height="90"
                             Grid.Row="1">
                     <TextBlock Text="{x:Bind Title, Mode=OneWay}"
                                labs:TransitionHelper.Id="name"
+                               TextWrapping="Wrap"
+                               MaxLines="2"
+                               TextTrimming="CharacterEllipsis"
                                FontWeight="SemiBold" />
                     <TextBlock TextWrapping="Wrap"
                                MaxLines="2"

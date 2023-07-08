@@ -73,10 +73,13 @@ internal sealed class SpotifyUIPlaylistClient : IWaveeUIPlaylistClient
                 FutureTracks = futureMozaicTracks,
                 Header = isBigHeader
                     ? new PlaylistBigHeader(listContent)
-                    : new RegularPlaylistHeader(listContent, futureMozaicTracks,
+                    : new RegularPlaylistHeader(listContent,
                         tracksDurationStirng: new ObservableStringHolder(),
                         tracksCountString: new ObservableStringHolder()
-                    ),
+                    )
+                    {
+                        FutureTracks = new FutereTracksHolder(futureMozaicTracks)
+                    },
                 Name = listContent.Attributes.Name,
                 ImageId = Option<string>.None,
                 Description = listContent.Attributes.HasDescription

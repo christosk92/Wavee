@@ -134,6 +134,5 @@
                 </DataTemplate>
             </ItemsRepeater.ItemTemplate>
         </ItemsRepeater>
-        <Border Height="80" />
     </StackPanel>
 </UserControl>

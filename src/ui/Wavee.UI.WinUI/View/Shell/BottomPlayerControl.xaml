@@ -217,6 +217,7 @@
                         DefaultLabelPosition="Collapsed"
                         OverflowButtonVisibility="Visible">
                 <AppBarToggleButton x:Name="LyricsButton"
+                                    IsEnabled="{x:Bind Playback.HasLyrics,Mode=OneWay}"
                                     Tapped="LyricsButton_OnTapped"
                                     IsChecked="{x:Bind RightSidebar.IsInLyricsView,Mode=OneWay}"
                                     Visibility="Visible">

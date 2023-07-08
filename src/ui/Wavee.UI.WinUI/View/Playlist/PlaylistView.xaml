@@ -63,11 +63,13 @@
 
                 <Grid Width="250" Height="250">
                     <Grid x:Name="MozaicGrid" x:Load="{x:Bind ShouldShowMozaic}">
-                        <labs:Shimmer x:Name="MozaicImageWaiter" x:Load="{x:Bind Negate(MozaicCreated), Mode=OneWay}" />
+                        <labs:Shimmer x:Name="MozaicImageWaiter" 
+                                      IsActive="{x:Bind Negate(MozaicCreated), Mode=OneWay}"
+                                      Visibility="{x:Bind MozaicCreated, Mode=OneWay, Converter={StaticResource TrueToCollapsedConverter}}" />
                         <controls:MozaicImageControl
                             x:Name="MozaicImageControl"
-                            FutureTracks="{Binding FutureTracks, Mode=OneWay}"
-                            ImageLoaded="{x:Bind MozaicCreated, Mode=TwoWay}" />
+                            FutureTracks="{x:Bind FutureTracks, Mode=OneWay}"
+                            ImageLoadedChanged="{x:Bind MozaicImageControl_OnImageLoadedChanged}"/>
                     </Grid>
 
                     <Grid x:Name="NormalImage" x:Load="{x:Bind Negate(ShouldShowMozaic)}">
@@ -99,6 +101,7 @@
                         FontWeight="SemiBold"
                         Foreground="{ThemeResource ApplicationSecondaryForegroundThemeBrush}"
                         MaxLines="4"
+                        Visibility="{x:Bind HasDescription, Mode=OneWay, Converter={StaticResource TrueToVisibleConverter}}"
                         Text="{x:Bind HtmlEscape(Description), Mode=OneWay}"
                         TextWrapping="Wrap" />
 

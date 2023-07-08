@@ -39,6 +39,7 @@ public sealed class PlaybackViewModel : ObservableObject
     private readonly UserViewModel _user;
     private readonly Subject<WaveeUIPlaybackState> _playbackEvent = new Subject<WaveeUIPlaybackState>();
     public WaveeUIPlaybackState _lastReceivedState;
+    private bool _hasLyrics;
 
     public PlaybackViewModel(UserViewModel user)
     {
@@ -107,6 +108,12 @@ public sealed class PlaybackViewModel : ObservableObject
         set => SetProperty(ref _paused, value);
     }
 
+    public bool HasLyrics
+    {
+        get => _hasLyrics;
+        set => SetProperty(ref _hasLyrics, value);
+    }
+
 
     private Unit OnPlaybackEvent(WaveeUIPlaybackState state)
     {
@@ -121,11 +128,17 @@ public sealed class PlaybackViewModel : ObservableObject
             Duration = metadata.Duration;
             ItemId = metadata.Id;
             Uid = metadata.Uid;
+            HasLyrics = metadata.HasLyrics;
+        }
+        else
+        {
+            HasLyrics = false;
         }
 
         switch (state.PlaybackState)
         {
             case WaveeUIPlayerState.NotPlayingAnything:
+                HasLyrics = false;
                 HasPlayback = false;
                 break;
             case WaveeUIPlayerState.Playing:
