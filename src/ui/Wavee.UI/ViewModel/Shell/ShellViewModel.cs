@@ -5,6 +5,8 @@ using Wavee.UI.User;
 using Wavee.UI.ViewModel.Home;
 using Wavee.UI.ViewModel.Library;
 using Wavee.UI.ViewModel.Playback;
+using Wavee.UI.ViewModel.Playlist;
+using Wavee.UI.ViewModel.Playlist.User;
 using Wavee.UI.ViewModel.Shell.Sidebar;
 
 namespace Wavee.UI.ViewModel.Shell;
@@ -21,6 +23,7 @@ public sealed class ShellViewModel : ObservableObject
         Library = new LibraryViewModel(user, Added, Removed);
         Playback = new PlaybackViewModel(user);
         SidebarItems = new BulkConcurrentObservableCollection<ISidebarItem>(ConstructDefaultItems(user));
+        Playlists = new PlaylistsViewModel(user, SidebarItems);
         RightSidebar = new RightSidebarViewModel(user);
         Task.Run(async () =>
         {
@@ -56,7 +59,7 @@ public sealed class ShellViewModel : ObservableObject
     public UserViewModel User { get; set; }
     public PlaybackViewModel Playback { get; }
     public RightSidebarViewModel RightSidebar { get; }
-
+    public PlaylistsViewModel Playlists { get; }
     public BulkConcurrentObservableCollection<ISidebarItem> SidebarItems { get; }
     public static ShellViewModel Instance { get; private set; }
 

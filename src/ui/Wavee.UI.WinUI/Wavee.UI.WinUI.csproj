@@ -88,7 +88,7 @@
 		<PackageReference Include="CommunityToolkit.WinUI.UI.Controls.Media" Version="7.1.2" />
 		<PackageReference Include="CommunityToolkit.WinUI.UI.Media" Version="7.1.2" />
 		<PackageReference Include="Microsoft.Graphics.Win2D" Version="1.0.5.1" />
-		<PackageReference Include="Microsoft.WindowsAppSDK" Version="1.3.230602002" />
+		<PackageReference Include="Microsoft.WindowsAppSDK" Version="1.4.230628000-preview1" />
 		<PackageReference Include="ReactiveUI.WinUI" Version="19.2.1" />
 		<PackageReference Include="Serilog.Sinks.Console" Version="4.1.1-dev-00910" />
 		<PackageReference Include="Serilog.Sinks.Debug" Version="2.0.0" />

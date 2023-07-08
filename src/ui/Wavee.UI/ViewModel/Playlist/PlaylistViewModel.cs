@@ -1,6 +1,10 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using LanguageExt;
 using Serilog;
+using Spotify.Metadata;
+using System;
+using System.Text;
+using LanguageExt.UnsafeValueAccess;
 using Wavee.Metadata.Artist;
 using Wavee.Metadata.Common;
 using Wavee.UI.Client.Playlist.Models;
@@ -55,6 +59,15 @@ public sealed class PlaylistViewModel : ObservableObject
         Id = id;
         var client = _user.Client.Playlist;
         var playlist = await client.GetPlaylist(id, cancellationToken);
+        if (playlist.Header is RegularPlaylistHeader regularPlaylistHeader)
+        {
+            regularPlaylistHeader.TracksCountString.Value = playlist.Tracks.Length switch
+            {
+                0 => "No tracks",
+                1 => "1 track",
+                _ => $"{playlist.Tracks.Length} tracks"
+            };
+        }
         Revision = playlist.Revision;
         Header = playlist.Header;
         _tracks = playlist.Tracks;
@@ -64,7 +77,8 @@ public sealed class PlaylistViewModel : ObservableObject
         await FetchTracksOnlyForSorting(playlist.FutureTracks, cancellationToken);
     }
 
-    private async Task FetchTracksOnlyForSorting(TaskCompletionSource<Seq<Either<WaveeUIEpisode, WaveeUITrack>>> playlistFutureTracks,
+    private async Task FetchTracksOnlyForSorting(
+        TaskCompletionSource<Seq<Either<WaveeUIEpisode, WaveeUITrack>>> playlistFutureTracks,
         CancellationToken cancellationToken)
     {
         var trckUris = _tracks.Select(x => x.Id).ToArray();
@@ -79,6 +93,11 @@ public sealed class PlaylistViewModel : ObservableObject
                 {
                     var tracks = await _user.Client.ExtendedMetadata.GetTracks(batch, true, cancellationToken);
                     playlistFutureTracks.TrySetResult(tracks.Values.ToSeq());
+                    if (Header is RegularPlaylistHeader regularPlaylistHeader)
+                    {
+                        regularPlaylistHeader.TracksDurationStirng.Value = CalculateDuration(tracks);
+                    }
+
                     break;
                 }
                 catch (Exception e)
@@ -95,7 +114,38 @@ public sealed class PlaylistViewModel : ObservableObject
             }
         }
     }
+    public string CalculateDuration(
+        Dictionary<string, Either<WaveeUIEpisode, WaveeUITrack>> data)
+    {
+        var duration = data.Sum(x => x.Value.Match(
+            track => track.DurationMs,
+            episode => episode.DurationMs));
 
+        //1 hr 23 min 45 sec
+        var hours = duration / 3600000;
+        var minutes = (duration % 3600000) / 60000;
+        var seconds = (duration % 60000) / 1000;
+        var sb = new StringBuilder();
+        if (hours > 0)
+        {
+            sb.Append(hours);
+            sb.Append(" hr ");
+        }
+
+        if (minutes > 0)
+        {
+            sb.Append(minutes);
+            sb.Append(" min ");
+        }
+
+        if (seconds > 0)
+        {
+            sb.Append(seconds);
+            sb.Append(" sec");
+        }
+
+        return sb.ToString();
+    }
     public Dictionary<string, PlaylistTrackViewModel> Generate(int offset, int limit) => _tracks.Skip(offset)
         .Take(limit).Select((x, i) => new PlaylistTrackViewModel(x, (ushort)(i + offset)))
         .ToDictionary(x => x.Id, x => x);
@@ -115,7 +165,7 @@ public sealed class PlaylistViewModel : ObservableObject
                     if (tracks.TryGetValue(track.Id, out var t))
                     {
                         _ = t.Match(
-                            Left: episode => throw new NotImplementedException(),
+                            Left: episode => fill[episode.Id].Episode = episode,
                             Right: tr => fill[track.Id].Track = tr
                         );
                     }
@@ -132,6 +182,7 @@ public sealed class PlaylistViewModel : ObservableObject
 public sealed class PlaylistTrackViewModel : ObservableObject
 {
     private WaveeUITrack? _track;
+    private WaveeUIEpisode _episode;
 
     public PlaylistTrackViewModel(WaveeUIPlaylistTrackInfo waveeUiPlaylistTrackInfo, ushort index)
     {
@@ -163,9 +214,67 @@ public sealed class PlaylistTrackViewModel : ObservableObject
     public bool Loading => Track is null;
     public ushort Index { get; }
 
+    public WaveeUIEpisode Episode
+    {
+        get => _episode;
+        set
+        {
+            if (SetProperty(ref _episode, value))
+            {
+                this.OnPropertyChanged(nameof(Loading));
+            }
+        }
+    }
+
     public bool Negate(bool b)
     {
         return !b;
+    }
+
+    public string FormatTimestamp(Option<DateTimeOffset> dateTimeOffsets)
+    {
+        if (dateTimeOffsets.IsNone) return string.Empty;
+        var dateTimeOffset = dateTimeOffsets.ValueUnsafe();
+
+        // less than 10 seconds: "Just now"
+        //less than 1 minute: "X seconds ago"
+        //less than 1 hour: "X minutes ago" OR // "1 minute ago"
+        //less than 1 day: "X hours ago" OR // "1 hour ago"
+        //less than 1 week: "X days ago" OR // "1 day ago"
+        //Exact date
+
+        var totalSeconds = (int)DateTimeOffset.Now.Subtract(dateTimeOffset).TotalSeconds;
+        var totalMinutes = totalSeconds / 60;
+        var totalHours = totalMinutes / 60;
+        var totalDays = totalHours / 24;
+        var totalWeeks = totalDays / 7;
+        return dateTimeOffset switch
+        {
+            _ when dateTimeOffset > DateTimeOffset.Now.AddMinutes(-1) => "Just now",
+            _ when dateTimeOffset > DateTimeOffset.Now.AddHours(-1) =>
+                $"{totalMinutes} minute{(totalMinutes > 1 ? "s" : "")} ago",
+            _ when dateTimeOffset > DateTimeOffset.Now.AddDays(-1) =>
+                $"{totalHours} hour{(totalHours > 1 ? "s" : "")} ago",
+            _ when dateTimeOffset > DateTimeOffset.Now.AddDays(-7) =>
+                $"{totalDays} day{(totalDays > 1 ? "s" : "")} ago",
+            _ when dateTimeOffset > DateTimeOffset.Now.AddMonths(-1) =>
+                $"{totalWeeks} week{(totalWeeks > 1 ? "s" : "")} ago",
+            _ => GetFullMonthStr(dateTimeOffset)
+        };
+
+        static string GetFullMonthStr(DateTimeOffset d)
+        {
+            string fullMonthName =
+                d.ToString("MMMM");
+            return $"{fullMonthName} {d.Day}, {d.Year}";
+        }
+    }
+
+    public string FormatDuration(int i)
+    {
+        var duration = TimeSpan.FromMilliseconds(i);
+        //in minutes and seconds
+        return duration.ToString("mm\\:ss");
     }
 }
 
@@ -186,4 +295,5 @@ public class WaveeUIEpisode
 {
     public CoverImage[] Covers { get; set; }
     public string Id { get; set; }
+    public int DurationMs { get; set; }
 }

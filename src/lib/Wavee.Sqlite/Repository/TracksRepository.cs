@@ -95,7 +95,9 @@ public sealed class TracksRepository
         }
 
         await using var db = LocalDbFactory.Create(_cachePath);
-        var cachedTracks = newTracks.Select(x => x.Value.Track.ToCachedTrack(x.Key, x.Value.Expiration));
+        var cachedTracks = newTracks
+            .Select(x => x.Value.Track.ToCachedTrack(x.Key, x.Value.Expiration))
+            .DistinctBy(x => x.Id);
         await db.Tracks.AddRangeAsync(cachedTracks);
         await db.SaveChangesAsync();
         return Unit.Default;

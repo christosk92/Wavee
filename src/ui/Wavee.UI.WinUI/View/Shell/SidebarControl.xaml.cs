@@ -24,6 +24,7 @@ using Wavee.UI.WinUI.Navigation;
 using Microsoft.VisualBasic.ApplicationServices;
 using ReactiveUI;
 using Wavee.UI.Client.Playback;
+using Wavee.UI.ViewModel.Playlist;
 using Wavee.UI.ViewModel.Shell;
 using Wavee.UI.WinUI.Extensions;
 
@@ -187,6 +188,11 @@ public sealed partial class SidebarControl : NavigationView, INotifyPropertyChan
             {
                 vm = ctd.Inner.ViewModelType;
                 parameter = ctd.Inner.Parameter;
+            }
+            else if (data is PlaylistSidebarItem playlist)
+            {
+                vm = typeof(PlaylistViewModel);
+                parameter = playlist.Parameter;
             }
 
             if (vm is not null)
@@ -373,5 +379,10 @@ public sealed partial class SidebarControl : NavigationView, INotifyPropertyChan
             var val = plb.Value.ValueUnsafe();
             SetImageFromPlaybackEvent(this, val);
         }
+    }
+
+    public double IsExpandedToHeight(bool b, short s, short s1)
+    {
+        return b ? s : s1;
     }
 }

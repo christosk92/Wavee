@@ -1,11 +1,13 @@
 ﻿using Microsoft.UI.Xaml;
 using System;
 using Wavee.UI.ViewModel.Home;
+using Wavee.UI.ViewModel.Playlist;
 using Wavee.UI.ViewModel.Setup;
 using Wavee.UI.ViewModel.Shell;
 using Wavee.UI.ViewModel.Wizard;
 using Wavee.UI.WinUI.View;
 using Wavee.UI.WinUI.View.Home;
+using Wavee.UI.WinUI.View.Playlist;
 using Wavee.UI.WinUI.View.Setup;
 using Wavee.UI.WinUI.View.Shell;
 
@@ -38,6 +40,7 @@ public static class ViewFactory
         return vm switch
         {
             _ when vm == typeof(HomeViewModel) => typeof(HomeView),
+            _ when vm == typeof(PlaylistViewModel) => typeof(PlaylistView),
         };
     }
 }

@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<Application x:Class="Wavee.UI.WinUI.App"
-             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:controls="using:Microsoft.UI.Xaml.Controls"
-             xmlns:local="using:Wavee.UI.WinUI"
-             xmlns:xaml="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:converters="using:CommunityToolkit.WinUI.UI.Converters"
-             xmlns:themes="using:Wavee.UI.WinUI.Themes">
+<Application
+    x:Class="Wavee.UI.WinUI.App"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:Microsoft.UI.Xaml.Controls"
+    xmlns:converters="using:CommunityToolkit.WinUI.UI.Converters"
+    xmlns:local="using:Wavee.UI.WinUI"
+    xmlns:themes="using:Wavee.UI.WinUI.Themes"
+    xmlns:xaml="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
 
     <Application.Resources>
         <ResourceDictionary>
@@ -21,49 +22,33 @@
                 </XamlControlsResources>
                 <ResourceDictionary Source="Themes/BorderStyles.xaml" />
                 <ResourceDictionary Source="Themes/ListViewItemStyles.xaml" />
-                <themes:AlbumArtistPageTrackTemplates/>
+                <themes:AlbumArtistPageTrackTemplates />
                 <ResourceDictionary>
-                    <SolidColorBrush x:Key="TransparentBrush"
-                                     Color="Transparent" />
-                    <StaticResource x:Key="WindowCaptionBackground"
-                                    ResourceKey="TransparentBrush" />
-                    <StaticResource x:Key="WindowCaptionBackgroundDisabled"
-                                    ResourceKey="TransparentBrush" />
-                    <StaticResource x:Key="WindowCaptionForeground"
-                                    ResourceKey="ApplicationForegroundThemeBrush" />
-                    <StaticResource x:Key="WindowCaptionForegroundDisabled"
-                                    ResourceKey="ApplicationForegroundThemeBrush" />
+                    <SolidColorBrush x:Key="TransparentBrush" Color="Transparent" />
+                    <StaticResource x:Key="WindowCaptionBackground" ResourceKey="TransparentBrush" />
+                    <StaticResource x:Key="WindowCaptionBackgroundDisabled" ResourceKey="TransparentBrush" />
+                    <StaticResource x:Key="WindowCaptionForeground" ResourceKey="ApplicationForegroundThemeBrush" />
+                    <StaticResource x:Key="WindowCaptionForegroundDisabled" ResourceKey="ApplicationForegroundThemeBrush" />
                 </ResourceDictionary>
 
                 <ResourceDictionary>
                     <ResourceDictionary.ThemeDictionaries>
                         <ResourceDictionary x:Key="Light">
-                            <SolidColorBrush x:Key="App.Theme.BackgroundBrush"
-                                             Color="Transparent" />
-                            <SolidColorBrush x:Key="App.Theme.AddressBar.BackgroundBrush"
-                                             Color="{StaticResource LayerOnMicaBaseAltFillColorDefault}" />
-                            <SolidColorBrush x:Key="App.Theme.Sidebar.BackgroundBrush"
-                                             Color="Transparent" />
-                            <SolidColorBrush x:Key="App.Theme.FileArea.BackgroundBrush"
-                                             Color="{StaticResource CardBackgroundFillColorDefault}" />
+                            <SolidColorBrush x:Key="App.Theme.BackgroundBrush" Color="Transparent" />
+                            <SolidColorBrush x:Key="App.Theme.AddressBar.BackgroundBrush" Color="{StaticResource LayerOnMicaBaseAltFillColorDefault}" />
+                            <SolidColorBrush x:Key="App.Theme.Sidebar.BackgroundBrush" Color="Transparent" />
+                            <SolidColorBrush x:Key="App.Theme.FileArea.BackgroundBrush" Color="{StaticResource CardBackgroundFillColorDefault}" />
                         </ResourceDictionary>
                         <ResourceDictionary x:Key="Dark">
-                            <SolidColorBrush x:Key="App.Theme.BackgroundBrush"
-                                             Color="Transparent" />
-                            <SolidColorBrush x:Key="App.Theme.Sidebar.BackgroundBrush"
-                                             Color="Transparent" />
-                            <SolidColorBrush x:Key="App.Theme.FileArea.BackgroundBrush"
-                                             Color="{StaticResource CardBackgroundFillColorDefault}" />
+                            <SolidColorBrush x:Key="App.Theme.BackgroundBrush" Color="Transparent" />
+                            <SolidColorBrush x:Key="App.Theme.Sidebar.BackgroundBrush" Color="Transparent" />
+                            <SolidColorBrush x:Key="App.Theme.FileArea.BackgroundBrush" Color="{StaticResource CardBackgroundFillColorDefault}" />
                         </ResourceDictionary>
                         <ResourceDictionary x:Key="HighContrast">
-                            <SolidColorBrush x:Key="App.Theme.BackgroundBrush"
-                                             Color="Transparent" />
-                            <SolidColorBrush x:Key="App.Theme.AddressBar.BackgroundBrush"
-                                             Color="Transparent" />
-                            <SolidColorBrush x:Key="App.Theme.Sidebar.BackgroundBrush"
-                                             Color="{StaticResource CardBackgroundFillColorDefault}" />
-                            <SolidColorBrush x:Key="App.Theme.FileArea.BackgroundBrush"
-                                             Color="{StaticResource CardBackgroundFillColorDefault}" />
+                            <SolidColorBrush x:Key="App.Theme.BackgroundBrush" Color="Transparent" />
+                            <SolidColorBrush x:Key="App.Theme.AddressBar.BackgroundBrush" Color="Transparent" />
+                            <SolidColorBrush x:Key="App.Theme.Sidebar.BackgroundBrush" Color="{StaticResource CardBackgroundFillColorDefault}" />
+                            <SolidColorBrush x:Key="App.Theme.FileArea.BackgroundBrush" Color="{StaticResource CardBackgroundFillColorDefault}" />
                         </ResourceDictionary>
                     </ResourceDictionary.ThemeDictionaries>
                 </ResourceDictionary>
@@ -71,12 +56,13 @@
             </ResourceDictionary.MergedDictionaries>
             <FontFamily x:Key="SegoeFluent">/Assets/Fonts/SegoeFluentIcons.ttf#Segoe Fluent Icons</FontFamily>
 
-            <converters:BoolToVisibilityConverter TrueValue="Visible"
-                                                  FalseValue="Collapsed"
-                                                  x:Key="TrueToVisibleConverter" />
+            <converters:BoolToVisibilityConverter
+                x:Key="TrueToVisibleConverter"
+                FalseValue="Collapsed"
+                TrueValue="Visible" />
             <converters:BoolToObjectConverter x:Key="BoolToGridConverter">
                 <converters:BoolToObjectConverter.TrueValue>
-                    <GridLength>*</GridLength>
+                    <GridLength>.5*</GridLength>
                 </converters:BoolToObjectConverter.TrueValue>
                 <converters:BoolToObjectConverter.FalseValue>
                     <GridLength>0</GridLength>

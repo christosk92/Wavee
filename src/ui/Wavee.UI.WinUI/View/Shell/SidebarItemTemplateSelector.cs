@@ -9,9 +9,8 @@ internal sealed class SidebarItemTemplateSelector : DataTemplateSelector
     public DataTemplate HeaderSidebarItemTemplate { get; set; }
     public DataTemplate RegularSidebarItemTemplate { get; set; }
     public DataTemplate CountedSidebarItemTemplate { get; set; }
-
     public DataTemplate PlaylistSidebarItemTemplate { get; set; }
-
+    public DataTemplate PlaylistFolderSidebarItemTemplate { get; set; }
 
     protected override DataTemplate SelectTemplateCore(object item, DependencyObject container)
     {
@@ -20,6 +19,7 @@ internal sealed class SidebarItemTemplateSelector : DataTemplateSelector
             HeaderSidebarItem => HeaderSidebarItemTemplate,
             RegularSidebarItem => RegularSidebarItemTemplate,
             CountedSidebarItem => CountedSidebarItemTemplate,
+            PlaylistFolderSidebarItem => PlaylistFolderSidebarItemTemplate,
             PlaylistSidebarItem => PlaylistSidebarItemTemplate,
             _ => base.SelectTemplateCore(item, container)
         };

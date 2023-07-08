@@ -1,188 +1,237 @@
-<?xml version="1.0" encoding="utf-8"?>
-<UserControl x:Class="Wavee.UI.WinUI.View.Playlist.PlaylistView"
-             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="using:Wavee.UI.WinUI.View.Playlist"
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:playlist="using:Wavee.UI.ViewModel.Playlist"
-             xmlns:labs="using:CommunityToolkit.Labs.WinUI"
-             xmlns:headers="using:Wavee.UI.ViewModel.Playlist.Headers"
-             xmlns:controls="using:Wavee.UI.WinUI.Controls"
-             xmlns:templateSelectors="using:Wavee.UI.WinUI.UI.TemplateSelectors"
-             xmlns:tracks="using:Wavee.UI.WinUI.Components.Tracks"
-             xmlns:ui="using:CommunityToolkit.WinUI.UI"
-             xmlns:media="using:CommunityToolkit.WinUI.UI.Media"
-             xmlns:converters="using:CommunityToolkit.WinUI.UI.Converters"
-             SizeChanged="PlaylistView_OnSizeChanged"
-             mc:Ignorable="d">
+<?xml version="1.0" encoding="utf-8" ?>
+<UserControl
+    x:Class="Wavee.UI.WinUI.View.Playlist.PlaylistView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:Wavee.UI.WinUI.Controls"
+    xmlns:converters="using:CommunityToolkit.WinUI.UI.Converters"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:headers="using:Wavee.UI.ViewModel.Playlist.Headers"
+    xmlns:labs="using:CommunityToolkit.Labs.WinUI"
+    xmlns:local="using:Wavee.UI.WinUI.View.Playlist"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:media="using:CommunityToolkit.WinUI.UI.Media"
+    xmlns:playlist="using:Wavee.UI.ViewModel.Playlist"
+    xmlns:templateSelectors="using:Wavee.UI.WinUI.UI.TemplateSelectors"
+    xmlns:tracks="using:Wavee.UI.WinUI.Components.Tracks"
+    xmlns:ui="using:CommunityToolkit.WinUI.UI"
+    SizeChanged="PlaylistView_OnSizeChanged"
+    mc:Ignorable="d">
     <UserControl.Transitions>
         <TransitionCollection>
             <EntranceThemeTransition />
         </TransitionCollection>
     </UserControl.Transitions>
     <UserControl.Resources>
-        <media:AttachedCardShadow x:Key="CommonShadow"
-                                  Offset="0"
-                                  Opacity=".6"
-                                  BlurRadius="24" />
+        <media:AttachedCardShadow
+            x:Key="CommonShadow"
+            BlurRadius="24"
+            Opacity=".6"
+            Offset="0" />
 
         <DataTemplate x:Key="LoadingHeader">
             <Grid Padding="34,34,34,0">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition/>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition />
                 </Grid.ColumnDefinitions>
 
-                <labs:Shimmer Width="250" Height="250"/>
+                <labs:Shimmer Width="250" Height="250" />
 
-                <StackPanel Spacing="8" Margin="12,0" VerticalAlignment="Bottom" Grid.Column="1">
+                <StackPanel
+                    Grid.Column="1"
+                    Margin="12,0"
+                    VerticalAlignment="Bottom"
+                    Spacing="8">
                     <labs:Shimmer Height="100" />
                     <labs:Shimmer Height="50" />
                 </StackPanel>
             </Grid>
         </DataTemplate>
-        <DataTemplate x:Key="RegularHeader"
-                      x:DataType="headers:RegularPlaylistHeader">
+        <DataTemplate x:Key="RegularHeader" x:DataType="headers:RegularPlaylistHeader">
             <Grid Padding="34,34,34,0">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition/>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition />
                 </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
 
                 <Grid Width="250" Height="250">
                     <Grid x:Name="MozaicGrid" x:Load="{x:Bind ShouldShowMozaic}">
-                        <labs:Shimmer x:Name="MozaicImageWaiter" x:Load="{x:Bind Negate(MozaicCreated), Mode=OneWay}"/>
+                        <labs:Shimmer x:Name="MozaicImageWaiter" x:Load="{x:Bind Negate(MozaicCreated), Mode=OneWay}" />
                         <controls:MozaicImageControl
                             x:Name="MozaicImageControl"
-                            ImageLoaded="{x:Bind MozaicCreated, Mode=TwoWay}"
-                            FutureTracks="{x:Bind FutureTracks,Mode=OneWay}"/>
+                            FutureTracks="{x:Bind FutureTracks, Mode=OneWay}"
+                            ImageLoaded="{x:Bind MozaicCreated, Mode=TwoWay}" />
                     </Grid>
 
                     <Grid x:Name="NormalImage" x:Load="{x:Bind Negate(ShouldShowMozaic)}">
-                        <labs:Shimmer x:Name="NormalImageWaiter" x:Load="{x:Bind Negate(MozaicCreated), Mode=OneWay}"/>
-                        <Image ui:Effects.Shadow="{StaticResource CommonShadow}"
-                               x:Name="AlbumImage"
-                               ImageOpened="AlbumImage_OnImageOpened"
-                               Canvas.ZIndex="1000">
+                        <labs:Shimmer x:Name="NormalImageWaiter" x:Load="{x:Bind Negate(MozaicCreated), Mode=OneWay}" />
+                        <Image
+                            x:Name="AlbumImage"
+                            ui:Effects.Shadow="{StaticResource CommonShadow}"
+                            Canvas.ZIndex="1000"
+                            ImageOpened="AlbumImage_OnImageOpened">
                             <Image.Source>
-                                <BitmapImage UriSource="{x:Bind ImageUrl, Mode=OneWay}"/>
+                                <BitmapImage UriSource="{x:Bind ImageUrl, Mode=OneWay}" />
                             </Image.Source>
                         </Image>
                     </Grid>
                 </Grid>
 
-                <StackPanel Spacing="8" Margin="24,0" VerticalAlignment="Bottom" Grid.Column="1">
+                <StackPanel
+                    Grid.Column="1"
+                    Margin="24,0"
+                    VerticalAlignment="Bottom"
+                    Spacing="8">
                     <TextBlock
                         FontSize="56"
-                        TextWrapping="Wrap"
                         FontWeight="Bold"
-                        Text="{x:Bind Name, Mode=OneWay}"/>
-                    <TextBlock 
-                        Foreground="{ThemeResource ApplicationSecondaryForegroundThemeBrush}"
+                        Text="{x:Bind Name, Mode=OneWay}"
+                        TextWrapping="Wrap" />
+                    <TextBlock
                         FontSize="16"
                         FontWeight="SemiBold"
-                        TextWrapping="Wrap"
+                        Foreground="{ThemeResource ApplicationSecondaryForegroundThemeBrush}"
                         MaxLines="4"
-                        Text="{x:Bind HtmlEscape(Description), Mode=OneWay}"/>
+                        Text="{x:Bind HtmlEscape(Description), Mode=OneWay}"
+                        TextWrapping="Wrap" />
 
                     <StackPanel Orientation="Horizontal" Spacing="8">
-                        <Button MinWidth="120" 
-                                HorizontalContentAlignment="Left">
-                            <StackPanel Orientation="Horizontal"
-                                        Spacing="8">
-                                <PersonPicture ProfilePicture="https://upload.wikimedia.org/wikipedia/commons/thumb/8/84/Spotify_icon.svg/1982px-Spotify_icon.svg.png"
-                                               Height="28"
-                                               Width="28" />
-                                <TextBlock Text="Spotify"
-                                           FontWeight="Bold"
-                                           VerticalAlignment="Center" />
+                        <Button MinWidth="120" HorizontalContentAlignment="Left">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <PersonPicture
+                                    Width="28"
+                                    Height="28"
+                                    ProfilePicture="https://upload.wikimedia.org/wikipedia/commons/thumb/8/84/Spotify_icon.svg/1982px-Spotify_icon.svg.png" />
+                                <TextBlock
+                                    VerticalAlignment="Center"
+                                    FontWeight="Bold"
+                                    Text="Spotify" />
                             </StackPanel>
                         </Button>
-                        <AppBarSeparator/>
+                        <AppBarSeparator />
 
-                        <Border  Background="{ThemeResource LayerFillColorDefaultBrush}"
-                                 VerticalAlignment="Top" 
-                                 HorizontalAlignment="Left" 
-                                 Padding="12"
-                                 CornerRadius="8"
-                                 BorderThickness="1"
-                                 BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
-                            <StackPanel Spacing="8" Orientation="Horizontal">
-                                <FontIcon 
+                        <Border
+                            Padding="12"
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Top"
+                            Background="{ThemeResource LayerFillColorDefaultBrush}"
+                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                            BorderThickness="1"
+                            CornerRadius="8"
+                            Opacity=".7">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon
+                                    FontFamily="/Assets/Fonts/SegoeFluentIcons.ttf#Segoe Fluent Icons"
                                     FontWeight="Bold"
-                                    FontFamily="/Assets/Fonts/SegoeFluentIcons.ttf#Segoe Fluent Icons" Glyph="&#xEC4F;" />
-                                <TextBlock 
-                                    FontWeight="Bold"
-                                    Text="100 tracks"/>
+                                    Glyph="&#xEC4F;" />
+                                <TextBlock FontWeight="Bold" Text="{x:Bind TracksCountString.Value, Mode=OneWay}" />
                             </StackPanel>
                         </Border>
 
-                        <Border  Background="{ThemeResource LayerFillColorDefaultBrush}"
-                                 VerticalAlignment="Top" 
-                                 HorizontalAlignment="Left" 
-                                 Padding="12"
-                                 CornerRadius="8"
-                                 BorderThickness="1"
-                                 BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
-                            <StackPanel Spacing="8" Orientation="Horizontal">
-                                <FontIcon 
+                        <Border
+                            Padding="12"
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Top"
+                            Background="{ThemeResource LayerFillColorDefaultBrush}"
+                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                            BorderThickness="1"
+                            CornerRadius="8"
+                            Opacity=".7">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon
+                                    FontFamily="/Assets/Fonts/SegoeFluentIcons.ttf#Segoe Fluent Icons"
                                     FontWeight="Bold"
-                                    FontFamily="/Assets/Fonts/SegoeFluentIcons.ttf#Segoe Fluent Icons" Glyph="&#xE916;" />
-                                <TextBlock 
-                                    FontWeight="Bold"
-                                    Text="1 hr 12 min 32 sec"/>
+                                    Glyph="&#xE916;" />
+                                <TextBlock FontWeight="Bold" Text="{x:Bind TracksDurationStirng.Value, Mode=OneWay}" />
                             </StackPanel>
                         </Border>
                     </StackPanel>
-                </StackPanel>
-            </Grid>
-        </DataTemplate>
-        <DataTemplate x:Key="BigHeader"
-                      x:DataType="headers:PlaylistBigHeader">
-            <Grid x:Name="BigHeaderGrid">
-                <controls:ImageTransitionControl Source="{x:Bind HeaderImage}"
-                                                 x:Name="BigHeaderImage"
-                                                 Loaded="BigHeaderImage_OnLoaded"
-                                                 Height="400" />
-                <StackPanel Orientation="Vertical"
-                            x:Name="BigHeaderMetadataPanel"
-                            VerticalAlignment="Center"
-                            HorizontalAlignment="Center">
-                    <TextBlock Text="A CURATED PLAYLIST BY SPOTIFY"
-                               FontWeight="ExtraBold"
-                               Opacity=".7"
-                               HorizontalAlignment="Center" />
-                    <TextBlock Text="{x:Bind Name}"
-                               HorizontalAlignment="Center"
-                               FontWeight="Bold"
-                               FontSize="76" />
-                    <TextBlock HorizontalAlignment="Center"
-                               TextAlignment="Center"
-                               FontSize="18"
-                               MaxWidth="500"
-                               FontWeight="SemiBold"
-                               TextWrapping="WrapWholeWords"
-                               Text="{x:Bind Description}" />
 
-                    <StackPanel HorizontalAlignment="Center"
-                                Spacing="8"
-                                Margin="0,18,0,0"
-                                Orientation="Horizontal">
+
+                    <StackPanel
+                        Grid.Row="1"
+                        Padding="0,0,0,0"
+                        Orientation="Horizontal"
+                        Spacing="8">
                         <Button Style="{ThemeResource AccentButtonStyle}">
-                            <StackPanel Spacing="8"
-                                        Orientation="Horizontal">
-                                <FontIcon FontFamily="{StaticResource SegoeFluent}"
-                                          Glyph="&#xF5B0;" />
+                            <ui:Effects.Shadow>
+                                <media:AttachedCardShadow
+                                    BlurRadius="8"
+                                    CornerRadius="6"
+                                    Opacity=".3"
+                                    Offset="2,4"
+                                    Color="Black" />
+                            </ui:Effects.Shadow>
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon FontFamily="{StaticResource SegoeFluent}" Glyph="&#xF5B0;" />
                                 <TextBlock Text="Play" />
                             </StackPanel>
                         </Button>
 
                         <Button>
-                            <StackPanel Spacing="8"
-                                        Orientation="Horizontal">
-                                <FontIcon FontFamily="{StaticResource SegoeFluent}"
-                                          Glyph="&#xE14B;" />
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon FontFamily="{StaticResource SegoeFluent}" Glyph="&#xEB51;" />
+                                <TextBlock Text="Save" />
+                            </StackPanel>
+                        </Button>
+                        <Button>
+                            <FontIcon FontFamily="{StaticResource SegoeFluent}" Glyph="&#xE10C;" />
+                        </Button>
+                    </StackPanel>
+                </StackPanel>
+            </Grid>
+        </DataTemplate>
+        <DataTemplate x:Key="BigHeader" x:DataType="headers:PlaylistBigHeader">
+            <Grid x:Name="BigHeaderGrid">
+                <controls:ImageTransitionControl
+                    x:Name="BigHeaderImage"
+                    Height="400"
+                    Loaded="BigHeaderImage_OnLoaded"
+                    Source="{x:Bind HeaderImage}" />
+                <StackPanel
+                    x:Name="BigHeaderMetadataPanel"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Orientation="Vertical">
+                    <TextBlock
+                        HorizontalAlignment="Center"
+                        FontWeight="ExtraBold"
+                        Opacity=".7"
+                        Text="A CURATED PLAYLIST BY SPOTIFY" />
+                    <TextBlock
+                        HorizontalAlignment="Center"
+                        FontSize="76"
+                        FontWeight="Bold"
+                        Text="{x:Bind Name}" />
+                    <TextBlock
+                        MaxWidth="500"
+                        HorizontalAlignment="Center"
+                        FontSize="18"
+                        FontWeight="SemiBold"
+                        Text="{x:Bind Description}"
+                        TextAlignment="Center"
+                        TextWrapping="WrapWholeWords" />
+
+                    <StackPanel
+                        Margin="0,18,0,0"
+                        HorizontalAlignment="Center"
+                        Orientation="Horizontal"
+                        Spacing="8">
+                        <Button Style="{ThemeResource AccentButtonStyle}">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon FontFamily="{StaticResource SegoeFluent}" Glyph="&#xF5B0;" />
+                                <TextBlock Text="Play" />
+                            </StackPanel>
+                        </Button>
+
+                        <Button>
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon FontFamily="{StaticResource SegoeFluent}" Glyph="&#xE14B;" />
                                 <TextBlock Text="Shuffle" />
                             </StackPanel>
                         </Button>
@@ -190,20 +239,18 @@
                 </StackPanel>
             </Grid>
         </DataTemplate>
-        <templateSelectors:PlaylistHeaderTemplateSelector LoadingHeaderTemplate="{StaticResource LoadingHeader}"
-                                              RegularHeaderTemplate="{StaticResource RegularHeader}"
-                                              BigHeaderTemplate="{StaticResource BigHeader}"
-                                              x:Key="PlaylistHeaderTemplateSelector" />
+        <templateSelectors:PlaylistHeaderTemplateSelector
+            x:Key="PlaylistHeaderTemplateSelector"
+            BigHeaderTemplate="{StaticResource BigHeader}"
+            LoadingHeaderTemplate="{StaticResource LoadingHeader}"
+            RegularHeaderTemplate="{StaticResource RegularHeader}" />
     </UserControl.Resources>
     <Grid>
-        <ListView ItemsSource="{x:Bind IncrementalLoadingCollection,Mode=OneWay}">
+        <ListView ItemsSource="{x:Bind IncrementalLoadingCollection, Mode=OneWay}">
             <ListView.ItemContainerStyle>
-                <Style BasedOn="{StaticResource DefaultListViewItemStyle}"
-                       TargetType="ListViewItem">
-                    <Setter Property="Margin"
-                            Value="28,0" />
-                    <Setter Property="Padding"
-                            Value="4,0" />
+                <Style BasedOn="{StaticResource DefaultListViewItemStyle}" TargetType="ListViewItem">
+                    <Setter Property="Margin" Value="28,0" />
+                    <Setter Property="Padding" Value="4,0" />
                 </Style>
             </ListView.ItemContainerStyle>
             <ListView.Header>
@@ -212,26 +259,29 @@
                         <RowDefinition />
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
-                    <ContentControl ContentTemplateSelector="{StaticResource PlaylistHeaderTemplateSelector}"
-                                    HorizontalContentAlignment="Stretch"
-                                    VerticalContentAlignment="Stretch"
-                                    Content="{x:Bind ViewModel.Header,Mode=OneWay}" />
+                    <ContentControl
+                        HorizontalContentAlignment="Stretch"
+                        VerticalContentAlignment="Stretch"
+                        Content="{x:Bind ViewModel.Header, Mode=OneWay}"
+                        ContentTemplateSelector="{StaticResource PlaylistHeaderTemplateSelector}" />
 
-                    <local:PlaylistSortButtons Grid.Row="1"
-                                               Margin="34,12"
-                                               ShowAlbum="True"
-                                               ShowArtists="True"
-                                               ShowDate="{x:Bind ViewModel.TracksHaveDate,Mode=OneWay}" />
+                    <local:PlaylistSortButtons
+                        Grid.Row="1"
+                        Margin="34,12"
+                        ShowAlbum="True"
+                        ShowArtists="True"
+                        ShowDate="{x:Bind ViewModel.TracksHaveDate, Mode=OneWay}" />
                 </Grid>
             </ListView.Header>
             <ListView.ItemTemplate>
                 <DataTemplate x:DataType="playlist:PlaylistTrackViewModel">
                     <Grid>
-                        <Grid Padding="4,6"
-                              Height="48"
-                              x:Name="LoadingGrid"
-                              x:Load="{x:Bind Loading,Mode=OneWay}"
-                              ColumnSpacing="8">
+                        <Grid
+                            x:Name="LoadingGrid"
+                            Height="48"
+                            Padding="4,6"
+                            x:Load="{x:Bind Loading, Mode=OneWay}"
+                            ColumnSpacing="8">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="74" />
                                 <ColumnDefinition Width="2*" />
@@ -240,21 +290,17 @@
                                 <ColumnDefinition Width="8" />
                             </Grid.ColumnDefinitions>
 
-                            <labs:Shimmer Margin="8,0,0,0"
-                                          IsActive="True" />
-                            <labs:Shimmer Grid.Column="1"
-                                          IsActive="True" />
-                            <labs:Shimmer  Grid.Column="2"
-                                           IsActive="True" />
-                            <labs:Shimmer  Grid.Column="3"
-                                           IsActive="True" />
+                            <labs:Shimmer Margin="8,0,0,0" IsActive="True" />
+                            <labs:Shimmer Grid.Column="1" IsActive="True" />
+                            <labs:Shimmer Grid.Column="2" IsActive="True" />
+                            <labs:Shimmer Grid.Column="3" IsActive="True" />
                         </Grid>
 
-                        <Border x:Name="LoadedGrid"
-                                x:Load="{x:Bind Negate(Loading),Mode=OneWay}">
-                            <tracks:WaveeTrackHost AlternateRowColor="True"
-                                                   Height="48"
-                                                   Index="{x:Bind Index,Mode=OneWay}">
+                        <Border x:Name="LoadedGrid" x:Load="{x:Bind Negate(Loading), Mode=OneWay}">
+                            <tracks:WaveeTrackHost
+                                Height="48"
+                                AlternateRowColor="True"
+                                Index="{x:Bind Index, Mode=OneWay}">
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="5" />
@@ -265,34 +311,39 @@
                                         <ColumnDefinition Width="50" />
                                         <ColumnDefinition Width="24" />
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="1"
-                                               FontSize="16"
-                                               TextTrimming="CharacterEllipsis"
-                                               Margin="0,0,8,0"
-                                               Text="{x:Bind Track.Name,Mode=OneWay}" />
+                                    <TextBlock
+                                        Grid.Column="1"
+                                        Margin="0,0,8,0"
+                                        FontSize="16"
+                                        Text="{x:Bind Track.Name, Mode=OneWay}"
+                                        TextTrimming="CharacterEllipsis" />
 
-                                    <TextBlock Text="{x:Bind Track.Artists[0].Name, Mode=OneWay}"
-                                               Grid.Column="2"
-                                               TextTrimming="CharacterEllipsis"
-                                               Margin="0,0,8,0"
-                                               FontSize="16" />
+                                    <TextBlock
+                                        Grid.Column="2"
+                                        Margin="0,0,8,0"
+                                        FontSize="16"
+                                        Text="{x:Bind Track.Artists[0].Name, Mode=OneWay}"
+                                        TextTrimming="CharacterEllipsis" />
 
-                                    <TextBlock Grid.Column="3"
-                                               FontSize="16"
-                                               TextTrimming="CharacterEllipsis"
-                                               Margin="0,0,8,0"
-                                               Text="{x:Bind Track.AlbumName, Mode=OneWay}" />
+                                    <TextBlock
+                                        Grid.Column="3"
+                                        Margin="0,0,8,0"
+                                        FontSize="16"
+                                        Text="{x:Bind Track.AlbumName, Mode=OneWay}"
+                                        TextTrimming="CharacterEllipsis" />
 
-                                    <TextBlock Grid.Column="4"
-                                               FontSize="16"
-                                               x:Name="DateAdded"
-                                               x:Load="{x:Bind HasDate,Mode=OneWay}"
-                                               Text="{x:Bind  AddedAt, Mode=OneWay}" />
+                                    <TextBlock
+                                        x:Name="DateAdded"
+                                        Grid.Column="4"
+                                        x:Load="{x:Bind HasDate, Mode=OneWay}"
+                                        FontSize="16"
+                                        Text="{x:Bind FormatTimestamp(AddedAt), Mode=OneWay}" />
 
-                                    <TextBlock Grid.Column="5"
-                                               FontSize="16"
-                                               HorizontalAlignment="Right"
-                                               Text="{x:Bind  Track.DurationMs, Mode=OneWay}" />
+                                    <TextBlock
+                                        Grid.Column="5"
+                                        HorizontalAlignment="Right"
+                                        FontSize="16"
+                                        Text="{x:Bind FormatDuration(Track.DurationMs), Mode=OneWay}" />
                                 </Grid>
                             </tracks:WaveeTrackHost>
                         </Border>
@@ -300,7 +351,7 @@
                 </DataTemplate>
             </ListView.ItemTemplate>
             <ListView.Footer>
-                <Border Height="110"/>
+                <Border Height="110" />
             </ListView.Footer>
         </ListView>
     </Grid>

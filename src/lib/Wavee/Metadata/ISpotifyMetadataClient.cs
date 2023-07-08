@@ -96,5 +96,6 @@ public interface ISpotifyMetadataClient
     Task<Dictionary<string, Option<Either<TrackWithExpiration, EpisodeWithExpiration>>>> GetExtendedMetadataForItems(
         IGrouping<AudioItemType, string>[] items, CancellationToken ct);
 
+    Task<SelectedListContent> GetUserRootList(CancellationToken ct = default);
 }
 public readonly record struct LyricsLine(string Words, double StartTimeMs);

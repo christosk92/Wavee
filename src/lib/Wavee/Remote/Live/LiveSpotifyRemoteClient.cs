@@ -2,6 +2,7 @@
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using Eum.Spotify.connectstate;
 using LanguageExt;
 using Wavee.Id;
@@ -156,9 +157,45 @@ internal readonly struct LiveSpotifyRemoteClient : ISpotifyRemoteClient
         }
     }
 
+    public IObservable<Unit> CreatePlaylistListener()
+    {
+
+        _waitForConnectionTask.Task.Wait();
+        var reader = _mainConnectionId.CreateListener(PlaylistlistenerCondition);
+        LiveSpotifyRemoteClient tmpThis = this;
+        return Observable.Create<Unit>(o =>
+        {
+            var cancel = new CancellationDisposable();
+            Task.Run(async () =>
+            {
+                try
+                {
+                    await foreach (var package in reader.Reader.ReadAllAsync(cancel.Token))
+                    {
+                        o.OnNext(Unit.Default);
+                    }
+                }
+                finally
+                {
+                    reader.onDone();
+                }
+            });
+            return cancel;
+        });
+    }
+
     private static bool RemoteStateListenerCondition(SpotifyRemoteMessage packagetocheck)
     {
         return packagetocheck.Uri.StartsWith("hm://connect-state/v1/cluster");
+    }
+
+    private static bool PlaylistlistenerCondition(SpotifyRemoteMessage message)
+    {
+        //hm://playlist/v2/user/7ucghdgquf6byqusqkliltwc2/rootlist
+        //regex hm://playlist/v2/user/.*?/.*?/rootlist
+        var regex = new Regex(@"hm://playlist/v2/user/.*?/.*?/rootlist");
+        var isMathc = regex.IsMatch(message.Uri);
+        return isMathc;
     }
     private static bool LibraryListenerCondition(SpotifyRemoteMessage packagetocheck)
     {

@@ -110,6 +110,7 @@ internal sealed class SpotifyUIExtendedMetadataClient : IWaveeUIExtendedMetadata
         return new WaveeUIEpisode
         {
             Covers = GetCoverImages(episode),
+            Id = episodeKey,
         };
     }
 
@@ -117,7 +118,8 @@ internal sealed class SpotifyUIExtendedMetadataClient : IWaveeUIExtendedMetadata
     {
         return new WaveeUIEpisode
         {
-            Covers = Array.Empty<CoverImage>()
+            Covers = Array.Empty<CoverImage>(),
+            Id = episodeKey
         };
     }
 

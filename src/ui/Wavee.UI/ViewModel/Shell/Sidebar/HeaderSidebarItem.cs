@@ -32,7 +32,7 @@ public sealed class RegularSidebarItem : ISidebarItem
     public string IconGlyph { get; }
     public string IconFontFamily { get; }
     public Type ViewModelType { get; }
-    public object Parameter { get;}
+    public object Parameter { get; }
 }
 
 public sealed class CountedSidebarItem : ObservableObject, ISidebarItem
@@ -57,12 +57,52 @@ public sealed class CountedSidebarItem : ObservableObject, ISidebarItem
     }
 }
 
-public sealed class PlaylistSidebarItem : ISidebarItem
+public sealed class PlaylistSidebarItem : ObservableObject, ISidebarItem
 {
-    public PlaylistSidebarItem(RegularSidebarItem sidebarItem)
+    private string _title;
+
+    public PlaylistSidebarItem(string title, string iconGlyph, string iconFontFamily, Type viewModelType, object parameter)
     {
-        SidebarItem = sidebarItem;
+        _title = title;
+        IconGlyph = iconGlyph;
+        IconFontFamily = iconFontFamily;
+        ViewModelType = viewModelType;
+        Parameter = parameter;
     }
 
-    public RegularSidebarItem SidebarItem { get; }
+    public string Title
+    {
+        get => _title;
+        set => this.SetProperty(ref _title, value);
+    }
+    public string IconGlyph { get; }
+    public string IconFontFamily { get; }
+    public Type ViewModelType { get; }
+    public object Parameter { get; }
+}
+
+public sealed class PlaylistFolderSidebarItem : ObservableObject, ISidebarItem
+{
+    private string _title;
+    private bool _isExpanded;
+
+    public PlaylistFolderSidebarItem(string title, bool isExpanded, PlaylistSidebarItem[] playlists)
+    {
+        _title = title;
+        _isExpanded = isExpanded;
+        Playlists = playlists;
+    }
+
+    public string Title
+    {
+        get => _title;
+        set => this.SetProperty(ref _title, value);
+    }
+
+    public bool IsExpanded
+    {
+        get => _isExpanded;
+        set => this.SetProperty(ref _isExpanded, value);
+    }
+    public PlaylistSidebarItem[] Playlists { get; set; }
 }

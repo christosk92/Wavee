@@ -1,4 +1,5 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿using System.Text;
+using CommunityToolkit.Mvvm.ComponentModel;
 using Eum.Spotify.playlist4;
 using LanguageExt;
 
@@ -8,9 +9,11 @@ public sealed class RegularPlaylistHeader : ObservableObject, IPlaylistHeader
 {
     private bool _mozaicCreated;
 
-    public RegularPlaylistHeader(SelectedListContent listContent, TaskCompletionSource<Seq<Either<WaveeUIEpisode, WaveeUITrack>>> futureTracks)
+    public RegularPlaylistHeader(SelectedListContent listContent, TaskCompletionSource<Seq<Either<WaveeUIEpisode, WaveeUITrack>>> futureTracks, ObservableStringHolder tracksDurationStirng, ObservableStringHolder tracksCountString)
     {
         FutureTracks = futureTracks;
+        TracksDurationStirng = tracksDurationStirng;
+        TracksCountString = tracksCountString;
         ImageUrl = listContent.Attributes.PictureSize.SingleOrDefault(x => x.TargetName is "large")?.Url
                    ?? listContent.Attributes.PictureSize.SingleOrDefault(x => x.TargetName is "default")?.Url;
         ShouldShowMozaic = string.IsNullOrEmpty(ImageUrl);
@@ -62,5 +65,19 @@ public sealed class RegularPlaylistHeader : ObservableObject, IPlaylistHeader
         doc.LoadHtml(s);
 
         return doc.DocumentNode.InnerText;
+    }
+
+    public ObservableStringHolder TracksDurationStirng { get; }
+    public ObservableStringHolder TracksCountString { get; }
+}
+
+public sealed class ObservableStringHolder : ObservableObject
+{
+    private string? _value;
+
+    public string Value
+    {
+        get => _value ?? string.Empty;
+        set => SetProperty(ref _value, value);
     }
 }

@@ -83,7 +83,10 @@ public readonly record struct ArtistOverview(SpotifyId Id, bool IsSaved,
     {
         var followers = stats.GetProperty("followers").GetUInt64();
         var monthlyListeners = stats.GetProperty("monthlyListeners").GetUInt64();
-        var worldRank = stats.GetProperty("worldRank").GetUInt16();
+        var worldRank = stats.TryGetProperty("worldRank", out var worldRankProp)
+                        && worldRankProp.ValueKind is not JsonValueKind.Null
+            ? worldRankProp.GetUInt16()
+            : (ushort)0;
         return new ArtistStats(
             Followers: followers,
             MonthlyListeners: monthlyListeners,
