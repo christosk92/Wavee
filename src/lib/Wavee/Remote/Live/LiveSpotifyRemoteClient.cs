@@ -193,7 +193,7 @@ internal readonly struct LiveSpotifyRemoteClient : ISpotifyRemoteClient
     {
         //hm://playlist/v2/user/7ucghdgquf6byqusqkliltwc2/rootlist
         //regex hm://playlist/v2/user/.*?/.*?/rootlist
-        var regex = new Regex(@"hm://playlist/v2/user/.*?/.*?/rootlist");
+        var regex = new Regex(@"hm://playlist/v2/user/.*?/rootlist");
         var isMathc = regex.IsMatch(message.Uri);
         return isMathc;
     }

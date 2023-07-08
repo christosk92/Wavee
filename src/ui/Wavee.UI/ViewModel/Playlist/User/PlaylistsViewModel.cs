@@ -3,6 +3,7 @@ using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using DynamicData;
+using ReactiveUI;
 using Wavee.Id;
 using Wavee.UI.Helpers;
 using Wavee.UI.User;
@@ -18,6 +19,7 @@ public sealed class PlaylistsViewModel : ObservableObject, IDisposable
     public PlaylistsViewModel(UserViewModel user,
         BulkConcurrentObservableCollection<ISidebarItem> sidebaritems)
     {
+        var offset = sidebaritems.Count;
         _playlistListener = new CompositeDisposable();
         user
             .Client.Playlist.ListenForUserPlaylists()
@@ -47,18 +49,38 @@ public sealed class PlaylistsViewModel : ObservableObject, IDisposable
                 new PlaylistFolderSidebarItem(title: x.Name, isExpanded: false,
                     playlists: x.Children.Select(ToSidebarItem).ToArray())
                 : ToSidebarItem(x) as ISidebarItem)
+            .ObserveOn(RxApp.MainThreadScheduler)
             .Select(x =>
             {
-                foreach (var change in x)
+                var allUpdates = x.All(z => z.Reason is ChangeReason.Update);
+                if (allUpdates)
                 {
-                    switch (change.Reason)
+                    //remove all
+                    sidebaritems.RemoveRange(offset, sidebaritems.Count - offset);
+                    //add all
+                    sidebaritems.Add(x.Select(z => z.Current));
+                }
+                else
+                {
+                    foreach (var change in x)
                     {
-                        case ChangeReason.Add:
-                            sidebaritems.Add(change.Current);
-                            break;
-                        case ChangeReason.Remove:
-                            sidebaritems.Remove(change.Current);
-                            break;
+                        switch (change.Reason)
+                        {
+                            case ChangeReason.Add:
+                                if (change.CurrentIndex is -1)
+                                {
+                                    sidebaritems.Add(change.Current);
+                                }
+                                else
+                                {
+                                    sidebaritems.Insert(offset + change.CurrentIndex, change.Current);
+                                }
+
+                                break;
+                            case ChangeReason.Remove:
+                                sidebaritems.Remove(change.Current);
+                                break;
+                        }
                     }
                 }
 

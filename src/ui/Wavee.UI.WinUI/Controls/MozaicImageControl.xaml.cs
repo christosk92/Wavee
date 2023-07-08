@@ -56,7 +56,11 @@ namespace Wavee.UI.WinUI.Controls
         public TaskCompletionSource<Seq<Either<WaveeUIEpisode, WaveeUITrack>>> FutureTracks
         {
             get => (TaskCompletionSource<Seq<Either<WaveeUIEpisode, WaveeUITrack>>>)GetValue(FutureTracksProperty);
-            set => SetValue(FutureTracksProperty, value);
+            set
+            {
+                SetValue(FutureTracksProperty, value);
+                _ = TracksChanged(value);
+            }
         }
 
         public bool ImageLoaded

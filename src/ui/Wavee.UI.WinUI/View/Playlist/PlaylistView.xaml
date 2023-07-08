@@ -64,7 +64,7 @@
                         <labs:Shimmer x:Name="MozaicImageWaiter" x:Load="{x:Bind Negate(MozaicCreated), Mode=OneWay}" />
                         <controls:MozaicImageControl
                             x:Name="MozaicImageControl"
-                            FutureTracks="{x:Bind FutureTracks, Mode=OneWay}"
+                            FutureTracks="{Binding FutureTracks, Mode=OneWay}"
                             ImageLoaded="{x:Bind MozaicCreated, Mode=TwoWay}" />
                     </Grid>
 
