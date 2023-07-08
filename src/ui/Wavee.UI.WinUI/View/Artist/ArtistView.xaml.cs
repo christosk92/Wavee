@@ -70,7 +70,7 @@ public sealed partial class ArtistView : UserControl, INavigable, ICacheablePage
         else
         {
             //else its only 1/4th
-            var topHeight = newSize * 0.25;
+            var topHeight = newSize * .3;
             topHeight = Math.Min(topHeight, 550);
             ImageT.Height = topHeight;
         }

@@ -266,6 +266,11 @@ public sealed class PlaylistTrackViewModel : ObservableObject
         {
             string fullMonthName =
                 d.ToString("MMMM");
+            //April -> Apr.
+            if (fullMonthName.Length > 3)
+            {
+                fullMonthName = fullMonthName[..3];
+            }
             return $"{fullMonthName} {d.Day}, {d.Year}";
         }
     }

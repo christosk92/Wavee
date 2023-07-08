@@ -55,7 +55,6 @@
 		<None Remove="View\Playlist\Headers\PlaylistRegularHeaderView.xaml" />
 		<None Remove="View\Playlist\PlaylistSortButtons.xaml" />
 		<None Remove="View\Playlist\PlaylistView.xaml" />
-		<None Remove="View\Search\SearchView.xaml" />
 		<None Remove="View\Setup\OptInView.xaml" />
 		<None Remove="View\Setup\SettingEverythingUpView.xaml" />
 		<None Remove="View\Setup\SetupPageContent.xaml" />
@@ -134,9 +133,6 @@
 	  <None Update="Assets\kakao-ryan-typing.gif">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </None>
-	  <Page Update="View\Search\SearchView.xaml">
-	    <Generator>MSBuild:Compile</Generator>
-	  </Page>
 	  <Page Update="Controls\MozaicImageControl.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </Page>
@@ -290,5 +286,8 @@
 	  <Content Update="Assets\4dba53850d6bfdb9800d53d65fe2e5f1369b9040.mp3">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </Content>
+	</ItemGroup>
+	<ItemGroup>
+	  <Folder Include="View\Search\" />
 	</ItemGroup>
 </Project>

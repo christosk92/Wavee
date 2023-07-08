@@ -21,6 +21,7 @@ using Windows.Graphics;
 using Windows.UI;
 using Microsoft.UI.Xaml.Shapes;
 using Wavee.UI.WinUI.Navigation;
+using Wavee.UI.WinUI.View.Search;
 using WinRT.Interop;
 
 // To learn more about WinUI, the WinUI project structure,
@@ -262,6 +263,19 @@ namespace Wavee.UI.WinUI.View.Shell
         private void SidebarControl_OnBackRequested(NavigationView sender, NavigationViewBackRequestedEventArgs args)
         {
             NavigationService.GoBack();
+        }
+
+        private void SearchBar_OnTextChanged(AutoSuggestBox sender, AutoSuggestBoxTextChangedEventArgs args)
+        {
+            if (MainContent.Content is not SearchView)
+            {
+                NavigationService.Navigate(typeof(SearchView));
+            }
+
+            if (args.Reason is AutoSuggestionBoxTextChangeReason.UserInput)
+            {
+                ViewModel.SearchBar.SearchText = sender.Text;
+            }
         }
     }
 }

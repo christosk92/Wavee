@@ -482,6 +482,7 @@
                 Grid.Column="2"
                 MaxWidth="600"
                 Margin="4,0"
+                TextChanged="SearchBar_OnTextChanged"
                 VerticalAlignment="Center"
                 PlaceholderText="Search"
                 QueryIcon="Find"

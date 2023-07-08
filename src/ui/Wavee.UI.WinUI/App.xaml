@@ -60,9 +60,14 @@
                 x:Key="TrueToVisibleConverter"
                 FalseValue="Collapsed"
                 TrueValue="Visible" />
+
+            <converters:BoolToVisibilityConverter
+                x:Key="TrueToCollapsedConverter"
+                FalseValue="Visible"
+                TrueValue="Collapsed" />
             <converters:BoolToObjectConverter x:Key="BoolToGridConverter">
                 <converters:BoolToObjectConverter.TrueValue>
-                    <GridLength>.5*</GridLength>
+                    <GridLength>.7*</GridLength>
                 </converters:BoolToObjectConverter.TrueValue>
                 <converters:BoolToObjectConverter.FalseValue>
                     <GridLength>0</GridLength>

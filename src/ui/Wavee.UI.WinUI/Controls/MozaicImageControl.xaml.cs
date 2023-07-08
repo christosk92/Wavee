@@ -192,5 +192,11 @@ namespace Wavee.UI.WinUI.Controls
             image.DecodePixelWidth = 200;
             return image;
         }
+
+        private async void MozaicImageControl_OnLoaded(object sender, RoutedEventArgs e)
+        {
+            if (FutureTracks is not null)
+                await TracksChanged(FutureTracks);
+        }
     }
 }

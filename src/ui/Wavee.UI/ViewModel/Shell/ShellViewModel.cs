@@ -1,4 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
+using ReactiveUI;
+using System.Reactive.Subjects;
 using Wavee.Id;
 using Wavee.UI.Helpers;
 using Wavee.UI.User;
@@ -7,6 +9,8 @@ using Wavee.UI.ViewModel.Library;
 using Wavee.UI.ViewModel.Playback;
 using Wavee.UI.ViewModel.Playlist;
 using Wavee.UI.ViewModel.Playlist.User;
+using Wavee.UI.ViewModel.Search;
+using Wavee.UI.ViewModel.Search.Sources;
 using Wavee.UI.ViewModel.Shell.Sidebar;
 
 namespace Wavee.UI.ViewModel.Shell;
@@ -20,6 +24,7 @@ public sealed class ShellViewModel : ObservableObject
         _invokeOnUiThread = invokeOnUiThread;
         User = user;
         Instance = this;
+        SearchBar = CreateSearchBar();
         Library = new LibraryViewModel(user, Added, Removed);
         Playback = new PlaybackViewModel(user);
         SidebarItems = new BulkConcurrentObservableCollection<ISidebarItem>(ConstructDefaultItems(user));
@@ -35,7 +40,7 @@ public sealed class ShellViewModel : ObservableObject
     {
         _invokeOnUiThread(() =>
         {
-            var sidebarItem = SidebarItems.FirstOrDefault(x=> x is CountedSidebarItem c && c.Identifier == audioItemType);
+            var sidebarItem = SidebarItems.FirstOrDefault(x => x is CountedSidebarItem c && c.Identifier == audioItemType);
             if (sidebarItem is CountedSidebarItem counted)
             {
                 counted.Value -= i;
@@ -54,7 +59,7 @@ public sealed class ShellViewModel : ObservableObject
             }
         });
     }
-
+    public SearchBarViewModel SearchBar { get; }
     public LibraryViewModel Library { get; }
     public UserViewModel User { get; set; }
     public PlaybackViewModel Playback { get; }
@@ -108,6 +113,25 @@ public sealed class ShellViewModel : ObservableObject
             new CountedSidebarItem(podcasts, AudioItemType.PodcastShow),
             playlistsHeader,
         };
+    }
+
+    private SearchBarViewModel CreateSearchBar()
+    {
+        // This subject is created to solve the circular dependency between the sources and SearchBarViewModel
+        var filterChanged = new Subject<string>();
+
+        var source = new CompositeSearchSource(
+            new SpotifyLibrarySearchSource(User, filterChanged),
+            new SpotifySearchSource(User, filterChanged));
+
+        var searchBar = new SearchBarViewModel(source.Changes);
+
+        searchBar
+            .WhenAnyValue(a => a.SearchText)
+            .WhereNotNull()
+            .Subscribe(filterChanged);
+
+        return searchBar;
     }
 
 }
