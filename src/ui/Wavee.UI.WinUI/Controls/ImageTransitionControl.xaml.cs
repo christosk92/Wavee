@@ -49,6 +49,13 @@ public sealed partial class ImageTransitionControl : UserControl
             typeof(ImageTransitionControl), new PropertyMetadata(default(double), OnBlurValueChanged));
 
     public static readonly DependencyProperty OffsetYProperty = DependencyProperty.Register(nameof(OffsetY), typeof(double), typeof(ImageTransitionControl), new PropertyMetadata(default(double)));
+    public static readonly DependencyProperty WithScaleProperty = DependencyProperty.Register(nameof(WithScale), typeof(bool), typeof(ImageTransitionControl), new PropertyMetadata(true, OnScaleProeprtyChanged));
+
+    private static void OnScaleProeprtyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        var control = d as ImageTransitionControl;
+        control.Br.WithScale = (bool)e.NewValue;
+    }
 
     public ImageTransitionControl()
     {
@@ -85,6 +92,12 @@ public sealed partial class ImageTransitionControl : UserControl
     {
         get => (double)GetValue(OffsetYProperty);
         set => SetValue(OffsetYProperty, value);
+    }
+
+    public bool WithScale
+    {
+        get => (bool)GetValue(WithScaleProperty);
+        set => SetValue(WithScaleProperty, value);
     }
 
     private static void OnBlurValueChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
@@ -143,20 +156,25 @@ public sealed partial class ImageTransitionControl : UserControl
     {
         // var s = (Storyboard)Resources["FadeInAnim"];
         // s.Begin();
-        AnimationBuilder
+        var baseAnimation = AnimationBuilder
             .Create()
-            .Scale(to: new Vector2(1.15f, 1.15f),
+            .Opacity(
+                from: 0,
+                to: 1,
+                duration: TimeSpan.FromMilliseconds(400));
+
+        if (WithScale)
+        {
+            baseAnimation = baseAnimation.Scale(to: new Vector2(1.15f, 1.15f),
                 from: new Vector2(1f, 1f),
                 duration: TimeSpan.FromSeconds(0.8),
                 easingMode: EasingMode.EaseInOut,
                 easingType: EasingType.Quintic,
                 delay: TimeSpan.FromMilliseconds(20)
-            )
-            .Opacity(
-                from: 0,
-                to: 1,
-                duration: TimeSpan.FromMilliseconds(400))
-            .Start(Image);
+            );
+        }
+
+        baseAnimation.Start(Image);
         return Task.CompletedTask;
     }
 
@@ -177,12 +195,12 @@ public sealed partial class ImageTransitionControl : UserControl
     private void Image_OnLoaded(object sender, RoutedEventArgs e)
     {
         AnimationBuilder
-            .Create()
-            .Opacity(
-                from: 1,
-                to: 0,
-                duration: TimeSpan.FromMilliseconds(1))
-            .Start(Image);
+                .Create()
+                .Opacity(
+                    from: 1,
+                    to: 0,
+                    duration: TimeSpan.FromMilliseconds(1))
+                .Start(Image);
     }
 }
 
@@ -218,6 +236,7 @@ public class ImageOpacityBrush : XamlCompositionBrushBase, IDisposable
     private LoadedImageSurface _surface;
     private CompositionSurfaceBrush _surfaceBrush;
     public static readonly DependencyProperty OffsetYProperty = DependencyProperty.Register(nameof(OffsetY), typeof(double), typeof(ImageOpacityBrush), new PropertyMetadata(default(double), OffsetChanged));
+    public static readonly DependencyProperty WithScaleProperty = DependencyProperty.Register(nameof(WithScale), typeof(bool), typeof(ImageOpacityBrush), new PropertyMetadata(default(bool), OffsetChanged));
 
     /// <summary>
     ///     Gets or sets the <see cref="BitmapImage" /> source of the image to composite.
@@ -249,6 +268,13 @@ public class ImageOpacityBrush : XamlCompositionBrushBase, IDisposable
         get => (double)GetValue(OffsetYProperty);
         set => SetValue(OffsetYProperty, value);
     }
+
+    public bool WithScale
+    {
+        get => (bool)GetValue(WithScaleProperty);
+        set => SetValue(WithScaleProperty, value);
+    }
+
 
     public void Dispose()
     {

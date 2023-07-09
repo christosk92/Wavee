@@ -6,7 +6,6 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:artist="using:Wavee.Metadata.Artist"
-             xmlns:panels="using:Wavee.UI.WinUI.Panels"
              Loaded="DiscographyPageGridView_OnLoaded"
              mc:Ignorable="d">
     <ItemsRepeater VerticalAlignment="Top"

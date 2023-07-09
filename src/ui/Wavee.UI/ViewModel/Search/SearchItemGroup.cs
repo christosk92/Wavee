@@ -27,7 +27,6 @@ public class SearchItemGroup : IDisposable
             .Subscribe()
             .DisposeWith(_disposables);
     }
-
     public string Title { get; }
     public int CategoryIndex { get; }
     public ReadOnlyObservableCollection<ISearchItem> Items => _items;

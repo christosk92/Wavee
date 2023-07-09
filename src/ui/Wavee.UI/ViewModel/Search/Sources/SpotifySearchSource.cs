@@ -50,15 +50,22 @@ public sealed partial class SpotifySearchSource : ReactiveObject, ISearchSource,
             //since limit is 10
             //capacity will be 10 * total + 1 (tophit)
             var results = root.GetProperty("results");
+            bool hasTopHit = false;
             var output = new List<ISearchItem>(10 * total + 1);
             for (var i = 0; i < total; i++)
             {
                 var categoryName = categoriesOrder[i].GetString();
                 if (results.TryGetProperty(categoryName!, out var category))
                 {
-                    MutateItemsFromCategory(category, categoryName, i, output);
+                    if (categoryName is "topHit")
+                    {
+                        hasTopHit = true;
+                    }
+
+                    MutateItemsFromCategory(category, categoryName, i, output, hasTopHit);
                 }
             }
+
 
             return output;
         }
@@ -72,7 +79,8 @@ public sealed partial class SpotifySearchSource : ReactiveObject, ISearchSource,
     private static void MutateItemsFromCategory(JsonElement category,
         string categoryName,
         int categoryOrderIndex,
-        List<ISearchItem> output)
+        List<ISearchItem> output,
+        bool hasTopHit)
     {
         var playlistRegex = PlaylistRegex();
 
@@ -104,7 +112,16 @@ public sealed partial class SpotifySearchSource : ReactiveObject, ISearchSource,
             else
             {
                 var spotifyId = SpotifyId.FromUri(uri);
-                var item = ParseHit(spotifyId, hit, categoryName, categoryOrderIndex, i);
+                int offset = 0;
+                string newCategoryName = categoryName;
+                if (categoryName is "tracks" && hasTopHit)
+                {
+                    categoryOrderIndex = 0;
+                    newCategoryName = "topHit";
+                    offset = 1;
+                }
+                var item = ParseHit(spotifyId, hit, newCategoryName, categoryOrderIndex,
+                    i + offset);
                 output.Add(item);
             }
         }
@@ -137,18 +154,18 @@ public sealed partial class SpotifySearchSource : ReactiveObject, ISearchSource,
                                 );
                             }
                         case AudioItemType.Album:
-                        {
-                            return new SpotifyAlbumHit(
-                                id: id,
-                                name: hit.GetProperty("name").GetString()!,
-                                image: hit.TryGetProperty("image", out var b) ? b.GetString()! : null,
+                            {
+                                return new SpotifyAlbumHit(
+                                    id: id,
+                                    name: hit.GetProperty("name").GetString()!,
+                                    image: hit.TryGetProperty("image", out var b) ? b.GetString()! : null,
 
-                                artists: ParseNameAndUriAsArr(hit.GetProperty("artists")),
-                                category: categoryName,
-                                categoryIndex: categoryIndex,
-                                itemIndex: itemIndex
-                            );
-                        }
+                                    artists: ParseNameAndUriAsArr(hit.GetProperty("artists")),
+                                    category: categoryName,
+                                    categoryIndex: categoryIndex,
+                                    itemIndex: itemIndex
+                                );
+                            }
                         case AudioItemType.Artist:
                             return new SpotifyArtistHit(
                                 id: id,
@@ -257,9 +274,10 @@ public class SpotifyPlaylistHit : ISearchItem
         int categoryIndex, int itemIndex)
     {
         Name = name;
-        Key = new ComposedKey(id.ToString());
-        Category = category;
-        CategoryIndex = categoryIndex;
+        Key = new ComposedKey(id.ToString(), categoryIndex);
+        Category = new CategoryComposite(
+            Name: category,
+            Index: categoryIndex);
         ItemIndex = itemIndex;
         Image = image;
         FollowersCount = followersCount;
@@ -273,7 +291,7 @@ public class SpotifyPlaylistHit : ISearchItem
     public string Author { get; }
     public bool Personalized { get; }
     public ComposedKey Key { get; }
-    public string Category { get; }
+    public CategoryComposite Category { get; }
     public int CategoryIndex { get; }
     public int ItemIndex { get; }
 }
@@ -288,9 +306,10 @@ public class SpotifyArtistHit : ISearchItem
         int categoryIndex, int itemIndex)
     {
         Name = name;
-        Key = new ComposedKey(id.ToString());
-        Category = category;
-        CategoryIndex = categoryIndex;
+        Key = new ComposedKey(id.ToString(), categoryIndex);
+        Category = new CategoryComposite(
+            Name: category,
+            Index: categoryIndex);
         ItemIndex = itemIndex;
         Image = image;
         Verified = verified;
@@ -300,7 +319,7 @@ public class SpotifyArtistHit : ISearchItem
     public string Image { get; }
     public bool Verified { get; }
     public ComposedKey Key { get; }
-    public string Category { get; }
+    public CategoryComposite Category { get; }
     public int CategoryIndex { get; }
     public int ItemIndex { get; }
 }
@@ -315,9 +334,10 @@ public class SpotifyAlbumHit : ISearchItem
         int categoryIndex, int itemIndex)
     {
         Name = name;
-        Key = new ComposedKey(id.ToString());
-        Category = category;
-        CategoryIndex = categoryIndex;
+        Key = new ComposedKey(id.ToString(), categoryIndex);
+        Category = new CategoryComposite(
+            Name: category,
+            Index: categoryIndex);
         ItemIndex = itemIndex;
         Image = image;
         Artists = artists;
@@ -327,7 +347,7 @@ public class SpotifyAlbumHit : ISearchItem
     public string Image { get; }
     public NameAndUri[] Artists { get; }
     public ComposedKey Key { get; }
-    public string Category { get; }
+    public CategoryComposite Category { get; }
     public int CategoryIndex { get; }
     public int ItemIndex { get; }
 }
@@ -344,9 +364,10 @@ public class SpotifyTrackHit : ISearchItem
         int categoryIndex, int itemIndex)
     {
         Name = name;
-        Key = new ComposedKey(id.ToString());
-        Category = category;
-        CategoryIndex = categoryIndex;
+        Key = new ComposedKey(id.ToString(), categoryIndex);
+        Category = new CategoryComposite(
+            Name: category,
+            Index: categoryIndex);
         ItemIndex = itemIndex;
         Image = image;
         Artists = artists;
@@ -360,7 +381,7 @@ public class SpotifyTrackHit : ISearchItem
     public NameAndUri Album { get; }
     public TimeSpan Duration { get; }
     public ComposedKey Key { get; }
-    public string Category { get; }
+    public CategoryComposite Category { get; }
     public int CategoryIndex { get; }
     public int ItemIndex { get; }
 }
@@ -380,8 +401,10 @@ internal class UnknownSearchItem : ISearchItem
         CategoryIndex = categoryIndex;
         ItemIndex = itemIndex;
         Description = "Unknown entity";
-        Key = new ComposedKey(id);
-        Category = "unknown";
+        Key = new ComposedKey(id, categoryIndex);
+        Category = new CategoryComposite(
+            Name: "unknown",
+            Index: categoryIndex);
         Keywords = new[] { "unknown" };
         IsDefault = false;
     }
@@ -390,7 +413,7 @@ internal class UnknownSearchItem : ISearchItem
     public string Description { get; }
     public ComposedKey Key { get; }
     public string? Icon { get; set; }
-    public string Category { get; }
+    public CategoryComposite Category { get; }
     public int CategoryIndex { get; }
     public int ItemIndex { get; }
     public IEnumerable<string> Keywords { get; }
