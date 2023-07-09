@@ -97,6 +97,8 @@
                                                 <DataTemplate x:DataType="common:ICardViewModel">
                                                     <Button Background="{ThemeResource LayerFillColorDefaultBrush}"
                                                             CornerRadius="8"
+                                                            Tag="{x:Bind }"
+                                                            Tapped="UIElement_OnTapped"
                                                             HorizontalAlignment="Stretch"
                                                             HorizontalContentAlignment="Stretch"
                                                             Padding="0"

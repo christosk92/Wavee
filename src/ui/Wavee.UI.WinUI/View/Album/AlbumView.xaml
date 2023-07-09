@@ -1,4 +1,5 @@
-<?xml version="1.0" encoding="utf-8" ?>
+<?xml version="1.0" encoding="utf-8"?>
+
 <UserControl
     x:Class="Wavee.UI.WinUI.View.Album.AlbumView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
@@ -15,6 +16,7 @@
     xmlns:ui="using:CommunityToolkit.WinUI.UI"
     xmlns:xamlConverters="using:Wavee.UI.WinUI.UI.XamlConverters"
     ActualThemeChanged="AlbumView_OnActualThemeChanged"
+    SizeChanged="AlbumName_OnSizeChanged"
     DataContext="{x:Bind ViewModel}"
     mc:Ignorable="d">
     <UserControl.Transitions>
@@ -72,6 +74,7 @@
 
                         <StackPanel
                             Margin="12,0,0,0"
+                            x:Name="MetadataPanel"
                             RelativePanel.AlignBottomWith="AlbumImage"
                             RelativePanel.RightOf="AlbumImage">
                             <TextBlock
@@ -80,13 +83,18 @@
                                 FontWeight="Bold"
                                 Foreground="{ThemeResource ApplicationSecondaryForegroundThemeBrush}"
                                 Text="ALBUM" />
+
                             <TextBlock
-                                x:Name="AlbumName"
-                                Padding="8"
-                                FontSize="58"
-                                FontWeight="Bold"
-                                Style="{ThemeResource TitleTextBlockStyle}"
-                                Text="{x:Bind ViewModel.Album.Name, Mode=OneWay}" />
+                                    x:Name="AlbumNameTextBlock"
+                                    Padding="8"
+                                    FontSize="58"
+                                    TextTrimming="CharacterEllipsis"
+                                    MaxLines="2"
+                                    TextWrapping="WrapWholeWords"
+                                    FontWeight="Bold"
+                                    Style="{ThemeResource TitleTextBlockStyle}"
+                                    Text="{x:Bind ViewModel.Album.Name, Mode=OneWay}" />
+
                             <ItemsRepeater Margin="8,0" ItemsSource="{x:Bind ViewModel.Album.Artists, Mode=OneWay}">
                                 <ItemsRepeater.Layout>
                                     <StackLayout Orientation="Horizontal" Spacing="8" />
@@ -257,7 +265,8 @@
                     Padding="12,0,12,24"
                     Orientation="Vertical"
                     Spacing="8">
-                    <TextBlock Foreground="{ThemeResource ApplicationSecondaryForegroundThemeBrush}" Text="{x:Bind ViewModel.CulturedDateString, Mode=OneWay}" />
+                    <TextBlock Foreground="{ThemeResource ApplicationSecondaryForegroundThemeBrush}"
+                               Text="{x:Bind ViewModel.CulturedDateString, Mode=OneWay}" />
                     <ItemsRepeater ItemsSource="{x:Bind ViewModel.Album.Copyrights, Mode=OneWay}">
                         <ItemsRepeater.Layout>
                             <StackLayout Orientation="Vertical" Spacing="4" />
@@ -277,7 +286,8 @@
                         <Run Text="{Binding Album.Artists[0].Name}" />
                     </TextBlock>
 
-                    <ItemsRepeater VerticalAlignment="Top" ItemsSource="{x:Bind ViewModel.Album.MoreAlbums, Mode=OneWay}">
+                    <ItemsRepeater VerticalAlignment="Top"
+                                   ItemsSource="{x:Bind ViewModel.Album.MoreAlbums, Mode=OneWay}">
                         <ItemsRepeater.Layout>
                             <panels:HorizontalAdaptiveLayout DesiredWidth="200" />
                         </ItemsRepeater.Layout>
@@ -312,44 +322,5 @@
                 </DataTemplate>
             </ListView.ItemTemplate>
         </ListView>
-        <VisualStateManager.VisualStateGroups>
-            <VisualStateGroup>
-                <VisualState x:Name="vsSmallPhone">
-                    <VisualState.StateTriggers>
-                        <AdaptiveTrigger MinWindowWidth="10" />
-                    </VisualState.StateTriggers>
-                    <VisualState.Setters>
-                        <Setter Target="AlbumName.FontSize" Value="28" />
-                    </VisualState.Setters>
-                </VisualState>
-
-                <VisualState x:Name="vsPhone">
-                    <VisualState.StateTriggers>
-                        <AdaptiveTrigger MinWindowWidth="500" />
-                    </VisualState.StateTriggers>
-                    <VisualState.Setters>
-                        <Setter Target="AlbumName.FontSize" Value="28" />
-                    </VisualState.Setters>
-                </VisualState>
-
-                <VisualState x:Name="vsTablet">
-                    <VisualState.StateTriggers>
-                        <AdaptiveTrigger MinWindowWidth="720" />
-                    </VisualState.StateTriggers>
-                    <VisualState.Setters>
-                        <Setter Target="AlbumName.FontSize" Value="48" />
-                    </VisualState.Setters>
-                </VisualState>
-
-                <VisualState x:Name="vsDesktop">
-                    <VisualState.StateTriggers>
-                        <AdaptiveTrigger MinWindowWidth="1024" />
-                    </VisualState.StateTriggers>
-                    <VisualState.Setters>
-                        <Setter Target="AlbumName.FontSize" Value="58" />
-                    </VisualState.Setters>
-                </VisualState>
-            </VisualStateGroup>
-        </VisualStateManager.VisualStateGroups>
     </Grid>
 </UserControl>

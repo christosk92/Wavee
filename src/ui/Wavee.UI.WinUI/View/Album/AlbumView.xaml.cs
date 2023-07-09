@@ -1,8 +1,10 @@
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Threading.Tasks;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Data;
@@ -26,6 +28,7 @@ namespace Wavee.UI.WinUI.View.Album
             ViewModel = new AlbumViewModel(ShellViewModel.Instance.User);
             this.InitializeComponent();
         }
+
         private void AlbumView_OnActualThemeChanged(FrameworkElement sender, object args)
         {
             ViewModel.OnThemeChange(this.ActualTheme switch
@@ -34,8 +37,10 @@ namespace Wavee.UI.WinUI.View.Album
                 ElementTheme.Light => AppTheme.Light,
             });
         }
+
         public AlbumViewModel ViewModel { get; }
         private bool _traveledWithImage;
+
         public async void NavigatedTo(object parameter)
         {
             if (parameter is string id)
@@ -64,7 +69,6 @@ namespace Wavee.UI.WinUI.View.Album
 
         public void NavigatedFrom(NavigationMode mode)
         {
-         
         }
 
         public bool ShouldKeepInCache(int currentDepth)
@@ -74,7 +78,6 @@ namespace Wavee.UI.WinUI.View.Album
 
         public void RemovedFromCache()
         {
-
         }
 
         public object? GetCorrectViewSource(WaveeUIAlbumDisc[] waveeUiAlbumDiscs)
@@ -114,6 +117,21 @@ namespace Wavee.UI.WinUI.View.Album
         {
             var id = (SpotifyId)((FrameworkElement)sender).Tag;
             NavigationService.Instance.Navigate(typeof(ArtistView), id.ToString());
+        }
+
+      
+        private async void AlbumName_OnSizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            double scaleFactor = 0.05; // Adjust as needed to control how much the text scales with the control's size
+            double newFontSize = this.ActualWidth * scaleFactor;
+            if (AlbumNameTextBlock.IsTextTrimmed)
+            {
+                // Set a minimum and maximum font size
+                newFontSize = Math.Max(10, newFontSize); // Minimum size of 10
+                newFontSize = Math.Min(58, newFontSize); // Maximum size of 58
+                AlbumNameTextBlock.FontSize = newFontSize;
+                await Task.Delay(200);
+            }
         }
     }
 }

@@ -21,9 +21,11 @@ public class SearchBarViewModel : ReactiveObject
     public SearchBarViewModel(IObservable<IChangeSet<ISearchItem, ComposedKey>> itemsObservable)
     {
         itemsObservable
-            .Group(s => s.Category)
-            .Transform(group => new SearchItemGroup(group.Key, group.Cache.Connect()))
-            .Sort(SortExpressionComparer<SearchItemGroup>.Ascending(x => x.Title))
+            .Group(s => (s.Category, s.CategoryIndex))
+            .Transform(group => new SearchItemGroup(group.Key.Category,
+                group.Key.CategoryIndex,
+                group.Cache.Connect()))
+            .Sort(SortExpressionComparer<SearchItemGroup>.Ascending(x => x.CategoryIndex))
             .Bind(out _groups)
             .DisposeMany()
             .ObserveOn(RxApp.MainThreadScheduler)
@@ -83,10 +85,8 @@ public class SearchBarViewModel : ReactiveObject
 public interface ISearchItem
 {
     string Name { get; }
-    string Description { get; }
     ComposedKey Key { get; }
-    string? Icon { get; set; }
     string Category { get; }
-    IEnumerable<string> Keywords { get; }
-    bool IsDefault { get; }
+    int CategoryIndex { get; }
+    int ItemIndex { get; }
 }

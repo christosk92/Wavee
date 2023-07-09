@@ -10,6 +10,12 @@ using Wavee.UI.ViewModel.Home;
 using Wavee.UI.ViewModel.Shell;
 using Wavee.UI.WinUI.Navigation;
 using Windows.Foundation.Metadata;
+using Microsoft.UI.Xaml.Input;
+using Wavee.Id;
+using Wavee.UI.Common;
+using Wavee.UI.WinUI.View.Album;
+using Wavee.UI.WinUI.View.Artist;
+using Wavee.UI.WinUI.View.Playlist;
 
 namespace Wavee.UI.WinUI.View.Home;
 
@@ -79,5 +85,24 @@ public sealed partial class HomeView : UserControl, ICacheablePage, INavigable
     {
         //TODO:
         return !b;
+    }
+
+    private void UIElement_OnTapped(object sender, TappedRoutedEventArgs e)
+    {
+        if ((sender as FrameworkElement).Tag is ICardViewModel c)
+        {
+            switch (c.Type)
+            {
+                case AudioItemType.Album:
+                    NavigationService.Instance.Navigate(typeof(AlbumView), c.Id);
+                    break;
+                case AudioItemType.Artist:
+                    NavigationService.Instance.Navigate(typeof(ArtistView), c.Id);
+                    break;
+                case AudioItemType.Playlist:
+                    NavigationService.Instance.Navigate(typeof(PlaylistView), c.Id);
+                    break;
+            }
+        }
     }
 }

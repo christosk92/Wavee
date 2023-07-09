@@ -6,6 +6,7 @@ namespace Wavee.UI.Common;
 
 public interface ICardViewModel
 {
+    AudioItemType Type { get; }
     string Id { get; }
     string Title { get; }
     string? Image { get; }
@@ -109,6 +110,7 @@ public sealed class CardViewModel : ICardViewModel
 
 public sealed class PodcastEpisodeCardViewModel : ICardViewModel
 {
+    public AudioItemType Type => AudioItemType.PodcastEpisode;
     public string Id { get; init; }
     public string Title { get; init; }
     public string? Image { get; init; }

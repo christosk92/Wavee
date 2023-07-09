@@ -58,7 +58,7 @@ namespace Wavee.UI.WinUI
 
         private void OnUnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
-            
+            e.Handled = true;
         }
 
         public static WaveeWindow MainWindow { get; private set; }
