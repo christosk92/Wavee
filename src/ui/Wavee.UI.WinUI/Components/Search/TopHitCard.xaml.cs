@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
@@ -41,18 +42,19 @@ namespace Wavee.UI.WinUI.Components.Search
             get => (ISearchItem)GetValue(ItemProperty);
             set => SetValue(ItemProperty, value);
         }
+
+
         private void OnitemChange(object newValue)
         {
             switch (newValue)
             {
                 case SpotifyArtistHit artist:
                     BackgroundImage.Source = artist.Image;
+                    RegularImage.Visibility = Visibility.Collapsed;
                     if (!string.IsNullOrEmpty(artist.Image))
                     {
                         var bmp = new BitmapImage
                         {
-                            DecodePixelHeight = 200,
-                            DecodePixelWidth = 200,
                             UriSource = new Uri(artist.Image)
                         };
                         ArtistImage.ProfilePicture = bmp;
@@ -64,7 +66,19 @@ namespace Wavee.UI.WinUI.Components.Search
                     break;
                 case SpotifyTrackHit track:
                     ArtistImage.Visibility = Visibility.Collapsed;
+                    RegularImage.Visibility = Visibility.Visible;
                     BackgroundImage.Source = track.Image;
+                    if (!string.IsNullOrEmpty(track.Image))
+                    {
+                        var bmp = new BitmapImage
+                        {
+                            DecodePixelHeight = 200,
+                            DecodePixelWidth = 200,
+                            UriSource = new Uri(track.Image)
+                        };
+                        RegularImage.Source = bmp;
+                    }
+                    ItemType.Text = "SONG";
                     break;
             }
         }

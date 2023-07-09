@@ -7,6 +7,7 @@
     xmlns:local="using:Wavee.UI.WinUI.View.Shell"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:sidebar="using:Wavee.UI.ViewModel.Shell.Sidebar"
+    xmlns:controls="using:CommunityToolkit.WinUI.UI.Controls"
     mc:Ignorable="d">
     <UserControl.Resources>
 
@@ -434,7 +435,39 @@
             Resized="SidebarControl_Resized"
             SidebarItems="{x:Bind ViewModel.SidebarItems}"
             User="{x:Bind ViewModel.User}">
+            <local:SidebarControl.BigImageContainer>
+                <controls:ConstrainedBox
+                    x:Name="SidebarImageBox"
+                    Grid.Row="2"
+                    AspectRatio="1:1"
+                    Margin="{x:Bind ProjectToMargin(ViewModel.BottomMargin),Mode=OneWay}"
+                    Loaded="SidebarImageBox_OnLoaded"
+                    PointerEntered="SidebarImageBox_OnPointerEntered"
+                    PointerExited="SidebarImageBox_OnPointerExited">
+                    <Grid>
+                        <Border
+                            DataContext="{x:Bind ViewModel,Mode=OneWay}"
+                            x:Name="SidebarImageBorder"
+                            Background="{ThemeResource LayerFillColorDefaultBrush}"
+                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                            BorderThickness="1">
+                            <Image x:Name="SidebarImage" 
+                                   Source="{Binding Playback.LargeImageUrl, Mode=OneWay}"/>
+                        </Border>
 
+                        <Button
+                            x:Name="DownsizeImageButton"
+                            Margin="-1"
+                            HorizontalAlignment="Stretch"
+                            VerticalAlignment="Top"
+                            CornerRadius="0"
+                            Tapped="DownsizeImageButton_OnTapped"
+                            Visibility="Collapsed">
+                            <FontIcon FontFamily="{StaticResource SegoeFluent}" Glyph="&#xE015;" />
+                        </Button>
+                    </Grid>
+                </controls:ConstrainedBox>
+            </local:SidebarControl.BigImageContainer>
             <SplitView
                 x:Name="Spl"
                 DisplayMode="Inline"
@@ -454,7 +487,8 @@
         </local:SidebarControl>
 
         <local:BottomPlayerControl
-            Height="110"
+            SizeChanged="BottomPlayerControl_OnSizeChanged"
+            x:Name="BottomPlayerControl"
             VerticalAlignment="Bottom"
             Playback="{x:Bind ViewModel.Playback}"
             RightSidebar="{x:Bind ViewModel.RightSidebar, Mode=OneWay}"

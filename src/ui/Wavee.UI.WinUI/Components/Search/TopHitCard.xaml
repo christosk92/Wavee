@@ -25,7 +25,7 @@
 
             <StackPanel Margin="12" HorizontalAlignment="Left" 
                         Orientation="Vertical" VerticalAlignment="Stretch">
-                <Grid Height="160" Width="160">
+                <Grid Height="160" Width="160" HorizontalAlignment="Left">
                     <Image Visibility="Collapsed" x:Name="RegularImage"/>
                     <Viewbox Stretch="UniformToFill">
                         <PersonPicture Visibility="Collapsed"  x:Name="ArtistImage"/>

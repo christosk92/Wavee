@@ -27,6 +27,7 @@
 	<ItemGroup>
 		<None Remove="Components\CardView.xaml" />
 		<None Remove="Components\PodcastEpisodeCardView.xaml" />
+		<None Remove="Components\Search\SearchTracksGrid.xaml" />
 		<None Remove="Components\Search\TopHitCard.xaml" />
 		<None Remove="Components\Tracks\AlbumTrackView.xaml" />
 		<None Remove="Components\Tracks\TopTrackView.xaml" />
@@ -135,6 +136,9 @@
 	  <None Update="Assets\kakao-ryan-typing.gif">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </None>
+	  <Page Update="Components\Search\SearchTracksGrid.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </Page>
 	  <Page Update="Components\Search\TopHitCard.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </Page>

@@ -17,12 +17,14 @@ internal readonly struct LiveSpotifyRemoteClient : ISpotifyRemoteClient
     private readonly Guid _mainConnectionId;
     private readonly TaskCompletionSource<Unit> _waitForConnectionTask;
     private readonly ITimeProvider _timeProvider;
+    private readonly string _ourDeviceId;
 
-    public LiveSpotifyRemoteClient(Guid mainConnectionId, TaskCompletionSource<Unit> waitForConnectionTask, ITimeProvider timeProvider)
+    public LiveSpotifyRemoteClient(Guid mainConnectionId, TaskCompletionSource<Unit> waitForConnectionTask, ITimeProvider timeProvider, string ourDeviceId)
     {
         _mainConnectionId = mainConnectionId;
         _waitForConnectionTask = waitForConnectionTask;
         _timeProvider = timeProvider;
+        _ourDeviceId = ourDeviceId;
     }
 
     public IObservable<SpotifyRemoteState> CreateListener()
@@ -43,12 +45,12 @@ internal readonly struct LiveSpotifyRemoteClient : ISpotifyRemoteClient
                         var clusterUpdate = ClusterUpdate.Parser.ParseFrom(package.Payload.Span);
                         if (clusterUpdate.Cluster is null)
                         {
-                            var state = SpotifyRemoteState.ParseFrom(Option<Cluster>.None, tmpThis._timeProvider);
+                            var state = SpotifyRemoteState.ParseFrom(Option<Cluster>.None, tmpThis._timeProvider, ourDeviceId: tmpThis._ourDeviceId);
                             o.OnNext(state ?? new SpotifyRemoteState());
                         }
                         else
                         {
-                            var state = SpotifyRemoteState.ParseFrom(clusterUpdate.Cluster, tmpThis._timeProvider);
+                            var state = SpotifyRemoteState.ParseFrom(clusterUpdate.Cluster, tmpThis._timeProvider, tmpThis._ourDeviceId);
                             o.OnNext(state!.Value); //Not null because of the if above
                         }
                     }
@@ -59,7 +61,7 @@ internal readonly struct LiveSpotifyRemoteClient : ISpotifyRemoteClient
                 }
             });
             return cancel;
-        }).StartWith(SpotifyRemoteState.ParseFrom(SpotifyRemoteConnection.GetInitialRemoteState(tmpThis._mainConnectionId), _timeProvider) ??
+        }).StartWith(SpotifyRemoteState.ParseFrom(SpotifyRemoteConnection.GetInitialRemoteState(tmpThis._mainConnectionId), _timeProvider, tmpThis._ourDeviceId) ??
                      new SpotifyRemoteState());
     }
 
@@ -150,7 +152,7 @@ internal readonly struct LiveSpotifyRemoteClient : ISpotifyRemoteClient
     {
         get
         {
-            var parsed = SpotifyRemoteState.ParseFrom(SpotifyRemoteConnection.GetInitialRemoteState(_mainConnectionId), _timeProvider);
+            var parsed = SpotifyRemoteState.ParseFrom(SpotifyRemoteConnection.GetInitialRemoteState(_mainConnectionId), _timeProvider, _ourDeviceId);
             if (parsed.HasValue)
                 return parsed.Value;
             return Option<SpotifyRemoteState>.None;

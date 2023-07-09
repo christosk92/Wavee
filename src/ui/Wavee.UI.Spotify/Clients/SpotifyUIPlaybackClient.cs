@@ -17,10 +17,12 @@ internal sealed class SpotifyUIPlaybackClient : IWaveeUIPlaybackClient
     public SpotifyUIPlaybackClient(SpotifyClient spotifyClient)
     {
         _spotifyClient = new WeakReference<SpotifyClient>(spotifyClient);
+        OurDeviceId = spotifyClient.DeviceId;
     }
 
     public IObservable<WaveeUIPlaybackState> PlaybackEvents => CreateListener();
     public Option<WaveeUIPlaybackState> CurrentPlayback { get; private set; }
+    public string OurDeviceId { get; }
 
     private IObservable<WaveeUIPlaybackState> CreateListener()
     {
@@ -78,25 +80,38 @@ internal sealed class SpotifyUIPlaybackClient : IWaveeUIPlaybackClient
                 SmallImageUrl: images.OrderBy(x => x.Height.IfNone(0)).Head().Url, TimeSpan.FromMilliseconds(track.Duration),
                 HasLyrics: track.HasHasLyrics && track.HasLyrics),
             Position: spotifyRemoteState.Position,
-            Remote: CalculateRemoteDevice(spotifyClient.DeviceId, spotifyRemoteState)
+            Remote: CalculateRemoteDevice(spotifyClient.DeviceId, spotifyRemoteState),
+            Devices: spotifyRemoteState.Devices.Select(CalculateRemoteDevice)
         );
 
     }
 
-    private static Option<RemoteState> CalculateRemoteDevice(string ourDeviceId, SpotifyRemoteState spotifyRemoteState)
+    private static RemoteDeviceInfo CalculateRemoteDevice(SpotifyRemoteDeviceInfo device)
+    {
+        return new RemoteDeviceInfo(
+            Service: ServiceType.Spotify,
+            DeviceId: device.Id,
+            DeviceName: device.Name,
+            Type: device.Type,
+            CanControlVolume: device.CanControlVolume,
+            VolumeFraction: device.Volume
+        );
+    }
+
+    private static Option<RemoteDeviceInfo> CalculateRemoteDevice(string ourDeviceId, SpotifyRemoteState spotifyRemoteState)
     {
         if (spotifyRemoteState.Device.IsNone)
         {
-            return Option<RemoteState>.None;
+            return Option<RemoteDeviceInfo>.None;
         }
 
         var device = spotifyRemoteState.Device.ValueUnsafe();
         if (device.Id == ourDeviceId)
         {
-            return Option<RemoteState>.None;
+            return Option<RemoteDeviceInfo>.None;
         }
 
-        return new RemoteState(
+        return new RemoteDeviceInfo(
             Service: ServiceType.Spotify,
             DeviceId: device.Id,
             DeviceName: device.Name,

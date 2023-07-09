@@ -18,6 +18,7 @@ namespace Wavee.UI.ViewModel.Shell;
 public sealed class ShellViewModel : ObservableObject
 {
     private readonly Action<Action> _invokeOnUiThread;
+    private double _bottomMargin;
 
     public ShellViewModel(UserViewModel user, Action<Action> invokeOnUiThread)
     {
@@ -67,6 +68,12 @@ public sealed class ShellViewModel : ObservableObject
     public PlaylistsViewModel Playlists { get; }
     public BulkConcurrentObservableCollection<ISidebarItem> SidebarItems { get; }
     public static ShellViewModel Instance { get; private set; }
+
+    public double BottomMargin
+    {
+        get => _bottomMargin;
+        set => this.SetProperty(ref _bottomMargin, value);
+    }
 
     private static IEnumerable<ISidebarItem> ConstructDefaultItems(UserViewModel user)
     {

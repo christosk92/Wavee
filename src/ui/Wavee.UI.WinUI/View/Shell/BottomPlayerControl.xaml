@@ -56,7 +56,10 @@
             <ColumnDefinition Width="1.3*" />
             <ColumnDefinition />
         </Grid.ColumnDefinitions>
-
+        <Grid.RowDefinitions>
+            <RowDefinition Height="110"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
         <RelativePanel>
             <RelativePanel.ChildrenTransitions>
                 <TransitionCollection>
@@ -343,6 +346,14 @@
                         IsThumbToolTipEnabled="False"
                         Value="50" />
             </Grid>
+        </Grid>
+
+        <Grid 
+            Background="{ThemeResource SystemControlBackgroundAccentBrush}"
+            Height="28"
+            Visibility="{x:Bind Playback.IsPlayingOnRemoteDevice, Mode=OneWay}"
+            Grid.Row="1" Grid.ColumnSpan="3">
+
         </Grid>
     </Grid>
 

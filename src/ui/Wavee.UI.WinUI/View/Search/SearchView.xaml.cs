@@ -28,6 +28,7 @@ namespace Wavee.UI.WinUI.View.Search
         public SearchBarViewModel ViewModel => ShellViewModel.Instance.SearchBar;
         public void NavigatedFrom(NavigationMode mode)
         {
+            ViewModel.ResetCommand.Execute(null);
             _disposable?.Dispose();
             _disposable = null;
         }

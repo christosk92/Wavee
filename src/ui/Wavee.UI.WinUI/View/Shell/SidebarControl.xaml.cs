@@ -69,6 +69,12 @@ public sealed partial class SidebarControl : NavigationView, INotifyPropertyChan
         set => SetValue(SidebarItemsProperty, value);
     }
 
+    public object BigImageContainer
+    {
+        get => (object)GetValue(BigImageContainerProperty);
+        set => SetValue(BigImageContainerProperty, value);
+    }
+
     public event EventHandler<Option<double>>? Resized;
 
 
@@ -82,7 +88,7 @@ public sealed partial class SidebarControl : NavigationView, INotifyPropertyChan
             if (user.Settings.ImageExpanded)
             {
                 x.IsPaneOpen = true;
-                var box = x.FindDescendant<ConstrainedBox>(x => x.Name is "SidebarImageBox");
+                var box = x.FindDescendant<ConstrainedBox>(x => x.Name is "BigImageContainer");
                 if (box != null)
                     box.Visibility = Visibility.Visible;
             }
@@ -94,46 +100,39 @@ public sealed partial class SidebarControl : NavigationView, INotifyPropertyChan
                     if (user.Settings.ImageExpanded)
                     {
                         x.IsPaneOpen = true;
-                        await SetImageFromPlaybackEvent(x, ShellViewModel.Instance.Playback._lastReceivedState);
                     }
 
-                    x.FindDescendant<ConstrainedBox>(x => x.Name is "SidebarImageBox").Visibility = user.Settings.ImageExpanded ? Visibility.Visible : Visibility.Collapsed;
+                    x.FindDescendant<FrameworkElement>(x => x.Name is "BigImageContainer").Visibility =
+                        user.Settings.ImageExpanded ? Visibility.Visible : Visibility.Collapsed;
                 }
             };
-
-
-            ShellViewModel.Instance.Playback
-                .CreateListener()
-                .ObserveOn(RxApp.MainThreadScheduler)
-                .StartWith(ShellViewModel.Instance.Playback._lastReceivedState)
-                .SelectMany(async y =>
-                {
-                    await SetImageFromPlaybackEvent(x, y);
-                    return Unit.Default;
-                })
-                .Subscribe();
         }
     }
 
     private static string _previousId;
-    private static async Task SetImageFromPlaybackEvent(SidebarControl x, WaveeUIPlaybackState y)
+    public static readonly DependencyProperty BigImageContainerProperty = DependencyProperty.Register(nameof(BigImageContainer), typeof(object), typeof(SidebarControl), new PropertyMetadata(default(object), PropertyChangedCallback));
+
+    private static async void PropertyChangedCallback(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
-        if (y.Metadata.IsSome)
+        var x = (SidebarControl)d;
+        await Task.Delay(TimeSpan.FromMilliseconds(200));
+        var container = x.FindDescendant<ContentControl>(f => f.Name is "BigImageContainer");
+        if (container != null)
         {
-            if (_previousId != y.Metadata.ValueUnsafe().Id)
-            {
-                _previousId = y.Metadata.ValueUnsafe().Id;
-                await Task.Delay(50);
-                var image = x.FindDescendant<Image>(z => z.Name is "SidebarImage");
-                if (image is not null)
+            container.Content = e.NewValue;
+            if (x.User is
                 {
-                    var bmp = new BitmapImage();
-                    image.Source = bmp;
-                    bmp.UriSource = new Uri(y.Metadata.ValueUnsafe().LargeImageUrl);
-                }
+                    Settings:
+                    {
+                        ImageExpanded: true
+                    }
+                })
+            {
+                container.Visibility = Visibility.Visible;
             }
         }
     }
+
 
     private void OnPropertyChanged([CallerMemberName] string propertyName = null)
     {
@@ -339,50 +338,26 @@ public sealed partial class SidebarControl : NavigationView, INotifyPropertyChan
             : new GridLength(200);
     }
 
-    private void DownsizeImageButton_OnTapped(object sender, TappedRoutedEventArgs e)
-    {
-        User.Settings.ImageExpanded = !User.Settings.ImageExpanded;
-    }
-
-    private void SidebarImageBox_OnLoaded(object sender, RoutedEventArgs e)
-    {
-        if (User?.Settings?.SidebarExpanded is true)
-        {
-            var box = sender as ConstrainedBox;
-            if (box != null)
-                box.Visibility = User.Settings.SidebarExpanded ? Visibility.Visible : Visibility.Collapsed;
-        }
-    }
-
-    private void SidebarImageBox_OnPointerEntered(object sender, PointerRoutedEventArgs e)
-    {
-        //DownsizeImageButton
-        var box = sender as ConstrainedBox;
-        var button = box.FindDescendant<Button>(x => x.Name is "DownsizeImageButton") as Button;
-        if (button != null)
-            button.Visibility = Visibility.Visible;
-    }
-
-    private void SidebarImageBox_OnPointerExited(object sender, PointerRoutedEventArgs e)
-    {
-        var box = sender as ConstrainedBox;
-        var button = box.FindDescendant<Button>(x => x.Name is "DownsizeImageButton") as Button;
-        if (button != null)
-            button.Visibility = Visibility.Collapsed;
-    }
-
-    private void SidebarImage_OnLoaded(object sender, RoutedEventArgs e)
-    {
-        var plb = User?.Client?.Playback?.CurrentPlayback;
-        if (plb is not null && plb.Value.IsSome)
-        {
-            var val = plb.Value.ValueUnsafe();
-            SetImageFromPlaybackEvent(this, val);
-        }
-    }
-
     public double IsExpandedToHeight(bool b, short s, short s1)
     {
         return b ? s : s1;
+    }
+
+    private void BigImageContainer_OnLoaded(object sender, RoutedEventArgs e)
+    {
+        if (BigImageContainer is not null)
+        {
+            (sender as ContentControl)!.Content = BigImageContainer;
+            if (User is
+                {
+                    Settings:
+                    {
+                        ImageExpanded: true
+                    }
+                })
+            {
+                (sender as ContentControl)!.Visibility = Visibility.Visible;
+            }
+        }
     }
 }

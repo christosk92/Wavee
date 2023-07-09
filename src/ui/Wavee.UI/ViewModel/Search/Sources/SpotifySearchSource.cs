@@ -1,6 +1,8 @@
-﻿using System.Reactive.Disposables;
+﻿using System.ComponentModel;
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using DynamicData;
@@ -330,6 +332,20 @@ public class SpotifyPlaylistHit : ISearchItem
     public CategoryComposite Category { get; }
     public int CategoryIndex { get; }
     public int ItemIndex { get; }
+    public event PropertyChangedEventHandler? PropertyChanged;
+
+    protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+    {
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    }
+
+    protected bool SetField<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
+    {
+        if (EqualityComparer<T>.Default.Equals(field, value)) return false;
+        field = value;
+        OnPropertyChanged(propertyName);
+        return true;
+    }
 }
 
 public class SpotifyArtistHit : ISearchItem
@@ -358,6 +374,20 @@ public class SpotifyArtistHit : ISearchItem
     public CategoryComposite Category { get; }
     public int CategoryIndex { get; }
     public int ItemIndex { get; }
+    public event PropertyChangedEventHandler? PropertyChanged;
+
+    protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+    {
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    }
+
+    protected bool SetField<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
+    {
+        if (EqualityComparer<T>.Default.Equals(field, value)) return false;
+        field = value;
+        OnPropertyChanged(propertyName);
+        return true;
+    }
 }
 
 public class SpotifyAlbumHit : ISearchItem
@@ -386,6 +416,20 @@ public class SpotifyAlbumHit : ISearchItem
     public CategoryComposite Category { get; }
     public int CategoryIndex { get; }
     public int ItemIndex { get; }
+    public event PropertyChangedEventHandler? PropertyChanged;
+
+    protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+    {
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    }
+
+    protected bool SetField<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
+    {
+        if (EqualityComparer<T>.Default.Equals(field, value)) return false;
+        field = value;
+        OnPropertyChanged(propertyName);
+        return true;
+    }
 }
 
 public class SpotifyTrackHit : ISearchItem
@@ -420,6 +464,20 @@ public class SpotifyTrackHit : ISearchItem
     public CategoryComposite Category { get; }
     public int CategoryIndex { get; }
     public int ItemIndex { get; }
+    public event PropertyChangedEventHandler? PropertyChanged;
+
+    protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+    {
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    }
+
+    protected bool SetField<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
+    {
+        if (EqualityComparer<T>.Default.Equals(field, value)) return false;
+        field = value;
+        OnPropertyChanged(propertyName);
+        return true;
+    }
 }
 
 
@@ -454,4 +512,18 @@ internal class UnknownSearchItem : ISearchItem
     public int ItemIndex { get; }
     public IEnumerable<string> Keywords { get; }
     public bool IsDefault { get; }
+    public event PropertyChangedEventHandler? PropertyChanged;
+
+    protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+    {
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    }
+
+    protected bool SetField<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
+    {
+        if (EqualityComparer<T>.Default.Equals(field, value)) return false;
+        field = value;
+        OnPropertyChanged(propertyName);
+        return true;
+    }
 }

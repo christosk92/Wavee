@@ -4,6 +4,7 @@ using ReactiveUI;
 using System.Reactive.Linq;
 using Wavee.UI.ViewModel.Search.Patterns;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Reactive.Disposables;
 using System.Windows.Input;
@@ -29,7 +30,7 @@ public class SearchBarViewModel : ReactiveObject
             .Group(s => s.Category)
             .Transform(group => new SearchItemGroup(group.Key.Name,
                 group.Key.Index,
-                group.Cache.Connect()))
+                (() => group.Cache.Connect())))
             .Sort(SortExpressionComparer<SearchItemGroup>.Ascending(x => x.CategoryIndex))
             .Bind(out _groups)
             .DisposeMany()
@@ -78,7 +79,16 @@ public class SearchBarViewModel : ReactiveObject
     public FilterItem? SelectedFilter
     {
         get => _selectedFilter;
-        set => this.RaiseAndSetIfChanged(ref _selectedFilter, value);
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _selectedFilter, value);
+            if (value is null)
+            {
+                var nextFilter = _filters?.FirstOrDefault();
+                if (nextFilter != null)
+                    SelectedFilter = nextFilter;
+            }
+        }
     }
     public string? SearchText
     {
@@ -117,7 +127,7 @@ public class FilterItem
         return $"{l:N0}";
     }
 }
-public interface ISearchItem
+public interface ISearchItem : INotifyPropertyChanged
 {
     string Name { get; }
     ComposedKey Key { get; }

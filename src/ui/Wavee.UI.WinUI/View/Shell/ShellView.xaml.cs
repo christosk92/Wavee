@@ -19,10 +19,13 @@ using Microsoft.UI;
 using System.Runtime.InteropServices;
 using Windows.Graphics;
 using Windows.UI;
+using CommunityToolkit.WinUI.UI;
 using Microsoft.UI.Xaml.Shapes;
 using Wavee.UI.WinUI.Navigation;
 using Wavee.UI.WinUI.View.Search;
 using WinRT.Interop;
+using CommunityToolkit.WinUI.UI.Controls;
+using LanguageExt.UnsafeValueAccess;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -40,6 +43,31 @@ namespace Wavee.UI.WinUI.View.Shell
         }
         public ShellViewModel ViewModel { get; set; }
         public NavigationService NavigationService { get; set; }
+
+
+        private void SidebarImageBox_OnLoaded(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void SidebarImageBox_OnPointerEntered(object sender, PointerRoutedEventArgs e)
+        {
+            //DownsizeImageButton
+            var box = sender as ConstrainedBox;
+            var button = box.FindDescendant<Button>(x => x.Name is "DownsizeImageButton") as Button;
+            if (button != null)
+                button.Visibility = Visibility.Visible;
+        }
+
+        private void SidebarImageBox_OnPointerExited(object sender, PointerRoutedEventArgs e)
+        {
+            var box = sender as ConstrainedBox;
+            var button = box.FindDescendant<Button>(x => x.Name is "DownsizeImageButton") as Button;
+            if (button != null)
+                button.Visibility = Visibility.Collapsed;
+        }
+
+
 
         private void SidebarControl_Resized(object sender, Option<double> e)
         {
@@ -276,6 +304,23 @@ namespace Wavee.UI.WinUI.View.Shell
             {
                 ViewModel.SearchBar.SearchText = sender.Text;
             }
+        }
+
+
+        private void DownsizeImageButton_OnTapped(object sender, TappedRoutedEventArgs e)
+        {
+            ViewModel.User.Settings.ImageExpanded = !ViewModel.User.Settings.ImageExpanded;
+        }
+
+        private void BottomPlayerControl_OnSizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            //SidebarImageBox
+            ViewModel.BottomMargin = e.NewSize.Height;
+        }
+
+        public Thickness ProjectToMargin(double d)
+        {
+            return new Thickness(0, 0, 0, d);
         }
     }
 }

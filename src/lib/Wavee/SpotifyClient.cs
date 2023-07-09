@@ -236,7 +236,7 @@ public class SpotifyClient : IDisposable
 
     public ISpotifyPublicClient Public => new LiveSpotifyPublicClient(tokenFactory: Token.GetToken);
 
-    public ISpotifyRemoteClient Remote => new LiveSpotifyRemoteClient(_connectionId, waitForConnectionTask: _waitForConnectionTask, TimeProvider);
+    public ISpotifyRemoteClient Remote => new LiveSpotifyRemoteClient(_connectionId, waitForConnectionTask: _waitForConnectionTask, TimeProvider, DeviceId);
 
     public IContextResolver ContextResolver => new LiveContextResolver(() => Mercury);
 

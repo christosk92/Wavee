@@ -14,9 +14,10 @@ public readonly record struct SpotifyRemoteState(
     Option<string> ContextUri,
     Option<int> IndexInContext,
     TimeSpan Position,
-    Option<SpotifyRemoteDeviceInfo> Device)
+    Option<SpotifyRemoteDeviceInfo> Device,
+    IEnumerable<SpotifyRemoteDeviceInfo> Devices)
 {
-    internal static SpotifyRemoteState? ParseFrom(Option<Cluster> cluster, ITimeProvider client)
+    internal static SpotifyRemoteState? ParseFrom(Option<Cluster> cluster, ITimeProvider client, string ourDeviceId)
     {
         if (cluster.IsNone)
             return null;
@@ -38,7 +39,21 @@ public readonly record struct SpotifyRemoteState(
             ContextUri: contextUri,
             IndexInContext: index,
             Position: CalculatePosition(clusterValue!.PlayerState, client.CurrentTimeMilliseconds, client.Offset),
-            Device: MutateToDevice(clusterValue)
+            Device: MutateToDevice(clusterValue),
+            Devices: clusterValue.Device
+                .Where(x=> x.Key != ourDeviceId)
+                .Select(x=> MutateToDevice(x.Value))
+        );
+    }
+
+    private static SpotifyRemoteDeviceInfo MutateToDevice(DeviceInfo dv)
+    {
+        return new SpotifyRemoteDeviceInfo(
+            Id: dv.DeviceId,
+            Name: dv.Name,
+            Type: dv.DeviceType,
+            Volume: dv.Capabilities.VolumeSteps is 0 ? 1 : (double)dv.Volume / dv.Capabilities.VolumeSteps,
+            CanControlVolume: !dv.Capabilities.DisableVolume
         );
     }
 

@@ -146,36 +146,14 @@
                                 </Grid>
 
 
-                                <controls:ConstrainedBox
-                                    x:Name="SidebarImageBox"
+                                <ContentControl
+                                    Visibility="Collapsed"
+                                    Loaded="BigImageContainer_OnLoaded"
+                                    x:Name="BigImageContainer"
+                                    VerticalContentAlignment="Stretch"
+                                    HorizontalContentAlignment="Stretch"
                                     Grid.Row="2"
-                                    Margin="0,0,0,110"
-                                    AspectRatio="1:1"
-                                    Loaded="SidebarImageBox_OnLoaded"
-                                    PointerEntered="SidebarImageBox_OnPointerEntered"
-                                    PointerExited="SidebarImageBox_OnPointerExited"
-                                    Visibility="Collapsed">
-                                    <Grid>
-                                        <Border
-                                            x:Name="SidebarImageBorder"
-                                            Background="{ThemeResource LayerFillColorDefaultBrush}"
-                                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
-                                            BorderThickness="1">
-                                            <Image x:Name="SidebarImage" Loaded="SidebarImage_OnLoaded" />
-                                        </Border>
-
-                                        <Button
-                                            x:Name="DownsizeImageButton"
-                                            Margin="-1"
-                                            HorizontalAlignment="Stretch"
-                                            VerticalAlignment="Top"
-                                            CornerRadius="0"
-                                            Tapped="DownsizeImageButton_OnTapped"
-                                            Visibility="Collapsed">
-                                            <FontIcon FontFamily="{StaticResource SegoeFluent}" Glyph="&#xE015;" />
-                                        </Button>
-                                    </Grid>
-                                </controls:ConstrainedBox>
+                                    />
 
                                 <VisualStateManager.VisualStateGroups>
                                     <VisualStateGroup x:Name="DisplayModeStates">

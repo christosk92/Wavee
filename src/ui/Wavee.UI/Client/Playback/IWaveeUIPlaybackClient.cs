@@ -6,4 +6,5 @@ public interface IWaveeUIPlaybackClient
 {
     IObservable<WaveeUIPlaybackState> PlaybackEvents { get; }
     Option<WaveeUIPlaybackState> CurrentPlayback { get; }
+    string OurDeviceId { get; }
 }

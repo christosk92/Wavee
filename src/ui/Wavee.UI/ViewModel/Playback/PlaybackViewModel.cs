@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -7,6 +8,7 @@ using Wavee.UI.Client.Playback;
 using Wavee.UI.User;
 using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
+using Wavee.Remote;
 using Unit = System.Reactive.Unit;
 
 namespace Wavee.UI.ViewModel.Playback;
@@ -40,6 +42,8 @@ public sealed class PlaybackViewModel : ObservableObject
     private readonly Subject<WaveeUIPlaybackState> _playbackEvent = new Subject<WaveeUIPlaybackState>();
     public WaveeUIPlaybackState _lastReceivedState;
     private bool _hasLyrics;
+    private RemoteDeviceInfo _remoteDevice;
+    private string _ourDeviceId;
 
     public PlaybackViewModel(UserViewModel user)
     {
@@ -49,7 +53,7 @@ public sealed class PlaybackViewModel : ObservableObject
             .ObserveOn(RxApp.MainThreadScheduler)
             .Select(OnPlaybackEvent)
             .Subscribe();
-
+        _ourDeviceId = user.Client.Playback.OurDeviceId;
         _timer = new Timer(MainPositionCallback, null, Timeout.Infinite, Timeout.Infinite);
     }
 
@@ -113,6 +117,20 @@ public sealed class PlaybackViewModel : ObservableObject
         get => _hasLyrics;
         set => SetProperty(ref _hasLyrics, value);
     }
+    public ObservableCollection<RemoteDeviceInfo> Devices { get; } = new();
+
+    public RemoteDeviceInfo RemoteDevice
+    {
+        get => _remoteDevice;
+        set
+        {
+            if (SetProperty(ref _remoteDevice, value))
+            {
+                this.OnPropertyChanged(nameof(IsPlayingOnRemoteDevice));
+            }
+        }
+    }
+    public bool IsPlayingOnRemoteDevice => RemoteDevice != default && RemoteDevice.DeviceId != _ourDeviceId;
 
 
     private Unit OnPlaybackEvent(WaveeUIPlaybackState state)
@@ -133,6 +151,29 @@ public sealed class PlaybackViewModel : ObservableObject
         else
         {
             HasLyrics = false;
+        }
+
+        Devices.Clear();
+        foreach (var otherDevices in state.Devices)
+        {
+            Devices.Add(otherDevices);
+        }
+
+        if (state.Remote.IsSome)
+        {
+            var remoteState = state.Remote.ValueUnsafe();
+            if (remoteState.DeviceId == _ourDeviceId)
+            {
+                RemoteDevice = default;
+            }
+            else
+            {
+                RemoteDevice = remoteState;
+            }
+        }
+        else
+        {
+            RemoteDevice = default;
         }
 
         switch (state.PlaybackState)
