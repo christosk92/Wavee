@@ -7,6 +7,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:controls="using:CommunityToolkit.WinUI.UI.Controls"
              xmlns:components="using:Wavee.UI.WinUI.Components"
+             xmlns:playback="using:Wavee.UI.Client.Playback"
              DataContext="{x:Bind Playback,Mode=OneWay}"
              mc:Ignorable="d">
     <UserControl.Resources>
@@ -238,6 +239,82 @@
                 </AppBarButton>
 
                 <AppBarButton x:Name="DevicesButton">
+                    <AppBarButton.Flyout>
+                        <Flyout>
+                            <Grid Width="250" RowSpacing="12">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition/>
+                                </Grid.RowDefinitions>
+
+                                <StackPanel Spacing="8" Orientation="Vertical">
+                                    <TextBlock HorizontalAlignment="Center" Text="Remote control" Style="{ThemeResource TitleTextBlockStyle}"/>
+                                    <TextBlock HorizontalTextAlignment="Center"  TextWrapping="WrapWholeWords">
+                                        <Run Foreground="{ThemeResource ApplicationSecondaryForegroundThemeBrush}" Text="You can identify this device as"/>
+                                        <Run FontWeight="Bold" Text="{x:Bind User.Settings.DeviceName,Mode=OneWay}"/>
+                                        <Run Foreground="{ThemeResource ApplicationSecondaryForegroundThemeBrush}" Text="on other devices."/>
+                                    </TextBlock>
+
+                                    <TextBlock HorizontalAlignment="Center"
+                                               Foreground="{ThemeResource SystemAccentColorLight2}"
+                                               Margin="0,12,0,0" Text="Currently listening on"/>
+                                    <Border  Background="{ThemeResource LayerFillColorDefaultBrush}"
+                                             HorizontalAlignment="Stretch"
+                                             CornerRadius="8"
+                                             Padding="12"
+                                            BorderThickness="1"
+                                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
+                                        <StackPanel 
+                                            HorizontalAlignment="Center"
+                                            Spacing="8" Orientation="Horizontal">
+                                            <FontIcon 
+                                            FontWeight="Bold"
+                                            FontSize="28"
+                                            Foreground="{ThemeResource SystemAccentColorLight2}"
+                                            FontFamily="/Assets/Fonts/SegoeFluentIcons.ttf#Segoe Fluent Icons" Glyph="&#xE1C9;" />
+                                            <TextBlock 
+                                                Foreground="{ThemeResource SystemAccentColorLight2}"
+                                            FontWeight="Bold"
+                                            FontSize="28"
+                                            Text="iPhone"/>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <Button HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch"
+                                            Style="{ThemeResource AccentButtonStyle}">
+                                        <StackPanel HorizontalAlignment="Center" Spacing="8" Orientation="Horizontal">
+                                            <FontIcon FontFamily="/Assets/Fonts/SegoeFluentIcons.ttf#Segoe Fluent Icons" Glyph="&#xE150;" />
+                                            <TextBlock Text="Play here"/>
+                                        </StackPanel>
+                                    </Button>
+                                    <MenuFlyoutSeparator/>
+                                </StackPanel>
+
+
+                                <ItemsRepeater 
+                                    Grid.Row="1"
+                                    ItemsSource="{x:Bind Playback.Devices,Mode=OneWay}">
+                                    <ItemsRepeater.ItemTemplate>
+                                        <DataTemplate x:DataType="playback:RemoteDeviceInfo">
+                                            <Button Margin="0,0,0,8" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
+                                                <Grid ColumnSpacing="8" HorizontalAlignment="Stretch" >
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="28"/>
+                                                        <ColumnDefinition />
+                                                    </Grid.ColumnDefinitions>
+                                                    <FontIcon
+                                                        HorizontalAlignment="Right"
+                                                        FontFamily="/Assets/Fonts/SegoeFluentIcons.ttf#Segoe Fluent Icons" 
+                                                        Glyph="&#xE150;" />
+                                                    <TextBlock Grid.Column="1" Text="{x:Bind DeviceName}"/>
+                                                </Grid>
+                                            </Button>
+                                        </DataTemplate>
+                                    </ItemsRepeater.ItemTemplate>
+                                </ItemsRepeater>
+                            </Grid>
+                        </Flyout>
+                    </AppBarButton.Flyout>
                     <AppBarButton.Icon>
                         <FontIcon FontFamily="{StaticResource SegoeFluent}"
                                   Glyph="&#xE772;" />
@@ -351,9 +428,32 @@
         <Grid 
             Background="{ThemeResource SystemControlBackgroundAccentBrush}"
             Height="28"
+            Padding="12,0"
             Visibility="{x:Bind Playback.IsPlayingOnRemoteDevice, Mode=OneWay}"
-            Grid.Row="1" Grid.ColumnSpan="3">
-
+            Grid.Row="1"
+            Grid.ColumnSpan="3">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="6"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel 
+                Grid.Column="0"
+                Spacing="8"
+                Orientation="Horizontal">
+                <FontIcon
+                    VerticalAlignment="Center"
+                    FontSize="18"
+                    Margin="0,3,0,0"
+                    FontFamily="/Assets/Fonts/SegoeFluentIcons.ttf#Segoe Fluent Icons" Glyph="&#xED33;" />
+                <TextBlock
+                    VerticalAlignment="Center">
+                    <Run Text="Listening on"/>
+                    <Run Text="{x:Bind Playback.RemoteDevice.DeviceName,Mode=OneWay}"
+                         FontWeight="Bold"
+                    />
+                </TextBlock>
+            </StackPanel>
         </Grid>
     </Grid>
 
