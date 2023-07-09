@@ -74,22 +74,25 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
-        <TextBlock FontSize="18">
+        <TextBlock FontSize="24">
             <Run Text="Results for '" />
             <Run FontWeight="Bold" Text="{x:Bind ViewModel.SearchText, Mode=OneWay}" />
             <Run Text="'" />
         </TextBlock>
-        <labs:Segmented
+        <labs:TokenView
             Grid.Row="1"
-            Margin="0,12"
+            Margin="0,6,0,24"
             SelectedItem="{x:Bind ViewModel.SelectedFilter, Mode=TwoWay}"
             ItemsSource="{x:Bind ViewModel.Filters, Mode=OneWay}">
-            <labs:Segmented.ItemTemplate>
+            <labs:TokenView.ItemTemplate>
                 <DataTemplate x:DataType="search:FilterItem">
-                    <TextBlock Text="{x:Bind Title}" />
+                    <StackPanel Spacing="8" Orientation="Horizontal">
+                        <TextBlock Text="{x:Bind Title}" />
+                        <TextBlock xml:space="preserve" Visibility="{x:Bind IsNotOverview, Converter={StaticResource TrueToVisibleConverter}}"><Run Text="("/><Run  Text="{x:Bind FormatCount(Count)}"/><Run Text=")"/></TextBlock>
+                    </StackPanel>
                 </DataTemplate>
-            </labs:Segmented.ItemTemplate>
-        </labs:Segmented>
+            </labs:TokenView.ItemTemplate>
+        </labs:TokenView>
 
         <TextBlock
             x:Name="NoResults"
@@ -99,7 +102,10 @@
             Text="It's kinda empty here... Try another keyword"
             Visibility="{x:Bind ViewModel.HasResultsVal, Mode=OneWay, Converter={StaticResource TrueToCollapsedConverter}}" />
         <ItemsRepeater Grid.Row="2" ItemsSource="{x:Bind ViewModel.Groups, Mode=OneWay}"
-                       ItemTemplate="{StaticResource SearchContainerSelector}"
-                       />
+                       ItemTemplate="{StaticResource SearchContainerSelector}">
+            <ItemsRepeater.Layout>
+                <StackLayout Orientation="Vertical" Spacing="18"/>
+            </ItemsRepeater.Layout>
+        </ItemsRepeater>
     </Grid>
 </UserControl>

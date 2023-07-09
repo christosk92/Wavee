@@ -18,17 +18,13 @@ public class SearchBarViewModel : ReactiveObject
     private bool _isSearchListVisible;
     private string? _searchText;
     private bool _hasResultsVal;
-    private string? _selectedFilter;
+    private FilterItem? _selectedFilter;
 
     public SearchBarViewModel(
         IObservable<IChangeSet<ISearchItem, ComposedKey>> itemsObservable,
         IObservable<IChangeSet<FilterItem, string>> filtersObservable)
     {
         itemsObservable
-            .Do(x =>
-            {
-                SelectedFilter = "Overview";
-            })
             .SortBy(x => x.Category.Index)
             .Group(s => s.Category)
             .Transform(group => new SearchItemGroup(group.Key.Name,
@@ -42,6 +38,10 @@ public class SearchBarViewModel : ReactiveObject
 
         filtersObservable
             .Bind(out _filters)
+            .Do(_ =>
+            {
+                SelectedFilter = _filters.FirstOrDefault();
+            })
             .DisposeMany()
             .ObserveOn(RxApp.MainThreadScheduler)
             .Subscribe();
@@ -75,7 +75,7 @@ public class SearchBarViewModel : ReactiveObject
         set => this.RaiseAndSetIfChanged(ref _isSearchListVisible, value);
     }
 
-    public string? SelectedFilter
+    public FilterItem? SelectedFilter
     {
         get => _selectedFilter;
         set => this.RaiseAndSetIfChanged(ref _selectedFilter, value);
@@ -108,6 +108,14 @@ public class FilterItem
     public string Id { get; init; }
     public string Title { get; init; }
     public long Count { get; init; }
+    public bool IsNotOverview => Id is not "overview";
+
+    public string FormatCount(long l)
+    {
+        //for example 1000000
+        //would return as: 1,000,000
+        return $"{l:N0}";
+    }
 }
 public interface ISearchItem
 {
