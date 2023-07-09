@@ -50,18 +50,20 @@ internal readonly struct LiveTokenClient : ITokenClient, IMercuryClient
 
                     const string KEYMASTER_URI =
                         "hm://keymaster/token/authenticated?scope=user-library-read,user-read-private,user-read-email,playlist-modify-public,ugc-image-upload,playlist-read-private,playlist-read-collaborative,playlist-read&client_id=65b708073fc0480ea92a077233ca87bd&device_id=";
-
-                    var finalData = await MercuryParsers.GetAsync(_connId, KEYMASTER_URI, ct);
+                    using var timeout = new CancellationTokenSource();
+                    timeout.CancelAfter(TimeSpan.FromSeconds(10));
+                    using var combined = CancellationTokenSource.CreateLinkedTokenSource(timeout.Token, ct);
+                    var finalData = await MercuryParsers.GetAsync(_connId, KEYMASTER_URI, combined.Token);
 
                     var tokenData = JsonSerializer.Deserialize<MercuryTokenData>(finalData.Payload.Span);
                     var newToken = new AccessToken(tokenData.AccessToken, DateTimeOffset.UtcNow.AddSeconds(tokenData.ExpiresIn).Subtract(TimeSpan.FromMinutes(1)));
                     _tokens[_connId] = newToken;
                     return tokenData.AccessToken;
                 }
-                catch (OperationCanceledException canceled)
+                catch (OperationCanceledException)
                 {
-                    if (canceled.CancellationToken == ct)
-                        throw;
+                    Log.Warning("Timeout for token.");
+                    throw;
                 }
                 catch (Exception f)
                 {

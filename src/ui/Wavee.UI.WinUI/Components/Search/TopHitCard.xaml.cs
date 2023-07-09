@@ -11,6 +11,7 @@ using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Data;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Media.Imaging;
 using Microsoft.UI.Xaml.Navigation;
 using Wavee.UI.ViewModel.Search;
 using Wavee.UI.ViewModel.Search.Sources;
@@ -46,8 +47,23 @@ namespace Wavee.UI.WinUI.Components.Search
             {
                 case SpotifyArtistHit artist:
                     BackgroundImage.Source = artist.Image;
+                    if (!string.IsNullOrEmpty(artist.Image))
+                    {
+                        var bmp = new BitmapImage
+                        {
+                            DecodePixelHeight = 200,
+                            DecodePixelWidth = 200,
+                            UriSource = new Uri(artist.Image)
+                        };
+                        ArtistImage.ProfilePicture = bmp;
+                    }
+
+                    ArtistImage.DisplayName = artist.Name;
+                    ArtistImage.Visibility = Visibility.Visible;
+                    ItemType.Text = "ARTIST";
                     break;
                 case SpotifyTrackHit track:
+                    ArtistImage.Visibility = Visibility.Collapsed;
                     BackgroundImage.Source = track.Image;
                     break;
             }
