@@ -21,24 +21,37 @@ public sealed partial class SpotifySearchSource : ReactiveObject, ISearchSource,
     public SpotifySearchSource(UserViewModel user, Subject<string> queries)
     {
         _user = user;
+
+        var filtersSourceCache = new SourceCache<FilterItem, string>(x => x.Id)
+            .DisposeWith(_disposables);
+
         var sourceCache = new SourceCache<ISearchItem, ComposedKey>(x => x.Key)
             .DisposeWith(_disposables);
 
         var results = queries
-            .SelectMany(query => query.Length > 0 ? Search(query) : Task.FromResult(Enumerable.Empty<ISearchItem>()))
+            .SelectMany(query => query.Length > 0 ? Search(query) : Task.FromResult(new SpotifySearchResult(
+                Filters: Array.Empty<FilterItem>(),
+                Results: Enumerable.Empty<ISearchItem>()
+                )))
             .ObserveOn(RxApp.MainThreadScheduler);
 
         sourceCache
-            .RefillFrom(results)
+            .RefillFrom(results.Select(x => x.Results))
+            .DisposeWith(_disposables);
+
+        filtersSourceCache
+            .RefillFrom(results.Select(x => x.Filters))
             .DisposeWith(_disposables);
 
         Changes = sourceCache.Connect();
+        Filters = filtersSourceCache.Connect();
     }
 
     public IObservable<IChangeSet<ISearchItem, ComposedKey>> Changes { get; }
+    public IObservable<IChangeSet<FilterItem, string>> Filters { get; }
 
-
-    private async Task<IEnumerable<ISearchItem>> Search(string query)
+    private readonly record struct SpotifySearchResult(IReadOnlyCollection<FilterItem> Filters, IEnumerable<ISearchItem> Results);
+    private async Task<SpotifySearchResult> Search(string query)
     {
         try
         {
@@ -52,6 +65,15 @@ public sealed partial class SpotifySearchSource : ReactiveObject, ISearchSource,
             var results = root.GetProperty("results");
             bool hasTopHit = false;
             var output = new List<ISearchItem>(10 * total + 1);
+            var filters = new List<FilterItem>(total + 1)
+            {
+                new FilterItem
+                {
+                    Count = -1,
+                    Id = "overview",
+                    Title = "Overview"
+                }
+            };
             for (var i = 0; i < total; i++)
             {
                 var categoryName = categoriesOrder[i].GetString();
@@ -61,18 +83,20 @@ public sealed partial class SpotifySearchSource : ReactiveObject, ISearchSource,
                     {
                         hasTopHit = true;
                     }
-
-                    MutateItemsFromCategory(category, categoryName, i, output, hasTopHit);
+                    MutateItemsFromCategory(category, categoryName, i, output, filters, hasTopHit);
                 }
             }
 
 
-            return output;
+            return new SpotifySearchResult(
+                filters,
+                Results: output
+                );
         }
         catch (Exception e)
         {
             Log.Error(e, "Failed to search");
-            return Enumerable.Empty<ISearchItem>();
+            return new SpotifySearchResult(Array.Empty<FilterItem>(), Enumerable.Empty<ISearchItem>());
         }
     }
 
@@ -80,6 +104,7 @@ public sealed partial class SpotifySearchSource : ReactiveObject, ISearchSource,
         string categoryName,
         int categoryOrderIndex,
         List<ISearchItem> output,
+        List<FilterItem> filtersOutput,
         bool hasTopHit)
     {
         var playlistRegex = PlaylistRegex();
@@ -124,6 +149,17 @@ public sealed partial class SpotifySearchSource : ReactiveObject, ISearchSource,
                     i + offset);
                 output.Add(item);
             }
+        }
+
+        if (categoryName is not "topHit" and not "topRecommendations")
+        {
+            var total = category.GetProperty("total").GetInt64();
+            filtersOutput.Add(new FilterItem
+            {
+                Id = categoryName,
+                Count = total,
+                Title = categoryName
+            });
         }
     }
 

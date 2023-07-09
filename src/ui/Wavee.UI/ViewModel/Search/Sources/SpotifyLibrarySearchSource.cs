@@ -17,9 +17,14 @@ internal class SpotifyLibrarySearchSource : ReactiveObject, ISearchSource, IDisp
         Changes = new SourceCache<ISearchItem, ComposedKey>(x => x.Key)
             .DisposeWith(_disposables)
             .Connect();
+        Filters = new SourceCache<FilterItem, string>(x => x.Id)
+            .DisposeWith(_disposables)
+            .Connect();
     }
 
     public IObservable<IChangeSet<ISearchItem, ComposedKey>> Changes { get; }
+    public IObservable<IChangeSet<FilterItem, string>> Filters { get; }
+
     public void Dispose()
     {
         _disposables.Dispose();

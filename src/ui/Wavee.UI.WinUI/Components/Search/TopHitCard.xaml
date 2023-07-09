@@ -16,24 +16,31 @@
             BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
         <Grid>
             <controls:ImageTransitionControl
-                WithScale="False"
+                WithScale="True"
                 BlurValue="10"
                 x:Name="BackgroundImage"/>
             <Border Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
-                    Margin="-1"
+                    Margin="-2"
                     Opacity=".7"/>
 
-            <StackPanel Margin="12" HorizontalAlignment="Left" Orientation="Vertical" VerticalAlignment="Bottom">
-                <Image Visibility="Collapsed" Height="200" Width="200" x:Name="RegularImage"/>
-                <PersonPicture Visibility="Collapsed" Height="180" Width="180" x:Name="ArtistImage"/>
-                <TextBlock 
-                    FontSize="24"
-                    FontWeight="Bold"  Text="{x:Bind Item.Name, Mode=OneWay}"/>
-                <TextBlock 
-                    FontWeight="Bold"
-                    Opacity=".8"
-                    FontSize="12"
-                    x:Name="ItemType"/>
+            <StackPanel Margin="12" HorizontalAlignment="Left" 
+                        Orientation="Vertical" VerticalAlignment="Stretch">
+                <Grid Height="160" Width="160">
+                    <Image Visibility="Collapsed" x:Name="RegularImage"/>
+                    <Viewbox Stretch="UniformToFill">
+                        <PersonPicture Visibility="Collapsed"  x:Name="ArtistImage"/>
+                    </Viewbox>
+                </Grid>
+                <StackPanel VerticalAlignment="Center" Margin="0,6,0,0">
+                    <TextBlock 
+                        FontSize="24"
+                        FontWeight="Bold"  Text="{x:Bind Item.Name, Mode=OneWay}"/>
+                    <TextBlock 
+                        FontWeight="Bold"
+                        Opacity=".8"
+                        FontSize="12"
+                        x:Name="ItemType"/>
+                </StackPanel>
             </StackPanel>
         </Grid>
     </Border>

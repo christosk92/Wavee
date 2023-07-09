@@ -14,4 +14,5 @@ public class CompositeSearchSource : ISearchSource
     }
 
     public IObservable<IChangeSet<ISearchItem, ComposedKey>> Changes => _sources.Select(r => r.Changes).Merge();
+    public IObservable<IChangeSet<FilterItem, string>> Filters => _sources.Select(x => x.Filters).Merge();
 }

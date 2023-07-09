@@ -124,7 +124,7 @@ public sealed class ShellViewModel : ObservableObject
             new SpotifyLibrarySearchSource(User, filterChanged),
             new SpotifySearchSource(User, filterChanged));
 
-        var searchBar = new SearchBarViewModel(source.Changes);
+        var searchBar = new SearchBarViewModel(source.Changes, source.Filters);
 
         searchBar
             .WhenAnyValue(a => a.SearchText)

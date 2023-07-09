@@ -13,25 +13,35 @@ namespace Wavee.UI.ViewModel.Search;
 
 public class SearchBarViewModel : ReactiveObject
 {
+    private readonly ReadOnlyObservableCollection<FilterItem> _filters;
     private readonly ReadOnlyObservableCollection<SearchItemGroup> _groups;
     private bool _isSearchListVisible;
     private string? _searchText;
     private bool _hasResultsVal;
+    private string? _selectedFilter;
 
-    public SearchBarViewModel(IObservable<IChangeSet<ISearchItem, ComposedKey>> itemsObservable)
+    public SearchBarViewModel(
+        IObservable<IChangeSet<ISearchItem, ComposedKey>> itemsObservable,
+        IObservable<IChangeSet<FilterItem, string>> filtersObservable)
     {
         itemsObservable
-            .SortBy(x=> x.Category.Index)
             .Do(x =>
             {
-
+                SelectedFilter = "Overview";
             })
+            .SortBy(x => x.Category.Index)
             .Group(s => s.Category)
             .Transform(group => new SearchItemGroup(group.Key.Name,
                 group.Key.Index,
                 group.Cache.Connect()))
             .Sort(SortExpressionComparer<SearchItemGroup>.Ascending(x => x.CategoryIndex))
             .Bind(out _groups)
+            .DisposeMany()
+            .ObserveOn(RxApp.MainThreadScheduler)
+            .Subscribe();
+
+        filtersObservable
+            .Bind(out _filters)
             .DisposeMany()
             .ObserveOn(RxApp.MainThreadScheduler)
             .Subscribe();
@@ -65,6 +75,11 @@ public class SearchBarViewModel : ReactiveObject
         set => this.RaiseAndSetIfChanged(ref _isSearchListVisible, value);
     }
 
+    public string? SelectedFilter
+    {
+        get => _selectedFilter;
+        set => this.RaiseAndSetIfChanged(ref _selectedFilter, value);
+    }
     public string? SearchText
     {
         get => _searchText;
@@ -80,12 +95,19 @@ public class SearchBarViewModel : ReactiveObject
     }
     public IObservable<bool> HasResults { get; }
     public ReadOnlyObservableCollection<SearchItemGroup> Groups => _groups;
-
+    public ReadOnlyObservableCollection<FilterItem> Filters => _filters;
     private void ClearAndHideSearchList()
     {
         IsSearchListVisible = false;
         SearchText = "";
     }
+}
+
+public class FilterItem
+{
+    public string Id { get; init; }
+    public string Title { get; init; }
+    public long Count { get; init; }
 }
 public interface ISearchItem
 {
@@ -93,6 +115,7 @@ public interface ISearchItem
     ComposedKey Key { get; }
     CategoryComposite Category { get; }
     int ItemIndex { get; }
+
 }
 
 public readonly record struct CategoryComposite(string Name, int Index);
