@@ -33,6 +33,7 @@ public sealed class PlaybackViewModel : ObservableObject
     private ItemWithId _title;
     private string? _largeImageUrl;
     private string? _smallImageUrl;
+    private string? _mediumImageUrl;
     private ItemWithId[] _subtitles;
     private TimeSpan? _duration;
     private string _itemId;
@@ -99,6 +100,11 @@ public sealed class PlaybackViewModel : ObservableObject
         get => _smallImageUrl;
         set => SetProperty(ref _smallImageUrl, value);
     }
+    public string? MediumImageUrl
+    {
+        get => _mediumImageUrl;
+        set => SetProperty(ref _mediumImageUrl, value);
+    }
 
     public TimeSpan? Duration
     {
@@ -143,6 +149,7 @@ public sealed class PlaybackViewModel : ObservableObject
             Subtitles = metadata.Subtitles;
             LargeImageUrl = metadata.LargeImageUrl;
             SmallImageUrl = metadata.SmallImageUrl;
+            MediumImageUrl = metadata.MediumImageUrl;
             Duration = metadata.Duration;
             ItemId = metadata.Id;
             Uid = metadata.Uid;

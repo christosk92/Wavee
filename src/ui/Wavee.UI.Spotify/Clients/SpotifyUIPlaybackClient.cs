@@ -77,6 +77,7 @@ internal sealed class SpotifyUIPlaybackClient : IWaveeUIPlaybackClient
                     Type: AudioItemType.Artist,
                     Title: x.Name)).ToArray(),
                 LargeImageUrl: images.OrderByDescending(x => x.Height.IfNone(0)).Head().Url,
+                MediumImageUrl: images.OrderByDescending(x => x.Height.IfNone(0)).Skip(1).Head().Url,
                 SmallImageUrl: images.OrderBy(x => x.Height.IfNone(0)).Head().Url, TimeSpan.FromMilliseconds(track.Duration),
                 HasLyrics: track.HasHasLyrics && track.HasLyrics),
             Position: spotifyRemoteState.Position,

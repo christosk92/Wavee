@@ -13,7 +13,8 @@ public readonly record struct WaveeUIPlaybackState(WaveeUIPlayerState PlaybackSt
 public readonly record struct RemoteDeviceInfo(ServiceType Service, string DeviceId, string DeviceName, DeviceType Type, bool CanControlVolume, Option<double> VolumeFraction);
 
 public readonly record struct WaveeItemMetadata(string Id, Option<string> Uid, ItemWithId Title, ItemWithId[] Subtitles,
-    string LargeImageUrl, string SmallImageUrl, TimeSpan Duration, bool HasLyrics);
+    string LargeImageUrl, string MediumImageUrl, string SmallImageUrl, TimeSpan Duration, bool HasLyrics);
+
 public readonly record struct ItemWithId(string Id, AudioItemType Type, string Title);
 
 public enum WaveeUIPlayerState

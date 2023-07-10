@@ -77,9 +77,9 @@
                   RelativePanel.AlignLeftWithPanel="True"
                   RelativePanel.AlignTopWithPanel="True"
                   RelativePanel.AlignBottomWithPanel="True">
-                <Border BorderThickness="4"
+                <Border BorderThickness="1"
                         BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
-                    <Image Source="{Binding SmallImageUrl, Mode=OneWay}" />
+                    <Image Source="{Binding MediumImageUrl, Mode=OneWay}" />
                 </Border>
                 <Button VerticalAlignment="Top"
                         Tapped="ExpandImageButton_OnTapped"
