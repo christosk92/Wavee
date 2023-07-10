@@ -178,7 +178,9 @@
                             </StackPanel>
                         </Button>
 
-                        <Button>
+                        <Button 
+                            CommandParameter="{x:Bind Id}"
+                            Command="{x:Bind SaveCommand}">
                             <StackPanel Orientation="Horizontal" Spacing="8">
                                 <FontIcon FontFamily="{StaticResource SegoeFluent}" Glyph="&#xEB51;" />
                                 <TextBlock Text="Save" />

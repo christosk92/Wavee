@@ -15,14 +15,6 @@
             BorderThickness="1"
             BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
         <Grid>
-            <controls:ImageTransitionControl
-                WithScale="True"
-                BlurValue="100"
-                x:Name="BackgroundImage"/>
-            <Border Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
-                    Margin="-2"
-                    Opacity=".7"/>
-
             <StackPanel Margin="12" HorizontalAlignment="Left" 
                         Orientation="Vertical" VerticalAlignment="Stretch">
                 <Grid Height="160" Width="160" HorizontalAlignment="Left">

@@ -623,6 +623,21 @@ internal readonly struct LiveSpotifyMetadataClient : ISpotifyMetadataClient
         throw new Exception("Failed to get user root list");
     }
 
+    public async Task<Unit> WritePlaylistChanges(string playlistId, ListChanges changes, CancellationToken ct)
+    {
+        //https://spclient.wg.spotify.com/playlist/v2/user/7ucghdgquf6byqusqkliltwc2/rootlist/changes
+        const string url = "/playlist/v2/{0}/changes";
+        const string spclient = "gae2-spclient.spotify.com:443";
+        var finalUrl = $"https://{spclient}{string.Format(url, playlistId)}";
+
+        var token = await _tokenFactory(ct);
+        var tokenHeader = new AuthenticationHeaderValue("Bearer", token);
+        using var body = new ByteArrayContent(changes.ToByteArray());
+        using var response = await HttpIO.Post(finalUrl, new Dictionary<string, string>(), body, tokenHeader,  ct);
+        response.EnsureSuccessStatusCode();
+        return Unit.Default;
+    }
+
     private static LyricsLine[] Parse(ReadOnlyMemory<byte> data)
     {
         using var json = JsonDocument.Parse(data);

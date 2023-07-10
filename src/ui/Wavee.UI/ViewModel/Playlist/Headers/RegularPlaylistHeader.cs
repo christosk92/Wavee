@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using Eum.Spotify.playlist4;
 using LanguageExt;
 
@@ -10,10 +11,14 @@ public sealed class RegularPlaylistHeader : ObservableObject, IPlaylistHeader
     private bool _mozaicCreated;
     private FutereTracksHolder _futureTracks;
 
-    public RegularPlaylistHeader(SelectedListContent listContent, ObservableStringHolder tracksDurationStirng, ObservableStringHolder tracksCountString)
+    public RegularPlaylistHeader(
+        string id,
+        SelectedListContent listContent, ObservableStringHolder tracksDurationStirng, ObservableStringHolder tracksCountString, AsyncRelayCommand<string> saveCommand)
     {
+        Id = id;
         TracksDurationStirng = tracksDurationStirng;
         TracksCountString = tracksCountString;
+        SaveCommand = saveCommand;
         ImageUrl = listContent.Attributes.PictureSize.SingleOrDefault(x => x.TargetName is "large")?.Url
                    ?? listContent.Attributes.PictureSize.SingleOrDefault(x => x.TargetName is "default")?.Url;
         ShouldShowMozaic = string.IsNullOrEmpty(ImageUrl);
@@ -75,6 +80,8 @@ public sealed class RegularPlaylistHeader : ObservableObject, IPlaylistHeader
     public ObservableStringHolder TracksDurationStirng { get; }
     public ObservableStringHolder TracksCountString { get; }
     public bool HasDescription => !string.IsNullOrEmpty(Description);
+    public AsyncRelayCommand<string> SaveCommand { get; }
+    public string Id { get; }
 
     public void MozaicImageControl_OnImageLoadedChanged(object? sender, bool e)
     {

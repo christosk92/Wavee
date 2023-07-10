@@ -8,4 +8,6 @@ public interface IWaveeUIPlaylistClient
 {
     ValueTask<WaveeUIPlaylist> GetPlaylist(string id, CancellationToken cancellationToken);
     IObservable<PlaylistInfoNotification> ListenForUserPlaylists();
+
+    Task SavePlaylist(string id, CancellationToken ct = default);
 }

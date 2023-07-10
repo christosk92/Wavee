@@ -130,7 +130,7 @@
             ItemsSource="{x:Bind ViewModel.Filters, Mode=OneWay}">
             <labs:TokenView.ItemTemplate>
                 <DataTemplate x:DataType="search:FilterItem">
-                    <StackPanel Spacing="8" Orientation="Horizontal">
+                    <StackPanel Spacing="0" Orientation="Horizontal">
                         <TextBlock Text="{x:Bind Title}" />
                         <TextBlock xml:space="preserve" Visibility="{x:Bind IsNotOverview, Converter={StaticResource TrueToVisibleConverter}}"><Run Text="("/><Run  Text="{x:Bind FormatCount(Count)}"/><Run Text=")"/></TextBlock>
                     </StackPanel>

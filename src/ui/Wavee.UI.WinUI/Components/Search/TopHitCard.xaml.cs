@@ -49,7 +49,7 @@ namespace Wavee.UI.WinUI.Components.Search
             switch (newValue)
             {
                 case SpotifyArtistHit artist:
-                    BackgroundImage.Source = artist.Image;
+                 //   BackgroundImage.Source = artist.Image;
                     RegularImage.Visibility = Visibility.Collapsed;
                     if (!string.IsNullOrEmpty(artist.Image))
                     {
@@ -67,7 +67,7 @@ namespace Wavee.UI.WinUI.Components.Search
                 case SpotifyTrackHit track:
                     ArtistImage.Visibility = Visibility.Collapsed;
                     RegularImage.Visibility = Visibility.Visible;
-                    BackgroundImage.Source = track.Image;
+                    //BackgroundImage.Source = track.Image;
                     if (!string.IsNullOrEmpty(track.Image))
                     {
                         var bmp = new BitmapImage

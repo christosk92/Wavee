@@ -97,5 +97,6 @@ public interface ISpotifyMetadataClient
         IGrouping<AudioItemType, string>[] items, CancellationToken ct);
 
     Task<SelectedListContent> GetUserRootList(CancellationToken ct = default);
+    Task<Unit> WritePlaylistChanges(string playlistId, ListChanges changes, CancellationToken ct);
 }
 public readonly record struct LyricsLine(string Words, double StartTimeMs);

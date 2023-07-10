@@ -2,10 +2,12 @@
 using System.Reactive.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using CommunityToolkit.Mvvm.Input;
 using Eum.Spotify.playlist4;
 using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
 using Org.BouncyCastle.Utilities.Encoders;
+using Serilog;
 using Wavee.Id;
 using Wavee.Sqlite.Entities;
 using Wavee.UI.Client.Playlist;
@@ -37,7 +39,7 @@ internal sealed class SpotifyUIPlaylistClient : IWaveeUIPlaylistClient
         var potentialCacheHit = await cache.TryGetPlaylist(spotifyId, cancellationToken);
 
         static WaveeUIPlaylist ToUIPlaylist(SelectedListContent listContent,
-            bool fromCache, string id)
+            bool fromCache, string id, SpotifyUIPlaylistClient spotifyUiPlaylistClient)
         {
             var tracks = new WaveeUIPlaylistTrackInfo[listContent.Contents.Items.Count];
 
@@ -73,9 +75,12 @@ internal sealed class SpotifyUIPlaylistClient : IWaveeUIPlaylistClient
                 FutureTracks = futureMozaicTracks,
                 Header = isBigHeader
                     ? new PlaylistBigHeader(listContent)
-                    : new RegularPlaylistHeader(listContent,
+                    : new RegularPlaylistHeader(
+                        id: id,
+                        listContent,
                         tracksDurationStirng: new ObservableStringHolder(),
-                        tracksCountString: new ObservableStringHolder()
+                        tracksCountString: new ObservableStringHolder(),
+                        saveCommand: new AsyncRelayCommand<string>(spotifyUiPlaylistClient.SavePlaylist)
                     )
                     {
                         FutureTracks = new FutereTracksHolder(futureMozaicTracks)
@@ -94,7 +99,7 @@ internal sealed class SpotifyUIPlaylistClient : IWaveeUIPlaylistClient
             .MatchAsync(Some: playlist =>
             {
                 var selectedListContent = SelectedListContent.Parser.ParseFrom(playlist.Data);
-                return ToUIPlaylist(selectedListContent, true, id);
+                return ToUIPlaylist(selectedListContent, true, id, this);
             }, None: async () =>
             {
                 try
@@ -102,7 +107,7 @@ internal sealed class SpotifyUIPlaylistClient : IWaveeUIPlaylistClient
                     var playlistResult = await spotifyClient.Metadata.GetPlaylist(spotifyId, cancellationToken);
                     //insert into cache
                     await cache.SavePlaylist(spotifyId, playlistResult, cancellationToken);
-                    return ToUIPlaylist(playlistResult, false, id);
+                    return ToUIPlaylist(playlistResult, false, id, this);
                 }
                 catch (Exception e)
                 {
@@ -190,5 +195,66 @@ internal sealed class SpotifyUIPlaylistClient : IWaveeUIPlaylistClient
                     Playlists = Unsafe.As<List<PlaylistInfo>, PlaylistInfo[]>(ref output)
                 };
             });
+    }
+
+    public async Task SavePlaylist(string id, CancellationToken ct = default)
+    {
+        try
+        {
+            var changes = new ListChanges
+            {
+                WantResultingRevisions = false,
+                WantSyncResult = false,
+                Nonces = { },
+                Deltas =
+                {
+                    new Delta
+                    {
+                        Info = new ChangeInfo
+                        {
+                            Source = new SourceInfo
+                            {
+                                Client = SourceInfo.Types.Client.Webplayer
+                            },
+                        },
+                        Ops =
+                        {
+                            new Op
+                            {
+                                Kind = Op.Types.Kind.Add,
+                                Add = new Add
+                                {
+                                    Items =
+                                    {
+                                        new Item
+                                        {
+                                            Uri = id,
+                                            Attributes = new ItemAttributes
+                                            {
+                                                Timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+                                                FormatAttributes = { }
+                                            }
+                                        }
+                                    },
+                                    AddFirst = true
+                                }
+                            }
+                        }
+                    }
+                }
+            };
+
+            if (!_spotifyClient.TryGetTarget(out var cl))
+                throw new ObjectDisposedException(nameof(SpotifyClient));
+
+            var playlistId = $"user/{cl.WelcomeMessage.CanonicalUsername}/rootlist";
+            await cl.Metadata.WritePlaylistChanges(playlistId, changes, ct);
+            return;
+        }
+        catch (Exception x)
+        {
+            Log.Error(x, "An error occurred while trying to follow: {id}", id);
+            return;
+        }
     }
 }
