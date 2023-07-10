@@ -47,8 +47,9 @@ public sealed class PlaylistsViewModel : ObservableObject, IDisposable
         _playlists.Connect()
             .Transform(x => x.IsFolder ?
                 new PlaylistFolderSidebarItem(title: x.Name, isExpanded: false,
-                    playlists: x.Children.Select(ToSidebarItem).ToArray())
-                : ToSidebarItem(x) as ISidebarItem)
+                    playlists: x.Children.Select(y => ToSidebarItem(y, offset)).ToArray(),
+                    x.FixedIndex + offset)
+                : ToSidebarItem(x, offset) as ISidebarItem)
             .ObserveOn(RxApp.MainThreadScheduler)
             .Select(x =>
             {
@@ -62,20 +63,13 @@ public sealed class PlaylistsViewModel : ObservableObject, IDisposable
                 }
                 else
                 {
+                    int i = 0;
                     foreach (var change in x)
                     {
                         switch (change.Reason)
                         {
                             case ChangeReason.Add:
-                                if (change.CurrentIndex is -1)
-                                {
-                                    sidebaritems.Add(change.Current);
-                                }
-                                else
-                                {
-                                    sidebaritems.Insert(offset + change.CurrentIndex, change.Current);
-                                }
-
+                                sidebaritems.Insert(change.Current.FixedIndex, change.Current);
                                 break;
                             case ChangeReason.Remove:
                                 sidebaritems.Remove(change.Current);
@@ -83,21 +77,22 @@ public sealed class PlaylistsViewModel : ObservableObject, IDisposable
                         }
                     }
                 }
-
+                //sidebaritems.Sort((item, sidebarItem) => (item.FixedIndex).CompareTo(sidebarItem.FixedIndex));
                 return Unit.Default;
             })
             .Subscribe()
             .DisposeWith(_playlistListener);
     }
 
-    private PlaylistSidebarItem ToSidebarItem(PlaylistInfo playlistInfo)
+    private PlaylistSidebarItem ToSidebarItem(PlaylistInfo playlistInfo, int offset)
     {
         return new PlaylistSidebarItem(
             title: playlistInfo.Name,
             iconGlyph: null,
             iconFontFamily: null,
             viewModelType: typeof(PlaylistsViewModel),
-            parameter: playlistInfo.Id
+            parameter: playlistInfo.Id,
+            fixedIndex: playlistInfo.FixedIndex + offset
         );
     }
 

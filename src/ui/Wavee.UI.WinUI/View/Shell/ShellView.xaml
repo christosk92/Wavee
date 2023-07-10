@@ -29,7 +29,7 @@
 
 
         <DataTemplate x:Key="Regular" x:DataType="sidebar:RegularSidebarItem">
-            <NavigationViewItem Content="{x:Bind Title}" Tag="{Binding}">
+            <NavigationViewItem Content="{x:Bind Title, Mode=OneWay}" Tag="{Binding}">
                 <NavigationViewItem.Icon>
                     <FontIcon FontFamily="{x:Bind IconFontFamily}" Glyph="{x:Bind IconGlyph}" />
                 </NavigationViewItem.Icon>
@@ -37,12 +37,12 @@
         </DataTemplate>
 
         <DataTemplate x:Key="PlaylistSidebarItem" x:DataType="sidebar:PlaylistSidebarItem">
-            <NavigationViewItem Content="{x:Bind Title}" Tag="{Binding}" />
+            <NavigationViewItem Content="{x:Bind Title, Mode=OneWay}" Tag="{Binding}" />
         </DataTemplate>
         <DataTemplate x:Key="PlaylistFolder" x:DataType="sidebar:PlaylistFolderSidebarItem">
             <NavigationViewItem
-                Content="{x:Bind Title}"
-                MenuItemsSource="{x:Bind Playlists}"
+                Content="{x:Bind Title, Mode=OneWay}"
+                MenuItemsSource="{x:Bind Playlists, Mode=OneWay}"
                 Tag="{Binding}">
                 <NavigationViewItem.Icon>
                     <FontIcon FontFamily="/Assets/Fonts/SegoeFluentIons.ttf#Segoe Fluent Icons" Glyph="&#xE8B7;" />

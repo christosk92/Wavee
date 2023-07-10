@@ -5,27 +5,30 @@ namespace Wavee.UI.ViewModel.Shell.Sidebar;
 
 public sealed class HeaderSidebarItem : ISidebarItem
 {
-    public HeaderSidebarItem(string title)
+    public HeaderSidebarItem(string title, int fixedIndex)
     {
         Title = title;
+        FixedIndex = fixedIndex;
     }
 
     public string Title { get; }
+    public int FixedIndex { get; }
 }
 
 public sealed class RegularSidebarItem : ISidebarItem
 {
-    public RegularSidebarItem()
+    public RegularSidebarItem(int fixedIndex)
     {
-
+        FixedIndex = fixedIndex;
     }
-    public RegularSidebarItem(string title, string iconGlyph, string iconFontFamily, Type viewModelType, object parameter)
+    public RegularSidebarItem(string title, string iconGlyph, string iconFontFamily, Type viewModelType, object parameter, int fixedIndex)
     {
         Title = title;
         IconGlyph = iconGlyph;
         IconFontFamily = iconFontFamily;
         ViewModelType = viewModelType;
         Parameter = parameter;
+        FixedIndex = fixedIndex;
     }
 
     public string Title { get; }
@@ -33,6 +36,7 @@ public sealed class RegularSidebarItem : ISidebarItem
     public string IconFontFamily { get; }
     public Type ViewModelType { get; }
     public object Parameter { get; }
+    public int FixedIndex { get; }
 }
 
 public sealed class CountedSidebarItem : ObservableObject, ISidebarItem
@@ -55,19 +59,22 @@ public sealed class CountedSidebarItem : ObservableObject, ISidebarItem
         get => _value;
         set => this.SetProperty(ref _value, value);
     }
+
+    public int FixedIndex => Inner.FixedIndex;
 }
 
 public sealed class PlaylistSidebarItem : ObservableObject, ISidebarItem
 {
     private string _title;
 
-    public PlaylistSidebarItem(string title, string iconGlyph, string iconFontFamily, Type viewModelType, object parameter)
+    public PlaylistSidebarItem(string title, string iconGlyph, string iconFontFamily, Type viewModelType, object parameter, int fixedIndex)
     {
         _title = title;
         IconGlyph = iconGlyph;
         IconFontFamily = iconFontFamily;
         ViewModelType = viewModelType;
         Parameter = parameter;
+        FixedIndex = fixedIndex;
     }
 
     public string Title
@@ -79,6 +86,7 @@ public sealed class PlaylistSidebarItem : ObservableObject, ISidebarItem
     public string IconFontFamily { get; }
     public Type ViewModelType { get; }
     public object Parameter { get; }
+    public int FixedIndex { get; }
 }
 
 public sealed class PlaylistFolderSidebarItem : ObservableObject, ISidebarItem
@@ -86,11 +94,12 @@ public sealed class PlaylistFolderSidebarItem : ObservableObject, ISidebarItem
     private string _title;
     private bool _isExpanded;
 
-    public PlaylistFolderSidebarItem(string title, bool isExpanded, PlaylistSidebarItem[] playlists)
+    public PlaylistFolderSidebarItem(string title, bool isExpanded, PlaylistSidebarItem[] playlists, int fixedIndex)
     {
         _title = title;
         _isExpanded = isExpanded;
         Playlists = playlists;
+        FixedIndex = fixedIndex;
     }
 
     public string Title
@@ -105,4 +114,5 @@ public sealed class PlaylistFolderSidebarItem : ObservableObject, ISidebarItem
         set => this.SetProperty(ref _isExpanded, value);
     }
     public PlaylistSidebarItem[] Playlists { get; set; }
+    public int FixedIndex { get; }
 }

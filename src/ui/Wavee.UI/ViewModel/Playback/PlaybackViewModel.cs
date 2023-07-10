@@ -160,11 +160,6 @@ public sealed class PlaybackViewModel : ObservableObject
             HasLyrics = false;
         }
 
-        Devices.Clear();
-        foreach (var otherDevices in state.Devices)
-        {
-            Devices.Add(otherDevices);
-        }
 
         if (state.Remote.IsSome)
         {
@@ -181,6 +176,11 @@ public sealed class PlaybackViewModel : ObservableObject
         else
         {
             RemoteDevice = default;
+        }
+        Devices.Clear();
+        foreach (var otherDevices in state.Devices.Where(x=> x.DeviceId != RemoteDevice.DeviceId))
+        {
+            Devices.Add(otherDevices);
         }
 
         switch (state.PlaybackState)

@@ -131,6 +131,7 @@ internal sealed class SpotifyUIPlaylistClient : IWaveeUIPlaylistClient
             {
                 var output = new List<PlaylistInfo>();
                 Stack<PlaylistInfo> foldersStack = new Stack<PlaylistInfo>();
+                int actualIndex = 0;
                 for (var index = 0; index < x.Contents.Items.Count; index++)
                 {
                     var info = x.Contents.Items[index];
@@ -149,7 +150,8 @@ internal sealed class SpotifyUIPlaylistClient : IWaveeUIPlaylistClient
                             Name = folderName,
                             OwnerId = spotifyClient.WelcomeMessage.CanonicalUsername,
                             IsFolder = true,
-                            Children = new List<PlaylistInfo>()
+                            Children = new List<PlaylistInfo>(),
+                            FixedIndex = actualIndex++
                         });
                     }
                     else if (uri.StartsWith("spotify:end-group"))
@@ -176,15 +178,18 @@ internal sealed class SpotifyUIPlaylistClient : IWaveeUIPlaylistClient
                                 ? metaItem.OwnerUsername
                                 : spotifyClient.WelcomeMessage.CanonicalUsername,
                             IsFolder = false,
-                            Children = new List<PlaylistInfo>()
+                            Children = new List<PlaylistInfo>(),
+                            FixedIndex = actualIndex
                         };
                         if (foldersStack.Count > 0)
                         {
+                            playlistInfo.FixedIndex = foldersStack.Peek().Children.Count;
                             foldersStack.Peek().Children.Add(playlistInfo);
                         }
                         else
                         {
                             output.Add(playlistInfo);
+                            actualIndex++;
                         }
                     }
                 }

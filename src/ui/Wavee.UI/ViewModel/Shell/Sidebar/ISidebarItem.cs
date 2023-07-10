@@ -2,4 +2,5 @@
 
 public interface ISidebarItem
 {
+    int FixedIndex { get; }
 }

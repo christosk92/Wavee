@@ -7,4 +7,5 @@ public sealed class PlaylistInfo
     public required string Name { get; init; }
     public required bool IsFolder { get; init; }
     public required List<PlaylistInfo> Children { get; init; }
+    public required int FixedIndex { get; set; }
 }

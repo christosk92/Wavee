@@ -96,17 +96,17 @@ public sealed class ShellViewModel : ObservableObject
         const string mediaPlayerIcons = "/Assets/Fonts/MediaPlayerIcons.ttf#Media Player Fluent Icons";
 
         //For You:
-        var header = new HeaderSidebarItem(title: "For You");
-        var home = new RegularSidebarItem(title: "Home", iconGlyph: "\uE10F", iconFontFamily: fluentIcons, viewModelType: typeof(HomeViewModel), null);
-        var feed = new RegularSidebarItem(title: "Feed", iconGlyph: "\uE794", iconFontFamily: mediaPlayerIcons, viewModelType: null, null);
+        var header = new HeaderSidebarItem(title: "For You", 0);
+        var home = new RegularSidebarItem(title: "Home", iconGlyph: "\uE10F", iconFontFamily: fluentIcons, viewModelType: typeof(HomeViewModel), null, 1);
+        var feed = new RegularSidebarItem(title: "Feed", iconGlyph: "\uE794", iconFontFamily: mediaPlayerIcons, viewModelType: null, null, 2);
 
-        var libraryHeader = new HeaderSidebarItem(title: "Your Library");
-        var savedSongs = new RegularSidebarItem(title: "Saved songs", iconGlyph: "\uEB52", iconFontFamily: fluentIcons, viewModelType: null, null);
-        var albums = new RegularSidebarItem(title: "Albums", iconGlyph: "\uE93C", iconFontFamily: fluentIcons, viewModelType: null, null); ;
-        var artists = new RegularSidebarItem(title: "Artists", iconGlyph: "\uEBDA", iconFontFamily: fluentIcons, viewModelType: null, null);
-        var podcasts = new RegularSidebarItem(title: "Podcasts", iconGlyph: "\uEB44", iconFontFamily: fluentIcons, viewModelType: null, null);
+        var libraryHeader = new HeaderSidebarItem(title: "Your Library", 3);
+        var savedSongs = new RegularSidebarItem(title: "Saved songs", iconGlyph: "\uEB52", iconFontFamily: fluentIcons, viewModelType: null, null,4);
+        var albums = new RegularSidebarItem(title: "Albums", iconGlyph: "\uE93C", iconFontFamily: fluentIcons, viewModelType: null, null,5); ;
+        var artists = new RegularSidebarItem(title: "Artists", iconGlyph: "\uEBDA", iconFontFamily: fluentIcons, viewModelType: null, null,6);
+        var podcasts = new RegularSidebarItem(title: "Podcasts", iconGlyph: "\uEB44", iconFontFamily: fluentIcons, viewModelType: null, null,7);
 
-        var playlistsHeader = new HeaderSidebarItem(title: "Playlists");
+        var playlistsHeader = new HeaderSidebarItem(title: "Playlists",8);
 
         return new ISidebarItem[]
         {
