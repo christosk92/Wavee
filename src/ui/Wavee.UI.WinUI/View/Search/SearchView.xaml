@@ -9,9 +9,43 @@
     xmlns:search="using:Wavee.UI.ViewModel.Search"
     xmlns:winUi="using:Wavee.UI.WinUI"
     xmlns:searchComponents="using:Wavee.UI.WinUI.Components.Search"
+    xmlns:panels="using:Wavee.UI.WinUI.UI.Panels"
+    xmlns:components="using:Wavee.UI.WinUI.Components"
+    xmlns:common="using:Wavee.UI.Common"
+    xmlns:templateSelectors="using:Wavee.UI.WinUI.UI.TemplateSelectors"
     mc:Ignorable="d">
 
     <UserControl.Resources>
+
+        <DataTemplate x:Key="CardViewTemplate"
+                      x:DataType="common:CardViewModel">
+            <components:CardView Id="{x:Bind Id,Mode=OneWay}"
+                                 AudioType="{x:Bind Type, Mode=OneWay}"
+                                 IsArtist="{x:Bind IsArtist,Mode=OneWay}"
+                                 Title="{x:Bind Title,Mode=OneWay}"
+                                 Subtitle="{x:Bind Subtitle,Mode=OneWay}"
+                                 Image="{x:Bind Image,Mode=OneWay}"
+                                 Caption="{x:Bind Caption,Mode=OneWay}"
+                                 ImageIsIcon="{x:Bind ImageIsIcon,Mode=OneWay}" />
+        </DataTemplate>
+
+        <DataTemplate x:Key="PodcastEpisodeCardViewTemplate"
+                      x:DataType="common:PodcastEpisodeCardViewModel">
+            <components:PodcastEpisodeCardView Id="{x:Bind Id}"
+                                               Title="{x:Bind Title}"
+                                               Image="{x:Bind Image}"
+                                               Started="{x:Bind Started}"
+                                               Duration="{x:Bind Duration}"
+                                               Progress="{x:Bind Progress}"
+                                               ShowTitle="{x:Bind Show}"
+                                               Description="{x:Bind PodcastDescription}"
+                                               ReleaseDate="{x:Bind ReleaseDate}" />
+        </DataTemplate>
+        <templateSelectors:CardViewTemplateSelector x:Key="CardViewTemplateSelector"
+                                                    PodcastViewTemplate="{StaticResource PodcastEpisodeCardViewTemplate}"
+                                                    CardViewTemplate="{StaticResource CardViewTemplate}" />
+
+
         <DataTemplate
             x:DataType="search:SearchItemGroup"
             x:Key="TopHitTracksComposite">
@@ -53,7 +87,7 @@
             </Grid>
         </DataTemplate>
         <DataTemplate  x:DataType="search:SearchItemGroup" x:Key="Regular">
-            <Grid>
+            <Grid RowSpacing="12">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition />
@@ -62,12 +96,13 @@
                         FontSize="18" 
                         FontWeight="SemiBold"
                         Text="{x:Bind Title, Mode=OneWay}" />
-                <ItemsRepeater Grid.Row="1" ItemsSource="{x:Bind Items, Mode=OneWay}">
-                    <ItemsRepeater.ItemTemplate>
-                        <DataTemplate x:DataType="search:ISearchItem">
-                            <TextBlock Text="{x:Bind Name}" />
-                        </DataTemplate>
-                    </ItemsRepeater.ItemTemplate>
+                <ItemsRepeater VerticalAlignment="Top"
+                               Grid.Row="1"
+                               ItemTemplate="{StaticResource CardViewTemplateSelector}"
+                               ItemsSource="{x:Bind AsCards, Mode=OneWay}">
+                    <ItemsRepeater.Layout>
+                        <panels:HorizontalAdaptiveLayout DesiredWidth="200" />
+                    </ItemsRepeater.Layout>
                 </ItemsRepeater>
             </Grid>
         </DataTemplate>

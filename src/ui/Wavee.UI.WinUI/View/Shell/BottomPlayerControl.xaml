@@ -259,20 +259,22 @@
 
                                     <TextBlock HorizontalAlignment="Center"
                                                Foreground="{ThemeResource SystemAccentColorLight2}"
-                                               Margin="0,12,0,0" Text="Currently listening on"/>
-                                    <Viewbox Height="40" Width="220" StretchDirection="DownOnly" Stretch="Uniform">
+                                               Margin="0,12,0,-12" Text="Currently listening on"/>
+                                    <Viewbox Height="100" Width="220" StretchDirection="Both" Stretch="Uniform">
                                         <Border  Background="{ThemeResource LayerFillColorDefaultBrush}"
                                                 HorizontalAlignment="Stretch"
                                                 CornerRadius="8"
+                                                VerticalAlignment="Stretch"
                                                 Padding="24"
                                                 BorderThickness="1"
                                                 BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
                                             <StackPanel 
                                                HorizontalAlignment="Center"
-                                               Spacing="8" Orientation="Horizontal">
+                                               VerticalAlignment="Stretch"
+                                               Spacing="8" Orientation="Vertical">
                                                 <FontIcon 
                                                    FontWeight="Bold"
-                                                   FontSize="28"
+                                                   FontSize="50"
                                                    Foreground="{ThemeResource SystemAccentColorLight2}"
                                                    FontFamily="/Assets/Fonts/SegoeFluentIcons.ttf#Segoe Fluent Icons" 
                                                    Glyph="{x:Bind Playback.RemoteDevice.Type, Mode=OneWay, Converter={StaticResource DeviceTypeToIconConverter}}" />

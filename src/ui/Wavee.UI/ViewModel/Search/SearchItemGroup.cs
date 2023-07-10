@@ -4,6 +4,8 @@ using System.Reactive.Linq;
 using DynamicData;
 using DynamicData.Binding;
 using ReactiveUI;
+using Wavee.Id;
+using Wavee.UI.Common;
 using Wavee.UI.ViewModel.Search.Patterns;
 using Wavee.UI.ViewModel.Search.Sources;
 
@@ -14,6 +16,7 @@ public class SearchItemGroup : ReactiveObject, IDisposable
     private readonly CompositeDisposable _disposables = new();
     private readonly ReadOnlyObservableCollection<ISearchItem> _items;
     private readonly ReadOnlyObservableCollection<ISearchItem> _tracks;
+    private readonly ReadOnlyObservableCollection<ICardViewModel> _asCards;
     private ISearchItem _firstItem;
 
     public SearchItemGroup(string title,
@@ -50,9 +53,50 @@ public class SearchItemGroup : ReactiveObject, IDisposable
                 .BindTo(this, x => x.FirstItem)
                 .DisposeWith(_disposables);
         }
+        else
+        {
+            changesFactory()
+                .Sort(SortExpressionComparer<ISearchItem>.Ascending(x => x.ItemIndex))
+                .Transform(x => x switch
+                {
+                    SpotifyPlaylistHit playlist => new CardViewModel
+                    {
+                        Title = playlist.Name,
+                        Id = playlist.SpotifyId.ToString(),
+                        Image = playlist.Image,
+                        Subtitle = playlist.Author,
+                        Type = AudioItemType.Playlist
+                    },
+                    SpotifyArtistHit artist => new CardViewModel
+                    {
+                        Title = artist.Name,
+                        Id = artist.SpotifyId.ToString(),
+                        Image = artist.Image,
+                        Subtitle = "Artist",
+                        Type = AudioItemType.Artist,
+                        IsArtist = true
+                    },
+                    SpotifyAlbumHit album => new CardViewModel
+                    {
+                        Title = album.Name,
+                        Id = album.SpotifyId.ToString(),
+                        Image = album.Image,
+                        Subtitle = string.Join(", ", album.Artists.Select(z => z.Name)),
+                        Type = AudioItemType.Album,
+                        IsArtist = false
+                    },
+                    _ => new CardViewModel() as ICardViewModel,
+                })
+                .Bind(out _asCards)
+                .DisposeMany()
+                .ObserveOn(RxApp.MainThreadScheduler)
+                .Subscribe()
+                .DisposeWith(_disposables);
+        }
     }
     public string Title { get; }
     public int CategoryIndex { get; }
+    public ReadOnlyObservableCollection<ICardViewModel> AsCards => _asCards;
     public ReadOnlyObservableCollection<ISearchItem> Items => _items;
     public ReadOnlyObservableCollection<ISearchItem> OnlyTracks => _tracks;
 

@@ -321,6 +321,7 @@ public class SpotifyPlaylistHit : ISearchItem
         FollowersCount = followersCount;
         Author = author;
         Personalized = personalized;
+        SpotifyId = id;
     }
 
     public string Name { get; }
@@ -332,6 +333,8 @@ public class SpotifyPlaylistHit : ISearchItem
     public CategoryComposite Category { get; }
     public int CategoryIndex { get; }
     public int ItemIndex { get; }
+    public SpotifyId SpotifyId { get;  }
+
     public event PropertyChangedEventHandler? PropertyChanged;
 
     protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
@@ -365,6 +368,7 @@ public class SpotifyArtistHit : ISearchItem
         ItemIndex = itemIndex;
         Image = image;
         Verified = verified;
+        SpotifyId = id;
     }
 
     public string Name { get; }
@@ -374,6 +378,8 @@ public class SpotifyArtistHit : ISearchItem
     public CategoryComposite Category { get; }
     public int CategoryIndex { get; }
     public int ItemIndex { get; }
+    public SpotifyId SpotifyId { get; }
+
     public event PropertyChangedEventHandler? PropertyChanged;
 
     protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
@@ -407,6 +413,7 @@ public class SpotifyAlbumHit : ISearchItem
         ItemIndex = itemIndex;
         Image = image;
         Artists = artists;
+        SpotifyId = id;
     }
 
     public string Name { get; }
@@ -416,6 +423,8 @@ public class SpotifyAlbumHit : ISearchItem
     public CategoryComposite Category { get; }
     public int CategoryIndex { get; }
     public int ItemIndex { get; }
+    public SpotifyId SpotifyId { get; }
+
     public event PropertyChangedEventHandler? PropertyChanged;
 
     protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)

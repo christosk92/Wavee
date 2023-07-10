@@ -17,7 +17,7 @@
         <Grid>
             <controls:ImageTransitionControl
                 WithScale="True"
-                BlurValue="10"
+                BlurValue="100"
                 x:Name="BackgroundImage"/>
             <Border Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
                     Margin="-2"
