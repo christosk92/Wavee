@@ -241,7 +241,7 @@
                 <AppBarButton x:Name="DevicesButton">
                     <AppBarButton.Flyout>
                         <Flyout>
-                            <Grid Width="250" RowSpacing="12">
+                            <Grid Width="220" RowSpacing="12">
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition/>

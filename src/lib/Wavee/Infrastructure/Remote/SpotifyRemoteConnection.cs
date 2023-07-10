@@ -104,6 +104,13 @@ internal static class SpotifyRemoteConnection
             },
             new List<SpotifyRemoteMessageCallbackFull>());
 
+        if (Connections.TryGetValue(connectionId, out var existingconn))
+        {
+            foreach (var oldCallback in existingconn.Callbacks)
+            {
+                connectionInfo.Callbacks.Add(oldCallback);
+            }
+        }
         Connections[connectionId] = connectionInfo;
 
         object lockObj = new();
