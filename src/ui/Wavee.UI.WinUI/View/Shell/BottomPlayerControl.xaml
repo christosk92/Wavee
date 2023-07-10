@@ -8,6 +8,7 @@
              xmlns:controls="using:CommunityToolkit.WinUI.UI.Controls"
              xmlns:components="using:Wavee.UI.WinUI.Components"
              xmlns:playback="using:Wavee.UI.Client.Playback"
+             xmlns:winUi="using:Wavee.UI.WinUI"
              DataContext="{x:Bind Playback,Mode=OneWay}"
              mc:Ignorable="d">
     <UserControl.Resources>
@@ -45,6 +46,7 @@
             <Setter Property="Width"
                     Value="40" />
         </Style>
+        <winUi:DeviceTypeToIconConverter x:Key="DeviceTypeToIconConverter" />
     </UserControl.Resources>
 
     <Grid HorizontalAlignment="Stretch"
@@ -238,9 +240,9 @@
                     </AppBarButton.Icon>
                 </AppBarButton>
 
-                <AppBarButton x:Name="DevicesButton">
+                <AppBarButton  x:Name="DevicesButton">
                     <AppBarButton.Flyout>
-                        <Flyout>
+                        <Flyout Placement="BottomEdgeAlignedLeft">
                             <Grid Width="220" RowSpacing="12">
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto"/>
@@ -258,28 +260,30 @@
                                     <TextBlock HorizontalAlignment="Center"
                                                Foreground="{ThemeResource SystemAccentColorLight2}"
                                                Margin="0,12,0,0" Text="Currently listening on"/>
-                                    <Border  Background="{ThemeResource LayerFillColorDefaultBrush}"
-                                             HorizontalAlignment="Stretch"
-                                             CornerRadius="8"
-                                             Padding="12"
-                                            BorderThickness="1"
-                                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
-                                        <StackPanel 
-                                            HorizontalAlignment="Center"
-                                            Spacing="8" Orientation="Horizontal">
-                                            <FontIcon 
-                                            FontWeight="Bold"
-                                            FontSize="28"
-                                            Foreground="{ThemeResource SystemAccentColorLight2}"
-                                            FontFamily="/Assets/Fonts/SegoeFluentIcons.ttf#Segoe Fluent Icons" Glyph="&#xE1C9;" />
-                                            <TextBlock 
-                                                Foreground="{ThemeResource SystemAccentColorLight2}"
-                                            FontWeight="Bold"
-                                            FontSize="28"
-                                            Text="iPhone"/>
-                                        </StackPanel>
-                                    </Border>
-
+                                    <Viewbox Height="40" Width="220" StretchDirection="DownOnly" Stretch="Uniform">
+                                        <Border  Background="{ThemeResource LayerFillColorDefaultBrush}"
+                                                HorizontalAlignment="Stretch"
+                                                CornerRadius="8"
+                                                Padding="24"
+                                                BorderThickness="1"
+                                                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
+                                            <StackPanel 
+                                               HorizontalAlignment="Center"
+                                               Spacing="8" Orientation="Horizontal">
+                                                <FontIcon 
+                                                   FontWeight="Bold"
+                                                   FontSize="28"
+                                                   Foreground="{ThemeResource SystemAccentColorLight2}"
+                                                   FontFamily="/Assets/Fonts/SegoeFluentIcons.ttf#Segoe Fluent Icons" 
+                                                   Glyph="{x:Bind Playback.RemoteDevice.Type, Mode=OneWay, Converter={StaticResource DeviceTypeToIconConverter}}" />
+                                                <TextBlock 
+                                                   Foreground="{ThemeResource SystemAccentColorLight2}"
+                                                   FontWeight="Bold"
+                                                   FontSize="28"
+                                                   Text="{x:Bind Playback.RemoteDevice.DeviceName,Mode=OneWay}"/>
+                                            </StackPanel>
+                                        </Border>
+                                    </Viewbox>
                                     <Button HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch"
                                             Style="{ThemeResource AccentButtonStyle}">
                                         <StackPanel HorizontalAlignment="Center" Spacing="8" Orientation="Horizontal">
@@ -305,8 +309,10 @@
                                                     <FontIcon
                                                         HorizontalAlignment="Right"
                                                         FontFamily="/Assets/Fonts/SegoeFluentIcons.ttf#Segoe Fluent Icons" 
-                                                        Glyph="&#xE150;" />
-                                                    <TextBlock Grid.Column="1" Text="{x:Bind DeviceName}"/>
+                                                        Glyph="{x:Bind Type, Mode=OneWay, Converter={StaticResource DeviceTypeToIconConverter}}" />
+                                                    <TextBlock 
+                                                        TextWrapping="WrapWholeWords"
+                                                        Grid.Column="1" Text="{x:Bind DeviceName}"/>
                                                 </Grid>
                                             </Button>
                                         </DataTemplate>
