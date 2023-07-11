@@ -65,8 +65,15 @@ namespace Wavee.UI.WinUI.Controls
                 var tracks = await tcs.Trakcs.Task;
                 //Mozaic is created by either a grid of 4 tracks or more or 1 track
                 //nothing in between
-                var firstFourTracks = tracks.Take(4);
-                var hasMoreThanFourTracks = tracks.Count() >= 4;
+                var firstFourTracks = tracks.DistinctBy(x =>
+                {
+                    var distinctItem = x.Match(
+                        Left: episode => episode.Id,
+                        Right: track => track.Album.Id
+                    );
+                    return distinctItem;
+                }).Take(4).ToList();
+                var hasMoreThanFourTracks = tracks.Length >= 4;
                 if (hasMoreThanFourTracks)
                 {
                     await ConstructGridMozaic(firstFourTracks);
@@ -86,7 +93,7 @@ namespace Wavee.UI.WinUI.Controls
         {
         }
 
-        private async Task ConstructGridMozaic(Seq<Either<WaveeUIEpisode, WaveeUITrack>> firstFourTracks)
+        private async Task ConstructGridMozaic(List<Either<WaveeUIEpisode, WaveeUITrack>> firstFourTracks)
         {
             var grid = new Grid();
             grid.ColumnDefinitions.Add(new ColumnDefinition());

@@ -436,6 +436,7 @@
         <Grid 
             Background="{ThemeResource SystemControlBackgroundAccentBrush}"
             Height="28"
+            Margin="-1"
             Padding="12,0"
             Visibility="{x:Bind Playback.IsPlayingOnRemoteDevice, Mode=OneWay}"
             Grid.Row="1"

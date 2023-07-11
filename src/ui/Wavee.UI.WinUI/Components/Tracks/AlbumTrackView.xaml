@@ -24,7 +24,7 @@
                 <ColumnDefinition Width="2*" />
                 <ColumnDefinition Width="124" />
                 <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="8" />
+                <ColumnDefinition Width="0" />
             </Grid.ColumnDefinitions>
             <StackPanel VerticalAlignment="Center"
                         Grid.Column="0"

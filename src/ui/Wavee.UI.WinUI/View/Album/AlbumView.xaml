@@ -158,14 +158,14 @@
 
                     <Grid
                         Grid.Row="2"
-                        Margin="28,12,28,6"
+                        Margin="28,12,16,6"
                         RowSpacing="8">
                         <Grid.RowDefinitions>
                             <RowDefinition />
                             <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="72" />
+                            <ColumnDefinition Width="82" />
                             <ColumnDefinition Width="2*" />
                             <ColumnDefinition Width="100" />
                             <ColumnDefinition Width="*" />
