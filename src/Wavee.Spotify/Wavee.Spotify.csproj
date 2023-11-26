@@ -8,7 +8,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Application\LegacyAuth\" />
     <Folder Include="Common\" />
   </ItemGroup>
 

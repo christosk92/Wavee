@@ -8,8 +8,9 @@ using Eum.Spotify.login5v3;
 using Google.Protobuf;
 using Mediator;
 using Wavee.Spotify.Application.Authentication.Requests;
-using Wavee.Spotify.Application.LegacyAuth.Commands;
 using Wavee.Spotify.Common.Contracts;
+using Wavee.Spotify.Infrastructure.LegacyAuth;
+using Wavee.Spotify.Infrastructure.LegacyAuth.Functions;
 using Wavee.Spotify.Infrastructure.Persistent;
 using ClientInfo = Eum.Spotify.login5v3.ClientInfo;
 
@@ -79,12 +80,13 @@ public sealed class SpotifyOAuthModule : ISpotifyAuthModule
             { "code_challenge", codeChallenge },
             { "utm_source", utmSource }
         };
-        
+
         var queryString = System.Web.HttpUtility.ParseQueryString(string.Empty);
         foreach (var (key, value) in query)
         {
             queryString[key] = value;
         }
+
         var urlBuilder = new UriBuilder("https://accounts.spotify.com")
         {
             Path = "/en/oauth2/v2/auth",
@@ -119,21 +121,17 @@ public sealed class SpotifyOAuthModule : ISpotifyAuthModule
 
         //Exchange for accesspoint token
         var deviceId = _config.Remote.DeviceId;
-        var apwelcome = await _mediator.Send(new SpotifyAuthenticateLegacyCommand
+        var apwelcome = SpotifyLegacyAuth.Create(credentials: new LoginCredentials
         {
-            Credentials = new LoginCredentials
-            {
-                Username = finalUsername,
-                Typ = AuthenticationType.AuthenticationSpotifyToken,
-                AuthData = ByteString.CopyFromUtf8(accessToken)
-            },
-            DeviceId = deviceId
-        }, cancellationToken);
+            Username = finalUsername,
+            Typ = AuthenticationType.AuthenticationSpotifyToken,
+            AuthData = ByteString.CopyFromUtf8(accessToken)
+        }, deviceId);
 
         var reusableUsername = apwelcome.CanonicalUsername;
         var reusablePassword = apwelcome.ReusableAuthCredentials;
-        var reusablePasswordType = apwelcome.ReusableAuthCredentialsType;
 
+        var reusablePasswordType = apwelcome.ReusableAuthCredentialsType;
         return new StoredCredentials(
             Username: reusableUsername,
             ReusableCredentialsBase64: reusablePassword.ToBase64(),

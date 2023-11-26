@@ -1,6 +1,6 @@
 ﻿using System.Net.Sockets;
 
-namespace Wavee.Spotify.Application.LegacyAuth.CommandHandlers;
+namespace Wavee.Spotify.Infrastructure.LegacyAuth.Functions;
 
 /// <summary>
 /// Contains methods for reading and writing to a TCP socket.
