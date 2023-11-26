@@ -1,0 +1,23 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Folder Include="Application\LegacyAuth\" />
+    <Folder Include="Common\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Wavee.Spotify.Proto\Wavee.Spotify.Proto.csproj" />
+    <ProjectReference Include="..\Wavee\Wavee.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.0" />
+  </ItemGroup>
+
+</Project>

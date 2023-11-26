@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Folder Include="Application\" />
+    <Folder Include="Domain\" />
+    <Folder Include="Infrastructure\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Mediator.Abstractions" Version="3.0.0-preview.11" />
+  </ItemGroup>
+
+</Project>
