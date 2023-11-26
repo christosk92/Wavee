@@ -8,7 +8,10 @@ public sealed class SpotifyGetAdaptiveApiUrlQuery : IQuery<SpotifyGetAdaptiveApi
     public required SpotifyGetAdaptiveApiUrl[]? DontReturnThese { get; init; }
 }
 
-public readonly record struct SpotifyGetAdaptiveApiUrl(string Host, ushort Port);
+public readonly record struct SpotifyGetAdaptiveApiUrl(string Host, ushort Port)
+{
+    public string Url(bool https, bool withPort) => $"{(https ? "https://" : string.Empty)}{Host}:{(withPort ? Port : string.Empty)}";
+}
 
 public enum SpotifyApiUrlType
 {

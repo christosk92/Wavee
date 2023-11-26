@@ -1,21 +1,21 @@
 using Mediator;
 using Wavee.Spotify.Application.Authentication.Queries;
+using Wavee.Spotify.Application.Remote;
 using Wavee.Spotify.Common.Contracts;
 
 namespace Wavee.Spotify;
 
 internal sealed class SpotifyClient : ISpotifyClient
 {
-    private readonly IMediator _mediator;
+    private readonly ISpotifyRemoteClient _spotifyRemoteHolder;
 
-    public SpotifyClient(IMediator mediator)
+    public SpotifyClient(ISpotifyRemoteClient spotifyRemoteHolder)
     {
-        _mediator = mediator;
+        _spotifyRemoteHolder = spotifyRemoteHolder;
     }
 
-    public async Task<string> Test()
+    public async Task Initialize(CancellationToken cancellationToken = default)
     {
-        var token = await _mediator.Send(new GetSpotifyTokenQuery(), new CancellationToken());
-        return token;
+        await (_spotifyRemoteHolder as SpotifyRemoteHolder)!.Initialize(cancellationToken);
     }
 }

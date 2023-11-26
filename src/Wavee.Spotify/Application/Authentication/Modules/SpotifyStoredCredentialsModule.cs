@@ -5,6 +5,7 @@ using Mediator;
 using Wavee.Spotify.Application.Authentication.Requests;
 using Wavee.Spotify.Common.Contracts;
 using Wavee.Spotify.Domain.Exceptions;
+using Wavee.Spotify.Infrastructure.Persistent;
 
 namespace Wavee.Spotify.Application.Authentication.Modules;
 
@@ -15,48 +16,31 @@ namespace Wavee.Spotify.Application.Authentication.Modules;
 /// </summary>
 public sealed class SpotifyStoredCredentialsModule : ISpotifyAuthModule
 {
-    private readonly SpotifyClientConfig _config;
+    private readonly ISpotifyStoredCredentialsRepository _spotifyStoredCredentialsRepository;
     private readonly IMediator _mediator;
 
     public SpotifyStoredCredentialsModule(
-        SpotifyClientConfig config,
-        IMediator mediator)
+        IMediator mediator,
+        ISpotifyStoredCredentialsRepository spotifyStoredCredentialsRepository)
     {
-        _config = config;
         _mediator = mediator;
+        _spotifyStoredCredentialsRepository = spotifyStoredCredentialsRepository;
     }
 
-    public async Task<StoredCredentials> GetCredentials(CancellationToken cancellationToken = default)
+    public bool IsDefault { get; private set; }
+
+    public async Task<StoredCredentials> GetCredentials(string? username, CancellationToken cancellationToken = default)
     {
-        var storedCredentials = await GetStoredCredentials();
+        var storedCredentials =
+            await _spotifyStoredCredentialsRepository.GetStoredCredentials(username, cancellationToken);
         if (storedCredentials is null)
         {
             //No stored credential, throw exception
             throw new SpotifyNoStoredCredentialsException();
         }
-
+        IsDefault = storedCredentials.IsDefault;
         return storedCredentials;
-    }
-
-    private async Task<StoredCredentials?> GetStoredCredentials()
-    {
-        try
-        {
-            var storedCredentials = Path.Combine(_config.Storage.Path, "credentials.json");
-            if (File.Exists(storedCredentials))
-            {
-                var json = await File.ReadAllTextAsync(storedCredentials);
-                var result = JsonSerializer.Deserialize<StoredCredentials>(json);
-                return result;
-            }
-
-            return null;
-        }
-        catch (Exception)
-        {
-            return null;
-        }
     }
 }
 
-public record StoredCredentials(string Username, string ReusableCredentialsBase64, int ReusableCredentialsType);
+public record StoredCredentials(string Username, string ReusableCredentialsBase64, int ReusableCredentialsType, bool IsDefault);

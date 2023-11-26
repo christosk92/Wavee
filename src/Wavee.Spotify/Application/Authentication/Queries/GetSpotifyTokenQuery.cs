@@ -9,4 +9,5 @@ namespace Wavee.Spotify.Application.Authentication.Queries;
 /// </summary>
 public sealed class GetSpotifyTokenQuery : IRequest<string>
 {
+    public string? Username { get; init; }
 }

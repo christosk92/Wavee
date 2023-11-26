@@ -4,5 +4,6 @@ namespace Wavee.Spotify.Common.Contracts;
 
 public interface ISpotifyAuthModule
 {
-    Task<StoredCredentials> GetCredentials(CancellationToken cancellationToken = default);
+    bool IsDefault { get; }
+    Task<StoredCredentials> GetCredentials(string? username, CancellationToken cancellationToken = default);
 }

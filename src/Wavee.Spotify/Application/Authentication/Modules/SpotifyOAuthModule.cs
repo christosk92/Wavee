@@ -10,12 +10,14 @@ using Mediator;
 using Wavee.Spotify.Application.Authentication.Requests;
 using Wavee.Spotify.Application.LegacyAuth.Commands;
 using Wavee.Spotify.Common.Contracts;
+using Wavee.Spotify.Infrastructure.Persistent;
 using ClientInfo = Eum.Spotify.login5v3.ClientInfo;
 
 namespace Wavee.Spotify.Application.Authentication.Modules;
 
 public sealed class SpotifyOAuthModule : ISpotifyAuthModule
 {
+    private readonly ISpotifyStoredCredentialsRepository _spotifyStoredCredentialsRepository;
     private readonly HttpClient _accountsApi;
     private readonly FetchRedirectUrlDelegate _openBrowser;
     private readonly IMediator _mediator;
@@ -24,15 +26,19 @@ public sealed class SpotifyOAuthModule : ISpotifyAuthModule
     public SpotifyOAuthModule(FetchRedirectUrlDelegate openBrowser,
         IHttpClientFactory httpClientFactory,
         IMediator mediator,
-        SpotifyClientConfig config)
+        SpotifyClientConfig config,
+        ISpotifyStoredCredentialsRepository spotifyStoredCredentialsRepository)
     {
         _openBrowser = openBrowser;
         _mediator = mediator;
         _config = config;
+        _spotifyStoredCredentialsRepository = spotifyStoredCredentialsRepository;
         _accountsApi = httpClientFactory.CreateClient(Constants.SpotifyAccountsApiHttpClient);
     }
 
-    public async Task<StoredCredentials> GetCredentials(CancellationToken cancellationToken = default)
+    public bool IsDefault { get; private set; }
+
+    public async Task<StoredCredentials> GetCredentials(string? username, CancellationToken cancellationToken = default)
     {
         //utm_medium=desktop-win32-store&response_type=code
         //&flow_ctx=dbbc3e5d-7bc8-4bf7-a6ff-782e98e7d603%3A1700995564
@@ -62,7 +68,8 @@ public sealed class SpotifyOAuthModule : ISpotifyAuthModule
 
         var url =
             $"https://accounts.spotify.com/en/oauth2/v2/auth?utm_campaign=organic&scope={scopes}&utm_medium={utmMedium}&response_type={responseType}&flow_ctx={flowctx}&redirect_uri={redirectUri}&code_challenge_method={codeChallengeMethod}&client_id={Constants.SpotifyClientId}&code_challenge={codeChallenge}&utm_source={utmSource}";
-        var redirectUrl = await _openBrowser(url, cancellationToken);
+        var (redirectUrl, makeDefault) = await _openBrowser(url, cancellationToken);
+        IsDefault = makeDefault;
         var code = Regex.Match(redirectUrl, "code=(.*)").Groups[1].Value;
         // POST https://accounts.spotify.com/api/token
         //Content-Type: application/x-www-form-urlencoded
@@ -84,7 +91,7 @@ public sealed class SpotifyOAuthModule : ISpotifyAuthModule
         var refreshToken = jsondoc.RootElement.GetProperty("refresh_token").GetString();
         var scope = jsondoc.RootElement.GetProperty("scope").GetString();
         var tokenType = jsondoc.RootElement.GetProperty("token_type").GetString();
-        var username = jsondoc.RootElement.GetProperty("username").GetString();
+        var finalUsername = jsondoc.RootElement.GetProperty("username").GetString();
 
 
         //Exchange for accesspoint token
@@ -93,7 +100,7 @@ public sealed class SpotifyOAuthModule : ISpotifyAuthModule
         {
             Credentials = new LoginCredentials
             {
-                Username = username,
+                Username = finalUsername,
                 Typ = AuthenticationType.AuthenticationSpotifyToken,
                 AuthData = ByteString.CopyFromUtf8(accessToken)
             },
@@ -104,11 +111,11 @@ public sealed class SpotifyOAuthModule : ISpotifyAuthModule
         var reusablePassword = apwelcome.ReusableAuthCredentials;
         var reusablePasswordType = apwelcome.ReusableAuthCredentialsType;
 
-
         return new StoredCredentials(
             Username: reusableUsername,
             ReusableCredentialsBase64: reusablePassword.ToBase64(),
-            ReusableCredentialsType: (int)reusablePasswordType
+            ReusableCredentialsType: (int)reusablePasswordType,
+            IsDefault: makeDefault
         );
     }
 
@@ -137,4 +144,6 @@ public sealed class SpotifyOAuthModule : ISpotifyAuthModule
     }
 }
 
-public delegate Task<string> FetchRedirectUrlDelegate(string url, CancellationToken cancellationToken);
+public delegate Task<OpenBrowserResult> FetchRedirectUrlDelegate(string url, CancellationToken cancellationToken);
+
+public readonly record struct OpenBrowserResult(string Url, bool MakeDefault);

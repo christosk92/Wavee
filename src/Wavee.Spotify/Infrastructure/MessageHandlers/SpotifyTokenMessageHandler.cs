@@ -7,7 +7,7 @@ namespace Wavee.Spotify.Infrastructure.MessageHandlers;
 internal sealed class SpotifyTokenMessageHandler : DelegatingHandler
 {
     private readonly IMediator _mediator;
-
+    
     public SpotifyTokenMessageHandler(IMediator mediator)
     {
         _mediator = mediator;
@@ -16,7 +16,10 @@ internal sealed class SpotifyTokenMessageHandler : DelegatingHandler
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request,
         CancellationToken cancellationToken)
     {
-        var token = await _mediator.Send(new GetSpotifyTokenQuery(), cancellationToken);
+        var token = await _mediator.Send(new GetSpotifyTokenQuery
+        {
+            Username = null
+        }, cancellationToken);
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
         return await base.SendAsync(request, cancellationToken);
     }

@@ -2,5 +2,5 @@ namespace Wavee.Spotify.Common.Contracts;
 
 public interface ISpotifyClient
 {
-    Task<string> Test();
+    Task Initialize(CancellationToken cancellationToken = default);
 }
