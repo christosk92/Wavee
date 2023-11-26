@@ -32,6 +32,10 @@ var sp = new ServiceCollection()
     .BuildServiceProvider();
 
 var client = sp.GetRequiredService<ISpotifyClient>();
+client.PlaybackStateChanged += (sender, state) =>
+{
+    Console.WriteLine($"Playback state changed: {state}");
+};
 await client.Initialize();
 var x = "";
 Console.ReadLine();

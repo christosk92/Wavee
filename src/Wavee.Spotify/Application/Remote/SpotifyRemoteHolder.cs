@@ -1,17 +1,21 @@
+using System.Diagnostics;
+using System.IO.Compression;
 using System.Net;
 using System.Net.WebSockets;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using CommunityToolkit.HighPerformance;
 using Eum.Spotify.connectstate;
 using Mediator;
 using Wavee.Spotify.Application.Authentication.Queries;
 using Wavee.Spotify.Application.Remote.Commands;
+using Wavee.Spotify.Utils;
 using Websocket.Client;
 
 namespace Wavee.Spotify.Application.Remote;
 
-internal sealed partial class SpotifyRemoteHolder : ISpotifyRemoteClient
+internal sealed partial class SpotifyRemoteHolder 
 {
     private (Cluster Cluster, string ConnectionId)? _remoteState;
     private readonly SpotifyLocalState _localState;
@@ -27,6 +31,7 @@ internal sealed partial class SpotifyRemoteHolder : ISpotifyRemoteClient
 
         _localState = SpotifyLocalState.Empty(config);
     }
+    public event EventHandler<Cluster>? RemoteStateChanged; 
 
     public async Task Initialize(CancellationToken cancellationToken = default)
     {
@@ -35,6 +40,13 @@ internal sealed partial class SpotifyRemoteHolder : ISpotifyRemoteClient
         _websocket = await SpotifyWebsocketHolder.Connect(url, cancellationToken);
         _websocket.Disconnected += OnDisconnected;
         _websocket.ConnectionId += OnConnectionId;
+        _websocket.RemoteClusterUpdate += OnRemoteClusterUpdate;
+    }
+
+    private async void OnRemoteClusterUpdate(object? sender, ClusterUpdate e)
+    {
+        _remoteState = (e.Cluster, _remoteState?.ConnectionId);
+        RemoteStateChanged?.Invoke(this, e.Cluster);
     }
 
     private async void OnConnectionId(object? sender, string e)
@@ -51,6 +63,7 @@ internal sealed partial class SpotifyRemoteHolder : ISpotifyRemoteClient
         }, CancellationToken.None);
 
         _remoteState = (result, e);
+        RemoteStateChanged?.Invoke(this, result);
     }
 
     private async void OnDisconnected(object? sender, Exception e)
@@ -61,6 +74,7 @@ internal sealed partial class SpotifyRemoteHolder : ISpotifyRemoteClient
             spotifyWebsocketHolder.ConnectionId -= OnConnectionId;
             spotifyWebsocketHolder.Dispose();
         }
+
         await Task.Delay(TimeSpan.FromSeconds(5));
         await Initialize();
     }
@@ -137,7 +151,12 @@ internal sealed partial class SpotifyRemoteHolder : ISpotifyRemoteClient
                         if (uri.Equals("hm://connect-state/v1/cluster"))
                         {
                             //Cluster update
-                            
+                            var headers = root.GetProperty("headers");
+                            var payload = root.GetProperty("payloads");
+                            var sw = Stopwatch.StartNew();
+                            var clusterUpdate = ParseClusterUpdate(payload, headers);
+                            RemoteClusterUpdate?.Invoke(this, clusterUpdate);
+                            sw.Stop();
                         }
                         else
                         {
@@ -157,6 +176,33 @@ internal sealed partial class SpotifyRemoteHolder : ISpotifyRemoteClient
             }
         }
 
+        private static ClusterUpdate ParseClusterUpdate(JsonElement payload, JsonElement headers)
+        {
+            bool isGzip = headers.GetProperty("Transfer-Encoding").GetString() is "gzip";
+
+            ReadOnlySpan<byte> output = stackalloc byte[0];
+            using var enu = payload.EnumerateArray();
+            while (enu.MoveNext())
+            {
+                var item = enu.Current;
+                Span<byte> buffer = item.GetBytesFromBase64();
+                //Add to output
+                Span<byte> newOutput = stackalloc byte[output.Length + buffer.Length];
+                output.CopyTo(newOutput);
+                buffer.CopyTo(newOutput.Slice(output.Length));
+                output = newOutput;
+            }
+
+            if (isGzip)
+            {
+                output = Gzip.UnsafeDecompressAlt(output);
+            }
+
+            var cluster = ClusterUpdate.Parser.ParseFrom(output);
+            return cluster;
+        }
+
+
         public void Dispose()
         {
             _webSocket.Dispose();
@@ -165,6 +211,7 @@ internal sealed partial class SpotifyRemoteHolder : ISpotifyRemoteClient
 
         public event EventHandler<string> ConnectionId;
         public event EventHandler<Exception> Disconnected;
+        public event EventHandler<ClusterUpdate> RemoteClusterUpdate;
 
         [GeneratedRegex(@"hm://pusher/v1/connections/([^/]+)")]
         private static partial Regex ConnIdRegex();
@@ -178,7 +225,7 @@ internal readonly record struct SpotifyLocalState
     public string? LastCommandSentByDeviceId { get; init; }
 
     private const uint VOLUME_STEPS = 12;
-    private const uint MAX_VOLUME = 65535;
+    public const uint MAX_VOLUME = 65535;
 
     public PutStateRequest BuildPutState(
         SpotifyClientConfig config,
@@ -259,8 +306,4 @@ internal readonly record struct SpotifyLocalState
     {
         return new SpotifyLocalState();
     }
-}
-
-public interface ISpotifyRemoteClient
-{
 }

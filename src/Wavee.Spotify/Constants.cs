@@ -4,7 +4,7 @@ internal static class Constants
 {
     public const string SpotifyPublicApiHttpClient = nameof(SpotifyPublicApiHttpClient);
     public const string SpotifyPartnerApiHttpClient = nameof(SpotifyPartnerApiHttpClient);
-    public const string SpotifyPrivateApiHttpClient = nameof(SpotifyPrivateApiHttpClient);
+    public const string SpotifyRemoteStateHttpClietn = nameof(SpotifyRemoteStateHttpClietn);
     public const string SpotifyAccountsApiHttpClient = nameof(SpotifyAccountsApiHttpClient);
     
     public static byte[] SERVER_KEY =

@@ -24,3 +24,16 @@ internal sealed class SpotifyTokenMessageHandler : DelegatingHandler
         return await base.SendAsync(request, cancellationToken);
     }
 }
+
+// internal sealed class GzipMessageHandler : DelegatingHandler
+// {
+//     public GzipMessageHandler(SpotifyTokenMessageHandler inner) : base(inner)
+//     {
+//     }
+//     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request,
+//         CancellationToken cancellationToken)
+//     {
+//         request.Headers.AcceptEncoding.Add(new StringWithQualityHeaderValue("gzip"));
+//         return await base.SendAsync(request, cancellationToken);
+//     }
+// }

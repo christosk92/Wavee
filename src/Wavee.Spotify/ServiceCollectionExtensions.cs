@@ -29,7 +29,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ISpotifyStoredCredentialsRepository, SpotifyStoredCredentialsRepository>();
         services.AddScoped<ISpotifyAccessTokenRepository, SpotifyAccessTokenRepository>();
 
-        services.AddSingleton<ISpotifyRemoteClient, SpotifyRemoteHolder>();
+        services.AddSingleton<SpotifyRemoteHolder>();
         
         return new IncompleteSpotifyBuilder(services);
     }
@@ -55,7 +55,7 @@ public static class ServiceCollectionExtensions
 
     public static void AddSpotifyPrivateApiHttpClient(this IServiceCollection services)
     {
-        services.AddHttpClient(Constants.SpotifyPrivateApiHttpClient, client =>
+        services.AddHttpClient(Constants.SpotifyRemoteStateHttpClietn, client =>
         {
         }).AddHttpMessageHandler<SpotifyTokenMessageHandler>();
     }
