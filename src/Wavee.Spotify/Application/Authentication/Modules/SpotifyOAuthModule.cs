@@ -66,8 +66,31 @@ public sealed class SpotifyOAuthModule : ISpotifyAuthModule
         var codeVerifier = GenerateNonce();
         var codeChallenge = GenerateCodeChallenge(codeVerifier);
 
-        var url =
-            $"https://accounts.spotify.com/en/oauth2/v2/auth?utm_campaign=organic&scope={scopes}&utm_medium={utmMedium}&response_type={responseType}&flow_ctx={flowctx}&redirect_uri={redirectUri}&code_challenge_method={codeChallengeMethod}&client_id={Constants.SpotifyClientId}&code_challenge={codeChallenge}&utm_source={utmSource}";
+        var query = new Dictionary<string, string>
+        {
+            { "utm_campaign", "organic" },
+            { "scope", scopes },
+            { "utm_medium", utmMedium },
+            { "response_type", responseType },
+            { "flow_ctx", flowctx },
+            { "redirect_uri", redirectUri },
+            { "code_challenge_method", codeChallengeMethod },
+            { "client_id", Constants.SpotifyClientId },
+            { "code_challenge", codeChallenge },
+            { "utm_source", utmSource }
+        };
+        
+        var queryString = System.Web.HttpUtility.ParseQueryString(string.Empty);
+        foreach (var (key, value) in query)
+        {
+            queryString[key] = value;
+        }
+        var urlBuilder = new UriBuilder("https://accounts.spotify.com")
+        {
+            Path = "/en/oauth2/v2/auth",
+            Query = queryString.ToString()
+        };
+        var url = urlBuilder.ToString();
         var (redirectUrl, makeDefault) = await _openBrowser(url, cancellationToken);
         IsDefault = makeDefault;
         var code = Regex.Match(redirectUrl, "code=(.*)").Groups[1].Value;
