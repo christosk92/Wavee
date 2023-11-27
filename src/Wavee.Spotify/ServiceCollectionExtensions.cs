@@ -1,3 +1,4 @@
+using System.Net;
 using LiteDB;
 using Mediator;
 using Microsoft.Extensions.DependencyInjection;
@@ -74,6 +75,9 @@ public static class ServiceCollectionExtensions
         services.AddHttpClient(Constants.SpotifyCdnPlaybackClientName, client =>
         {
             //https://audio4-ak-spotify-com.akamaized.net/audio/f529eee95393647091d45b17dd1cc4630da1a0ae?__token__=exp=1701163282~hmac=03d01eab0da50b9b777bcf2edc46b8be0637ea9ebfa0d4874d519303144a5545
+            //force http 3
+            client.DefaultRequestVersion = HttpVersion.Version30;
+            client.DefaultVersionPolicy = HttpVersionPolicy.RequestVersionOrHigher;
             client.BaseAddress = new Uri("https://audio4-ak-spotify-com.akamaized.net");
         });
     }

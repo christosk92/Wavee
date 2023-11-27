@@ -2,6 +2,7 @@ using System.Net.Http.Headers;
 using Eum.Spotify.storage;
 using Google.Protobuf;
 using Mediator;
+using Nito.AsyncEx;
 using Wavee.Infrastructure.Playback.Decrypt;
 using Wavee.Spotify.Application.AudioKeys.QueryHandlers;
 using Wavee.Spotify.Application.Decrypt;
@@ -40,13 +41,12 @@ internal sealed class SpotifyStorageResolver : ISpotifyStorageResolver
         var res = StorageResolveResponse.Parser.ParseFrom(stream);
         var cdnUrl = res.Cdnurl.First();
 
-        var firstChunkLength = SpotifyUnoffsettedStream.ChunkSize - 1;
-        using var firstChunkRequest = new HttpRequestMessage(HttpMethod.Get, cdnUrl);
-        firstChunkRequest.Headers.Range = new RangeHeaderValue(0, firstChunkLength);
-        using var firstChunkResponse = await _httpClient.SendAsync(firstChunkRequest, cancellationToken);
-        firstChunkResponse.EnsureSuccessStatusCode();
-        var firstChunk = await firstChunkResponse.Content.ReadAsByteArrayAsync(cancellationToken);
-        var totalSize = firstChunkResponse.Content.Headers.ContentRange.Length.Value;
+        var (firstChunk, totalSize) = await _mediator.Send(new SpotifyGetChunkQuery
+        {
+            FileId = fileFileId,
+            CdnUrl = cdnUrl,
+            Index = 0
+        }, cancellationToken);
         return new SpotifyStreamingFile(
             totalSize: totalSize,
             cdnUrl: cdnUrl,
@@ -67,8 +67,9 @@ public sealed class SpotifyStreamingFile
 {
     private readonly ByteString _fileId;
     private readonly string _cdnUrl;
-    private readonly byte[] _firstChunk;
+    private readonly Dictionary<int, byte[]> _chunks;
     private readonly IMediator _mediator;
+    private readonly AsyncLock _lock = new();
 
     public SpotifyStreamingFile(long totalSize,
         string cdnUrl,
@@ -78,22 +79,29 @@ public sealed class SpotifyStreamingFile
     {
         TotalSize = totalSize;
         _cdnUrl = cdnUrl;
-        _firstChunk = firstChunk;
+        _chunks = new Dictionary<int, byte[]>();
+        _chunks.Add(0, firstChunk);
         _mediator = mediator;
         _fileId = fileId;
     }
 
     public long TotalSize { get; }
 
-    public ValueTask<byte[]> GetChunk(int index, CancellationToken cancellationToken)
+    public async ValueTask<byte[]> GetChunk(int index, CancellationToken cancellationToken)
     {
-        if (index is 0) return new ValueTask<byte[]>(_firstChunk);
-
-        return _mediator.Send(new SpotifyGetChunkQuery
+        using (await _lock.LockAsync(cancellationToken))
         {
-            FileId = _fileId,
-            CdnUrl = _cdnUrl,
-            Index = index
-        }, cancellationToken);
+            if (_chunks.TryGetValue(index, out var chunk))
+                return chunk;
+
+            var res = (await _mediator.Send(new SpotifyGetChunkQuery
+            {
+                FileId = _fileId,
+                CdnUrl = _cdnUrl,
+                Index = index
+            }, cancellationToken)).Data;
+            _chunks[index] = res;
+            return res;
+        }
     }
 }

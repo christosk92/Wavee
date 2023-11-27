@@ -31,4 +31,5 @@ internal static class Constants
 
     public const ulong SPOTIFY_DESKTOP_VERSION = 117300517;
     public const string SpotifyClientId = "65b708073fc0480ea92a077233ca87bd";
+    public static string InstanceId { get; } = Guid.NewGuid().ToString();
 }

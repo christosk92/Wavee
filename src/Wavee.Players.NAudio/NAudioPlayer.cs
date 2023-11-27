@@ -2,6 +2,7 @@ using System.Collections.Concurrent;
 using System.Runtime.InteropServices;
 using NAudio.Wave;
 using Wavee.Domain.Playback.Player;
+using Wavee.Players.NAudio.VorbisDecoder;
 
 namespace Wavee.Players.NAudio;
 
@@ -51,6 +52,8 @@ public sealed class NAudioPlayer : IWaveePlayer
 
     private async Task StartReadingPackets()
     {
+        TimeSpan? stream_one_duration = null;
+        TimeSpan? stream_two_duration = null;
         WaveStream? stream_one = null;
         WaveStream? stream_two = null;
         IWaveeMediaSource? sourceOneRaw = null;
@@ -68,6 +71,7 @@ public sealed class NAudioPlayer : IWaveePlayer
                 {
                     sourceOneRaw = await source.Value();
                     var streamOneRaw = await sourceOneRaw.CreateStream();
+                    stream_one_duration = sourceOneRaw.Duration;
                     stream_one = CreateStream(streamOneRaw);
                 }
 
@@ -84,7 +88,7 @@ public sealed class NAudioPlayer : IWaveePlayer
 
                     //Crossfade
                     var volumeOut = CalculateCrossfadeOut(_crossfadeDuration.Value,
-                        stream_two.TotalTime,
+                        stream_two_duration.Value,
                         stream_two.CurrentTime);
 
                     var volumeIn = CalculateCrossfadeIn(_crossfadeDuration.Value,
@@ -101,7 +105,7 @@ public sealed class NAudioPlayer : IWaveePlayer
                     await Task.Delay(10, _cts.Token);
                 }
 
-                if (stream_one.Position >= stream_one.Length)
+                if (stream_one.CurrentTime >= stream_one_duration.Value)
                 {
                     sourceOneRaw?.Dispose();
                     stream_one = null;
@@ -122,7 +126,7 @@ public sealed class NAudioPlayer : IWaveePlayer
                         var currentStream = stream_one;
                         // Swap streams, main stream is now the new stream
                         stream_two = currentStream;
-
+                        stream_two_duration = stream_one_duration;
                         //Settings this to null will cause the next iteration to create a new stream
                         source = next;
                         stream_one = null;
@@ -168,6 +172,12 @@ public sealed class NAudioPlayer : IWaveePlayer
             {
                 var mp3reader = new Mp3FileReader(streamOneRaw);
                 return new WaveChannel32(mp3reader);
+                break;
+            }
+            case WaveeAudioFormat.OGG:
+            {
+                var oggReader = new VorbisWaveReader(streamOneRaw, true);
+                return oggReader;
                 break;
             }
         }

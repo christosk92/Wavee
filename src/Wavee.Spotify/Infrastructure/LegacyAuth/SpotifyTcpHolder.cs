@@ -137,9 +137,19 @@ public sealed class SpotifyTcpHolder : IDisposable
     {
         if (_connection is null)
         {
-            throw new SpotifyNotAuthenticatedException("Not connected to Spotify. Did you forget to call Connect()?");
+            //wait for 5 seconds
+            try
+            {
+                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+                await _connected.WaitAsync(cts.Token);
+            }
+            catch (OperationCanceledException)
+            {
+                throw new SpotifyNotAuthenticatedException(
+                    "Not connected to Spotify. Did you forget to call Connect()?");
+            }
         }
-        
+
         var tcs = new TaskCompletionSource<byte[]>();
         SendKeyRequest(_connection!.GetNextAudioKeySeq(tcs), itemId, fileId);
         var result = await tcs.Task;

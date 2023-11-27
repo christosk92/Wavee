@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Net.Http.Headers;
 using Google.Protobuf;
 using Google.Protobuf.Collections;
@@ -13,55 +14,61 @@ namespace Wavee.Spotify.Application.Playback;
 
 public sealed class SpotifyMediaSource : IWaveeMediaSource
 {
+    private SpotifyStream? _stream;
+    private readonly string _uri;
+    private ISpotifyClient? _client;
     public IReadOnlyDictionary<string, string> Metadata { get; }
 
-    public ValueTask<Stream> CreateStream()
+    private SpotifyMediaSource(string uri, ISpotifyClient client)
     {
-        throw new NotImplementedException();
+        _uri = uri;
+        _client = client;
     }
 
-    public TimeSpan Duration { get; }
+    public Either<Episode, Track> TrackOrEpisode { get; private set; }
+    public Option<NormalisationData> NormData { get; private set; }
 
-    public static async Task<SpotifyMediaSource> CreateFromUri(
-        ISpotifyClient client,
-        string uri,
-        CancellationToken cancellationToken = default)
+    public async ValueTask<Stream> CreateStream()
     {
-        var id = SpotifyId.FromUri(uri);
-        var track = await client.Tracks.GetTrack(id, cancellationToken);
-        var preferedQuality = client.Config.Playback.PreferedQuality;
+        if (_stream is not null)
+            return _stream;
+
+        var id = SpotifyId.FromUri(_uri);
+        var track = await _client.Tracks.GetTrack(id, CancellationToken.None);
+        var preferedQuality = _client.Config.Playback.PreferedQuality;
         var file = FindFile(track, preferedQuality);
-        var audioKeyTask = client.AudioKeys.GetAudioKey(id, file.FileId, cancellationToken).AsTask();
-        var streamingFileTask = client.StorageResolver.GetStorageFile(file.FileId, cancellationToken).AsTask();
+        var audioKeyTask = _client.AudioKeys.GetAudioKey(id, file.FileId, CancellationToken.None).AsTask();
+        var streamingFileTask = _client.StorageResolver.GetStorageFile(file.FileId, CancellationToken.None).AsTask();
         await Task.WhenAll(audioKeyTask, streamingFileTask);
 
         var audioKey = audioKeyTask.Result;
         var streamingFile = streamingFileTask.Result;
 
-        var stream = new SpotifyUnoffsettedStream(
-            streamingFile,
+        var stream = new SpotifyStream(
+            file: streamingFile,
             audioKey: audioKey,
-            offset: 0xa7
+            isOgg: IsVorbis(file)
         );
-        var normData = NormalisationData.ParseFromOgg(stream);
+        var normData = NormalisationData.ParseFromOgg(stream.UnoffsettedStream);
 
+        _stream = stream;
+        NormData = normData;
+        TrackOrEpisode = track;
+        Duration = TimeSpan.FromSeconds(track.Duration);
+        return stream;
+    }
 
-        // //download first 1MB of the file as test
-        // using var httpClient = new HttpClient();
-        // using var request = new HttpRequestMessage(HttpMethod.Get, streamingurl);
-        // request.Headers.Range = new RangeHeaderValue(0, 1024 * 1024);
-        // using var response = await httpClient.SendAsync(request, cancellationToken);
-        // response.EnsureSuccessStatusCode();
-        // var bytes = await response.Content.ReadAsByteArrayAsync(cancellationToken);
-        // var stream = new SpotifyUnoffsettedStream(
-        //     totalSize: response.Content.Headers.ContentLength.Value,
-        //     getChunkFunc: (i) => { return new ValueTask<byte[]>(bytes); },
-        //     audioKey: audioKey,
-        //     offset: 0xa7
-        // );
-        // var normData = NormalisationData.ParseFromOgg(stream);
+    public TimeSpan Duration { get; private set; }
 
-        return null;
+    public static SpotifyMediaSource CreateFromUri(
+        ISpotifyClient client,
+        string uri,
+        CancellationToken cancellationToken = default)
+    {
+        return new SpotifyMediaSource(
+            uri,
+            client
+        );
     }
 
     public void Dispose()

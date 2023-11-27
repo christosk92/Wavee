@@ -2,6 +2,7 @@ using System.Text.Json;
 using Eum.Spotify.login5v3;
 using Google.Protobuf;
 using Mediator;
+using Nito.AsyncEx;
 using Wavee.Spotify.Application.Authentication.Queries;
 using Wavee.Spotify.Application.Authentication.Requests;
 using Wavee.Spotify.Common.Contracts;
@@ -11,6 +12,8 @@ namespace Wavee.Spotify.Application.Authentication.QueryHandlers;
 
 public sealed class GetSpotifyTokenQueryHandler : IRequestHandler<GetSpotifyTokenQuery, string>
 {
+    private static readonly AsyncLock _lock = new();
+
     private readonly ISpotifyAccessTokenRepository _spotifyAccessTokenRepository;
     private readonly ISpotifyAuthModule _spotifyAuthModule;
     private readonly IMediator _mediator;
@@ -33,49 +36,53 @@ public sealed class GetSpotifyTokenQueryHandler : IRequestHandler<GetSpotifyToke
 
     public async ValueTask<string> Handle(GetSpotifyTokenQuery request, CancellationToken cancellationToken)
     {
-        string? usernameToCheck = request.Username;
-        if (string.IsNullOrEmpty(usernameToCheck))
+        using (await _lock.LockAsync(cancellationToken))
         {
-            var defaultUser = await _spotifyStoredCredentialsRepository.GetDefaultUser(cancellationToken);
-            usernameToCheck = defaultUser;
-        }
-
-        if (!string.IsNullOrEmpty(usernameToCheck))
-        {
-            var accessToken = await _spotifyAccessTokenRepository.GetAccessToken(usernameToCheck, cancellationToken);
-            if (accessToken is { IsExpired: false })
+            string? usernameToCheck = request.Username;
+            if (string.IsNullOrEmpty(usernameToCheck))
             {
-                return accessToken.Value.Value;
+                var defaultUser = await _spotifyStoredCredentialsRepository.GetDefaultUser(cancellationToken);
+                usernameToCheck = defaultUser;
             }
 
-            if (accessToken is { IsExpired: true, RefreshToken: { } refreshToken })
+            if (!string.IsNullOrEmpty(usernameToCheck))
             {
-                //TODO: Refresh
-                //For now, just get new token.
+                var accessToken = 
+                    await _spotifyAccessTokenRepository.GetAccessToken(usernameToCheck, cancellationToken);
+                if (accessToken is { IsExpired: false })
+                {
+                    return accessToken.Value.Value;
+                }
+
+                if (accessToken is { IsExpired: true, RefreshToken: { } refreshToken })
+                {
+                    //TODO: Refresh
+                    //For now, just get new token.
+                }
             }
-        }
 
-        // Fetch credentials
-        var res = await _spotifyAuthModule.GetCredentials(usernameToCheck, cancellationToken);
+            // Fetch credentials
+            var res = await _spotifyAuthModule.GetCredentials(usernameToCheck, cancellationToken);
 
-        await _spotifyStoredCredentialsRepository.StoreCredentials(
-            credentials: res,
-            isDefault: _spotifyAuthModule.IsDefault,
-            cancellationToken: cancellationToken);
+            await _spotifyStoredCredentialsRepository.StoreCredentials(
+                credentials: res,
+                isDefault: _spotifyAuthModule.IsDefault,
+                cancellationToken: cancellationToken);
 
-        var loginResponseFinal = await _mediator.Send(new SpotifyLoginV3Request
-        {
-            DeviceId = _config.Remote.DeviceId,
-            Request = new StoredCredential
+            var loginResponseFinal = await _mediator.Send(new SpotifyLoginV3Request
             {
-                Data = ByteString.FromBase64(res.ReusableCredentialsBase64),
-                Username = res.Username
-            },
-        }, cancellationToken);
+                DeviceId = _config.Remote.DeviceId,
+                Request = new StoredCredential
+                {
+                    Data = ByteString.FromBase64(res.ReusableCredentialsBase64),
+                    Username = res.Username
+                },
+            }, cancellationToken);
 
-        //Store
-        await _spotifyAccessTokenRepository.StoreAccessToken(loginResponseFinal.Ok, cancellationToken);
+            //Store
+            await _spotifyAccessTokenRepository.StoreAccessToken(loginResponseFinal.Ok, cancellationToken);
 
-        return loginResponseFinal.Ok.AccessToken;
+            return loginResponseFinal.Ok.AccessToken;
+        }
     }
 }

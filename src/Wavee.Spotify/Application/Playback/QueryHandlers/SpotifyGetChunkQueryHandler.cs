@@ -5,7 +5,7 @@ using Wavee.Spotify.Application.Playback.Queries;
 
 namespace Wavee.Spotify.Application.Playback.QueryHandlers;
 
-public sealed class SpotifyGetChunkQueryHandler : IQueryHandler<SpotifyGetChunkQuery, byte[]>
+public sealed class SpotifyGetChunkQueryHandler : IQueryHandler<SpotifyGetChunkQuery, (byte[] Data, long TotalSize)>
 {
     private readonly HttpClient _httpClient;
 
@@ -14,7 +14,8 @@ public sealed class SpotifyGetChunkQueryHandler : IQueryHandler<SpotifyGetChunkQ
         _httpClient = httpClientFactory.CreateClient(Constants.SpotifyCdnPlaybackClientName);
     }
 
-    public async ValueTask<byte[]> Handle(SpotifyGetChunkQuery query, CancellationToken cancellationToken)
+    public async ValueTask<(byte[] Data, long TotalSize)> Handle(SpotifyGetChunkQuery query,
+        CancellationToken cancellationToken)
     {
         const string akamized = "https://audio4-ak-spotify-com.akamaized.net";
         var url = query.CdnUrl!.Replace(akamized, string.Empty);
@@ -25,6 +26,6 @@ public sealed class SpotifyGetChunkQueryHandler : IQueryHandler<SpotifyGetChunkQ
         using var response = await _httpClient.SendAsync(request, cancellationToken);
         response.EnsureSuccessStatusCode();
         var bytes = await response.Content.ReadAsByteArrayAsync(cancellationToken);
-        return bytes;
+        return (bytes, response.Content.Headers.ContentRange.Length.Value);
     }
 }

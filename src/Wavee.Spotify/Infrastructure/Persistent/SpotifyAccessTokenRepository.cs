@@ -25,9 +25,10 @@ internal sealed class SpotifyAccessTokenRepository : ISpotifyAccessTokenReposito
             Value: ok.AccessToken,
             Expiration: DateTimeOffset.UtcNow.AddSeconds(ok.AccessTokenExpiresIn),
             RefreshToken: null,
-            Username: ok.Username
+            Username: ok.Username,
+            InstanceId: Constants.InstanceId
         );
-        _collection.Update(accessToken);
+        _collection.Insert(accessToken);
         return Task.CompletedTask;
     }
 
@@ -39,10 +40,11 @@ internal sealed class SpotifyAccessTokenRepository : ISpotifyAccessTokenReposito
             return Task.FromResult<SpotifyAccessToken?>(null);
         }
 
-        if (accessToken.IsExpired)
+        if (accessToken.IsExpired || accessToken.InstanceId != Constants.InstanceId)
         {
             //delete
             _collection.Delete(accessToken.Id);
+            return Task.FromResult<SpotifyAccessToken?>(null);
         }
 
         return Task.FromResult<SpotifyAccessToken?>(accessToken);
@@ -57,8 +59,10 @@ public interface ISpotifyAccessTokenRepository
 
 public readonly record struct SpotifyAccessToken(
     [BsonId] ObjectId Id,
-    string Value, DateTimeOffset Expiration, string RefreshToken,
-    string Username)
+    string Value, DateTimeOffset Expiration,
+    string RefreshToken,
+    string Username,
+    string InstanceId)
 {
     private static TimeSpan _expirationOffset = TimeSpan.FromMinutes(5);
     public bool IsExpired => DateTimeOffset.UtcNow > (Expiration - _expirationOffset);
