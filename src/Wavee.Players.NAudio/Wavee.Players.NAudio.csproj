@@ -8,13 +8,15 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Wavee\Wavee.csproj"/>
+        <ProjectReference Include="..\Wavee\Wavee.csproj" />
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="NAudio" Version="2.2.1"/>
-        <PackageReference Include="Serilog" Version="3.1.2-dev-02097"/>
-        <PackageReference Include="MathNet.Numerics" Version="5.0.0"/>
+        <PackageReference Include="NAudio" Version="2.2.1" />
+        <PackageReference Include="NeoSmart.AsyncLock" Version="3.2.1" />
+        <PackageReference Include="Nito.AsyncEx.Coordination" Version="5.1.2" />
+        <PackageReference Include="Serilog" Version="3.1.2-dev-02097" />
+        <PackageReference Include="MathNet.Numerics" Version="5.0.0" />
     </ItemGroup>
 
 </Project>

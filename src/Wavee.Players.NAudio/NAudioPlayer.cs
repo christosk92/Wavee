@@ -1,8 +1,10 @@
 using System.Collections.Concurrent;
 using System.Runtime.InteropServices;
 using NAudio.Wave;
+using Nito.AsyncEx;
 using Wavee.Domain.Playback.Player;
 using Wavee.Players.NAudio.VorbisDecoder;
+using AsyncLock = NeoSmart.AsyncLock.AsyncLock;
 
 namespace Wavee.Players.NAudio;
 
@@ -11,12 +13,13 @@ public sealed class NAudioPlayer : IWaveePlayer
     private readonly CancellationTokenSource _cts = new CancellationTokenSource();
     private readonly IWavePlayer _wavePlayer;
     private readonly WaveFormat waveFormat;
+    private readonly AsyncLock _lock = new AsyncLock();
     private readonly BufferedWaveProvider _bufferedWaveProvider;
 
     private LinkedListNode<Func<ValueTask<IWaveeMediaSource>>>? source = null;
 
     private TimeSpan? _crossfadeDuration = null;
-
+    private AsyncManualResetEvent _playbackStopped = new AsyncManualResetEvent(true);
     public NAudioPlayer()
     {
         const int sampleRate = 44100;
@@ -34,7 +37,19 @@ public sealed class NAudioPlayer : IWaveePlayer
     {
         //TODO:
         var stream = playlist.Get(0);
-        source = stream;
+        using (_lock.Lock())
+        {
+            source = null;
+            _bufferedWaveProvider.ClearBuffer();
+        }
+
+        _playbackStopped.Wait();
+
+        using (_lock.Lock())
+        {
+            source = stream;
+        }
+
         _wavePlayer.Play();
         return new ValueTask();
     }
@@ -59,84 +74,93 @@ public sealed class NAudioPlayer : IWaveePlayer
         IWaveeMediaSource? sourceOneRaw = null;
         while (!_cts.IsCancellationRequested)
         {
-            try
+            using (await _lock.LockAsync())
             {
-                if (source is null)
+                try
                 {
-                    await Task.Delay(10, _cts.Token);
-                    continue;
-                }
-
-                if (stream_one is null)
-                {
-                    sourceOneRaw = await source.Value();
-                    var streamOneRaw = await sourceOneRaw.CreateStream();
-                    stream_one_duration = sourceOneRaw.Duration;
-                    stream_one = CreateStream(streamOneRaw);
-                }
-
-                //Read packet from stream_one
-                var packet = new byte[1024];
-                var copied = stream_one.Read(packet, 0, packet.Length);
-
-                if (stream_two is not null)
-                {
-                    //When we are crossfading, stream_one is always the "main stream", hence this one is fading in.
-                    //Stream_two is the outgoing stream, so that one is fading out.
-                    var packet_two = new byte[1024];
-                    stream_two.Read(packet_two, 0, packet_two.Length);
-
-                    //Crossfade
-                    var volumeOut = CalculateCrossfadeOut(_crossfadeDuration.Value,
-                        stream_two_duration.Value,
-                        stream_two.CurrentTime);
-
-                    var volumeIn = CalculateCrossfadeIn(_crossfadeDuration.Value,
-                        stream_one.CurrentTime);
-
-                    //Mix
-                    packet = Mix(packet, packet_two, volumeIn, volumeOut);
-                }
-
-
-                _bufferedWaveProvider.AddSamples(packet, 0, copied);
-                while (_bufferedWaveProvider.BufferedDuration.TotalSeconds > 0.5)
-                {
-                    await Task.Delay(10, _cts.Token);
-                }
-
-                if (stream_one.CurrentTime >= stream_one_duration.Value)
-                {
-                    sourceOneRaw?.Dispose();
-                    stream_one = null;
-                    source = source.Next;
-                    continue;
-                }
-
-                //Check if we need to crossfade
-                if (_crossfadeDuration is not null
-                    && ReachedCrossfadePoint(
-                        crossfadeDuration: _crossfadeDuration.Value,
-                        duration: sourceOneRaw.Duration,
-                        currentTime: stream_one.CurrentTime))
-                {
-                    var next = source!.Next;
-                    if (next is not null)
+                    if (source is null)
                     {
-                        var currentStream = stream_one;
-                        // Swap streams, main stream is now the new stream
-                        stream_two = currentStream;
-                        stream_two_duration = stream_one_duration;
-                        //Settings this to null will cause the next iteration to create a new stream
-                        source = next;
+                        stream_one?.Dispose();
+                        stream_two?.Dispose();
                         stream_one = null;
+                        stream_two = null;
+                        _playbackStopped.Set();
+                        await Task.Delay(10, _cts.Token);
+                        continue;
+                    }
+                    _playbackStopped.Reset();
+
+                    if (stream_one is null)
+                    {
+                        sourceOneRaw = await source.Value();
+                        var streamOneRaw = await sourceOneRaw.CreateStream();
+                        stream_one_duration = sourceOneRaw.Duration;
+                        stream_one = CreateStream(streamOneRaw);
+                    }
+
+                    //Read packet from stream_one
+                    var packet = new byte[1024];
+                    var copied = stream_one.Read(packet, 0, packet.Length);
+
+                    if (stream_two is not null)
+                    {
+                        //When we are crossfading, stream_one is always the "main stream", hence this one is fading in.
+                        //Stream_two is the outgoing stream, so that one is fading out.
+                        var packet_two = new byte[1024];
+                        stream_two.Read(packet_two, 0, packet_two.Length);
+
+                        //Crossfade
+                        var volumeOut = CalculateCrossfadeOut(_crossfadeDuration.Value,
+                            stream_two_duration.Value,
+                            stream_two.CurrentTime);
+
+                        var volumeIn = CalculateCrossfadeIn(_crossfadeDuration.Value,
+                            stream_one.CurrentTime);
+
+                        //Mix
+                        packet = Mix(packet, packet_two, volumeIn, volumeOut);
+                    }
+
+
+                    _bufferedWaveProvider.AddSamples(packet, 0, copied);
+                    while (_bufferedWaveProvider.BufferedDuration.TotalSeconds > 0.5)
+                    {
+                        await Task.Delay(10, _cts.Token);
+                    }
+
+                    if (stream_one.CurrentTime >= stream_one_duration.Value)
+                    {
+                        sourceOneRaw?.Dispose();
+                        stream_one = null;
+                        source = source.Next;
+                        continue;
+                    }
+
+                    //Check if we need to crossfade
+                    if (_crossfadeDuration is not null
+                        && ReachedCrossfadePoint(
+                            crossfadeDuration: _crossfadeDuration.Value,
+                            duration: sourceOneRaw.Duration,
+                            currentTime: stream_one.CurrentTime))
+                    {
+                        var next = source!.Next;
+                        if (next is not null)
+                        {
+                            var currentStream = stream_one;
+                            // Swap streams, main stream is now the new stream
+                            stream_two = currentStream;
+                            stream_two_duration = stream_one_duration;
+                            //Settings this to null will cause the next iteration to create a new stream
+                            source = next;
+                            stream_one = null;
+                        }
                     }
                 }
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-                throw;
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                    throw;
+                }
             }
         }
     }
@@ -169,17 +193,17 @@ public sealed class NAudioPlayer : IWaveePlayer
         switch (format)
         {
             case WaveeAudioFormat.MP3:
-            {
-                var mp3reader = new Mp3FileReader(streamOneRaw);
-                return new WaveChannel32(mp3reader);
-                break;
-            }
+                {
+                    var mp3reader = new Mp3FileReader(streamOneRaw);
+                    return new WaveChannel32(mp3reader);
+                    break;
+                }
             case WaveeAudioFormat.OGG:
-            {
-                var oggReader = new VorbisWaveReader(streamOneRaw, true);
-                return oggReader;
-                break;
-            }
+                {
+                    var oggReader = new VorbisWaveReader(streamOneRaw, true);
+                    return oggReader;
+                    break;
+                }
         }
 
         return null;
