@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<UserControl
+    x:Class="Wavee.UI.WinUI.Views.Shell.ShellView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:converters="using:Wavee.UI.WinUI.Converters"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:system="using:System"
+    xmlns:viewModels="using:Wavee.UI.Features.Navigation.ViewModels"
+    DataContextChanged="ShellView_OnDataContextChanged"
+    mc:Ignorable="d">
+
+    <UserControl.Resources>
+        <converters:SidebarViewModelToAppropriateTitleConverter x:Key="SidebarViewModelToAppropriateTitleConverter" />
+        <converters:SidebarViewModelToAppropriateIconConverter x:Key="SidebarViewModelToAppropriateIconConverter" />
+        <DataTemplate x:Key="NavigationViewItemTemplate" x:DataType="viewModels:NavigationItemViewModel">
+            <NavigationViewItem
+                Content="{x:Bind Converter={StaticResource SidebarViewModelToAppropriateTitleConverter}}"
+                Icon="{x:Bind Converter={StaticResource SidebarViewModelToAppropriateIconConverter}}"
+                Tag="{x:Bind}" />
+        </DataTemplate>
+        <StaticResource x:Key="Original" ResourceKey="NavigationViewContentGridBorderBrush" />
+    </UserControl.Resources>
+    <Grid>
+        <NavigationView
+            IsBackButtonVisible="Collapsed"
+            ItemInvoked="NavigationView_OnItemInvoked"
+            MenuItemTemplate="{StaticResource NavigationViewItemTemplate}"
+            MenuItemsSource="{x:Bind ViewModel.TopNavItems, Mode=OneWay}"
+            PaneDisplayMode="Top"
+            SelectedItem="{x:Bind ViewModel.SelectedItem, Mode=OneWay}"
+            Style="{StaticResource ExtendedNavigationViewStyle}">
+            <NavigationView.Resources>
+                <SolidColorBrush x:Key="NavigationViewContentGridBorderBrush" Color="Transparent" />
+            </NavigationView.Resources>
+            <NavigationView.AutoSuggestBox>
+                <AutoSuggestBox PlaceholderText="Find..." QueryIcon="Find" />
+            </NavigationView.AutoSuggestBox>
+            <NavigationView.PaneHeader>
+                <Grid Margin="0,0,0,0" Padding="12,12,0,0">
+                    <StackPanel Orientation="Horizontal" Spacing="4">
+                        <Button
+                            Command="{Binding Navigation.GoBackCommand}"
+                            IsEnabled="{Binding Navigation.CanGoBack, Mode=OneWay}"
+                            Style="{StaticResource NavigationRoundButtonStyle}">
+                            <FontIcon
+                                FontFamily="{StaticResource FluentIcons}"
+                                FontSize="14"
+                                Glyph="&#xE76B;" />
+                        </Button>
+                        <Button
+                            Command="{Binding Navigation.GoNextCommand}"
+                            IsEnabled="{Binding Navigation.CanGoNext, Mode=OneWay}"
+                            Style="{StaticResource NavigationRoundButtonStyle}">
+                            <FontIcon
+                                FontFamily="{StaticResource FluentIcons}"
+                                FontSize="14"
+                                Glyph="&#xE76C;" />
+                        </Button>
+                        <TextBlock
+                            Margin="4,0,0,0"
+                            VerticalAlignment="Center"
+                            FontWeight="ExtraBold"
+                            Opacity=".5"
+                            Text="Wavee" />
+                    </StackPanel>
+                </Grid>
+            </NavigationView.PaneHeader>
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition />
+                </Grid.RowDefinitions>
+                <Border>
+                    <NavigationView
+                        ItemInvoked="NavigationView_OnItemInvoked"
+                        IsBackButtonVisible="Collapsed"
+                        IsSettingsVisible="False"
+                        MenuItemTemplate="{StaticResource NavigationViewItemTemplate}"
+                        MenuItemsSource="{x:Bind ViewModel.SelectedItem.Children, Mode=OneWay}"
+                        PaneDisplayMode="Top"
+                        SelectedItem="{x:Bind ViewModel.SelectedItem.SelectedItem, Mode=OneWay}"
+                        Visibility="{x:Bind HasSubItemsThenVisible(ViewModel.SelectedItem.Children), Mode=OneWay}">
+                        <NavigationView.Resources>
+                            <StaticResource x:Key="NavigationViewContentGridBorderBrush" ResourceKey="Original" />
+                        </NavigationView.Resources>
+                    </NavigationView>
+                </Border>
+
+                <Border Grid.Row="1" Background="{ThemeResource LayerFillColorDefaultBrush}">
+                    <Frame x:Name="NavigationFrame" />
+                </Border>
+            </Grid>
+        </NavigationView>
+    </Grid>
+</UserControl>

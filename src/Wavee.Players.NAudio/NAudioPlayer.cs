@@ -101,7 +101,6 @@ public sealed class NAudioPlayer : IWaveePlayer
                     //Read packet from stream_one
                     var packet = new byte[1024];
                     var copied = stream_one.Read(packet, 0, packet.Length);
-
                     if (stream_two is not null)
                     {
                         //When we are crossfading, stream_one is always the "main stream", hence this one is fading in.
@@ -128,7 +127,7 @@ public sealed class NAudioPlayer : IWaveePlayer
                         await Task.Delay(10, _cts.Token);
                     }
 
-                    if (stream_one.CurrentTime >= stream_one_duration.Value)
+                    if (copied is 0 || stream_one.CurrentTime >= stream_one_duration.Value)
                     {
                         sourceOneRaw?.Dispose();
                         stream_one = null;

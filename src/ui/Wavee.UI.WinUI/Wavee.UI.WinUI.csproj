@@ -1,0 +1,114 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<OutputType>WinExe</OutputType>
+		<TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+		<TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+		<RootNamespace>Wavee.UI.WinUI</RootNamespace>
+		<ApplicationManifest>app.manifest</ApplicationManifest>
+		<Platforms>x86;x64;ARM64</Platforms>
+		<RuntimeIdentifiers>win10-x86;win10-x64;win10-arm64</RuntimeIdentifiers>
+		<PublishProfile>win10-$(Platform).pubxml</PublishProfile>
+		<UseWinUI>true</UseWinUI>
+		<EnableMsixTooling>true</EnableMsixTooling>
+		<UseRidGraph>true</UseRidGraph>
+	</PropertyGroup>
+	<ItemGroup>
+	  <Content Remove="Assets\Fonts\MediaPlayerIcons.ttf" />
+	</ItemGroup>
+	<ItemGroup>
+	  <None Remove="Styles\ButtonStyles.xaml" />
+	  <None Remove="Styles\NavigationView\ExtendedNavigationViewStyle.xaml" />
+	  <None Remove="Views\Identity\SignInView.xaml" />
+	  <None Remove="Views\Libraries\AlbumLibraryPage.xaml" />
+	  <None Remove="Views\Libraries\ArtistLibraryPage.xaml" />
+	  <None Remove="Views\Libraries\PodcastLibraryPage.xaml" />
+	  <None Remove="Views\Libraries\SongLibraryPage.xaml" />
+	  <None Remove="Views\Listen\ListenPage.xaml" />
+	  <None Remove="Views\Main\MainContent.xaml" />
+	  <None Remove="Views\NowPlaying\NowPlayingPage.xaml" />
+	  <None Remove="Views\Shell\ShellView.xaml" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Content Include="Assets\SplashScreen.scale-200.png" />
+		<Content Include="Assets\LockScreenLogo.scale-200.png" />
+		<Content Include="Assets\Square150x150Logo.scale-200.png" />
+		<Content Include="Assets\Square44x44Logo.scale-200.png" />
+		<Content Include="Assets\Square44x44Logo.targetsize-24_altform-unplated.png" />
+		<Content Include="Assets\StoreLogo.png" />
+		<Content Include="Assets\Wide310x150Logo.scale-200.png" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="CommunityToolkit.WinUI.UI" Version="7.1.2" />
+		<PackageReference Include="Mediator.SourceGenerator" Version="3.0.0-preview.11">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
+		<PackageReference Include="Microsoft.WindowsAppSDK" Version="1.4.231115000" />
+		<Manifest Include="$(ApplicationManifest)" />
+	</ItemGroup>
+
+	<!-- 
+    Defining the "Msix" ProjectCapability here allows the Single-project MSIX Packaging
+    Tools extension to be activated for this project even if the Windows App SDK Nuget
+    package has not yet been restored.
+  -->
+	<ItemGroup Condition="'$(DisableMsixProjectCapabilityAddedByProject)'!='true' and '$(EnableMsixTooling)'=='true'">
+		<ProjectCapability Include="Msix" />
+	</ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\Wavee.UI\Wavee.UI.csproj" />
+	</ItemGroup>
+	<ItemGroup>
+	  <None Update="Assets\Fonts\MediaPlayerIcons.ttf">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	  <Page Update="Views\Libraries\PodcastLibraryPage.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </Page>
+	  <Page Update="Views\Libraries\ArtistLibraryPage.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </Page>
+	  <Page Update="Views\Libraries\AlbumLibraryPage.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </Page>
+	  <Page Update="Views\Libraries\SongLibraryPage.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </Page>
+	  <Page Update="Views\NowPlaying\NowPlayingPage.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </Page>
+	  <Page Update="Views\Listen\ListenPage.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </Page>
+	  <Page Update="Styles\ButtonStyles.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </Page>
+	  <Page Update="Styles\NavigationView\ExtendedNavigationViewStyle.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </Page>
+	  <Page Update="Views\Main\MainContent.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </Page>
+	  <Page Update="Views\Shell\ShellView.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </Page>
+	  <Page Update="Views\Identity\SignInView.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </Page>
+	</ItemGroup>
+	<ItemGroup>
+	  <Folder Include="Themes\" />
+	</ItemGroup>
+
+	<!-- 
+    Defining the "HasPackageAndPublishMenuAddedByProject" property here allows the Solution 
+    Explorer "Package and Publish" context menu entry to be enabled for this project even if 
+    the Windows App SDK Nuget package has not yet been restored.
+  -->
+	<PropertyGroup Condition="'$(DisableHasPackageAndPublishMenuAddedByProject)'!='true' and '$(EnableMsixTooling)'=='true'">
+		<HasPackageAndPublishMenu>true</HasPackageAndPublishMenu>
+	</PropertyGroup>
+</Project>

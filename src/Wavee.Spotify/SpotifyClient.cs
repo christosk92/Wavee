@@ -9,6 +9,7 @@ using Wavee.Spotify.Application.StorageResolve;
 using Wavee.Spotify.Common.Contracts;
 using Wavee.Spotify.Domain.State;
 using Wavee.Spotify.Domain.Tracks;
+using Wavee.Spotify.Domain.User;
 using Wavee.Spotify.Infrastructure.LegacyAuth;
 
 namespace Wavee.Spotify;
@@ -52,9 +53,10 @@ internal sealed class SpotifyClient : ISpotifyClient
     public ISpotifyAudioKeyClient AudioKeys { get; }
     public ISpotifyStorageResolver StorageResolver { get; }
 
-    public async Task Initialize(CancellationToken cancellationToken = default)
+    public async Task<Me> Initialize(CancellationToken cancellationToken = default)
     {
         await _spotifyRemoteHolder.Initialize(cancellationToken);
+        return new Me();
     }
     
     private async void OnRemoteStateChanged(object? sender, Cluster e)

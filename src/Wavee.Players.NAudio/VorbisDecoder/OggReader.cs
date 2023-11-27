@@ -495,6 +495,7 @@ public sealed class OggReader
                 if (error is IOException)
                 {
                     // IO error.
+                    if (error is EndOfStreamException) return new Result<Unit>(error);
                     break;
                 }
 
