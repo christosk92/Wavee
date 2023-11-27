@@ -83,6 +83,10 @@ public sealed class SpotifyStreamingFile
         _chunks.Add(0, firstChunk);
         _mediator = mediator;
         _fileId = fileId;
+
+        //Preload next chunk
+        _ = Task.Run(async () => { return await GetChunk(1, true, CancellationToken.None); },
+            CancellationToken.None);
     }
 
     public long TotalSize { get; }
