@@ -16,9 +16,9 @@ namespace Wavee.Spotify.Domain.State;
 /// <param name="Device">
 /// The device that is currently active. This is null if <see cref="IsActive"/> is false.
 /// </param>
-public readonly record struct SpotifyPlaybackState(
-    bool IsActive,
+public readonly record struct SpotifyPlaybackState(bool IsActive,
     SpotifyDevice? Device,
+    IReadOnlyCollection<SpotifyDevice> OtherDevices,
     SpotifyPlaybackContext Context,
     SpotifyPlaybackOrigin PlayOrigin,
     SpotifyPlaybackTrackInfo? TrackInfo,
@@ -35,16 +35,16 @@ public readonly record struct SpotifyPlaybackState(
 
     internal static SpotifyPlaybackState InActive()
     {
-        return new SpotifyPlaybackState(false, null,
+        return new SpotifyPlaybackState(false,
+            null,
+            OtherDevices: Array.Empty<SpotifyDevice>(),
             Context: default,
             PlayOrigin: default,
-            PlaybackId: null,
             TrackInfo: null,
+            PlaybackId: null,
             SessionId: null,
             IsPaused: false,
-            Shuffling: false,
-            RepeatState: WaveeRepeatState.None
-        );
+            Shuffling: false, RepeatState: WaveeRepeatState.None);
     }
 }
 

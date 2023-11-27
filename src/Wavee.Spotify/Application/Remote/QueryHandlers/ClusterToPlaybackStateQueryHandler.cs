@@ -14,6 +14,13 @@ namespace Wavee.Spotify.Application.Remote.QueryHandlers;
 public sealed class
     ClusterToPlaybackStateQueryHandler : IRequestHandler<ClusterToPlaybackStateQuery, SpotifyPlaybackState>
 {
+    private readonly SpotifyClientConfig _config;
+
+    public ClusterToPlaybackStateQueryHandler(SpotifyClientConfig config)
+    {
+        _config = config;
+    }
+
     public ValueTask<SpotifyPlaybackState> Handle(ClusterToPlaybackStateQuery request,
         CancellationToken cancellationToken)
     {
@@ -48,10 +55,18 @@ public sealed class
         var elapsed = now - timestamp;
         var offset = TimeSpan.FromMilliseconds(positionAsOfTimestamp + elapsed);
 
+        var otherDevices = request.Cluster.Device
+            .Keys
+            .Where(x => (x != request.Cluster.ActiveDeviceId && x != _config.Remote.DeviceId))
+            .Select(x => ParseDevice(x, request.Cluster.Device))
+            .Where(x=> x.HasValue)
+            .Select(f=> f!.Value)
+            .ToArray();
 
         return ValueTask.FromResult(new SpotifyPlaybackState(
             IsActive: true,
             Device: ParseDevice(request.Cluster.ActiveDeviceId, request.Cluster.Device),
+            OtherDevices: otherDevices,
             Context: new SpotifyPlaybackContext(
                 Uri: contextUri,
                 Restrictions: contextRestrictions
