@@ -4,39 +4,74 @@ namespace Wavee.Domain.Playback.Player;
 
 public sealed class WaveePlaybackList
 {
-    private readonly Func<int, IWaveeMediaSource> _factory;
-    private readonly Either<InfiniteContext, ValueTask<int>> _count;
+    private readonly LinkedList<Func<ValueTask<IWaveeMediaSource>>> _factory;
+    private readonly Either<InfiniteContext, int> _count;
 
-    private WaveePlaybackList(Func<int, IWaveeMediaSource> factory,
-        Either<InfiniteContext, ValueTask<int>> count)
+    private WaveePlaybackList(Func<int, ValueTask<IWaveeMediaSource>> factory,
+        Either<InfiniteContext, int> count)
     {
-        _factory = factory;
+        if (count.IsLeft)
+        {
+            //TODO:
+        }
+        else
+        {
+            var countVal = count.Match(
+                Left: _ => throw new InvalidOperationException(),
+                Right: x => x
+            );
+
+            var list = new LinkedList<Func<ValueTask<IWaveeMediaSource>>>();
+            for (var i = 0; i < countVal; i++)
+            {
+                var num = i;
+                var factoryFunc = () => factory(num);
+                list.AddLast(factoryFunc);
+            }
+            
+            _factory = list;
+        }
+
         _count = count;
     }
-    public IWaveeMediaSource Get(int index)
+
+    public LinkedListNode<Func<ValueTask<IWaveeMediaSource>>>? Get(int index)
     {
-        return _factory(index);
+        int i = 0;
+        var node = _factory.First;
+        while (i < index)
+        {
+            node = node.Next;
+            i++;
+        }
+
+        return node;
     }
 
-    public bool TryGet(int index, out IWaveeMediaSource source)
+    public bool TryGet(int index, out LinkedListNode<Func<ValueTask<IWaveeMediaSource>>> source)
     {
-        try
-        {
-            source = _factory(index);
-            return true;
-        }
-        catch (IndexOutOfRangeException)
+        if (index < 0)
         {
             source = default!;
             return false;
         }
+
+        var node = Get(index);
+        if (node is null)
+        {
+            source = default!;
+            return false;
+        }
+
+        source = node;
+        return true;
     }
 
     public static WaveePlaybackList Create(params IWaveeMediaSource[] sources)
     {
         return new WaveePlaybackList(
-            factory: i => sources[i],
-            count: new ValueTask<int>(sources.Length));
+            factory: i => new ValueTask<IWaveeMediaSource>(sources[i]),
+            count: sources.Length);
     }
 
     private readonly record struct InfiniteContext;

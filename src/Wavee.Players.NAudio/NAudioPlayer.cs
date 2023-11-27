@@ -12,8 +12,7 @@ public sealed class NAudioPlayer : IWaveePlayer
     private readonly WaveFormat waveFormat;
     private readonly BufferedWaveProvider _bufferedWaveProvider;
 
-    private IWaveeMediaSource? source_One = null;
-    private IWaveeMediaSource? source_Two = null;
+    private LinkedListNode<Func<ValueTask<IWaveeMediaSource>>>? source = null;
 
     private TimeSpan? _crossfadeDuration = null;
 
@@ -34,11 +33,7 @@ public sealed class NAudioPlayer : IWaveePlayer
     {
         //TODO:
         var stream = playlist.Get(0);
-        source_One = stream;
-        if (playlist.TryGet(1, out var second))
-        {
-            source_Two = second;
-        }
+        source = stream;
         _wavePlayer.Play();
         return new ValueTask();
     }
@@ -58,11 +53,12 @@ public sealed class NAudioPlayer : IWaveePlayer
     {
         WaveStream? stream_one = null;
         WaveStream? stream_two = null;
+        IWaveeMediaSource? sourceOneRaw = null;
         while (!_cts.IsCancellationRequested)
         {
             try
             {
-                if (source_One is null)
+                if (source is null)
                 {
                     await Task.Delay(10, _cts.Token);
                     continue;
@@ -70,7 +66,8 @@ public sealed class NAudioPlayer : IWaveePlayer
 
                 if (stream_one is null)
                 {
-                    var streamOneRaw = await source_One.CreateStream();
+                    sourceOneRaw = await source.Value();
+                    var streamOneRaw = await sourceOneRaw.CreateStream();
                     stream_one = CreateStream(streamOneRaw);
                 }
 
@@ -87,7 +84,7 @@ public sealed class NAudioPlayer : IWaveePlayer
 
                     //Crossfade
                     var volumeOut = CalculateCrossfadeOut(_crossfadeDuration.Value,
-                        source_Two.Duration,
+                        stream_two.TotalTime,
                         stream_two.CurrentTime);
 
                     var volumeIn = CalculateCrossfadeIn(_crossfadeDuration.Value,
@@ -108,24 +105,25 @@ public sealed class NAudioPlayer : IWaveePlayer
                 {
                     stream_one.Dispose();
                     stream_one = null;
-                    source_One = null;
                 }
 
                 //Check if we need to crossfade
-                if (_crossfadeDuration is not null 
-                    && source_Two is not null
+                if (_crossfadeDuration is not null
                     && ReachedCrossfadePoint(
                         crossfadeDuration: _crossfadeDuration.Value,
-                        duration: source_One.Duration,
+                        duration: sourceOneRaw.Duration,
                         currentTime: stream_one.CurrentTime))
                 {
-                    var currentStream = stream_one;
-                    var newStreamRaw = await source_Two!.CreateStream();
-                    var newStream = CreateStream(newStreamRaw);
+                    var next = source!.Next;
+                    if (next is not null)
+                    {
+                        var currentStream = stream_one;
+                        // Swap streams, main stream is now the new stream
+                        stream_two = currentStream;
 
-                    // Swap streams, main stream is now the new stream
-                    stream_one = newStream;
-                    stream_two = currentStream;
+                        //Settings this to null will cause the next iteration to create a new stream
+                        source = next;
+                    }
                 }
             }
             catch (Exception e)
@@ -138,21 +136,21 @@ public sealed class NAudioPlayer : IWaveePlayer
 
     private byte[] Mix(byte[] packet, byte[] packetTwo, double volumeIn, double volumeOut)
     {
-        var x_floats =MemoryMarshal.Cast<byte, float>(packet);
+        var x_floats = MemoryMarshal.Cast<byte, float>(packet);
         var y_floats = MemoryMarshal.Cast<byte, float>(packetTwo);
         var mixed = new float[x_floats.Length];
         for (var i = 0; i < x_floats.Length; i++)
         {
             var xSample = x_floats[i];
             var ySample = y_floats[i];
-            
+
             //Crossfade
             var x_volume = xSample * (float)volumeIn;
             var y_volume = ySample * (float)volumeOut;
-            
+
             mixed[i] = x_volume + y_volume;
         }
-        
+
         var mixedBytes = MemoryMarshal.Cast<float, byte>(mixed);
         return mixedBytes.ToArray();
     }
