@@ -2,7 +2,9 @@ namespace Wavee.Spotify.Domain.Exceptions;
 
 public sealed class SpotifyNotAuthenticatedException : Exception
 {
-    public SpotifyNotAuthenticatedException() : base("Spotify is not authenticated.")
+    public SpotifyNotAuthenticatedException(string? msg = null) : base(
+        msg ??
+        "Spotify is not authenticated.")
     {
     }
 }

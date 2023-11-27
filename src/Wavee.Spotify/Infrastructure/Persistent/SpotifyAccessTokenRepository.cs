@@ -14,13 +14,20 @@ internal sealed class SpotifyAccessTokenRepository : ISpotifyAccessTokenReposito
 
     public Task StoreAccessToken(LoginOk ok, CancellationToken cancellationToken)
     {
+        var existingTokens = _collection.Find(x => x.Username == ok.Username);
+        foreach (var existingToken in existingTokens)
+        {
+            _collection.Delete(existingToken.Id);
+        }
+
         var accessToken = new SpotifyAccessToken(
+            Id: ObjectId.NewObjectId(),
             Value: ok.AccessToken,
             Expiration: DateTimeOffset.UtcNow.AddSeconds(ok.AccessTokenExpiresIn),
             RefreshToken: null,
             Username: ok.Username
         );
-        _collection.Upsert(accessToken);
+        _collection.Update(accessToken);
         return Task.CompletedTask;
     }
 
@@ -30,6 +37,12 @@ internal sealed class SpotifyAccessTokenRepository : ISpotifyAccessTokenReposito
         if (accessToken == default)
         {
             return Task.FromResult<SpotifyAccessToken?>(null);
+        }
+
+        if (accessToken.IsExpired)
+        {
+            //delete
+            _collection.Delete(accessToken.Id);
         }
 
         return Task.FromResult<SpotifyAccessToken?>(accessToken);
@@ -43,8 +56,9 @@ public interface ISpotifyAccessTokenRepository
 }
 
 public readonly record struct SpotifyAccessToken(
-    [BsonId] string Username,
-    string Value, DateTimeOffset Expiration, string RefreshToken)
+    [BsonId] ObjectId Id,
+    string Value, DateTimeOffset Expiration, string RefreshToken,
+    string Username)
 {
     private static TimeSpan _expirationOffset = TimeSpan.FromMinutes(5);
     public bool IsExpired => DateTimeOffset.UtcNow > (Expiration - _expirationOffset);

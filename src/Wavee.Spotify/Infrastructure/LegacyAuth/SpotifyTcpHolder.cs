@@ -8,6 +8,7 @@ using Mediator;
 using Nito.AsyncEx;
 using Wavee.Spotify.Application.Common.Queries;
 using Wavee.Spotify.Common;
+using Wavee.Spotify.Domain.Exceptions;
 using Wavee.Spotify.Infrastructure.LegacyAuth.Functions;
 
 namespace Wavee.Spotify.Infrastructure.LegacyAuth;
@@ -134,6 +135,11 @@ public sealed class SpotifyTcpHolder : IDisposable
 
     public async Task<byte[]> RequestAudioKey(SpotifyId itemId, ByteString fileId, CancellationToken cancellationToken)
     {
+        if (_connection is null)
+        {
+            throw new SpotifyNotAuthenticatedException("Not connected to Spotify. Did you forget to call Connect()?");
+        }
+        
         var tcs = new TaskCompletionSource<byte[]>();
         SendKeyRequest(_connection!.GetNextAudioKeySeq(tcs), itemId, fileId);
         var result = await tcs.Task;
