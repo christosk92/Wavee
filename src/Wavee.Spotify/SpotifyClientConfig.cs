@@ -12,6 +12,14 @@ public sealed class SpotifyClientConfig
 public sealed class SpotifyPlaybackConfig
 {
     public required double InitialVolume { get; init; }
+    public required SpotifyAudioQuality PreferedQuality { get; init; }
+}
+
+public enum SpotifyAudioQuality
+{
+    Normal,
+    High,
+    VeryHigh
 }
 
 public sealed class SpotifyRemoteConfig

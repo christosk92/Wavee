@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Wavee.Spotify.Proto", "..\W
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Wavee.Players.NAudio", "..\Wavee.Players.NAudio\Wavee.Players.NAudio.csproj", "{857FB633-6B51-4C9C-B7B5-6A71634AEA46}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Wavee.Youtube", "..\Wavee.Youtube\Wavee.Youtube.csproj", "{BC5CF4A9-BAFC-4CD7-8198-D77DAF22C307}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{857FB633-6B51-4C9C-B7B5-6A71634AEA46}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{857FB633-6B51-4C9C-B7B5-6A71634AEA46}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{857FB633-6B51-4C9C-B7B5-6A71634AEA46}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BC5CF4A9-BAFC-4CD7-8198-D77DAF22C307}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BC5CF4A9-BAFC-4CD7-8198-D77DAF22C307}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BC5CF4A9-BAFC-4CD7-8198-D77DAF22C307}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BC5CF4A9-BAFC-4CD7-8198-D77DAF22C307}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -8,19 +8,18 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Common\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\Wavee.Spotify.Proto\Wavee.Spotify.Proto.csproj" />
     <ProjectReference Include="..\Wavee\Wavee.csproj" />
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Base62-Net" Version="1.2.157201" />
+    <PackageReference Include="BouncyCastle.Cryptography" Version="2.2.1" />
     <PackageReference Include="CommunityToolkit.HighPerformance" Version="8.2.2" />
     <PackageReference Include="LiteDB" Version="5.0.17" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.0" />
     <PackageReference Include="NeoSmart.AsyncLock" Version="3.2.1" />
+    <PackageReference Include="Nito.AsyncEx" Version="5.1.2" />
     <PackageReference Include="Websocket.Client" Version="5.0.0" />
   </ItemGroup>
 

@@ -3,9 +3,7 @@ using System.Data;
 using System.Net.Sockets;
 using Eum.Spotify;
 using Google.Protobuf;
-using Wavee.Spotify.Application.LegacyAuth.CommandHandlers;
 using Wavee.Spotify.Domain.Exceptions;
-using Wavee.Spotify.Infrastructure.LegacyAuth.CommandHandlers;
 
 namespace Wavee.Spotify.Infrastructure.LegacyAuth.Functions;
 

@@ -19,6 +19,7 @@ namespace Wavee.Spotify.Application.Authentication.Modules;
 
 public sealed partial class SpotifyOAuthModule : ISpotifyAuthModule
 {
+    private readonly SpotifyTcpHolder _tcpHolder;
     private readonly ISpotifyStoredCredentialsRepository _spotifyStoredCredentialsRepository;
     private readonly HttpClient _accountsApi;
     private readonly FetchRedirectUrlDelegate _openBrowser;
@@ -29,12 +30,14 @@ public sealed partial class SpotifyOAuthModule : ISpotifyAuthModule
         IHttpClientFactory httpClientFactory,
         IMediator mediator,
         SpotifyClientConfig config,
-        ISpotifyStoredCredentialsRepository spotifyStoredCredentialsRepository)
+        ISpotifyStoredCredentialsRepository spotifyStoredCredentialsRepository,
+        SpotifyTcpHolder tcpHolder)
     {
         _openBrowser = openBrowser;
         _mediator = mediator;
         _config = config;
         _spotifyStoredCredentialsRepository = spotifyStoredCredentialsRepository;
+        _tcpHolder = tcpHolder;
         _accountsApi = httpClientFactory.CreateClient(Constants.SpotifyAccountsApiHttpClient);
     }
 
@@ -122,22 +125,20 @@ public sealed partial class SpotifyOAuthModule : ISpotifyAuthModule
 
         //Exchange for accesspoint token
         var deviceId = _config.Remote.DeviceId;
-        var ur = await _mediator.Send(new SpotifyGetAdaptiveApiUrlQuery
-        {
-            Type = SpotifyApiUrlType.AccessPoint,
-            DontReturnThese = null
-        }, cancellationToken);
-        var host = ur.Host;
-        var port = ur.Port;
-        var apwelcome = SpotifyLegacyAuth.Create(
-            host: host,
-            port: port,
+
+        await _tcpHolder.Connect(
             credentials: new LoginCredentials
             {
+                AuthData = ByteString.CopyFromUtf8(accessToken),
                 Username = finalUsername,
-                Typ = AuthenticationType.AuthenticationSpotifyToken,
-                AuthData = ByteString.CopyFromUtf8(accessToken)
-            }, deviceId);
+                Typ = AuthenticationType.AuthenticationSpotifyToken
+            },
+            deviceId: deviceId,
+            cancellationToken: cancellationToken
+        );
+
+        var apwelcome = await _tcpHolder.WelcomeMessage;
+
 
         var reusableUsername = apwelcome.CanonicalUsername;
         var reusablePassword = apwelcome.ReusableAuthCredentials;
@@ -179,8 +180,10 @@ public sealed partial class SpotifyOAuthModule : ISpotifyAuthModule
 
     [GeneratedRegex("\\+")]
     private static partial Regex UrlSafeRegex();
+
     [GeneratedRegex("\\/")]
     private static partial Regex UrlSafeRegex_2();
+
     [GeneratedRegex("=+$")]
     private static partial Regex UrlSafeRegex_3();
 }

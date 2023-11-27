@@ -5,7 +5,6 @@ using System.Numerics;
 using System.Security.Cryptography;
 using Eum.Spotify;
 using Google.Protobuf;
-using Wavee.Spotify.Application.LegacyAuth.CommandHandlers;
 
 namespace Wavee.Spotify.Infrastructure.LegacyAuth.Functions;
 

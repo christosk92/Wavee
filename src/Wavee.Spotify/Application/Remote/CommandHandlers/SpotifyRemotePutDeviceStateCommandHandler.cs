@@ -24,14 +24,7 @@ public sealed class
     {
         // TODO (massive): GZIP !!!!!!!!!!!!!!!!!
         
-        var spclient = await _mediator.Send(new SpotifyGetAdaptiveApiUrlQuery
-        {
-            Type = SpotifyApiUrlType.SpClient,
-            DontReturnThese = null
-        }, cancellationToken);
-        var url = spclient.Url(true, false);
-        
-        var putstateUrl = $"{url}/connect-state/v1/devices/{command.State.Device.DeviceInfo.DeviceId}";
+        var putstateUrl = $"https://spclient.com/connect-state/v1/devices/{command.State.Device.DeviceInfo.DeviceId}";
         using var request = new HttpRequestMessage(HttpMethod.Put, putstateUrl);
         request.Headers.Add("X-Spotify-Connection-Id", command.ConnectionId);
         //accept-encoding: gzip

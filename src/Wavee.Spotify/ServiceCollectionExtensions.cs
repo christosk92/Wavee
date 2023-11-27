@@ -2,9 +2,14 @@ using LiteDB;
 using Mediator;
 using Microsoft.Extensions.DependencyInjection;
 using Wavee.Domain.Playback.Player;
+using Wavee.Spotify.Application.AudioKeys;
 using Wavee.Spotify.Application.Authentication.Modules;
 using Wavee.Spotify.Application.Remote;
+using Wavee.Spotify.Application.StorageResolve;
+using Wavee.Spotify.Application.Tracks;
 using Wavee.Spotify.Common.Contracts;
+using Wavee.Spotify.Domain.Tracks;
+using Wavee.Spotify.Infrastructure.LegacyAuth;
 using Wavee.Spotify.Infrastructure.MessageHandlers;
 using Wavee.Spotify.Infrastructure.Persistent;
 
@@ -17,6 +22,7 @@ public static class ServiceCollectionExtensions
     {
         services.AddSingleton(spotifyClientConfig);
         services.AddTransient<SpotifyTokenMessageHandler>();
+        services.AddTransient<SpotifyPrependSpClientUrlHandler>();
 
         services.AddSpotifyPublicApiHttpClient();
         services.AddSpotifyPartnerApiHttpClient();
@@ -31,7 +37,15 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ISpotifyAccessTokenRepository, SpotifyAccessTokenRepository>();
 
         services.AddSingleton<SpotifyRemoteHolder>();
+        services.AddSingleton<SpotifyTcpHolder>();
 
+
+        services.AddScoped<ISpotifyTrackClient, SpotifyTrackClient>();
+        services.AddScoped<ISpotifyTrackRepository, SpotifyTrackRepository>();
+
+        services.AddScoped<ISpotifyAudioKeyClient, SpotifyAudioKeyClient>();
+
+        services.AddScoped<ISpotifyStorageResolver, SpotifyStorageResolver>();
         return new AuthMissingSpotifyBuilder(services);
     }
 
@@ -57,7 +71,8 @@ public static class ServiceCollectionExtensions
     public static void AddSpotifyPrivateApiHttpClient(this IServiceCollection services)
     {
         services.AddHttpClient(Constants.SpotifyRemoteStateHttpClietn, client => { })
-            .AddHttpMessageHandler<SpotifyTokenMessageHandler>();
+            .AddHttpMessageHandler<SpotifyTokenMessageHandler>()
+            .AddHttpMessageHandler<SpotifyPrependSpClientUrlHandler>();
     }
 }
 
@@ -110,7 +125,9 @@ public class AuthMissingSpotifyBuilder
         {
             return new SpotifyStoredCredentialsModule(
                 sp.GetRequiredService<IMediator>(),
-                sp.GetRequiredService<ISpotifyStoredCredentialsRepository>()
+                sp.GetRequiredService<ISpotifyStoredCredentialsRepository>(),
+                sp.GetRequiredService<SpotifyTcpHolder>(),
+                sp.GetRequiredService<SpotifyClientConfig>()
             );
         }));
     }
@@ -123,7 +140,8 @@ public class AuthMissingSpotifyBuilder
                 sp.GetRequiredService<IHttpClientFactory>(),
                 sp.GetRequiredService<IMediator>(),
                 sp.GetRequiredService<SpotifyClientConfig>(),
-                sp.GetRequiredService<ISpotifyStoredCredentialsRepository>()
+                sp.GetRequiredService<ISpotifyStoredCredentialsRepository>(),
+                sp.GetRequiredService<SpotifyTcpHolder>()
             );
         }));
     }

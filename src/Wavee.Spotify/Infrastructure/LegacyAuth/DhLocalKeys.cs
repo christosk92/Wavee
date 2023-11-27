@@ -1,7 +1,7 @@
 ﻿using System.Numerics;
 using System.Security.Cryptography;
 
-namespace Wavee.Spotify.Application.LegacyAuth.CommandHandlers;
+namespace Wavee.Spotify.Infrastructure.LegacyAuth;
 
 internal readonly record struct DhLocalKeys(BigInteger PrivateKey, BigInteger PublicKey)
 {

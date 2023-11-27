@@ -5,6 +5,8 @@
 
 # Common IntelliJ Platform excludes
 
+**/Decrypt
+Decrypt
 .idea/
 **/.idea
 # User specific

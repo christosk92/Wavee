@@ -103,8 +103,10 @@ public sealed class NAudioPlayer : IWaveePlayer
 
                 if (stream_one.Position >= stream_one.Length)
                 {
-                    stream_one.Dispose();
+                    sourceOneRaw?.Dispose();
                     stream_one = null;
+                    source = source.Next;
+                    continue;
                 }
 
                 //Check if we need to crossfade
@@ -135,7 +137,7 @@ public sealed class NAudioPlayer : IWaveePlayer
         }
     }
 
-    private byte[] Mix(byte[] packet, byte[] packetTwo, double volumeIn, double volumeOut)
+    private static byte[] Mix(byte[] packet, byte[] packetTwo, double volumeIn, double volumeOut)
     {
         var x_floats = MemoryMarshal.Cast<byte, float>(packet);
         var y_floats = MemoryMarshal.Cast<byte, float>(packetTwo);

@@ -1,7 +1,4 @@
-using Mediator;
-using Wavee.Spotify.Application.LegacyAuth.CommandHandlers;
-
-namespace Wavee.Spotify.Infrastructure.LegacyAuth.CommandHandlers;
+namespace Wavee.Spotify.Infrastructure.LegacyAuth;
 
 internal readonly ref struct SpotifyUnencryptedPackage
 {

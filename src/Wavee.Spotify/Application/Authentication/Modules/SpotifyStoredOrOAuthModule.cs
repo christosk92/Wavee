@@ -1,6 +1,7 @@
 using Mediator;
 using Microsoft.Extensions.DependencyInjection;
 using Wavee.Spotify.Common.Contracts;
+using Wavee.Spotify.Infrastructure.LegacyAuth;
 using Wavee.Spotify.Infrastructure.Persistent;
 
 namespace Wavee.Spotify.Application.Authentication.Modules;
@@ -21,14 +22,17 @@ public sealed class SpotifyStoredOrOAuthModule : ISpotifyAuthModule
                 httpClientFactory: provider.GetRequiredService<IHttpClientFactory>(),
                 provider.GetRequiredService<IMediator>(),
                 provider.GetRequiredService<SpotifyClientConfig>(),
-                provider.GetRequiredService<ISpotifyStoredCredentialsRepository>()
+                provider.GetRequiredService<ISpotifyStoredCredentialsRepository>(),
+                provider.GetRequiredService<SpotifyTcpHolder>()
             );
         };
         _storedCredentialsModuleFactory = () =>
         {
             return new SpotifyStoredCredentialsModule(
                 provider.GetRequiredService<IMediator>(),
-                spotifyStoredCredentialsRepository: provider.GetRequiredService<ISpotifyStoredCredentialsRepository>()
+                spotifyStoredCredentialsRepository: provider.GetRequiredService<ISpotifyStoredCredentialsRepository>(),
+                provider.GetRequiredService<SpotifyTcpHolder>(),
+                provider.GetRequiredService<SpotifyClientConfig>()
             );
         };
     }
