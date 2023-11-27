@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using Eum.Spotify.connectstate;
 using Wavee.Domain.Playback;
 using Wavee.Spotify.Domain.Playback;
 using Wavee.Spotify.Domain.Remote;

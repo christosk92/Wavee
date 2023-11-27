@@ -1,9 +1,6 @@
-using System.Text.Json;
 using Eum.Spotify;
-using Eum.Spotify.login5v3;
 using Google.Protobuf;
 using Mediator;
-using Wavee.Spotify.Application.Authentication.Requests;
 using Wavee.Spotify.Common.Contracts;
 using Wavee.Spotify.Domain.Exceptions;
 using Wavee.Spotify.Infrastructure.LegacyAuth;

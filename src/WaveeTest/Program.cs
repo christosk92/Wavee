@@ -50,7 +50,7 @@ client.Player.Crossfade(TimeSpan.FromSeconds(10));
 
 //await client.Initialize();
 
-var spotifyTrack = SpotifyMediaSource.CreateFromUri(client, "spotify:track:6ru2VMkOMkSBUKWqrTZYwe");
+var spotifyTrack = SpotifyMediaSource.CreateFromUri(client, "spotify:track:210JJAa9nJOgNa0YNrsT5g");
 await client.Player.Play(WaveePlaybackList.Create(spotifyTrack));
 
 // client.PlaybackStateChanged += (sender, state) =>

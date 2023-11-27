@@ -1,6 +1,5 @@
 using System.Buffers.Binary;
 using System.Collections.Concurrent;
-using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using Eum.Spotify;
 using Google.Protobuf;

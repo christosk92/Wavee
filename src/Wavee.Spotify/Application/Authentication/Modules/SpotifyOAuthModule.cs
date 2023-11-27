@@ -1,42 +1,28 @@
-using System.Net.Http.Headers;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using Eum.Spotify;
-using Eum.Spotify.login5v3;
 using Google.Protobuf;
-using Mediator;
-using Wavee.Spotify.Application.Authentication.Requests;
-using Wavee.Spotify.Application.Common.Queries;
 using Wavee.Spotify.Common.Contracts;
 using Wavee.Spotify.Infrastructure.LegacyAuth;
-using Wavee.Spotify.Infrastructure.LegacyAuth.Functions;
-using Wavee.Spotify.Infrastructure.Persistent;
-using ClientInfo = Eum.Spotify.login5v3.ClientInfo;
 
 namespace Wavee.Spotify.Application.Authentication.Modules;
 
 public sealed partial class SpotifyOAuthModule : ISpotifyAuthModule
 {
     private readonly SpotifyTcpHolder _tcpHolder;
-    private readonly ISpotifyStoredCredentialsRepository _spotifyStoredCredentialsRepository;
     private readonly HttpClient _accountsApi;
     private readonly FetchRedirectUrlDelegate _openBrowser;
-    private readonly IMediator _mediator;
     private readonly SpotifyClientConfig _config;
 
     public SpotifyOAuthModule(FetchRedirectUrlDelegate openBrowser,
         IHttpClientFactory httpClientFactory,
-        IMediator mediator,
         SpotifyClientConfig config,
-        ISpotifyStoredCredentialsRepository spotifyStoredCredentialsRepository,
         SpotifyTcpHolder tcpHolder)
     {
         _openBrowser = openBrowser;
-        _mediator = mediator;
         _config = config;
-        _spotifyStoredCredentialsRepository = spotifyStoredCredentialsRepository;
         _tcpHolder = tcpHolder;
         _accountsApi = httpClientFactory.CreateClient(Constants.SpotifyAccountsApiHttpClient);
     }
@@ -116,10 +102,10 @@ public sealed partial class SpotifyOAuthModule : ISpotifyAuthModule
         await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
         using var jsondoc = await JsonDocument.ParseAsync(stream, cancellationToken: cancellationToken);
         var accessToken = jsondoc.RootElement.GetProperty("access_token").GetString();
-        var expiresIn = jsondoc.RootElement.GetProperty("expires_in").GetInt32();
-        var refreshToken = jsondoc.RootElement.GetProperty("refresh_token").GetString();
-        var scope = jsondoc.RootElement.GetProperty("scope").GetString();
-        var tokenType = jsondoc.RootElement.GetProperty("token_type").GetString();
+        jsondoc.RootElement.GetProperty("expires_in").GetInt32();
+        jsondoc.RootElement.GetProperty("refresh_token").GetString();
+        jsondoc.RootElement.GetProperty("scope").GetString();
+        jsondoc.RootElement.GetProperty("token_type").GetString();
         var finalUsername = jsondoc.RootElement.GetProperty("username").GetString();
 
 

@@ -20,9 +20,7 @@ public sealed class SpotifyStoredOrOAuthModule : ISpotifyAuthModule
             return new SpotifyOAuthModule(
                 fetchRedirectUrl,
                 httpClientFactory: provider.GetRequiredService<IHttpClientFactory>(),
-                provider.GetRequiredService<IMediator>(),
                 provider.GetRequiredService<SpotifyClientConfig>(),
-                provider.GetRequiredService<ISpotifyStoredCredentialsRepository>(),
                 provider.GetRequiredService<SpotifyTcpHolder>()
             );
         };

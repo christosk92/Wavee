@@ -3,9 +3,7 @@ using Eum.Spotify.storage;
 using Google.Protobuf;
 using Mediator;
 using Nito.AsyncEx;
-using Wavee.Infrastructure.Playback.Decrypt;
 using Wavee.Spotify.Application.AudioKeys.QueryHandlers;
-using Wavee.Spotify.Application.Decrypt;
 using Wavee.Spotify.Application.Playback.Queries;
 
 namespace Wavee.Spotify.Application.StorageResolve;

@@ -26,6 +26,6 @@ public sealed class SpotifyGetChunkQueryHandler : IQueryHandler<SpotifyGetChunkQ
         using var response = await _httpClient.SendAsync(request, cancellationToken);
         response.EnsureSuccessStatusCode();
         var bytes = await response.Content.ReadAsByteArrayAsync(cancellationToken);
-        return (bytes, response.Content.Headers.ContentRange.Length.Value);
+        return (bytes, response.Content.Headers.ContentRange?.Length ?? 0);
     }
 }

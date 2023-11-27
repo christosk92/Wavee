@@ -1,7 +1,5 @@
 using System.Net.Sockets;
 using Eum.Spotify;
-using Mediator;
-using Wavee.Spotify.Application.Common.Queries;
 
 namespace Wavee.Spotify.Infrastructure.LegacyAuth.Functions;
 

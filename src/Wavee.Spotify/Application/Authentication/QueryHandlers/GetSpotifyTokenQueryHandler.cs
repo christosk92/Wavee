@@ -1,4 +1,3 @@
-using System.Text.Json;
 using Eum.Spotify.login5v3;
 using Google.Protobuf;
 using Mediator;

@@ -152,9 +152,7 @@ public class AuthMissingSpotifyBuilder
         {
             return new SpotifyOAuthModule(openBrowser,
                 sp.GetRequiredService<IHttpClientFactory>(),
-                sp.GetRequiredService<IMediator>(),
                 sp.GetRequiredService<SpotifyClientConfig>(),
-                sp.GetRequiredService<ISpotifyStoredCredentialsRepository>(),
                 sp.GetRequiredService<SpotifyTcpHolder>()
             );
         }));

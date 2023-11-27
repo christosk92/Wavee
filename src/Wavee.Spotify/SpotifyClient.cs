@@ -3,7 +3,6 @@ using Mediator;
 using NeoSmart.AsyncLock;
 using Wavee.Domain.Playback.Player;
 using Wavee.Spotify.Application.AudioKeys;
-using Wavee.Spotify.Application.Authentication.Queries;
 using Wavee.Spotify.Application.Remote;
 using Wavee.Spotify.Application.Remote.Queries;
 using Wavee.Spotify.Application.StorageResolve;

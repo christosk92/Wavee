@@ -1,17 +1,12 @@
 using System.Diagnostics;
-using System.IO.Compression;
-using System.Net;
 using System.Net.WebSockets;
-using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
-using CommunityToolkit.HighPerformance;
 using Eum.Spotify.connectstate;
 using Mediator;
 using Wavee.Spotify.Application.Authentication.Queries;
 using Wavee.Spotify.Application.Remote.Commands;
 using Wavee.Spotify.Utils;
-using Websocket.Client;
 
 namespace Wavee.Spotify.Application.Remote;
 

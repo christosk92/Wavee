@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "Wavee.UI.WinUI.Prototyping (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "Wavee.UI.WinUI.Prototyping (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}

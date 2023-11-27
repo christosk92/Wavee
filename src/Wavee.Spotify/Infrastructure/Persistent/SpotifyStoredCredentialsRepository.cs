@@ -1,8 +1,5 @@
-using Eum.Spotify;
-using Google.Protobuf;
 using LiteDB;
 using Wavee.Spotify.Application.Authentication.Modules;
-using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace Wavee.Spotify.Infrastructure.Persistent;
 

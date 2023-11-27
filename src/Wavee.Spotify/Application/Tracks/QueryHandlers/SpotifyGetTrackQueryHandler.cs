@@ -4,7 +4,6 @@ using Spotify.Metadata;
 using Wavee.Spotify.Application.Tracks.Queries;
 using Wavee.Spotify.Common;
 using Wavee.Spotify.Infrastructure.Persistent;
-using Wavee.Spotify.Utils;
 
 namespace Wavee.Spotify.Application.Tracks.QueryHandlers;
 

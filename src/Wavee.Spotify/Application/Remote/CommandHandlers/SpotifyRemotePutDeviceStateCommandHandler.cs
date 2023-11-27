@@ -2,7 +2,6 @@ using System.Net.Http.Headers;
 using Eum.Spotify.connectstate;
 using Google.Protobuf;
 using Mediator;
-using Wavee.Spotify.Application.Common.Queries;
 using Wavee.Spotify.Application.Remote.Commands;
 using Wavee.Spotify.Utils;
 

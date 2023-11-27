@@ -1,11 +1,7 @@
-using System.Diagnostics;
-using System.Net.Http.Headers;
-using Google.Protobuf;
 using Google.Protobuf.Collections;
 using LanguageExt;
 using Spotify.Metadata;
 using Wavee.Domain.Playback.Player;
-using Wavee.Spotify.Application.AudioKeys.QueryHandlers;
 using Wavee.Spotify.Application.Decrypt;
 using Wavee.Spotify.Common;
 using Wavee.Spotify.Common.Contracts;

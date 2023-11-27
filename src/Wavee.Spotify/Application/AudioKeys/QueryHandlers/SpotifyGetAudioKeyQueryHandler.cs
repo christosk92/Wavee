@@ -1,6 +1,3 @@
-using System.Net.Http.Headers;
-using Eum.Spotify.playplay;
-using Google.Protobuf;
 using Mediator;
 using Wavee.Spotify.Application.AudioKeys.Queries;
 using Wavee.Spotify.Infrastructure.LegacyAuth;
