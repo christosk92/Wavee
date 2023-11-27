@@ -123,6 +123,7 @@ public sealed class NAudioPlayer : IWaveePlayer
 
                         //Settings this to null will cause the next iteration to create a new stream
                         source = next;
+                        stream_one = null;
                     }
                 }
             }
