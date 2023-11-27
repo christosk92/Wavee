@@ -1,9 +1,8 @@
-﻿using System.Reflection.Metadata;
-using Eum.Spotify;
-using Eum.Spotify.connectstate;
-using Eum.Spotify.login5v3;
-using Google.Protobuf;
+﻿using Eum.Spotify.connectstate;
 using Microsoft.Extensions.DependencyInjection;
+using Wavee.Application.Playback;
+using Wavee.Domain.Playback.Player;
+using Wavee.Players.NAudio;
 using Wavee.Spotify;
 using Wavee.Spotify.Application.Authentication.Modules;
 using Wavee.Spotify.Common.Contracts;
@@ -28,16 +27,23 @@ var sp = new ServiceCollection()
         }
     })
     .WithStoredOrOAuthModule(OpenBrowser)
+    .WithPlayer<NAudioPlayer>()
     .AddMediator()
     .BuildServiceProvider();
 
 var client = sp.GetRequiredService<ISpotifyClient>();
-client.PlaybackStateChanged += (sender, state) =>
-{
-    Console.WriteLine($"Playback state changed: {state}");
-};
-await client.Initialize();
-var x = "";
+const string filePathMp3 = "C:\\Users\\ckara\\Downloads\\4dba53850d6bfdb9800d53d65fe2e5f1369b9040.mp3";
+client.Player.Crossfade(TimeSpan.FromSeconds(10));
+await client.Player.Play(WaveePlaybackList.Create(
+    LocalMediaSource.CreateFromFilePath(filePathMp3),
+    LocalMediaSource.CreateFromFilePath(filePathMp3)));
+
+// client.PlaybackStateChanged += (sender, state) =>
+// {
+//     Console.WriteLine($"Playback state changed: {state}");
+// };
+// await client.Initialize();
+// var x = "";
 Console.ReadLine();
 
 static Task<OpenBrowserResult> OpenBrowser(string url, CancellationToken ct)

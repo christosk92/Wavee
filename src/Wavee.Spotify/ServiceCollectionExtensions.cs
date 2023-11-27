@@ -1,6 +1,7 @@
 using LiteDB;
 using Mediator;
 using Microsoft.Extensions.DependencyInjection;
+using Wavee.Domain.Playback.Player;
 using Wavee.Spotify.Application.Authentication.Modules;
 using Wavee.Spotify.Application.Remote;
 using Wavee.Spotify.Common.Contracts;
@@ -11,7 +12,7 @@ namespace Wavee.Spotify;
 
 public static class ServiceCollectionExtensions
 {
-    public static IncompleteSpotifyBuilder AddSpotify(this IServiceCollection services,
+    public static AuthMissingSpotifyBuilder AddSpotify(this IServiceCollection services,
         SpotifyClientConfig spotifyClientConfig)
     {
         services.AddSingleton(spotifyClientConfig);
@@ -30,8 +31,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ISpotifyAccessTokenRepository, SpotifyAccessTokenRepository>();
 
         services.AddSingleton<SpotifyRemoteHolder>();
-        
-        return new IncompleteSpotifyBuilder(services);
+
+        return new AuthMissingSpotifyBuilder(services);
     }
 
 
@@ -55,43 +56,68 @@ public static class ServiceCollectionExtensions
 
     public static void AddSpotifyPrivateApiHttpClient(this IServiceCollection services)
     {
-        services.AddHttpClient(Constants.SpotifyRemoteStateHttpClietn, client =>
-        {
-        }).AddHttpMessageHandler<SpotifyTokenMessageHandler>();
+        services.AddHttpClient(Constants.SpotifyRemoteStateHttpClietn, client => { })
+            .AddHttpMessageHandler<SpotifyTokenMessageHandler>();
     }
 }
 
-public readonly struct IncompleteSpotifyBuilder
+public class PlayerMissingSpotifyBuilder
 {
     private readonly IServiceCollection _services;
 
-    internal IncompleteSpotifyBuilder(IServiceCollection services)
+    internal PlayerMissingSpotifyBuilder(IServiceCollection services)
     {
         _services = services;
     }
 
-    public IServiceCollection WithStoredOrOAuthModule(FetchRedirectUrlDelegate openBrowser)
+    public IServiceCollection WithPlayer<TPlayer>() where TPlayer : class, IWaveePlayer
     {
-        return _services.AddSingleton<ISpotifyAuthModule>((sp) =>
-        {
-            return new SpotifyStoredOrOAuthModule(openBrowser, sp);
-        });
+        return _services.AddSingleton<IWaveePlayer, TPlayer>();
     }
 
-    public IServiceCollection WithStoredCredentialsModule()
+    public IServiceCollection WithPlayer<TPlayer>(Func<IServiceProvider, TPlayer> factory)
+        where TPlayer : class, IWaveePlayer
     {
-        return _services.AddSingleton<ISpotifyAuthModule>((sp) =>
+        return _services.AddSingleton<IWaveePlayer, TPlayer>(factory);
+    }
+
+    public IServiceCollection WithPlayer(IWaveePlayer playerInstance)
+    {
+        return _services.AddSingleton<IWaveePlayer>(playerInstance);
+    }
+}
+
+public class AuthMissingSpotifyBuilder
+{
+    private readonly IServiceCollection _services;
+
+    internal AuthMissingSpotifyBuilder(IServiceCollection services)
+    {
+        _services = services;
+    }
+
+    public PlayerMissingSpotifyBuilder WithStoredOrOAuthModule(FetchRedirectUrlDelegate openBrowser)
+    {
+        return new PlayerMissingSpotifyBuilder(_services.AddSingleton<ISpotifyAuthModule>((sp) =>
+        {
+            return new SpotifyStoredOrOAuthModule(openBrowser, sp);
+        }));
+    }
+
+    public PlayerMissingSpotifyBuilder WithStoredCredentialsModule()
+    {
+        return new PlayerMissingSpotifyBuilder(_services.AddSingleton<ISpotifyAuthModule>((sp) =>
         {
             return new SpotifyStoredCredentialsModule(
                 sp.GetRequiredService<IMediator>(),
                 sp.GetRequiredService<ISpotifyStoredCredentialsRepository>()
             );
-        });
+        }));
     }
 
-    public IServiceCollection WithOAuthModule(FetchRedirectUrlDelegate openBrowser)
+    public PlayerMissingSpotifyBuilder WithOAuthModule(FetchRedirectUrlDelegate openBrowser)
     {
-        return _services.AddSingleton<ISpotifyAuthModule>((sp) =>
+        return new PlayerMissingSpotifyBuilder(_services.AddSingleton<ISpotifyAuthModule>((sp) =>
         {
             return new SpotifyOAuthModule(openBrowser,
                 sp.GetRequiredService<IHttpClientFactory>(),
@@ -99,6 +125,6 @@ public readonly struct IncompleteSpotifyBuilder
                 sp.GetRequiredService<SpotifyClientConfig>(),
                 sp.GetRequiredService<ISpotifyStoredCredentialsRepository>()
             );
-        });
+        }));
     }
 }

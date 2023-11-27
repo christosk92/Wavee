@@ -1,6 +1,7 @@
 using Eum.Spotify.connectstate;
 using Mediator;
 using NeoSmart.AsyncLock;
+using Wavee.Domain.Playback.Player;
 using Wavee.Spotify.Application.Authentication.Queries;
 using Wavee.Spotify.Application.Remote;
 using Wavee.Spotify.Application.Remote.Queries;
@@ -16,16 +17,19 @@ internal sealed class SpotifyClient : ISpotifyClient
     private readonly SpotifyRemoteHolder _spotifyRemoteHolder;
     private readonly IMediator _mediator;
 
-    public SpotifyClient(SpotifyRemoteHolder spotifyRemoteHolder, IMediator mediator)
+    public SpotifyClient(SpotifyRemoteHolder spotifyRemoteHolder, IMediator mediator, IWaveePlayer player)
     {
         _spotifyRemoteHolder = spotifyRemoteHolder;
         _mediator = mediator;
+        Player = player;
         _playbackState = SpotifyPlaybackState.InActive();
         _spotifyRemoteHolder.RemoteStateChanged += OnRemoteStateChanged;
     }
 
     public event EventHandler<SpotifyPlaybackState> PlaybackStateChanged;
-    
+
+    public IWaveePlayer Player { get; }
+
     public async Task Initialize(CancellationToken cancellationToken = default)
     {
         await _spotifyRemoteHolder.Initialize(cancellationToken);

@@ -8,6 +8,7 @@ using Eum.Spotify.login5v3;
 using Google.Protobuf;
 using Mediator;
 using Wavee.Spotify.Application.Authentication.Requests;
+using Wavee.Spotify.Application.Common.Queries;
 using Wavee.Spotify.Common.Contracts;
 using Wavee.Spotify.Infrastructure.LegacyAuth;
 using Wavee.Spotify.Infrastructure.LegacyAuth.Functions;
@@ -16,7 +17,7 @@ using ClientInfo = Eum.Spotify.login5v3.ClientInfo;
 
 namespace Wavee.Spotify.Application.Authentication.Modules;
 
-public sealed class SpotifyOAuthModule : ISpotifyAuthModule
+public sealed partial class SpotifyOAuthModule : ISpotifyAuthModule
 {
     private readonly ISpotifyStoredCredentialsRepository _spotifyStoredCredentialsRepository;
     private readonly HttpClient _accountsApi;
@@ -121,12 +122,22 @@ public sealed class SpotifyOAuthModule : ISpotifyAuthModule
 
         //Exchange for accesspoint token
         var deviceId = _config.Remote.DeviceId;
-        var apwelcome = SpotifyLegacyAuth.Create(credentials: new LoginCredentials
+        var ur = await _mediator.Send(new SpotifyGetAdaptiveApiUrlQuery
         {
-            Username = finalUsername,
-            Typ = AuthenticationType.AuthenticationSpotifyToken,
-            AuthData = ByteString.CopyFromUtf8(accessToken)
-        }, deviceId);
+            Type = SpotifyApiUrlType.AccessPoint,
+            DontReturnThese = null
+        }, cancellationToken);
+        var host = ur.Host;
+        var port = ur.Port;
+        var apwelcome = SpotifyLegacyAuth.Create(
+            host: host,
+            port: port,
+            credentials: new LoginCredentials
+            {
+                Username = finalUsername,
+                Typ = AuthenticationType.AuthenticationSpotifyToken,
+                AuthData = ByteString.CopyFromUtf8(accessToken)
+            }, deviceId);
 
         var reusableUsername = apwelcome.CanonicalUsername;
         var reusablePassword = apwelcome.ReusableAuthCredentials;
@@ -143,11 +154,14 @@ public sealed class SpotifyOAuthModule : ISpotifyAuthModule
     private static string GenerateNonce()
     {
         const string chars = "abcdefghijklmnopqrstuvwxyz123456789";
-        var random = new Random();
         var nonce = new char[128];
         for (int i = 0; i < nonce.Length; i++)
         {
-            nonce[i] = chars[random.Next(chars.Length)];
+            var numberToPick = RandomNumberGenerator.GetInt32(
+                fromInclusive: 0,
+                toExclusive: chars.Length
+            );
+            nonce[i] = chars[numberToPick];
         }
 
         return new string(nonce);
@@ -155,14 +169,20 @@ public sealed class SpotifyOAuthModule : ISpotifyAuthModule
 
     private static string GenerateCodeChallenge(string codeVerifier)
     {
-        using var sha256 = SHA256.Create();
-        var hash = sha256.ComputeHash(Encoding.UTF8.GetBytes(codeVerifier));
+        var hash = SHA256.HashData(Encoding.UTF8.GetBytes(codeVerifier));
         var b64Hash = Convert.ToBase64String(hash);
-        var code = Regex.Replace(b64Hash, "\\+", "-");
-        code = Regex.Replace(code, "\\/", "_");
-        code = Regex.Replace(code, "=+$", "");
+        var code = UrlSafeRegex().Replace(b64Hash, "-");
+        code = UrlSafeRegex_2().Replace(code, "_");
+        code = UrlSafeRegex_3().Replace(code, "");
         return code;
     }
+
+    [GeneratedRegex("\\+")]
+    private static partial Regex UrlSafeRegex();
+    [GeneratedRegex("\\/")]
+    private static partial Regex UrlSafeRegex_2();
+    [GeneratedRegex("=+$")]
+    private static partial Regex UrlSafeRegex_3();
 }
 
 public delegate Task<OpenBrowserResult> FetchRedirectUrlDelegate(string url, CancellationToken cancellationToken);

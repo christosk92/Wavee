@@ -7,12 +7,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Application\" />
     <Folder Include="Infrastructure\" />
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="LanguageExt.Core" Version="4.4.7" />
     <PackageReference Include="Mediator.Abstractions" Version="3.0.0-preview.11" />
+    <PackageReference Include="TagLibSharp" Version="2.3.0" />
   </ItemGroup>
 
 </Project>
