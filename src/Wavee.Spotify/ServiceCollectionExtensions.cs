@@ -27,6 +27,7 @@ public static class ServiceCollectionExtensions
         services.AddSpotifyPublicApiHttpClient();
         services.AddSpotifyPartnerApiHttpClient();
         services.AddSpotifyPrivateApiHttpClient();
+        services.AddPlaybackHttpClient();
 
         services.AddSingleton<ISpotifyClient, SpotifyClient>();
 
@@ -66,6 +67,15 @@ public static class ServiceCollectionExtensions
             client.BaseAddress = new Uri("https://partner.api.spotify.com/v1/");
             client.DefaultRequestHeaders.Add("Accept", "application/json");
         }).AddHttpMessageHandler<SpotifyTokenMessageHandler>();
+    }
+
+    public static void AddPlaybackHttpClient(this IServiceCollection services)
+    {
+        services.AddHttpClient(Constants.SpotifyCdnPlaybackClientName, client =>
+        {
+            //https://audio4-ak-spotify-com.akamaized.net/audio/f529eee95393647091d45b17dd1cc4630da1a0ae?__token__=exp=1701163282~hmac=03d01eab0da50b9b777bcf2edc46b8be0637ea9ebfa0d4874d519303144a5545
+            client.BaseAddress = new Uri("https://audio4-ak-spotify-com.akamaized.net");
+        });
     }
 
     public static void AddSpotifyPrivateApiHttpClient(this IServiceCollection services)

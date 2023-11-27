@@ -1,6 +1,7 @@
 using System.Net.Http.Headers;
 using Google.Protobuf;
 using Google.Protobuf.Collections;
+using LanguageExt;
 using Spotify.Metadata;
 using Wavee.Domain.Playback.Player;
 using Wavee.Spotify.Application.AudioKeys.QueryHandlers;
@@ -21,30 +22,44 @@ public sealed class SpotifyMediaSource : IWaveeMediaSource
 
     public TimeSpan Duration { get; }
 
-    public static async Task<SpotifyMediaSource> CreateFromUri(ISpotifyClient client, string uri,
+    public static async Task<SpotifyMediaSource> CreateFromUri(
+        ISpotifyClient client,
+        string uri,
         CancellationToken cancellationToken = default)
     {
         var id = SpotifyId.FromUri(uri);
         var track = await client.Tracks.GetTrack(id, cancellationToken);
         var preferedQuality = client.Config.Playback.PreferedQuality;
         var file = FindFile(track, preferedQuality);
-        var audioKey = await client.AudioKeys.GetAudioKey(id, file.FileId, cancellationToken);
-        var streamingurl = await client.StorageResolver.GetStreamingUrl(file.FileId, cancellationToken);
+        var audioKeyTask = client.AudioKeys.GetAudioKey(id, file.FileId, cancellationToken).AsTask();
+        var streamingFileTask = client.StorageResolver.GetStorageFile(file.FileId, cancellationToken).AsTask();
+        await Task.WhenAll(audioKeyTask, streamingFileTask);
 
-        //download first 1MB of the file as test
-        using var httpClient = new HttpClient();
-        using var request = new HttpRequestMessage(HttpMethod.Get, streamingurl);
-        request.Headers.Range = new RangeHeaderValue(0, 1024 * 1024);
-        using var response = await httpClient.SendAsync(request, cancellationToken);
-        response.EnsureSuccessStatusCode();
-        var bytes = await response.Content.ReadAsByteArrayAsync(cancellationToken);
+        var audioKey = audioKeyTask.Result;
+        var streamingFile = streamingFileTask.Result;
+
         var stream = new SpotifyUnoffsettedStream(
-            totalSize: response.Content.Headers.ContentLength.Value,
-            getChunkFunc: (i) => { return new ValueTask<byte[]>(bytes); },
+            streamingFile,
             audioKey: audioKey,
             offset: 0xa7
         );
         var normData = NormalisationData.ParseFromOgg(stream);
+
+
+        // //download first 1MB of the file as test
+        // using var httpClient = new HttpClient();
+        // using var request = new HttpRequestMessage(HttpMethod.Get, streamingurl);
+        // request.Headers.Range = new RangeHeaderValue(0, 1024 * 1024);
+        // using var response = await httpClient.SendAsync(request, cancellationToken);
+        // response.EnsureSuccessStatusCode();
+        // var bytes = await response.Content.ReadAsByteArrayAsync(cancellationToken);
+        // var stream = new SpotifyUnoffsettedStream(
+        //     totalSize: response.Content.Headers.ContentLength.Value,
+        //     getChunkFunc: (i) => { return new ValueTask<byte[]>(bytes); },
+        //     audioKey: audioKey,
+        //     offset: 0xa7
+        // );
+        // var normData = NormalisationData.ParseFromOgg(stream);
 
         return null;
     }

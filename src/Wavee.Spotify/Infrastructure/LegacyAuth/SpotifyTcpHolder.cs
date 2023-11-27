@@ -22,6 +22,7 @@ public sealed class SpotifyTcpHolder : IDisposable
         BoxedSpotifyPackage Send,
         Action<BoxedSpotifyPackage> Response);
 
+    private readonly AsyncLock _connectLock = new();
     private bool _disposed;
     private readonly IMediator _mediator;
     private ActiveSpotifyConnection? _connection;
@@ -41,15 +42,20 @@ public sealed class SpotifyTcpHolder : IDisposable
         string deviceId,
         CancellationToken cancellationToken)
     {
-        _connection = new ActiveSpotifyConnection(
-            credentials,
-            deviceId: deviceId,
-            mediator: _mediator
-        );
-        await _connection.Connect(cancellationToken);
-        _connected.Set();
+        using (await _connectLock.LockAsync())
+        {
+            if (_connected.IsSet)
+                return;
+            _connection = new ActiveSpotifyConnection(
+                credentials,
+                deviceId: deviceId,
+                mediator: _mediator
+            );
+            await _connection.Connect(cancellationToken);
+            _connected.Set();
 
-        await StartListening(_connection, ConnectionOnLost);
+            await StartListening(_connection, ConnectionOnLost);
+        }
     }
 
     private async Task StartListening(ActiveSpotifyConnection connection,
