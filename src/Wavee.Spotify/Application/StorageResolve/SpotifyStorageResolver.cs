@@ -98,7 +98,16 @@ public sealed class SpotifyStreamingFile
         using (await _lock.LockAsync(cancellationToken))
         {
             if (_chunks.TryGetValue(index, out var chunk))
+            {
+                if (!preloading)
+                {
+                    //Preload next chunk
+                    _ = Task.Run(async () => { return await GetChunk(index + 1, true, cancellationToken); },
+                        cancellationToken);
+                }
+
                 return chunk;
+            }
 
             var res = (await _mediator.Send(new SpotifyGetChunkQuery
             {
