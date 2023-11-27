@@ -87,7 +87,9 @@ public sealed class SpotifyStreamingFile
 
     public long TotalSize { get; }
 
-    public async ValueTask<byte[]> GetChunk(int index, CancellationToken cancellationToken)
+    public async ValueTask<byte[]> GetChunk(int index,
+        bool preloading = false,
+        CancellationToken cancellationToken = default)
     {
         using (await _lock.LockAsync(cancellationToken))
         {
@@ -101,6 +103,14 @@ public sealed class SpotifyStreamingFile
                 Index = index
             }, cancellationToken)).Data;
             _chunks[index] = res;
+
+            if (!preloading)
+            {
+                //Preload next chunk
+                _ = Task.Run(async () => { return await GetChunk(index + 1, true, cancellationToken); },
+                    cancellationToken);
+            }
+
             return res;
         }
     }
