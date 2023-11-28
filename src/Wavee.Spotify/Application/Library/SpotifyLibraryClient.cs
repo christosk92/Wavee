@@ -13,19 +13,20 @@ namespace Wavee.Spotify.Application.Library;
 internal class SpotifyLibraryClient : ISpotifyLibraryClient
 {
     private readonly IMediator _mediator;
-    private readonly SpotifyTcpHolder _spotifyTcpHolder;;
+    private readonly SpotifyTcpHolder _spotifyTcpHolder;
     public SpotifyLibraryClient(IMediator mediator, SpotifyTcpHolder spotifyTcpHolder)
     {
         _mediator = mediator;
         _spotifyTcpHolder = spotifyTcpHolder;
     }
 
-    public Task<SpotifyLibraryItem> GetArtists()
+    public async Task<SpotifyLibraryItem> GetArtists()
     {
         var userId = _spotifyTcpHolder.WelcomeMessage.Result.CanonicalUsername;
 
         var mercuryUri = $"hm://collection/artist/{userId}?allowonlytracks=false&format=json";
-        _spotifyTcpHolder.GetMercury(mercuryUri);
+        var res = await _spotifyTcpHolder.GetMercury(mercuryUri);
+        return null;
     }
 }
 

@@ -25,12 +25,13 @@ public sealed class GetLibraryArtistsQueryHandler : IQueryHandler<GetLibraryArti
             var cts = new TaskCompletionSource<LibraryItems<SimpleArtistEntity>>();
             _ = Task.Run(async () =>
             {
-                await initializeTask.Task.ContinueWith(t =>
+                await initializeTask.Task.ContinueWith(async t =>
                 {
                     if (t.IsCompletedSuccessfully)
                     {
                         var artists =
-                            _libraryRepository.GetArtists(
+                           await _libraryRepository.GetArtists(
+                               userId: string.Empty,
                                 query.Search,
                                 offset: query.Offset,
                                 limit: query.Limit,
@@ -50,7 +51,8 @@ public sealed class GetLibraryArtistsQueryHandler : IQueryHandler<GetLibraryArti
 
         var tcs = new TaskCompletionSource<LibraryItems<SimpleArtistEntity>>();
         var artists =
-            _libraryRepository.GetArtists(
+            await _libraryRepository.GetArtists(
+                userId: string.Empty,
                 query.Search,
                 offset: query.Offset,
                 limit: query.Limit,

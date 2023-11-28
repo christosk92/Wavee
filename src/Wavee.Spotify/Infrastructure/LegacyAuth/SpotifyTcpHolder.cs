@@ -90,7 +90,7 @@ public sealed class SpotifyTcpHolder : IDisposable
                                     var part = ParsePart(ref data);
                                     if (!partials.TryGetValue(foundSeq, out var list))
                                     {
-                                        list = new List<byte[]>();
+                                        list = new List<ReadOnlyMemory<byte>>();
                                         partials.Add(foundSeq, list);
                                     }
                                     list.Add(part.ToArray());
@@ -98,7 +98,7 @@ public sealed class SpotifyTcpHolder : IDisposable
                                     if (flags != 1)
                                         continue;
                                     var appropriatePartials = partials[foundSeq];
-                                    var header = Header.Parser.ParseFrom(appropriatePartials[0]);
+                                    var header = Header.Parser.ParseFrom(appropriatePartials[0].Span);
                                     var bodyLength = appropriatePartials.Skip(1).Sum(x => x.Length);
                                     Memory<byte> body = new byte[bodyLength];
                                     var offset = 0;
@@ -110,7 +110,7 @@ public sealed class SpotifyTcpHolder : IDisposable
 
                                     if (connection.MercuryWaiters.TryGetValue(foundSeq, out var waiter))
                                     {
-                                        waiter.SetResult(body.ToArray());
+                                        waiter.SetResult(new GetMercuryResponse(header, body));
                                     }
                                 }
                                 break;
