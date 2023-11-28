@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Wavee.Domain.Playback.Player;
 using Wavee.Spotify.Application.AudioKeys;
 using Wavee.Spotify.Application.Authentication.Modules;
+using Wavee.Spotify.Application.Library;
 using Wavee.Spotify.Application.Remote;
 using Wavee.Spotify.Application.StorageResolve;
 using Wavee.Spotify.Application.Tracks;
@@ -48,6 +49,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ISpotifyAudioKeyClient, SpotifyAudioKeyClient>();
 
         services.AddScoped<ISpotifyStorageResolver, SpotifyStorageResolver>();
+
+        services.AddScoped<ISpotifyLibraryClient, SpotifyLibraryClient>();
         return new AuthMissingSpotifyBuilder(services);
     }
 

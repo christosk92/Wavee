@@ -1,5 +1,7 @@
+using Eum.Spotify;
 using Wavee.Domain.Playback.Player;
 using Wavee.Spotify.Application.AudioKeys;
+using Wavee.Spotify.Application.Library;
 using Wavee.Spotify.Application.StorageResolve;
 using Wavee.Spotify.Domain.State;
 using Wavee.Spotify.Domain.Tracks;
@@ -14,6 +16,8 @@ public interface ISpotifyClient
     ISpotifyTrackClient Tracks { get; }
     ISpotifyAudioKeyClient AudioKeys { get; }
     ISpotifyStorageResolver StorageResolver { get; }
+    ISpotifyLibraryClient Library { get; }
+    Task<APWelcome> User { get; }
     Task<Me> Initialize(CancellationToken cancellationToken = default);
     event EventHandler<SpotifyPlaybackState> PlaybackStateChanged;
 }
