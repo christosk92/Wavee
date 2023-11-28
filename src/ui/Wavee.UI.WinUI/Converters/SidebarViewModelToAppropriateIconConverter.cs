@@ -5,6 +5,7 @@ using Microsoft.UI.Xaml.Media;
 using Wavee.UI.Features.Library.ViewModels;
 using Wavee.UI.Features.Listen;
 using Wavee.UI.Features.NowPlaying.ViewModels;
+using Wavee.UI.Features.Library.ViewModels.Artist;
 
 namespace Wavee.UI.WinUI.Converters;
 internal sealed class SidebarViewModelToAppropriateIconConverter : IValueConverter

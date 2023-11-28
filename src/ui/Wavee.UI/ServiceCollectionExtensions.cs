@@ -5,6 +5,7 @@ using Wavee.Spotify;
 using Wavee.Spotify.Application.Authentication.Modules;
 using Wavee.UI.Features.Identity.ViewModels;
 using Wavee.UI.Features.Library.ViewModels;
+using Wavee.UI.Features.Library.ViewModels.Artist;
 using Wavee.UI.Features.Listen;
 using Wavee.UI.Features.MainWindow;
 using Wavee.UI.Features.NowPlaying.ViewModels;

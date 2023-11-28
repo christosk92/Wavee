@@ -1,6 +1,6 @@
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
-using Wavee.UI.Features.Library.ViewModels;
+using Wavee.UI.Features.Library.ViewModels.Artist;
 using Wavee.UI.WinUI.Contracts;
 
 namespace Wavee.UI.WinUI.Views.Libraries;
@@ -12,12 +12,13 @@ public sealed partial class ArtistLibraryPage : Page, INavigeablePage<LibraryArt
         this.InitializeComponent();
     }
 
-    protected override void OnNavigatedTo(NavigationEventArgs e)
+    protected override async void OnNavigatedTo(NavigationEventArgs e)
     {
         base.OnNavigatedTo(e);
         if (e.Parameter is LibraryArtistsViewModel vm)
         {
             DataContext = vm;
+            await vm.Initialize();
         }
     }
 

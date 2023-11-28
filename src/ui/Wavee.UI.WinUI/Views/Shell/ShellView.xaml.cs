@@ -1,6 +1,7 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Wavee.UI.Features.Library.ViewModels;
+using Wavee.UI.Features.Library.ViewModels.Artist;
 using Wavee.UI.Features.Listen;
 using Wavee.UI.Features.Navigation;
 using Wavee.UI.Features.Navigation.ViewModels;

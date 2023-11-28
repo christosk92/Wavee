@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<OutputType>WinExe</OutputType>
 		<TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
@@ -18,6 +18,7 @@
 	<ItemGroup>
 	  <None Remove="Styles\ButtonStyles.xaml" />
 	  <None Remove="Styles\NavigationView\ExtendedNavigationViewStyle.xaml" />
+	  <None Remove="Styles\TextBlockStyles.xaml" />
 	  <None Remove="Views\Identity\SignInView.xaml" />
 	  <None Remove="Views\Libraries\AlbumLibraryPage.xaml" />
 	  <None Remove="Views\Libraries\ArtistLibraryPage.xaml" />
@@ -40,6 +41,11 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<PackageReference Include="CommunityToolkit.WinUI.Controls.Segmented" Version="8.0.230907" />
+		<PackageReference Include="CommunityToolkit.WinUI.Controls.Sizers" Version="8.0.230907" />
+		<PackageReference Include="CommunityToolkit.WinUI.UI.Animations" Version="7.1.2" />
+		<PackageReference Include="CommunityToolkit.WinUI.UI.Controls.Primitives" Version="7.1.2" />
+		<PackageReference Include="CommunityToolkit.WinUI.UI.Media" Version="7.1.2" />
 		<PackageReference Include="CommunityToolkit.WinUI.UI" Version="7.1.2" />
 		<PackageReference Include="Mediator.SourceGenerator" Version="3.0.0-preview.11">
 			<PrivateAssets>all</PrivateAssets>
@@ -65,6 +71,9 @@
 	  <None Update="Assets\Fonts\MediaPlayerIcons.ttf">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </None>
+	  <Page Update="Styles\TextBlockStyles.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </Page>
 	  <Page Update="Views\Libraries\PodcastLibraryPage.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </Page>
