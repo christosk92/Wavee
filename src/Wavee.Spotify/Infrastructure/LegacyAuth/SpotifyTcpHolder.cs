@@ -93,25 +93,26 @@ public sealed class SpotifyTcpHolder : IDisposable
                                         list = new List<ReadOnlyMemory<byte>>();
                                         partials.Add(foundSeq, list);
                                     }
+
                                     list.Add(part.ToArray());
+                                }
 
-                                    if (flags != 1)
-                                        continue;
-                                    var appropriatePartials = partials[foundSeq];
-                                    var header = Header.Parser.ParseFrom(appropriatePartials[0].Span);
-                                    var bodyLength = appropriatePartials.Skip(1).Sum(x => x.Length);
-                                    Memory<byte> body = new byte[bodyLength];
-                                    var offset = 0;
-                                    foreach (var partpart in appropriatePartials.Skip(1))
-                                    {
-                                        partpart.CopyTo(body.Slice(offset));
-                                        offset += partpart.Length;
-                                    }
+                                if (flags != 1)
+                                    continue;
+                                var appropriatePartials = partials[foundSeq];
+                                var header = Header.Parser.ParseFrom(appropriatePartials[0].Span);
+                                var bodyLength = appropriatePartials.Skip(1).Sum(x => x.Length);
+                                Memory<byte> body = new byte[bodyLength];
+                                var offset = 0;
+                                foreach (var partpart in appropriatePartials.Skip(1))
+                                {
+                                    partpart.CopyTo(body.Slice(offset));
+                                    offset += partpart.Length;
+                                }
 
-                                    if (connection.MercuryWaiters.TryGetValue(foundSeq, out var waiter))
-                                    {
-                                        waiter.SetResult(new GetMercuryResponse(header, body));
-                                    }
+                                if (connection.MercuryWaiters.TryGetValue(foundSeq, out var waiter))
+                                {
+                                    waiter.SetResult(new GetMercuryResponse(header, body));
                                 }
                                 break;
                             }

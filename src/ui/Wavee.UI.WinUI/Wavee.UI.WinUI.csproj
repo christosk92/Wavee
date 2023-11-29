@@ -17,11 +17,13 @@
 	</ItemGroup>
 	<ItemGroup>
 	  <None Remove="Styles\ButtonStyles.xaml" />
+	  <None Remove="Styles\ItemContainerStyles.xaml" />
 	  <None Remove="Styles\NavigationView\ExtendedNavigationViewStyle.xaml" />
 	  <None Remove="Styles\TextBlockStyles.xaml" />
 	  <None Remove="Views\Identity\SignInView.xaml" />
 	  <None Remove="Views\Libraries\AlbumLibraryPage.xaml" />
 	  <None Remove="Views\Libraries\ArtistLibraryPage.xaml" />
+	  <None Remove="Views\Libraries\Components\SelectedLibraryArtistComponent.xaml" />
 	  <None Remove="Views\Libraries\PodcastLibraryPage.xaml" />
 	  <None Remove="Views\Libraries\SongLibraryPage.xaml" />
 	  <None Remove="Views\Listen\ListenPage.xaml" />
@@ -71,6 +73,12 @@
 	  <None Update="Assets\Fonts\MediaPlayerIcons.ttf">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </None>
+	  <Page Update="Styles\ItemContainerStyles.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </Page>
+	  <Page Update="Views\Libraries\Components\SelectedLibraryArtistComponent.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </Page>
 	  <Page Update="Styles\TextBlockStyles.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </Page>

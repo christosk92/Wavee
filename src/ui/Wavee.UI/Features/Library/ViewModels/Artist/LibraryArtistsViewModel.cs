@@ -1,8 +1,9 @@
 ﻿using System.Collections.ObjectModel;
 using Mediator;
 using Wavee.Spotify.Common;
+using Wavee.Spotify.Domain.Common;
+using Wavee.UI.Domain.Library;
 using Wavee.UI.Entities.Artist;
-using Wavee.UI.Entities.Library;
 using Wavee.UI.Features.Library.Queries;
 using Wavee.UI.Features.Navigation.ViewModels;
 
@@ -17,8 +18,8 @@ public sealed class LibraryArtistsViewModel : NavigationItemViewModel
     private SortDirection _sortDirection;
     private string _sortField;
     private int _offset;
-    private const int Count = 20;
     private int _total;
+    private LibraryArtistViewModel? _selectedArtist;
 
     public LibraryArtistsViewModel(IMediator mediator)
     {
@@ -58,32 +59,27 @@ public sealed class LibraryArtistsViewModel : NavigationItemViewModel
         private set => SetProperty(ref _total, value);
     }
 
+    public LibraryArtistViewModel? SelectedArtist
+    {
+        get => _selectedArtist;
+        set => SetProperty(ref _selectedArtist, value);
+    }
 
 
     public async Task Initialize()
     {
         try
         {
+            Artists.Clear();
             var library = await _mediator.Send(new GetLibraryArtistsQuery()
             {
-                Offset = _offset,
-                Limit = Count,
+                Offset = 0,
+                Limit = 50,
                 Search = _query,
                 SortDirection = _sortDirection,
                 SortField = _sortField
             });
-            if (!library.Task.IsCompleted)
-            {
-                IsLoading = true;
-                var result = await library.Task;
-                HandleResult(result);
-                IsLoading = false;
-            }
-            else
-            {
-                var result = await library.Task;
-                HandleResult(result);
-            }
+            HandleResult(library);
         }
         catch (Exception e)
         {
@@ -93,7 +89,22 @@ public sealed class LibraryArtistsViewModel : NavigationItemViewModel
 
     private void HandleResult(LibraryItems<SimpleArtistEntity> artistsResult)
     {
-
+        foreach (var artist in artistsResult.Items)
+        {
+            var bigImage = artist.Item.Images.MaxBy(z => z.Height ?? 0);
+            var smallestImage = artist.Item.Images.MinBy(z => z.Height ?? 0);
+            var mediumImage = artist.Item.Images.OrderBy(z => z.Height ?? 0).Skip(1).FirstOrDefault();
+            Artists.Add(new LibraryArtistViewModel
+            {
+                Name = artist.Item.Name,
+                Id = artist.Item.Id,
+                BigImageUrl = bigImage.Url,
+                MediumImageUrl = mediumImage.Url,
+                SmallImageUrl = smallestImage.Url,
+                AddedAt = artist.AddedAt
+            });
+        }
+        Total = artistsResult.Total;
     }
 
     private void HandleError(Exception exception)

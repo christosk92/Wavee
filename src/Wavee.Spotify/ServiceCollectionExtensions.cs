@@ -68,7 +68,7 @@ public static class ServiceCollectionExtensions
     {
         services.AddHttpClient(Constants.SpotifyPartnerApiHttpClient, client =>
         {
-            client.BaseAddress = new Uri("https://partner.api.spotify.com/v1/");
+            client.BaseAddress = new Uri("https://api-partner.spotify.com/pathfinder/v1/");
             client.DefaultRequestHeaders.Add("Accept", "application/json");
         }).AddHttpMessageHandler<SpotifyTokenMessageHandler>();
     }

@@ -28,4 +28,14 @@ public sealed partial class ArtistLibraryPage : Page, INavigeablePage<LibraryArt
     }
 
     public LibraryArtistsViewModel ViewModel => DataContext is LibraryArtistsViewModel vm ? vm : null;
+
+    private void ItemsView_OnSelectionChanged(ItemsView sender, ItemsViewSelectionChangedEventArgs args)
+    {
+        var vm = ViewModel;
+        var selected = sender.SelectedItem;
+        if (selected is LibraryArtistViewModel v)
+        {
+            vm.SelectedArtist = v;
+        }
+    }
 }

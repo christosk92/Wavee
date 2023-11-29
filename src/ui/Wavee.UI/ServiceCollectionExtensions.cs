@@ -4,7 +4,6 @@ using Wavee.Players.NAudio;
 using Wavee.Spotify;
 using Wavee.Spotify.Application.Authentication.Modules;
 using Wavee.UI.Features.Identity.ViewModels;
-using Wavee.UI.Features.Library.DataAcces;
 using Wavee.UI.Features.Library.ViewModels;
 using Wavee.UI.Features.Library.ViewModels.Artist;
 using Wavee.UI.Features.Listen;
@@ -38,8 +37,8 @@ public static class ServiceCollectionExtensions
             }
         })
             .WithStoredOrOAuthModule(openBrowser)
-            .WithPlayer<NAudioPlayer>()
-            .AddScoped<ILibraryRepository, LibraryRepository>();
+            .WithPlayer<NAudioPlayer>();
+        //     .AddScoped<ILibraryRepository, LibraryRepository>();
     }
 
     public static IServiceCollection AddViewModels(this IServiceCollection collection)

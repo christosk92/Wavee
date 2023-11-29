@@ -1,64 +1,52 @@
 ﻿using Mediator;
+using Wavee.Spotify.Common.Contracts;
+using Wavee.Spotify.Domain.Common;
+using Wavee.Spotify.Domain.Library;
+using Wavee.UI.Domain.Library;
 using Wavee.UI.Entities.Artist;
-using Wavee.UI.Features.Library.Commands;
-using Wavee.UI.Features.Library.DataAcces;
 using Wavee.UI.Features.Library.Queries;
+using Wavee.UI.Features.Library.ViewModels.Artist;
 
 namespace Wavee.UI.Features.Library.QueryHandlers;
 
-public sealed class GetLibraryArtistsQueryHandler : IQueryHandler<GetLibraryArtistsQuery, TaskCompletionSource<LibraryItems<SimpleArtistEntity>>>
+public sealed class GetLibraryArtistsQueryHandler : IQueryHandler<GetLibraryArtistsQuery, LibraryItems<SimpleArtistEntity>>
 {
     private readonly IMediator _mediator;
-    private readonly ILibraryRepository _libraryRepository;
+    private readonly ISpotifyClient _spotifyClient;
 
-    public GetLibraryArtistsQueryHandler(IMediator mediator, ILibraryRepository libraryRepository)
+    public GetLibraryArtistsQueryHandler(IMediator mediator, ISpotifyClient spotifyClient)
     {
         _mediator = mediator;
-        _libraryRepository = libraryRepository;
+        _spotifyClient = spotifyClient;
     }
 
-    public async ValueTask<TaskCompletionSource<LibraryItems<SimpleArtistEntity>>> Handle(GetLibraryArtistsQuery query, CancellationToken cancellationToken)
+    public async ValueTask<LibraryItems<SimpleArtistEntity>> Handle(GetLibraryArtistsQuery query, CancellationToken cancellationToken)
     {
-        var initializeTask = await _mediator.Send(new InitializeLibraryCommand());
-        if (!initializeTask.Task.IsCompleted)
-        {
-            var cts = new TaskCompletionSource<LibraryItems<SimpleArtistEntity>>();
-            _ = Task.Run(async () =>
+        var libraryItems = await _spotifyClient.Library.GetArtists(
+            query: query.Search,
+            order: query.SortField switch
             {
-                await initializeTask.Task.ContinueWith(async t =>
+                nameof(LibraryItem<SimpleArtistEntity>.AddedAt) => SpotifyArtistLibrarySortField.RecentlyAdded,
+            },
+            direction: query.SortDirection,
+            offset: query.Offset,
+            limit: query.Limit,
+            cancellationToken: cancellationToken);
+
+        return new LibraryItems<SimpleArtistEntity>
+        {
+            Items = libraryItems.Items.Select(x=> new LibraryItem<SimpleArtistEntity>
+            {
+                Item = new SimpleArtistEntity
                 {
-                    if (t.IsCompletedSuccessfully)
-                    {
-                        var artists =
-                           await _libraryRepository.GetArtists(
-                               userId: string.Empty,
-                                query.Search,
-                                offset: query.Offset,
-                                limit: query.Limit,
-                                sortField: query.SortField,
-                                sortDirection: query.SortDirection);
-                        cts.SetResult(artists);
-                    }
-                    else
-                    {
-                        cts.SetException(t.Exception);
-                    }
-                });
-            }, cancellationToken);
+                    Id = x.Item.Id.ToBase62(),
+                    Name = x.Item.Name,
+                    Images = x.Item.Images
+                },
+                AddedAt = x.AddedAt,
+            }).ToArray(),
+            Total = libraryItems.Total
+        };
 
-            return cts;
-        }
-
-        var tcs = new TaskCompletionSource<LibraryItems<SimpleArtistEntity>>();
-        var artists =
-            await _libraryRepository.GetArtists(
-                userId: string.Empty,
-                query.Search,
-                offset: query.Offset,
-                limit: query.Limit,
-                sortField: query.SortField,
-                sortDirection: query.SortDirection);
-        tcs.SetResult(artists);
-        return tcs;
     }
 }

@@ -18,9 +18,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Domain\Common\" />
     <Folder Include="Features\Library\CommandHandlers\" />
     <Folder Include="Features\Library\Commands\" />
+    <Folder Include="Domain\" />
   </ItemGroup>
 
 </Project>

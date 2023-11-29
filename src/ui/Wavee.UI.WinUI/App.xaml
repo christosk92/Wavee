@@ -20,6 +20,7 @@
                 <ResourceDictionary Source="/Styles/NavigationView/ExtendedNavigationViewStyle.xaml" />
                 <ResourceDictionary Source="/Styles/ButtonStyles.xaml" />
                 <ResourceDictionary Source="/Styles/TextBlockStyles.xaml" />
+                <ResourceDictionary Source="/Styles/ItemContainerStyles.xaml" />
             </ResourceDictionary.MergedDictionaries>
 
             <FontFamily x:Key="MediaPlayerIcons">/Assets/Fonts/MediaPlayerIcons.ttf#Media Player Fluent Icons</FontFamily>

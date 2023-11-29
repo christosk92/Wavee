@@ -1,4 +1,4 @@
-﻿namespace Wavee.UI.Entities.Library;
+﻿namespace Wavee.UI.Domain.Library;
 
 public sealed class LibraryItem<T> 
 {
