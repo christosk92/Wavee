@@ -3,6 +3,8 @@ using Eum.Spotify.connectstate;
 using Mediator;
 using NeoSmart.AsyncLock;
 using Wavee.Domain.Playback.Player;
+using Wavee.Spotify.Application.Album;
+using Wavee.Spotify.Application.Artist;
 using Wavee.Spotify.Application.AudioKeys;
 using Wavee.Spotify.Application.Library;
 using Wavee.Spotify.Application.Remote;
@@ -32,7 +34,7 @@ internal sealed class SpotifyClient : ISpotifyClient
         ISpotifyTrackClient tracks, 
         ISpotifyAudioKeyClient audioKeys, 
         ISpotifyStorageResolver storageResolver,
-        SpotifyTcpHolder tcpHolder, ISpotifyLibraryClient library)
+        SpotifyTcpHolder tcpHolder, ISpotifyLibraryClient library, ISpotifyArtistClient artist, ISpotifyAlbumClient album)
     {
         _spotifyRemoteHolder = spotifyRemoteHolder;
         _mediator = mediator;
@@ -43,6 +45,8 @@ internal sealed class SpotifyClient : ISpotifyClient
         StorageResolver = storageResolver;
         _tcpHolder = tcpHolder;
         Library = library;
+        Artist = artist;
+        Album = album;
         _playbackState = SpotifyPlaybackState.InActive();
         _spotifyRemoteHolder.RemoteStateChanged += OnRemoteStateChanged;
     }
@@ -56,6 +60,8 @@ internal sealed class SpotifyClient : ISpotifyClient
     public ISpotifyAudioKeyClient AudioKeys { get; }
     public ISpotifyStorageResolver StorageResolver { get; }
     public ISpotifyLibraryClient Library { get; }
+    public ISpotifyArtistClient Artist { get; }
+    public ISpotifyAlbumClient Album { get; set; }
     public Task<APWelcome> User => _tcpHolder.WelcomeMessage;
 
     public async Task<Me> Initialize(CancellationToken cancellationToken = default)

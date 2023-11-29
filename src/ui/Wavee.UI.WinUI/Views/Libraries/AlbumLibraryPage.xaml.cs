@@ -1,6 +1,6 @@
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
-using Wavee.UI.Features.Library.ViewModels;
+using Wavee.UI.Features.Library.ViewModels.Album;
 using Wavee.UI.WinUI.Contracts;
 
 namespace Wavee.UI.WinUI.Views.Libraries;

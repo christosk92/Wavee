@@ -1,6 +1,7 @@
 ﻿using System;
 using Microsoft.UI.Xaml.Data;
 using Wavee.UI.Features.Library.ViewModels;
+using Wavee.UI.Features.Library.ViewModels.Album;
 using Wavee.UI.Features.Library.ViewModels.Artist;
 using Wavee.UI.Features.Listen;
 using Wavee.UI.Features.NowPlaying.ViewModels;

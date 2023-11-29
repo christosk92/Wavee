@@ -4,6 +4,8 @@ using Wavee.Spotify.Common;
 using Wavee.Spotify.Domain.Common;
 using Wavee.UI.Domain.Library;
 using Wavee.UI.Entities.Artist;
+using Wavee.UI.Features.Album.ViewModels;
+using Wavee.UI.Features.Artist.Queries;
 using Wavee.UI.Features.Library.Queries;
 using Wavee.UI.Features.Navigation.ViewModels;
 
@@ -20,6 +22,7 @@ public sealed class LibraryArtistsViewModel : NavigationItemViewModel
     private int _offset;
     private int _total;
     private LibraryArtistViewModel? _selectedArtist;
+
 
     public LibraryArtistsViewModel(IMediator mediator)
     {
@@ -101,7 +104,8 @@ public sealed class LibraryArtistsViewModel : NavigationItemViewModel
                 BigImageUrl = bigImage.Url,
                 MediumImageUrl = mediumImage.Url,
                 SmallImageUrl = smallestImage.Url,
-                AddedAt = artist.AddedAt
+                AddedAt = artist.AddedAt,
+                TotalAlbums = null
             });
         }
         Total = artistsResult.Total;
@@ -110,5 +114,40 @@ public sealed class LibraryArtistsViewModel : NavigationItemViewModel
     private void HandleError(Exception exception)
     {
 
+    }
+
+    public async Task FetchArtistAlbums(LibraryArtistViewModel artist,
+        int offset, int limit, CancellationToken cancellationToken)
+    {
+        var results = await _mediator.Send(new GetAlbumsForArtistQuery
+        {
+            Id = artist.Id,
+            Offset = (uint)offset,
+            Limit = (uint)limit,
+        }, cancellationToken);
+
+        artist.TotalAlbums = results.Total;
+        foreach (var album in results.Albums)
+        {
+            var bigImage = album.Images.MaxBy(z => z.Height ?? 0);
+            //   var smallestImage = album.Images.MinBy(z => z.Height ?? 0);
+            // var mediumImage = album.Images.OrderBy(z => z.Height ?? 0).Skip(1).FirstOrDefault();
+            artist.Albums.Add(new AlbumViewModel
+            {
+                Name = album.Name,
+                Id = album.Id,
+                BigImageUrl = bigImage.Url,
+                TotalSongs = (uint)album.Tracks.Length,
+                Duration = TimeSpan.FromMilliseconds(album.Tracks.Sum(x => x.Duration.TotalMilliseconds)),
+                Year = album.Year,
+                Type = album.Type,
+                Tracks = album.Tracks.Select(x => new AlbumTrackViewModel
+                {
+                    Id = x.Id,
+                    Name = x.Name,
+                    Duration = x.Duration
+                }).ToArray(),
+            });
+        }
     }
 }

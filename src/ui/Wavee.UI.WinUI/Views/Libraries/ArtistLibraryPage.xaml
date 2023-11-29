@@ -60,7 +60,7 @@
             HorizontalAlignment="Left"
             Fill="{ThemeResource CardStrokeColorDefaultBrush}" />
         <Grid Grid.Column="1" Margin="28,18,0,0">
-            <components:SelectedLibraryArtistComponent SelectedArtist="{x:Bind ViewModel.SelectedArtist, Mode=OneWay}" />
+            <components:SelectedLibraryArtistComponent DataContext="{x:Bind ViewModel}" SelectedArtist="{x:Bind ViewModel.SelectedArtist, Mode=OneWay}" />
         </Grid>
     </Grid>
 </Page>

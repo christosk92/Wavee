@@ -17,6 +17,16 @@
                         Background="{TemplateBinding Background}"
                         CornerRadius="{TemplateBinding CornerRadius}">
                         <!--  Placeholder for child  -->
+                        <Rectangle
+                            x:Name="PART_CommonVisual"
+                            HorizontalAlignment="Stretch"
+                            VerticalAlignment="Stretch"
+                            Fill="{ThemeResource ItemContainerBackground}"
+                            IsHitTestVisible="False"
+                            RadiusX="{Binding CornerRadius, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource TopLeftCornerRadiusDoubleValueConverter}}"
+                            RadiusY="{Binding CornerRadius, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource BottomRightCornerRadiusDoubleValueConverter}}"
+                            Stroke="{ThemeResource ItemContainerBorderBrush}"
+                            StrokeThickness="{ThemeResource ItemContainerSelectedInnerThickness}" />
                         <Grid
                             x:Name="PART_SelectionVisual"
                             Width="4"
@@ -31,16 +41,6 @@
                             CornerRadius="1"
                             IsHitTestVisible="False"
                             Opacity="0" />
-                        <Rectangle
-                            x:Name="PART_CommonVisual"
-                            HorizontalAlignment="Stretch"
-                            VerticalAlignment="Stretch"
-                            Fill="{ThemeResource ItemContainerBackground}"
-                            IsHitTestVisible="False"
-                            RadiusX="{Binding CornerRadius, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource TopLeftCornerRadiusDoubleValueConverter}}"
-                            RadiusY="{Binding CornerRadius, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource BottomRightCornerRadiusDoubleValueConverter}}"
-                            Stroke="{ThemeResource ItemContainerBorderBrush}"
-                            StrokeThickness="{ThemeResource ItemContainerSelectedInnerThickness}" />
                         <CheckBox
                             x:Name="PART_SelectionCheckbox"
                             x:DeferLoadStrategy="Lazy"
@@ -84,6 +84,7 @@
                                             Storyboard.TargetProperty="Opacity"
                                             To="1"
                                             Duration="00:00:00.167" />
+
                                         <ObjectAnimationUsingKeyFrames Storyboard.TargetName="PART_SelectionVisual" Storyboard.TargetProperty="BorderBrush">
                                             <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource ItemContainerSelectionVisualBackground}" />
                                         </ObjectAnimationUsingKeyFrames>
@@ -91,7 +92,7 @@
                                             <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource ItemContainerSelectionVisualBackground}" />
                                         </ObjectAnimationUsingKeyFrames>
                                         <ObjectAnimationUsingKeyFrames Storyboard.TargetName="PART_CommonVisual" Storyboard.TargetProperty="Fill">
-                                            <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource ItemContainerSelectedBackground}" />
+                                            <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource ItemContainerPointerOverBackground}" />
                                         </ObjectAnimationUsingKeyFrames>
                                         <ObjectAnimationUsingKeyFrames Storyboard.TargetName="PART_CommonVisual" Storyboard.TargetProperty="Stroke">
                                             <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource ItemContainerSelectedInnerBorderBrush}" />

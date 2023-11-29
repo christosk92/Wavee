@@ -35,11 +35,11 @@ public sealed class GetLibraryArtistsQueryHandler : IQueryHandler<GetLibraryArti
 
         return new LibraryItems<SimpleArtistEntity>
         {
-            Items = libraryItems.Items.Select(x=> new LibraryItem<SimpleArtistEntity>
+            Items = libraryItems.Items.Select(x => new LibraryItem<SimpleArtistEntity>
             {
                 Item = new SimpleArtistEntity
                 {
-                    Id = x.Item.Id.ToBase62(),
+                    Id = x.Item.Id.ToString(),
                     Name = x.Item.Name,
                     Images = x.Item.Images
                 },

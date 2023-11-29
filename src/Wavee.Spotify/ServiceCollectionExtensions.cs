@@ -3,6 +3,8 @@ using LiteDB;
 using Mediator;
 using Microsoft.Extensions.DependencyInjection;
 using Wavee.Domain.Playback.Player;
+using Wavee.Spotify.Application.Album;
+using Wavee.Spotify.Application.Artist;
 using Wavee.Spotify.Application.AudioKeys;
 using Wavee.Spotify.Application.Authentication.Modules;
 using Wavee.Spotify.Application.Library;
@@ -51,6 +53,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ISpotifyStorageResolver, SpotifyStorageResolver>();
 
         services.AddScoped<ISpotifyLibraryClient, SpotifyLibraryClient>();
+        services.AddScoped<ISpotifyArtistClient, SpotifyArtistClient>();
+        services.AddScoped<ISpotifyAlbumClient, SpotifyAlbumClient>();
         return new AuthMissingSpotifyBuilder(services);
     }
 
