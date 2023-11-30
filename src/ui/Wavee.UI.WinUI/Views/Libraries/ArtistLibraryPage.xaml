@@ -56,17 +56,20 @@
                 <AutoSuggestBox
                     x:Name="NameFilterBox"
                     PlaceholderText="Filter"
-                    QueryIcon="Find" />
+                    QueryIcon="Find"
+                    TextChanged="NameFilterBox_OnTextChanged" />
                 <ComboBox
                     Grid.Column="1"
                     Margin="8,0,0,0"
                     ItemTemplateSelector="{StaticResource ComboBoxItemTemplateSelector}"
                     ItemsSource="{x:Bind ViewModel.SortFields, Mode=OneWay}"
-                    SelectedItem="{x:Bind ViewModel.SortField, Mode=TwoWay}" />
+                    SelectedItem="{x:Bind ViewModel.SortField, Mode=TwoWay}"
+                    SelectionChanged="SortFieldSelectionChanged" />
             </Grid>
             <ItemsView
                 Grid.Row="1"
                 ItemsSource="{x:Bind ViewModel.Artists}"
+                Loaded="ArtistsItemsViewLoaded"
                 SelectionChanged="ItemsView_OnSelectionChanged"
                 SelectionMode="Single">
                 <ItemsView.ItemTemplate>
@@ -93,7 +96,6 @@
                     </DataTemplate>
                 </ItemsView.ItemTemplate>
             </ItemsView>
-
         </Grid>
         <controls1:GridSplitter
             Grid.Column="1"
@@ -109,7 +111,7 @@
             </controls1:GridSplitter.RenderTransform>
         </controls1:GridSplitter>
         <Grid Grid.Column="1" Margin="28,18,0,0">
-            <Frame x:Name="ArtistsFrame" />
+            <components:SelectedLibraryArtistComponent x:Name="ArtistFrame" SelectedArtist="{x:Bind ViewModel.SelectedArtist, Mode=OneWay}" />
         </Grid>
     </Grid>
 </Page>

@@ -10,10 +10,22 @@ using Wavee.UI.Features.Library.ViewModels.Artist;
 
 namespace Wavee.UI.WinUI.Views.Libraries.Components
 {
-    public sealed partial class SelectedLibraryArtistComponent : Page
+    public sealed partial class SelectedLibraryArtistComponent : UserControl
     {
 
-        public static readonly DependencyProperty SelectedArtistProperty = DependencyProperty.Register(nameof(SelectedArtist), typeof(LibraryArtistViewModel), typeof(SelectedLibraryArtistComponent), new PropertyMetadata(default(LibraryArtistViewModel)));
+        public static readonly DependencyProperty SelectedArtistProperty = DependencyProperty.Register(nameof(SelectedArtist), typeof(LibraryArtistViewModel), typeof(SelectedLibraryArtistComponent), new PropertyMetadata(default(LibraryArtistViewModel), ArtistChanged));
+
+        private static async void ArtistChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (e.NewValue is LibraryArtistViewModel vm)
+            {
+                await vm.FetchArtistAlbums(
+                    offset: 0,
+                    limit: limit,
+                    CancellationToken.None);
+            }
+        }
+
         private readonly AsyncLock _lock = new AsyncLock();
 
         public SelectedLibraryArtistComponent()
@@ -21,18 +33,18 @@ namespace Wavee.UI.WinUI.Views.Libraries.Components
             this.InitializeComponent();
         }
 
-        protected override async void OnNavigatedTo(NavigationEventArgs e)
-        {
-            base.OnNavigatedTo(e);
-            if (e.Parameter is LibraryArtistViewModel vm)
-            {
-                SelectedArtist = vm;
-                await vm.FetchArtistAlbums(
-                    offset: 0,
-                    limit: limit,
-                    CancellationToken.None);
-            }
-        }
+        // protected override async void OnNavigatedTo(NavigationEventArgs e)
+        // {
+        //     base.OnNavigatedTo(e);
+        //     if (e.Parameter is LibraryArtistViewModel vm)
+        //     {
+        //         SelectedArtist = vm;
+        //         await vm.FetchArtistAlbums(
+        //             offset: 0,
+        //             limit: limit,
+        //             CancellationToken.None);
+        //     }
+        // }
 
         public LibraryArtistViewModel SelectedArtist
         {

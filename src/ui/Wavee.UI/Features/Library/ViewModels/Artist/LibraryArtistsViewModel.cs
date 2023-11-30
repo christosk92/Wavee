@@ -18,7 +18,6 @@ public sealed class LibraryArtistsViewModel : NavigationItemViewModel
     private string? _query;
     private bool _isLoading;
     private string _sortField;
-    private int _offset;
     private int _total;
     private LibraryArtistViewModel? _selectedArtist;
 
@@ -43,16 +42,11 @@ public sealed class LibraryArtistsViewModel : NavigationItemViewModel
         private set => SetProperty(ref _isLoading, value);
     }
 
-    public int Offset
-    {
-        get => _offset;
-        private set => SetProperty(ref _offset, value);
-    }
 
     public string? Query
     {
         get => _query;
-        private set => SetProperty(ref _query, value);
+        set => SetProperty(ref _query, value);
     }
 
     public int Total
@@ -83,10 +77,29 @@ public sealed class LibraryArtistsViewModel : NavigationItemViewModel
             var library = await _mediator.Send(new GetLibraryArtistsQuery()
             {
                 Offset = 0,
-                Limit = 50,
+                Limit = 20,
                 Search = _query,
                 SortField = _sortField
             });
+            HandleResult(library);
+        }
+        catch (Exception e)
+        {
+            HandleError(e);
+        }
+    }
+
+    public async Task FetchPage(int offset, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var library = await _mediator.Send(new GetLibraryArtistsQuery()
+            {
+                Offset = offset,
+                Limit = 20,
+                Search = _query,
+                SortField = _sortField
+            }, cancellationToken);
             HandleResult(library);
         }
         catch (Exception e)

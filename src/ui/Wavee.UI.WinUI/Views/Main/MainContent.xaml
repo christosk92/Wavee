@@ -18,7 +18,7 @@
 
         <shell:ShellView
             x:Name="ShellView"
-            Visibility="{x:Bind IsNotNullThenVisible(ViewModel.Identity.User), Mode=OneWay}"
-            DataContext="{x:Bind ViewModel.Shell, Mode=OneWay}" />
+            DataContext="{x:Bind ViewModel.Shell, Mode=OneWay}"
+            Visibility="{x:Bind IsNotNullThenVisible(ViewModel.Identity.User), Mode=OneWay}" />
     </Grid>
 </UserControl>
