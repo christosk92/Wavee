@@ -16,6 +16,9 @@
 	  <Content Remove="Assets\Fonts\MediaPlayerIcons.ttf" />
 	</ItemGroup>
 	<ItemGroup>
+		<PublishReadyToRunExclude Include="LanguageExt.Core.dll" />
+	</ItemGroup>
+	<ItemGroup>
 	  <None Remove="Styles\ButtonStyles.xaml" />
 	  <None Remove="Styles\ItemContainerStyles.xaml" />
 	  <None Remove="Styles\NavigationView\ExtendedNavigationViewStyle.xaml" />
@@ -117,6 +120,7 @@
 	  </Page>
 	</ItemGroup>
 	<ItemGroup>
+	  <Folder Include="Controls\" />
 	  <Folder Include="Themes\" />
 	</ItemGroup>
 

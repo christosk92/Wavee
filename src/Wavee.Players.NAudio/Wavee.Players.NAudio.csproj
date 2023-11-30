@@ -10,7 +10,9 @@
     <ItemGroup>
         <ProjectReference Include="..\Wavee\Wavee.csproj" />
     </ItemGroup>
-
+	<ItemGroup>
+		<PublishReadyToRunExclude Include="LanguageExt.Core.dll" />
+	</ItemGroup>
     <ItemGroup>
         <PackageReference Include="NAudio" Version="2.2.1" />
         <PackageReference Include="NeoSmart.AsyncLock" Version="3.2.1" />

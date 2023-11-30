@@ -17,7 +17,6 @@ public sealed class LibraryArtistsViewModel : NavigationItemViewModel
 
     private string? _query;
     private bool _isLoading;
-    private SortDirection _sortDirection;
     private string _sortField;
     private int _offset;
     private int _total;
@@ -28,7 +27,13 @@ public sealed class LibraryArtistsViewModel : NavigationItemViewModel
     {
         _mediator = mediator;
         _sortField = nameof(LibraryItem<SimpleArtistEntity>.AddedAt);
-        _sortDirection = SortDirection.Descending;
+
+        SortFields = new[]
+        {
+            nameof(LibraryItem<SimpleArtistEntity>.AddedAt),
+            nameof(LibraryItem<SimpleArtistEntity>.Item.Name),
+            "Recents"
+        };
     }
     public ObservableCollection<LibraryArtistViewModel> Artists { get; } = new();
 
@@ -42,12 +47,6 @@ public sealed class LibraryArtistsViewModel : NavigationItemViewModel
     {
         get => _offset;
         private set => SetProperty(ref _offset, value);
-    }
-
-    public SortDirection SortDirection
-    {
-        get => _sortDirection;
-        private set => SetProperty(ref _sortDirection, value);
     }
 
     public string? Query
@@ -68,6 +67,13 @@ public sealed class LibraryArtistsViewModel : NavigationItemViewModel
         set => SetProperty(ref _selectedArtist, value);
     }
 
+    public string SortField
+    {
+        get => _sortField;
+        set => SetProperty(ref _sortField, value);
+    }
+
+    public IReadOnlyCollection<string> SortFields { get; }
 
     public async Task Initialize()
     {
@@ -79,7 +85,6 @@ public sealed class LibraryArtistsViewModel : NavigationItemViewModel
                 Offset = 0,
                 Limit = 50,
                 Search = _query,
-                SortDirection = _sortDirection,
                 SortField = _sortField
             });
             HandleResult(library);
@@ -97,7 +102,7 @@ public sealed class LibraryArtistsViewModel : NavigationItemViewModel
             var bigImage = artist.Item.Images.MaxBy(z => z.Height ?? 0);
             var smallestImage = artist.Item.Images.MinBy(z => z.Height ?? 0);
             var mediumImage = artist.Item.Images.OrderBy(z => z.Height ?? 0).Skip(1).FirstOrDefault();
-            Artists.Add(new LibraryArtistViewModel
+            var vm = new LibraryArtistViewModel
             {
                 Name = artist.Item.Name,
                 Id = artist.Item.Id,
@@ -106,7 +111,9 @@ public sealed class LibraryArtistsViewModel : NavigationItemViewModel
                 SmallImageUrl = smallestImage.Url,
                 AddedAt = artist.AddedAt,
                 TotalAlbums = null
-            });
+            };
+            vm.FetchArtistAlbumsFunc = (i, i1, arg3) => FetchArtistAlbums(vm, i, i1, arg3);
+            Artists.Add(vm);
         }
         Total = artistsResult.Total;
     }
@@ -131,7 +138,7 @@ public sealed class LibraryArtistsViewModel : NavigationItemViewModel
         {
             var bigImage = album.Images.MaxBy(z => z.Height ?? 0);
             //   var smallestImage = album.Images.MinBy(z => z.Height ?? 0);
-            // var mediumImage = album.Images.OrderBy(z => z.Height ?? 0).Skip(1).FirstOrDefault();
+            var mediumImage = album.Images.OrderBy(z => z.Height ?? 0).Skip(1).FirstOrDefault();
             artist.Albums.Add(new AlbumViewModel
             {
                 Name = album.Name,
@@ -141,12 +148,15 @@ public sealed class LibraryArtistsViewModel : NavigationItemViewModel
                 Duration = TimeSpan.FromMilliseconds(album.Tracks.Sum(x => x.Duration.TotalMilliseconds)),
                 Year = album.Year,
                 Type = album.Type,
-                Tracks = album.Tracks.Select(x => new AlbumTrackViewModel
+                Tracks = album.Tracks.Select((x, i) => new AlbumTrackViewModel
                 {
                     Id = x.Id,
                     Name = x.Name,
-                    Duration = x.Duration
-                }).ToArray(),
+                    Duration = x.Duration,
+                    Number = i + 1,
+                })
+                    .ToArray(),
+                MediumImageUrl = mediumImage.Url,
             });
         }
     }

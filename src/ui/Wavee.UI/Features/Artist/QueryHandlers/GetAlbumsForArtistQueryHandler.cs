@@ -21,7 +21,7 @@ public sealed class GetAlbumsForArtistQueryHandler : IQueryHandler<GetAlbumsForA
     public async ValueTask<ArtistAlbumsResult> Handle(GetAlbumsForArtistQuery query, CancellationToken cancellationToken)
     {
         // Step 1. Fetch albums
-        var (albums, total) = await _spotifyClient.Artist.GetDiscographyAllAsync(SpotifyId.FromUri(query.Id), 
+        var (albums, total) = await _spotifyClient.Artist.GetDiscographyAllAsync(SpotifyId.FromUri(query.Id),
             offset: query.Offset,
             limit: query.Limit,
             cancellationToken);
@@ -54,12 +54,15 @@ public sealed class GetAlbumsForArtistQueryHandler : IQueryHandler<GetAlbumsForA
 
     private async Task<IReadOnlyDictionary<SpotifyId, IReadOnlyCollection<SpotifyAlbumTrack>>> GetTracksForAlbums(IEnumerable<SpotifyId> select, CancellationToken cancellationToken)
     {
-        var tracks = new Dictionary<SpotifyId, IReadOnlyCollection<SpotifyAlbumTrack>>();
-        foreach (var album in select)
-        {
-            var albumTracks = await _spotifyClient.Album.GetTracks(album, cancellationToken);
-            tracks.Add(album, albumTracks);
-        }
-        return tracks;
+        //var tracks = new Dictionary<SpotifyId, IReadOnlyCollection<SpotifyAlbumTrack>>();
+        var tracks = select.ToDictionary(x => x,
+            x => Task.Run(async () => await _spotifyClient.Album.GetTracks(x, cancellationToken), cancellationToken));
+        await Task.WhenAll(tracks.Values);
+        // foreach (var album in select)
+        // {
+        //     var albumTracks = await _spotifyClient.Album.GetTracks(album, cancellationToken);
+        //     tracks.Add(album, albumTracks);
+        // }
+        return tracks.ToDictionary(x => x.Key, x => x.Value.Result);
     }
 }

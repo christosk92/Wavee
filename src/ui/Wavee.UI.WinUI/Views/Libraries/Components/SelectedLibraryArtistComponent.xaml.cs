@@ -3,80 +3,35 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Navigation;
 using NeoSmart.AsyncLock;
 using Wavee.UI.Features.Library.ViewModels.Artist;
 
 
 namespace Wavee.UI.WinUI.Views.Libraries.Components
 {
-    public sealed partial class SelectedLibraryArtistComponent : UserControl
+    public sealed partial class SelectedLibraryArtistComponent : Page
     {
-        private static AsyncLock _lock = new();
-        private static CancellationTokenSource _cts;
 
-        public static readonly DependencyProperty SelectedArtistProperty = DependencyProperty.Register(nameof(SelectedArtist), typeof(LibraryArtistViewModel), typeof(SelectedLibraryArtistComponent), new PropertyMetadata(default(LibraryArtistViewModel), PropertyChangedCallback));
+        public static readonly DependencyProperty SelectedArtistProperty = DependencyProperty.Register(nameof(SelectedArtist), typeof(LibraryArtistViewModel), typeof(SelectedLibraryArtistComponent), new PropertyMetadata(default(LibraryArtistViewModel)));
+        private readonly AsyncLock _lock = new AsyncLock();
 
-        private static async void PropertyChangedCallback(DependencyObject d, DependencyPropertyChangedEventArgs e)
-        {
-            try
-            {
-                _cts?.Cancel();
-            }
-            catch (Exception)
-            {
-                // ignored
-            }
-            finally
-            {
-                try
-                {
-
-                    _cts?.Dispose();
-                }
-                catch (Exception)
-                {
-                    // ignored
-                }
-            }
-
-            CancellationToken token = default;
-            try
-            {
-                using (await _lock.LockAsync())
-                {
-                    try
-                    {
-                        token = _cts?.Token ?? CancellationToken.None;
-                    }
-                    catch (Exception)
-                    {
-                        // ignored
-                    }
-
-                    _cts = new CancellationTokenSource();
-                    token = _cts.Token;
-
-
-                    var x = d as SelectedLibraryArtistComponent;
-                    try
-                    {
-                        await x.OnSelectedArtistChanged(e.NewValue as LibraryArtistViewModel, token);
-                    }
-                    catch (Exception)
-                    {
-                        // ignored
-                    }
-                }
-            }
-            catch (Exception)
-            {
-                // ignored
-            }
-        }
-        public LibraryArtistsViewModel ViewModel => DataContext is LibraryArtistsViewModel vm ? vm : null;
         public SelectedLibraryArtistComponent()
         {
             this.InitializeComponent();
+        }
+
+        protected override async void OnNavigatedTo(NavigationEventArgs e)
+        {
+            base.OnNavigatedTo(e);
+            if (e.Parameter is LibraryArtistViewModel vm)
+            {
+                SelectedArtist = vm;
+                await vm.FetchArtistAlbums(
+                    offset: 0,
+                    limit: limit,
+                    CancellationToken.None);
+            }
         }
 
         public LibraryArtistViewModel SelectedArtist
@@ -85,21 +40,14 @@ namespace Wavee.UI.WinUI.Views.Libraries.Components
             set => SetValue(SelectedArtistProperty, value);
         }
 
-        private async Task OnSelectedArtistChanged(LibraryArtistViewModel artist, CancellationToken cancellationToken)
-        {
-            await ViewModel.FetchArtistAlbums(artist,
-                offset: 0,
-                limit: limit,
-                cancellationToken);
-        }
 
-        const int limit = 10;
+        const int limit = 5;
 
         private async void MainScroller_OnViewChanged(ScrollView sender, object args)
         {
             try
             {
-                using (await _lock.LockAsync(_cts.Token))
+                using (await _lock.LockAsync())
                 {
                     // Fetch more albums if we are at the bottom of the scrollviewer
                     if (sender.VerticalOffset >= sender.ScrollableHeight - 200)
@@ -109,10 +57,10 @@ namespace Wavee.UI.WinUI.Views.Libraries.Components
                             return;
                         }
 
-                        await ViewModel.FetchArtistAlbums(SelectedArtist,
+                        await SelectedArtist.FetchArtistAlbums(
                             offset: SelectedArtist.Albums.Count,
                             limit: limit,
-                            _cts.Token);
+                            CancellationToken.None);
                     }
                 }
             }
@@ -120,6 +68,11 @@ namespace Wavee.UI.WinUI.Views.Libraries.Components
             {
                 // ignored
             }
+        }
+
+        public Visibility NotNullThenVisible(uint? u)
+        {
+            return u.HasValue ? Visibility.Visible : Visibility.Collapsed;
         }
     }
 }

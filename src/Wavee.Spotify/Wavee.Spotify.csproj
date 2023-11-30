@@ -11,7 +11,9 @@
 		<ProjectReference Include="..\Wavee.Spotify.Proto\Wavee.Spotify.Proto.csproj" />
 		<ProjectReference Include="..\Wavee\Wavee.csproj" />
 	</ItemGroup>
-
+	<ItemGroup>
+		<PublishReadyToRunExclude Include="LanguageExt.Core.dll" />
+	</ItemGroup>
 	<ItemGroup>
 		<PackageReference Include="Base62-Net" Version="1.2.157201" />
 		<PackageReference Include="BouncyCastle.Cryptography" Version="2.2.1" />

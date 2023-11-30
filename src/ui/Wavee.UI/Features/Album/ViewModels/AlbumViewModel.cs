@@ -10,6 +10,7 @@ public sealed class AlbumViewModel
     public required ushort Year { get; init; }
     public required string Type { get; init; }
     public required IReadOnlyCollection<AlbumTrackViewModel> Tracks { get; init; }
+    public required string MediumImageUrl { get; init; }
 
     public string FormatToDurationString(TimeSpan timeSpan)
     {

@@ -9,7 +9,9 @@
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.2" />
   </ItemGroup>
-
+	<ItemGroup>
+		<PublishReadyToRunExclude Include="LanguageExt.Core.dll" />
+	</ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Wavee.Players.NAudio\Wavee.Players.NAudio.csproj" />
     <ProjectReference Include="..\..\Wavee.Spotify.Proto\Wavee.Spotify.Proto.csproj" />

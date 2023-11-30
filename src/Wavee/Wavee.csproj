@@ -9,7 +9,9 @@
   <ItemGroup>
     <Folder Include="Infrastructure\" />
   </ItemGroup>
-
+	<ItemGroup>
+		<PublishReadyToRunExclude Include="LanguageExt.Core.dll" />
+	</ItemGroup>
   <ItemGroup>
     <PackageReference Include="LanguageExt.Core" Version="4.4.7" />
     <PackageReference Include="Mediator.Abstractions" Version="3.0.0-preview.11" />

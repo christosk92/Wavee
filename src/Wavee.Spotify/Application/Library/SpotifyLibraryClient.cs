@@ -1,17 +1,10 @@
-﻿using Eum.Spotify.transfer;
-using Mediator;
-using System.Buffers.Binary;
-using System;
+﻿using Mediator;
 using System.Text.Json;
-using Eum.Spotify;
-using Google.Protobuf;
-using Nito.AsyncEx;
 using Wavee.Spotify.Application.GraphQL.Queries;
 using Wavee.Spotify.Common;
 using Wavee.Spotify.Domain.Artist;
 using Wavee.Spotify.Domain.Common;
 using Wavee.Spotify.Domain.Library;
-using Wavee.Spotify.Infrastructure.LegacyAuth;
 
 namespace Wavee.Spotify.Application.Library;
 
@@ -24,7 +17,7 @@ internal class SpotifyLibraryClient : ISpotifyLibraryClient
     }
     public async Task<(SpotifyLibraryItem<SpotifySimpleArtist>[] Items, int Total)> GetArtists(
         string? query,
-        SpotifyArtistLibrarySortField order, SortDirection direction,
+        SpotifyArtistLibrarySortField order, 
         int offset, int limit,
         CancellationToken cancellationToken = default)
     {
@@ -113,6 +106,5 @@ internal class SpotifyLibraryClient : ISpotifyLibraryClient
 
 public interface ISpotifyLibraryClient
 {
-    Task<(SpotifyLibraryItem<SpotifySimpleArtist>[] Items, int Total)> GetArtists(string? query, SpotifyArtistLibrarySortField order,
-        SortDirection direction, int offset, int limit, CancellationToken cancellationToken = default);
+    Task<(SpotifyLibraryItem<SpotifySimpleArtist>[] Items, int Total)> GetArtists(string? query, SpotifyArtistLibrarySortField order, int offset, int limit, CancellationToken cancellationToken = default);
 }

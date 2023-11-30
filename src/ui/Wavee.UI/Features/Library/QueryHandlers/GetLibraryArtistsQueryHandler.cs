@@ -27,8 +27,9 @@ public sealed class GetLibraryArtistsQueryHandler : IQueryHandler<GetLibraryArti
             order: query.SortField switch
             {
                 nameof(LibraryItem<SimpleArtistEntity>.AddedAt) => SpotifyArtistLibrarySortField.RecentlyAdded,
+                nameof(LibraryItem<SimpleArtistEntity>.Item.Name) => SpotifyArtistLibrarySortField.Alphabetical,
+                "Recents" => SpotifyArtistLibrarySortField.Recents,
             },
-            direction: query.SortDirection,
             offset: query.Offset,
             limit: query.Limit,
             cancellationToken: cancellationToken);
