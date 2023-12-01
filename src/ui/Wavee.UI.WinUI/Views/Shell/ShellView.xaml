@@ -523,14 +523,14 @@
         </NavigationView>
 
         <Grid
-            Height="100"
+            Height="80"
             Margin="32,12"
             VerticalAlignment="Bottom"
             ui:Effects.Shadow="{StaticResource CommonShadow}"
             Background="{ThemeResource AcrylicBackgroundFillColorBaseBrush}"
             CornerRadius="6">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="100" />
+                <ColumnDefinition Width="80" />
                 <ColumnDefinition />
             </Grid.ColumnDefinitions>
 
@@ -554,6 +554,7 @@
                 <Slider
                     Grid.RowSpan="2"
                     Grid.ColumnSpan="2"
+                    CornerRadius="0"
                     Height="30"
                     VerticalAlignment="Top"
                     Style="{StaticResource DefaultSliderStyle}" />
@@ -563,12 +564,14 @@
                     Grid.Column="0"
                     Margin="2,12,0,0"
                     VerticalAlignment="Top"
+                    FontSize="12"
                     FontWeight="SemiBold"
                     Opacity=".6"
                     Text="00:00" />
                 <TextBlock
                     Grid.Row="1"
                     Grid.Column="1"
+                    FontSize="12"
                     Margin="0,12,4,0"
                     HorizontalAlignment="Right"
                     VerticalAlignment="Top"

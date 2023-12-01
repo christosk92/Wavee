@@ -34,7 +34,6 @@
 	  <None Remove="Views\NowPlaying\NowPlayingPage.xaml" />
 	  <None Remove="Views\Shell\ShellView.xaml" />
 	</ItemGroup>
-
 	<ItemGroup>
 		<Content Include="Assets\SplashScreen.scale-200.png" />
 		<Content Include="Assets\LockScreenLogo.scale-200.png" />
@@ -75,6 +74,9 @@
 	<ItemGroup>
 	  <None Update="Assets\Fonts\MediaPlayerIcons.ttf">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	  <None Update="Themes\Generic.xaml">
+	    <Generator>MSBuild:Compile</Generator>
 	  </None>
 	  <Page Update="Styles\ItemContainerStyles.xaml">
 	    <Generator>MSBuild:Compile</Generator>
@@ -118,10 +120,6 @@
 	  <Page Update="Views\Identity\SignInView.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </Page>
-	</ItemGroup>
-	<ItemGroup>
-	  <Folder Include="Controls\" />
-	  <Folder Include="Themes\" />
 	</ItemGroup>
 
 	<!-- 
