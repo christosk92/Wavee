@@ -1,3 +1,3 @@
 # Wavee
 
-![image](https://github.com/christosk92/Wavee/assets/13438702/3bdcb399-5826-4730-b7ee-268df736afcc)
+![image](https://github.com/christosk92/Wavee/assets/13438702/957ed40c-7708-4f8f-b11f-e58fa051ab4e)
