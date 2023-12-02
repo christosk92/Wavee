@@ -9,10 +9,10 @@ namespace Wavee.Spotify.Application.Tracks.QueryHandlers;
 
 public sealed class SpotifyGetTrackQueryHandler : IQueryHandler<SpotifyGetTrackQuery, Track>
 {
-    private readonly ISpotifyTrackRepository _spotifyTrackRepository;
+    private readonly ISpotifyGenericRepository _spotifyTrackRepository;
     private readonly HttpClient _httpClient;
 
-    public SpotifyGetTrackQueryHandler(ISpotifyTrackRepository spotifyTrackRepository,
+    public SpotifyGetTrackQueryHandler(ISpotifyGenericRepository spotifyTrackRepository,
         IHttpClientFactory httpClientFactory)
     {
         _spotifyTrackRepository = spotifyTrackRepository;

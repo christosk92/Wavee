@@ -46,7 +46,7 @@ public static class ServiceCollectionExtensions
 
 
         services.AddScoped<ISpotifyTrackClient, SpotifyTrackClient>();
-        services.AddScoped<ISpotifyTrackRepository, SpotifyTrackRepository>();
+        services.AddScoped<ISpotifyGenericRepository, SpotifyGenericRepository>();
 
         services.AddScoped<ISpotifyAudioKeyClient, SpotifyAudioKeyClient>();
 

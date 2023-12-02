@@ -2,6 +2,8 @@
 using Eum.Spotify.playplay;
 using Google.Protobuf;
 using Microsoft.Extensions.DependencyInjection;
+using Spotify.Collection.Proto.V2;
+using Spotify.PlayedState.Proto;
 using Wavee.Application.Playback;
 using Wavee.Domain.Playback.Player;
 using Wavee.Players.NAudio;
@@ -11,6 +13,11 @@ using Wavee.Spotify.Application.Playback;
 using Wavee.Spotify.Common.Contracts;
 
 var storagePath = "/d/";
+const string b =
+    "Ci0KJXNwb3RpZnk6YXJ0aXN0OjBLODdmM293ZW16SThOVUNvRUlYT0IQye2sqwYKKAogc3BvdGlmeTpjb2xsZWN0aW9uOnlvdXItZXBpc29kZXMQ58zCkQYKLwonc3BvdGlmeTpwbGF5bGlzdDozN2k5ZFFaRjFEWGFQOTZnd1BSTGVlEOvSwIQGGg0xNzAxNTM0NTcyMDc3";
+var playedState = PageResponse.Parser.ParseFrom(ByteString.FromBase64(b));
+
+
 Directory.CreateDirectory(storagePath);
 var sp = new ServiceCollection()
     .AddSpotify(new SpotifyClientConfig
@@ -42,6 +49,7 @@ var res2 = PlayPlayLicenseRequest.Parser.ParseFrom(ByteString.FromBase64(secondO
 const string thirdone = "CAMSEAEn1RRO2yBW/ETBsuaDz4kgASgBMNjmkKsG";
 var res3 = PlayPlayLicenseRequest.Parser.ParseFrom(ByteString.FromBase64(thirdone));
 var client = sp.GetRequiredService<ISpotifyClient>();
+await client.Initialize(); 
 const string filePathMp3 = "C:\\Users\\ckara\\Downloads\\4dba53850d6bfdb9800d53d65fe2e5f1369b9040.mp3";
 client.Player.Crossfade(TimeSpan.FromSeconds(10));
 // await client.Player.Play(WaveePlaybackList.Create(

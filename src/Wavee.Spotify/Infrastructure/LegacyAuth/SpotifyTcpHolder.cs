@@ -2,6 +2,7 @@ using System;
 using System.Buffers.Binary;
 using System.Collections.Concurrent;
 using System.Net.Sockets;
+using System.Text;
 using CommunityToolkit.HighPerformance;
 using Eum.Spotify;
 using Google.Protobuf;
@@ -78,6 +79,12 @@ public sealed class SpotifyTcpHolder : IDisposable
                     var receive = Auth.Receive(stream, keys.ReceiveKey.Span, nonce);
                     switch (receive.Type)
                     {
+                        case SpotifyPacketType.CountryCode:
+                        {
+                            var cntry = Encoding.UTF8.GetString(receive.Payload);
+                            Country = cntry;
+                            break;
+                        }
                         case SpotifyPacketType.MercuryReq:
                             {
                                 var data = receive.Payload;
@@ -224,6 +231,7 @@ public sealed class SpotifyTcpHolder : IDisposable
     }
 
     public Task<APWelcome> WelcomeMessage { get; }
+    public string Country { get; private set; }
 
 
     private void SendKeyRequest(uint seq, SpotifyId track, ByteString fileId)

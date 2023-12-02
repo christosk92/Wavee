@@ -67,6 +67,7 @@ internal sealed class SpotifyClient : ISpotifyClient
     public async Task<Me> Initialize(CancellationToken cancellationToken = default)
     {
         await _spotifyRemoteHolder.Initialize(cancellationToken);
+        var username = _tcpHolder.WelcomeMessage.Result.CanonicalUsername;
         return new Me();
     }
     
