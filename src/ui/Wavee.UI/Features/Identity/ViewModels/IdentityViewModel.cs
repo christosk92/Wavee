@@ -1,9 +1,13 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
+using Mediator;
+using Microsoft.Extensions.DependencyInjection;
 using Wavee.Spotify.Application.Authentication.Modules;
 using Wavee.Spotify.Common.Contracts;
 using Wavee.UI.Features.Identity.Entities;
 using Wavee.UI.Features.Identity.Requests;
+using Wavee.UI.Features.Playback.Notifications;
+using Wavee.UI.Features.Playback.ViewModels;
 
 namespace Wavee.UI.Features.Identity.ViewModels;
 
@@ -15,10 +19,13 @@ public sealed class IdentityViewModel : ObservableRecipient, IRecipient<SpotifyO
     private bool _isLoading;
 
     private readonly ISpotifyClient _spotifyClient;
-
-    public IdentityViewModel(ISpotifyClient spotifyClient)
+    private readonly IMediator _mediator;
+    private readonly Func<SpotifyPlaybackPlayerViewModel> _playerFactory;
+    public IdentityViewModel(ISpotifyClient spotifyClient, IServiceProvider provider, IMediator mediator)
     {
         _spotifyClient = spotifyClient;
+        _mediator = mediator;
+        _playerFactory = () => provider.GetRequiredService<SpotifyPlaybackPlayerViewModel>();
     }
 
     public async Task Initialize()
@@ -27,6 +34,10 @@ public sealed class IdentityViewModel : ObservableRecipient, IRecipient<SpotifyO
         IsLoading = true;
 
         var me = await _spotifyClient.Initialize();
+        await _mediator.Publish(new PlaybackPlayerAddedNotification
+        {
+            Player = _playerFactory()
+        });
         User = new WaveeUser();
         IsLoading = false;
     }

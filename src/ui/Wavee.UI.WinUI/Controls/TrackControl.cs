@@ -41,9 +41,11 @@ public sealed class TrackControl : Control
         {
             VisualStateManager.GoToState(this, "Even", true);
         }
+        NumberString = Number.ToString();
     }
 
     public static readonly DependencyProperty AlternateColorsProperty = DependencyProperty.Register(nameof(AlternateColors), typeof(bool), typeof(TrackControl), new PropertyMetadata(default(bool)));
+    public static readonly DependencyProperty NumberStringProperty = DependencyProperty.Register(nameof(NumberString), typeof(string), typeof(TrackControl), new PropertyMetadata(default(string)));
 
     public object MainContent
     {
@@ -67,5 +69,11 @@ public sealed class TrackControl : Control
     {
         get => (bool)GetValue(AlternateColorsProperty);
         set => SetValue(AlternateColorsProperty, value);
+    }
+
+    public string NumberString
+    {
+        get => (string)GetValue(NumberStringProperty);
+        set => SetValue(NumberStringProperty, value);
     }
 }

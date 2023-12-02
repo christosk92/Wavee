@@ -7,6 +7,7 @@ using Wavee.UI.Features.Listen;
 using Wavee.UI.Features.Navigation;
 using Wavee.UI.Features.Navigation.ViewModels;
 using Wavee.UI.Features.NowPlaying.ViewModels;
+using Wavee.UI.Features.Playback.ViewModels;
 
 namespace Wavee.UI.Features.Shell.ViewModels;
 
@@ -18,7 +19,7 @@ public sealed class ShellViewModel : ObservableObject
         ListenViewModel listen,
         LibrariesViewModel library,
         NowPlayingViewModel nowPlaying,
-        INavigationService navigation)
+        INavigationService navigation, PlaybackViewModel playback)
     {
         TopNavItems = new object[]
         {
@@ -28,6 +29,7 @@ public sealed class ShellViewModel : ObservableObject
         };
         SelectedItem = listen;
         Navigation = navigation;
+        Playback = playback;
 
         navigation.NavigatedTo += (sender, o) =>
         {
@@ -79,4 +81,6 @@ public sealed class ShellViewModel : ObservableObject
         get => _selectedItem;
         set => SetProperty(ref _selectedItem, value);
     }
+
+    public PlaybackViewModel Playback { get; }
 }

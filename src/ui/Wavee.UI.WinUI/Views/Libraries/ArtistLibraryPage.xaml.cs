@@ -1,3 +1,4 @@
+using System;
 using System.ComponentModel;
 using System.Threading;
 using CommunityToolkit.WinUI;
@@ -33,7 +34,7 @@ public sealed partial class ArtistLibraryPage : Page, INavigeablePage<LibraryArt
         if (e.Parameter is LibraryArtistsViewModel vm)
         {
             DataContext = vm;
-           // vm.PropertyChanged += VmOnPropertyChanged;
+            // vm.PropertyChanged += VmOnPropertyChanged;
             await vm.Initialize();
         }
     }
@@ -63,7 +64,20 @@ public sealed partial class ArtistLibraryPage : Page, INavigeablePage<LibraryArt
         this.Bindings.Update();
     }
 
-    public LibraryArtistsViewModel ViewModel => DataContext is LibraryArtistsViewModel vm ? vm : null;
+    public LibraryArtistsViewModel ViewModel
+    {
+        get
+        {
+            try
+            {
+                return DataContext is LibraryArtistsViewModel vm ? vm : null;
+            }
+            catch (ObjectDisposedException)
+            {
+                return null;
+            }
+        }
+    }
 
     private void ItemsView_OnSelectionChanged(ItemsView sender, ItemsViewSelectionChangedEventArgs args)
     {

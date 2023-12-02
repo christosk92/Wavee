@@ -1,5 +1,7 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using System;
+using Microsoft.Extensions.DependencyInjection;
 using Wavee.UI.Features.Navigation;
+using Wavee.UI.Test;
 using Wavee.UI.WinUI.Services;
 using Wavee.UI.WinUI.Views.Libraries;
 using Wavee.UI.WinUI.Views.Listen;
@@ -23,6 +25,21 @@ public static class ServiceCollectionExtensions
 
 
         collection.AddSingleton<INavigationService, WinUINavigationService>();
+        collection.AddSingleton<IUIDispatcher, WinUIDispatcher>();
         return collection;
+    }
+}
+
+public sealed class WinUIDispatcher : IUIDispatcher
+{
+    private readonly Microsoft.UI.Dispatching.DispatcherQueue _dispatcher;
+    public WinUIDispatcher()
+    {
+        _dispatcher = App.MainWindow.DispatcherQueue;
+
+    }
+    public void Invoke(Action action)
+    {
+        _dispatcher.TryEnqueue(() => action());
     }
 }

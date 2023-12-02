@@ -139,6 +139,7 @@ public sealed class LibraryArtistsViewModel : NavigationItemViewModel
     public async Task FetchArtistAlbums(LibraryArtistViewModel artist,
         int offset, int limit, CancellationToken cancellationToken)
     {
+        if (offset is 0) artist.Albums.Clear();
         var results = await _mediator.Send(new GetAlbumsForArtistQuery
         {
             Id = artist.Id,

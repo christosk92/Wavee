@@ -10,6 +10,7 @@ using Wavee.UI.Features.Library.ViewModels.Artist;
 using Wavee.UI.Features.Listen;
 using Wavee.UI.Features.MainWindow;
 using Wavee.UI.Features.NowPlaying.ViewModels;
+using Wavee.UI.Features.Playback.ViewModels;
 using Wavee.UI.Features.Shell.ViewModels;
 
 namespace Wavee.UI;
@@ -39,7 +40,6 @@ public static class ServiceCollectionExtensions
         })
             .WithStoredOrOAuthModule(openBrowser)
             .WithPlayer<NAudioPlayer>();
-        //     .AddScoped<ILibraryRepository, LibraryRepository>();
     }
 
     public static IServiceCollection AddViewModels(this IServiceCollection collection)
@@ -54,6 +54,8 @@ public static class ServiceCollectionExtensions
             .AddScoped<LibraryAlbumsViewModel>()
             .AddScoped<LibraryArtistsViewModel>()
             .AddScoped<LibraryPodcastsViewModel>()
-            .AddScoped<NowPlayingViewModel>();
+            .AddScoped<NowPlayingViewModel>()
+            .AddScoped<PlaybackViewModel>()
+            .AddTransient<SpotifyPlaybackPlayerViewModel>();
     }
 }

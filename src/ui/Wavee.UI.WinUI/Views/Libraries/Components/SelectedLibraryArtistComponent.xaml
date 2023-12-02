@@ -101,12 +101,10 @@
                                         <ItemContainer>
                                             <controls:TrackControl
                                                 AlternateColors="True"
-                                                Number="{x:Bind Number}"
+                                                Number="{x:Bind Number, Mode=OneWay}"
                                                 ShowImage="False">
                                                 <controls:TrackControl.MainContent>
-                                                    <Grid
-                                                        
-                                                        HorizontalAlignment="Stretch">
+                                                    <Grid HorizontalAlignment="Stretch">
                                                         <Grid.ColumnDefinitions>
                                                             <ColumnDefinition />
                                                             <ColumnDefinition Width="50" />

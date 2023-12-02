@@ -31,7 +31,7 @@
                                 VerticalAlignment="Center"
                                 FontWeight="Bold"
                                 Foreground="{ThemeResource ApplicationSecondaryForegroundThemeBrush}"
-                                Text="{TemplateBinding Number}" />
+                                Text="{TemplateBinding NumberString}" />
 
                             <FontIcon
                                 Grid.Column="3"
@@ -53,7 +53,7 @@
 
                                 <VisualState x:Name="Even">
                                     <VisualState.Setters>
-                                        <Setter Target="LayoutRoot.Background" Value="{ThemeResource ControlAltFillColorSecondaryBrush}" />
+                                        <Setter Target="LayoutRoot.Background" Value="{ThemeResource CardBackgroundFillColorSecondaryBrush}" />
                                         <Setter Target="LayoutRoot.BorderThickness" Value="0" />
                                         <Setter Target="LayoutRoot.CornerRadius" Value="8" />
                                     </VisualState.Setters>

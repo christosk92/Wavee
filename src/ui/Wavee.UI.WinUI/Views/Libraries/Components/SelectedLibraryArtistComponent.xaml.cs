@@ -19,14 +19,18 @@ namespace Wavee.UI.WinUI.Views.Libraries.Components
         {
             if (e.NewValue is LibraryArtistViewModel vm)
             {
-                await vm.FetchArtistAlbums(
-                    offset: 0,
-                    limit: limit,
-                    CancellationToken.None);
+                using (await _lock.LockAsync())
+                {
+                    if (vm.Albums.Count is not 0) return;
+                    await vm.FetchArtistAlbums(
+                        offset: 0,
+                        limit: limit,
+                        CancellationToken.None);
+                }
             }
         }
 
-        private readonly AsyncLock _lock = new AsyncLock();
+        private static readonly AsyncLock _lock = new AsyncLock();
 
         public SelectedLibraryArtistComponent()
         {

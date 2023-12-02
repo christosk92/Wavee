@@ -32,6 +32,7 @@
 	  <None Remove="Views\Listen\ListenPage.xaml" />
 	  <None Remove="Views\Main\MainContent.xaml" />
 	  <None Remove="Views\NowPlaying\NowPlayingPage.xaml" />
+	  <None Remove="Views\Playback\PlaybackPlayerControl.xaml" />
 	  <None Remove="Views\Shell\ShellView.xaml" />
 	</ItemGroup>
 	<ItemGroup>
@@ -75,9 +76,15 @@
 	  <None Update="Assets\Fonts\MediaPlayerIcons.ttf">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </None>
+	  <None Update="Controls\AlbumCoverControl.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </None>
 	  <None Update="Themes\Generic.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </None>
+	  <Page Update="Views\Playback\PlaybackPlayerControl.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </Page>
 	  <Page Update="Styles\ItemContainerStyles.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </Page>
