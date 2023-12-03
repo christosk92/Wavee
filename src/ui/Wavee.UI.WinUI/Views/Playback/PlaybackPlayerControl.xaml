@@ -433,13 +433,24 @@
             </Setter>
         </Style>
 
+
+
+        <Style
+            x:Key="AppBarButtonCompactStyle"
+            BasedOn="{StaticResource DefaultAppBarButtonStyle}"
+            TargetType="AppBarButton">
+            <Setter Property="LabelPosition" Value="Collapsed" />
+            <Setter Property="Margin" Value="0" />
+            <Setter Property="Padding" Value="4" />
+            <Setter Property="Width" Value="40" />
+        </Style>
     </UserControl.Resources>
 
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="80" />
-            <ColumnDefinition Width="2*" />
-            <ColumnDefinition />
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
         </Grid.ColumnDefinitions>
 
         <Grid>
@@ -504,5 +515,155 @@
                 Opacity=".6"
                 Text="{x:Bind Player.Artists[0], Mode=OneWay}" />
         </StackPanel>
+
+        <Grid Grid.Column="2" Margin="0,8,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <StackPanel
+                HorizontalAlignment="Right"
+                Orientation="Horizontal"
+                Spacing="0">
+                <Button
+                    VerticalAlignment="Stretch"
+                    Background="Transparent"
+                    BorderThickness="0">
+                    <FontIcon
+                        FontFamily="{StaticResource MediaPlayerIcons}"
+                        FontSize="12"
+                        Glyph="&#xE622;" />
+                </Button>
+                <Button
+                    Width="42"
+                    Height="42"
+                    VerticalAlignment="Center"
+                    CornerRadius="100">
+                    <FontIcon
+                        FontFamily="{StaticResource MediaPlayerIcons}"
+                        FontSize="18"
+                        Glyph="&#xE62E;" />
+                </Button>
+                <Button
+                    VerticalAlignment="Stretch"
+                    Background="Transparent"
+                    BorderThickness="0">
+                    <FontIcon
+                        FontFamily="{StaticResource MediaPlayerIcons}"
+                        FontSize="12"
+                        Glyph="&#xE623;" />
+                </Button>
+            </StackPanel>
+
+            <Grid
+                x:Name="ExtraButtonsGrid"
+                Grid.Row="0"
+                Grid.Column="1"
+                Margin="12,0,0,0"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Center">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <AppBarButton x:Name="QueueButton" Style="{StaticResource AppBarButtonCompactStyle}">
+                    <AppBarButton.Icon>
+                        <FontIcon FontFamily="/Assets/Fonts/MediaPlayerIcons.ttf#Media Player Fluent Icons" Glyph="&#xE93F;" />
+                    </AppBarButton.Icon>
+                </AppBarButton>
+
+                <AppBarButton
+                    x:Name="LyricsButton"
+                    Grid.Column="1"
+                    Style="{StaticResource AppBarButtonCompactStyle}">
+                    <AppBarButton.Icon>
+                        <FontIcon FontFamily="/Assets/Fonts/MediaPlayerIcons.ttf#Media Player Fluent Icons" Glyph="&#xED1E;" />
+                    </AppBarButton.Icon>
+                </AppBarButton>
+                <AppBarButton
+                    x:Name="DevicesButton"
+                    Grid.Column="2"
+                    Style="{StaticResource AppBarButtonCompactStyle}">
+                    <AppBarButton.Icon>
+                        <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE772;" />
+                    </AppBarButton.Icon>
+                </AppBarButton>
+                <AppBarButton
+                    x:Name="VolumeButton"
+                    Grid.Column="3"
+                    VerticalAlignment="Top"
+                    Style="{StaticResource AppBarButtonCompactStyle}">
+                    <AppBarButton.Icon>
+                        <FontIcon FontFamily="/Assets/Fonts/MediaPlayerIcons.ttf#Media Player Fluent Icons" Glyph="&#xE767;" />
+                    </AppBarButton.Icon>
+                </AppBarButton>
+            </Grid>
+        </Grid>
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup>
+                <VisualState x:Name="vSmall">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="10" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="DevicesButton.(Grid.Column)" Value="0" />
+                        <Setter Target="DevicesButton.(Grid.Row)" Value="1" />
+
+                        <Setter Target="VolumeButton.(Grid.Column)" Value="1" />
+                        <Setter Target="VolumeButton.(Grid.Row)" Value="1" />
+                        <Setter Target="ExtraButtonsGrid.Margin" Value="12,0,0,0" />
+                    </VisualState.Setters>
+                </VisualState>
+
+                <VisualState x:Name="vMedium">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="500" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="DevicesButton.(Grid.Column)" Value="0" />
+                        <Setter Target="DevicesButton.(Grid.Row)" Value="1" />
+
+                        <Setter Target="VolumeButton.(Grid.Column)" Value="1" />
+                        <Setter Target="VolumeButton.(Grid.Row)" Value="1" />
+
+                        <Setter Target="VolumeButton.Margin" Value="0,-6,0,-12" />
+                        <Setter Target="DevicesButton.Margin" Value="0,-6,0,-12" />
+
+                        <Setter Target="QueueButton.Margin" Value="0,0,0,-12" />
+                        <Setter Target="LyricsButton.Margin" Value="0,0,0,-12" />
+
+
+                        <Setter Target="ExtraButtonsGrid.Margin" Value="0,6,0,0" />
+                    </VisualState.Setters>
+                </VisualState>
+
+                <VisualState x:Name="vBig">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="720" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="DevicesButton.(Grid.Column)" Value="2" />
+                        <Setter Target="DevicesButton.(Grid.Row)" Value="0" />
+
+                        <Setter Target="VolumeButton.(Grid.Column)" Value="3" />
+                        <Setter Target="VolumeButton.(Grid.Row)" Value="0" />
+                        <Setter Target="ExtraButtonsGrid.Margin" Value="12,0,0,12" />
+
+                        <Setter Target="VolumeButton.Margin" Value="0,0,0,-12" />
+                        <Setter Target="DevicesButton.Margin" Value="0,0,0,-12" />
+
+                        <Setter Target="QueueButton.Margin" Value="0,0,0,-12" />
+                        <Setter Target="LyricsButton.Margin" Value="0,0,0,-12" />
+                    </VisualState.Setters>
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
     </Grid>
 </UserControl>

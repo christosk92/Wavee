@@ -7,5 +7,22 @@ public sealed class AlbumTrackViewModel
     public required TimeSpan Duration { get; init; }
     public required int Number { get; init; }
 
-    public string DurationString => Duration.ToString(@"mm\:ss");
+    public string DurationString
+    {
+        get
+        {
+            var totalHours = (int)Duration.TotalHours;
+            var totalMinutes = (int)Duration.TotalMinutes;
+            var totalSeconds = (int)Duration.TotalSeconds;
+            if (totalHours > 0)
+            {
+                //=> Duration.ToString(@"mm\:ss");
+                return Duration.ToString(@"hh\:mm\:ss");
+            }
+            else
+            {
+                return Duration.ToString(@"mm\:ss");
+            }
+        }
+    }
 }

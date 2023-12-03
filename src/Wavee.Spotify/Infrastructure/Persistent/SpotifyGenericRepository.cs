@@ -25,12 +25,20 @@ internal sealed class SpotifyGenericRepository : ISpotifyGenericRepository
 
     public void AddTrack(Track track)
     {
-        var spotifyId = SpotifyId.FromRaw(track.Gid.Span, SpotifyItemType.Track);
-        _dataCollection.Insert(new GenericByteEntity
+        try
         {
-            Uri = spotifyId.ToString(),
-            Data = track.ToByteArray()
-        });
+            var spotifyId = SpotifyId.FromRaw(track.Gid.Span, SpotifyItemType.Track);
+            _dataCollection.Insert(new GenericByteEntity
+            {
+                Uri = spotifyId.ToString(),
+                Data = track.ToByteArray()
+            });
+        }
+        catch (LiteException)
+        {
+            //If duplicate ignore
+
+        }
     }
 
     public bool TryGetTrack(SpotifyId id, out Track o)
