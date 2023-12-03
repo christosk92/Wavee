@@ -500,22 +500,34 @@
                 Opacity=".6"
                 Text="{x:Bind Format(Player.Duration), Mode=OneWay}" />
         </Grid>
-        <StackPanel
+        <RelativePanel
             Grid.Column="1"
-            Margin="6,4"
-            VerticalAlignment="Bottom"
-            Orientation="Vertical">
-            <TextBlock
-                FontSize="24"
-                FontWeight="Bold"
-                Text="{x:Bind Player.Title, Mode=OneWay}"
-                TextTrimming="CharacterEllipsis" />
-            <TextBlock
-                FontWeight="SemiBold"
-                Opacity=".6"
-                Text="{x:Bind Player.Artists[0], Mode=OneWay}" />
-        </StackPanel>
-
+            Margin="6,4,0,4"
+            VerticalAlignment="Bottom">
+            <StackPanel x:Name="MetadataInfo" Orientation="Vertical">
+                <TextBlock
+                    x:Name="TitleBlock"
+                    FontSize="24"
+                    FontWeight="Bold"
+                    Text="{x:Bind Player.Title, Mode=OneWay}"
+                    TextTrimming="CharacterEllipsis" />
+                <TextBlock
+                    x:Name="ArtistBlock"
+                    FontWeight="SemiBold"
+                    Opacity=".6"
+                    RelativePanel.Below="TitleBlock"
+                    Text="{x:Bind Player.Artists[0], Mode=OneWay}" />
+            </StackPanel>
+            <FontIcon
+                Margin="12,12,0,0"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Center"
+                FontFamily="Segoe Fluent Icons"
+                FontSize="16"
+                Glyph="&#xEB51;"
+                RelativePanel.AlignTopWithPanel="True"
+                RelativePanel.RightOf="MetadataInfo" />
+        </RelativePanel>
         <Grid Grid.Column="2" Margin="0,8,0,0">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
@@ -526,6 +538,15 @@
                 HorizontalAlignment="Right"
                 Orientation="Horizontal"
                 Spacing="0">
+                <Button
+                    VerticalAlignment="Stretch"
+                    Background="Transparent"
+                    BorderThickness="0">
+                    <FontIcon
+                        FontFamily="{StaticResource MediaPlayerIcons}"
+                        FontSize="14"
+                        Glyph="&#xE8B1;" />
+                </Button>
                 <Button
                     VerticalAlignment="Stretch"
                     Background="Transparent"
@@ -551,8 +572,18 @@
                     BorderThickness="0">
                     <FontIcon
                         FontFamily="{StaticResource MediaPlayerIcons}"
-                        FontSize="12"
+                        FontSize="14"
                         Glyph="&#xE623;" />
+                </Button>
+
+                <Button
+                    VerticalAlignment="Stretch"
+                    Background="Transparent"
+                    BorderThickness="0">
+                    <FontIcon
+                        FontFamily="{StaticResource MediaPlayerIcons}"
+                        FontSize="12"
+                        Glyph="&#xE8EE;" />
                 </Button>
             </StackPanel>
 

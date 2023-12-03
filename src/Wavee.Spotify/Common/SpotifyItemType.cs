@@ -35,4 +35,5 @@ public enum SpotifyItemType
     UserCollection = 64,
     Prerelease = 128,
     Concert = 256,
+    Genre = 512,
 }

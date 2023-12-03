@@ -139,9 +139,9 @@ internal class SpotifyLibraryClient : ISpotifyLibraryClient
                 {
                     Item = new SpotifySimpleArtist
                     {
-                        Id = SpotifyId.FromUri(x.Key),
+                        Uri = SpotifyId.FromUri(x.Key),
                         Name = x.Value.Name,
-                        Images = BuildImages(x.Value)
+                        Images = BuildImages(x.Value),
                     },
                     AddedAt = libraryItem.AddedAt,
                     LastPlayedAt = recentlyPlayedItem

@@ -111,8 +111,29 @@
                 <TranslateTransform X="-7" />
             </controls1:GridSplitter.RenderTransform>
         </controls1:GridSplitter>
-        <Grid Grid.Column="1" Margin="28,18,0,0">
+        <Grid x:Name="DetailGrid" Grid.Column="1">
             <components:SelectedLibraryArtistComponent x:Name="ArtistFrame" SelectedArtist="{x:Bind ViewModel.SelectedArtist, Mode=OneWay}" />
         </Grid>
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup>
+                <VisualState x:Name="vSmall">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="10" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="DetailGrid.Margin" Value="12,18,0,0" />
+                    </VisualState.Setters>
+                </VisualState>
+
+                <VisualState x:Name="vBig">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="800" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="DetailGrid.Margin" Value="28,18,0,0" />
+                    </VisualState.Setters>
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
     </Grid>
 </Page>

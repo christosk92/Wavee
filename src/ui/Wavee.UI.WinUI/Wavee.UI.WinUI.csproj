@@ -26,6 +26,7 @@
 	  <None Remove="Views\Identity\SignInView.xaml" />
 	  <None Remove="Views\Libraries\AlbumLibraryPage.xaml" />
 	  <None Remove="Views\Libraries\ArtistLibraryPage.xaml" />
+	  <None Remove="Views\Libraries\Components\LibraryAlbumComponent.xaml" />
 	  <None Remove="Views\Libraries\Components\SelectedLibraryArtistComponent.xaml" />
 	  <None Remove="Views\Libraries\PodcastLibraryPage.xaml" />
 	  <None Remove="Views\Libraries\SongLibraryPage.xaml" />
@@ -82,6 +83,9 @@
 	  <None Update="Themes\Generic.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </None>
+	  <Page Update="Views\Libraries\Components\LibraryAlbumComponent.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </Page>
 	  <Page Update="Views\Playback\PlaybackPlayerControl.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </Page>

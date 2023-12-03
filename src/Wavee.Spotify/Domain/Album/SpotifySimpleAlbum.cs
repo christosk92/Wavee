@@ -3,7 +3,7 @@ using Wavee.Spotify.Domain.Common;
 
 namespace Wavee.Spotify.Domain.Album;
 
-public sealed class SpotifySimpleAlbum
+public sealed class SpotifySimpleAlbum : ISpotifyItem
 {
     public required SpotifyId Uri { get; init; }
     public required string Name { get; init; }

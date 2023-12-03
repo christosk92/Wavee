@@ -45,6 +45,7 @@ public sealed class GetLibraryArtistsQueryHandler : IQueryHandler<GetLibraryArti
                     Images = x.Item.Images
                 },
                 AddedAt = x.AddedAt,
+                LastPlayedAt = x.LastPlayedAt,
             }).ToArray(),
             Total = libraryItems.Total
         };

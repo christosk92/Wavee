@@ -1,4 +1,5 @@
-﻿using Eum.Spotify.connectstate;
+﻿using System.Diagnostics;
+using Eum.Spotify.connectstate;
 using Eum.Spotify.playplay;
 using Google.Protobuf;
 using Microsoft.Extensions.DependencyInjection;
@@ -42,14 +43,16 @@ var sp = new ServiceCollection()
     .AddMediator()
     .BuildServiceProvider();
 
-const string base64 = "CAMSEAEn1RRO2yBW/ETBsuaDz4kgASgBMKnjkKsG";
-var res = PlayPlayLicenseRequest.Parser.ParseFrom(ByteString.FromBase64(base64));
-const string secondOne = "CAMSEAEn1RRO2yBW/ETBsuaDz4kgASgBMJbmkKsG";
-var res2 = PlayPlayLicenseRequest.Parser.ParseFrom(ByteString.FromBase64(secondOne));
-const string thirdone = "CAMSEAEn1RRO2yBW/ETBsuaDz4kgASgBMNjmkKsG";
-var res3 = PlayPlayLicenseRequest.Parser.ParseFrom(ByteString.FromBase64(thirdone));
 var client = sp.GetRequiredService<ISpotifyClient>();
-await client.Initialize(); 
+await client.Initialize();
+
+var sw = Stopwatch.StartNew();
+//var result = await client.Search.SearchAsync("empire", 0, 2);
+var autoCompleteResult = await client.Search.Autocomplete("re", cancellationToken: CancellationToken.None);
+sw.Stop();
+
+
+
 const string filePathMp3 = "C:\\Users\\ckara\\Downloads\\4dba53850d6bfdb9800d53d65fe2e5f1369b9040.mp3";
 client.Player.Crossfade(TimeSpan.FromSeconds(10));
 // await client.Player.Play(WaveePlaybackList.Create(
