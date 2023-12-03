@@ -36,8 +36,9 @@ public sealed class LibraryArtistsViewModel : NavigationItemViewModel
             nameof(LibraryItem<SimpleArtistEntity>.Item.Name),
             "Recents"
         };
+        Artists = new ObservableCollection<LibraryArtistViewModel>();
     }
-    public ObservableCollection<LibraryArtistViewModel> Artists { get; } = new();
+    public ObservableCollection<LibraryArtistViewModel> Artists { get; private set; }
 
     public bool IsLoading
     {
@@ -76,6 +77,7 @@ public sealed class LibraryArtistsViewModel : NavigationItemViewModel
     {
         try
         {
+            Artists ??= new ObservableCollection<LibraryArtistViewModel>();
             Artists.Clear();
             var library = await _mediator.Send(new GetLibraryArtistsQuery()
             {

@@ -33,8 +33,8 @@ public sealed partial class ArtistLibraryPage : Page, INavigeablePage<LibraryArt
         base.OnNavigatedTo(e);
         if (e.Parameter is LibraryArtistsViewModel vm)
         {
+            this.Bindings.Initialize(); ;
             DataContext = vm;
-            // vm.PropertyChanged += VmOnPropertyChanged;
             await vm.Initialize();
         }
     }
@@ -53,6 +53,7 @@ public sealed partial class ArtistLibraryPage : Page, INavigeablePage<LibraryArt
     protected override void OnNavigatedFrom(NavigationEventArgs e)
     {
         base.OnNavigatedFrom(e);
+        this.Bindings.StopTracking();
         // if (e.Parameter is LibraryArtistsViewModel vm)
         // {
         //     vm.PropertyChanged -= VmOnPropertyChanged;
