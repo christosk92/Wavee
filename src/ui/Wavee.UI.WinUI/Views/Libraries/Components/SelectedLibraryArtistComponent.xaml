@@ -48,7 +48,7 @@
                     <DataTemplate x:DataType="viewModels:AlbumViewModel">
                         <Grid Margin="0,24,0,0">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="200" />
+                                <ColumnDefinition Width="150" />
                                 <ColumnDefinition Width="4*" />
                             </Grid.ColumnDefinitions>
                             <Grid.RowDefinitions>
@@ -58,8 +58,8 @@
 
                             <StackPanel Grid.RowSpan="2" Orientation="Vertical">
                                 <Image
-                                    Width="200"
-                                    Height="200"
+                                    Width="150"
+                                    Height="150"
                                     Source="{x:Bind MediumImageUrl}" />
                                 <TextBlock
                                     Margin="0,8"

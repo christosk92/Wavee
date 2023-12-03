@@ -7,6 +7,7 @@ using Wavee.Spotify.Application.Common.Queries;
 using Wavee.Spotify.Application.GraphQL.Queries;
 using Wavee.Spotify.Application.Library.Query;
 using Wavee.Spotify.Application.Metadata.Query;
+using Wavee.Spotify.Application.Remote;
 using Wavee.Spotify.Common;
 using Wavee.Spotify.Domain.Artist;
 using Wavee.Spotify.Domain.Common;
@@ -23,10 +24,61 @@ internal class SpotifyLibraryClient : ISpotifyLibraryClient
     private static readonly AsyncLock _libraryPerUserLock = new AsyncLock();
     private static Dictionary<LibraryKeyComposite, IReadOnlyCollection<SpotifyLibraryItem<SpotifyId>>> _libraryPerUser = new();
 
-    public SpotifyLibraryClient(IMediator mediator, SpotifyTcpHolder tcpHolder)
+    public SpotifyLibraryClient(IMediator mediator,
+        SpotifyTcpHolder tcpHolder,
+        SpotifyRemoteHolder remoteHolder)
     {
         _mediator = mediator;
         _tcpHolder = tcpHolder;
+
+        remoteHolder.ItemAdded += (sender, item) =>
+        {
+            using (_libraryPerUserLock.Lock())
+            {
+                var user = _tcpHolder.WelcomeMessage.Result.CanonicalUsername;
+                var groups = item.GroupBy(x => x.Item.Type);
+                foreach (var group in groups)
+                {
+                    var key = new LibraryKeyComposite(user, group.Key);
+                    if (!_libraryPerUser.TryGetValue(key, out var libraryForUserAlreadyCached))
+                    {
+                        libraryForUserAlreadyCached = new List<SpotifyLibraryItem<SpotifyId>>().AsReadOnly();
+                        _libraryPerUser[key] = libraryForUserAlreadyCached;
+                    }
+
+                    var list = libraryForUserAlreadyCached.ToList();
+                    list.AddRange(group);
+                    _libraryPerUser[key] = list.AsReadOnly();
+                }
+
+                ItemAdded?.Invoke(this, item);
+            }
+        };
+        remoteHolder.ItemRemoved += (sender, e) =>
+        {
+            using (_libraryPerUserLock.Lock())
+            {
+                var uery = e.Select(x => x.ToString()).ToArray();
+                var user = _tcpHolder.WelcomeMessage.Result.CanonicalUsername;
+                var key = new LibraryKeyComposite(user, SpotifyItemType.Artist);
+                if (!_libraryPerUser.TryGetValue(key, out var libraryForUserAlreadyCached))
+                {
+                    //add new one
+                    libraryForUserAlreadyCached = new List<SpotifyLibraryItem<SpotifyId>>().AsReadOnly();
+                    _libraryPerUser[key] = libraryForUserAlreadyCached;
+                }
+                else
+                {
+                    libraryForUserAlreadyCached = libraryForUserAlreadyCached
+                        .Where(x => !e.Contains(x.Item))
+                        .ToArray()
+                        .AsReadOnly();
+                    _libraryPerUser[key] = libraryForUserAlreadyCached;
+                }
+
+                ItemRemoved?.Invoke(this, e);
+            }
+        };
     }
     public async Task<(SpotifyLibraryItem<SpotifySimpleArtist>[] Items, int Total)> GetArtists(
         string? query,
@@ -166,6 +218,9 @@ internal class SpotifyLibraryClient : ISpotifyLibraryClient
         // return (output, totalCount);
     }
 
+    public event EventHandler<IReadOnlyCollection<SpotifyLibraryItem<SpotifyId>>>? ItemAdded;
+    public event EventHandler<IReadOnlyCollection<SpotifyId>>? ItemRemoved;
+
     private SpotifyLibraryItem<SpotifySimpleArtist>[] FilterSortLimit(
         IEnumerable<SpotifyLibraryItem<SpotifySimpleArtist>> finalList,
         string query,
@@ -232,4 +287,7 @@ internal class SpotifyLibraryClient : ISpotifyLibraryClient
 public interface ISpotifyLibraryClient
 {
     Task<(SpotifyLibraryItem<SpotifySimpleArtist>[] Items, int Total)> GetArtists(string? query, SpotifyArtistLibrarySortField order, int offset, int limit, CancellationToken cancellationToken = default);
+
+    event EventHandler<IReadOnlyCollection<SpotifyLibraryItem<SpotifyId>>> ItemAdded;
+    event EventHandler<IReadOnlyCollection<SpotifyId>> ItemRemoved;
 }

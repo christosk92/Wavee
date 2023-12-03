@@ -6,11 +6,13 @@ using Eum.Spotify.connectstate;
 using Mediator;
 using Wavee.Spotify.Application.Authentication.Queries;
 using Wavee.Spotify.Application.Remote.Commands;
+using Wavee.Spotify.Common;
+using Wavee.Spotify.Domain.Library;
 using Wavee.Spotify.Utils;
 
 namespace Wavee.Spotify.Application.Remote;
 
-internal sealed partial class SpotifyRemoteHolder 
+internal sealed partial class SpotifyRemoteHolder
 {
     private (Cluster Cluster, string ConnectionId)? _remoteState;
     private readonly SpotifyLocalState _localState;
@@ -26,7 +28,9 @@ internal sealed partial class SpotifyRemoteHolder
 
         _localState = SpotifyLocalState.Empty(config);
     }
-    public event EventHandler<Cluster>? RemoteStateChanged; 
+    public event EventHandler<Cluster>? RemoteStateChanged;
+    public event EventHandler<IReadOnlyCollection<SpotifyLibraryItem<SpotifyId>>>? ItemAdded;
+    public event EventHandler<IReadOnlyCollection<SpotifyId>>? ItemRemoved;
 
     public async Task Initialize(CancellationToken cancellationToken = default)
     {
@@ -36,6 +40,64 @@ internal sealed partial class SpotifyRemoteHolder
         _websocket.Disconnected += OnDisconnected;
         _websocket.ConnectionId += OnConnectionId;
         _websocket.RemoteClusterUpdate += OnRemoteClusterUpdate;
+        _websocket.LibraryUpdate += OnLibraryUpdate;
+    }
+
+    private void OnLibraryUpdate(object? sender, (string, JsonElement) e)
+    {
+        try
+        {
+            if (e.Item1.StartsWith("hm://collection/artist/"))
+            {
+                //Artist update
+                using var payloads = e.Item2.GetProperty("payloads").EnumerateArray();
+                payloads.MoveNext();
+                var payloadStr = payloads.Current.GetString();
+                using var json = JsonDocument.Parse(payloadStr);
+                var payload = json.RootElement;
+                var items = payload.GetProperty("items");
+
+                var removedItems = new SpotifyId[items.GetArrayLength()];
+                var added = new SpotifyLibraryItem<SpotifyId>[items.GetArrayLength()];
+                var i = 0;
+                foreach (var item in items.EnumerateArray())
+                {
+                    ReadOnlySpan<char> id = item.GetProperty("identifier").GetString();
+                    var spotifyId = SpotifyId.FromBase62(id, SpotifyItemType.Artist);
+                    var removed = item.GetProperty("removed").GetBoolean();
+                    if (removed)
+                    {
+                        removedItems[i++] = spotifyId;
+                    }
+                    else
+                    {
+                        var addedAt = item.GetProperty("addedAt").GetInt64();
+                        added[i++] = new SpotifyLibraryItem<SpotifyId>
+                        {
+                            Item = spotifyId,
+                            AddedAt = DateTimeOffset.FromUnixTimeSeconds(addedAt),
+                            LastPlayedAt = null
+                        };
+                    }
+                }
+
+                added = added.Where(x => x is not null).ToArray();
+                if (added.Length > 0)
+                {
+                    ItemAdded?.Invoke(this, added);
+                }
+
+                added = added.Where(x => x is not null).ToArray();
+                if (removedItems.Length > 0)
+                {
+                    ItemRemoved?.Invoke(this, removedItems);
+                }
+            }
+        }
+        catch (Exception exception)
+        {
+            Console.WriteLine(exception);
+        }
     }
 
     private async void OnRemoteClusterUpdate(object? sender, ClusterUpdate e)
@@ -156,6 +218,10 @@ internal sealed partial class SpotifyRemoteHolder
                         else
                         {
                             //something else
+                            if (uri.StartsWith("hm://collection") && uri.EndsWith("/json"))
+                            {
+                                LibraryUpdate?.Invoke(this, (uri, root.Clone()));
+                            }
                         }
                     }
                 }
@@ -207,6 +273,8 @@ internal sealed partial class SpotifyRemoteHolder
         public event EventHandler<string> ConnectionId;
         public event EventHandler<Exception> Disconnected;
         public event EventHandler<ClusterUpdate> RemoteClusterUpdate;
+        public event EventHandler<(string, JsonElement)>? LibraryUpdate;
+
 
         [GeneratedRegex(@"hm://pusher/v1/connections/([^/]+)")]
         private static partial Regex ConnIdRegex();
@@ -291,7 +359,8 @@ internal readonly record struct SpotifyLocalState
                 RepeatingTrack = false,
                 ShufflingContext = false
             },
-            PositionAsOfTimestamp = 0, Position = 0,
+            PositionAsOfTimestamp = 0,
+            Position = 0,
             PlaybackSpeed = 1.0,
             IsPlaying = false
         };

@@ -1,6 +1,10 @@
-﻿using Wavee.Spotify.Common;
+﻿using System.Collections.Immutable;
+using Mediator;
+using Wavee.Spotify.Common;
 using Wavee.Spotify.Common.Contracts;
+using Wavee.Spotify.Domain.Library;
 using Wavee.Spotify.Domain.State;
+using Wavee.UI.Features.Library.Notifications;
 using Wavee.UI.Test;
 
 namespace Wavee.UI.Features.Playback.ViewModels;
@@ -9,17 +13,50 @@ internal sealed class SpotifyPlaybackPlayerViewModel : PlaybackPlayerViewModel
 {
     private readonly ISpotifyClient _spotifyClient;
     private readonly IUIDispatcher _dispatcher;
+    private readonly IMediator _mediator;
     public SpotifyPlaybackPlayerViewModel(
         ISpotifyClient spotifyClient,
-        IUIDispatcher dispatcher) : base(dispatcher)
+        IUIDispatcher dispatcher, IMediator mediator) : base(dispatcher)
     {
         _spotifyClient = spotifyClient;
         _dispatcher = dispatcher;
+        _mediator = mediator;
         spotifyClient.PlaybackStateChanged += SpotifyClientOnPlaybackStateChanged;
+        spotifyClient.Library.ItemAdded += LibraryOnItemAdded;
+        spotifyClient.Library.ItemRemoved += LibraryOnItemRemoved;
+    }
+
+    private void LibraryOnItemRemoved(object? sender, IReadOnlyCollection<SpotifyId> e)
+    {
+        _dispatcher.Invoke(() =>
+        {
+            _mediator.Publish(new LibraryItemRemovedNotification()
+            {
+                Id = e.Select(x => (x.ToString(), x.Type))
+            });
+        });
+    }
+
+    private void LibraryOnItemAdded(object? sender, IReadOnlyCollection<SpotifyLibraryItem<SpotifyId>> e)
+    {
+        _dispatcher.Invoke(() =>
+        {
+            _mediator.Publish(new LibraryItemAddedNotification()
+            {
+                Items = e.Select(x => (x.Item.ToString(),
+                    x.Item.Type,
+                    x.AddedAt))
+            });
+        });
     }
 
     private async void SpotifyClientOnPlaybackStateChanged(object? sender, SpotifyPlaybackState e)
     {
+        if (e.TrackInfo is null)
+        {
+            //TODO: REset playback
+            return;
+        }
         var trackId = e.TrackInfo.Value.Uri;
         var trackMetadata = await _spotifyClient.Tracks.GetTrack(SpotifyId.FromUri(trackId));
         const string url = "https://i.scdn.co/image/";

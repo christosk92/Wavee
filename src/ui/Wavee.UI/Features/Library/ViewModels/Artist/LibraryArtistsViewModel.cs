@@ -1,4 +1,6 @@
-﻿using System.Collections.ObjectModel;
+﻿using System.Collections.Immutable;
+using System.Collections.ObjectModel;
+using CommunityToolkit.Mvvm.Messaging;
 using Mediator;
 using Wavee.Spotify.Common;
 using Wavee.Spotify.Domain.Common;
@@ -6,6 +8,7 @@ using Wavee.UI.Domain.Library;
 using Wavee.UI.Entities.Artist;
 using Wavee.UI.Features.Album.ViewModels;
 using Wavee.UI.Features.Artist.Queries;
+using Wavee.UI.Features.Library.Notifications;
 using Wavee.UI.Features.Library.Queries;
 using Wavee.UI.Features.Navigation.ViewModels;
 
@@ -172,6 +175,29 @@ public sealed class LibraryArtistsViewModel : NavigationItemViewModel
                     .ToArray(),
                 MediumImageUrl = mediumImage.Url,
             });
+        }
+    }
+
+    public async Task Add(int items)
+    {
+        var itemsCount = Artists.Count;
+        var library = await _mediator.Send(new GetLibraryArtistsQuery()
+        {
+            Offset = 0,
+            Limit = itemsCount + items,
+            Search = _query,
+            SortField = _sortField
+        });
+        Artists.Clear();
+        HandleResult(library);
+    }
+
+    public void Remove(ImmutableArray<string> ids)
+    {
+        var artistsToRemove = Artists.Where(x => ids.Contains(x.Id)).ToArray();
+        foreach (var artist in artistsToRemove)
+        {
+            Artists.Remove(artist);
         }
     }
 }

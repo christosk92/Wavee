@@ -52,7 +52,7 @@ public static class ServiceCollectionExtensions
 
         services.AddScoped<ISpotifyStorageResolver, SpotifyStorageResolver>();
 
-        services.AddScoped<ISpotifyLibraryClient, SpotifyLibraryClient>();
+        services.AddSingleton<ISpotifyLibraryClient, SpotifyLibraryClient>();
         services.AddScoped<ISpotifyArtistClient, SpotifyArtistClient>();
         services.AddScoped<ISpotifyAlbumClient, SpotifyAlbumClient>();
         return new AuthMissingSpotifyBuilder(services);

@@ -438,13 +438,17 @@
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="80" />
+            <ColumnDefinition Width="2*" />
             <ColumnDefinition />
         </Grid.ColumnDefinitions>
 
         <Grid>
             <controls:AlbumCoverControl Source="{x:Bind Player.CoverSmallImageUrl, Mode=OneWay}" />
         </Grid>
-        <Grid Grid.Column="1" VerticalAlignment="Top">
+        <Grid
+            Grid.Column="1"
+            Grid.ColumnSpan="2"
+            VerticalAlignment="Top">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
@@ -493,7 +497,8 @@
             <TextBlock
                 FontSize="24"
                 FontWeight="Bold"
-                Text="{x:Bind Player.Title, Mode=OneWay}" />
+                Text="{x:Bind Player.Title, Mode=OneWay}"
+                TextTrimming="CharacterEllipsis" />
             <TextBlock
                 FontWeight="SemiBold"
                 Opacity=".6"

@@ -21,6 +21,8 @@ public abstract class PlaybackPlayerViewModel : ObservableObject
     private TimeSpan _duration;
 
     private readonly IUIDispatcher _dispatcher;
+    private string _id;
+
     protected PlaybackPlayerViewModel(IUIDispatcher dispatcher)
     {
         _dispatcher = dispatcher;
@@ -78,6 +80,12 @@ public abstract class PlaybackPlayerViewModel : ObservableObject
     {
         get => _duration;
         protected set => SetProperty(ref _duration, value);
+    }
+
+    public string Id
+    {
+        get => _id;
+        protected set => SetProperty(ref _id, value);
     }
 
     public Guid AddPositionCallback(int minimumDifferenceMs, Action<TimeSpan> callback)
