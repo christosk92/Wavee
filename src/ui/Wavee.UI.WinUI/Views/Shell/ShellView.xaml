@@ -117,6 +117,7 @@
             </NavigationView.Resources>
             <NavigationView.AutoSuggestBox>
                 <AutoSuggestBox
+                    SuggestionChosen="AutoSuggestBox_OnSuggestionChosen"
                     ItemTemplateSelector="{StaticResource SearchSuggestionsItemTemplateSelector}"
                     ItemsSource="{x:Bind ViewModel.Search.Suggestions}"
                     PlaceholderText="Find..."

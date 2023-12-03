@@ -7,6 +7,7 @@ using Wavee.UI.Features.Listen;
 using Wavee.UI.Features.Navigation;
 using Wavee.UI.Features.Navigation.ViewModels;
 using Wavee.UI.Features.NowPlaying.ViewModels;
+using Wavee.UI.Features.Search.ViewModels;
 using Wavee.UI.Features.Shell.ViewModels;
 using Wavee.UI.WinUI.Services;
 
@@ -107,6 +108,16 @@ namespace Wavee.UI.WinUI.Views.Shell
             {
                 ViewModel.Search.Query = sender.Text;
                 await ViewModel.Search.SearchSuggestions();
+            }
+        }
+
+        private void AutoSuggestBox_OnSuggestionChosen(AutoSuggestBox sender, AutoSuggestBoxSuggestionChosenEventArgs args)
+        {
+            var suggestion = args.SelectedItem as SearchSuggestionViewModel;
+            if (suggestion is SearchSuggestionQueryViewModel q)
+            {
+                ViewModel.Search.Query = q.Query;
+                sender.Text = q.Query;
             }
         }
     }
