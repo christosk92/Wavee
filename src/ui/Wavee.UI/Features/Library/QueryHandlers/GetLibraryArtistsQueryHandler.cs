@@ -40,7 +40,7 @@ public sealed class GetLibraryArtistsQueryHandler : IQueryHandler<GetLibraryArti
             {
                 Item = new SimpleArtistEntity
                 {
-                    Id = x.Item.Id.ToString(),
+                    Id = x.Item.Uri.ToString(),
                     Name = x.Item.Name,
                     Images = x.Item.Images
                 },

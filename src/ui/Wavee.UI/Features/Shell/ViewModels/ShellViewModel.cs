@@ -8,6 +8,7 @@ using Wavee.UI.Features.Navigation;
 using Wavee.UI.Features.Navigation.ViewModels;
 using Wavee.UI.Features.NowPlaying.ViewModels;
 using Wavee.UI.Features.Playback.ViewModels;
+using Wavee.UI.Features.Search.ViewModels;
 
 namespace Wavee.UI.Features.Shell.ViewModels;
 
@@ -19,7 +20,7 @@ public sealed class ShellViewModel : ObservableObject
         ListenViewModel listen,
         LibrariesViewModel library,
         NowPlayingViewModel nowPlaying,
-        INavigationService navigation, PlaybackViewModel playback)
+        INavigationService navigation, PlaybackViewModel playback, SearchViewModel search)
     {
         TopNavItems = new object[]
         {
@@ -30,6 +31,7 @@ public sealed class ShellViewModel : ObservableObject
         SelectedItem = listen;
         Navigation = navigation;
         Playback = playback;
+        Search = search;
 
         navigation.NavigatedTo += (sender, o) =>
         {
@@ -83,4 +85,5 @@ public sealed class ShellViewModel : ObservableObject
     }
 
     public PlaybackViewModel Playback { get; }
+    public SearchViewModel Search { get; }
 }

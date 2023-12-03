@@ -33,25 +33,25 @@ namespace Wavee.UI.WinUI.Views.Shell
                         ViewModel.Navigation.Navigate(args.RecommendedNavigationTransitionInfo, h);
                         break;
                     case LibrarySongsViewModel s:
-                    {
-                        ViewModel.Navigation.Navigate(args.RecommendedNavigationTransitionInfo, s);
-                        break;
-                    }
+                        {
+                            ViewModel.Navigation.Navigate(args.RecommendedNavigationTransitionInfo, s);
+                            break;
+                        }
                     case LibraryAlbumsViewModel s:
-                    {
-                        ViewModel.Navigation.Navigate(args.RecommendedNavigationTransitionInfo, s);
-                        break;
-                    }
+                        {
+                            ViewModel.Navigation.Navigate(args.RecommendedNavigationTransitionInfo, s);
+                            break;
+                        }
                     case LibraryArtistsViewModel s:
-                    {
-                        ViewModel.Navigation.Navigate(args.RecommendedNavigationTransitionInfo, s);
-                        break;
-                    }
+                        {
+                            ViewModel.Navigation.Navigate(args.RecommendedNavigationTransitionInfo, s);
+                            break;
+                        }
                     case LibraryPodcastsViewModel s:
-                    {
-                        ViewModel.Navigation.Navigate(args.RecommendedNavigationTransitionInfo, s);
-                        break;
-                    }
+                        {
+                            ViewModel.Navigation.Navigate(args.RecommendedNavigationTransitionInfo, s);
+                            break;
+                        }
                     case LibrariesViewModel p:
                         {
                             var selected = p.SelectedItem;
@@ -99,6 +99,15 @@ namespace Wavee.UI.WinUI.Views.Shell
         public Visibility HasSubItemsThenVisible(NavigationItemViewModel[]? navigationItemViewModels)
         {
             return navigationItemViewModels?.Length > 0 ? Visibility.Visible : Visibility.Collapsed;
+        }
+
+        private async void AutoSuggestBox_OnTextChanged(AutoSuggestBox sender, AutoSuggestBoxTextChangedEventArgs args)
+        {
+            if (args.Reason is AutoSuggestionBoxTextChangeReason.UserInput)
+            {
+                ViewModel.Search.Query = sender.Text;
+                await ViewModel.Search.SearchSuggestions();
+            }
         }
     }
 }

@@ -11,6 +11,7 @@ using Wavee.UI.Features.Listen;
 using Wavee.UI.Features.MainWindow;
 using Wavee.UI.Features.NowPlaying.ViewModels;
 using Wavee.UI.Features.Playback.ViewModels;
+using Wavee.UI.Features.Search.ViewModels;
 using Wavee.UI.Features.Shell.ViewModels;
 
 namespace Wavee.UI;
@@ -56,6 +57,7 @@ public static class ServiceCollectionExtensions
             .AddScoped<LibraryPodcastsViewModel>()
             .AddScoped<NowPlayingViewModel>()
             .AddScoped<PlaybackViewModel>()
-            .AddTransient<SpotifyPlaybackPlayerViewModel>();
+            .AddTransient<SpotifyPlaybackPlayerViewModel>()
+            .AddScoped<SearchViewModel>();
     }
 }
