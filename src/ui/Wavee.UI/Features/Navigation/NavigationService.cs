@@ -9,6 +9,7 @@ public interface INavigationService
 
     RelayCommand GoNextCommand { get; }
     RelayCommand GoBackCommand { get; }
+    Type CurrentPage { get;  }
 
     void Navigate<TViewModel>(object navigationStateParameters, TViewModel? overrideDataContext = default);
 

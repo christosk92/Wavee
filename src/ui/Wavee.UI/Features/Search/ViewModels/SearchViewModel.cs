@@ -16,7 +16,7 @@ public sealed class SearchViewModel : ObservableObject
     }
 
     public ObservableCollection<SearchSuggestionViewModel> Suggestions { get; } = new();
-
+    public ObservableCollection<SearchGroupViewModel> Results { get; } = new();
     public string? Query
     {
         get => _query;
@@ -39,6 +39,25 @@ public sealed class SearchViewModel : ObservableObject
         foreach (var suggestion in result)
         {
             Suggestions.Add(suggestion);
+        }
+    }
+
+    public async Task Search()
+    {
+        if (string.IsNullOrEmpty(Query))
+        {
+            Results.Clear();
+            return;
+        }
+
+        var result = await _mediator.Send(new SearchQuery
+        {
+            Query = _query
+        });
+        Results.Clear();
+        foreach (var group in result)
+        {
+            Results.Add(group);
         }
     }
 }

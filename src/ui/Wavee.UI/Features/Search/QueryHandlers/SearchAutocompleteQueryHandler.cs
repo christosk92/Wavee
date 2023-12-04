@@ -24,7 +24,7 @@ public sealed class SearchAutocompleteQueryHandler : IQueryHandler<SearchAutocom
             suggestions.Add(new SearchSuggestionQueryViewModel
             {
                 Terms = suggestion.Segments,
-                Query = query.Query
+                Query = suggestion.Query
             });
         }
 

@@ -99,7 +99,7 @@
                     Glyph="&#xE721;" />
 
                 <controls:QueryHitTextBlock
-                    Margin="4,0"
+                    Margin="8,0"
                     RelativePanel.AlignVerticalCenterWith="QueryIcon"
                     RelativePanel.RightOf="QueryIcon"
                     Terms="{x:Bind Terms}" />

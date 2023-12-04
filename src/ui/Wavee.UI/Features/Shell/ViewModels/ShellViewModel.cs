@@ -70,7 +70,7 @@ public sealed class ShellViewModel : ObservableObject
             }
             else
             {
-                SelectedItem = null;
+                SelectedItem = new NothingSelectedViewModel();
             }
         };
     }
@@ -86,4 +86,8 @@ public sealed class ShellViewModel : ObservableObject
 
     public PlaybackViewModel Playback { get; }
     public SearchViewModel Search { get; }
+}
+
+public sealed class NothingSelectedViewModel : NavigationItemViewModel
+{
 }

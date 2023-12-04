@@ -19,6 +19,7 @@
 		<PublishReadyToRunExclude Include="LanguageExt.Core.dll" />
 	</ItemGroup>
 	<ItemGroup>
+	  <None Remove="Assets\AlbumPlaceholder.png" />
 	  <None Remove="Styles\ButtonStyles.xaml" />
 	  <None Remove="Styles\ItemContainerStyles.xaml" />
 	  <None Remove="Styles\NavigationView\ExtendedNavigationViewStyle.xaml" />
@@ -34,6 +35,7 @@
 	  <None Remove="Views\Main\MainContent.xaml" />
 	  <None Remove="Views\NowPlaying\NowPlayingPage.xaml" />
 	  <None Remove="Views\Playback\PlaybackPlayerControl.xaml" />
+	  <None Remove="Views\Search\SearchPage.xaml" />
 	  <None Remove="Views\Shell\ShellView.xaml" />
 	</ItemGroup>
 	<ItemGroup>
@@ -74,6 +76,9 @@
 		<ProjectReference Include="..\Wavee.UI\Wavee.UI.csproj" />
 	</ItemGroup>
 	<ItemGroup>
+	  <Content Update="Assets\AlbumPlaceholder.png">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </Content>
 	  <None Update="Assets\Fonts\MediaPlayerIcons.ttf">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </None>
@@ -83,6 +88,9 @@
 	  <None Update="Themes\Generic.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </None>
+	  <Page Update="Views\Search\SearchPage.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </Page>
 	  <Page Update="Views\Libraries\Components\LibraryAlbumComponent.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </Page>

@@ -152,12 +152,14 @@ public sealed class SpotifySearchQueryHandler : IQueryHandler<SpotifySearchQuery
 
     private static ISpotifyItem Parse(JsonElement item)
     {
-        var data = item.GetProperty("data");
-        ReadOnlySpan<char> uri = data.GetProperty("uri").GetString();
-        ReadOnlySpan<char> typeName = data.GetProperty("__typename").GetString();
-        switch (typeName)
+        try
         {
-            case "Album":
+            var data = item.GetProperty("data");
+            ReadOnlySpan<char> uri = data.GetProperty("uri").GetString();
+            ReadOnlySpan<char> typeName = data.GetProperty("__typename").GetString();
+            switch (typeName)
+            {
+                case "Album":
                 {
                     return new SpotifySimpleAlbum
                     {
@@ -169,7 +171,7 @@ public sealed class SpotifySearchQueryHandler : IQueryHandler<SpotifySearchQuery
                     };
                     break;
                 }
-            case "Artist":
+                case "Artist":
                 {
                     return new SpotifySimpleArtist()
                     {
@@ -179,7 +181,7 @@ public sealed class SpotifySearchQueryHandler : IQueryHandler<SpotifySearchQuery
                     };
                     break;
                 }
-            case "Episode":
+                case "Episode":
                 {
                     return new SpotifySimplePodcastEpisode()
                     {
@@ -187,7 +189,7 @@ public sealed class SpotifySearchQueryHandler : IQueryHandler<SpotifySearchQuery
                     };
                     break;
                 }
-            case "Genre":
+                case "Genre":
                 {
                     return new SpotifySimpleGenre()
                     {
@@ -195,7 +197,7 @@ public sealed class SpotifySearchQueryHandler : IQueryHandler<SpotifySearchQuery
                     };
                     break;
                 }
-            case "Playlist":
+                case "Playlist":
                 {
                     return new SpotifySimplePlaylist()
                     {
@@ -203,7 +205,7 @@ public sealed class SpotifySearchQueryHandler : IQueryHandler<SpotifySearchQuery
                     };
                     break;
                 }
-            case "Track":
+                case "Track":
                 {
                     return new SpotifySimpleTrack
                     {
@@ -211,7 +213,7 @@ public sealed class SpotifySearchQueryHandler : IQueryHandler<SpotifySearchQuery
                     };
                     break;
                 }
-            case "Podcast":
+                case "Podcast":
                 {
                     return new SpotifySimplePodcast
                     {
@@ -219,7 +221,7 @@ public sealed class SpotifySearchQueryHandler : IQueryHandler<SpotifySearchQuery
                     };
                     break;
                 }
-            case "User":
+                case "User":
                 {
                     return new SpotifySimpleUser()
                     {
@@ -227,31 +229,43 @@ public sealed class SpotifySearchQueryHandler : IQueryHandler<SpotifySearchQuery
                     };
                     break;
                 }
-        }
+            }
 
-        return default;
+            return default;
+        }
+        catch (KeyNotFoundException)
+        {
+            return default;
+        }
     }
 
     private static SpotifyImage[] ParseImages(JsonElement getProperty)
     {
-        var sources = getProperty.GetProperty("sources");
-        var output = new SpotifyImage[sources.GetArrayLength()];
-        int i = 0;
-        using var enumrator = sources.EnumerateArray();
-        while (enumrator.MoveNext())
+        try
         {
-            var item = enumrator.Current;
-            var image = new SpotifyImage
+            var sources = getProperty.GetProperty("sources");
+            var output = new SpotifyImage[sources.GetArrayLength()];
+            int i = 0;
+            using var enumrator = sources.EnumerateArray();
+            while (enumrator.MoveNext())
             {
-                Url = item.GetProperty("url").GetString(),
-                Height = item.GetProperty("height").GetUInt16(),
-                Width = item.GetProperty("width").GetUInt16(),
-                ColorDark = ParseColorDark(getProperty)
-            };
-            output[i++] = image;
-        }
+                var item = enumrator.Current;
+                var image = new SpotifyImage
+                {
+                    Url = item.GetProperty("url").GetString(),
+                    Height = item.GetProperty("height").GetUInt16(),
+                    Width = item.GetProperty("width").GetUInt16(),
+                    ColorDark = ParseColorDark(getProperty)
+                };
+                output[i++] = image;
+            }
 
-        return output;
+            return output;
+        }
+        catch (InvalidOperationException)
+        {
+            return Array.Empty<SpotifyImage>();
+        }
     }
 
     private static string? ParseColorDark(JsonElement getProperty)

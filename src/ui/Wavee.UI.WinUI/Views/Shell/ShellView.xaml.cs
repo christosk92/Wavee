@@ -1,3 +1,4 @@
+using System.Windows.Forms;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Wavee.UI.Features.Library.ViewModels;
@@ -10,6 +11,8 @@ using Wavee.UI.Features.NowPlaying.ViewModels;
 using Wavee.UI.Features.Search.ViewModels;
 using Wavee.UI.Features.Shell.ViewModels;
 using Wavee.UI.WinUI.Services;
+using Wavee.UI.WinUI.Views.Search;
+using UserControl = Microsoft.UI.Xaml.Controls.UserControl;
 
 namespace Wavee.UI.WinUI.Views.Shell
 {
@@ -24,7 +27,7 @@ namespace Wavee.UI.WinUI.Views.Shell
 
         private void NavigationView_OnItemInvoked(NavigationView sender, NavigationViewItemInvokedEventArgs args)
         {
-            if (args.InvokedItemContainer.Tag is object item)
+            if (args.InvokedItemContainer?.Tag is object item)
             {
                 //ince sidebarviewmodel is a viewmodelbase, we need to pass the type as the actual upper time
                 //so we can navigate to the correct page
@@ -107,7 +110,16 @@ namespace Wavee.UI.WinUI.Views.Shell
             if (args.Reason is AutoSuggestionBoxTextChangeReason.UserInput)
             {
                 ViewModel.Search.Query = sender.Text;
-                await ViewModel.Search.SearchSuggestions();
+                //if we are on the search page, we want to update the suggestions
+                if (ViewModel.Navigation.CurrentPage != typeof(SearchPage))
+                {
+                    await ViewModel.Search.SearchSuggestions();
+                }
+                else
+                {
+                    ViewModel.Search.Suggestions.Clear();
+                    await ViewModel.Search.Search();
+                }
             }
         }
 
@@ -122,13 +134,14 @@ namespace Wavee.UI.WinUI.Views.Shell
             if (query is SearchSuggestionQueryViewModel q)
             {
                 ViewModel.Search.Query = q.Query;
+                ViewModel.Navigation.Navigate<SearchViewModel>(null);
             }
         }
 
         private void FrameworkElement_OnLayoutUpdated(object sender, object e)
         {
-            if (SuggestBox is not null)
-                SuggestBox.IsSuggestionListOpen = true;
+            // if (SuggestBox is not null)
+            //     SuggestBox.IsSuggestionListOpen = true;
         }
     }
 }
