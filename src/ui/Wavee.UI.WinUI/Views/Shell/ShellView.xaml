@@ -193,11 +193,7 @@
                         MenuItemsSource="{x:Bind ViewModel.SelectedItem.Children, Mode=OneWay}"
                         PaneDisplayMode="Top"
                         SelectedItem="{x:Bind ViewModel.SelectedItem.SelectedItem, Mode=OneWay}"
-                        Visibility="{x:Bind HasSubItemsThenVisible(ViewModel.SelectedItem.Children), Mode=OneWay}">
-                        <NavigationView.Resources>
-                            <StaticResource x:Key="NavigationViewContentGridBorderBrush" ResourceKey="Original" />
-                        </NavigationView.Resources>
-                    </NavigationView>
+                        Visibility="{x:Bind HasSubItemsThenVisible(ViewModel.SelectedItem.Children), Mode=OneWay}" />
                 </Border>
             </Grid>
         </NavigationView>

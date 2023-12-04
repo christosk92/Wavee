@@ -22,6 +22,7 @@ public sealed partial class ArtistPage : Page, INavigeablePage<ArtistViewModel>
         {
             DataContext = vm;
             await vm.Initialize();
+            ArtistPage_OnSizeChanged(null, null);
         }
     }
 
@@ -39,7 +40,7 @@ public sealed partial class ArtistPage : Page, INavigeablePage<ArtistViewModel>
 
     private void ArtistPage_OnSizeChanged(object sender, SizeChangedEventArgs e)
     {
-        var topTracksGridSize = TopTracksGrid.ActualWidth;
+        var topTracksGridSize = SecondTopGridColumn.ActualWidth;
         var wdth = topTracksGridSize / 2;
         if (TopTracksGrid.ItemsPanelRoot is ItemsWrapGrid wrapGrid)
         {
@@ -47,13 +48,13 @@ public sealed partial class ArtistPage : Page, INavigeablePage<ArtistViewModel>
             {
                 wrapGrid.Orientation = Orientation.Vertical;
                 wrapGrid.MaximumRowsOrColumns = 5;
-                wrapGrid.ItemWidth = e.NewSize.Width / 2 - 24;
+                wrapGrid.ItemWidth = this.ActualWidth / 2 - 24;
             }
             else
             {
                 wrapGrid.Orientation = Orientation.Vertical;
                 wrapGrid.MaximumRowsOrColumns = 5;
-                wrapGrid.ItemWidth = e.NewSize.Width - 48;
+                wrapGrid.ItemWidth = this.ActualWidth - 48;
             }
         }
     }
