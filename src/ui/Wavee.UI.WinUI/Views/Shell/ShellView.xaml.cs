@@ -113,12 +113,22 @@ namespace Wavee.UI.WinUI.Views.Shell
 
         private void AutoSuggestBox_OnSuggestionChosen(AutoSuggestBox sender, AutoSuggestBoxSuggestionChosenEventArgs args)
         {
-            var suggestion = args.SelectedItem as SearchSuggestionViewModel;
-            if (suggestion is SearchSuggestionQueryViewModel q)
+
+        }
+
+        private void AutoSuggestBox_OnQuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
+        {
+            var query = args.ChosenSuggestion;
+            if (query is SearchSuggestionQueryViewModel q)
             {
                 ViewModel.Search.Query = q.Query;
-                sender.Text = q.Query;
             }
+        }
+
+        private void FrameworkElement_OnLayoutUpdated(object sender, object e)
+        {
+            if (SuggestBox is not null)
+                SuggestBox.IsSuggestionListOpen = true;
         }
     }
 }

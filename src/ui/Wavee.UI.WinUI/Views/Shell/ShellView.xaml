@@ -34,52 +34,61 @@
         <StaticResource x:Key="Original" ResourceKey="NavigationViewContentGridBorderBrush" />
 
         <DataTemplate x:Key="GenericSearchSuggestion" x:DataType="viewModels2:SearchSuggestionEntityViewModel">
-            <RelativePanel>
-                <Image
-                    x:Name="image"
-                    Width="50"
-                    Height="50"
-                    Source="{Binding ImageUrl}" />
+            <StackPanel Orientation="Vertical" Spacing="8">
+                <MenuFlyoutSeparator />
+                <RelativePanel>
+                    <Image
+                        x:Name="image"
+                        Width="40"
+                        Height="40"
+                        Source="{Binding ImageUrl}" />
 
-                <TextBlock
-                    x:Name="Name"
-                    Margin="12,0"
-                    RelativePanel.AlignTopWith="image"
-                    RelativePanel.RightOf="image"
-                    Text="{x:Bind Name}" />
+                    <TextBlock
+                        x:Name="Name"
+                        Margin="6,0"
+                        FontSize="14"
+                        RelativePanel.AlignTopWith="image"
+                        RelativePanel.RightOf="image"
+                        Text="{x:Bind Name}"
+                        TextTrimming="CharacterEllipsis" />
 
-                <TextBlock
-                    Margin="12,0"
-                    Foreground="{ThemeResource SystemControlForegroundBaseHighBrush}"
-                    Opacity=".5"
-                    RelativePanel.Below="Name"
-                    RelativePanel.RightOf="image"
-                    Text="{x:Bind Subtitle}" />
-            </RelativePanel>
+                    <TextBlock
+                        Margin="6,0"
+                        FontSize="13"
+                        Foreground="{ThemeResource SystemControlForegroundBaseHighBrush}"
+                        Opacity=".5"
+                        RelativePanel.Below="Name"
+                        RelativePanel.RightOf="image"
+                        Text="{x:Bind Subtitle}" />
+                </RelativePanel>
+            </StackPanel>
         </DataTemplate>
         <DataTemplate x:Key="ArtistSearchSuggestion" x:DataType="viewModels2:SearchSuggestionEntityViewModel">
-            <RelativePanel>
-                <PersonPicture
-                    x:Name="image"
-                    Width="50"
-                    Height="50"
-                    ProfilePicture="{Binding ImageUrl}" />
+            <StackPanel Orientation="Vertical" Spacing="8">
+                <MenuFlyoutSeparator />
+                <RelativePanel>
+                    <PersonPicture
+                        x:Name="image"
+                        Width="40"
+                        Height="40"
+                        ProfilePicture="{Binding ImageUrl}" />
 
-                <TextBlock
-                    x:Name="Name"
-                    Margin="12,0"
-                    RelativePanel.AlignTopWith="image"
-                    RelativePanel.RightOf="image"
-                    Text="{x:Bind Name}" />
+                    <TextBlock
+                        x:Name="Name"
+                        Margin="6,0"
+                        RelativePanel.AlignTopWith="image"
+                        RelativePanel.RightOf="image"
+                        Text="{x:Bind Name}" />
 
-                <TextBlock
-                    Margin="12,0"
-                    Foreground="{ThemeResource SystemControlForegroundBaseHighBrush}"
-                    Opacity=".5"
-                    RelativePanel.Below="Name"
-                    RelativePanel.RightOf="image"
-                    Text="{x:Bind Subtitle}" />
-            </RelativePanel>
+                    <TextBlock
+                        Margin="6,0"
+                        Foreground="{ThemeResource SystemControlForegroundBaseHighBrush}"
+                        Opacity=".5"
+                        RelativePanel.Below="Name"
+                        RelativePanel.RightOf="image"
+                        Text="{x:Bind Subtitle}" />
+                </RelativePanel>
+            </StackPanel>
         </DataTemplate>
 
         <DataTemplate x:Key="QuerySearchSuggestion" x:DataType="viewModels2:SearchSuggestionQueryViewModel">
@@ -117,13 +126,24 @@
             </NavigationView.Resources>
             <NavigationView.AutoSuggestBox>
                 <AutoSuggestBox
-                    SuggestionChosen="AutoSuggestBox_OnSuggestionChosen"
+                    x:Name="SuggestBox"
                     ItemTemplateSelector="{StaticResource SearchSuggestionsItemTemplateSelector}"
                     ItemsSource="{x:Bind ViewModel.Search.Suggestions}"
+                    LayoutUpdated="FrameworkElement_OnLayoutUpdated"
                     PlaceholderText="Find..."
                     QueryIcon="Find"
+                    QuerySubmitted="AutoSuggestBox_OnQuerySubmitted"
+                    SuggestionChosen="AutoSuggestBox_OnSuggestionChosen"
+                    Text="{x:Bind ViewModel.Search.Query, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                     TextChanged="AutoSuggestBox_OnTextChanged"
-                    UpdateTextOnSelect="False" />
+                    UpdateTextOnSelect="False">
+                    <AutoSuggestBox.ItemContainerStyle>
+                        <Style TargetType="ListViewItem">
+                            <Setter Property="Padding" Value="12,4" />
+                            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                        </Style>
+                    </AutoSuggestBox.ItemContainerStyle>
+                </AutoSuggestBox>
             </NavigationView.AutoSuggestBox>
             <NavigationView.PaneHeader>
                 <Grid Margin="0,0,0,0" Padding="12,12,0,0">
