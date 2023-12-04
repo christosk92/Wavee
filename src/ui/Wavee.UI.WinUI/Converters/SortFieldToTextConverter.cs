@@ -1,7 +1,7 @@
 ﻿using System;
 using Microsoft.UI.Xaml.Data;
+using Wavee.UI.Domain.Artist;
 using Wavee.UI.Domain.Library;
-using Wavee.UI.Entities.Artist;
 
 namespace Wavee.UI.WinUI.Converters;
 

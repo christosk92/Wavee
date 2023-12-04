@@ -4,7 +4,7 @@ namespace Wavee.UI.Domain.Artist;
 
 public sealed class ArtistAlbumEntity
 {
-    public required SpotifyImage[] Images { get; init; }
+    public required IReadOnlyCollection<SpotifyImage> Images { get; init; }
     public required string Name { get; set; }
     public required string Id { get; init; }
     public required ArtistAlbumTrackEntity[] Tracks { get; set; }

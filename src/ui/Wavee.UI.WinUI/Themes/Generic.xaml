@@ -20,10 +20,11 @@
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="14" />
-                                <ColumnDefinition />
+                                <ColumnDefinition Width="20" />
                                 <ColumnDefinition Width="14" />
                                 <ColumnDefinition />
                                 <ColumnDefinition Width="14" />
+                                <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
                             <TextBlock
                                 Grid.Column="1"
@@ -38,6 +39,15 @@
                                 FontFamily="Segoe Fluent Icons"
                                 FontSize="16"
                                 Glyph="&#xEB51;" />
+
+                            <Image
+                                x:Name="MainImage"
+                                Grid.Column="5"
+                                Width="38"
+                                Height="38"
+                                Margin="0,0,14,0"
+                                Source="{TemplateBinding Image}"
+                                Visibility="Collapsed" />
                         </Grid>
 
 
@@ -49,13 +59,23 @@
                             Content="{TemplateBinding MainContent}" />
                         <VisualStateManager.VisualStateGroups>
                             <VisualStateGroup x:Name="OddEvenStates">
-                                <VisualState x:Name="Odd" />
+                                <VisualState x:Name="Default" />
+                                <VisualState x:Name="Even" />
 
-                                <VisualState x:Name="Even">
+                                <VisualState x:Name="Odd">
                                     <VisualState.Setters>
                                         <Setter Target="LayoutRoot.Background" Value="{ThemeResource CardBackgroundFillColorSecondaryBrush}" />
                                         <Setter Target="LayoutRoot.BorderThickness" Value="0" />
                                         <Setter Target="LayoutRoot.CornerRadius" Value="8" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                            </VisualStateGroup>
+                            <VisualStateGroup x:Name="ImageStates">
+                                <VisualState x:Name="HideImage" />
+
+                                <VisualState x:Name="ShowImage">
+                                    <VisualState.Setters>
+                                        <Setter Target="MainImage.Visibility" Value="Visible" />
                                     </VisualState.Setters>
                                 </VisualState>
                             </VisualStateGroup>
@@ -67,7 +87,7 @@
         </Setter>
     </Style>
 
-    <Style  TargetType="controls:QueryHitTextBlock">
+    <Style TargetType="controls:QueryHitTextBlock">
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="controls:QueryHitTextBlock">

@@ -75,7 +75,10 @@
                 SelectionMode="Single">
                 <ItemsView.ItemTemplate>
                     <DataTemplate x:DataType="artist:LibraryArtistViewModel">
-                        <ItemContainer Height="60">
+                        <ItemContainer IsDoubleTapEnabled="True"
+                                       Tag="{x:Bind Id}"
+                                       DoubleTapped="ArtistDoubleTapped"
+                                       Height="60">
                             <StackPanel
                                 Margin="16,0"
                                 Orientation="Horizontal"

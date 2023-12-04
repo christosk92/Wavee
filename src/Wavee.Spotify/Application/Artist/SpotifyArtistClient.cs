@@ -3,6 +3,7 @@ using Mediator;
 using Wavee.Spotify.Application.GraphQL.Queries;
 using Wavee.Spotify.Common;
 using Wavee.Spotify.Domain.Album;
+using Wavee.Spotify.Domain.Artist;
 using Wavee.Spotify.Domain.Common;
 
 namespace Wavee.Spotify.Application.Artist;
@@ -10,6 +11,7 @@ namespace Wavee.Spotify.Application.Artist;
 public interface ISpotifyArtistClient
 {
     Task<(IReadOnlyCollection<SpotifySimpleAlbum> Albums, uint Total)> GetDiscographyAllAsync(SpotifyId id, uint offset, uint limit, CancellationToken cancellationToken);
+    Task<SpotifyArtistView> GetAsync(SpotifyId id, CancellationToken cancellationToken);
 }
 internal sealed class SpotifyArtistClient : ISpotifyArtistClient
 {
@@ -74,6 +76,37 @@ internal sealed class SpotifyArtistClient : ISpotifyArtistClient
             output[i++] = album;
         }
         return (output, total);
+    }
+
+    public async Task<SpotifyArtistView> GetAsync(SpotifyId id, CancellationToken cancellationToken)
+    {
+        const string operationName = "queryArtistOverview";
+        const string operationHash = "3a747b83568580814534e662a2569a6978ac3ad2e449ff751a859abe05dec995";
+        const string locale = "";
+        const bool includePrerelease = true;
+
+        var variables = new Dictionary<string, object>
+        {
+            ["uri"] = id.ToString(),
+            ["locale"] = locale,
+            ["includePrerelease"] = includePrerelease
+        };
+
+        using var response = await _mediator.Send(new GetSpotifyGraphQLQuery
+        {
+            OperationName = operationName,
+            Variables = variables,
+            Hash = operationHash
+        }, cancellationToken);
+
+        await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
+        using var jsondoc = await JsonDocument.ParseAsync(stream, cancellationToken: cancellationToken);
+
+        var artist = jsondoc.RootElement.GetProperty("data")
+            .GetProperty("artistUnion");
+
+        var parsed = SpotifyArtistViewParser.Parse(artist);
+        return parsed;
     }
 
     private static SpotifyImage[] GetImages(JsonElement sources)

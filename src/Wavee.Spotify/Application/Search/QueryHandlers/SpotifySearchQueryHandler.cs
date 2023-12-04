@@ -209,7 +209,8 @@ public sealed class SpotifySearchQueryHandler : IQueryHandler<SpotifySearchQuery
                 {
                     return new SpotifySimpleTrack
                     {
-                        Uri = SpotifyId.FromUri(uri)
+                        Uri = SpotifyId.FromUri(uri),
+                        Name = null
                     };
                     break;
                 }

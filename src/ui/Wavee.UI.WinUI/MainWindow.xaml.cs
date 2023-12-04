@@ -11,6 +11,7 @@ public sealed partial class MainWindow : Window
     {
         ViewModel = viewModel;
         this.InitializeComponent();
+        Instance = this;
         this.SystemBackdrop = new MicaBackdrop();
         this.AppWindow.TitleBar.ExtendsContentIntoTitleBar = true;
 
@@ -24,4 +25,6 @@ public sealed partial class MainWindow : Window
     }
 
     public MainWindowViewModel ViewModel { get; }
+
+    public static MainWindow Instance { get; private set; }
 }

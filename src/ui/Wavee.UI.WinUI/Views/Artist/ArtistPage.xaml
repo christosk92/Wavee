@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Page
+    x:Class="Wavee.UI.WinUI.Views.Artist.ArtistPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:artist="using:Wavee.UI.Domain.Artist"
+    xmlns:controls="using:Wavee.UI.WinUI.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="using:Wavee.UI.WinUI.Views.Artist"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:viewModels="using:Wavee.UI.Features.Artist.ViewModels"
+    DataContext="{x:Bind ViewModel}"
+    SizeChanged="ArtistPage_OnSizeChanged"
+    mc:Ignorable="d">
+
+    <Page.Resources>
+        <Style
+            x:Key="WithoutRandomMarginLvStyle"
+            BasedOn="{StaticResource DefaultListViewItemStyle}"
+            TargetType="ListViewItem">
+            <Setter Property="Padding" Value="12,0" />
+            <Setter Property="Margin" Value="-4,4,0,4" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        </Style>
+    </Page.Resources>
+    <ScrollView Margin="0,-135,0,0">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" />
+                <RowDefinition />
+            </Grid.RowDefinitions>
+            <Grid Margin="0,0,0,0">
+                <controls:ImageTransitionControl
+                    Grid.RowSpan="2"
+                    VerticalAlignment="Stretch"
+                    OffsetY="0"
+                    Source="{Binding HeaderImageUrl, Mode=OneWay}" />
+            </Grid>
+
+            <RelativePanel
+                Grid.Row="0"
+                Grid.RowSpan="2"
+                Margin="24,160,24,0">
+                <StackPanel
+                    x:Name="MetadataPanel"
+                    Orientation="Vertical"
+                    RelativePanel.AlignLeftWithPanel="True"
+                    RelativePanel.AlignTopWithPanel="True">
+                    <TextBlock
+                        FontSize="16"
+                        FontWeight="Bold"
+                        Foreground="{ThemeResource ApplicationSecondaryForegroundThemeBrush}">
+                        <Run Text="Verified" />
+                        <Run Text="artist" />
+                    </TextBlock>
+                    <TextBlock
+                        FontSize="60"
+                        FontWeight="ExtraBlack"
+                        Opacity="1"
+                        Text="{x:Bind ViewModel.Name, Mode=OneWay}" />
+                    <TextBlock
+                        FontSize="16"
+                        FontWeight="SemiBold"
+                        Foreground="{ThemeResource ApplicationSecondaryForegroundThemeBrush}">
+                        <Run Foreground="{ThemeResource ApplicationForegroundThemeBrush}" Text="{x:Bind ViewModel.MonthlyListeners, Mode=OneWay}" />
+                        <Run Text="monthly listeners" />
+                    </TextBlock>
+                </StackPanel>
+
+                <Grid
+                    x:Name="TopTrackGrid"
+                    Margin="0,48,0,0"
+                    RelativePanel.Below="MetadataPanel">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition x:Name="SecondTopGridColumn" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition />
+                    </Grid.RowDefinitions>
+
+                    <TextBlock
+                        FontSize="16"
+                        FontWeight="SemiBold"
+                        Text="Latest release"
+                        Visibility="{x:Bind NullIsCollapsed(ViewModel.LatestRelease), Mode=OneWay}" />
+
+                    <!--  TODO Card here  -->
+
+                    <TextBlock
+                        Grid.Row="0"
+                        Grid.Column="1"
+                        FontSize="16"
+                        FontWeight="SemiBold"
+                        Text="Top songs" />
+
+                    <ListView
+                        x:Name="TopTracksGrid"
+                        Grid.Row="1"
+                        Grid.Column="1"
+                        Margin="0,0,0,0"
+                        ItemContainerStyle="{StaticResource WithoutRandomMarginLvStyle}"
+                        ItemsSource="{x:Bind ViewModel.TopTracks}"
+                        SelectionMode="Extended">
+                        <ListView.ItemTemplate>
+                            <DataTemplate x:DataType="viewModels:ArtistTopTrackViewModel">
+                                <StackPanel Orientation="Vertical">
+                                    <controls:TrackControl
+                                        AlternateColors="False"
+                                        Image="{x:Bind Track.SmallImage, Mode=OneWay}"
+                                        Number="{x:Bind Number, Mode=OneWay}"
+                                        ShowImage="True">
+                                        <controls:TrackControl.MainContent>
+                                            <Grid VerticalAlignment="Center">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition />
+                                                    <ColumnDefinition Width="100" />
+                                                    <ColumnDefinition Width="50" />
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock
+                                                    FontWeight="SemiBold"
+                                                    Text="{x:Bind Track.Name}"
+                                                    TextTrimming="CharacterEllipsis"
+                                                    TextWrapping="WrapWholeWords" />
+
+                                                <TextBlock
+                                                    Grid.Column="1"
+                                                    HorizontalAlignment="Right"
+                                                    VerticalAlignment="Center"
+                                                    Text="{x:Bind Playcount}" />
+
+                                                <Button
+                                                    Grid.Column="2"
+                                                    Padding="8,0"
+                                                    HorizontalAlignment="Right"
+                                                    VerticalAlignment="Center"
+                                                    VerticalContentAlignment="Center"
+                                                    Background="Transparent"
+                                                    BorderThickness="0"
+                                                    FontWeight="Bold"
+                                                    Style="{ThemeResource TextBlockButtonStyle}">
+                                                    <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE712;" />
+                                                </Button>
+                                            </Grid>
+                                        </controls:TrackControl.MainContent>
+                                    </controls:TrackControl>
+                                    <MenuFlyoutSeparator />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                        <ListView.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <ItemsWrapGrid />
+                            </ItemsPanelTemplate>
+                        </ListView.ItemsPanel>
+                    </ListView>
+                </Grid>
+            </RelativePanel>
+        </Grid>
+    </ScrollView>
+</Page>

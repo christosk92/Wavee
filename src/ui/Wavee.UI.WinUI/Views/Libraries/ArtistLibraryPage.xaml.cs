@@ -4,6 +4,7 @@ using System.Threading;
 using CommunityToolkit.WinUI;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media.Animation;
 using Microsoft.UI.Xaml.Navigation;
 using Nito.AsyncEx;
@@ -138,6 +139,16 @@ public sealed partial class ArtistLibraryPage : Page, INavigeablePage<LibraryArt
                     cancellationToken: CancellationToken.None
                 );
             }
+        }
+    }
+
+    private void ArtistDoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
+    {
+        var container = sender as FrameworkElement;
+        var tag = container?.Tag;
+        if (tag is string id)
+        {
+            ViewModel.NavigateToArtist(id);
         }
     }
 }

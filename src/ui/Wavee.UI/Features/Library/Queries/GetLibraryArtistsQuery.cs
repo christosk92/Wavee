@@ -1,4 +1,4 @@
-﻿using Wavee.UI.Entities.Artist;
+﻿using Wavee.UI.Domain.Artist;
 
 namespace Wavee.UI.Features.Library.Queries;
 

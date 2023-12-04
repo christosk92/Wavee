@@ -4,12 +4,14 @@ using CommunityToolkit.Mvvm.Messaging;
 using Mediator;
 using Wavee.Spotify.Common;
 using Wavee.Spotify.Domain.Common;
+using Wavee.UI.Domain.Artist;
 using Wavee.UI.Domain.Library;
-using Wavee.UI.Entities.Artist;
 using Wavee.UI.Features.Album.ViewModels;
 using Wavee.UI.Features.Artist.Queries;
+using Wavee.UI.Features.Artist.ViewModels;
 using Wavee.UI.Features.Library.Notifications;
 using Wavee.UI.Features.Library.Queries;
+using Wavee.UI.Features.Navigation;
 using Wavee.UI.Features.Navigation.ViewModels;
 
 namespace Wavee.UI.Features.Library.ViewModels.Artist;
@@ -23,11 +25,12 @@ public sealed class LibraryArtistsViewModel : NavigationItemViewModel
     private string _sortField;
     private int _total;
     private LibraryArtistViewModel? _selectedArtist;
+    private readonly INavigationService _navigationService;
 
-
-    public LibraryArtistsViewModel(IMediator mediator)
+    public LibraryArtistsViewModel(IMediator mediator, INavigationService navigationService)
     {
         _mediator = mediator;
+        _navigationService = navigationService;
         _sortField = nameof(LibraryItem<SimpleArtistEntity>.AddedAt);
 
         SortFields = new[]
@@ -201,5 +204,10 @@ public sealed class LibraryArtistsViewModel : NavigationItemViewModel
         {
             Artists.Remove(artist);
         }
+    }
+
+    public void NavigateToArtist(string id)
+    {
+        _navigationService.Navigate(null, new ArtistViewModel(_mediator, id));
     }
 }

@@ -1,5 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using System.Collections.Generic;
+using Mediator;
+using Wavee.UI.Features.Artist.ViewModels;
 using Wavee.UI.Features.Library.ViewModels;
 using Wavee.UI.Features.Library.ViewModels.Album;
 using Wavee.UI.Features.Library.ViewModels.Artist;
@@ -20,7 +22,10 @@ public sealed class ShellViewModel : ObservableObject
         ListenViewModel listen,
         LibrariesViewModel library,
         NowPlayingViewModel nowPlaying,
-        INavigationService navigation, PlaybackViewModel playback, SearchViewModel search)
+        INavigationService navigation,
+        PlaybackViewModel playback,
+        SearchViewModel search,
+        IMediator mediator)
     {
         TopNavItems = new object[]
         {
@@ -32,6 +37,7 @@ public sealed class ShellViewModel : ObservableObject
         Navigation = navigation;
         Playback = playback;
         Search = search;
+        Mediator = mediator;
 
         navigation.NavigatedTo += (sender, o) =>
         {
@@ -68,6 +74,11 @@ public sealed class ShellViewModel : ObservableObject
                 SelectedItem = library;
                 library.SelectedItem = library.Podcasts;
             }
+            else if (type == typeof(ArtistViewModel))
+            {
+                SelectedItem = o as ArtistViewModel;
+                SelectedItem.SelectedItem = SelectedItem.Children[0];
+            }
             else
             {
                 SelectedItem = new NothingSelectedViewModel();
@@ -86,6 +97,7 @@ public sealed class ShellViewModel : ObservableObject
 
     public PlaybackViewModel Playback { get; }
     public SearchViewModel Search { get; }
+    public IMediator Mediator { get; }
 }
 
 public sealed class NothingSelectedViewModel : NavigationItemViewModel

@@ -2,8 +2,8 @@
 using Wavee.Spotify.Common.Contracts;
 using Wavee.Spotify.Domain.Common;
 using Wavee.Spotify.Domain.Library;
+using Wavee.UI.Domain.Artist;
 using Wavee.UI.Domain.Library;
-using Wavee.UI.Entities.Artist;
 using Wavee.UI.Features.Library.Queries;
 using Wavee.UI.Features.Library.ViewModels.Artist;
 

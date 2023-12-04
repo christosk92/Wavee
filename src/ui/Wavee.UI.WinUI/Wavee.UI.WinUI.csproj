@@ -20,10 +20,12 @@
 	</ItemGroup>
 	<ItemGroup>
 	  <None Remove="Assets\AlbumPlaceholder.png" />
+	  <None Remove="Assets\amb.png" />
 	  <None Remove="Styles\ButtonStyles.xaml" />
 	  <None Remove="Styles\ItemContainerStyles.xaml" />
 	  <None Remove="Styles\NavigationView\ExtendedNavigationViewStyle.xaml" />
 	  <None Remove="Styles\TextBlockStyles.xaml" />
+	  <None Remove="Views\Artist\ArtistPage.xaml" />
 	  <None Remove="Views\Identity\SignInView.xaml" />
 	  <None Remove="Views\Libraries\AlbumLibraryPage.xaml" />
 	  <None Remove="Views\Libraries\ArtistLibraryPage.xaml" />
@@ -79,15 +81,24 @@
 	  <Content Update="Assets\AlbumPlaceholder.png">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </Content>
+	  <Content Update="Assets\amb.png">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </Content>
 	  <None Update="Assets\Fonts\MediaPlayerIcons.ttf">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </None>
 	  <None Update="Controls\AlbumCoverControl.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </None>
+	  <None Update="Controls\ImageTransitionControl.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </None>
 	  <None Update="Themes\Generic.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </None>
+	  <Page Update="Views\Artist\ArtistPage.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </Page>
 	  <Page Update="Views\Search\SearchPage.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </Page>

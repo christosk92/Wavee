@@ -1,5 +1,6 @@
 ﻿using System;
 using Microsoft.UI.Xaml.Data;
+using Wavee.UI.Features.Artist.ViewModels;
 using Wavee.UI.Features.Library.ViewModels;
 using Wavee.UI.Features.Library.ViewModels.Album;
 using Wavee.UI.Features.Library.ViewModels.Artist;
@@ -21,6 +22,9 @@ internal sealed class SidebarViewModelToAppropriateTitleConverter : IValueConver
             LibraryAlbumsViewModel => "Albums",
             LibraryArtistsViewModel => "Artists",
             LibraryPodcastsViewModel => "Podcasts",
+            ArtistOverviewViewModel => "Discography",
+            ArtistAboutViewModel => "About",
+            ArtistRelatedContentViewModel => "Related Content",
         };
     }
 

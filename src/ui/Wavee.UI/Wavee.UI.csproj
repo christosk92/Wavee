@@ -30,5 +30,8 @@
     <ProjectReference Include="..\..\Wavee.Spotify\Wavee.Spotify.csproj" />
     <ProjectReference Include="..\..\Wavee\Wavee.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Domain\Track\" />
+  </ItemGroup>
 
 </Project>

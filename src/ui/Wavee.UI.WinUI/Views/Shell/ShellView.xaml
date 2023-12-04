@@ -180,7 +180,11 @@
                     <RowDefinition Height="Auto" />
                     <RowDefinition />
                 </Grid.RowDefinitions>
-                <Border>
+                <Border Grid.Row="1" Background="{ThemeResource LayerFillColorDefaultBrush}">
+                    <Frame x:Name="NavigationFrame" />
+                </Border>
+
+                <Border Grid.Row="0">
                     <NavigationView
                         IsBackButtonVisible="Collapsed"
                         IsSettingsVisible="False"
@@ -194,10 +198,6 @@
                             <StaticResource x:Key="NavigationViewContentGridBorderBrush" ResourceKey="Original" />
                         </NavigationView.Resources>
                     </NavigationView>
-                </Border>
-
-                <Border Grid.Row="1" Background="{ThemeResource LayerFillColorDefaultBrush}">
-                    <Frame x:Name="NavigationFrame" />
                 </Border>
             </Grid>
         </NavigationView>

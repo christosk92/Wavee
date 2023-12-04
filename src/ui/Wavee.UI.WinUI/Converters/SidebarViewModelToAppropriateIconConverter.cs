@@ -22,6 +22,7 @@ internal sealed class SidebarViewModelToAppropriateIconConverter : IValueConvert
             LibraryAlbumsViewModel => Create('\uE93C', MediaPlayerIcons),
             LibraryArtistsViewModel => Create('\uEBDA', SegoeFluentIcons),
             LibraryPodcastsViewModel => Create('\uEB44', SegoeFluentIcons),
+            _ => null
         };
 
         return icon;

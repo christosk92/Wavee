@@ -128,13 +128,18 @@ namespace Wavee.UI.WinUI.Views.Shell
 
         }
 
-        private void AutoSuggestBox_OnQuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
+        private async void AutoSuggestBox_OnQuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
         {
             var query = args.ChosenSuggestion;
             if (query is SearchSuggestionQueryViewModel q)
             {
                 ViewModel.Search.Query = q.Query;
                 ViewModel.Navigation.Navigate<SearchViewModel>(null);
+                await ViewModel.Search.Search();
+            }
+            else if (query is SearchSuggestionEntityViewModel entity)
+            {
+                entity.Navigate(ViewModel.Navigation, ViewModel.Mediator);
             }
         }
 

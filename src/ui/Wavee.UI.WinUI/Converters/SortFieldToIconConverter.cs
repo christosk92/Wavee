@@ -2,8 +2,8 @@
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Data;
 using Microsoft.UI.Xaml.Media;
+using Wavee.UI.Domain.Artist;
 using Wavee.UI.Domain.Library;
-using Wavee.UI.Entities.Artist;
 
 namespace Wavee.UI.WinUI.Converters;
 
