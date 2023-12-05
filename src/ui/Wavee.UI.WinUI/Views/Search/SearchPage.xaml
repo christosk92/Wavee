@@ -204,8 +204,8 @@
             <RowDefinition Height="Auto" />
             <RowDefinition />
         </Grid.RowDefinitions>
-        <TextBlock FontSize="20" >
-            <Run Text="Showing results for &quot;" /><Run FontWeight="ExtraBold" Foreground="{ThemeResource SystemControlForegroundAccentBrush}" Text="{x:Bind ViewModel.Query, Mode=OneWay}" /><Run Text="&quot;" />
+        <TextBlock FontSize="20">
+            <Run Text="Showing results for &quot;" /><Run FontWeight="ExtraBold" Text="{x:Bind ViewModel.Query, Mode=OneWay}" /><Run Text="&quot;" />
         </TextBlock>
 
         <ScrollView

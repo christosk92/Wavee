@@ -1,8 +1,10 @@
-﻿using Mediator;
+﻿using System.Diagnostics;
+using Mediator;
 using Wavee.Spotify.Common;
 using Wavee.Spotify.Common.Contracts;
 using Wavee.Spotify.Domain.Common;
 using Wavee.Spotify.Domain.Tracks;
+using Wavee.UI.Domain.Album;
 using Wavee.UI.Domain.Artist;
 using Wavee.UI.Features.Artist.Queries;
 
@@ -21,31 +23,52 @@ public sealed class GetAlbumsForArtistQueryHandler : IQueryHandler<GetAlbumsForA
     public async ValueTask<ArtistAlbumsResult> Handle(GetAlbumsForArtistQuery query, CancellationToken cancellationToken)
     {
         // Step 1. Fetch albums
-        var (albums, total) = await _spotifyClient.Artist.GetDiscographyAllAsync(SpotifyId.FromUri(query.Id),
-            offset: query.Offset,
-            limit: query.Limit,
-            cancellationToken);
+        var (albums, total) = await (query.Group switch
+        {
+            DiscographyGroupType.Album => _spotifyClient.Artist.GetDiscographyAlbumsAsync(SpotifyId.FromUri(query.Id),
+                offset: (uint)query.Offset,
+                limit: (uint)query.Limit,
+                cancellationToken),
+            DiscographyGroupType.Single => _spotifyClient.Artist.GetDiscographySinglesAsync(SpotifyId.FromUri(query.Id),
+                offset: (uint)query.Offset,
+                limit: (uint)query.Limit,
+                cancellationToken),
+            DiscographyGroupType.Compilation => _spotifyClient.Artist.GetDiscographyCompilationsAsync(SpotifyId.FromUri(query.Id),
+                offset: (uint)query.Offset,
+                limit: (uint)query.Limit,
+                cancellationToken),
+            null => _spotifyClient.Artist.GetDiscographyAllAsync(SpotifyId.FromUri(query.Id),
+                offset: (uint)query.Offset,
+                limit: (uint)query.Limit,
+                cancellationToken),
+            _ => throw new ArgumentOutOfRangeException()
+        });
 
-        // Step 2. Fetch tracks
-        var tracks = await GetTracksForAlbums(albums.Select(f => f.Uri), cancellationToken);
+
+        IReadOnlyDictionary<SpotifyId, IReadOnlyCollection<SpotifyAlbumTrack>> tracks = new Dictionary<SpotifyId, IReadOnlyCollection<SpotifyAlbumTrack>>();
+        if (query.FetchTracks)
+        {
+            // Step 2. Fetch tracks
+            tracks = await GetTracksForAlbums(albums.Select(f => f.Uri), cancellationToken);
+        }
 
         return new ArtistAlbumsResult
         {
             Total = total,
-            Albums = albums.Select(f => new ArtistAlbumEntity
+            Albums = albums.Select(f => new SimpleAlbumEntity()
             {
                 Images = f.Images,
                 Name = f.Name,
                 Id = f.Uri.ToString(),
-                Tracks = tracks[f.Uri]
-                    .Select(x => new ArtistAlbumTrackEntity
+                Tracks = tracks.TryGetValue(f.Uri, out var tr) ? tr
+                    .Select(x => new AlbumTrackEntity()
                     {
                         Duration = x.Duration,
                         Id = x.Uri.ToString(),
                         Name = x.Name,
                         PlayCount = x.PlayCount
                     })
-                    .ToArray(),
+                    .ToArray() : null,
                 Year = (ushort)f.ReleaseDate.Year,
                 Type = f.Type
             }).ToArray()

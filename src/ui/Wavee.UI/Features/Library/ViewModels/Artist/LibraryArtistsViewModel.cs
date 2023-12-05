@@ -151,8 +151,8 @@ public sealed class LibraryArtistsViewModel : NavigationItemViewModel
         var results = await _mediator.Send(new GetAlbumsForArtistQuery
         {
             Id = artist.Id,
-            Offset = (uint)offset,
-            Limit = (uint)limit,
+            Offset = (int)offset,
+            Limit = (int)limit,
         }, cancellationToken);
 
         artist.TotalAlbums = results.Total;
@@ -166,9 +166,9 @@ public sealed class LibraryArtistsViewModel : NavigationItemViewModel
                 Name = album.Name,
                 Id = album.Id,
                 BigImageUrl = bigImage.Url,
-                TotalSongs = (uint)album.Tracks.Length,
+                TotalSongs = (uint)album.Tracks.Count,
                 Duration = TimeSpan.FromMilliseconds(album.Tracks.Sum(x => x.Duration.TotalMilliseconds)),
-                Year = album.Year,
+                Year = album.Year ?? 1,
                 Type = album.Type,
                 Tracks = album.Tracks.Select((x, i) => new AlbumTrackViewModel
                 {

@@ -1,4 +1,5 @@
 ﻿using System.Text.Json;
+using System.Threading;
 using Mediator;
 using Wavee.Spotify.Application.GraphQL.Queries;
 using Wavee.Spotify.Common;
@@ -10,6 +11,9 @@ namespace Wavee.Spotify.Application.Artist;
 
 public interface ISpotifyArtistClient
 {
+    Task<(IReadOnlyCollection<SpotifySimpleAlbum> Albums, uint Total)> GetDiscographyAlbumsAsync(SpotifyId id, uint offset, uint limit, CancellationToken cancellationToken);
+    Task<(IReadOnlyCollection<SpotifySimpleAlbum> Albums, uint Total)> GetDiscographySinglesAsync(SpotifyId id, uint offset, uint limit, CancellationToken cancellationToken);
+    Task<(IReadOnlyCollection<SpotifySimpleAlbum> Albums, uint Total)> GetDiscographyCompilationsAsync(SpotifyId id, uint offset, uint limit, CancellationToken cancellationToken);
     Task<(IReadOnlyCollection<SpotifySimpleAlbum> Albums, uint Total)> GetDiscographyAllAsync(SpotifyId id, uint offset, uint limit, CancellationToken cancellationToken);
     Task<SpotifyArtistView> GetAsync(SpotifyId id, CancellationToken cancellationToken);
 }
@@ -22,11 +26,41 @@ internal sealed class SpotifyArtistClient : ISpotifyArtistClient
         _mediator = mediator;
     }
 
-    public async Task<(IReadOnlyCollection<SpotifySimpleAlbum> Albums, uint Total)> GetDiscographyAllAsync(SpotifyId id, uint offset, uint limit, CancellationToken cancellationToken)
+    public Task<(IReadOnlyCollection<SpotifySimpleAlbum> Albums, uint Total)> GetDiscographyAlbumsAsync(SpotifyId id, uint offset, uint limit, CancellationToken cancellationToken)
     {
-        //TODO: Caching
+        const string operationHash = "40232560bd1ae023cfbc4602d67477ea832c82c969296fff1617664b72a17f5d";
+        const string operationName = "queryArtistDiscographyAlbums";
+        return GetDiscographyGroupSpecific(id, offset, limit, operationHash, operationName, "albums", cancellationToken);
+    }
+
+    public Task<(IReadOnlyCollection<SpotifySimpleAlbum> Albums, uint Total)> GetDiscographySinglesAsync(SpotifyId id, uint offset, uint limit, CancellationToken cancellationToken)
+    {
+        const string operationHash = "c63ec6380f6dd82c1f4cfbfb70a9ce60285719ebfe5fdefd2469239f7e1b8963";
+        const string operationName = "queryArtistDiscographySingles";
+        return GetDiscographyGroupSpecific(id, offset, limit, operationHash, operationName, "singles", cancellationToken);
+    }
+
+    public Task<(IReadOnlyCollection<SpotifySimpleAlbum> Albums, uint Total)> GetDiscographyCompilationsAsync(SpotifyId id, uint offset, uint limit, CancellationToken cancellationToken)
+    {
+        const string operationHash = "03524e8eea1267057dc1c6604534cdb0e6daa52f63c0b33510b32ea7a6c9ad9e";
+        const string operationName = "queryArtistDiscographyCompilations";
+        return GetDiscographyGroupSpecific(id, offset, limit, operationHash, operationName, "compilations", cancellationToken);
+    }
+
+    public Task<(IReadOnlyCollection<SpotifySimpleAlbum> Albums, uint Total)> GetDiscographyAllAsync(SpotifyId id, uint offset, uint limit, CancellationToken cancellationToken)
+    {
         const string operationHash = "3f1c940cde61596bf4f534e5a736e6fac24d2a792cc81852820e20a93863a2b5";
         const string operationName = "queryArtistDiscographyAll";
+        return GetDiscographyGroupSpecific(id, offset, limit, operationHash, operationName, "all", cancellationToken);
+    }
+
+    private async Task<(IReadOnlyCollection<SpotifySimpleAlbum> Albums, uint Total)> GetDiscographyGroupSpecific(
+        SpotifyId id, uint offset, uint limit,
+        string operationHash, 
+        string operationName,
+        string key,
+        CancellationToken cancellationToken)
+    {
         var variables = new Dictionary<string, object>
         {
             ["uri"] = id.ToString(),
@@ -45,7 +79,7 @@ internal sealed class SpotifyArtistClient : ISpotifyArtistClient
         var actualItems = jsondoc.RootElement.GetProperty("data")
             .GetProperty("artistUnion")
             .GetProperty("discography")
-            .GetProperty("all");
+            .GetProperty(key);
         var total = actualItems.GetProperty("totalCount").GetUInt32();
         var items = actualItems.GetProperty("items");
         var output = new SpotifySimpleAlbum[items.GetArrayLength()];

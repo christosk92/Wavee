@@ -21,6 +21,7 @@
 	<ItemGroup>
 	  <None Remove="Assets\AlbumPlaceholder.png" />
 	  <None Remove="Assets\amb.png" />
+	  <None Remove="Controls\ArtistDiscographyGroupComponent.xaml" />
 	  <None Remove="Styles\ButtonStyles.xaml" />
 	  <None Remove="Styles\ItemContainerStyles.xaml" />
 	  <None Remove="Styles\NavigationView\ExtendedNavigationViewStyle.xaml" />
@@ -90,6 +91,9 @@
 	  <None Update="Controls\AlbumCoverControl.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </None>
+	  <Page Update="Controls\ArtistDiscographyGroupComponent.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </Page>
 	  <None Update="Controls\ImageTransitionControl.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </None>

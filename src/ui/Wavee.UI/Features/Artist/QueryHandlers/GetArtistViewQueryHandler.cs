@@ -113,7 +113,9 @@ public sealed class GetArtistViewQueryHandler : IQueryHandler<GetArtistViewQuery
             Id = album.Uri.ToString(),
             Name = album.Name,
             Images = album.Images,
-            TracksCount = album.TotalTracks
+            TracksCount = album.TotalTracks,
+            Year = (ushort?)album.ReleaseDate.Year,
+            Type = album.Type
         };
     }
 
