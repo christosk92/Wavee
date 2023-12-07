@@ -12,6 +12,21 @@ namespace Wavee.UI.Features.Artist.QueryHandlers;
 
 public sealed class GetAlbumsForArtistQueryHandler : IQueryHandler<GetAlbumsForArtistQuery, ArtistAlbumsResult>
 {
+    private readonly record struct CachedAlbumsKey(SpotifyId ArtistId,
+        int Offset,
+        int Limit,
+        DiscographyGroupType? Group);
+    private record CachedAlbums(
+        IReadOnlyCollection<SimpleAlbumEntity> Albums,
+        uint Total,
+        DateTimeOffset CachedAt)
+    {
+        private static TimeSpan _cacheDuration = TimeSpan.FromHours(1);
+
+        public bool Expired => DateTimeOffset.UtcNow - CachedAt > _cacheDuration;
+    }
+
+    private static Dictionary<CachedAlbumsKey, CachedAlbums> _cache = new();
     private readonly ISpotifyClient _spotifyClient;
 
     public GetAlbumsForArtistQueryHandler(ISpotifyClient spotifyClient)
@@ -23,6 +38,20 @@ public sealed class GetAlbumsForArtistQueryHandler : IQueryHandler<GetAlbumsForA
     public async ValueTask<ArtistAlbumsResult> Handle(GetAlbumsForArtistQuery query, CancellationToken cancellationToken)
     {
         // Step 1. Fetch albums
+        var key = new CachedAlbumsKey(SpotifyId.FromUri(query.Id),
+            query.Offset,
+            query.Limit,
+            query.Group);
+
+        if (_cache.TryGetValue(key, out var cached) && !cached.Expired)
+        {
+            return new ArtistAlbumsResult
+            {
+                Total = (uint)cached.Total,
+                Albums = cached.Albums
+            };
+        }
+
         var (albums, total) = await (query.Group switch
         {
             DiscographyGroupType.Album => _spotifyClient.Artist.GetDiscographyAlbumsAsync(SpotifyId.FromUri(query.Id),
@@ -44,7 +73,6 @@ public sealed class GetAlbumsForArtistQueryHandler : IQueryHandler<GetAlbumsForA
             _ => throw new ArgumentOutOfRangeException()
         });
 
-
         IReadOnlyDictionary<SpotifyId, IReadOnlyCollection<SpotifyAlbumTrack>> tracks = new Dictionary<SpotifyId, IReadOnlyCollection<SpotifyAlbumTrack>>();
         if (query.FetchTracks)
         {
@@ -52,15 +80,13 @@ public sealed class GetAlbumsForArtistQueryHandler : IQueryHandler<GetAlbumsForA
             tracks = await GetTracksForAlbums(albums.Select(f => f.Uri), cancellationToken);
         }
 
-        return new ArtistAlbumsResult
+        var adapted = albums.Select(f => new SimpleAlbumEntity()
         {
-            Total = total,
-            Albums = albums.Select(f => new SimpleAlbumEntity()
-            {
-                Images = f.Images,
-                Name = f.Name,
-                Id = f.Uri.ToString(),
-                Tracks = tracks.TryGetValue(f.Uri, out var tr) ? tr
+            Images = f.Images,
+            Name = f.Name,
+            Id = f.Uri.ToString(),
+            Tracks = tracks.TryGetValue(f.Uri, out var tr)
+                ? tr
                     .Select(x => new AlbumTrackEntity()
                     {
                         Duration = x.Duration,
@@ -68,10 +94,17 @@ public sealed class GetAlbumsForArtistQueryHandler : IQueryHandler<GetAlbumsForA
                         Name = x.Name,
                         PlayCount = x.PlayCount
                     })
-                    .ToArray() : null,
-                Year = (ushort)f.ReleaseDate.Year,
-                Type = f.Type
-            }).ToArray()
+                    .ToArray()
+                : null,
+            Year = (ushort)f.ReleaseDate.Year,
+            Type = f.Type
+        }).ToArray();
+        _cache[key] = new CachedAlbums(adapted, total, DateTimeOffset.UtcNow);
+
+        return new ArtistAlbumsResult
+        {
+            Total = total,
+            Albums = adapted
         };
     }
 
@@ -81,11 +114,6 @@ public sealed class GetAlbumsForArtistQueryHandler : IQueryHandler<GetAlbumsForA
         var tracks = select.ToDictionary(x => x,
             x => Task.Run(async () => await _spotifyClient.Album.GetTracks(x, cancellationToken), cancellationToken));
         await Task.WhenAll(tracks.Values);
-        // foreach (var album in select)
-        // {
-        //     var albumTracks = await _spotifyClient.Album.GetTracks(album, cancellationToken);
-        //     tracks.Add(album, albumTracks);
-        // }
         return tracks.ToDictionary(x => x.Key, x => x.Value.Result);
     }
 }

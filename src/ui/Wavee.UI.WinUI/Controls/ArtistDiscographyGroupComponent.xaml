@@ -3,17 +3,24 @@
     x:Class="Wavee.UI.WinUI.Controls.ArtistDiscographyGroupComponent"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:ani="using:CommunityToolkit.WinUI.UI.Animations"
+    xmlns:behaviors1="using:CommunityToolkit.WinUI.UI.Behaviors"
+    xmlns:components="using:Wavee.UI.WinUI.Views.Libraries.Components"
     xmlns:controls="using:CommunityToolkit.WinUI.Controls"
     xmlns:controls1="using:CommunityToolkit.WinUI.UI.Controls"
+    xmlns:controls2="using:Wavee.UI.WinUI.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:interactions="using:Microsoft.Xaml.Interactions.Core"
+    xmlns:interactivity="using:Microsoft.Xaml.Interactivity"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:media="using:CommunityToolkit.WinUI.UI.Media"
+    xmlns:ui="using:CommunityToolkit.WinUI.UI"
     xmlns:viewModels="using:Wavee.UI.Features.Artist.ViewModels"
     xmlns:winUi="using:CommunityToolkit.Labs.WinUI"
     VerticalAlignment="Top"
     VerticalContentAlignment="Top"
     DataContext="{x:Bind Item, Mode=OneWay}"
     mc:Ignorable="d">
-
     <StackPanel VerticalAlignment="Top">
         <Grid>
             <Grid.ColumnDefinitions>
@@ -27,7 +34,10 @@
                 FontWeight="SemiBold"
                 Text="{x:Bind Item.Title, Mode=OneWay}" />
 
-            <controls:Segmented Grid.Row="0" Grid.Column="1">
+            <controls:Segmented
+                Grid.Row="0"
+                Grid.Column="1"
+                SelectedIndex="{x:Bind Item.SelectedIndex, Mode=TwoWay}">
                 <controls:Segmented.Items>
                     <controls:SegmentedItem>
                         <controls:SegmentedItem.Icon>
@@ -42,11 +52,13 @@
                 </controls:Segmented.Items>
             </controls:Segmented>
         </Grid>
+
         <ItemsRepeater
             x:Name="ItemsViewData"
             Margin="0,12,0,0"
             HorizontalAlignment="Stretch"
             VerticalAlignment="Top"
+            x:Load="{x:Bind IsEqualTo(Item.SelectedIndex, 0), Mode=OneWay}"
             ItemsSource="{Binding Items, Mode=OneWay}">
             <ItemsRepeater.ItemTemplate>
                 <DataTemplate x:DataType="viewModels:LazyArtistViewDiscographyItemViewModel">
@@ -54,50 +66,24 @@
                         MaxWidth="400"
                         MaxHeight="400"
                         VerticalAlignment="Top">
-                        <Image MaxHeight="150" Source="ms-appx:///Assets/AlbumPlaceholder.png" />
                         <Grid
                             MaxWidth="400"
                             MaxHeight="400"
-                            VerticalAlignment="Top"
-                            Tag="{x:Bind HasValue}"
-                            Visibility="{x:Bind HasValue, Mode=OneWay, Converter={StaticResource TrueToVisibleConverter}}">
-                            <Grid.RowDefinitions>
-                                <RowDefinition />
-                                <RowDefinition Height="Auto" />
-                            </Grid.RowDefinitions>
-                            <controls1:ConstrainedBox
-                                Grid.Row="0"
-                                MaxWidth="400"
-                                MaxHeight="400"
-                                VerticalAlignment="Top"
-                                AspectRatio="1:1">
-                                <Image x:Phase="2" Source="{x:Bind Value.MediumImageUrl, Mode=OneWay}" />
-                            </controls1:ConstrainedBox>
-
-                            <StackPanel
-                                Grid.Row="1"
-                                Height="60"
-                                Margin="0,6,0,0"
-                                VerticalAlignment="Top"
-                                Orientation="Vertical">
-                                <TextBlock
-                                    x:Phase="1"
-                                    FontSize="15"
-                                    FontWeight="SemiBold"
-                                    MaxLines="2"
-                                    Text="{x:Bind Value.Name, Mode=OneWay}"
-                                    TextWrapping="Wrap" />
-                                <TextBlock
-                                    x:Phase="1"
-                                    FontSize="13"
-                                    Foreground="{ThemeResource ApplicationSecondaryForegroundThemeBrush}"
-                                    Text="{x:Bind Value.Year, Mode=OneWay}" />
-                            </StackPanel>
+                            VerticalAlignment="Top">
+                            <Image MaxHeight="150" Source="ms-appx:///Assets/AlbumPlaceholder.png" />
+                            <controls2:PlayableContentControl
+                                Title="{x:Bind Value.Album.Name, Mode=OneWay}"
+                                x:Phase="1"
+                                Description="{x:Bind Value.Album.Year, Mode=OneWay}"
+                                Id="{x:Bind Value.Album.Id, Mode=OneWay}"
+                                Image="{x:Bind Value.Album.MediumImageUrl, Mode=OneWay}"
+                                ViewType="AlbumSquare" />
                         </Grid>
                         <Grid
                             MaxWidth="400"
                             MaxHeight="400"
                             VerticalAlignment="Top"
+                            x:Phase="0"
                             Tag="{x:Bind HasValue}"
                             Visibility="{x:Bind HasValue, Mode=OneWay, Converter={StaticResource TrueToCollapsedConverter}}">
                             <Grid.RowDefinitions>
@@ -134,5 +120,24 @@
                     Orientation="Horizontal" />
             </ItemsRepeater.Layout>
         </ItemsRepeater>
+
+        <ItemsRepeater
+            x:Name="TracksItemsViewData"
+            Margin="0,12,0,0"
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Top"
+            x:Load="{x:Bind IsEqualTo(Item.SelectedIndex, 1), Mode=OneWay}"
+            ItemsSource="{Binding Items, Mode=OneWay}">
+            <ItemsRepeater.ItemTemplate>
+                <DataTemplate x:DataType="viewModels:LazyArtistViewDiscographyItemViewModel">
+                    <components:LibraryAlbumComponent DataContext="{x:Bind Value.Album, Mode=OneWay}" />
+                </DataTemplate>
+            </ItemsRepeater.ItemTemplate>
+            <ItemsRepeater.Layout>
+                <StackLayout Orientation="Vertical" />
+            </ItemsRepeater.Layout>
+        </ItemsRepeater>
+
+
     </StackPanel>
 </UserControl>

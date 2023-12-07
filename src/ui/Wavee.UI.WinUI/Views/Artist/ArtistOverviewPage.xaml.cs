@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using NeoSmart.AsyncLock;
@@ -23,4 +24,34 @@ public sealed partial class ArtistOverviewPage : UserControl
     // {
     //    // await ViewModel.FetchNextDiscography(true);
     // }
+    private void FrameworkElement_OnLoaded(object sender, RoutedEventArgs e)
+    {
+        RootSizeChanged();
+    }
+
+    public void RootSizeChanged()
+    {
+        var topTracksGridSize = SecondTopGridColumn.ActualWidth;
+        var wdth = topTracksGridSize / 2;
+        if (TopTracksGrid.ItemsPanelRoot is ItemsWrapGrid wrapGrid)
+        {
+            if (wdth > 350)
+            {
+                wrapGrid.Orientation = Orientation.Vertical;
+                wrapGrid.MaximumRowsOrColumns = 5;
+                wrapGrid.ItemWidth = this.ActualWidth / 2 - 24;
+            }
+            else
+            {
+                wrapGrid.Orientation = Orientation.Vertical;
+                wrapGrid.MaximumRowsOrColumns = 5;
+                wrapGrid.ItemWidth = this.ActualWidth - 48;
+            }
+        }
+    }
+
+    private void TopTrackGrid_OnSizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        RootSizeChanged();
+    }
 }

@@ -135,6 +135,9 @@ internal sealed partial class SpotifyRemoteHolder
         {
             spotifyWebsocketHolder.Disconnected -= OnDisconnected;
             spotifyWebsocketHolder.ConnectionId -= OnConnectionId;
+            spotifyWebsocketHolder.RemoteClusterUpdate -= OnRemoteClusterUpdate;
+            spotifyWebsocketHolder.LibraryUpdate -= OnLibraryUpdate;
+
             spotifyWebsocketHolder.Dispose();
         }
 
@@ -222,6 +225,10 @@ internal sealed partial class SpotifyRemoteHolder
                             if (uri.StartsWith("hm://collection") && uri.EndsWith("/json"))
                             {
                                 LibraryUpdate?.Invoke(this, (uri, root.Clone()));
+                            }
+                            else
+                            {
+
                             }
                         }
                     }

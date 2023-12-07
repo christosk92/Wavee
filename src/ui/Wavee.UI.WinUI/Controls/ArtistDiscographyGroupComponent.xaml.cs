@@ -36,5 +36,10 @@ namespace Wavee.UI.WinUI.Controls
             get => (ArtistViewDiscographyGroupViewModel)GetValue(ItemProperty);
             set => SetValue(ItemProperty, value);
         }
+
+        public bool IsEqualTo(int i, int s)
+        {
+            return i == s;
+        }
     }
 }

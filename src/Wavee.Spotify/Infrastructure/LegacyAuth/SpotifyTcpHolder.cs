@@ -80,11 +80,11 @@ public sealed class SpotifyTcpHolder : IDisposable
                     switch (receive.Type)
                     {
                         case SpotifyPacketType.CountryCode:
-                        {
-                            var cntry = Encoding.UTF8.GetString(receive.Payload);
-                            Country = cntry;
-                            break;
-                        }
+                            {
+                                var cntry = Encoding.UTF8.GetString(receive.Payload);
+                                Country = cntry;
+                                break;
+                            }
                         case SpotifyPacketType.MercuryReq:
                             {
                                 var data = receive.Payload;
@@ -150,6 +150,7 @@ public sealed class SpotifyTcpHolder : IDisposable
                 catch (Exception e)
                 {
                     connectionOnLost(connection, e);
+                    break;
                 }
             }
         });

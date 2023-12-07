@@ -73,7 +73,7 @@ public sealed class TrackControl : Control
                 imageControl.Source = null;
             }
 
-            VisualStateManager.GoToState(this, "Default", true);
+            VisualStateManager.GoToState(this, "HideImage", true);
         }
 
         NumberString = Number.ToString();

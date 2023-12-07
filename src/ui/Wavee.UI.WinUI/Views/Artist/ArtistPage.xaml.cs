@@ -82,23 +82,7 @@ public sealed partial class ArtistPage : Page, INavigeablePage<ArtistViewModel>
     {
         if (MainContent.Content is ArtistOverviewPage overviewPage)
         {
-            var topTracksGridSize = overviewPage.SecondTopGridColumn.ActualWidth;
-            var wdth = topTracksGridSize / 2;
-            if (overviewPage.TopTracksGrid.ItemsPanelRoot is ItemsWrapGrid wrapGrid)
-            {
-                if (wdth > 350)
-                {
-                    wrapGrid.Orientation = Orientation.Vertical;
-                    wrapGrid.MaximumRowsOrColumns = 5;
-                    wrapGrid.ItemWidth = this.ActualWidth / 2 - 24;
-                }
-                else
-                {
-                    wrapGrid.Orientation = Orientation.Vertical;
-                    wrapGrid.MaximumRowsOrColumns = 5;
-                    wrapGrid.ItemWidth = this.ActualWidth - 48;
-                }
-            }
+            overviewPage.RootSizeChanged();
         }
     }
     public object ToView(NavigationItemViewModel navigationItemViewModel)

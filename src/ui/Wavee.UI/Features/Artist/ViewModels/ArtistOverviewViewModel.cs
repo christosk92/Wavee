@@ -3,6 +3,7 @@ using System.Globalization;
 using Mediator;
 using NeoSmart.AsyncLock;
 using Wavee.UI.Domain.Album;
+using Wavee.UI.Features.Album.ViewModels;
 using Wavee.UI.Features.Artist.Queries;
 using Wavee.UI.Features.Navigation.ViewModels;
 using Wavee.UI.Test;
@@ -33,25 +34,27 @@ public sealed class ArtistOverviewViewModel : NavigationItemViewModel
         get => _latestRelease;
         set => SetProperty(ref _latestRelease, value);
     }
-    private ObservableCollection<ArtistViewDiscographyTrackViewModel> BuildTracks(ArtistViewDiscographyItem artistViewDiscographyItem)
+    private ObservableCollection<AlbumTrackViewModel> BuildTracks(ArtistViewDiscographyItem artistViewDiscographyItem)
     {
         if (artistViewDiscographyItem.HasValue)
         {
             var tracksCount = artistViewDiscographyItem.Album!.TracksCount!.Value;
-            var emptyTracks = new ArtistViewDiscographyTrackViewModel[tracksCount];
+            var emptyTracks = new AlbumTrackViewModel[tracksCount];
             for (int i = 0; i < tracksCount; i++)
             {
-                emptyTracks[i] = new ArtistViewDiscographyTrackViewModel
+                emptyTracks[i] = new AlbumTrackViewModel
                 {
-                    Track = null,
-                    Number = i + 1
+                    Number = i + 1,
+                    Id = null,
+                    Name = null,
+                    Duration = default
                 };
             }
 
-            return new ObservableCollection<ArtistViewDiscographyTrackViewModel>(emptyTracks);
+            return new ObservableCollection<AlbumTrackViewModel>(emptyTracks);
         }
 
-        return new ObservableCollection<ArtistViewDiscographyTrackViewModel>();
+        return new ObservableCollection<AlbumTrackViewModel>();
     }
     public void Initialize(ArtistViewResult artist)
     {
@@ -319,18 +322,20 @@ public sealed class ArtistOverviewViewModel : NavigationItemViewModel
     {
         var vm = new ArtistViewDiscographyItemViewModel
         {
-            Tracks = new ObservableCollection<ArtistViewDiscographyTrackViewModel>(),
             Group = album.Type?.ToLower() switch
             {
                 "single" or "ep" => DiscographyGroupType.Single,
                 "album" => DiscographyGroupType.Album,
                 _ => DiscographyGroupType.Compilation
             },
-            Id = album.Id,
-            Name = album.Name,
-            MediumImageUrl = album.Images.OrderBy(x => x.Height).Skip(1).FirstOrDefault().Url ?? album.Images
-                .FirstOrDefault().Url,
-            Year = album.Year?.ToString(CultureInfo.InvariantCulture) ?? "Unknown"
+            Album = new AlbumViewModel
+            {
+                Id = album.Id,
+                Name = album.Name,
+                MediumImageUrl = album.Images.OrderBy(x => x.Height).Skip(1).FirstOrDefault().Url ?? album.Images
+                    .FirstOrDefault().Url,
+                Year = album.Year ?? 0
+            }
         };
 
         return vm;

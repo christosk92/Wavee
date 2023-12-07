@@ -9,6 +9,7 @@ using Nito.AsyncEx;
 using Spotify.Metadata;
 using Wavee.UI.Domain.Album;
 using Wavee.UI.Domain.Artist;
+using Wavee.UI.Features.Album.ViewModels;
 using Wavee.UI.Features.Artist.Queries;
 using Wavee.UI.Features.Navigation.ViewModels;
 using Wavee.UI.Test;
@@ -92,14 +93,21 @@ public sealed class ArtistViewModel : NavigationItemViewModel
 }
 
 
-public sealed class ArtistViewDiscographyGroupViewModel
+public sealed class ArtistViewDiscographyGroupViewModel : ObservableObject
 {
+    private int _selectedIndex;
     public string ArtistId { get; set; }
     public string Title { get; set; }
     public ObservableCollection<LazyArtistViewDiscographyItemViewModel> Items { get; set; }
     public IMediator Mediator { get; set; }
     public uint TotalItems { get; set; }
     public DiscographyGroupType Type { get; set; }
+
+    public int SelectedIndex
+    {
+        get => _selectedIndex;
+        set => SetProperty(ref _selectedIndex, value);
+    }
 }
 public sealed class LazyArtistViewDiscographyItemViewModel : ObservableObject
 {
@@ -136,37 +144,10 @@ public sealed class LazyArtistViewDiscographyItemViewModel : ObservableObject
 }
 public sealed class ArtistViewDiscographyItemViewModel : ObservableObject
 {
-    public required string Id { get; set; }
-    public required string Name { get; set; }
-    public required string MediumImageUrl { get; set; }
-    public required string Year { get; set; }
-    public required ObservableCollection<ArtistViewDiscographyTrackViewModel> Tracks { get; init; }
+    public AlbumViewModel Album { get; init; }
     public required DiscographyGroupType Group { get; init; }
 }
 
-public sealed class ArtistViewDiscographyTrackViewModel : ObservableObject
-{
-    private AlbumTrackEntity? _track;
-    private bool _HasValue;
-
-    public required AlbumTrackEntity? Track
-    {
-        get => _track;
-        set
-        {
-            SetProperty(ref _track, value);
-            HasValue = value is not null;
-        }
-    }
-
-    public bool HasValue
-    {
-        get => _HasValue;
-        set => SetProperty(ref _HasValue, value);
-    }
-
-    public required int Number { get; init; }
-}
 
 public sealed class ArtistTopTrackViewModel
 {
