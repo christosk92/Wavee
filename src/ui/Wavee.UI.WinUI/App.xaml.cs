@@ -11,6 +11,7 @@ using Wavee.UI.WinUI.Interop;
 using Microsoft.UI;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Hosting;
+using Wavee.UI.Features.MainWindow;
 
 namespace Wavee.UI.WinUI;
 
@@ -38,6 +39,7 @@ public partial class App : Microsoft.UI.Xaml.Application
     protected override async void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
     {
         _mWindow = _sp.GetRequiredService<MainWindow>();
+        _mWindow.SetViewModel(_sp.GetRequiredService<MainWindowViewModel>());
         _mWindow.Activate();
     }
 

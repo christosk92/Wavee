@@ -41,6 +41,12 @@ internal sealed partial class SpotifyRemoteHolder
         _websocket.ConnectionId += OnConnectionId;
         _websocket.RemoteClusterUpdate += OnRemoteClusterUpdate;
         _websocket.LibraryUpdate += OnLibraryUpdate;
+
+        await Task.Factory.StartNew(async () =>
+        {
+            await Task.Delay(10, cancellationToken);
+            await _websocket.Listen();
+        }, cancellationToken);
     }
 
     private void OnLibraryUpdate(object? sender, (string, JsonElement) e)
@@ -157,15 +163,10 @@ internal sealed partial class SpotifyRemoteHolder
             await clientWebSocket.ConnectAsync(new Uri(url), ct);
             var client = new SpotifyWebsocketHolder(clientWebSocket, cts);
 
-            await Task.Factory.StartNew(async () =>
-            {
-                await Task.Delay(10, cts.Token);
-                await client.Listen();
-            }, cts.Token);
             return client;
         }
 
-        private async Task Listen()
+        internal async Task Listen()
         {
             try
             {

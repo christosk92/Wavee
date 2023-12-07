@@ -11,11 +11,13 @@ using Wavee.UI.Features.Navigation.ViewModels;
 using Wavee.UI.Features.NowPlaying.ViewModels;
 using Wavee.UI.Features.Playback.ViewModels;
 using Wavee.UI.Features.Search.ViewModels;
+using Wavee.UI.Test;
 
 namespace Wavee.UI.Features.Shell.ViewModels;
 
 public sealed class ShellViewModel : ObservableObject
 {
+    private Func<IUIDispatcher> _dispatcherFactory;
     private NavigationItemViewModel? _selectedItem;
 
     public ShellViewModel(
@@ -25,7 +27,8 @@ public sealed class ShellViewModel : ObservableObject
         INavigationService navigation,
         PlaybackViewModel playback,
         SearchViewModel search,
-        IMediator mediator)
+        IMediator mediator,
+        IServiceProvider serviceProvider)
     {
         TopNavItems = new object[]
         {
@@ -38,6 +41,10 @@ public sealed class ShellViewModel : ObservableObject
         Playback = playback;
         Search = search;
         Mediator = mediator;
+        _dispatcherFactory = () =>
+        {
+            return (IUIDispatcher)serviceProvider.GetService(typeof(IUIDispatcher));
+        };
 
         navigation.NavigatedTo += (sender, o) =>
         {
@@ -98,6 +105,7 @@ public sealed class ShellViewModel : ObservableObject
     public PlaybackViewModel Playback { get; }
     public SearchViewModel Search { get; }
     public IMediator Mediator { get; }
+    public IUIDispatcher Dispatcher => _dispatcherFactory();
 }
 
 public sealed class NothingSelectedViewModel : NavigationItemViewModel

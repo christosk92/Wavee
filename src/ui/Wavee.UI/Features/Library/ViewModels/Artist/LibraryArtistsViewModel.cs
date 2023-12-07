@@ -13,6 +13,7 @@ using Wavee.UI.Features.Library.Notifications;
 using Wavee.UI.Features.Library.Queries;
 using Wavee.UI.Features.Navigation;
 using Wavee.UI.Features.Navigation.ViewModels;
+using Wavee.UI.Test;
 
 namespace Wavee.UI.Features.Library.ViewModels.Artist;
 
@@ -26,11 +27,13 @@ public sealed class LibraryArtistsViewModel : NavigationItemViewModel
     private int _total;
     private LibraryArtistViewModel? _selectedArtist;
     private readonly INavigationService _navigationService;
+    private IUIDispatcher _dispatcher;
 
-    public LibraryArtistsViewModel(IMediator mediator, INavigationService navigationService)
+    public LibraryArtistsViewModel(IMediator mediator, INavigationService navigationService, IUIDispatcher dispatcher)
     {
         _mediator = mediator;
         _navigationService = navigationService;
+        _dispatcher = dispatcher;
         _sortField = nameof(LibraryItem<SimpleArtistEntity>.AddedAt);
 
         SortFields = new[]
@@ -208,6 +211,6 @@ public sealed class LibraryArtistsViewModel : NavigationItemViewModel
 
     public void NavigateToArtist(string id)
     {
-        _navigationService.Navigate(null, new ArtistViewModel(_mediator, id));
+        _navigationService.Navigate(null, new ArtistViewModel(_mediator, id, _dispatcher));
     }
 }

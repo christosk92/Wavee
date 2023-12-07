@@ -36,7 +36,6 @@ public sealed class WinUIDispatcher : IUIDispatcher
     public WinUIDispatcher()
     {
         _dispatcher = App.MainWindow.DispatcherQueue;
-
     }
     public void Invoke(Action action)
     {

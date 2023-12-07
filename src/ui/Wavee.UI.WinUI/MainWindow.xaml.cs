@@ -7,10 +7,10 @@ namespace Wavee.UI.WinUI;
 
 public sealed partial class MainWindow : Window
 {
-    public MainWindow(MainWindowViewModel viewModel)
+    public MainWindow()
     {
-        ViewModel = viewModel;
         this.InitializeComponent();
+
         Instance = this;
         this.SystemBackdrop = new MicaBackdrop();
         this.AppWindow.TitleBar.ExtendsContentIntoTitleBar = true;
@@ -24,7 +24,13 @@ public sealed partial class MainWindow : Window
         m_TitleBar.ButtonInactiveBackgroundColor = Colors.Transparent;
     }
 
-    public MainWindowViewModel ViewModel { get; }
+    public MainWindowViewModel ViewModel { get; private set; }
 
     public static MainWindow Instance { get; private set; }
+
+    public void SetViewModel(MainWindowViewModel viewModel)
+    {
+        ViewModel = viewModel;
+        this.Bindings.Update();
+    }
 }

@@ -26,7 +26,10 @@
 	  <None Remove="Styles\ItemContainerStyles.xaml" />
 	  <None Remove="Styles\NavigationView\ExtendedNavigationViewStyle.xaml" />
 	  <None Remove="Styles\TextBlockStyles.xaml" />
+	  <None Remove="Views\Artist\ArtistAboutPage.xaml" />
+	  <None Remove="Views\Artist\ArtistOverviewPage.xaml" />
 	  <None Remove="Views\Artist\ArtistPage.xaml" />
+	  <None Remove="Views\Artist\ArtistRelatedContentPage.xaml" />
 	  <None Remove="Views\Identity\SignInView.xaml" />
 	  <None Remove="Views\Libraries\AlbumLibraryPage.xaml" />
 	  <None Remove="Views\Libraries\ArtistLibraryPage.xaml" />
@@ -52,6 +55,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<PackageReference Include="CommunityToolkit.Labs.WinUI.Shimmer" Version="0.1.231204-build.1603" />
 		<PackageReference Include="CommunityToolkit.WinUI.Controls.Segmented" Version="8.0.230907" />
 		<PackageReference Include="CommunityToolkit.WinUI.Controls.Sizers" Version="8.0.230907" />
 		<PackageReference Include="CommunityToolkit.WinUI.UI.Animations" Version="7.1.2" />
@@ -63,7 +67,7 @@
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
-		<PackageReference Include="Microsoft.WindowsAppSDK" Version="1.4.231115000" />
+		<PackageReference Include="Microsoft.WindowsAppSDK" Version="1.5.231202003-experimental1" />
 		<Manifest Include="$(ApplicationManifest)" />
 	</ItemGroup>
 
@@ -91,6 +95,15 @@
 	  <None Update="Controls\AlbumCoverControl.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </None>
+	  <Page Update="Views\Artist\ArtistAboutPage.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </Page>
+	  <Page Update="Views\Artist\ArtistRelatedContentPage.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </Page>
+	  <Page Update="Views\Artist\ArtistOverviewPage.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </Page>
 	  <Page Update="Controls\ArtistDiscographyGroupComponent.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </Page>

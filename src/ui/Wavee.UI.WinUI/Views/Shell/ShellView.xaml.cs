@@ -1,6 +1,7 @@
 using System.Windows.Forms;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Wavee.UI.Features.Artist.ViewModels;
 using Wavee.UI.Features.Library.ViewModels;
 using Wavee.UI.Features.Library.ViewModels.Album;
 using Wavee.UI.Features.Library.ViewModels.Artist;
@@ -54,6 +55,17 @@ namespace Wavee.UI.WinUI.Views.Shell
                     case LibraryPodcastsViewModel s:
                         {
                             ViewModel.Navigation.Navigate(args.RecommendedNavigationTransitionInfo, s);
+                            break;
+                        }
+                    case ArtistOverviewViewModel:
+                    case ArtistAboutViewModel:
+                    case ArtistRelatedContentViewModel:
+                        {
+                            if (ViewModel.SelectedItem is ArtistViewModel artistRoot)
+                            {
+                                artistRoot.SelectedItem = item as NavigationItemViewModel;
+                            }
+
                             break;
                         }
                     case LibrariesViewModel p:
@@ -139,7 +151,7 @@ namespace Wavee.UI.WinUI.Views.Shell
             }
             else if (query is SearchSuggestionEntityViewModel entity)
             {
-                entity.Navigate(ViewModel.Navigation, ViewModel.Mediator);
+                entity.Navigate(ViewModel.Navigation, ViewModel.Mediator, ViewModel.Dispatcher);
             }
         }
 
