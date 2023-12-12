@@ -57,7 +57,8 @@ public static class ServiceCollectionExtensions
             .AddScoped<LibraryPodcastsViewModel>()
             .AddScoped<NowPlayingViewModel>()
             .AddScoped<PlaybackViewModel>()
-            .AddTransient<SpotifyPlaybackPlayerViewModel>()
+            .AddTransient<SpotifyRemotePlaybackPlayerViewModel>()
+            .AddTransient<LocalPlaybackPlayerviewModel>()
             .AddScoped<SearchViewModel>();
     }
 }

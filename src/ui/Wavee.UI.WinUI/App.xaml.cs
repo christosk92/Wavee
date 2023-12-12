@@ -30,6 +30,7 @@ public partial class App : Microsoft.UI.Xaml.Application
             .AddViews()
             .AddMediator()
             .BuildServiceProvider();
+        Constants.ServiceProvider = _sp;
     }
 
     /// <summary>
@@ -48,7 +49,7 @@ public partial class App : Microsoft.UI.Xaml.Application
         var tcs = new TaskCompletionSource<OpenBrowserResult>();
         _mWindow.DispatcherQueue.TryEnqueue(() =>
         {
-             MainWindow.ViewModel.RequestOpenBrowser(url, tcs);
+            MainWindow.ViewModel.RequestOpenBrowser(url, tcs);
         });
 
         return tcs.Task;

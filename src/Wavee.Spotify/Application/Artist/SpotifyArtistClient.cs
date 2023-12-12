@@ -6,6 +6,7 @@ using Wavee.Spotify.Common;
 using Wavee.Spotify.Domain.Album;
 using Wavee.Spotify.Domain.Artist;
 using Wavee.Spotify.Domain.Common;
+using Wavee.Spotify.Infrastructure.LegacyAuth;
 
 namespace Wavee.Spotify.Application.Artist;
 
@@ -20,10 +21,11 @@ public interface ISpotifyArtistClient
 internal sealed class SpotifyArtistClient : ISpotifyArtistClient
 {
     private readonly IMediator _mediator;
-
-    public SpotifyArtistClient(IMediator mediator)
+    private readonly HttpClient _httpClient;
+    public SpotifyArtistClient(IMediator mediator, IHttpClientFactory httpClientFactory)
     {
         _mediator = mediator;
+        _httpClient = httpClientFactory.CreateClient(Constants.SpotifyRemoteStateHttpClietn);
     }
 
     public Task<(IReadOnlyCollection<SpotifySimpleAlbum> Albums, uint Total)> GetDiscographyAlbumsAsync(SpotifyId id, uint offset, uint limit, CancellationToken cancellationToken)
@@ -114,6 +116,14 @@ internal sealed class SpotifyArtistClient : ISpotifyArtistClient
 
     public async Task<SpotifyArtistView> GetAsync(SpotifyId id, CancellationToken cancellationToken)
     {
+        // const string metadataUri = "https://spclient.com/metadata/4/artist/";
+        // var artistUri = metadataUri + id.ToBase16();
+        // using var mercuryResponse = await _httpClient.GetAsync(artistUri, cancellationToken);
+        // mercuryResponse.EnsureSuccessStatusCode();
+        // using var rr = await mercuryResponse.Content.ReadAsStreamAsync(cancellationToken);
+        //
+        // var artistR = global::Spotify.Metadata.Artist.Parser.ParseFrom(rr);
+
         const string operationName = "queryArtistOverview";
         const string operationHash = "3a747b83568580814534e662a2569a6978ac3ad2e449ff751a859abe05dec995";
         const string locale = "";

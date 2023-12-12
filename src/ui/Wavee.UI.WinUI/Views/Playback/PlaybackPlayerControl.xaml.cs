@@ -1,4 +1,9 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Windows.Input;
+using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.WinUI.Controls;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Wavee.UI.Features.Playback.ViewModels;
@@ -32,5 +37,19 @@ public sealed partial class PlaybackPlayerControl : UserControl
     public string Format(TimeSpan timeSpan)
     {
         return timeSpan.ToString(@"mm\:ss");
+    }
+
+    public IEnumerable<MetadataItem> ConvertToMetadataItem((string, string)[] valueTuples)
+    {
+        if(valueTuples is null) yield break;
+        foreach (var (item1, item2) in valueTuples)
+        {
+            yield return new MetadataItem
+            {
+                Label = item2,
+                Command = Player.NavigationCommand,
+                CommandParameter = item1
+            };
+        }
     }
 }

@@ -178,4 +178,16 @@ public readonly record struct SpotifyId(BigInteger Id, SpotifyItemType Type)
 
         return new SpotifyId(result, type);
     }
+
+    public static bool TryParse(ReadOnlySpan<char> uri, out SpotifyId o)
+    {
+        o = default;
+        if (uri.StartsWith("spotify:"))
+        {
+            o = FromUri(uri);
+            return true;
+        }
+
+        return false;
+    }
 }

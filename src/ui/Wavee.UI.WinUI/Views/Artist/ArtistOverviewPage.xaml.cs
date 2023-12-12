@@ -24,14 +24,10 @@ public sealed partial class ArtistOverviewPage : UserControl
     // {
     //    // await ViewModel.FetchNextDiscography(true);
     // }
-    private void FrameworkElement_OnLoaded(object sender, RoutedEventArgs e)
-    {
-        RootSizeChanged();
-    }
 
     public void RootSizeChanged()
     {
-        var topTracksGridSize = SecondTopGridColumn.ActualWidth;
+        var topTracksGridSize = this.ActualWidth;
         var wdth = topTracksGridSize / 2;
         if (TopTracksGrid.ItemsPanelRoot is ItemsWrapGrid wrapGrid)
         {
@@ -39,19 +35,20 @@ public sealed partial class ArtistOverviewPage : UserControl
             {
                 wrapGrid.Orientation = Orientation.Vertical;
                 wrapGrid.MaximumRowsOrColumns = 5;
-                wrapGrid.ItemWidth = this.ActualWidth / 2 - 24;
+                wrapGrid.ItemWidth = this.ActualWidth / 2;
             }
             else
             {
                 wrapGrid.Orientation = Orientation.Vertical;
                 wrapGrid.MaximumRowsOrColumns = 5;
-                wrapGrid.ItemWidth = this.ActualWidth - 48;
+                wrapGrid.ItemWidth = this.ActualWidth;
             }
         }
     }
 
-    private void TopTrackGrid_OnSizeChanged(object sender, SizeChangedEventArgs e)
+    private async void TopTrackControlLoaded(object sender, RoutedEventArgs e)
     {
+        await Task.Delay(10);
         RootSizeChanged();
     }
 }

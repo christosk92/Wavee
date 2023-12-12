@@ -20,12 +20,14 @@ public sealed class IdentityViewModel : ObservableRecipient, IRecipient<SpotifyO
 
     private readonly ISpotifyClient _spotifyClient;
     private readonly IMediator _mediator;
-    private readonly Func<SpotifyPlaybackPlayerViewModel> _playerFactory;
+    private readonly Func<SpotifyRemotePlaybackPlayerViewModel> _spotifyRemotePlayerFactory;
+    private readonly Func<LocalPlaybackPlayerviewModel> _localPlaybackPlayerFactory;
     public IdentityViewModel(ISpotifyClient spotifyClient, IServiceProvider provider, IMediator mediator)
     {
         _spotifyClient = spotifyClient;
         _mediator = mediator;
-        _playerFactory = () => provider.GetRequiredService<SpotifyPlaybackPlayerViewModel>();
+        _spotifyRemotePlayerFactory = provider.GetRequiredService<SpotifyRemotePlaybackPlayerViewModel>;
+        _localPlaybackPlayerFactory = provider.GetRequiredService<LocalPlaybackPlayerviewModel>;
     }
 
     public async Task Initialize()
@@ -34,9 +36,9 @@ public sealed class IdentityViewModel : ObservableRecipient, IRecipient<SpotifyO
         IsLoading = true;
 
         var me = await _spotifyClient.Initialize();
-        await _mediator.Publish(new PlaybackPlayerAddedNotification
+        await _mediator.Publish(new PlaybackPlayerChangedNotification
         {
-            Player = _playerFactory()
+            Player = _spotifyRemotePlayerFactory()
         });
         User = new WaveeUser();
         IsLoading = false;

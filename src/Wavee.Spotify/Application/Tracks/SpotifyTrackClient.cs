@@ -1,7 +1,9 @@
 using Mediator;
 using Spotify.Metadata;
+using Wavee.Domain.Exceptions;
 using Wavee.Spotify.Application.Tracks.Queries;
 using Wavee.Spotify.Common;
+using Wavee.Spotify.Domain.Exceptions;
 using Wavee.Spotify.Domain.Tracks;
 
 namespace Wavee.Spotify.Application.Tracks;
@@ -15,9 +17,12 @@ internal sealed class SpotifyTrackClient : ISpotifyTrackClient
         _mediator = mediator;
     }
 
-    public ValueTask<Track> GetTrack(SpotifyId trackId, CancellationToken cancellationToken = default)
-        => _mediator.Send(new SpotifyGetTrackQuery
+    public async ValueTask<Track> GetTrack(SpotifyId trackId, CancellationToken cancellationToken = default)
+    {
+        var response = await _mediator.Send(new SpotifyGetTrackQuery
         {
             TrackId = trackId
         }, cancellationToken);
+        return response;
+    }
 }

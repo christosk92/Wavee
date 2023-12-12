@@ -162,11 +162,18 @@ public sealed class GetArtistViewQueryHandler : IQueryHandler<GetArtistViewQuery
             if (i < hasItemsLength)
             {
                 var item = items.Items.ElementAt(i);
-                output[i] = new ArtistViewRelatedItem
+                if (item is not null)
                 {
-                    HasValue = true,
-                    Item = parser(item),
-                };
+                    output[i] = new ArtistViewRelatedItem
+                    {
+                        HasValue = true,
+                        Item = parser(item),
+                    };
+                }
+                else
+                {
+
+                }
             }
             else
             {

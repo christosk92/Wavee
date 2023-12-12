@@ -31,17 +31,17 @@ public sealed class SpotifyArtistViewStats
 
 public sealed class SpotifyArtistViewRelatedContent
 {
-    public required SpotifyArtistDiscographyGroup<SpotifySimpleAlbum> AppearsOn { get; init; }
-    public required SpotifyArtistDiscographyGroup<SpotifySimplePlaylist> DiscoveredOn { get; init; }
-    public required SpotifyArtistDiscographyGroup<SpotifySimplePlaylist> FeaturedIn { get; init; }
-    public required SpotifyArtistDiscographyGroup<SpotifySimpleArtist> RelatedArtists { get; init; }
+    public required SpotifyArtistDiscographyGroup<SpotifySimpleAlbum?> AppearsOn { get; init; }
+    public required SpotifyArtistDiscographyGroup<SpotifySimplePlaylist?> DiscoveredOn { get; init; }
+    public required SpotifyArtistDiscographyGroup<SpotifySimplePlaylist?> FeaturedIn { get; init; }
+    public required SpotifyArtistDiscographyGroup<SpotifySimpleArtist?> RelatedArtists { get; init; }
 }
 
 public sealed class SpotifyArtistViewProfile
 {
     public required string Name { get; init; } = null!;
     public required SpotifyArtistViewPinnedItem? PinnedItem { get; init; }
-    public required IReadOnlyCollection<SpotifySimplePlaylist> Playlists { get; init; }
+    public required IReadOnlyCollection<SpotifySimplePlaylist?> Playlists { get; init; }
     public required IReadOnlyDictionary<string, string> SocialLinks { get; init; }
     public required bool Verified { get; init; }
 }
@@ -55,11 +55,11 @@ public sealed class SpotifyArtistViewPinnedItem
 
 public sealed class SpotifyArtistViewDiscography
 {
-    public required SpotifyArtistDiscographyGroup<SpotifySimpleAlbum> Albums { get; init; } = null!;
-    public required SpotifyArtistDiscographyGroup<SpotifySimpleAlbum> Compilations { get; init; } = null!;
-    public required SpotifyArtistDiscographyGroup<SpotifySimpleAlbum> Singles { get; init; } = null!;
+    public required SpotifyArtistDiscographyGroup<SpotifySimpleAlbum?> Albums { get; init; } = null!;
+    public required SpotifyArtistDiscographyGroup<SpotifySimpleAlbum?> Compilations { get; init; } = null!;
+    public required SpotifyArtistDiscographyGroup<SpotifySimpleAlbum?> Singles { get; init; } = null!;
     public required SpotifySimpleAlbum? LatestRelease { get; init; } = null!;
-    public required SpotifyArtistDiscographyGroup<SpotifySimpleAlbum> PopularReleases { get; init; } = null!;
+    public required SpotifyArtistDiscographyGroup<SpotifySimpleAlbum?> PopularReleases { get; init; } = null!;
     public required IReadOnlyCollection<SpotifyArtistTopTrack> TopTracks { get; init; }
 }
 

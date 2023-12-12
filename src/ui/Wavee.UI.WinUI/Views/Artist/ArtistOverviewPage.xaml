@@ -25,7 +25,6 @@
     </UserControl.Resources>
     <RelativePanel>
         <Grid
-            SizeChanged="TopTrackGrid_OnSizeChanged"
             x:Name="TopTrackGrid"
             Margin="0,24,0,0"
             VerticalAlignment="Top">
@@ -68,6 +67,7 @@
                         <StackPanel Orientation="Vertical">
                             <controls:TrackControl
                                 AlternateColors="False"
+                                Loaded="TopTrackControlLoaded"
                                 Image="{x:Bind Track.SmallImage, Mode=OneWay}"
                                 Number="{x:Bind Number, Mode=OneWay}"
                                 ShowImage="True">

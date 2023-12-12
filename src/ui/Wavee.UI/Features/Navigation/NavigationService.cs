@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.Input;
+using Mediator;
 
 namespace Wavee.UI.Features.Navigation;
 

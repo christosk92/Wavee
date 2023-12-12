@@ -4,6 +4,7 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="using:Wavee.UI.WinUI.Controls"
+    xmlns:controls1="using:CommunityToolkit.WinUI.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="using:Wavee.UI.WinUI.Views.Playback"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -511,12 +512,14 @@
                     FontWeight="Bold"
                     Text="{x:Bind Player.Title, Mode=OneWay}"
                     TextTrimming="CharacterEllipsis" />
-                <TextBlock
-                    x:Name="ArtistBlock"
-                    FontWeight="SemiBold"
-                    Opacity=".6"
-                    RelativePanel.Below="TitleBlock"
-                    Text="{x:Bind Player.Artists[0], Mode=OneWay}" />
+                <controls1:MetadataControl Items="{x:Bind ConvertToMetadataItem(Player.Artists), Mode=OneWay}" RelativePanel.Below="TitleBlock">
+                    <controls1:MetadataControl.TextBlockStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="FontWeight" Value="SemiBold" />
+                            <Setter Property="Opacity" Value=".6" />
+                        </Style>
+                    </controls1:MetadataControl.TextBlockStyle>
+                </controls1:MetadataControl>
             </StackPanel>
             <FontIcon
                 Margin="12,12,0,0"

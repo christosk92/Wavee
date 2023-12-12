@@ -208,10 +208,10 @@ internal static class SpotifyArtistViewParser
         return ImmutableArray.Create(itemsParsed);
     }
 
-    private static SpotifyArtistDiscographyGroup<T> ParseDiscographyGroup<T>(JsonElement albums, Func<JsonElement, T> parser)
+    private static SpotifyArtistDiscographyGroup<T?> ParseDiscographyGroup<T>(JsonElement albums, Func<JsonElement, T> parser)
     {
         var items = albums.GetProperty("items");
-        Span<T> itemsParsed = new T[items.GetArrayLength()];
+        Span<T?> itemsParsed = new T?[items.GetArrayLength()];
         var items_idx = 0;
         using var itemsEnumerator = items.EnumerateArray();
         while (itemsEnumerator.MoveNext())
@@ -233,12 +233,22 @@ internal static class SpotifyArtistViewParser
             }
             catch (KeyNotFoundException x)
             {
+                if (item.TryGetProperty("data", out var dt) 
+                    && dt.TryGetProperty("__typename", out var typeNameProp))
+                {
+                    if (typeNameProp.GetString() is "NotFound")
+                    {
+                        //itemsParsed[items_idx++] = default(T);
+                        continue;
+                    }
+                }
+
                 Debugger.Break();
             }
 #endif
         }
 
-        return new SpotifyArtistDiscographyGroup<T>
+        return new SpotifyArtistDiscographyGroup<T?>
         {
             Items = ImmutableArray.Create(itemsParsed),
             Total = albums.GetProperty("totalCount").GetUInt32()

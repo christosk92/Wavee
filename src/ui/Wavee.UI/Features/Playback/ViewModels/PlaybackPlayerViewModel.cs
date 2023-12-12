@@ -1,10 +1,17 @@
 ﻿using System.Diagnostics;
+using System.Windows.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using Wavee.Spotify.Common;
+using Wavee.UI.Extensions;
+using Wavee.UI.Features.Album.ViewModels;
+using Wavee.UI.Features.Artist.ViewModels;
+using Wavee.UI.Features.Navigation;
 using Wavee.UI.Test;
 
 namespace Wavee.UI.Features.Playback.ViewModels;
 
-public abstract class PlaybackPlayerViewModel : ObservableObject
+public abstract class PlaybackPlayerViewModel : ObservableObject, IDisposable, IAsyncDisposable
 {
     private record PositionCallback(int MinimumDifferenceMs, Action<TimeSpan> Callback, int previousMs);
 
@@ -17,15 +24,40 @@ public abstract class PlaybackPlayerViewModel : ObservableObject
     private bool _hasPlayback;
     private string? _coverSmallImageUrl;
     private string? _title;
-    private string[]? _artists;
+    private string[]? _artistsIds;
+    private (string, string)[]? _artists;
     private TimeSpan _duration;
 
     private readonly IUIDispatcher _dispatcher;
     private string _id;
 
-    protected PlaybackPlayerViewModel(IUIDispatcher dispatcher)
+    protected PlaybackPlayerViewModel(IUIDispatcher dispatcher, INavigationService navigationService)
     {
         _dispatcher = dispatcher;
+        NavigationCommand = new RelayCommand<string>(s =>
+        {
+            static void Navigate(string id, SpotifyItemType type, INavigationService service)
+            {
+                switch (type)
+                {
+                    case SpotifyItemType.Artist:
+                        service.NavigateToArtist(id);
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException(nameof(type), type, null);
+                }
+            }
+
+            if (SpotifyId.TryParse(s, out var id))
+            {
+                Navigate(id.ToString(), id.Type, navigationService);
+            }
+            else
+            {
+                //TODO:
+            }
+        });
+
         _timer = new Timer(state =>
         {
             var time = _timeSinceStopwatch + _stopwatch?.Elapsed;
@@ -70,7 +102,7 @@ public abstract class PlaybackPlayerViewModel : ObservableObject
         protected set => SetProperty(ref _title, value);
     }
 
-    public string[]? Artists
+    public (string, string)[]? Artists
     {
         get => _artists;
         protected set => SetProperty(ref _artists, value);
@@ -87,6 +119,8 @@ public abstract class PlaybackPlayerViewModel : ObservableObject
         get => _id;
         protected set => SetProperty(ref _id, value);
     }
+
+    public ICommand NavigationCommand { get; }
 
     public Guid AddPositionCallback(int minimumDifferenceMs, Action<TimeSpan> callback)
     {
@@ -116,5 +150,31 @@ public abstract class PlaybackPlayerViewModel : ObservableObject
         _timeSinceStopwatch = at ?? _timeSinceStopwatch ?? TimeSpan.Zero;
         _stopwatch = Stopwatch.StartNew();
         _timer.Change(0, 10);
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            _timer.Dispose();
+        }
+        this.IsActive = false;
+    }
+
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    protected virtual async ValueTask DisposeAsyncCore()
+    {
+        await _timer.DisposeAsync();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        await DisposeAsyncCore();
+        GC.SuppressFinalize(this);
     }
 }

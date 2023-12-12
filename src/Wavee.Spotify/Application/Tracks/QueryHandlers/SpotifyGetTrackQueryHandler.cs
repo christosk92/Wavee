@@ -1,8 +1,10 @@
+using System.Net;
 using System.Net.Http.Headers;
 using Mediator;
 using Spotify.Metadata;
 using Wavee.Spotify.Application.Tracks.Queries;
 using Wavee.Spotify.Common;
+using Wavee.Spotify.Domain.Exceptions;
 using Wavee.Spotify.Infrastructure.Persistent;
 
 namespace Wavee.Spotify.Application.Tracks.QueryHandlers;
@@ -29,6 +31,18 @@ public sealed class SpotifyGetTrackQueryHandler : IQueryHandler<SpotifyGetTrackQ
         return new ValueTask<Track>(FetchTrack(query.TrackId, cancellationToken)
             .ContinueWith(task =>
             {
+                if (task.IsFaulted)
+                {
+                    var exception = task.Exception;
+                    if (exception.InnerException is HttpRequestException httpErr)
+                    {
+                        if (httpErr.StatusCode is HttpStatusCode.NotFound)
+                        {
+                            throw new SpotifyTrackNotFoundException(query.TrackId, httpErr);
+                        }
+                    }
+                }
+
                 var x = task.Result;
                 _spotifyTrackRepository.AddTrack(x);
                 return x;
