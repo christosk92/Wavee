@@ -28,12 +28,30 @@
                                 <ColumnDefinition Width="14" />
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
-                            <ContentPresenter
-                                x:Name="IndexOrNumber"
-                                Grid.Column="1"
-                                HorizontalAlignment="Stretch"
-                                HorizontalContentAlignment="Stretch"
-                                VerticalContentAlignment="Stretch" />
+                            <Grid Grid.Column="1" HorizontalAlignment="Stretch">
+                                <TextBlock
+                                    x:Name="NumberBlock"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    FontWeight="Bold"
+                                    Foreground="{ThemeResource ApplicationSecondaryForegroundThemeBrush}"
+                                    Text="{TemplateBinding NumberString}" />
+                                <Button
+                                    x:Name="PlayButton"
+                                    Margin="-4,0,8,0"
+                                    HorizontalAlignment="Stretch"
+                                    VerticalAlignment="Center"
+                                    Command="{Binding RelativeSource={RelativeSource Mode=TemplatedParent}, Path=PlayCommand}"
+                                    CommandParameter="{TemplateBinding PlayCommandParameter}"
+                                    FontWeight="Bold"
+                                    Foreground="{ThemeResource ApplicationSecondaryForegroundThemeBrush}">
+                                    <FontIcon
+                                        Margin="-8,0,-8,0"
+                                        FontFamily="/Assets/Fonts/MediaPlayerIcons.ttf#Media Player Fluent Icons"
+                                        FontSize="12"
+                                        Glyph="&#xF5B0;" />
+                                </Button>
+                            </Grid>
 
                             <FontIcon
                                 Grid.Column="2"
@@ -83,98 +101,38 @@
                             <VisualStateGroup x:Name="PointerStates">
                                 <VisualState x:Name="NoPointerNotPlaying">
                                     <VisualState.Setters>
-                                        <Setter Target="IndexOrNumber.Content">
-                                            <Setter.Value>
-                                                <TextBlock
-                                                    HorizontalAlignment="Center"
-                                                    VerticalAlignment="Center"
-                                                    FontWeight="Bold"
-                                                    Foreground="{ThemeResource ApplicationSecondaryForegroundThemeBrush}"
-                                                    Text="{TemplateBinding NumberString}" />
-                                            </Setter.Value>
-                                        </Setter>
+                                        <Setter Target="NumberBlock.Visibility" Value="Visible" />
+                                        <Setter Target="PlayButton.Visibility" Value="Collapsed" />
                                     </VisualState.Setters>
                                 </VisualState>
                                 <VisualState x:Name="NoPointerPlaying">
                                     <VisualState.Setters>
-                                        <Setter Target="IndexOrNumber.Content">
-                                            <Setter.Value>
-                                                <TextBlock
-                                                    Grid.Column="1"
-                                                    HorizontalAlignment="Right"
-                                                    VerticalAlignment="Center"
-                                                    FontWeight="Bold"
-                                                    Foreground="{ThemeResource ApplicationSecondaryForegroundThemeBrush}"
-                                                    Text="{TemplateBinding NumberString}" />
-                                            </Setter.Value>
-                                        </Setter>
+                                        <Setter Target="NumberBlock.Visibility" Value="Visible" />
+                                        <Setter Target="PlayButton.Visibility" Value="Collapsed" />
                                     </VisualState.Setters>
                                 </VisualState>
                                 <VisualState x:Name="NoPointerPaused">
                                     <VisualState.Setters>
-                                        <Setter Target="IndexOrNumber.Content">
-                                            <Setter.Value>
-                                                <TextBlock
-                                                    Grid.Column="1"
-                                                    HorizontalAlignment="Right"
-                                                    VerticalAlignment="Center"
-                                                    FontWeight="Bold"
-                                                    Foreground="{ThemeResource ApplicationSecondaryForegroundThemeBrush}"
-                                                    Text="{TemplateBinding NumberString}" />
-                                            </Setter.Value>
-                                        </Setter>
+                                        <Setter Target="NumberBlock.Visibility" Value="Visible" />
+                                        <Setter Target="PlayButton.Visibility" Value="Collapsed" />
                                     </VisualState.Setters>
                                 </VisualState>
                                 <VisualState x:Name="PointerNotPlaying">
                                     <VisualState.Setters>
-                                        <Setter Target="IndexOrNumber.Content">
-                                            <Setter.Value>
-                                                <Button
-                                                    x:Name="PlayButton"
-                                                    Grid.Column="1"
-                                                    Margin="-4,0,8,0"
-                                                    HorizontalAlignment="Stretch"
-                                                    VerticalAlignment="Center"
-                                                    FontWeight="Bold"
-                                                    Foreground="{ThemeResource ApplicationSecondaryForegroundThemeBrush}">
-                                                    <FontIcon
-                                                        Margin="-8,0,-8,0"
-                                                        FontFamily="/Assets/Fonts/MediaPlayerIcons.ttf#Media Player Fluent Icons"
-                                                        FontSize="12"
-                                                        Glyph="&#xF5B0;" />
-                                                </Button>
-                                            </Setter.Value>
-                                        </Setter>
+                                        <Setter Target="NumberBlock.Visibility" Value="Collapsed" />
+                                        <Setter Target="PlayButton.Visibility" Value="Visible" />
                                     </VisualState.Setters>
                                 </VisualState>
                                 <VisualState x:Name="PointerPlaying">
                                     <VisualState.Setters>
-                                        <Setter Target="IndexOrNumber.Content">
-                                            <Setter.Value>
-                                                <TextBlock
-                                                    Grid.Column="1"
-                                                    HorizontalAlignment="Right"
-                                                    VerticalAlignment="Center"
-                                                    FontWeight="Bold"
-                                                    Foreground="{ThemeResource ApplicationSecondaryForegroundThemeBrush}"
-                                                    Text="pplaying" />
-                                            </Setter.Value>
-                                        </Setter>
+                                        <Setter Target="NumberBlock.Visibility" Value="Collapsed" />
+                                        <Setter Target="PlayButton.Visibility" Value="Visible" />
                                     </VisualState.Setters>
                                 </VisualState>
                                 <VisualState x:Name="PointerPaused">
                                     <VisualState.Setters>
-                                        <Setter Target="IndexOrNumber.Content">
-                                            <Setter.Value>
-                                                <TextBlock
-                                                    Grid.Column="1"
-                                                    HorizontalAlignment="Right"
-                                                    VerticalAlignment="Center"
-                                                    FontWeight="Bold"
-                                                    Foreground="{ThemeResource ApplicationSecondaryForegroundThemeBrush}"
-                                                    Text="{TemplateBinding NumberString}" />
-                                            </Setter.Value>
-                                        </Setter>
+                                        <Setter Target="NumberBlock.Visibility" Value="Collapsed" />
+                                        <Setter Target="PlayButton.Visibility" Value="Visible" />
                                     </VisualState.Setters>
                                 </VisualState>
                             </VisualStateGroup>

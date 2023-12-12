@@ -1,9 +1,11 @@
 using System;
 using System.Windows.Input;
+using CommunityToolkit.WinUI;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Markup;
+using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Imaging;
 using Spotify.Metadata;
 using Image = Microsoft.UI.Xaml.Controls.Image;
@@ -12,7 +14,6 @@ namespace Wavee.UI.WinUI.Controls;
 
 public sealed class TrackControl : Control
 {
-    private Button? _playButton;
     public TrackControl()
     {
         this.DefaultStyleKey = typeof(TrackControl);
@@ -27,8 +28,6 @@ public sealed class TrackControl : Control
     protected override void OnApplyTemplate()
     {
         base.OnApplyTemplate();
-        _playButton = GetTemplateChild("PlayButton") as Button;
-        _playButton.Tapped += PlayButtonOnTapped;
         ReRender();
     }
 
@@ -47,7 +46,18 @@ public sealed class TrackControl : Control
     protected override void OnPointerExited(PointerRoutedEventArgs e)
     {
         base.OnPointerExited(e);
-        VisualStateManager.GoToState(this, "NoPointerNotPlaying", true);
+        //Check if originalSource is not a child of this control
+        var originalSource = e.OriginalSource as DependencyObject;
+        if (originalSource is not null && !IsChildOf(originalSource))
+        {
+            VisualStateManager.GoToState(this, "NoPointerNotPlaying", true);
+        }
+    }
+
+    private bool IsChildOf(DependencyObject ob)
+    {
+        var hasChildOfThis = this.FindDescendant<DependencyObject>(x => x == ob);
+        return hasChildOfThis is not null;
     }
 
     private static void PropertyChangedCallback(DependencyObject d, DependencyPropertyChangedEventArgs e)
