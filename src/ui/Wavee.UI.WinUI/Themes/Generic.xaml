@@ -76,6 +76,7 @@
 
 
                         <ContentControl
+                            x:Name="MainContentCtrl"
                             Grid.Column="1"
                             HorizontalAlignment="Stretch"
                             HorizontalContentAlignment="Stretch"
@@ -108,6 +109,7 @@
                                     <VisualState.Setters>
                                         <Setter Target="NumberBlock.Visibility" Value="Visible" />
                                         <Setter Target="PlayButton.Visibility" Value="Collapsed" />
+                                        <Setter Target="MainContentCtrl.Foreground" Value="{ThemeResource ApplicationForegroundThemeBrush}" />
 
                                         <Setter Target="Equaliser.Visibility" Value="Collapsed" />
                                         <Setter Target="Equaliser.Source" Value="{x:Null}" />
@@ -118,6 +120,7 @@
                                         <Setter Target="NumberBlock.Visibility" Value="Collapsed" />
                                         <Setter Target="PlayButton.Visibility" Value="Collapsed" />
 
+                                        <Setter Target="MainContentCtrl.Foreground" Value="{ThemeResource SystemControlForegroundAccentBrush}" />
                                         <Setter Target="Equaliser.Visibility" Value="Visible" />
                                         <Setter Target="Equaliser.Width" Value="18" />
                                         <Setter Target="Equaliser.Height" Value="18" />

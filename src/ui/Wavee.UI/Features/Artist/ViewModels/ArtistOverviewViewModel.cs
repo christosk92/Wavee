@@ -372,6 +372,7 @@ public sealed class ArtistOverviewViewModel : NavigationItemViewModel
     {
         foreach (var track in TopTracks)
         {
+            var oldState = track.PlaybackState;
             track.PlaybackState = player.IsPlaying(track.Track.Id, null);
         }
 
