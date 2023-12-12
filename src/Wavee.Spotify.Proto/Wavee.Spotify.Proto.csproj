@@ -21,8 +21,11 @@
 
 
     <ItemGroup>
+      <None Remove="es_optional.proto" />
       <None Remove="extracted_colors.proto" />
+      <None Remove="player_license.proto" />
       <None Remove="playlist_permission.proto" />
+      <None Remove="skip_to_track.proto" />
     </ItemGroup>
 
 </Project>

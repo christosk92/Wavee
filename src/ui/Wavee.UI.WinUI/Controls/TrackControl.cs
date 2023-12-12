@@ -1,6 +1,8 @@
 using System;
+using System.Windows.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Markup;
 using Microsoft.UI.Xaml.Media.Imaging;
 using Spotify.Metadata;
@@ -10,6 +12,7 @@ namespace Wavee.UI.WinUI.Controls;
 
 public sealed class TrackControl : Control
 {
+    private Button? _playButton;
     public TrackControl()
     {
         this.DefaultStyleKey = typeof(TrackControl);
@@ -24,8 +27,27 @@ public sealed class TrackControl : Control
     protected override void OnApplyTemplate()
     {
         base.OnApplyTemplate();
-
+        _playButton = GetTemplateChild("PlayButton") as Button;
+        _playButton.Tapped += PlayButtonOnTapped;
         ReRender();
+    }
+
+    protected override void OnPointerEntered(PointerRoutedEventArgs e)
+    {
+        base.OnPointerEntered(e);
+
+        VisualStateManager.GoToState(this, "PointerNotPlaying", true);
+    }
+
+    private void PlayButtonOnTapped(object sender, TappedRoutedEventArgs e)
+    {
+        PlayCommand?.Execute(PlayCommandParameter);
+    }
+
+    protected override void OnPointerExited(PointerRoutedEventArgs e)
+    {
+        base.OnPointerExited(e);
+        VisualStateManager.GoToState(this, "NoPointerNotPlaying", true);
     }
 
     private static void PropertyChangedCallback(DependencyObject d, DependencyPropertyChangedEventArgs e)
@@ -52,6 +74,8 @@ public sealed class TrackControl : Control
         {
             VisualStateManager.GoToState(this, "Default", true);
         }
+
+        VisualStateManager.GoToState(this, "NoPointerNotPlaying", true);
 
         var imageControl = GetTemplateChild("MainImage") as Image;
         if (ShowImage)
@@ -82,6 +106,8 @@ public sealed class TrackControl : Control
     public static readonly DependencyProperty AlternateColorsProperty = DependencyProperty.Register(nameof(AlternateColors), typeof(bool), typeof(TrackControl), new PropertyMetadata(default(bool), PropertyChangedCallback));
     public static readonly DependencyProperty NumberStringProperty = DependencyProperty.Register(nameof(NumberString), typeof(string), typeof(TrackControl), new PropertyMetadata(default(string), PropertyChangedCallback));
     public static readonly DependencyProperty ImageProperty = DependencyProperty.Register(nameof(Image), typeof(string), typeof(TrackControl), new PropertyMetadata(default(string?), PropertyChangedCallback));
+    public static readonly DependencyProperty PlayCommandProperty = DependencyProperty.Register(nameof(PlayCommand), typeof(ICommand), typeof(TrackControl), new PropertyMetadata(default(ICommand)));
+    public static readonly DependencyProperty PlayCommandParameterProperty = DependencyProperty.Register(nameof(PlayCommandParameter), typeof(object), typeof(TrackControl), new PropertyMetadata(default(object)));
 
     public object MainContent
     {
@@ -117,5 +143,17 @@ public sealed class TrackControl : Control
     {
         get => (string?)GetValue(ImageProperty);
         set => SetValue(ImageProperty, value);
+    }
+
+    public ICommand PlayCommand
+    {
+        get => (ICommand)GetValue(PlayCommandProperty);
+        set => SetValue(PlayCommandProperty, value);
+    }
+
+    public object PlayCommandParameter
+    {
+        get => (object)GetValue(PlayCommandParameterProperty);
+        set => SetValue(PlayCommandParameterProperty, value);
     }
 }

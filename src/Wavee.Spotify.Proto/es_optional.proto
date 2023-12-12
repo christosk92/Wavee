@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package spotify.player.esperanto.proto;
+
+option objc_class_prefix = "ESP";
+option optimize_for = CODE_SIZE;
+option java_package = "com.spotify.player.esperanto.proto";
+
+message OptionalInt64 {
+    int64 value = 1;
+}
+
+message OptionalDouble {
+    double value = 1;
+}
+
+message OptionalBoolean {
+    bool value = 1;
+}

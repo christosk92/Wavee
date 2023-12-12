@@ -1,6 +1,8 @@
 ﻿using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Mediator;
+using Wavee.Spotify.Common.Contracts;
+using Wavee.UI.Domain.Playback;
 using Wavee.UI.Features.Playback.Notifications;
 
 namespace Wavee.UI.Features.Playback.ViewModels;
@@ -10,10 +12,11 @@ public sealed class PlaybackViewModel : ObservableObject,
 {
     private readonly IMediator _mediator;
     private PlaybackPlayerViewModel? _activePlayer;
-
-    public PlaybackViewModel(IMediator mediator)
+    private readonly ISpotifyClient _spotifyClient;
+    public PlaybackViewModel(IMediator mediator, ISpotifyClient spotifyClient)
     {
         _mediator = mediator;
+        _spotifyClient = spotifyClient;
     }
 
     public PlaybackPlayerViewModel? ActivePlayer
@@ -41,5 +44,14 @@ public sealed class PlaybackViewModel : ObservableObject,
         ActivePlayer = notification.Player;
         Players.Add(notification.Player);
         return ValueTask.CompletedTask;
+    }
+
+    public async Task Play(PlayContext ctx)
+    {
+        if (ActivePlayer is SpotifyRemotePlaybackPlayerViewModel)
+        {
+            // Do command
+            await _spotifyClient.Remote.Play(ctx._spContext, ctx._playOrigin, ctx._playOptions);
+        }
     }
 }

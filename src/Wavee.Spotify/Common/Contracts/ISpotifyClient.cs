@@ -4,6 +4,7 @@ using Wavee.Spotify.Application.Album;
 using Wavee.Spotify.Application.Artist;
 using Wavee.Spotify.Application.AudioKeys;
 using Wavee.Spotify.Application.Library;
+using Wavee.Spotify.Application.Remote;
 using Wavee.Spotify.Application.Search;
 using Wavee.Spotify.Application.StorageResolve;
 using Wavee.Spotify.Domain.State;
@@ -23,7 +24,7 @@ public interface ISpotifyClient
     ISpotifyArtistClient Artist { get; }
     ISpotifyAlbumClient Album { get; set; }
     ISpotifySearchClient Search { get;}
-
+    ISpotifyRemoteClient Remote { get; }
     Task<APWelcome> User { get; }
     Task<Me> Initialize(CancellationToken cancellationToken = default);
     event EventHandler<SpotifyPlaybackState> PlaybackStateChanged;

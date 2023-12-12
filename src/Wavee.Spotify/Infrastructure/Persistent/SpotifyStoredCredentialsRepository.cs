@@ -20,6 +20,13 @@ internal sealed class SpotifyStoredCredentialsRepository : ISpotifyStoredCredent
 
     public Task StoreCredentials(StoredCredentials credentials, bool isDefault, CancellationToken cancellationToken)
     {
+        var allforUsername = _collection.Find(x => x.Username == credentials.Username);
+
+        foreach (var storedCredentials in allforUsername)
+        {
+            _collection.Delete(id: storedCredentials.Id);
+        }
+
         _collection.Insert(credentials);
         return Task.CompletedTask;
     }

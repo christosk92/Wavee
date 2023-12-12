@@ -1,32 +1,41 @@
 using System.Diagnostics;
+using System.Net.Http.Headers;
 using System.Net.WebSockets;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using Eum.Spotify.connectstate;
+using Eum.Spotify.context;
+using Eum.Spotify.playback;
+using Google.Protobuf;
 using Mediator;
 using Wavee.Spotify.Application.Authentication.Queries;
 using Wavee.Spotify.Application.Remote.Commands;
 using Wavee.Spotify.Common;
 using Wavee.Spotify.Domain.Library;
 using Wavee.Spotify.Utils;
+using ContextPlayerOptions = Eum.Spotify.connectstate.ContextPlayerOptions;
+using PlayOrigin = Eum.Spotify.context.PlayOrigin;
+using Restrictions = Eum.Spotify.connectstate.Restrictions;
 
 namespace Wavee.Spotify.Application.Remote;
 
-internal sealed partial class SpotifyRemoteHolder
+internal sealed partial class SpotifyRemoteHolder : ISpotifyRemoteClient
 {
     private (Cluster Cluster, string ConnectionId)? _remoteState;
     private readonly SpotifyLocalState _localState;
 
     private readonly IMediator _mediator;
+    private readonly HttpClient _httpClient;
     private readonly SpotifyClientConfig _config;
     private SpotifyWebsocketHolder? _websocket;
 
-    public SpotifyRemoteHolder(SpotifyClientConfig config, IMediator mediator)
+    public SpotifyRemoteHolder(SpotifyClientConfig config, IMediator mediator, IHttpClientFactory httpClientFactory)
     {
         _config = config;
         _mediator = mediator;
 
         _localState = SpotifyLocalState.Empty(config);
+        _httpClient = httpClientFactory.CreateClient(Constants.SpotifyRemoteStateHttpClietn);
     }
     public event EventHandler<Cluster>? RemoteStateChanged;
     public event EventHandler<IReadOnlyCollection<SpotifyLibraryItem<SpotifyId>>>? ItemAdded;
@@ -286,6 +295,52 @@ internal sealed partial class SpotifyRemoteHolder
 
         [GeneratedRegex(@"hm://pusher/v1/connections/([^/]+)")]
         private static partial Regex ConnIdRegex();
+    }
+
+    public Task Play(Context context, PlayOrigin playOrigin, PreparePlayOptions preparePlayOptions)
+    {
+        JsonFormatter formatter = new JsonFormatter(JsonFormatter.Settings.Default.WithIndentation().WithPreserveProtoFieldNames(true
+            ));
+
+
+        var ctxJson = JsonSerializer.Deserialize<object>(formatter.Format(context));
+        var playOriginJson = JsonSerializer.Deserialize<object>(formatter.Format(playOrigin));
+        var preparePlayOptionsJson = JsonSerializer.Deserialize<object>(formatter.Format(preparePlayOptions));
+        var body = new
+        {
+            command = new
+            {
+                endpoint = "play",
+                context = ctxJson,
+                play_origin = playOriginJson,
+                options = preparePlayOptionsJson
+            }
+        };
+
+        ReadOnlyMemory<byte> json = JsonSerializer.SerializeToUtf8Bytes(body);
+        return Command(json);
+    }
+
+    private async Task Command(ReadOnlyMemory<byte> json)
+    {
+        const string url =
+            "https://spclient.com/connect-state/v1/player/command/from/{0}/to/{1}";
+        var ownDeviceId = _config.Remote.DeviceId;
+        var toDevice = _remoteState?.Cluster.ActiveDeviceId;
+        if (toDevice is null)
+        {
+            throw new InvalidOperationException("No active device");
+        }
+
+        var formattedUrl = string.Format(url, ownDeviceId, toDevice);
+        using var readOnlyMemoryContent = new ReadOnlyMemoryContent(json);
+        readOnlyMemoryContent.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+        using var req = new HttpRequestMessage(HttpMethod.Post, formattedUrl)
+        {
+            Content = readOnlyMemoryContent
+        };
+        using var r = await _httpClient.SendAsync(req, CancellationToken.None);
+        r.EnsureSuccessStatusCode();
     }
 }
 

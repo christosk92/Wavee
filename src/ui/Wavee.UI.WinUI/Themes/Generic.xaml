@@ -14,7 +14,8 @@
                         x:Name="LayoutRoot"
                         Height="44"
                         HorizontalAlignment="Stretch"
-                        VerticalAlignment="Stretch">
+                        VerticalAlignment="Stretch"
+                        Background="Transparent">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition />
@@ -22,29 +23,27 @@
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="14" />
-                                <ColumnDefinition Width="20" />
-                                <ColumnDefinition Width="14" />
+                                <ColumnDefinition Width="34" />
                                 <ColumnDefinition />
                                 <ColumnDefinition Width="14" />
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
-                            <TextBlock
+                            <ContentPresenter
+                                x:Name="IndexOrNumber"
                                 Grid.Column="1"
-                                HorizontalAlignment="Right"
-                                VerticalAlignment="Center"
-                                FontWeight="Bold"
-                                Foreground="{ThemeResource ApplicationSecondaryForegroundThemeBrush}"
-                                Text="{TemplateBinding NumberString}" />
+                                HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Stretch"
+                                VerticalContentAlignment="Stretch" />
 
                             <FontIcon
-                                Grid.Column="3"
+                                Grid.Column="2"
                                 FontFamily="Segoe Fluent Icons"
                                 FontSize="16"
                                 Glyph="&#xEB51;" />
 
                             <Image
                                 x:Name="MainImage"
-                                Grid.Column="5"
+                                Grid.Column="4"
                                 Width="38"
                                 Height="38"
                                 Margin="0,0,14,0"
@@ -78,6 +77,104 @@
                                 <VisualState x:Name="ShowImage">
                                     <VisualState.Setters>
                                         <Setter Target="MainImage.Visibility" Value="Visible" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                            </VisualStateGroup>
+                            <VisualStateGroup x:Name="PointerStates">
+                                <VisualState x:Name="NoPointerNotPlaying">
+                                    <VisualState.Setters>
+                                        <Setter Target="IndexOrNumber.Content">
+                                            <Setter.Value>
+                                                <TextBlock
+                                                    HorizontalAlignment="Center"
+                                                    VerticalAlignment="Center"
+                                                    FontWeight="Bold"
+                                                    Foreground="{ThemeResource ApplicationSecondaryForegroundThemeBrush}"
+                                                    Text="{TemplateBinding NumberString}" />
+                                            </Setter.Value>
+                                        </Setter>
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="NoPointerPlaying">
+                                    <VisualState.Setters>
+                                        <Setter Target="IndexOrNumber.Content">
+                                            <Setter.Value>
+                                                <TextBlock
+                                                    Grid.Column="1"
+                                                    HorizontalAlignment="Right"
+                                                    VerticalAlignment="Center"
+                                                    FontWeight="Bold"
+                                                    Foreground="{ThemeResource ApplicationSecondaryForegroundThemeBrush}"
+                                                    Text="{TemplateBinding NumberString}" />
+                                            </Setter.Value>
+                                        </Setter>
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="NoPointerPaused">
+                                    <VisualState.Setters>
+                                        <Setter Target="IndexOrNumber.Content">
+                                            <Setter.Value>
+                                                <TextBlock
+                                                    Grid.Column="1"
+                                                    HorizontalAlignment="Right"
+                                                    VerticalAlignment="Center"
+                                                    FontWeight="Bold"
+                                                    Foreground="{ThemeResource ApplicationSecondaryForegroundThemeBrush}"
+                                                    Text="{TemplateBinding NumberString}" />
+                                            </Setter.Value>
+                                        </Setter>
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="PointerNotPlaying">
+                                    <VisualState.Setters>
+                                        <Setter Target="IndexOrNumber.Content">
+                                            <Setter.Value>
+                                                <Button
+                                                    x:Name="PlayButton"
+                                                    Grid.Column="1"
+                                                    Margin="-4,0,8,0"
+                                                    HorizontalAlignment="Stretch"
+                                                    VerticalAlignment="Center"
+                                                    FontWeight="Bold"
+                                                    Foreground="{ThemeResource ApplicationSecondaryForegroundThemeBrush}">
+                                                    <FontIcon
+                                                        Margin="-8,0,-8,0"
+                                                        FontFamily="/Assets/Fonts/MediaPlayerIcons.ttf#Media Player Fluent Icons"
+                                                        FontSize="12"
+                                                        Glyph="&#xF5B0;" />
+                                                </Button>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="PointerPlaying">
+                                    <VisualState.Setters>
+                                        <Setter Target="IndexOrNumber.Content">
+                                            <Setter.Value>
+                                                <TextBlock
+                                                    Grid.Column="1"
+                                                    HorizontalAlignment="Right"
+                                                    VerticalAlignment="Center"
+                                                    FontWeight="Bold"
+                                                    Foreground="{ThemeResource ApplicationSecondaryForegroundThemeBrush}"
+                                                    Text="pplaying" />
+                                            </Setter.Value>
+                                        </Setter>
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="PointerPaused">
+                                    <VisualState.Setters>
+                                        <Setter Target="IndexOrNumber.Content">
+                                            <Setter.Value>
+                                                <TextBlock
+                                                    Grid.Column="1"
+                                                    HorizontalAlignment="Right"
+                                                    VerticalAlignment="Center"
+                                                    FontWeight="Bold"
+                                                    Foreground="{ThemeResource ApplicationSecondaryForegroundThemeBrush}"
+                                                    Text="{TemplateBinding NumberString}" />
+                                            </Setter.Value>
+                                        </Setter>
                                     </VisualState.Setters>
                                 </VisualState>
                             </VisualStateGroup>

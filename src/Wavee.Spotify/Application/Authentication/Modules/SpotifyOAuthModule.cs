@@ -4,6 +4,7 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using Eum.Spotify;
 using Google.Protobuf;
+using LiteDB;
 using Wavee.Spotify.Common.Contracts;
 using Wavee.Spotify.Infrastructure.LegacyAuth;
 
@@ -135,7 +136,10 @@ public sealed partial class SpotifyOAuthModule : ISpotifyAuthModule
             ReusableCredentialsBase64: reusablePassword.ToBase64(),
             ReusableCredentialsType: (int)reusablePasswordType,
             IsDefault: makeDefault
-        );
+        )
+        {
+            Id = ObjectId.NewObjectId()
+        };
     }
 
     private static string GenerateNonce()

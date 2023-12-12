@@ -69,6 +69,8 @@
                             <controls:TrackControl
                                 AlternateColors="True"
                                 Number="{x:Bind Number, Mode=OneWay}"
+                                PlayCommand="{x:Bind PlayCommand, Mode=OneWay}"
+                                PlayCommandParameter="{x:Bind This}"
                                 ShowImage="False">
                                 <controls:TrackControl.MainContent>
                                     <Grid HorizontalAlignment="Stretch">

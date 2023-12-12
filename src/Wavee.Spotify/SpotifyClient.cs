@@ -65,6 +65,7 @@ internal sealed class SpotifyClient : ISpotifyClient
     public ISpotifyArtistClient Artist { get; }
     public ISpotifyAlbumClient Album { get; set; }
     public ISpotifySearchClient Search { get; }
+    public ISpotifyRemoteClient Remote => _spotifyRemoteHolder;
     public Task<APWelcome> User => _tcpHolder.WelcomeMessage;
 
     public async Task<Me> Initialize(CancellationToken cancellationToken = default)

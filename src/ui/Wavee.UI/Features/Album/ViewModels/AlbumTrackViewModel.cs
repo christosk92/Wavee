@@ -1,4 +1,7 @@
-﻿namespace Wavee.UI.Features.Album.ViewModels;
+﻿
+using System.Windows.Input;
+
+namespace Wavee.UI.Features.Album.ViewModels;
 
 public sealed class AlbumTrackViewModel
 {
@@ -25,4 +28,8 @@ public sealed class AlbumTrackViewModel
             }
         }
     }
+
+    public required ICommand PlayCommand { get; init; }
+    public object This => this;
+    public required AlbumViewModel Album { get; init; }
 }

@@ -1,11 +1,13 @@
 ﻿using System.Collections.Immutable;
 using System.Collections.ObjectModel;
+using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using Mediator;
 using Wavee.Spotify.Common;
 using Wavee.Spotify.Domain.Common;
 using Wavee.UI.Domain.Artist;
 using Wavee.UI.Domain.Library;
+using Wavee.UI.Domain.Playback;
 using Wavee.UI.Features.Album.ViewModels;
 using Wavee.UI.Features.Artist.Queries;
 using Wavee.UI.Features.Artist.ViewModels;
@@ -13,6 +15,7 @@ using Wavee.UI.Features.Library.Notifications;
 using Wavee.UI.Features.Library.Queries;
 using Wavee.UI.Features.Navigation;
 using Wavee.UI.Features.Navigation.ViewModels;
+using Wavee.UI.Features.Playback.ViewModels;
 using Wavee.UI.Test;
 
 namespace Wavee.UI.Features.Library.ViewModels.Artist;
@@ -28,12 +31,33 @@ public sealed class LibraryArtistsViewModel : NavigationItemViewModel
     private LibraryArtistViewModel? _selectedArtist;
     private readonly INavigationService _navigationService;
     private IUIDispatcher _dispatcher;
-
-    public LibraryArtistsViewModel(IMediator mediator, INavigationService navigationService, IUIDispatcher dispatcher)
+    private readonly PlaybackViewModel _playback;
+    public LibraryArtistsViewModel(IMediator mediator,
+        INavigationService navigationService,
+        IUIDispatcher dispatcher,
+        PlaybackViewModel playback)
     {
         _mediator = mediator;
         _navigationService = navigationService;
         _dispatcher = dispatcher;
+        _playback = playback;
+        PlayCommand = new AsyncRelayCommand<object>(async x =>
+        {
+            var playbackVm = _playback;
+            switch (x)
+            {
+                case AlbumTrackViewModel track:
+                    //TODO: Can this be more??
+                    var artist = Artists.Single(z => z.Albums.Contains(track.Album));
+                    var ctx = PlayContext.FromLibraryArtist(artist)
+                        .FromDiscography(PlayContextDiscographyGroupType.All)
+                        .StartWithAlbum(track.Album)
+                        .StartWithTrack(track)
+                        .Build();
+                    await playbackVm.Play(ctx);
+                    break;
+            }
+        });
         _sortField = nameof(LibraryItem<SimpleArtistEntity>.AddedAt);
 
         SortFields = new[]
@@ -164,7 +188,7 @@ public sealed class LibraryArtistsViewModel : NavigationItemViewModel
             var bigImage = album.Images.MaxBy(z => z.Height ?? 0);
             //   var smallestImage = album.Images.MinBy(z => z.Height ?? 0);
             var mediumImage = album.Images.OrderBy(z => z.Height ?? 0).Skip(1).FirstOrDefault();
-            artist.Albums.Add(new AlbumViewModel
+            var vm = new AlbumViewModel
             {
                 Name = album.Name,
                 Id = album.Id,
@@ -173,18 +197,24 @@ public sealed class LibraryArtistsViewModel : NavigationItemViewModel
                 Duration = TimeSpan.FromMilliseconds(album.Tracks.Sum(x => x.Duration.TotalMilliseconds)),
                 Year = album.Year ?? 1,
                 Type = album.Type,
-                Tracks = album.Tracks.Select((x, i) => new AlbumTrackViewModel
-                {
-                    Id = x.Id,
-                    Name = x.Name,
-                    Duration = x.Duration,
-                    Number = i + 1,
-                })
-                    .ToArray(),
+                Tracks = null,
                 MediumImageUrl = mediumImage.Url,
-            });
+            };
+            vm.Tracks = album.Tracks.Select((x, i) => new AlbumTrackViewModel
+            {
+                Id = x.Id,
+                Name = x.Name,
+                Duration = x.Duration,
+                Number = i + 1,
+                PlayCommand = PlayCommand,
+                Album = vm
+            })
+                .ToArray();
+            artist.Albums.Add(vm);
         }
     }
+
+    public AsyncRelayCommand<object> PlayCommand { get; }
 
     public async Task Add(int items)
     {
@@ -213,4 +243,12 @@ public sealed class LibraryArtistsViewModel : NavigationItemViewModel
     {
         _navigationService.Navigate(null, new ArtistViewModel(_mediator, id, _dispatcher));
     }
+}
+
+public enum PlayContextDiscographyGroupType
+{
+    All,
+    Albums,
+    Singles,
+    Compilations
 }

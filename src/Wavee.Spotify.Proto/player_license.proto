@@ -1,0 +1,10 @@
+syntax = "proto2";
+
+package spotify.player.proto;
+
+option csharp_namespace = "Eum.Spotify.playback";
+option optimize_for = CODE_SIZE;
+
+message PlayerLicense {
+    optional string identifier = 1;
+}

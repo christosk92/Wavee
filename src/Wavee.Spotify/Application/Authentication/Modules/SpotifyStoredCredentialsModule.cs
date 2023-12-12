@@ -1,5 +1,6 @@
 using Eum.Spotify;
 using Google.Protobuf;
+using LiteDB;
 using Mediator;
 using Wavee.Spotify.Common.Contracts;
 using Wavee.Spotify.Domain.Exceptions;
@@ -60,5 +61,21 @@ public sealed class SpotifyStoredCredentialsModule : ISpotifyAuthModule
     }
 }
 
-public record StoredCredentials(string Username, string ReusableCredentialsBase64, int ReusableCredentialsType,
-    bool IsDefault);
+public class StoredCredentials(string Username, string ReusableCredentialsBase64, int ReusableCredentialsType,
+    bool IsDefault)
+{
+    [BsonId]
+    public required ObjectId Id { get; init; }
+    public string Username { get; init; } = Username;
+    public string ReusableCredentialsBase64 { get; init; } = ReusableCredentialsBase64;
+    public int ReusableCredentialsType { get; init; } = ReusableCredentialsType;
+    public bool IsDefault { get; init; } = IsDefault;
+
+    public void Deconstruct(out string Username, out string ReusableCredentialsBase64, out int ReusableCredentialsType, out bool IsDefault)
+    {
+        Username = this.Username;
+        ReusableCredentialsBase64 = this.ReusableCredentialsBase64;
+        ReusableCredentialsType = this.ReusableCredentialsType;
+        IsDefault = this.IsDefault;
+    }
+}
