@@ -51,6 +51,13 @@
                                         FontSize="12"
                                         Glyph="&#xF5B0;" />
                                 </Button>
+
+                                <Image
+                                    x:Name="Equaliser"
+                                    Width="24"
+                                    Height="24"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center" />
                             </Grid>
 
                             <FontIcon
@@ -62,8 +69,6 @@
                             <Image
                                 x:Name="MainImage"
                                 Grid.Column="4"
-                                Width="38"
-                                Height="38"
                                 Margin="0,0,14,0"
                                 Source="{TemplateBinding Image}"
                                 Visibility="Collapsed" />
@@ -103,12 +108,24 @@
                                     <VisualState.Setters>
                                         <Setter Target="NumberBlock.Visibility" Value="Visible" />
                                         <Setter Target="PlayButton.Visibility" Value="Collapsed" />
+
+                                        <Setter Target="Equaliser.Visibility" Value="Collapsed" />
+                                        <Setter Target="Equaliser.Source" Value="{x:Null}" />
                                     </VisualState.Setters>
                                 </VisualState>
                                 <VisualState x:Name="NoPointerPlaying">
                                     <VisualState.Setters>
-                                        <Setter Target="NumberBlock.Visibility" Value="Visible" />
+                                        <Setter Target="NumberBlock.Visibility" Value="Collapsed" />
                                         <Setter Target="PlayButton.Visibility" Value="Collapsed" />
+
+                                        <Setter Target="Equaliser.Visibility" Value="Visible" />
+                                        <Setter Target="Equaliser.Width" Value="18" />
+                                        <Setter Target="Equaliser.Height" Value="18" />
+                                        <Setter Target="Equaliser.Source">
+                                            <Setter.Value>
+                                                <BitmapImage UriSource="ms-appx:///Assets/Equaliser.gif" />
+                                            </Setter.Value>
+                                        </Setter>
                                     </VisualState.Setters>
                                 </VisualState>
                                 <VisualState x:Name="NoPointerPaused">

@@ -21,6 +21,7 @@
 	<ItemGroup>
 	  <None Remove="Assets\AlbumPlaceholder.png" />
 	  <None Remove="Assets\amb.png" />
+	  <None Remove="Assets\equaliser.gif" />
 	  <None Remove="Controls\ArtistDiscographyGroupComponent.xaml" />
 	  <None Remove="Styles\ButtonStyles.xaml" />
 	  <None Remove="Styles\ItemContainerStyles.xaml" />
@@ -90,6 +91,9 @@
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </Content>
 	  <Content Update="Assets\amb.png">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </Content>
+	  <Content Update="Assets\equaliser.gif">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </Content>
 	  <None Update="Assets\Fonts\MediaPlayerIcons.ttf">

@@ -1,6 +1,7 @@
 using System.Windows.Forms;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Wavee.UI.Extensions;
 using Wavee.UI.Features.Artist.ViewModels;
 using Wavee.UI.Features.Library.ViewModels;
 using Wavee.UI.Features.Library.ViewModels.Album;
@@ -151,7 +152,7 @@ namespace Wavee.UI.WinUI.Views.Shell
             }
             else if (query is SearchSuggestionEntityViewModel entity)
             {
-                entity.Navigate(ViewModel.Navigation, ViewModel.Mediator, ViewModel.Dispatcher);
+                ViewModel.Navigation.NavigateToArtist(entity.Id);
             }
         }
 

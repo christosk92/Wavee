@@ -52,6 +52,19 @@ internal sealed class WinUINavigationService : ObservableObject, INavigationServ
     public RelayCommand GoBackCommand { get; set; }
     public Type CurrentPage => _frame.Content?.GetType() ?? typeof(object);
 
+    public object CurrentViewModel
+    {
+        get
+        {
+            if (_frame.Content is Page page)
+            {
+                return page.DataContext;
+            }
+
+            return null;
+        }
+    }
+
     public void Navigate<TViewModel>(object navigationParams, TViewModel? overrideDataContext = default)
     {
         var typeName = typeof(TViewModel).FullName;

@@ -68,6 +68,7 @@
                         <ItemContainer>
                             <controls:TrackControl
                                 AlternateColors="True"
+                                PlaybackState="{x:Bind PlaybackState, Mode=OneWay}"
                                 Number="{x:Bind Number, Mode=OneWay}"
                                 PlayCommand="{x:Bind PlayCommand, Mode=OneWay}"
                                 PlayCommandParameter="{x:Bind This}"

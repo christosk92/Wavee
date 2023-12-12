@@ -8,6 +8,7 @@ using Microsoft.UI.Xaml.Markup;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Imaging;
 using Spotify.Metadata;
+using Wavee.Domain.Playback;
 using Image = Microsoft.UI.Xaml.Controls.Image;
 
 namespace Wavee.UI.WinUI.Controls;
@@ -34,8 +35,14 @@ public sealed class TrackControl : Control
     protected override void OnPointerEntered(PointerRoutedEventArgs e)
     {
         base.OnPointerEntered(e);
-
-        VisualStateManager.GoToState(this, "PointerNotPlaying", true);
+        var correctState = PlaybackState switch
+        {
+            WaveeTrackPlaybackState.NotPlaying => "PointerNotPlaying",
+            WaveeTrackPlaybackState.Playing => "PointerPlaying",
+            WaveeTrackPlaybackState.Paused => "PointerPaused",
+            _ => throw new ArgumentOutOfRangeException()
+        };
+        VisualStateManager.GoToState(this, correctState, true);
     }
 
     private void PlayButtonOnTapped(object sender, TappedRoutedEventArgs e)
@@ -50,7 +57,15 @@ public sealed class TrackControl : Control
         var originalSource = e.OriginalSource as DependencyObject;
         if (originalSource is not null && !IsChildOf(originalSource))
         {
-            VisualStateManager.GoToState(this, "NoPointerNotPlaying", true);
+            var correctState = PlaybackState switch
+            {
+                WaveeTrackPlaybackState.NotPlaying => "NoPointerNotPlaying",
+                WaveeTrackPlaybackState.Playing => "NoPointerPlaying",
+                WaveeTrackPlaybackState.Paused => "NoPointerPaused",
+                _ => throw new ArgumentOutOfRangeException()
+            };
+
+            VisualStateManager.GoToState(this, correctState, true);
         }
     }
 
@@ -110,6 +125,15 @@ public sealed class TrackControl : Control
             VisualStateManager.GoToState(this, "HideImage", true);
         }
 
+        var correctState = PlaybackState switch
+        {
+            WaveeTrackPlaybackState.NotPlaying => "NoPointerNotPlaying",
+            WaveeTrackPlaybackState.Playing => "NoPointerPlaying",
+            WaveeTrackPlaybackState.Paused => "NoPointerPaused",
+            _ => throw new ArgumentOutOfRangeException()
+        };
+        VisualStateManager.GoToState(this, correctState, true);
+
         NumberString = Number.ToString();
     }
 
@@ -118,6 +142,7 @@ public sealed class TrackControl : Control
     public static readonly DependencyProperty ImageProperty = DependencyProperty.Register(nameof(Image), typeof(string), typeof(TrackControl), new PropertyMetadata(default(string?), PropertyChangedCallback));
     public static readonly DependencyProperty PlayCommandProperty = DependencyProperty.Register(nameof(PlayCommand), typeof(ICommand), typeof(TrackControl), new PropertyMetadata(default(ICommand)));
     public static readonly DependencyProperty PlayCommandParameterProperty = DependencyProperty.Register(nameof(PlayCommandParameter), typeof(object), typeof(TrackControl), new PropertyMetadata(default(object)));
+    public static readonly DependencyProperty PlaybackStateProperty = DependencyProperty.Register(nameof(PlaybackState), typeof(WaveeTrackPlaybackState), typeof(TrackControl), new PropertyMetadata(default(WaveeTrackPlaybackState), PropertyChangedCallback));
 
     public object MainContent
     {
@@ -165,5 +190,11 @@ public sealed class TrackControl : Control
     {
         get => (object)GetValue(PlayCommandParameterProperty);
         set => SetValue(PlayCommandParameterProperty, value);
+    }
+
+    public WaveeTrackPlaybackState PlaybackState
+    {
+        get => (WaveeTrackPlaybackState)GetValue(PlaybackStateProperty);
+        set => SetValue(PlaybackStateProperty, value);
     }
 }

@@ -8,6 +8,7 @@ using Wavee.Spotify.Domain.Common;
 using Wavee.UI.Domain.Artist;
 using Wavee.UI.Domain.Library;
 using Wavee.UI.Domain.Playback;
+using Wavee.UI.Extensions;
 using Wavee.UI.Features.Album.ViewModels;
 using Wavee.UI.Features.Artist.Queries;
 using Wavee.UI.Features.Artist.ViewModels;
@@ -15,12 +16,13 @@ using Wavee.UI.Features.Library.Notifications;
 using Wavee.UI.Features.Library.Queries;
 using Wavee.UI.Features.Navigation;
 using Wavee.UI.Features.Navigation.ViewModels;
+using Wavee.UI.Features.Playback;
 using Wavee.UI.Features.Playback.ViewModels;
 using Wavee.UI.Test;
 
 namespace Wavee.UI.Features.Library.ViewModels.Artist;
 
-public sealed class LibraryArtistsViewModel : NavigationItemViewModel
+public sealed class LibraryArtistsViewModel : NavigationItemViewModel, IPlaybackChangedListener
 {
     private readonly IMediator _mediator;
 
@@ -207,7 +209,8 @@ public sealed class LibraryArtistsViewModel : NavigationItemViewModel
                 Duration = x.Duration,
                 Number = i + 1,
                 PlayCommand = PlayCommand,
-                Album = vm
+                Album = vm,
+                PlaybackState = _playback.IsPlaying(x.Id,null)
             })
                 .ToArray();
             artist.Albums.Add(vm);
@@ -241,7 +244,22 @@ public sealed class LibraryArtistsViewModel : NavigationItemViewModel
 
     public void NavigateToArtist(string id)
     {
-        _navigationService.Navigate(null, new ArtistViewModel(_mediator, id, _dispatcher));
+        _navigationService.NavigateToArtist(id);
+        // _navigationService.Navigate(null, new ArtistViewModel(_mediator, id, _dispatcher));
+    }
+
+    public void OnPlaybackChanged(PlaybackViewModel player)
+    {
+        foreach (var artist in Artists)
+        {
+            foreach (var album in artist.Albums)
+            {
+                foreach (var track in album.Tracks)
+                {
+                    track.PlaybackState = player.IsPlaying(track.Id, null);
+                }
+            }
+        }
     }
 }
 

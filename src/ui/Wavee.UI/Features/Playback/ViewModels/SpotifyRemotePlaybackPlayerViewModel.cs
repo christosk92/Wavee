@@ -18,7 +18,7 @@ internal sealed class SpotifyRemotePlaybackPlayerViewModel : PlaybackPlayerViewM
     private readonly IMediator _mediator;
     public SpotifyRemotePlaybackPlayerViewModel(
         ISpotifyClient spotifyClient,
-        IUIDispatcher dispatcher, 
+        IUIDispatcher dispatcher,
         IMediator mediator,
         INavigationService navigationService) : base(dispatcher, navigationService)
     {
@@ -82,6 +82,7 @@ internal sealed class SpotifyRemotePlaybackPlayerViewModel : PlaybackPlayerViewM
                 CoverSmallImageUrl = smallest.Item1;
                 Title = trackMetadata.Name;
                 Artists = trackMetadata.Artist.Select(a => (SpotifyId.FromRaw(a.Gid.Span, SpotifyItemType.Artist).ToString(), a.Name)).ToArray();
+                Id = trackId;
             });
 
             if (e.IsPaused)
@@ -92,6 +93,12 @@ internal sealed class SpotifyRemotePlaybackPlayerViewModel : PlaybackPlayerViewM
             {
                 base.Resume(e.Position);
             }
+
+            _dispatcher.Invoke(() =>
+            {
+                base.OnPlaybackChanged();
+            });
+
         }
         catch (TrackNotFoundException)
         {

@@ -30,6 +30,7 @@ public abstract class PlaybackPlayerViewModel : ObservableObject, IDisposable, I
 
     private readonly IUIDispatcher _dispatcher;
     private string _id;
+    private bool _paused;
 
     protected PlaybackPlayerViewModel(IUIDispatcher dispatcher, INavigationService navigationService)
     {
@@ -122,6 +123,13 @@ public abstract class PlaybackPlayerViewModel : ObservableObject, IDisposable, I
 
     public ICommand NavigationCommand { get; }
 
+    public bool IsPaused
+    {
+        get => _paused;
+        protected set => SetProperty(ref _paused, value);
+    }
+
+    public event EventHandler PlaybackChanged;
     public Guid AddPositionCallback(int minimumDifferenceMs, Action<TimeSpan> callback)
     {
         var id = Guid.NewGuid();
@@ -140,6 +148,7 @@ public abstract class PlaybackPlayerViewModel : ObservableObject, IDisposable, I
         if (!HasPlayback) return;
         _stopwatch?.Stop();
         _timer.Change(-1, -1);
+        IsPaused = true;
     }
 
     protected void Resume(TimeSpan? at = null)
@@ -150,6 +159,7 @@ public abstract class PlaybackPlayerViewModel : ObservableObject, IDisposable, I
         _timeSinceStopwatch = at ?? _timeSinceStopwatch ?? TimeSpan.Zero;
         _stopwatch = Stopwatch.StartNew();
         _timer.Change(0, 10);
+        IsPaused = false;
     }
 
     protected virtual void Dispose(bool disposing)
@@ -176,5 +186,10 @@ public abstract class PlaybackPlayerViewModel : ObservableObject, IDisposable, I
     {
         await DisposeAsyncCore();
         GC.SuppressFinalize(this);
+    }
+
+    protected void OnPlaybackChanged()
+    {
+        this.PlaybackChanged?.Invoke(this, EventArgs.Empty);
     }
 }

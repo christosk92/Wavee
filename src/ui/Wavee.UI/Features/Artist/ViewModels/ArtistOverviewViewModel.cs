@@ -1,11 +1,13 @@
 ﻿using System.Collections.ObjectModel;
 using System.Globalization;
+using CommunityToolkit.Mvvm.Input;
 using Mediator;
 using NeoSmart.AsyncLock;
 using Wavee.UI.Domain.Album;
 using Wavee.UI.Features.Album.ViewModels;
 using Wavee.UI.Features.Artist.Queries;
 using Wavee.UI.Features.Navigation.ViewModels;
+using Wavee.UI.Features.Playback.ViewModels;
 using Wavee.UI.Test;
 
 namespace Wavee.UI.Features.Artist.ViewModels;
@@ -19,11 +21,13 @@ public sealed class ArtistOverviewViewModel : NavigationItemViewModel
     private readonly IMediator _mediator;
     private readonly string _id;
     private readonly IUIDispatcher _uiDispatcher;
-    public ArtistOverviewViewModel(IMediator mediator, string id, IUIDispatcher uiDispatcher)
+    private readonly PlaybackViewModel _playback;
+    public ArtistOverviewViewModel(IMediator mediator, string id, IUIDispatcher uiDispatcher, PlaybackViewModel playback)
     {
         _mediator = mediator;
         _id = id;
         _uiDispatcher = uiDispatcher;
+        _playback = playback;
     }
     public double ScrollPosition { get; set; }
     public ObservableCollection<ArtistTopTrackViewModel> TopTracks { get; } = new();
@@ -58,7 +62,7 @@ public sealed class ArtistOverviewViewModel : NavigationItemViewModel
 
         return new ObservableCollection<AlbumTrackViewModel>();
     }
-    public void Initialize(ArtistViewResult artist)
+    public void Initialize(ArtistViewResult artist, AsyncRelayCommand<object> playCommand)
     {
         int i = 1;
         foreach (var track in artist.TopTracks)
@@ -68,7 +72,9 @@ public sealed class ArtistOverviewViewModel : NavigationItemViewModel
                 Track = track,
                 Number = i,
                 Playcount = track.Playcount.HasValue ? Format(track.Playcount.Value) : "< 1,000",
-                Duration = FormatDuration(track.Duration)
+                Duration = FormatDuration(track.Duration),
+                PlayCommand = playCommand,
+                PlaybackState = _playback.IsPlaying(track.Id, null)
             });
             i++;
         }
@@ -360,5 +366,30 @@ public sealed class ArtistOverviewViewModel : NavigationItemViewModel
     private static string Format(ulong artistMonthlyListeners)
     {
         return artistMonthlyListeners.ToString("N0", CultureInfo.InvariantCulture);
+    }
+
+    public void OnPlaybackChanged(PlaybackViewModel player)
+    {
+        foreach (var track in TopTracks)
+        {
+            track.PlaybackState = player.IsPlaying(track.Track.Id, null);
+        }
+
+        foreach (var group in Discography)
+        {
+            foreach (var item in group.Items)
+            {
+                if (item.Value is not null)
+                {
+                    if (item.Value.Album.Tracks is not null)
+                    {
+                        foreach (var track in item.Value.Album.Tracks)
+                        {
+                            track.PlaybackState = player.IsPlaying(track.Id, null);
+                        }
+                    }
+                }
+            }
+        }
     }
 }

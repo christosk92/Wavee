@@ -30,8 +30,7 @@
             VerticalAlignment="Top">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
-                <ColumnDefinition 
-                    x:Name="SecondTopGridColumn" x:FieldModifier="public" />
+                <ColumnDefinition x:Name="SecondTopGridColumn" x:FieldModifier="public" />
             </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
@@ -67,9 +66,12 @@
                         <StackPanel Orientation="Vertical">
                             <controls:TrackControl
                                 AlternateColors="False"
-                                Loaded="TopTrackControlLoaded"
                                 Image="{x:Bind Track.SmallImage, Mode=OneWay}"
+                                Loaded="TopTrackControlLoaded"
                                 Number="{x:Bind Number, Mode=OneWay}"
+                                PlayCommand="{x:Bind PlayCommand}"
+                                PlayCommandParameter="{x:Bind This}"
+                                PlaybackState="{x:Bind PlaybackState, Mode=OneWay}"
                                 ShowImage="True">
                                 <controls:TrackControl.MainContent>
                                     <Grid VerticalAlignment="Center">

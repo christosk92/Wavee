@@ -1,10 +1,14 @@
 ﻿
 using System.Windows.Input;
+using CommunityToolkit.Mvvm.ComponentModel;
+using NAudio.Wave;
+using Wavee.Domain.Playback;
 
 namespace Wavee.UI.Features.Album.ViewModels;
 
-public sealed class AlbumTrackViewModel
+public sealed class AlbumTrackViewModel : ObservableObject
 {
+    private WaveeTrackPlaybackState _playbackState;
     public required string Id { get; init; }
     public required string Name { get; init; }
     public required TimeSpan Duration { get; init; }
@@ -32,4 +36,10 @@ public sealed class AlbumTrackViewModel
     public required ICommand PlayCommand { get; init; }
     public object This => this;
     public required AlbumViewModel Album { get; init; }
+
+    public WaveeTrackPlaybackState PlaybackState
+    {
+        get => _playbackState;
+        set => SetProperty(ref _playbackState, value);
+    }
 }
