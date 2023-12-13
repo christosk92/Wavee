@@ -28,7 +28,8 @@ public sealed class ShellViewModel : ObservableObject
         PlaybackViewModel playback,
         SearchViewModel search,
         IMediator mediator,
-        IServiceProvider serviceProvider)
+        IServiceProvider serviceProvider,
+        RightSidebarViewModel rightSidebar)
     {
         TopNavItems = new object[]
         {
@@ -41,6 +42,7 @@ public sealed class ShellViewModel : ObservableObject
         Playback = playback;
         Search = search;
         Mediator = mediator;
+        RightSidebar = rightSidebar;
         _dispatcherFactory = () =>
         {
             return (IUIDispatcher)serviceProvider.GetService(typeof(IUIDispatcher));
@@ -106,6 +108,7 @@ public sealed class ShellViewModel : ObservableObject
     public SearchViewModel Search { get; }
     public IMediator Mediator { get; }
     public IUIDispatcher Dispatcher => _dispatcherFactory();
+    public RightSidebarViewModel RightSidebar { get; }
 }
 
 public sealed class NothingSelectedViewModel : NavigationItemViewModel

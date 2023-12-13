@@ -6,6 +6,7 @@ using Wavee.UI.WinUI.Services;
 using Wavee.UI.WinUI.Views.Libraries;
 using Wavee.UI.WinUI.Views.Listen;
 using Wavee.UI.WinUI.Views.NowPlaying;
+using Wavee.UI.WinUI.Views.Shell.RightSidebar;
 
 namespace Wavee.UI.WinUI;
 
@@ -20,6 +21,9 @@ public static class ServiceCollectionExtensions
         collection.AddTransient<AlbumLibraryPage>();
         collection.AddTransient<ArtistLibraryPage>();
         collection.AddTransient<PodcastLibraryPage>();
+
+        collection.AddTransient<LyricsRightSidebarPage>();
+        collection.AddTransient<VideoRightSidebarPage>();
 
         collection.AddTransient<NowPlayingPage>();
 

@@ -445,6 +445,15 @@
             <Setter Property="Padding" Value="4" />
             <Setter Property="Width" Value="40" />
         </Style>
+        <Style
+            x:Key="AppBarToggleButtonCompactStyle"
+            BasedOn="{StaticResource DefaultAppBarToggleButtonStyle}"
+            TargetType="AppBarToggleButton">
+            <Setter Property="LabelPosition" Value="Collapsed" />
+            <Setter Property="Margin" Value="0" />
+            <Setter Property="Padding" Value="4" />
+            <Setter Property="Width" Value="40" />
+        </Style>
     </UserControl.Resources>
 
     <Grid>
@@ -613,14 +622,15 @@
                     </AppBarButton.Icon>
                 </AppBarButton>
 
-                <AppBarButton
+                <AppBarToggleButton
                     x:Name="LyricsButton"
                     Grid.Column="1"
-                    Style="{StaticResource AppBarButtonCompactStyle}">
-                    <AppBarButton.Icon>
+                    IsChecked="{x:Bind IsLyrics(SelectedSidebarComponent), Mode=TwoWay, BindBack=Setlyrics}"
+                    Style="{StaticResource AppBarToggleButtonCompactStyle}">
+                    <AppBarToggleButton.Icon>
                         <FontIcon FontFamily="/Assets/Fonts/MediaPlayerIcons.ttf#Media Player Fluent Icons" Glyph="&#xED1E;" />
-                    </AppBarButton.Icon>
-                </AppBarButton>
+                    </AppBarToggleButton.Icon>
+                </AppBarToggleButton>
                 <AppBarButton
                     x:Name="DevicesButton"
                     Grid.Column="2"

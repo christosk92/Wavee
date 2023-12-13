@@ -13,6 +13,7 @@ using Wavee.UI.Features.NowPlaying.ViewModels;
 using Wavee.UI.Features.Playback.ViewModels;
 using Wavee.UI.Features.Search.ViewModels;
 using Wavee.UI.Features.Shell.ViewModels;
+using Wavee.Youtube;
 
 namespace Wavee.UI;
 
@@ -40,7 +41,8 @@ public static class ServiceCollectionExtensions
             }
         })
             .WithStoredOrOAuthModule(openBrowser)
-            .WithPlayer<NAudioPlayer>();
+            .WithPlayer<NAudioPlayer>()
+            .AddYoutube();
     }
 
     public static IServiceCollection AddViewModels(this IServiceCollection collection)
@@ -48,6 +50,9 @@ public static class ServiceCollectionExtensions
         return collection
             .AddScoped<MainWindowViewModel>()
             .AddScoped<ShellViewModel>()
+            .AddScoped<RightSidebarViewModel>()
+            .AddScoped<RightSidebarLyricsViewModel>()
+            .AddScoped<RightSidebarVideoViewModel>()
             .AddScoped<IdentityViewModel>()
             .AddScoped<ListenViewModel>()
             .AddScoped<LibrariesViewModel>()

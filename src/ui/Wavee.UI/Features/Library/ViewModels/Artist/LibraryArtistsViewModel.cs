@@ -45,19 +45,26 @@ public sealed class LibraryArtistsViewModel : NavigationItemViewModel, IPlayback
         _playback = playback;
         PlayCommand = new AsyncRelayCommand<object>(async x =>
         {
-            var playbackVm = _playback;
-            switch (x)
+            try
             {
-                case AlbumTrackViewModel track:
-                    //TODO: Can this be more??
-                    var artist = Artists.Single(z => z.Albums.Contains(track.Album));
-                    var ctx = PlayContext.FromLibraryArtist(artist)
-                        .FromDiscography(PlayContextDiscographyGroupType.All)
-                        .StartWithAlbum(track.Album)
-                        .StartWithTrack(track)
-                        .Build();
-                    await playbackVm.Play(ctx);
-                    break;
+                var playbackVm = _playback;
+                switch (x)
+                {
+                    case AlbumTrackViewModel track:
+                        //TODO: Can this be more??
+                        var artist = Artists.Single(z => z.Albums.Contains(track.Album));
+                        var ctx = PlayContext.FromLibraryArtist(artist)
+                            .FromDiscography(PlayContextDiscographyGroupType.All)
+                            .StartWithAlbum(track.Album)
+                            .StartWithTrack(track)
+                            .Build();
+                        await playbackVm.Play(ctx);
+                        break;
+                }
+            }
+            catch (InvalidOperationException)
+            {
+
             }
         });
         _sortField = nameof(LibraryItem<SimpleArtistEntity>.AddedAt);
@@ -110,6 +117,7 @@ public sealed class LibraryArtistsViewModel : NavigationItemViewModel, IPlayback
         try
         {
             Artists ??= new ObservableCollection<LibraryArtistViewModel>();
+            if (Artists.Count is not 0) return;
             Artists.Clear();
             var library = await _mediator.Send(new GetLibraryArtistsQuery()
             {
@@ -210,7 +218,7 @@ public sealed class LibraryArtistsViewModel : NavigationItemViewModel, IPlayback
                 Number = i + 1,
                 PlayCommand = PlayCommand,
                 Album = vm,
-                PlaybackState = _playback.IsPlaying(x.Id,null)
+                PlaybackState = _playback.IsPlaying(x.Id, null)
             })
                 .ToArray();
             artist.Albums.Add(vm);

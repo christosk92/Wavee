@@ -6,4 +6,15 @@
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
+    <ItemGroup>
+      <PackageReference Include="FFmpeg.AutoGen" Version="6.1.0" />
+      <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.0" />
+      <PackageReference Include="YoutubeExplode" Version="6.3.9" />
+      <PackageReference Include="YoutubeExplode.Converter" Version="6.3.9" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Wavee\Wavee.csproj" />
+    </ItemGroup>
+
 </Project>

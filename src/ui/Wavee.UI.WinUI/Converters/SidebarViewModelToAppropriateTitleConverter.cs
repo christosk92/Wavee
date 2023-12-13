@@ -6,6 +6,7 @@ using Wavee.UI.Features.Library.ViewModels.Album;
 using Wavee.UI.Features.Library.ViewModels.Artist;
 using Wavee.UI.Features.Listen;
 using Wavee.UI.Features.NowPlaying.ViewModels;
+using Wavee.UI.Features.Shell.ViewModels;
 
 namespace Wavee.UI.WinUI.Converters;
 
@@ -25,6 +26,9 @@ internal sealed class SidebarViewModelToAppropriateTitleConverter : IValueConver
             ArtistOverviewViewModel => "Discography",
             ArtistAboutViewModel => "About",
             ArtistRelatedContentViewModel => "Related Content",
+
+            RightSidebarLyricsViewModel => "Lyrics",
+            RightSidebarVideoViewModel => "Video",
         };
     }
 

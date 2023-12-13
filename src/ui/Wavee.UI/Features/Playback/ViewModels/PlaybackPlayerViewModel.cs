@@ -7,6 +7,7 @@ using Wavee.UI.Extensions;
 using Wavee.UI.Features.Album.ViewModels;
 using Wavee.UI.Features.Artist.ViewModels;
 using Wavee.UI.Features.Navigation;
+using Wavee.UI.Features.Shell.ViewModels;
 using Wavee.UI.Test;
 
 namespace Wavee.UI.Features.Playback.ViewModels;
@@ -32,9 +33,12 @@ public abstract class PlaybackPlayerViewModel : ObservableObject, IDisposable, I
     private string _id;
     private bool _paused;
 
-    protected PlaybackPlayerViewModel(IUIDispatcher dispatcher, INavigationService navigationService)
+    protected PlaybackPlayerViewModel(IUIDispatcher dispatcher, 
+        INavigationService navigationService,
+        RightSidebarLyricsViewModel lyrics)
     {
         _dispatcher = dispatcher;
+        Lyrics = lyrics;
         NavigationCommand = new RelayCommand<string>(s =>
         {
             static void Navigate(string id, SpotifyItemType type, INavigationService service)
@@ -127,6 +131,18 @@ public abstract class PlaybackPlayerViewModel : ObservableObject, IDisposable, I
     {
         get => _paused;
         protected set => SetProperty(ref _paused, value);
+    }
+
+    public RightSidebarLyricsViewModel Lyrics { get; }
+
+    public TimeSpan Position
+    {
+        get
+        {
+            if (_timeSinceStopwatch is null) return TimeSpan.Zero;
+
+            return _timeSinceStopwatch.Value + _stopwatch?.Elapsed ?? TimeSpan.Zero;
+        }
     }
 
     public event EventHandler PlaybackChanged;

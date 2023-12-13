@@ -7,6 +7,7 @@ using Wavee.Spotify.Domain.Library;
 using Wavee.Spotify.Domain.State;
 using Wavee.UI.Features.Library.Notifications;
 using Wavee.UI.Features.Navigation;
+using Wavee.UI.Features.Shell.ViewModels;
 using Wavee.UI.Test;
 
 namespace Wavee.UI.Features.Playback.ViewModels;
@@ -20,7 +21,8 @@ internal sealed class SpotifyRemotePlaybackPlayerViewModel : PlaybackPlayerViewM
         ISpotifyClient spotifyClient,
         IUIDispatcher dispatcher,
         IMediator mediator,
-        INavigationService navigationService) : base(dispatcher, navigationService)
+        INavigationService navigationService,
+        RightSidebarLyricsViewModel lyricsRightSidebarViewModel) : base(dispatcher, navigationService, lyricsRightSidebarViewModel)
     {
         _spotifyClient = spotifyClient;
         _dispatcher = dispatcher;

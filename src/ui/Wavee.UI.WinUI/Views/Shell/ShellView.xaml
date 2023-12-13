@@ -4,6 +4,7 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="using:Wavee.UI.WinUI.Controls"
+    xmlns:controls1="using:CommunityToolkit.WinUI.Controls"
     xmlns:converters="using:Wavee.UI.WinUI.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -15,6 +16,8 @@
     xmlns:viewModels="using:Wavee.UI.Features.Navigation.ViewModels"
     xmlns:viewModels1="using:Wavee.UI.Features.Playback.ViewModels"
     xmlns:viewModels2="using:Wavee.UI.Features.Search.ViewModels"
+    xmlns:viewModels3="using:Wavee.UI.Features.Shell.ViewModels"
+    x:Name="Root"
     DataContextChanged="ShellView_OnDataContextChanged"
     mc:Ignorable="d">
     <UserControl.Resources>
@@ -113,6 +116,10 @@
             QueryTemplate="{StaticResource QuerySearchSuggestion}" />
     </UserControl.Resources>
     <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition x:Name="RightSidebarColumn" Width="Auto" />
+        </Grid.ColumnDefinitions>
         <NavigationView
             IsBackButtonVisible="Collapsed"
             ItemInvoked="NavigationView_OnItemInvoked"
@@ -210,10 +217,76 @@
                 SelectedItem="{x:Bind ViewModel.Playback.ActivePlayer, Mode=TwoWay}">
                 <FlipView.ItemTemplate>
                     <DataTemplate x:DataType="viewModels1:PlaybackPlayerViewModel">
-                        <playback:PlaybackPlayerControl DataContext="{Binding}" />
+                        <playback:PlaybackPlayerControl DataContext="{Binding}" SelectedSidebarComponent="{Binding ElementName=Root, Path=ViewModel.RightSidebar.SelectedItem, Mode=TwoWay}" />
                     </DataTemplate>
                 </FlipView.ItemTemplate>
             </FlipView>
         </Grid>
+
+        <Grid
+            x:Name="RightSidebarGrid"
+            Grid.Column="1"
+            Width="440"
+            Background="{ThemeResource LayerFillColorDefaultBrush}"
+            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+            BorderThickness="1,1,0,0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="32" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition />
+            </Grid.RowDefinitions>
+
+            <Frame x:Name="RightSidebarNavigationFrame" Grid.Row="2" />
+            <controls1:Segmented
+                Grid.Row="1"
+                Margin="8,0"
+                HorizontalAlignment="Stretch"
+                HorizontalContentAlignment="Stretch"
+                Background="Transparent"
+                BorderThickness="0"
+                SelectedIndex="{x:Bind ToIndex(ViewModel.RightSidebar.SelectedItem), Mode=TwoWay, BindBack=SetItem}"
+                SelectionChanged="SidebarItemSelectionChanged">
+                <controls1:Segmented.Items>
+                    <controls1:SegmentedItem Content="{x:Bind ViewModel.RightSidebar.Items[0], Converter={StaticResource SidebarViewModelToAppropriateTitleConverter}}" Icon="{x:Bind ViewModel.RightSidebar.Items[0], Converter={StaticResource SidebarViewModelToAppropriateIconConverter}}" />
+                    <controls1:SegmentedItem Content="{x:Bind ViewModel.RightSidebar.Items[1], Converter={StaticResource SidebarViewModelToAppropriateTitleConverter}}" Icon="{x:Bind ViewModel.RightSidebar.Items[1], Converter={StaticResource SidebarViewModelToAppropriateIconConverter}}" />
+                </controls1:Segmented.Items>
+            </controls1:Segmented>
+        </Grid>
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup>
+                <VisualState x:Name="sidebarNotOpen">
+                    <VisualState.StateTriggers>
+                        <StateTrigger IsActive="{x:Bind Negate(ViewModel.RightSidebar.IsOpen), Mode=OneWay}" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="RightSidebarGrid.Visibility" Value="Collapsed" />
+                        <Setter Target="RightSidebarColumn.Width" Value="0" />
+                    </VisualState.Setters>
+                </VisualState>
+                <VisualState x:Name="sidebarOpenNotDocked">
+                    <VisualState.StateTriggers>
+                        <StateTrigger IsActive="{x:Bind CompositeBool(ViewModel.RightSidebar.IsOpen, ViewModel.RightSidebar.IsDocked, x:True, x:False), Mode=OneWay}" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="RightSidebarGrid.Visibility" Value="Visible" />
+                        <Setter Target="RightSidebarGrid.(Grid.Column)" Value="0" />
+                        <Setter Target="RightSidebarGrid.HorizontalAlignment" Value="Right" />
+
+                        <Setter Target="RightSidebarColumn.Width" Value="0" />
+                    </VisualState.Setters>
+                </VisualState>
+                <VisualState x:Name="sidebarOpenDocked">
+                    <VisualState.StateTriggers>
+                        <StateTrigger IsActive="{x:Bind CompositeBool(ViewModel.RightSidebar.IsOpen, ViewModel.RightSidebar.IsDocked, x:True, x:False), Mode=OneWay}" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="RightSidebarGrid.Visibility" Value="Visible" />
+                        <Setter Target="RightSidebarGrid.(Grid.Column)" Value="1" />
+                        <Setter Target="RightSidebarGrid.HorizontalAlignment" Value="Stretch" />
+                        <Setter Target="RightSidebarColumn.Width" Value="600" />
+                    </VisualState.Setters>
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
     </Grid>
 </UserControl>

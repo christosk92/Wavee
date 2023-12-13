@@ -43,6 +43,8 @@
 	  <None Remove="Views\NowPlaying\NowPlayingPage.xaml" />
 	  <None Remove="Views\Playback\PlaybackPlayerControl.xaml" />
 	  <None Remove="Views\Search\SearchPage.xaml" />
+	  <None Remove="Views\Shell\RightSidebar\LyricsRightSidebarPage.xaml" />
+	  <None Remove="Views\Shell\RightSidebar\VideoRightSidebarPage.xaml" />
 	  <None Remove="Views\Shell\ShellView.xaml" />
 	</ItemGroup>
 	<ItemGroup>
@@ -102,6 +104,12 @@
 	  <None Update="Controls\AlbumCoverControl.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </None>
+	  <Page Update="Views\Shell\RightSidebar\VideoRightSidebarPage.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </Page>
+	  <Page Update="Views\Shell\RightSidebar\LyricsRightSidebarPage.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </Page>
 	  <Page Update="Views\Artist\ArtistAboutPage.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </Page>
