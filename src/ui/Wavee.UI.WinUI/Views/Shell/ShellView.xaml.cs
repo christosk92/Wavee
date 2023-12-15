@@ -14,6 +14,7 @@ using Wavee.UI.Features.Listen;
 using Wavee.UI.Features.Navigation;
 using Wavee.UI.Features.Navigation.ViewModels;
 using Wavee.UI.Features.NowPlaying.ViewModels;
+using Wavee.UI.Features.Playlists.ViewModel;
 using Wavee.UI.Features.RightSidebar.ViewModels;
 using Wavee.UI.Features.Search.ViewModels;
 using Wavee.UI.Features.Shell.ViewModels;
@@ -23,283 +24,314 @@ using Wavee.UI.WinUI.Views.Search;
 using NavigationTransitionInfo = Microsoft.UI.Xaml.Media.Animation.NavigationTransitionInfo;
 using UserControl = Microsoft.UI.Xaml.Controls.UserControl;
 
-namespace Wavee.UI.WinUI.Views.Shell
+namespace Wavee.UI.WinUI.Views.Shell;
+
+public sealed partial class ShellView : UserControl
 {
-    public sealed partial class ShellView : UserControl
+    public ShellView()
     {
-        public ShellView()
-        {
-            this.InitializeComponent();
-        }
+        this.InitializeComponent();
+    }
 
-        public ShellViewModel ViewModel => DataContext is ShellViewModel vm ? vm : null;
+    public ShellViewModel ViewModel => DataContext is ShellViewModel vm ? vm : null;
 
-        private void NavigationView_OnItemInvoked(NavigationView sender, NavigationViewItemInvokedEventArgs args)
+    private void NavigationView_OnItemInvoked(NavigationView sender, NavigationViewItemInvokedEventArgs args)
+    {
+        if (args.InvokedItemContainer?.Tag is object item)
         {
-            if (args.InvokedItemContainer?.Tag is object item)
+            //ince sidebarviewmodel is a viewmodelbase, we need to pass the type as the actual upper time
+            //so we can navigate to the correct page
+            switch (item)
             {
-                //ince sidebarviewmodel is a viewmodelbase, we need to pass the type as the actual upper time
-                //so we can navigate to the correct page
-                switch (item)
+                case ListenViewModel h:
+                    ViewModel.Navigation.Navigate(args.RecommendedNavigationTransitionInfo, h);
+                    break;
+                case LibrarySongsViewModel s:
                 {
-                    case ListenViewModel h:
-                        ViewModel.Navigation.Navigate(args.RecommendedNavigationTransitionInfo, h);
-                        break;
-                    case LibrarySongsViewModel s:
-                        {
-                            ViewModel.Navigation.Navigate(args.RecommendedNavigationTransitionInfo, s);
-                            break;
-                        }
-                    case LibraryAlbumsViewModel s:
-                        {
-                            ViewModel.Navigation.Navigate(args.RecommendedNavigationTransitionInfo, s);
-                            break;
-                        }
-                    case LibraryArtistsViewModel s:
-                        {
-                            ViewModel.Navigation.Navigate(args.RecommendedNavigationTransitionInfo, s);
-                            break;
-                        }
-                    case LibraryPodcastsViewModel s:
-                        {
-                            ViewModel.Navigation.Navigate(args.RecommendedNavigationTransitionInfo, s);
-                            break;
-                        }
-                    case ArtistOverviewViewModel:
-                    case ArtistAboutViewModel:
-                    case ArtistRelatedContentViewModel:
-                        {
-                            if (ViewModel.SelectedItem is ArtistViewModel artistRoot)
-                            {
-                                artistRoot.SelectedItem = item as NavigationItemViewModel;
-                            }
-
-                            break;
-                        }
-                    case LibrariesViewModel p:
-                        {
-                            var selected = p.SelectedItem;
-                            switch (selected)
-                            {
-                                case LibrarySongsViewModel s:
-                                    {
-                                        ViewModel.Navigation.Navigate(args.RecommendedNavigationTransitionInfo, s);
-                                        break;
-                                    }
-                                case LibraryAlbumsViewModel s:
-                                    {
-                                        ViewModel.Navigation.Navigate(args.RecommendedNavigationTransitionInfo, s);
-                                        break;
-                                    }
-                                case LibraryArtistsViewModel s:
-                                    {
-                                        ViewModel.Navigation.Navigate(args.RecommendedNavigationTransitionInfo, s);
-                                        break;
-                                    }
-                                case LibraryPodcastsViewModel s:
-                                    {
-                                        ViewModel.Navigation.Navigate(args.RecommendedNavigationTransitionInfo, s);
-                                        break;
-                                    }
-                            }
-
-                            break;
-                        }
-                    case NowPlayingViewModel c:
-                        ViewModel.Navigation.Navigate(args.RecommendedNavigationTransitionInfo, c);
-                        break;
+                    ViewModel.Navigation.Navigate(args.RecommendedNavigationTransitionInfo, s);
+                    break;
                 }
-            }
-        }
-
-        private bool _initialized = false;
-        private void ShellView_OnDataContextChanged(FrameworkElement sender, DataContextChangedEventArgs args)
-        {
-            if (_initialized)
-                return;
-            if (ViewModel?.Navigation is WinUINavigationService nav)
-            {
-                nav.Initialize(NavigationFrame);
-                _initialized = true;
-            }
-
-            if (ViewModel is not null)
-            {
-                var navService = new WinUINavigationService(Constants.ServiceProvider);
-                ViewModel.RightSidebar.Navigation = navService;
-                navService.Initialize(RightSidebarNavigationFrame);
-                _initialized = true;
-
-                ViewModel.Navigation.NavigatedTo += (sender, o) =>
+                case LibraryAlbumsViewModel s:
                 {
-                    this.Bindings.Update();
-                };
-            }
-
-        }
-
-        public Visibility HasSubItemsThenVisible(NavigationItemViewModel[]? navigationItemViewModels)
-        {
-            return navigationItemViewModels?.Length > 0 ? Visibility.Visible : Visibility.Collapsed;
-        }
-
-        private async void AutoSuggestBox_OnTextChanged(AutoSuggestBox sender, AutoSuggestBoxTextChangedEventArgs args)
-        {
-            if (args.Reason is AutoSuggestionBoxTextChangeReason.UserInput)
-            {
-                ViewModel.Search.Query = sender.Text;
-                //if we are on the search page, we want to update the suggestions
-                if (ViewModel.Navigation.CurrentPage != typeof(SearchPage))
-                {
-                    await ViewModel.Search.SearchSuggestions();
+                    ViewModel.Navigation.Navigate(args.RecommendedNavigationTransitionInfo, s);
+                    break;
                 }
-                else
+                case LibraryArtistsViewModel s:
                 {
-                    ViewModel.Search.Suggestions.Clear();
-                    await ViewModel.Search.Search();
+                    ViewModel.Navigation.Navigate(args.RecommendedNavigationTransitionInfo, s);
+                    break;
                 }
+                case LibraryPodcastsViewModel s:
+                {
+                    ViewModel.Navigation.Navigate(args.RecommendedNavigationTransitionInfo, s);
+                    break;
+                }
+                case ArtistOverviewViewModel:
+                case ArtistAboutViewModel:
+                case ArtistRelatedContentViewModel:
+                {
+                    if (ViewModel.SelectedItem is ArtistViewModel artistRoot)
+                    {
+                        artistRoot.SelectedItem = item as NavigationItemViewModel;
+                    }
+
+                    break;
+                }
+                case LibrariesViewModel p:
+                {
+                    var selected = p.SelectedItem;
+                    switch (selected)
+                    {
+                        case LibrarySongsViewModel s:
+                        {
+                            ViewModel.Navigation.Navigate(args.RecommendedNavigationTransitionInfo, s);
+                            break;
+                        }
+                        case LibraryAlbumsViewModel s:
+                        {
+                            ViewModel.Navigation.Navigate(args.RecommendedNavigationTransitionInfo, s);
+                            break;
+                        }
+                        case LibraryArtistsViewModel s:
+                        {
+                            ViewModel.Navigation.Navigate(args.RecommendedNavigationTransitionInfo, s);
+                            break;
+                        }
+                        case LibraryPodcastsViewModel s:
+                        {
+                            ViewModel.Navigation.Navigate(args.RecommendedNavigationTransitionInfo, s);
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+                case NowPlayingViewModel c:
+                    ViewModel.Navigation.Navigate(args.RecommendedNavigationTransitionInfo, c);
+                    break;
             }
         }
+    }
 
-        private void AutoSuggestBox_OnSuggestionChosen(AutoSuggestBox sender, AutoSuggestBoxSuggestionChosenEventArgs args)
+    private bool _initialized = false;
+    private ArtistPage? _currentPage;
+    private async void ShellView_OnDataContextChanged(FrameworkElement sender, DataContextChangedEventArgs args)
+    {
+        if (_initialized)
+            return;
+        if (ViewModel?.Navigation is WinUINavigationService nav)
         {
-
+            nav.Initialize(NavigationFrame);
+            _initialized = true;
         }
 
-        private async void AutoSuggestBox_OnQuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
+        if (ViewModel is not null)
         {
-            var query = args.ChosenSuggestion;
-            if (query is SearchSuggestionQueryViewModel q)
+            var navService = new WinUINavigationService(Constants.ServiceProvider);
+            ViewModel.RightSidebar.Navigation = navService;
+            navService.Initialize(RightSidebarNavigationFrame);
+            _initialized = true;
+
+            ViewModel.Navigation.NavigatedTo += (sender, o) =>
             {
-                ViewModel.Search.Query = q.Query;
-                ViewModel.Navigation.Navigate<SearchViewModel>(null);
-                await ViewModel.Search.Search();
-            }
-            else if (query is SearchSuggestionEntityViewModel entity)
-            {
-                ViewModel.Navigation.NavigateToArtist(entity.Id);
-            }
+                //this.Bindings.Update();
+                RightSidebarGrid.Margin = new Thickness(0, 8, 0, 0);
+                PlaylistsGrid.Margin = new Thickness(12, 12, 12, 100);
+                if (ViewModel.Navigation.CurrentPageSource is ArtistPage pg)
+                {
+                    _currentPage = pg;
+                    pg.Scroller.ViewChanged += ScrollerOnViewChanged;
+                }
+                else if (_currentPage is not null)
+                {
+                    _currentPage.Scroller.ViewChanged -= ScrollerOnViewChanged;
+                    _currentPage = null;
+                }
+            };
+
+            await ViewModel.Playlists.Playlists.Initialize().ConfigureAwait(false);
         }
 
-        private void FrameworkElement_OnLayoutUpdated(object sender, object e)
-        {
-            // if (SuggestBox is not null)
-            //     SuggestBox.IsSuggestionListOpen = true;
-        }
+    }
 
-        public bool CompositeBool(bool x, bool y, bool xShouldBe, bool yShouldBe)
+    private void ScrollerOnViewChanged(ScrollView sender, object args)
+    {
+        if (_currentPage is not null)
         {
-            if (x == xShouldBe && y == yShouldBe)
+            var opacity = _currentPage.HideBackground.Opacity; // 0 -> 1
+            var progress = 54 * opacity;
+            var baseRightThickness = RightSidebarGrid.Margin;
+            RightSidebarGrid.Margin = new Thickness(baseRightThickness.Left,
+                progress + 8,
+                baseRightThickness.Right,
+                baseRightThickness.Bottom);
+
+            var baseLeftThickness = PlaylistsGrid.Margin;
+            PlaylistsGrid.Margin = new Thickness(baseLeftThickness.Left,
+                progress + 8,
+                baseLeftThickness.Right,
+                baseLeftThickness.Bottom);
+        }
+    }
+
+    public Visibility HasSubItemsThenVisible(NavigationItemViewModel[]? navigationItemViewModels)
+    {
+        return navigationItemViewModels?.Length > 0 ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    private async void AutoSuggestBox_OnTextChanged(AutoSuggestBox sender, AutoSuggestBoxTextChangedEventArgs args)
+    {
+        if (args.Reason is AutoSuggestionBoxTextChangeReason.UserInput)
+        {
+            ViewModel.Search.Query = sender.Text;
+            //if we are on the search page, we want to update the suggestions
+            if (ViewModel.Navigation.CurrentPage != typeof(SearchPage))
             {
-                return true;
+                await ViewModel.Search.SearchSuggestions();
             }
             else
             {
-                return false;
+                ViewModel.Search.Suggestions.Clear();
+                await ViewModel.Search.Search();
             }
         }
+    }
 
-        public bool Negate(bool b)
+    private void AutoSuggestBox_OnSuggestionChosen(AutoSuggestBox sender, AutoSuggestBoxSuggestionChosenEventArgs args)
+    {
+
+    }
+
+    private async void AutoSuggestBox_OnQuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
+    {
+        var query = args.ChosenSuggestion;
+        if (query is SearchSuggestionQueryViewModel q)
         {
-            return !b;
+            ViewModel.Search.Query = q.Query;
+            ViewModel.Navigation.Navigate<SearchViewModel>(null);
+            await ViewModel.Search.Search();
         }
-
-        public int ToIndex(RightSidebarItemViewModel x)
+        else if (query is SearchSuggestionEntityViewModel entity)
         {
-            return ViewModel.RightSidebar.Items.IndexOf(x);
+            ViewModel.Navigation.NavigateToArtist(entity.Id);
         }
-
-        public void SetItem(int o)
+    }
+    public bool CompositeBool(bool x, bool y, bool xShouldBe, bool yShouldBe)
+    {
+        if (x == xShouldBe && y == yShouldBe)
         {
-            ViewModel.RightSidebar.SelectedItem = ViewModel.RightSidebar.Items[o];
-            // if (o is RightSidebarItemViewModel item)
-            // {
-            //     ViewModel.RightSidebar.SelectedItem = item;
-            // }
+            return true;
         }
-
-        private void SidebarItemSelectionChanged(object sender, SelectionChangedEventArgs e)
+        else
         {
-            var removed = e.RemovedItems;
-            var added = e.AddedItems;
-            NavigationTransitionInfo? info = null;
-            if (added.Count is not 0)
+            return false;
+        }
+    }
+
+    public bool Negate(bool b)
+    {
+        return !b;
+    }
+
+    public int ToIndex(RightSidebarItemViewModel x)
+    {
+        return ViewModel.RightSidebar.Items.IndexOf(x);
+    }
+
+    public void SetItem(int o)
+    {
+        ViewModel.RightSidebar.SelectedItem = ViewModel.RightSidebar.Items[o];
+    }
+
+    private void SidebarItemSelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        var removed = e.RemovedItems;
+        var added = e.AddedItems;
+        NavigationTransitionInfo? info = null;
+        if (added.Count is not 0)
+        {
+            var addedOne = added[0];
+            var addedOneIndex = (sender as Segmented).Items.IndexOf(addedOne);
+            if (removed.Count is not 0)
             {
-                var addedOne = added[0];
-                var addedOneIndex = (sender as Segmented).Items.IndexOf(addedOne);
-                if (removed.Count is not 0)
+                var removedOne = removed[0];
+                var removedOneIndex = (sender as Segmented).Items.IndexOf(removedOne);
+
+
+                //if the index is greater than the removed index, we are going forward
+                if (addedOneIndex >
+                    removedOneIndex)
                 {
-                    var removedOne = removed[0];
-                    var removedOneIndex = (sender as Segmented).Items.IndexOf(removedOne);
-
-
-                    //if the index is greater than the removed index, we are going forward
-                    if (addedOneIndex >
-                        removedOneIndex)
+                    info = new Microsoft.UI.Xaml.Media.Animation.SlideNavigationTransitionInfo
                     {
-                        info = new Microsoft.UI.Xaml.Media.Animation.SlideNavigationTransitionInfo
-                        {
-                            Effect = SlideNavigationTransitionEffect.FromLeft
-                        };
-                    }
-                    else
-                    {
-                        info = new Microsoft.UI.Xaml.Media.Animation.SlideNavigationTransitionInfo
-                        {
-                            Effect = SlideNavigationTransitionEffect.FromRight
-                        };
-                    }
+                        Effect = SlideNavigationTransitionEffect.FromLeft
+                    };
                 }
                 else
                 {
-                    // drill in
-                    info = new Microsoft.UI.Xaml.Media.Animation.DrillInNavigationTransitionInfo();
-                }
-
-                var addedOneItem = ViewModel.RightSidebar.Items[addedOneIndex];
-                switch (addedOneItem)
-                {
-                    case RightSidebarVideoViewModel vv:
-                        ViewModel.RightSidebar.Navigation.Navigate(info, vv);
-                        break;
-                    case RightSidebarLyricsViewModel lv:
-                        ViewModel.RightSidebar.Navigation.Navigate(info, lv);
-                        break;
+                    info = new Microsoft.UI.Xaml.Media.Animation.SlideNavigationTransitionInfo
+                    {
+                        Effect = SlideNavigationTransitionEffect.FromRight
+                    };
                 }
             }
-        }
-
-        public Visibility TrueThenVisible(bool? b)
-        {
-            return b is true ? Visibility.Visible : Visibility.Collapsed;
-        }
-
-
-        public GridLength TrueThenSavedOrDefault(bool? b)
-        {
-            if (b is true)
+            else
             {
-                return new GridLength(ViewModel.Playlists.SidebarWidth, GridUnitType.Pixel);
+                // drill in
+                info = new Microsoft.UI.Xaml.Media.Animation.DrillInNavigationTransitionInfo();
             }
 
-            return new GridLength(0);
-        }
-
-        public GridLength TrueThenSavedOrDefaultRight(bool? b)
-        {
-            if (b is true)
+            var addedOneItem = ViewModel.RightSidebar.Items[addedOneIndex];
+            switch (addedOneItem)
             {
-                return new GridLength(ViewModel.RightSidebar.SidebarWidth, GridUnitType.Pixel);
+                case RightSidebarVideoViewModel vv:
+                    ViewModel.RightSidebar.Navigation.Navigate(info, vv);
+                    break;
+                case RightSidebarLyricsViewModel lv:
+                    ViewModel.RightSidebar.Navigation.Navigate(info, lv);
+                    break;
             }
-
-            return new GridLength(0);
         }
+    }
 
-        private void PlaylistSidebarChanged(object sender, SizeChangedEventArgs e)
+    public Visibility TrueThenVisible(bool? b)
+    {
+        return b is true ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+
+    public GridLength TrueThenSavedOrDefault(bool? b)
+    {
+        if (b is true)
         {
-            var grid = sender as Grid;
-            var width = grid.ActualWidth;
-            ViewModel.Playlists.SidebarWidth = width;
+            return new GridLength(ViewModel.Playlists.SidebarWidth, GridUnitType.Pixel);
         }
+
+        return new GridLength(0);
+    }
+
+    public GridLength TrueThenSavedOrDefaultRight(bool? b)
+    {
+        if (b is true)
+        {
+            return new GridLength(ViewModel.RightSidebar.SidebarWidth, GridUnitType.Pixel);
+        }
+
+        return new GridLength(0);
+    }
+
+
+    private void RightSidebarGridChanged(object sender, SizeChangedEventArgs e)
+    {
+        var grid = sender as Grid;
+        var width = grid.ActualWidth;
+        ViewModel.RightSidebar.SidebarWidth = width;
+    }
+
+    private void PlaylistSidebarChanged(object sender, SizeChangedEventArgs e)
+    {
+        var grid = sender as Grid;
+        var width = grid.ActualWidth;
+        ViewModel.Playlists.SidebarWidth = width;
     }
 }

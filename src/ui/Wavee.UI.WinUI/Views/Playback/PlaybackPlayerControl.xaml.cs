@@ -24,7 +24,20 @@ public sealed partial class PlaybackPlayerControl : UserControl
         this.InitializeComponent();
     }
 
-    public PlaybackPlayerViewModel Player => (PlaybackPlayerViewModel)DataContext;
+    public PlaybackPlayerViewModel Player
+    {
+        get
+        {
+            try
+            {
+                return (PlaybackPlayerViewModel)DataContext;
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+    }
 
     public RightSidebarItemViewModel SelectedSidebarComponent
     {

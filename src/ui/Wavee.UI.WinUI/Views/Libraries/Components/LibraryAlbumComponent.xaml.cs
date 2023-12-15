@@ -21,12 +21,20 @@ namespace Wavee.UI.WinUI.Views.Libraries.Components
 {
     public sealed partial class LibraryAlbumComponent : UserControl
     {
+        public static readonly DependencyProperty PageWidthProperty = DependencyProperty.Register(nameof(PageWidth), typeof(double), typeof(LibraryAlbumComponent), new PropertyMetadata(default(double)));
+
         public LibraryAlbumComponent()
         {
             this.InitializeComponent();
         }
 
         public AlbumViewModel ViewModel => DataContext is AlbumViewModel v ? v : null;
+
+        public double PageWidth
+        {
+            get => (double)GetValue(PageWidthProperty);
+            set => SetValue(PageWidthProperty, value);
+        }
 
 
         public string FormatToDurationString(TimeSpan timeSpan)
@@ -55,6 +63,24 @@ namespace Wavee.UI.WinUI.Views.Libraries.Components
             {
                 this.Bindings.Update();
             }
+        }
+
+        public bool SizeBetween(double pageWidth, double lowerBound, double upperBound)
+        {
+            double tolerance = 0.0001;
+            if (Math.Abs(upperBound - (-1)) < tolerance)
+            {
+                return pageWidth >= lowerBound;
+            }
+            else
+            {
+                return pageWidth >= lowerBound && pageWidth < upperBound;
+            }
+        }
+
+        private void LibraryAlbumComponent_OnSizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            PageWidth = e.NewSize.Width;
         }
     }
 }

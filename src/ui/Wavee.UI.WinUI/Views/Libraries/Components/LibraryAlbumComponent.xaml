@@ -9,6 +9,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:viewModels="using:Wavee.UI.Features.Album.ViewModels"
     DataContextChanged="LibraryAlbumComponent_OnDataContextChanged"
+    SizeChanged="LibraryAlbumComponent_OnSizeChanged"
     mc:Ignorable="d">
 
     <Grid Margin="0,24,0,0">
@@ -68,10 +69,10 @@
                         <ItemContainer>
                             <controls:TrackControl
                                 AlternateColors="True"
-                                PlaybackState="{x:Bind PlaybackState, Mode=OneWay}"
                                 Number="{x:Bind Number, Mode=OneWay}"
                                 PlayCommand="{x:Bind PlayCommand, Mode=OneWay}"
                                 PlayCommandParameter="{x:Bind This}"
+                                PlaybackState="{x:Bind PlaybackState, Mode=OneWay}"
                                 ShowImage="False">
                                 <controls:TrackControl.MainContent>
                                     <Grid HorizontalAlignment="Stretch">
@@ -117,7 +118,7 @@
             <VisualStateGroup>
                 <VisualState x:Name="vSmall">
                     <VisualState.StateTriggers>
-                        <AdaptiveTrigger MinWindowWidth="10" />
+                        <StateTrigger IsActive="{x:Bind SizeBetween(PageWidth, 0, 800), Mode=OneWay}" />
                     </VisualState.StateTriggers>
                     <VisualState.Setters>
                         <Setter Target="TracksView.(RelativePanel.Below)" Value="AlbumImage" />
@@ -141,7 +142,7 @@
 
                 <VisualState x:Name="vBig">
                     <VisualState.StateTriggers>
-                        <AdaptiveTrigger MinWindowWidth="800" />
+                        <StateTrigger IsActive="{x:Bind SizeBetween(PageWidth, 800, -1), Mode=OneWay}" />
                     </VisualState.StateTriggers>
                     <VisualState.Setters>
                         <Setter Target="TracksView.(RelativePanel.AlignLeftWithPanel)" Value="False" />

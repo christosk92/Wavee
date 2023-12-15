@@ -8,6 +8,7 @@ using System.Linq;
 using Microsoft.UI.Xaml.Controls;
 using Wavee.UI.Features.Navigation;
 using Wavee.UI.WinUI.Contracts;
+using LanguageExt;
 
 namespace Wavee.UI.WinUI.Services;
 
@@ -77,6 +78,10 @@ internal sealed class WinUINavigationService : ObservableObject, INavigationServ
         var viewModel = overrideDataContext ?? _services.GetRequiredService<TViewModel>();
 
 
+        if (navigationParams is Option<object>)
+        {
+            navigationParams = new SuppressNavigationTransitionInfo();
+        }
         if (_frame.Navigate(pageType, parameter: viewModel, infoOverride: navigationParams as NavigationTransitionInfo))
         {
             if (_frame.Content is INavigeablePage<TViewModel> v)

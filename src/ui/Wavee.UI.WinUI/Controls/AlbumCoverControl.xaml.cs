@@ -37,10 +37,25 @@ public sealed partial class AlbumCoverControl : UserControl
             control.SetImage(newImage);
         }));
 
+    public static readonly DependencyProperty DecodePixelWidthProperty = DependencyProperty.Register(nameof(DecodePixelWidth), typeof(double), typeof(AlbumCoverControl), new PropertyMetadata(default(double)));
+    public static readonly DependencyProperty DecodePixelHeightProperty = DependencyProperty.Register(nameof(DecodePixelHeight), typeof(int), typeof(AlbumCoverControl), new PropertyMetadata(default(int)));
+
     public string Source
     {
         get { return (string)GetValue(SourceProperty); }
         set { SetValue(SourceProperty, value); }
+    }
+
+    public double DecodePixelWidth
+    {
+        get => (double)GetValue(DecodePixelWidthProperty);
+        set => SetValue(DecodePixelWidthProperty, value);
+    }
+
+    public int DecodePixelHeight
+    {
+        get => (int)GetValue(DecodePixelHeightProperty);
+        set => SetValue(DecodePixelHeightProperty, value);
     }
 
     public AlbumCoverControl()
@@ -62,7 +77,11 @@ public sealed partial class AlbumCoverControl : UserControl
         else
         {
             NoImage.Visibility = Visibility.Collapsed;
-            _topImage.Source = new BitmapImage(new Uri(imageSource));
+            var bmp = new BitmapImage();
+            bmp.DecodePixelWidth = (int)DecodePixelWidth;
+            bmp.DecodePixelHeight = (int)DecodePixelHeight;
+            bmp.UriSource = new Uri(imageSource);
+            _topImage.Source = bmp;
         }
 
         var fadeInAnim = (Storyboard)Resources["FadeInAnim"];

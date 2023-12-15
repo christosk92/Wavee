@@ -43,7 +43,9 @@
 	  <None Remove="Views\Main\MainContent.xaml" />
 	  <None Remove="Views\NowPlaying\NowPlayingPage.xaml" />
 	  <None Remove="Views\Playback\PlaybackPlayerControl.xaml" />
+	  <None Remove="Views\Playlist\PlaylistPage.xaml" />
 	  <None Remove="Views\Search\SearchPage.xaml" />
+	  <None Remove="Views\Shell\PlaylistsSidebar\PlaylistSidebarComponent.xaml" />
 	  <None Remove="Views\Shell\RightSidebar\LyricsRightSidebarPage.xaml" />
 	  <None Remove="Views\Shell\RightSidebar\QueueRightSidebarPage.xaml" />
 	  <None Remove="Views\Shell\RightSidebar\VideoRightSidebarPage.xaml" />
@@ -69,7 +71,7 @@
 		<PackageReference Include="CommunityToolkit.WinUI.UI.Controls.Primitives" Version="7.1.2" />
 		<PackageReference Include="CommunityToolkit.WinUI.UI.Media" Version="7.1.2" />
 		<PackageReference Include="CommunityToolkit.WinUI.UI" Version="7.1.2" />
-		<PackageReference Include="Mediator.SourceGenerator" Version="3.0.0-preview.13">
+		<PackageReference Include="Mediator.SourceGenerator" Version="3.0.0-preview.15">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
@@ -106,6 +108,12 @@
 	  <None Update="Controls\AlbumCoverControl.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </None>
+	  <Page Update="Views\Playlist\PlaylistPage.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </Page>
+	  <Page Update="Views\Shell\PlaylistsSidebar\PlaylistSidebarComponent.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </Page>
 	  <Page Update="Dialogs\DeviceSelectionDialog.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </Page>

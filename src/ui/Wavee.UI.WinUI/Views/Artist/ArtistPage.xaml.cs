@@ -127,7 +127,7 @@ public sealed partial class ArtistPage : Page, INavigeablePage<ArtistViewModel>
             baseThickness = new Thickness(
                 left: -leftSidebarWidth + baseThickness.Top,
                 top: baseThickness.Top,
-                right: baseThickness.Right,
+                right: baseThickness.Right - 12,
                 bottom: baseThickness.Bottom
             );
             // return new Thickness(-sidebarwidth, -135, 0, 0);
@@ -198,5 +198,45 @@ public sealed partial class ArtistPage : Page, INavigeablePage<ArtistViewModel>
         }
 
         return baseThickness;
+    }
+
+    public Thickness HideBackgroundMargin(bool? b, double d, bool b1, double d1)
+    {
+        //0,0,-12,0
+        var baseThickenss = new Thickness(0, 0, -12, 0);
+
+        if (b is true)
+        {
+            baseThickenss = new Thickness(
+                left: -d + baseThickenss.Top - 24,
+                top: baseThickenss.Top,
+                right: baseThickenss.Right,
+                bottom: baseThickenss.Bottom
+            );
+            //return new Thickness(-d, 0, -12, 0);
+        }
+        else
+        {
+            baseThickenss = baseThickenss;
+            //return new Thickness(0, 0, -12, 0);
+        }
+
+        if (b1 is true)
+        {
+            baseThickenss = new Thickness(
+                left: baseThickenss.Left,
+                top: baseThickenss.Top,
+                right: -d1 + baseThickenss.Right,
+                bottom: baseThickenss.Bottom
+            );
+            //return new Thickness(0, 0, -d1, 0);
+        }
+        else
+        {
+            baseThickenss = baseThickenss;
+            //return new Thickness(0, 0, -12, 0);
+        }
+
+        return baseThickenss;
     }
 }

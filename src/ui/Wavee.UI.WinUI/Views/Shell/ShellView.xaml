@@ -9,15 +9,13 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:media="using:CommunityToolkit.WinUI.UI.Media"
+    xmlns:nav="using:Wavee.UI.Features.Navigation.ViewModels"
     xmlns:playback="using:Wavee.UI.WinUI.Views.Playback"
-    xmlns:system="using:System"
+    xmlns:playbackVm="using:Wavee.UI.Features.Playback.ViewModels"
+    xmlns:playlistsSidebar="using:Wavee.UI.WinUI.Views.Shell.PlaylistsSidebar"
+    xmlns:search="using:Wavee.UI.Features.Search.ViewModels"
     xmlns:templateSelectors="using:Wavee.UI.WinUI.TemplateSelectors"
     xmlns:ui="using:CommunityToolkit.WinUI.UI"
-    xmlns:viewModel="using:Wavee.UI.Features.Playlists.ViewModel"
-    xmlns:viewModels="using:Wavee.UI.Features.Navigation.ViewModels"
-    xmlns:viewModels1="using:Wavee.UI.Features.Playback.ViewModels"
-    xmlns:viewModels2="using:Wavee.UI.Features.Search.ViewModels"
-    xmlns:viewModels3="using:Wavee.UI.Features.Shell.ViewModels"
     x:Name="Root"
     DataContextChanged="ShellView_OnDataContextChanged"
     mc:Ignorable="d">
@@ -29,7 +27,7 @@
             Offset="2" />
         <converters:SidebarViewModelToAppropriateTitleConverter x:Key="SidebarViewModelToAppropriateTitleConverter" />
         <converters:SidebarViewModelToAppropriateIconConverter x:Key="SidebarViewModelToAppropriateIconConverter" />
-        <DataTemplate x:Key="NavigationViewItemTemplate" x:DataType="viewModels:NavigationItemViewModel">
+        <DataTemplate x:Key="NavigationViewItemTemplate" x:DataType="nav:NavigationItemViewModel">
             <NavigationViewItem
                 Content="{x:Bind Converter={StaticResource SidebarViewModelToAppropriateTitleConverter}}"
                 Icon="{x:Bind Converter={StaticResource SidebarViewModelToAppropriateIconConverter}}"
@@ -42,7 +40,7 @@
 
         <StaticResource x:Key="Original" ResourceKey="NavigationViewContentGridBorderBrush" />
 
-        <DataTemplate x:Key="GenericSearchSuggestion" x:DataType="viewModels2:SearchSuggestionEntityViewModel">
+        <DataTemplate x:Key="GenericSearchSuggestion" x:DataType="search:SearchSuggestionEntityViewModel">
             <StackPanel Orientation="Vertical" Spacing="8">
                 <MenuFlyoutSeparator />
                 <RelativePanel>
@@ -72,7 +70,7 @@
                 </RelativePanel>
             </StackPanel>
         </DataTemplate>
-        <DataTemplate x:Key="ArtistSearchSuggestion" x:DataType="viewModels2:SearchSuggestionEntityViewModel">
+        <DataTemplate x:Key="ArtistSearchSuggestion" x:DataType="search:SearchSuggestionEntityViewModel">
             <StackPanel Orientation="Vertical" Spacing="8">
                 <MenuFlyoutSeparator />
                 <RelativePanel>
@@ -100,7 +98,7 @@
             </StackPanel>
         </DataTemplate>
 
-        <DataTemplate x:Key="QuerySearchSuggestion" x:DataType="viewModels2:SearchSuggestionQueryViewModel">
+        <DataTemplate x:Key="QuerySearchSuggestion" x:DataType="search:SearchSuggestionQueryViewModel">
             <RelativePanel>
                 <FontIcon
                     x:Name="QueryIcon"
@@ -155,7 +153,6 @@
                     x:Name="SuggestBox"
                     ItemTemplateSelector="{StaticResource SearchSuggestionsItemTemplateSelector}"
                     ItemsSource="{x:Bind ViewModel.Search.Suggestions}"
-                    LayoutUpdated="FrameworkElement_OnLayoutUpdated"
                     PlaceholderText="Find..."
                     QueryIcon="Find"
                     QuerySubmitted="AutoSuggestBox_OnQuerySubmitted"
@@ -211,10 +208,13 @@
                     <ColumnDefinition />
                     <ColumnDefinition Width="{x:Bind TrueThenSavedOrDefaultRight(ViewModel.RightSidebar.IsOpen), Mode=OneWay}" />
                 </Grid.ColumnDefinitions>
-                <Border Grid.Row="1" Grid.Column="1">
-                    <Frame x:Name="NavigationFrame" />
-                </Border>
+                <Frame
+                    x:Name="NavigationFrame"
+                    Grid.Row="1"
+                    Grid.Column="1"
+                    Margin="0,0,0,0" />
 
+                <!--  Left sidebar  -->
                 <Grid
                     x:Name="PlaylistsGrid"
                     Grid.RowSpan="2"
@@ -235,13 +235,18 @@
                     <TextBlock
                         Margin="12,-8,0,0"
                         VerticalAlignment="Center"
-                        FontSize="24"
+                        FontSize="14"
                         FontWeight="ExtraBlack"
                         Opacity=".8"
                         Text="PLAYLISTS" />
-                </Grid>
 
+                    <playlistsSidebar:PlaylistSidebarComponent
+                        Grid.Row="2"
+                        Margin="0,0,0,0"
+                        DataContext="{x:Bind ViewModel, Mode=OneWay}" />
+                </Grid>
                 <controls1:GridSplitter
+                    Grid.Row="0"
                     Grid.RowSpan="2"
                     Grid.Column="1"
                     Width="16"
@@ -256,15 +261,17 @@
                 </controls1:GridSplitter>
 
 
+                <!--  Right sidebar  -->
                 <Grid
                     x:Name="RightSidebarGrid"
                     Grid.RowSpan="2"
                     Grid.Column="2"
-                    Margin="0,12,6,100"
+                    Margin="-12,12,12,100"
                     Background="{ThemeResource LayerFillColorDefaultBrush}"
                     BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                     BorderThickness="1,1,1,1"
-                    CornerRadius="8">
+                    CornerRadius="8"
+                    SizeChanged="RightSidebarGridChanged">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
                         <RowDefinition />
@@ -286,12 +293,12 @@
                         </controls1:Segmented.Items>
                     </controls1:Segmented>
                 </Grid>
-
                 <controls1:GridSplitter
+                    Grid.Row="0"
                     Grid.RowSpan="2"
                     Grid.Column="1"
                     Width="16"
-                    Margin="0,0,-8,100"
+                    Margin="0,0,-24,100"
                     HorizontalAlignment="Right"
                     ResizeBehavior="BasedOnAlignment"
                     ResizeDirection="Auto"
@@ -301,6 +308,8 @@
                     </controls1:GridSplitter.RenderTransform>
                 </controls1:GridSplitter>
 
+
+                <!--  Secondary navigation  -->
                 <Border Grid.Row="0" Grid.Column="1">
                     <NavigationView
                         IsBackButtonVisible="Collapsed"
@@ -326,7 +335,7 @@
                 ItemsSource="{x:Bind ViewModel.Playback.Players}"
                 SelectedItem="{x:Bind ViewModel.Playback.ActivePlayer, Mode=TwoWay}">
                 <FlipView.ItemTemplate>
-                    <DataTemplate x:DataType="viewModels1:PlaybackPlayerViewModel">
+                    <DataTemplate x:DataType="playbackVm:PlaybackPlayerViewModel">
                         <playback:PlaybackPlayerControl DataContext="{Binding}" SelectedSidebarComponent="{Binding ElementName=Root, Path=ViewModel.RightSidebar.SelectedItem, Mode=TwoWay}" />
                     </DataTemplate>
                 </FlipView.ItemTemplate>

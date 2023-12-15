@@ -66,12 +66,15 @@
                                 FontSize="16"
                                 Glyph="&#xEB51;" />
 
-                            <Image
-                                x:Name="MainImage"
+
+                            <Border
+                                x:Name="MainImageBorder"
                                 Grid.Column="4"
                                 Margin="0,0,14,0"
-                                Source="{TemplateBinding Image}"
-                                Visibility="Collapsed" />
+                                Style="{TemplateBinding ImageBorderStyle}"
+                                Visibility="Collapsed">
+                                <Image x:Name="MainImage" Source="{TemplateBinding Image}" />
+                            </Border>
                         </Grid>
 
 
@@ -89,7 +92,7 @@
 
                                 <VisualState x:Name="Odd">
                                     <VisualState.Setters>
-                                        <Setter Target="LayoutRoot.Background" Value="{ThemeResource CardBackgroundFillColorSecondaryBrush}" />
+                                        <Setter Target="LayoutRoot.Background" Value="{ThemeResource CardBackgroundFillColorDefaultBrush}" />
                                         <Setter Target="LayoutRoot.BorderThickness" Value="0" />
                                         <Setter Target="LayoutRoot.CornerRadius" Value="8" />
                                     </VisualState.Setters>
@@ -100,7 +103,7 @@
 
                                 <VisualState x:Name="ShowImage">
                                     <VisualState.Setters>
-                                        <Setter Target="MainImage.Visibility" Value="Visible" />
+                                        <Setter Target="MainImageBorder.Visibility" Value="Visible" />
                                     </VisualState.Setters>
                                 </VisualState>
                             </VisualStateGroup>

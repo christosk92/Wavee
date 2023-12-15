@@ -8,8 +8,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Google.Protobuf" Version="3.23.3" />
-        <PackageReference Include="Grpc.Tools" Version="2.54.0">
+        <PackageReference Include="Google.Protobuf" Version="3.25.1" />
+        <PackageReference Include="Grpc.Tools" Version="2.60.0">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
@@ -25,6 +25,7 @@
       <None Remove="extracted_colors.proto" />
       <None Remove="player_license.proto" />
       <None Remove="playlist_permission.proto" />
+      <None Remove="popcount2_external.proto" />
       <None Remove="skip_to_track.proto" />
     </ItemGroup>
 

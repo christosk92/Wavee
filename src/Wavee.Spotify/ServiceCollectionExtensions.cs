@@ -8,6 +8,7 @@ using Wavee.Spotify.Application.Artist;
 using Wavee.Spotify.Application.AudioKeys;
 using Wavee.Spotify.Application.Authentication.Modules;
 using Wavee.Spotify.Application.Library;
+using Wavee.Spotify.Application.Playlist;
 using Wavee.Spotify.Application.Remote;
 using Wavee.Spotify.Application.Search;
 using Wavee.Spotify.Application.StorageResolve;
@@ -54,6 +55,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ISpotifyStorageResolver, SpotifyStorageResolver>();
 
         services.AddSingleton<ISpotifyLibraryClient, SpotifyLibraryClient>();
+
+        services.AddScoped<ISpotifyPlaylistClient, SpotifyPlaylistClient>();
         services.AddScoped<ISpotifyArtistClient, SpotifyArtistClient>();
         services.AddScoped<ISpotifyAlbumClient, SpotifyAlbumClient>();
         services.AddScoped<ISpotifySearchClient, SpotifySearchClient>();
