@@ -46,16 +46,23 @@ public sealed class ArtistViewModel : NavigationItemViewModel, IPlaybackChangedL
         };
         PlayCommand = new AsyncRelayCommand<object>(async x =>
         {
-            var playbackVm = playback;
-            switch (x)
+            try
             {
-                case ArtistTopTrackViewModel topTrack:
-                    var ctx = PlayContext.FromArtist(this, true)
-                        .FromTopTracks(Overview.TopTracks)
-                        .StartWithTrack(topTrack)
-                        .Build();
-                    await playbackVm.Play(ctx);
-                    break;
+                var playbackVm = playback;
+                switch (x)
+                {
+                    case ArtistTopTrackViewModel topTrack:
+                        var ctx = PlayContext.FromArtist(this, true)
+                            .FromTopTracks(Overview.TopTracks)
+                            .StartWithTrack(topTrack)
+                            .Build();
+                        await playbackVm.Play(ctx);
+                        break;
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
             }
         });
     }

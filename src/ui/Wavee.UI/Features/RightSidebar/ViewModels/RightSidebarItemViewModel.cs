@@ -1,6 +1,6 @@
 ﻿using Wavee.UI.Features.Navigation.ViewModels;
 
-namespace Wavee.UI.Features.Shell.ViewModels;
+namespace Wavee.UI.Features.RightSidebar.ViewModels;
 
 public abstract class RightSidebarItemViewModel : NavigationItemViewModel
 {

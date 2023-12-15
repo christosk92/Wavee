@@ -9,6 +9,7 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using Wavee.UI.Features.Playback.ViewModels;
+using Wavee.UI.Features.RightSidebar.ViewModels;
 using Wavee.UI.Features.Shell.ViewModels;
 
 

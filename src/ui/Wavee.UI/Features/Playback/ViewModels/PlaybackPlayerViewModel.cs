@@ -1,12 +1,16 @@
-﻿using System.Diagnostics;
+﻿using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Windows.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Wavee.Domain.Playback;
 using Wavee.Spotify.Common;
 using Wavee.UI.Extensions;
 using Wavee.UI.Features.Album.ViewModels;
 using Wavee.UI.Features.Artist.ViewModels;
 using Wavee.UI.Features.Navigation;
+using Wavee.UI.Features.Playback.Notifications;
+using Wavee.UI.Features.RightSidebar.ViewModels;
 using Wavee.UI.Features.Shell.ViewModels;
 using Wavee.UI.Test;
 
@@ -32,6 +36,8 @@ public abstract class PlaybackPlayerViewModel : ObservableObject, IDisposable, I
     private readonly IUIDispatcher _dispatcher;
     private string _id;
     private bool _paused;
+
+    protected ObservableCollection<RemoteDevice> _devices = new ObservableCollection<RemoteDevice>();
 
     protected PlaybackPlayerViewModel(IUIDispatcher dispatcher, 
         INavigationService navigationService,
@@ -118,6 +124,7 @@ public abstract class PlaybackPlayerViewModel : ObservableObject, IDisposable, I
         get => _duration;
         protected set => SetProperty(ref _duration, value);
     }
+    public ObservableCollection<RemoteDevice> Devices => _devices;
 
     public string Id
     {
@@ -144,6 +151,8 @@ public abstract class PlaybackPlayerViewModel : ObservableObject, IDisposable, I
             return _timeSinceStopwatch.Value + _stopwatch?.Elapsed ?? TimeSpan.Zero;
         }
     }
+
+    public event EventHandler<RemoteDeviceChangeNotification>? DevicesChanged;
 
     public event EventHandler PlaybackChanged;
     public Guid AddPositionCallback(int minimumDifferenceMs, Action<TimeSpan> callback)
@@ -207,5 +216,13 @@ public abstract class PlaybackPlayerViewModel : ObservableObject, IDisposable, I
     protected void OnPlaybackChanged()
     {
         this.PlaybackChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    protected void OnDevicesChanged()
+    {
+        this.DevicesChanged?.Invoke(this, new RemoteDeviceChangeNotification
+        {
+            Devices = _devices.ToArray()
+        });
     }
 }

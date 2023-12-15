@@ -124,13 +124,23 @@
                                         x:Name="TopNavLeftPadding"
                                         Grid.Column="1"
                                         Width="0" />
+
                                     <ContentControl
-                                        x:Name="PaneTitleOnTopPane"
+                                        x:Name="HeaderContent"
                                         Grid.Column="2"
-                                        Margin="{ThemeResource NavigationViewItemInnerHeaderMargin}"
+                                        MinHeight="{StaticResource PaneToggleButtonHeight}"
                                         HorizontalContentAlignment="Stretch"
                                         VerticalContentAlignment="Stretch"
+                                        Content="{TemplateBinding Header}"
+                                        ContentTemplate="{TemplateBinding HeaderTemplate}"
                                         IsTabStop="False" />
+                                    <!--  <ContentControl  -->
+                                    <!--  x:Name="PaneTitleOnTopPane"  -->
+                                    <!--  Grid.Column="2"  -->
+                                    <!--  Margin="{ThemeResource NavigationViewItemInnerHeaderMargin}"  -->
+                                    <!--  HorizontalContentAlignment="Stretch"  -->
+                                    <!--  VerticalContentAlignment="Stretch"  -->
+                                    <!--  IsTabStop="False" />  -->
                                     <!--  Top nav ItemsRepeater  -->
                                     <ItemsRepeaterScrollHost Grid.Column="3">
                                         <ScrollViewer
@@ -431,17 +441,6 @@
                                             Height="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=TemplateSettings.TopPadding}"
                                             Visibility="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=TemplateSettings.LeftPaneVisibility}" />
                                         <Grid x:Name="ContentLeftPadding" Grid.Row="1" />
-                                        <ContentControl
-                                            x:Name="HeaderContent"
-                                            Grid.Row="1"
-                                            Grid.Column="1"
-                                            MinHeight="{StaticResource PaneToggleButtonHeight}"
-                                            HorizontalContentAlignment="Stretch"
-                                            VerticalContentAlignment="Stretch"
-                                            Content="{TemplateBinding Header}"
-                                            ContentTemplate="{TemplateBinding HeaderTemplate}"
-                                            IsTabStop="False"
-                                            Style="{StaticResource NavigationViewTitleHeaderContentControlTextStyle}" />
                                         <ContentPresenter
                                             x:Name="ContentPresenter"
                                             Grid.Row="2"

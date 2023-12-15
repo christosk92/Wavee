@@ -10,6 +10,8 @@ using Wavee.UI.Features.Navigation;
 using Wavee.UI.Features.Navigation.ViewModels;
 using Wavee.UI.Features.NowPlaying.ViewModels;
 using Wavee.UI.Features.Playback.ViewModels;
+using Wavee.UI.Features.Playlists.ViewModel;
+using Wavee.UI.Features.RightSidebar.ViewModels;
 using Wavee.UI.Features.Search.ViewModels;
 using Wavee.UI.Test;
 
@@ -29,8 +31,10 @@ public sealed class ShellViewModel : ObservableObject
         SearchViewModel search,
         IMediator mediator,
         IServiceProvider serviceProvider,
-        RightSidebarViewModel rightSidebar)
+        RightSidebarViewModel rightSidebar,
+        PlaylistsViewModel playlists)
     {
+        Playlists = new PlaylistsNavItem(playlists);
         TopNavItems = new object[]
         {
             listen,
@@ -109,6 +113,7 @@ public sealed class ShellViewModel : ObservableObject
     public IMediator Mediator { get; }
     public IUIDispatcher Dispatcher => _dispatcherFactory();
     public RightSidebarViewModel RightSidebar { get; }
+    public PlaylistsNavItem Playlists { get; }
 }
 
 public sealed class NothingSelectedViewModel : NavigationItemViewModel

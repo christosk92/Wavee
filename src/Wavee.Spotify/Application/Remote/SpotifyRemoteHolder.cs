@@ -297,7 +297,7 @@ internal sealed partial class SpotifyRemoteHolder : ISpotifyRemoteClient
         private static partial Regex ConnIdRegex();
     }
 
-    public Task Play(Context context, PlayOrigin playOrigin, PreparePlayOptions preparePlayOptions)
+    public Task Play(Context context, PlayOrigin playOrigin, PreparePlayOptions preparePlayOptions, string? overrideDeviceId = null)
     {
         JsonFormatter formatter = new JsonFormatter(JsonFormatter.Settings.Default.WithIndentation().WithPreserveProtoFieldNames(true
             ));
@@ -318,15 +318,15 @@ internal sealed partial class SpotifyRemoteHolder : ISpotifyRemoteClient
         };
 
         ReadOnlyMemory<byte> json = JsonSerializer.SerializeToUtf8Bytes(body);
-        return Command(json);
+        return Command(json, overrideDeviceId);
     }
 
-    private async Task Command(ReadOnlyMemory<byte> json)
+    private async Task Command(ReadOnlyMemory<byte> json, string? overrideDeviceId)
     {
         const string url =
             "https://spclient.com/connect-state/v1/player/command/from/{0}/to/{1}";
         var ownDeviceId = _config.Remote.DeviceId;
-        var toDevice = _remoteState?.Cluster.ActiveDeviceId;
+        var toDevice = overrideDeviceId ?? _remoteState?.Cluster.ActiveDeviceId;
         if (toDevice is null)
         {
             throw new InvalidOperationException("No active device");

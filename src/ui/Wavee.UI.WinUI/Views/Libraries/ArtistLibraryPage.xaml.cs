@@ -34,7 +34,7 @@ public sealed partial class ArtistLibraryPage : Page, INavigeablePage<LibraryArt
         base.OnNavigatedTo(e);
         if (e.Parameter is LibraryArtistsViewModel vm)
         {
-            this.Bindings.Initialize(); ;
+            this.Bindings.Update(); ;
             DataContext = vm;
             await vm.Initialize();
         }
@@ -54,7 +54,6 @@ public sealed partial class ArtistLibraryPage : Page, INavigeablePage<LibraryArt
     protected override void OnNavigatedFrom(NavigationEventArgs e)
     {
         base.OnNavigatedFrom(e);
-        this.Bindings.StopTracking();
         // if (e.Parameter is LibraryArtistsViewModel vm)
         // {
         //     vm.PropertyChanged -= VmOnPropertyChanged;
@@ -104,7 +103,7 @@ public sealed partial class ArtistLibraryPage : Page, INavigeablePage<LibraryArt
 
     private async void SortFieldSelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        await ViewModel.Initialize();
+        await ViewModel.Initialize(true);
     }
 
     private async void NameFilterBox_OnTextChanged(AutoSuggestBox sender, AutoSuggestBoxTextChangedEventArgs args)
@@ -112,7 +111,7 @@ public sealed partial class ArtistLibraryPage : Page, INavigeablePage<LibraryArt
         using (await _lock.LockAsync())
         {
             ViewModel.Query = sender.Text;
-            await ViewModel.Initialize();
+            await ViewModel.Initialize(true);
         }
     }
 

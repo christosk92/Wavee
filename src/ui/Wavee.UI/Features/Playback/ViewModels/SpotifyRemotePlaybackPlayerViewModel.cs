@@ -1,12 +1,16 @@
 ﻿using System.Collections.Immutable;
 using Mediator;
 using Wavee.Domain.Exceptions;
+using Wavee.Domain.Playback;
 using Wavee.Spotify.Common;
 using Wavee.Spotify.Common.Contracts;
 using Wavee.Spotify.Domain.Library;
+using Wavee.Spotify.Domain.Remote;
 using Wavee.Spotify.Domain.State;
+using Wavee.Spotify.Utils;
 using Wavee.UI.Features.Library.Notifications;
 using Wavee.UI.Features.Navigation;
+using Wavee.UI.Features.RightSidebar.ViewModels;
 using Wavee.UI.Features.Shell.ViewModels;
 using Wavee.UI.Test;
 
@@ -17,6 +21,8 @@ internal sealed class SpotifyRemotePlaybackPlayerViewModel : PlaybackPlayerViewM
     private readonly ISpotifyClient _spotifyClient;
     private readonly IUIDispatcher _dispatcher;
     private readonly IMediator _mediator;
+    private SpotifyDevice? _device;
+
     public SpotifyRemotePlaybackPlayerViewModel(
         ISpotifyClient spotifyClient,
         IUIDispatcher dispatcher,
@@ -30,6 +36,12 @@ internal sealed class SpotifyRemotePlaybackPlayerViewModel : PlaybackPlayerViewM
         spotifyClient.PlaybackStateChanged += SpotifyClientOnPlaybackStateChanged;
         spotifyClient.Library.ItemAdded += LibraryOnItemAdded;
         spotifyClient.Library.ItemRemoved += LibraryOnItemRemoved;
+    }
+
+    public SpotifyDevice? Device
+    {
+        get => _device;
+        set => SetProperty(ref _device, value);
     }
 
     private void LibraryOnItemRemoved(object? sender, IReadOnlyCollection<SpotifyId> e)
@@ -85,6 +97,22 @@ internal sealed class SpotifyRemotePlaybackPlayerViewModel : PlaybackPlayerViewM
                 Title = trackMetadata.Name;
                 Artists = trackMetadata.Artist.Select(a => (SpotifyId.FromRaw(a.Gid.Span, SpotifyItemType.Artist).ToString(), a.Name)).ToArray();
                 Id = trackId;
+
+                Device = e.Device;
+
+                _devices.Clear();
+
+                if (e.Device is not null)
+                {
+                    _devices.Add(e.Device.Value.ToRemoteDevice());
+                }
+
+                foreach (var device in e.OtherDevices)  
+                {
+                    _devices.Add(device.ToRemoteDevice());
+                }
+
+                OnDevicesChanged(); 
             });
 
             if (e.IsPaused)

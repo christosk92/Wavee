@@ -1,4 +1,5 @@
 ﻿using Wavee.UI.Features.Navigation;
+using Wavee.UI.Features.RightSidebar.ViewModels;
 using Wavee.UI.Features.Shell.ViewModels;
 using Wavee.UI.Test;
 

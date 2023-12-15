@@ -2,6 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Wavee.UI.Features.Navigation;
 using Wavee.UI.Test;
+using Wavee.UI.WinUI.Dialogs;
 using Wavee.UI.WinUI.Services;
 using Wavee.UI.WinUI.Views.Libraries;
 using Wavee.UI.WinUI.Views.Listen;
@@ -30,6 +31,8 @@ public static class ServiceCollectionExtensions
 
         collection.AddSingleton<INavigationService, WinUINavigationService>();
         collection.AddSingleton<IUIDispatcher, WinUIDispatcher>();
+
+        collection.AddTransient<DeviceSelectionDialog>();
         return collection;
     }
 }

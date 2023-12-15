@@ -23,6 +23,7 @@
 	  <None Remove="Assets\amb.png" />
 	  <None Remove="Assets\equaliser.gif" />
 	  <None Remove="Controls\ArtistDiscographyGroupComponent.xaml" />
+	  <None Remove="Dialogs\DeviceSelectionDialog.xaml" />
 	  <None Remove="Styles\ButtonStyles.xaml" />
 	  <None Remove="Styles\ItemContainerStyles.xaml" />
 	  <None Remove="Styles\NavigationView\ExtendedNavigationViewStyle.xaml" />
@@ -44,6 +45,7 @@
 	  <None Remove="Views\Playback\PlaybackPlayerControl.xaml" />
 	  <None Remove="Views\Search\SearchPage.xaml" />
 	  <None Remove="Views\Shell\RightSidebar\LyricsRightSidebarPage.xaml" />
+	  <None Remove="Views\Shell\RightSidebar\QueueRightSidebarPage.xaml" />
 	  <None Remove="Views\Shell\RightSidebar\VideoRightSidebarPage.xaml" />
 	  <None Remove="Views\Shell\ShellView.xaml" />
 	</ItemGroup>
@@ -104,6 +106,12 @@
 	  <None Update="Controls\AlbumCoverControl.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </None>
+	  <Page Update="Dialogs\DeviceSelectionDialog.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </Page>
+	  <Page Update="Views\Shell\RightSidebar\QueueRightSidebarPage.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </Page>
 	  <Page Update="Views\Shell\RightSidebar\VideoRightSidebarPage.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </Page>

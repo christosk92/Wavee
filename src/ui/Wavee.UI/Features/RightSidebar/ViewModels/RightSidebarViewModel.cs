@@ -1,7 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using Wavee.UI.Features.Navigation;
 
-namespace Wavee.UI.Features.Shell.ViewModels;
+namespace Wavee.UI.Features.RightSidebar.ViewModels;
 
 public sealed class RightSidebarViewModel : ObservableObject
 {
@@ -11,12 +11,12 @@ public sealed class RightSidebarViewModel : ObservableObject
 
     public RightSidebarViewModel(
         RightSidebarLyricsViewModel lyrics,
-        RightSidebarVideoViewModel video)
+        RightSidebarQueueViewModel queue)
     {
         Items = new List<RightSidebarItemViewModel>()
         {
             lyrics,
-            video
+            queue
         };
     }
 

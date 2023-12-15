@@ -112,12 +112,12 @@ public sealed class LibraryArtistsViewModel : NavigationItemViewModel, IPlayback
 
     public IReadOnlyCollection<string> SortFields { get; }
 
-    public async Task Initialize()
+    public async Task Initialize(bool overrideCountCheck = false)
     {
         try
         {
             Artists ??= new ObservableCollection<LibraryArtistViewModel>();
-            if (Artists.Count is not 0) return;
+            if (!overrideCountCheck && Artists.Count is not 0) return;
             Artists.Clear();
             var library = await _mediator.Send(new GetLibraryArtistsQuery()
             {

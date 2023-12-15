@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Wavee.Players.NAudio;
 using Wavee.Spotify;
 using Wavee.Spotify.Application.Authentication.Modules;
+using Wavee.UI.Features.Dialog.ViewModels;
 using Wavee.UI.Features.Identity.ViewModels;
 using Wavee.UI.Features.Library.ViewModels;
 using Wavee.UI.Features.Library.ViewModels.Album;
@@ -11,6 +12,8 @@ using Wavee.UI.Features.Listen;
 using Wavee.UI.Features.MainWindow;
 using Wavee.UI.Features.NowPlaying.ViewModels;
 using Wavee.UI.Features.Playback.ViewModels;
+using Wavee.UI.Features.Playlists.ViewModel;
+using Wavee.UI.Features.RightSidebar.ViewModels;
 using Wavee.UI.Features.Search.ViewModels;
 using Wavee.UI.Features.Shell.ViewModels;
 using Wavee.Youtube;
@@ -31,8 +34,8 @@ public static class ServiceCollectionExtensions
             },
             Remote = new SpotifyRemoteConfig
             {
-                DeviceName = "temp",
-                DeviceType = DeviceType.Unknown
+                DeviceName = "Wavee",
+                DeviceType = DeviceType.Computer
             },
             Playback = new SpotifyPlaybackConfig
             {
@@ -53,6 +56,7 @@ public static class ServiceCollectionExtensions
             .AddScoped<RightSidebarViewModel>()
             .AddScoped<RightSidebarLyricsViewModel>()
             .AddScoped<RightSidebarVideoViewModel>()
+            .AddScoped<RightSidebarQueueViewModel>()
             .AddScoped<IdentityViewModel>()
             .AddScoped<ListenViewModel>()
             .AddScoped<LibrariesViewModel>()
@@ -62,8 +66,10 @@ public static class ServiceCollectionExtensions
             .AddScoped<LibraryPodcastsViewModel>()
             .AddScoped<NowPlayingViewModel>()
             .AddScoped<PlaybackViewModel>()
+            .AddScoped<PlaylistsViewModel>()
             .AddTransient<SpotifyRemotePlaybackPlayerViewModel>()
             .AddTransient<LocalPlaybackPlayerviewModel>()
+            .AddTransient<NoActiveDeviceSelectionDialogViewModel>()
             .AddScoped<SearchViewModel>();
     }
 }

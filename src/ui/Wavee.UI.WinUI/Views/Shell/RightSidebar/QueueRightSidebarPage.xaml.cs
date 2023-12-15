@@ -1,30 +1,29 @@
-using System;
 using Microsoft.UI.Xaml.Controls;
+using System;
 using Wavee.UI.Features.RightSidebar.ViewModels;
-using Wavee.UI.Features.Shell.ViewModels;
 using Wavee.UI.WinUI.Contracts;
 
 namespace Wavee.UI.WinUI.Views.Shell.RightSidebar;
 
-public sealed partial class LyricsRightSidebarPage : Page, INavigeablePage<RightSidebarLyricsViewModel>
+public sealed partial class QueueRightSidebarPage : Page, INavigeablePage<RightSidebarQueueViewModel>
 {
-    public LyricsRightSidebarPage()
+    public QueueRightSidebarPage()
     {
         this.InitializeComponent();
     }
 
     public void UpdateBindings()
     {
-       // this.Bindings.Update();
+        // this.Bindings.Update();
     }
 
-    public RightSidebarLyricsViewModel ViewModel
+    public RightSidebarQueueViewModel ViewModel
     {
         get
         {
             try
             {
-                return DataContext is RightSidebarLyricsViewModel vm ? vm : null;
+                return DataContext is RightSidebarQueueViewModel vm ? vm : null;
             }
             catch (ObjectDisposedException)
             {

@@ -2,11 +2,9 @@
 using CommunityToolkit.Mvvm.Input;
 using Wavee.UI.Features.Playback.ViewModels;
 using Wavee.Youtube;
-using YoutubeExplode.Common;
 using YoutubeExplode.Search;
-using YoutubeExplode.Videos;
 
-namespace Wavee.UI.Features.Shell.ViewModels;
+namespace Wavee.UI.Features.RightSidebar.ViewModels;
 
 public sealed class RightSidebarVideoViewModel : RightSidebarItemViewModel
 {

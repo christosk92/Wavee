@@ -9,6 +9,7 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
 using Wavee.UI.Features.Library.ViewModels.Artist;
+using Wavee.UI.Features.RightSidebar.ViewModels;
 using Wavee.UI.Features.Shell.ViewModels;
 using Wavee.UI.Test;
 using Wavee.UI.WinUI.Contracts;

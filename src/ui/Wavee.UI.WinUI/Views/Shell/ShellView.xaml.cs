@@ -14,6 +14,7 @@ using Wavee.UI.Features.Listen;
 using Wavee.UI.Features.Navigation;
 using Wavee.UI.Features.Navigation.ViewModels;
 using Wavee.UI.Features.NowPlaying.ViewModels;
+using Wavee.UI.Features.RightSidebar.ViewModels;
 using Wavee.UI.Features.Search.ViewModels;
 using Wavee.UI.Features.Shell.ViewModels;
 using Wavee.UI.WinUI.Services;
@@ -259,6 +260,22 @@ namespace Wavee.UI.WinUI.Views.Shell
                         break;
                 }
             }
+        }
+
+        public Visibility TrueThenVisible(bool? b)
+        {
+            return b is true ? Visibility.Visible : Visibility.Collapsed;
+        }
+
+        private double defaultGridLengthPlaylists = 200;
+        public GridLength TrueThenSavedOrDefault(bool? b)
+        {
+            if (b is true)
+            {
+                return new GridLength(defaultGridLengthPlaylists);
+            }
+
+            return new GridLength(0);
         }
     }
 }

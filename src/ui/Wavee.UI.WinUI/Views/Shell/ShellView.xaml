@@ -13,6 +13,7 @@
     xmlns:system="using:System"
     xmlns:templateSelectors="using:Wavee.UI.WinUI.TemplateSelectors"
     xmlns:ui="using:CommunityToolkit.WinUI.UI"
+    xmlns:viewModel="using:Wavee.UI.Features.Playlists.ViewModel"
     xmlns:viewModels="using:Wavee.UI.Features.Navigation.ViewModels"
     xmlns:viewModels1="using:Wavee.UI.Features.Playback.ViewModels"
     xmlns:viewModels2="using:Wavee.UI.Features.Search.ViewModels"
@@ -34,6 +35,11 @@
                 Icon="{x:Bind Converter={StaticResource SidebarViewModelToAppropriateIconConverter}}"
                 Tag="{x:Bind}" />
         </DataTemplate>
+        <DataTemplate x:Key="NavigationViewSeperatorTemplate">
+            <MenuFlyoutSeparator />
+        </DataTemplate>
+
+
         <StaticResource x:Key="Original" ResourceKey="NavigationViewContentGridBorderBrush" />
 
         <DataTemplate x:Key="GenericSearchSuggestion" x:DataType="viewModels2:SearchSuggestionEntityViewModel">
@@ -128,6 +134,18 @@
             PaneDisplayMode="Top"
             SelectedItem="{x:Bind ViewModel.SelectedItem, Mode=OneWay}"
             Style="{StaticResource ExtendedNavigationViewStyle}">
+            <NavigationView.Header>
+                <StackPanel
+                    Margin="4,0,0,0"
+                    VerticalAlignment="Center"
+                    Orientation="Horizontal"
+                    Spacing="8">
+                    <ToggleButton IsChecked="{x:Bind ViewModel.Playlists.ShowSidebar, Mode=TwoWay}">
+                        <FontIcon FontFamily="/Assets/Fonts/MediaPlayerIcons.ttf#Media Player Fluent Icons" Glyph="&#xED3B;" />
+                    </ToggleButton>
+                    <AppBarSeparator />
+                </StackPanel>
+            </NavigationView.Header>
             <NavigationView.Resources>
                 <SolidColorBrush x:Key="NavigationViewContentGridBorderBrush" Color="Transparent" />
             </NavigationView.Resources>
@@ -187,11 +205,53 @@
                     <RowDefinition Height="Auto" />
                     <RowDefinition />
                 </Grid.RowDefinitions>
-                <Border Grid.Row="1" Background="{ThemeResource LayerFillColorDefaultBrush}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="{x:Bind TrueThenSavedOrDefault(ViewModel.Playlists.ShowSidebar), Mode=OneWay}" />
+                    <ColumnDefinition />
+                </Grid.ColumnDefinitions>
+                <Border
+                    Grid.Row="1"
+                    Grid.Column="1"
+                    Background="{ThemeResource LayerFillColorDefaultBrush}">
                     <Frame x:Name="NavigationFrame" />
                 </Border>
 
-                <Border Grid.Row="0">
+                <Grid
+                    Grid.RowSpan="2"
+                    Grid.Column="0"
+                    Background="{ThemeResource LayerFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="1,1,1,1"
+                    Visibility="{x:Bind TrueThenVisible(ViewModel.Playlists.ShowSidebar), Mode=OneWay}">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="48" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition />
+                    </Grid.RowDefinitions>
+
+                    <TextBlock
+                        Margin="8"
+                        VerticalAlignment="Center"
+                        FontSize="14"
+                        FontWeight="SemiBold"
+                        Text="Playlists" />
+                </Grid>
+
+                <controls1:GridSplitter
+                    Grid.RowSpan="2"
+                    Grid.Column="1"
+                    Width="16"
+                    Margin="0,0,0,0"
+                    HorizontalAlignment="Left"
+                    ResizeBehavior="BasedOnAlignment"
+                    ResizeDirection="Auto"
+                    Visibility="{x:Bind TrueThenVisible(ViewModel.Playlists.ShowSidebar), Mode=OneWay}">
+                    <controls1:GridSplitter.RenderTransform>
+                        <TranslateTransform X="-7" />
+                    </controls1:GridSplitter.RenderTransform>
+                </controls1:GridSplitter>
+
+                <Border Grid.Row="0" Grid.Column="1">
                     <NavigationView
                         IsBackButtonVisible="Collapsed"
                         IsSettingsVisible="False"
@@ -226,7 +286,7 @@
         <Grid
             x:Name="RightSidebarGrid"
             Grid.Column="1"
-            Width="440"
+            Width="280"
             Background="{ThemeResource LayerFillColorDefaultBrush}"
             BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
             BorderThickness="1,1,0,0">

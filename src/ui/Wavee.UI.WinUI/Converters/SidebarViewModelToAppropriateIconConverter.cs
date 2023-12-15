@@ -7,7 +7,8 @@ using Wavee.UI.Features.Listen;
 using Wavee.UI.Features.NowPlaying.ViewModels;
 using Wavee.UI.Features.Library.ViewModels.Artist;
 using Wavee.UI.Features.Library.ViewModels.Album;
-using Wavee.UI.Features.Shell.ViewModels;
+using Wavee.UI.Features.Playlists.ViewModel;
+using Wavee.UI.Features.RightSidebar.ViewModels;
 
 namespace Wavee.UI.WinUI.Converters;
 internal sealed class SidebarViewModelToAppropriateIconConverter : IValueConverter
@@ -26,6 +27,9 @@ internal sealed class SidebarViewModelToAppropriateIconConverter : IValueConvert
 
             RightSidebarLyricsViewModel => Create('\uED1E', MediaPlayerIcons),
             RightSidebarVideoViewModel => Create('\uE714', MediaPlayerIcons),
+            RightSidebarQueueViewModel => Create('\uE93F', MediaPlayerIcons),
+
+            PlaylistsViewModel => Create('\uE8EF', SegoeFluentIcons),
             _ => null
         };
 
@@ -41,7 +45,8 @@ internal sealed class SidebarViewModelToAppropriateIconConverter : IValueConvert
     {
         return new FontIcon
         {
-            FontFamily = fontFamily, Glyph = glyph.ToString()
+            FontFamily = fontFamily,
+            Glyph = glyph.ToString()
         };
     }
     private static FontFamily SegoeFluentIcons => (FontFamily)Microsoft.UI.Xaml.Application.Current.Resources["FluentIcons"]!;

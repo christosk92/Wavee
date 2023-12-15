@@ -10,7 +10,6 @@ public sealed partial class MainWindow : Window
     public MainWindow()
     {
         this.InitializeComponent();
-
         Instance = this;
         this.SystemBackdrop = new MicaBackdrop();
         this.AppWindow.TitleBar.ExtendsContentIntoTitleBar = true;
