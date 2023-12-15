@@ -51,6 +51,7 @@ internal sealed class WinUINavigationService : ObservableObject, INavigationServ
     public RelayCommand GoNextCommand { get; set; }
     public RelayCommand GoBackCommand { get; set; }
     public Type CurrentPage => _frame.Content?.GetType() ?? typeof(object);
+    public object CurrentPageSource => _frame.Content;
 
     public object CurrentViewModel
     {
@@ -83,6 +84,9 @@ internal sealed class WinUINavigationService : ObservableObject, INavigationServ
                 v.UpdateBindings();
             }
         }
+
+        this.OnPropertyChanged(nameof(CurrentPage));
+        this.OnPropertyChanged(nameof(CurrentViewModel));
     }
 
     public event EventHandler<object> NavigatedTo;

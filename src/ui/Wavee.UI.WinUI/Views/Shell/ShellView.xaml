@@ -127,6 +127,7 @@
             <ColumnDefinition x:Name="RightSidebarColumn" Width="Auto" />
         </Grid.ColumnDefinitions>
         <NavigationView
+            Background="Transparent"
             IsBackButtonVisible="Collapsed"
             ItemInvoked="NavigationView_OnItemInvoked"
             MenuItemTemplate="{StaticResource NavigationViewItemTemplate}"
@@ -208,20 +209,22 @@
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="{x:Bind TrueThenSavedOrDefault(ViewModel.Playlists.ShowSidebar), Mode=OneWay}" />
                     <ColumnDefinition />
+                    <ColumnDefinition Width="{x:Bind TrueThenSavedOrDefaultRight(ViewModel.RightSidebar.IsOpen), Mode=OneWay}" />
                 </Grid.ColumnDefinitions>
-                <Border
-                    Grid.Row="1"
-                    Grid.Column="1"
-                    Background="{ThemeResource LayerFillColorDefaultBrush}">
+                <Border Grid.Row="1" Grid.Column="1">
                     <Frame x:Name="NavigationFrame" />
                 </Border>
 
                 <Grid
+                    x:Name="PlaylistsGrid"
                     Grid.RowSpan="2"
                     Grid.Column="0"
+                    Margin="12,12,12,100"
                     Background="{ThemeResource LayerFillColorDefaultBrush}"
                     BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                     BorderThickness="1,1,1,1"
+                    CornerRadius="8"
+                    SizeChanged="PlaylistSidebarChanged"
                     Visibility="{x:Bind TrueThenVisible(ViewModel.Playlists.ShowSidebar), Mode=OneWay}">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="48" />
@@ -230,22 +233,69 @@
                     </Grid.RowDefinitions>
 
                     <TextBlock
-                        Margin="8"
+                        Margin="12,-8,0,0"
                         VerticalAlignment="Center"
-                        FontSize="14"
-                        FontWeight="SemiBold"
-                        Text="Playlists" />
+                        FontSize="24"
+                        FontWeight="ExtraBlack"
+                        Opacity=".8"
+                        Text="PLAYLISTS" />
                 </Grid>
 
                 <controls1:GridSplitter
                     Grid.RowSpan="2"
                     Grid.Column="1"
                     Width="16"
-                    Margin="0,0,0,0"
+                    Margin="-8,0,0,100"
                     HorizontalAlignment="Left"
                     ResizeBehavior="BasedOnAlignment"
                     ResizeDirection="Auto"
                     Visibility="{x:Bind TrueThenVisible(ViewModel.Playlists.ShowSidebar), Mode=OneWay}">
+                    <controls1:GridSplitter.RenderTransform>
+                        <TranslateTransform X="-7" />
+                    </controls1:GridSplitter.RenderTransform>
+                </controls1:GridSplitter>
+
+
+                <Grid
+                    x:Name="RightSidebarGrid"
+                    Grid.RowSpan="2"
+                    Grid.Column="2"
+                    Margin="0,12,6,100"
+                    Background="{ThemeResource LayerFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="1,1,1,1"
+                    CornerRadius="8">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition />
+                    </Grid.RowDefinitions>
+
+                    <Frame x:Name="RightSidebarNavigationFrame" Grid.Row="1" />
+                    <controls1:Segmented
+                        Grid.Row="0"
+                        Margin="8,8"
+                        HorizontalAlignment="Stretch"
+                        HorizontalContentAlignment="Stretch"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        SelectedIndex="{x:Bind ToIndex(ViewModel.RightSidebar.SelectedItem), Mode=TwoWay, BindBack=SetItem}"
+                        SelectionChanged="SidebarItemSelectionChanged">
+                        <controls1:Segmented.Items>
+                            <controls1:SegmentedItem Content="{x:Bind ViewModel.RightSidebar.Items[0], Converter={StaticResource SidebarViewModelToAppropriateTitleConverter}}" Icon="{x:Bind ViewModel.RightSidebar.Items[0], Converter={StaticResource SidebarViewModelToAppropriateIconConverter}}" />
+                            <controls1:SegmentedItem Content="{x:Bind ViewModel.RightSidebar.Items[1], Converter={StaticResource SidebarViewModelToAppropriateTitleConverter}}" Icon="{x:Bind ViewModel.RightSidebar.Items[1], Converter={StaticResource SidebarViewModelToAppropriateIconConverter}}" />
+                        </controls1:Segmented.Items>
+                    </controls1:Segmented>
+                </Grid>
+
+                <controls1:GridSplitter
+                    Grid.RowSpan="2"
+                    Grid.Column="1"
+                    Width="16"
+                    Margin="0,0,-8,100"
+                    HorizontalAlignment="Right"
+                    ResizeBehavior="BasedOnAlignment"
+                    ResizeDirection="Auto"
+                    Visibility="{x:Bind TrueThenVisible(ViewModel.RightSidebar.IsOpen), Mode=OneWay}">
                     <controls1:GridSplitter.RenderTransform>
                         <TranslateTransform X="-7" />
                     </controls1:GridSplitter.RenderTransform>
@@ -281,36 +331,6 @@
                     </DataTemplate>
                 </FlipView.ItemTemplate>
             </FlipView>
-        </Grid>
-
-        <Grid
-            x:Name="RightSidebarGrid"
-            Grid.Column="1"
-            Width="280"
-            Background="{ThemeResource LayerFillColorDefaultBrush}"
-            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
-            BorderThickness="1,1,0,0">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="32" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition />
-            </Grid.RowDefinitions>
-
-            <Frame x:Name="RightSidebarNavigationFrame" Grid.Row="2" />
-            <controls1:Segmented
-                Grid.Row="1"
-                Margin="8,0"
-                HorizontalAlignment="Stretch"
-                HorizontalContentAlignment="Stretch"
-                Background="Transparent"
-                BorderThickness="0"
-                SelectedIndex="{x:Bind ToIndex(ViewModel.RightSidebar.SelectedItem), Mode=TwoWay, BindBack=SetItem}"
-                SelectionChanged="SidebarItemSelectionChanged">
-                <controls1:Segmented.Items>
-                    <controls1:SegmentedItem Content="{x:Bind ViewModel.RightSidebar.Items[0], Converter={StaticResource SidebarViewModelToAppropriateTitleConverter}}" Icon="{x:Bind ViewModel.RightSidebar.Items[0], Converter={StaticResource SidebarViewModelToAppropriateIconConverter}}" />
-                    <controls1:SegmentedItem Content="{x:Bind ViewModel.RightSidebar.Items[1], Converter={StaticResource SidebarViewModelToAppropriateTitleConverter}}" Icon="{x:Bind ViewModel.RightSidebar.Items[1], Converter={StaticResource SidebarViewModelToAppropriateIconConverter}}" />
-                </controls1:Segmented.Items>
-            </controls1:Segmented>
         </Grid>
         <VisualStateManager.VisualStateGroups>
             <VisualStateGroup>

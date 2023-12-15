@@ -113,4 +113,90 @@ public sealed partial class ArtistPage : Page, INavigeablePage<ArtistViewModel>
 
         return pg;
     }
+
+    public Thickness RootGridMargin(
+        bool? leftSidebarIsOpen,
+        double leftSidebarWidth,
+        bool rightSidebarIsOpen,
+        double rightSidebarWidth)
+    {
+        var baseThickness = new Thickness(0, -135, 0, 0);
+
+        if (leftSidebarIsOpen is true)
+        {
+            baseThickness = new Thickness(
+                left: -leftSidebarWidth + baseThickness.Top,
+                top: baseThickness.Top,
+                right: baseThickness.Right,
+                bottom: baseThickness.Bottom
+            );
+            // return new Thickness(-sidebarwidth, -135, 0, 0);
+        }
+        else
+        {
+            baseThickness = baseThickness;
+        }
+
+        if (rightSidebarIsOpen is true)
+        {
+            baseThickness = new Thickness(
+                left: baseThickness.Left,
+                top: baseThickness.Top,
+                right: -rightSidebarWidth + baseThickness.Right,
+                bottom: baseThickness.Bottom
+            );
+            // return new Thickness(0, -135, -sidebarwidth, 0);
+        }
+        else
+        {
+            baseThickness = baseThickness;
+            // return new Thickness(0, -135, 0, 0);
+        }
+
+        return baseThickness;
+    }
+
+    public Thickness RestGridMargin(
+        bool? leftSidebarIsOpen,
+        double leftSidebarWidth,
+        bool rightSidebarIsOpen,
+        double rightSidebarWidth)
+    {
+        var baseThickness = new Thickness(24, 160, 24, 0);
+
+        if (leftSidebarIsOpen is true)
+        {
+            baseThickness = new Thickness(
+                left: leftSidebarWidth + baseThickness.Top,
+                top: baseThickness.Top,
+                right: baseThickness.Right,
+                bottom: baseThickness.Bottom
+            );
+
+            //return new Thickness(d + 24, 160, 24, 0);
+        }
+        else
+        {
+            baseThickness = baseThickness;
+            // return new Thickness(0, 0, 0, 0);
+        }
+
+        if (rightSidebarIsOpen is true)
+        {
+            baseThickness = new Thickness(
+                left: baseThickness.Left,
+                top: baseThickness.Top,
+                right: rightSidebarWidth + baseThickness.Right,
+                bottom: baseThickness.Bottom
+            );
+            //return new Thickness(0, 0, d + 24, 0);
+        }
+        else
+        {
+            baseThickness = baseThickness;
+            //return new Thickness(0, 0, 0, 0);
+        }
+
+        return baseThickness;
+    }
 }

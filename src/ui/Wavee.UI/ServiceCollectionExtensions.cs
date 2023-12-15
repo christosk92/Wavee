@@ -67,6 +67,7 @@ public static class ServiceCollectionExtensions
             .AddScoped<NowPlayingViewModel>()
             .AddScoped<PlaybackViewModel>()
             .AddScoped<PlaylistsViewModel>()
+            .AddScoped<PlaylistsNavItem>()
             .AddTransient<SpotifyRemotePlaybackPlayerViewModel>()
             .AddTransient<LocalPlaybackPlayerviewModel>()
             .AddTransient<NoActiveDeviceSelectionDialogViewModel>()

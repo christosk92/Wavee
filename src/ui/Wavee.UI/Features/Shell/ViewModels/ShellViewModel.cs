@@ -32,9 +32,9 @@ public sealed class ShellViewModel : ObservableObject
         IMediator mediator,
         IServiceProvider serviceProvider,
         RightSidebarViewModel rightSidebar,
-        PlaylistsViewModel playlists)
+        PlaylistsNavItem playlists)
     {
-        Playlists = new PlaylistsNavItem(playlists);
+        Playlists = playlists;
         TopNavItems = new object[]
         {
             listen,

@@ -9,10 +9,11 @@
     DataContext="{x:Bind ViewModel}"
     SizeChanged="ArtistPage_OnSizeChanged"
     mc:Ignorable="d">
-    <Grid Margin="0,-135,0,0" VerticalAlignment="Top">
-        <ScrollView 
+    <Grid Margin="{x:Bind RootGridMargin(         ViewModel.PlaylistsNavItem.ShowSidebar, ViewModel.PlaylistsNavItem.SidebarWidth, ViewModel.RightSidebar.IsOpen, ViewModel.RightSidebar.SidebarWidth         ), Mode=OneWay}" VerticalAlignment="Top">
+        <ScrollView
             x:Name="Scroller"
             VerticalContentAlignment="Top"
+            x:FieldModifier="public"
             ViewChanged="Scroller_OnViewChanged">
             <Grid VerticalAlignment="Top">
                 <Grid.RowDefinitions>
@@ -29,7 +30,7 @@
                 <RelativePanel
                     Grid.Row="0"
                     Grid.RowSpan="2"
-                    Margin="24,160,24,0"
+                    Margin="{x:Bind RestGridMargin(                     ViewModel.PlaylistsNavItem.ShowSidebar, ViewModel.PlaylistsNavItem.SidebarWidth, ViewModel.RightSidebar.IsOpen, ViewModel.RightSidebar.SidebarWidth                     ), Mode=OneWay}"
                     VerticalAlignment="Top">
                     <StackPanel
                         x:Name="MetadataPanel"
@@ -69,8 +70,9 @@
         </ScrollView>
         <Rectangle
             x:Name="HideBackground"
-            Height="150"
+            Height="140"
             VerticalAlignment="Top"
+            x:FieldModifier="public"
             Fill="{ThemeResource AcrylicBackgroundFillColorDefaultBrush}"
             Opacity="0" />
     </Grid>

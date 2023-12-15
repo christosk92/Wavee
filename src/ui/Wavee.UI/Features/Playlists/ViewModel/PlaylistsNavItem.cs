@@ -5,6 +5,8 @@ namespace Wavee.UI.Features.Playlists.ViewModel;
 public sealed class PlaylistsNavItem : NavigationItemViewModel
 {
     private bool? _showSidebar = false;
+    private double _sidebarWidth = 200;
+
     public PlaylistsNavItem(PlaylistsViewModel playlists)
     {
         
@@ -16,5 +18,11 @@ public sealed class PlaylistsNavItem : NavigationItemViewModel
     {
         get => _showSidebar;
         set => SetProperty(ref _showSidebar, value);
+    }
+
+    public double SidebarWidth
+    {
+        get => _sidebarWidth;
+        set => SetProperty(ref _sidebarWidth, value);
     }
 }

@@ -8,6 +8,7 @@ public sealed class RightSidebarViewModel : ObservableObject
     private bool _isOpen;
     private bool _isDocked = true;
     private RightSidebarItemViewModel? _selectedItem;
+    private double _sidebarWidth = 200;
 
     public RightSidebarViewModel(
         RightSidebarLyricsViewModel lyrics,
@@ -24,6 +25,12 @@ public sealed class RightSidebarViewModel : ObservableObject
     {
         get => _isOpen;
         set => SetProperty(ref _isOpen, value);
+    }
+
+    public double SidebarWidth
+    {
+        get => _sidebarWidth;
+        set => SetProperty(ref _sidebarWidth, value);
     }
 
     public bool IsDocked

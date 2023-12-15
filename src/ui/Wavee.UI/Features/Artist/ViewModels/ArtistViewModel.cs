@@ -18,6 +18,8 @@ using Wavee.UI.Features.Library.ViewModels.Artist;
 using Wavee.UI.Features.Navigation.ViewModels;
 using Wavee.UI.Features.Playback;
 using Wavee.UI.Features.Playback.ViewModels;
+using Wavee.UI.Features.Playlists.ViewModel;
+using Wavee.UI.Features.RightSidebar.ViewModels;
 using Wavee.UI.Test;
 using ICommand = System.Windows.Input.ICommand;
 
@@ -33,11 +35,17 @@ public sealed class ArtistViewModel : NavigationItemViewModel, IPlaybackChangedL
     private string? _headerImageUrl;
     private string? _profilePictureImageUrl;
     private SimpleAlbumEntity _latestRelease;
-
-    public ArtistViewModel(IMediator mediator, string id, IUIDispatcher dispatcher, PlaybackViewModel playback)
+    public ArtistViewModel(IMediator mediator, 
+        string id, 
+        IUIDispatcher dispatcher, 
+        PlaybackViewModel playback,
+        PlaylistsNavItem playlistsNavItem, 
+        RightSidebarViewModel rightSidebar)
     {
         _mediator = mediator;
         _id = id;
+        PlaylistsNavItem = playlistsNavItem;
+        RightSidebar = rightSidebar;
         Children = new NavigationItemViewModel[]
         {
             new ArtistOverviewViewModel(mediator, id, dispatcher, playback),
@@ -66,6 +74,9 @@ public sealed class ArtistViewModel : NavigationItemViewModel, IPlaybackChangedL
             }
         });
     }
+
+    public PlaylistsNavItem PlaylistsNavItem { get; }
+    public RightSidebarViewModel RightSidebar { get; }
 
     public AsyncRelayCommand<object> PlayCommand { get;  }
 

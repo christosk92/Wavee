@@ -4,6 +4,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Wavee.UI.Features.Artist.ViewModels;
 using Wavee.UI.Features.Navigation;
 using Wavee.UI.Features.Playback.ViewModels;
+using Wavee.UI.Features.Playlists.ViewModel;
+using Wavee.UI.Features.RightSidebar.ViewModels;
 using Wavee.UI.Test;
 
 namespace Wavee.UI.Extensions;
@@ -15,7 +17,9 @@ public static class NavigationExtensions
         var mediator = Constants.ServiceProvider.GetRequiredService<IMediator>();
         var dispatcher = Constants.ServiceProvider.GetRequiredService<IUIDispatcher>();
         var playback = Constants.ServiceProvider.GetRequiredService<PlaybackViewModel>();
-        var vm = new ArtistViewModel(mediator, id, dispatcher, playback);
+        var playlistsNavItem = Constants.ServiceProvider.GetRequiredService<PlaylistsNavItem>();
+        var rightSidebar = Constants.ServiceProvider.GetRequiredService<RightSidebarViewModel>();
+        var vm = new ArtistViewModel(mediator, id, dispatcher, playback, playlistsNavItem, rightSidebar);
 
         service.Navigate(null, vm);
     }

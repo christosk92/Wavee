@@ -18,6 +18,7 @@ using Wavee.UI.Features.RightSidebar.ViewModels;
 using Wavee.UI.Features.Search.ViewModels;
 using Wavee.UI.Features.Shell.ViewModels;
 using Wavee.UI.WinUI.Services;
+using Wavee.UI.WinUI.Views.Artist;
 using Wavee.UI.WinUI.Views.Search;
 using NavigationTransitionInfo = Microsoft.UI.Xaml.Media.Animation.NavigationTransitionInfo;
 using UserControl = Microsoft.UI.Xaml.Controls.UserControl;
@@ -128,7 +129,13 @@ namespace Wavee.UI.WinUI.Views.Shell
                 ViewModel.RightSidebar.Navigation = navService;
                 navService.Initialize(RightSidebarNavigationFrame);
                 _initialized = true;
+
+                ViewModel.Navigation.NavigatedTo += (sender, o) =>
+                {
+                    this.Bindings.Update();
+                };
             }
+
         }
 
         public Visibility HasSubItemsThenVisible(NavigationItemViewModel[]? navigationItemViewModels)
@@ -267,15 +274,32 @@ namespace Wavee.UI.WinUI.Views.Shell
             return b is true ? Visibility.Visible : Visibility.Collapsed;
         }
 
-        private double defaultGridLengthPlaylists = 200;
+
         public GridLength TrueThenSavedOrDefault(bool? b)
         {
             if (b is true)
             {
-                return new GridLength(defaultGridLengthPlaylists);
+                return new GridLength(ViewModel.Playlists.SidebarWidth, GridUnitType.Pixel);
             }
 
             return new GridLength(0);
+        }
+
+        public GridLength TrueThenSavedOrDefaultRight(bool? b)
+        {
+            if (b is true)
+            {
+                return new GridLength(ViewModel.RightSidebar.SidebarWidth, GridUnitType.Pixel);
+            }
+
+            return new GridLength(0);
+        }
+
+        private void PlaylistSidebarChanged(object sender, SizeChangedEventArgs e)
+        {
+            var grid = sender as Grid;
+            var width = grid.ActualWidth;
+            ViewModel.Playlists.SidebarWidth = width;
         }
     }
 }
