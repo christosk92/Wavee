@@ -239,4 +239,15 @@ public sealed partial class ArtistPage : Page, INavigeablePage<ArtistViewModel>
 
         return baseThickenss;
     }
+
+    public Thickness RootGridMargin_2(bool? b, bool b1)
+    {
+        //0,-48,0,0
+        if (b is true || b1 is true)
+        {
+            return new Thickness(0, -48, 0, 0);
+        }
+
+        return new Thickness(0, -48, 0, 0);
+    }
 }

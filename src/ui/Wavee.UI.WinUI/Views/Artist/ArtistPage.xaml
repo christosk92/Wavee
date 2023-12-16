@@ -9,7 +9,7 @@
     DataContext="{x:Bind ViewModel}"
     SizeChanged="ArtistPage_OnSizeChanged"
     mc:Ignorable="d">
-    <Grid Margin="0,-135,0,0" VerticalAlignment="Top">
+    <Grid Margin="{x:Bind RootGridMargin_2(ViewModel.PlaylistsNavItem.ShowSidebar, ViewModel.RightSidebar.IsOpen), Mode=OneWay}" VerticalAlignment="Top">
         <ScrollView
             x:Name="Scroller"
             VerticalContentAlignment="Top"
@@ -70,15 +70,35 @@
         </ScrollView>
         <Border
             x:Name="HideBackground"
-            Height="140"
-            Margin="{x:Bind HideBackgroundMargin(             ViewModel.PlaylistsNavItem.ShowSidebar, ViewModel.PlaylistsNavItem.SidebarWidth, ViewModel.RightSidebar.IsOpen, ViewModel.RightSidebar.SidebarWidth), Mode=OneWay}"
+            Margin="4,4,22,0"
             HorizontalAlignment="Stretch"
             VerticalAlignment="Top"
             x:FieldModifier="public"
             Background="{ThemeResource AcrylicBackgroundFillColorDefaultBrush}"
             BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
             BorderThickness="1"
-            CornerRadius="0,0,1,1"
-            Opacity="0" />
+            CornerRadius="4"
+            Opacity="0">
+            <RelativePanel Margin="24,44,0,12" HorizontalAlignment="Left">
+                <PersonPicture
+                    x:Name="ProfilePicture"
+                    Width="56"
+                    Height="56">
+                    <PersonPicture.ProfilePicture>
+                        <BitmapImage
+                            DecodePixelHeight="56"
+                            DecodePixelWidth="56"
+                            UriSource="{Binding ProfilePictureImageUrl, Mode=OneWay}" />
+                    </PersonPicture.ProfilePicture>
+                </PersonPicture>
+                <TextBlock
+                    Margin="8,0"
+                    FontSize="34"
+                    FontWeight="ExtraBlack"
+                    RelativePanel.AlignVerticalCenterWith="ProfilePicture"
+                    RelativePanel.RightOf="ProfilePicture"
+                    Text="{x:Bind ViewModel.Name, Mode=OneWay}" />
+            </RelativePanel>
+        </Border>
     </Grid>
 </Page>

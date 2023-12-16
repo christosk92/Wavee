@@ -266,7 +266,7 @@
                     x:Name="RightSidebarGrid"
                     Grid.RowSpan="2"
                     Grid.Column="2"
-                    Margin="-12,12,12,100"
+                    Margin="12,12,12,100"
                     Background="{ThemeResource LayerFillColorDefaultBrush}"
                     BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                     BorderThickness="1,1,1,1"
@@ -298,7 +298,7 @@
                     Grid.RowSpan="2"
                     Grid.Column="1"
                     Width="16"
-                    Margin="0,0,-24,100"
+                    Margin="0,0,-22,100"
                     HorizontalAlignment="Right"
                     ResizeBehavior="BasedOnAlignment"
                     ResizeDirection="Auto"
@@ -312,6 +312,7 @@
                 <!--  Secondary navigation  -->
                 <Border Grid.Row="0" Grid.Column="1">
                     <NavigationView
+                        Margin="{x:Bind ToWinUIThickness(ViewModel.SelectedItem.ChildrenThickness), Mode=OneWay}"
                         IsBackButtonVisible="Collapsed"
                         IsSettingsVisible="False"
                         ItemInvoked="NavigationView_OnItemInvoked"

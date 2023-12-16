@@ -35,11 +35,11 @@ public sealed class ArtistViewModel : NavigationItemViewModel, IPlaybackChangedL
     private string? _headerImageUrl;
     private string? _profilePictureImageUrl;
     private SimpleAlbumEntity _latestRelease;
-    public ArtistViewModel(IMediator mediator, 
-        string id, 
-        IUIDispatcher dispatcher, 
+    public ArtistViewModel(IMediator mediator,
+        string id,
+        IUIDispatcher dispatcher,
         PlaybackViewModel playback,
-        PlaylistsNavItem playlistsNavItem, 
+        PlaylistsNavItem playlistsNavItem,
         RightSidebarViewModel rightSidebar)
     {
         _mediator = mediator;
@@ -73,12 +73,14 @@ public sealed class ArtistViewModel : NavigationItemViewModel, IPlaybackChangedL
                 Console.WriteLine(e);
             }
         });
+
+        this.ChildrenThickness = new SharedThickness(0, 14, 0, 0);
     }
 
     public PlaylistsNavItem PlaylistsNavItem { get; }
     public RightSidebarViewModel RightSidebar { get; }
 
-    public AsyncRelayCommand<object> PlayCommand { get;  }
+    public AsyncRelayCommand<object> PlayCommand { get; }
 
     public override NavigationItemViewModel[] Children { get; }
 

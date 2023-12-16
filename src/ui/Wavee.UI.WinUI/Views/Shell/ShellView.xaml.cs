@@ -47,65 +47,65 @@ public sealed partial class ShellView : UserControl
                     ViewModel.Navigation.Navigate(args.RecommendedNavigationTransitionInfo, h);
                     break;
                 case LibrarySongsViewModel s:
-                {
-                    ViewModel.Navigation.Navigate(args.RecommendedNavigationTransitionInfo, s);
-                    break;
-                }
+                    {
+                        ViewModel.Navigation.Navigate(args.RecommendedNavigationTransitionInfo, s);
+                        break;
+                    }
                 case LibraryAlbumsViewModel s:
-                {
-                    ViewModel.Navigation.Navigate(args.RecommendedNavigationTransitionInfo, s);
-                    break;
-                }
+                    {
+                        ViewModel.Navigation.Navigate(args.RecommendedNavigationTransitionInfo, s);
+                        break;
+                    }
                 case LibraryArtistsViewModel s:
-                {
-                    ViewModel.Navigation.Navigate(args.RecommendedNavigationTransitionInfo, s);
-                    break;
-                }
+                    {
+                        ViewModel.Navigation.Navigate(args.RecommendedNavigationTransitionInfo, s);
+                        break;
+                    }
                 case LibraryPodcastsViewModel s:
-                {
-                    ViewModel.Navigation.Navigate(args.RecommendedNavigationTransitionInfo, s);
-                    break;
-                }
+                    {
+                        ViewModel.Navigation.Navigate(args.RecommendedNavigationTransitionInfo, s);
+                        break;
+                    }
                 case ArtistOverviewViewModel:
                 case ArtistAboutViewModel:
                 case ArtistRelatedContentViewModel:
-                {
-                    if (ViewModel.SelectedItem is ArtistViewModel artistRoot)
                     {
-                        artistRoot.SelectedItem = item as NavigationItemViewModel;
-                    }
+                        if (ViewModel.SelectedItem is ArtistViewModel artistRoot)
+                        {
+                            artistRoot.SelectedItem = item as NavigationItemViewModel;
+                        }
 
-                    break;
-                }
+                        break;
+                    }
                 case LibrariesViewModel p:
-                {
-                    var selected = p.SelectedItem;
-                    switch (selected)
                     {
-                        case LibrarySongsViewModel s:
+                        var selected = p.SelectedItem;
+                        switch (selected)
                         {
-                            ViewModel.Navigation.Navigate(args.RecommendedNavigationTransitionInfo, s);
-                            break;
+                            case LibrarySongsViewModel s:
+                                {
+                                    ViewModel.Navigation.Navigate(args.RecommendedNavigationTransitionInfo, s);
+                                    break;
+                                }
+                            case LibraryAlbumsViewModel s:
+                                {
+                                    ViewModel.Navigation.Navigate(args.RecommendedNavigationTransitionInfo, s);
+                                    break;
+                                }
+                            case LibraryArtistsViewModel s:
+                                {
+                                    ViewModel.Navigation.Navigate(args.RecommendedNavigationTransitionInfo, s);
+                                    break;
+                                }
+                            case LibraryPodcastsViewModel s:
+                                {
+                                    ViewModel.Navigation.Navigate(args.RecommendedNavigationTransitionInfo, s);
+                                    break;
+                                }
                         }
-                        case LibraryAlbumsViewModel s:
-                        {
-                            ViewModel.Navigation.Navigate(args.RecommendedNavigationTransitionInfo, s);
-                            break;
-                        }
-                        case LibraryArtistsViewModel s:
-                        {
-                            ViewModel.Navigation.Navigate(args.RecommendedNavigationTransitionInfo, s);
-                            break;
-                        }
-                        case LibraryPodcastsViewModel s:
-                        {
-                            ViewModel.Navigation.Navigate(args.RecommendedNavigationTransitionInfo, s);
-                            break;
-                        }
-                    }
 
-                    break;
-                }
+                        break;
+                    }
                 case NowPlayingViewModel c:
                     ViewModel.Navigation.Navigate(args.RecommendedNavigationTransitionInfo, c);
                     break;
@@ -134,19 +134,19 @@ public sealed partial class ShellView : UserControl
 
             ViewModel.Navigation.NavigatedTo += (sender, o) =>
             {
-                //this.Bindings.Update();
-                RightSidebarGrid.Margin = new Thickness(0, 8, 0, 0);
-                PlaylistsGrid.Margin = new Thickness(12, 12, 12, 100);
-                if (ViewModel.Navigation.CurrentPageSource is ArtistPage pg)
-                {
-                    _currentPage = pg;
-                    pg.Scroller.ViewChanged += ScrollerOnViewChanged;
-                }
-                else if (_currentPage is not null)
-                {
-                    _currentPage.Scroller.ViewChanged -= ScrollerOnViewChanged;
-                    _currentPage = null;
-                }
+                // //this.Bindings.Update();
+                // RightSidebarGrid.Margin = new Thickness(0, 8, 0, 0);
+                // PlaylistsGrid.Margin = new Thickness(12, 12, 12, 100);
+                // if (ViewModel.Navigation.CurrentPageSource is ArtistPage pg)
+                // {
+                //     _currentPage = pg;
+                //     pg.Scroller.ViewChanged += ScrollerOnViewChanged;
+                // }
+                // else if (_currentPage is not null)
+                // {
+                //     _currentPage.Scroller.ViewChanged -= ScrollerOnViewChanged;
+                //     _currentPage = null;
+                // }
             };
 
             await ViewModel.Playlists.Playlists.Initialize().ConfigureAwait(false);
@@ -154,25 +154,25 @@ public sealed partial class ShellView : UserControl
 
     }
 
-    private void ScrollerOnViewChanged(ScrollView sender, object args)
-    {
-        if (_currentPage is not null)
-        {
-            var opacity = _currentPage.HideBackground.Opacity; // 0 -> 1
-            var progress = 54 * opacity;
-            var baseRightThickness = RightSidebarGrid.Margin;
-            RightSidebarGrid.Margin = new Thickness(baseRightThickness.Left,
-                progress + 8,
-                baseRightThickness.Right,
-                baseRightThickness.Bottom);
-
-            var baseLeftThickness = PlaylistsGrid.Margin;
-            PlaylistsGrid.Margin = new Thickness(baseLeftThickness.Left,
-                progress + 8,
-                baseLeftThickness.Right,
-                baseLeftThickness.Bottom);
-        }
-    }
+    // private void ScrollerOnViewChanged(ScrollView sender, object args)
+    // {
+    //     if (_currentPage is not null)
+    //     {
+    //         var opacity = _currentPage.HideBackground.Opacity; // 0 -> 1
+    //         var progress = 54 * opacity;
+    //         var baseRightThickness = RightSidebarGrid.Margin;
+    //         RightSidebarGrid.Margin = new Thickness(baseRightThickness.Left,
+    //             progress + 8,
+    //             baseRightThickness.Right,
+    //             baseRightThickness.Bottom);
+    //
+    //         var baseLeftThickness = PlaylistsGrid.Margin;
+    //         PlaylistsGrid.Margin = new Thickness(baseLeftThickness.Left,
+    //             progress + 8,
+    //             baseLeftThickness.Right,
+    //             baseLeftThickness.Bottom);
+    //     }
+    // }
 
     public Visibility HasSubItemsThenVisible(NavigationItemViewModel[]? navigationItemViewModels)
     {
@@ -333,5 +333,15 @@ public sealed partial class ShellView : UserControl
         var grid = sender as Grid;
         var width = grid.ActualWidth;
         ViewModel.Playlists.SidebarWidth = width;
+    }
+
+    public Thickness ToWinUIThickness(SharedThickness sharedThickness)
+    {
+        return new Thickness(
+            left: sharedThickness.Left,
+            top: sharedThickness.Top,
+            right: sharedThickness.Right,
+            bottom: sharedThickness.Bottom
+        );
     }
 }
