@@ -17,9 +17,7 @@ public static class NavigationExtensions
         var mediator = Constants.ServiceProvider.GetRequiredService<IMediator>();
         var dispatcher = Constants.ServiceProvider.GetRequiredService<IUIDispatcher>();
         var playback = Constants.ServiceProvider.GetRequiredService<PlaybackViewModel>();
-        var playlistsNavItem = Constants.ServiceProvider.GetRequiredService<PlaylistsNavItem>();
-        var rightSidebar = Constants.ServiceProvider.GetRequiredService<RightSidebarViewModel>();
-        var vm = new ArtistViewModel(mediator, id, dispatcher, playback, playlistsNavItem, rightSidebar);
+        var vm = new ArtistViewModel(mediator, id, dispatcher, playback);
 
         service.Navigate(null, vm);
     }

@@ -204,9 +204,15 @@
                     <RowDefinition />
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="{x:Bind TrueThenSavedOrDefault(ViewModel.Playlists.ShowSidebar), Mode=OneWay}" />
+                    <ColumnDefinition
+                        x:Name="LeftGridColumn"
+                        MinWidth="100"
+                        MaxWidth="300" />
                     <ColumnDefinition />
-                    <ColumnDefinition Width="{x:Bind TrueThenSavedOrDefaultRight(ViewModel.RightSidebar.IsOpen), Mode=OneWay}" />
+                    <ColumnDefinition
+                        x:Name="RightGridColumn"
+                        MinWidth="100"
+                        MaxWidth="300" />
                 </Grid.ColumnDefinitions>
                 <Frame
                     x:Name="NavigationFrame"
@@ -220,6 +226,7 @@
                     Grid.RowSpan="2"
                     Grid.Column="0"
                     Margin="12,12,12,100"
+                    HorizontalAlignment="Stretch"
                     Background="{ThemeResource LayerFillColorDefaultBrush}"
                     BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                     BorderThickness="1,1,1,1"
@@ -271,7 +278,8 @@
                     BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                     BorderThickness="1,1,1,1"
                     CornerRadius="8"
-                    SizeChanged="RightSidebarGridChanged">
+                    SizeChanged="RightSidebarGridChanged"
+                    Visibility="{x:Bind TrueThenVisible(ViewModel.RightSidebar.IsOpen), Mode=OneWay}">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
                         <RowDefinition />
@@ -310,7 +318,10 @@
 
 
                 <!--  Secondary navigation  -->
-                <Border Grid.Row="0" Grid.Column="1">
+                <Border
+                    x:Name="SecondaryNavView"
+                    Grid.Row="0"
+                    Grid.Column="1">
                     <NavigationView
                         Margin="{x:Bind ToWinUIThickness(ViewModel.SelectedItem.ChildrenThickness), Mode=OneWay}"
                         IsBackButtonVisible="Collapsed"

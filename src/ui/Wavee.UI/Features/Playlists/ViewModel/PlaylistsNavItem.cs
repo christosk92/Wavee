@@ -30,6 +30,16 @@ public sealed class PlaylistsNavItem : NavigationItemViewModel
     public double SidebarWidth
     {
         get => _sidebarWidth;
-        set => SetProperty(ref _sidebarWidth, value);
+        set
+        {
+            double epsilon = 0.01;
+            if (Math.Abs(value) > epsilon)
+            {
+                if (Math.Abs(value - _sidebarWidth) > epsilon)
+                {
+                    SetProperty(ref _sidebarWidth, value);
+                }
+            }
+        }
     }
 }

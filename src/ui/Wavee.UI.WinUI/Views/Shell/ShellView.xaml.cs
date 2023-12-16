@@ -18,6 +18,7 @@ using Wavee.UI.Features.Playlists.ViewModel;
 using Wavee.UI.Features.RightSidebar.ViewModels;
 using Wavee.UI.Features.Search.ViewModels;
 using Wavee.UI.Features.Shell.ViewModels;
+using Wavee.UI.WinUI.Contracts;
 using Wavee.UI.WinUI.Services;
 using Wavee.UI.WinUI.Views.Artist;
 using Wavee.UI.WinUI.Views.Search;
@@ -33,7 +34,20 @@ public sealed partial class ShellView : UserControl
         this.InitializeComponent();
     }
 
-    public ShellViewModel ViewModel => DataContext is ShellViewModel vm ? vm : null;
+    public ShellViewModel ViewModel
+    {
+        get
+        {
+            try
+            {
+                return DataContext is ShellViewModel vm ? vm : null;
+            }
+            catch (Exception ex)
+            {
+                return null;
+            }
+        }
+    }
 
     private void NavigationView_OnItemInvoked(NavigationView sender, NavigationViewItemInvokedEventArgs args)
     {
@@ -127,12 +141,55 @@ public sealed partial class ShellView : UserControl
 
         if (ViewModel is not null)
         {
+            var vm = ViewModel;
             var navService = new WinUINavigationService(Constants.ServiceProvider);
-            ViewModel.RightSidebar.Navigation = navService;
+            vm.RightSidebar.Navigation = navService;
             navService.Initialize(RightSidebarNavigationFrame);
             _initialized = true;
 
-            ViewModel.Navigation.NavigatedTo += (sender, o) =>
+            void NotifyPageOfSidebar(object? currentPageSourceOverride = null)
+            {
+                var leftOpen = ViewModel.Playlists.ShowSidebar;
+                var rightOpen = ViewModel.RightSidebar.IsOpen;
+
+                if ((currentPageSourceOverride ?? ViewModel.Navigation.CurrentPageSource) is ISidebarListener s)
+                {
+                    s.SidebarOpened(leftOpen ?? false, rightOpen);
+                }
+
+                void SetColumnAndColumnSpan(FrameworkElement f, int col, int span)
+                {
+                    Grid.SetColumn(f, col);
+                    Grid.SetColumnSpan(f, span);
+                }
+
+                if (leftOpen is true && !rightOpen)
+                {
+                    // | ---
+                    SetColumnAndColumnSpan(NavigationFrame, 1, 2);
+                    SetColumnAndColumnSpan(SecondaryNavView, 1, 2);
+                }
+                else if (leftOpen is true && rightOpen is true)
+                {
+                    // | --- |
+                    SetColumnAndColumnSpan(NavigationFrame, 1, 1);
+                    SetColumnAndColumnSpan(SecondaryNavView, 1, 1);
+                }
+                else if (leftOpen is false && rightOpen)
+                {
+                    // --- |
+                    SetColumnAndColumnSpan(NavigationFrame, 0, 2);
+                    SetColumnAndColumnSpan(SecondaryNavView, 0, 2);
+                }
+                else if (leftOpen is false && !rightOpen)
+                {
+                    // -----
+                    SetColumnAndColumnSpan(NavigationFrame, 0, 3);
+                    SetColumnAndColumnSpan(SecondaryNavView, 0, 3);
+                }
+            }
+
+            vm.Navigation.NavigatedTo += (sender, o) =>
             {
                 // //this.Bindings.Update();
                 // RightSidebarGrid.Margin = new Thickness(0, 8, 0, 0);
@@ -147,9 +204,57 @@ public sealed partial class ShellView : UserControl
                 //     _currentPage.Scroller.ViewChanged -= ScrollerOnViewChanged;
                 //     _currentPage = null;
                 // }
+                NotifyPageOfSidebar();
             };
 
-            await ViewModel.Playlists.Playlists.Initialize().ConfigureAwait(false);
+            vm.RightSidebar.PropertyChanged += (sender, e) =>
+            {
+                if (e.PropertyName == nameof(RightSidebarViewModel.IsOpen))
+                {
+                    NotifyPageOfSidebar();
+                    if (ViewModel.RightSidebar.IsOpen)
+                    {
+                       // RightGridColumn.Width = new GridLength(1, GridUnitType.Star);
+                        //RightSidebarGrid.Width = ViewModel.RightSidebar.SidebarWidth;
+                    }
+                    else
+                    {
+                        //RightGridColumn.Width = new GridLength(0);
+                    }
+                }
+                else if (e.PropertyName == nameof(RightSidebarViewModel.SidebarWidth))
+                {
+                    if (Math.Abs(ViewModel.RightSidebar.SidebarWidth - RightSidebarGrid.ActualWidth) > 0.01)
+                    {
+                        RightSidebarGrid.Width = ViewModel.Playlists.SidebarWidth;
+                    }
+                }
+            };
+            vm.Playlists.PropertyChanged += (o, e) =>
+            {
+                if (e.PropertyName == nameof(PlaylistsNavItem.ShowSidebar))
+                {
+                    NotifyPageOfSidebar();
+                    if (ViewModel.Playlists.ShowSidebar is true)
+                    {
+                        //LeftGridColumn.Width = new GridLength(1, GridUnitType.Star);
+                       // PlaylistsGrid.Width = ViewModel.Playlists.SidebarWidth;
+                    }
+                    else
+                    {
+                      //  LeftGridColumn.Width = new GridLength(0);
+                    }
+                }
+                else if (e.PropertyName == nameof(PlaylistsNavItem.SidebarWidth))
+                {
+                    if (Math.Abs(ViewModel.Playlists.SidebarWidth - PlaylistsGrid.ActualWidth) > 0.01)
+                    {
+                        PlaylistsGrid.Width = ViewModel.Playlists.SidebarWidth;
+                    }
+                }
+            };
+
+            await vm.Playlists.Playlists.Initialize().ConfigureAwait(false);
         }
 
     }
@@ -334,6 +439,11 @@ public sealed partial class ShellView : UserControl
         var width = grid.ActualWidth;
         ViewModel.Playlists.SidebarWidth = width;
     }
+    // private void NavigationFrame_OnSizeChanged(object sender, SizeChangedEventArgs e)
+    // {
+    //     ViewModel.Playlists.SidebarWidth = PlaylistsGrid.ActualWidth;
+    //     ViewModel.RightSidebar.SidebarWidth = RightSidebarGrid.ActualWidth;
+    // }
 
     public Thickness ToWinUIThickness(SharedThickness sharedThickness)
     {

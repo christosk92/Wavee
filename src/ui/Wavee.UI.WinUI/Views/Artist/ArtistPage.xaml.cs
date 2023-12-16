@@ -12,7 +12,9 @@ using AsyncLock = NeoSmart.AsyncLock.AsyncLock;
 
 namespace Wavee.UI.WinUI.Views.Artist;
 
-public sealed partial class ArtistPage : Page, INavigeablePage<ArtistViewModel>
+public sealed partial class ArtistPage : Page,
+    INavigeablePage<ArtistViewModel>,
+    ISidebarListener
 {
     private ArtistOverviewPage? _overviewPage;
     private readonly AsyncLock _asyncLock = new();
@@ -30,7 +32,9 @@ public sealed partial class ArtistPage : Page, INavigeablePage<ArtistViewModel>
         if (e.Parameter is ArtistViewModel vm)
         {
             DataContext = vm;
+            this.SidebarOpened(_lastLeft, _lastRight);
             await vm.Initialize();
+            
         }
     }
 
@@ -114,140 +118,36 @@ public sealed partial class ArtistPage : Page, INavigeablePage<ArtistViewModel>
         return pg;
     }
 
-    public Thickness RootGridMargin(
-        bool? leftSidebarIsOpen,
-        double leftSidebarWidth,
-        bool rightSidebarIsOpen,
-        double rightSidebarWidth)
+    private bool _lastLeft;
+    private bool _lastRight;
+    public void SidebarOpened(bool left, bool right)
     {
-        var baseThickness = new Thickness(0, -135, 0, 0);
-
-        if (leftSidebarIsOpen is true)
-        {
-            baseThickness = new Thickness(
-                left: -leftSidebarWidth + baseThickness.Top,
-                top: baseThickness.Top,
-                right: baseThickness.Right - 12,
-                bottom: baseThickness.Bottom
-            );
-            // return new Thickness(-sidebarwidth, -135, 0, 0);
-        }
-        else
-        {
-            baseThickness = baseThickness;
-        }
-
-        if (rightSidebarIsOpen is true)
-        {
-            baseThickness = new Thickness(
-                left: baseThickness.Left,
-                top: baseThickness.Top,
-                right: -rightSidebarWidth + baseThickness.Right,
-                bottom: baseThickness.Bottom
-            );
-            // return new Thickness(0, -135, -sidebarwidth, 0);
-        }
-        else
-        {
-            baseThickness = baseThickness;
-            // return new Thickness(0, -135, 0, 0);
-        }
-
-        return baseThickness;
+        _lastLeft = left;
+        _lastRight = right;
+        ChangeSharedMargins(left, right);
     }
 
-    public Thickness RestGridMargin(
-        bool? leftSidebarIsOpen,
-        double leftSidebarWidth,
-        bool rightSidebarIsOpen,
-        double rightSidebarWidth)
+
+    void ChangeSharedMargins(bool leftOpen, bool rightOpen)
     {
-        var baseThickness = new Thickness(24, 160, 24, 0);
-
-        if (leftSidebarIsOpen is true)
+        if (ViewModel is null)
         {
-            baseThickness = new Thickness(
-                left: leftSidebarWidth + baseThickness.Top,
-                top: baseThickness.Top,
-                right: baseThickness.Right,
-                bottom: baseThickness.Bottom
-            );
+            return;
+        }
 
-            //return new Thickness(d + 24, 160, 24, 0);
+        if (leftOpen || rightOpen)
+        {
+            HideBackground.Height = 120;
+            ViewModel.ChildrenThickness = new SharedThickness(0, 14, 0, 0);
+            RootGrid.Margin = new Thickness(0, -48, 0, 0);
+            HideBackground.Margin =  new Thickness(4, 4, 22, 0);
         }
         else
         {
-            baseThickness = baseThickness;
-            // return new Thickness(0, 0, 0, 0);
+            HideBackground.Height = 230;
+            ViewModel.ChildrenThickness = new SharedThickness(0);
+            HideBackground.Margin =  new Thickness(0, 0, 0, 0);
+            RootGrid.Margin = new Thickness(0, -148, 0, 0);
         }
-
-        if (rightSidebarIsOpen is true)
-        {
-            baseThickness = new Thickness(
-                left: baseThickness.Left,
-                top: baseThickness.Top,
-                right: rightSidebarWidth + baseThickness.Right,
-                bottom: baseThickness.Bottom
-            );
-            //return new Thickness(0, 0, d + 24, 0);
-        }
-        else
-        {
-            baseThickness = baseThickness;
-            //return new Thickness(0, 0, 0, 0);
-        }
-
-        return baseThickness;
-    }
-
-    public Thickness HideBackgroundMargin(bool? b, double d, bool b1, double d1)
-    {
-        //0,0,-12,0
-        var baseThickenss = new Thickness(0, 0, -12, 0);
-
-        if (b is true)
-        {
-            baseThickenss = new Thickness(
-                left: -d + baseThickenss.Top - 24,
-                top: baseThickenss.Top,
-                right: baseThickenss.Right,
-                bottom: baseThickenss.Bottom
-            );
-            //return new Thickness(-d, 0, -12, 0);
-        }
-        else
-        {
-            baseThickenss = baseThickenss;
-            //return new Thickness(0, 0, -12, 0);
-        }
-
-        if (b1 is true)
-        {
-            baseThickenss = new Thickness(
-                left: baseThickenss.Left,
-                top: baseThickenss.Top,
-                right: -d1 + baseThickenss.Right,
-                bottom: baseThickenss.Bottom
-            );
-            //return new Thickness(0, 0, -d1, 0);
-        }
-        else
-        {
-            baseThickenss = baseThickenss;
-            //return new Thickness(0, 0, -12, 0);
-        }
-
-        return baseThickenss;
-    }
-
-    public Thickness RootGridMargin_2(bool? b, bool b1)
-    {
-        //0,-48,0,0
-        if (b is true || b1 is true)
-        {
-            return new Thickness(0, -48, 0, 0);
-        }
-
-        return new Thickness(0, -48, 0, 0);
     }
 }

@@ -9,7 +9,7 @@
     DataContext="{x:Bind ViewModel}"
     SizeChanged="ArtistPage_OnSizeChanged"
     mc:Ignorable="d">
-    <Grid Margin="{x:Bind RootGridMargin_2(ViewModel.PlaylistsNavItem.ShowSidebar, ViewModel.RightSidebar.IsOpen), Mode=OneWay}" VerticalAlignment="Top">
+    <Grid x:Name="RootGrid" VerticalAlignment="Top">
         <ScrollView
             x:Name="Scroller"
             VerticalContentAlignment="Top"
@@ -70,7 +70,6 @@
         </ScrollView>
         <Border
             x:Name="HideBackground"
-            Margin="4,4,22,0"
             HorizontalAlignment="Stretch"
             VerticalAlignment="Top"
             x:FieldModifier="public"
@@ -79,7 +78,10 @@
             BorderThickness="1"
             CornerRadius="4"
             Opacity="0">
-            <RelativePanel Margin="24,44,0,12" HorizontalAlignment="Left">
+            <RelativePanel
+                Margin="24,44,0,12"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Bottom">
                 <PersonPicture
                     x:Name="ProfilePicture"
                     Width="56"

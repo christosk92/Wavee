@@ -1,25 +1,16 @@
-﻿using System.Collections.Immutable;
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using LanguageExt;
-using LiteDB;
 using Mediator;
-using Nito.AsyncEx;
-using Spotify.Metadata;
 using Wavee.Domain.Playback;
 using Wavee.UI.Domain.Album;
-using Wavee.UI.Domain.Artist;
 using Wavee.UI.Domain.Playback;
 using Wavee.UI.Features.Album.ViewModels;
 using Wavee.UI.Features.Artist.Queries;
-using Wavee.UI.Features.Library.ViewModels.Artist;
 using Wavee.UI.Features.Navigation.ViewModels;
 using Wavee.UI.Features.Playback;
 using Wavee.UI.Features.Playback.ViewModels;
-using Wavee.UI.Features.Playlists.ViewModel;
-using Wavee.UI.Features.RightSidebar.ViewModels;
 using Wavee.UI.Test;
 using ICommand = System.Windows.Input.ICommand;
 
@@ -38,14 +29,10 @@ public sealed class ArtistViewModel : NavigationItemViewModel, IPlaybackChangedL
     public ArtistViewModel(IMediator mediator,
         string id,
         IUIDispatcher dispatcher,
-        PlaybackViewModel playback,
-        PlaylistsNavItem playlistsNavItem,
-        RightSidebarViewModel rightSidebar)
+        PlaybackViewModel playback)
     {
         _mediator = mediator;
         _id = id;
-        PlaylistsNavItem = playlistsNavItem;
-        RightSidebar = rightSidebar;
         Children = new NavigationItemViewModel[]
         {
             new ArtistOverviewViewModel(mediator, id, dispatcher, playback),
@@ -76,10 +63,6 @@ public sealed class ArtistViewModel : NavigationItemViewModel, IPlaybackChangedL
 
         this.ChildrenThickness = new SharedThickness(0, 14, 0, 0);
     }
-
-    public PlaylistsNavItem PlaylistsNavItem { get; }
-    public RightSidebarViewModel RightSidebar { get; }
-
     public AsyncRelayCommand<object> PlayCommand { get; }
 
     public override NavigationItemViewModel[] Children { get; }
