@@ -52,7 +52,7 @@ public sealed class FetchBatchedMetadataQueryHandler : IQueryHandler<FetchBatche
                 SpotifyItemType.Artist => ExtensionKind.ArtistV4,
                 SpotifyItemType.PodcastEpisode => ExtensionKind.EpisodeV4,
                 SpotifyItemType.PodcastShow => ExtensionKind.ShowV4,
-                _ => throw new ArgumentOutOfRangeException()
+                _ => ExtensionKind.UnknownExtension
             };
             batchRequest.EntityRequest.AddRange(missing.Select(x => new EntityRequest
             {
@@ -86,7 +86,7 @@ public sealed class FetchBatchedMetadataQueryHandler : IQueryHandler<FetchBatche
 
             var data = BatchedExtensionResponse.Parser.ParseFrom(Gzip.UnsafeDecompressAlt(r.Span));
             var bytesData = data.ExtendedMetadata
-                .SelectMany(f => f.ExtensionData.Select(x => (x.EntityUri, x.ExtensionData.Value)))
+                .SelectMany(f => f.ExtensionData.Select(x => (x.EntityUri, x.ExtensionData?.Value)))
                 .ToImmutableArray();
             foreach (var byteData in bytesData)
             {

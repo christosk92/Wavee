@@ -22,7 +22,9 @@ public sealed class GetTracksMetadataRequestHandler : IRequestHandler<GetTracksM
 
     public async ValueTask<IReadOnlyDictionary<string, TrackOrEpisode?>> Handle(GetTracksMetadataRequest request, CancellationToken cancellationToken)
     {
-        var groups = request.Ids.Select(x => SpotifyId.FromUri(x)).GroupBy(x => x.Type)
+        var groups = request.Ids.Select(x => SpotifyId.FromUri(x))
+            .Where(x=> !x.IsLocal)
+            .GroupBy(x => x.Type)
             .Select(f => new
             {
                 Key = f.Key,

@@ -70,9 +70,10 @@ internal sealed class SpotifyGenericRepository : ISpotifyGenericRepository
         return allitems;
     }
 
-    public void SaveBulk(IReadOnlyCollection<(string EntityUri, ByteString Value)> bytesData)
+    public void SaveBulk(IReadOnlyCollection<(string EntityUri, ByteString? Value)> bytesData)
     {
-        _dataCollection.InsertBulk(bytesData.Select(x => new GenericByteEntity
+        _dataCollection.InsertBulk(bytesData.Where(f=> f.Value is not null)
+            .Select(x => new GenericByteEntity
         {
             Uri = x.EntityUri,
             Data = x.Value.ToByteArray()
@@ -85,5 +86,5 @@ public interface ISpotifyGenericRepository
     void AddTrack(Track track);
     bool TryGetTrack(SpotifyId id, out Track o);
     Dictionary<string, ByteString?> GetInBulk(IReadOnlyCollection<string> uris);
-    void SaveBulk(IReadOnlyCollection<(string EntityUri, ByteString Value)> bytesData);
+    void SaveBulk(IReadOnlyCollection<(string EntityUri, ByteString? Value)> bytesData);
 }

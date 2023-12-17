@@ -1,5 +1,8 @@
 ﻿using System.Numerics;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Text;
+using CommunityToolkit.HighPerformance;
 
 namespace Wavee.Spotify.Common;
 
@@ -15,7 +18,7 @@ namespace Wavee.Spotify.Common;
 /// <param name="Service">
 ///  The service the audio item is from.
 /// </param>
-public readonly record struct SpotifyId(BigInteger Id, SpotifyItemType Type)
+public readonly record struct SpotifyId(BigInteger Id, SpotifyItemType Type, bool IsLocal = false)
 {
     private const string BASE62_CHARS = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
@@ -68,40 +71,60 @@ public readonly record struct SpotifyId(BigInteger Id, SpotifyItemType Type)
 
     public string ToBase62()
     {
-        var value = Id;
-        var sb = new StringBuilder();
-
-        while (value > 0)
+        if (!IsLocal)
         {
-            value = BigInteger.DivRem(value, BASE62_CHARS.Length, out BigInteger remainder);
-            sb.Insert(0, BASE62_CHARS[(int)remainder]);
+            var value = Id;
+            var sb = new StringBuilder();
+
+            while (value > 0)
+            {
+                value = BigInteger.DivRem(value, BASE62_CHARS.Length, out BigInteger remainder);
+                sb.Insert(0, BASE62_CHARS[(int)remainder]);
+            }
+
+            //expected length is 22
+            while (sb.Length < 22)
+            {
+                sb.Insert(0, '0');
+            }
+
+            return sb.ToString();
         }
 
-        //expected length is 22
-        while (sb.Length < 22)
-        {
-            sb.Insert(0, '0');
-        }
-
-        return sb.ToString();
+        Span<byte> bytes = Id.ToByteArray();
+        ReadOnlySpan<char> asSpanChar = MemoryMarshal.Cast<byte, char>(bytes);
+        var asString = new string(asSpanChar);
+        return asString;
     }
 
     public static SpotifyId FromUri(ReadOnlySpan<char> uri)
     {
-        //[local,spotify]:[itemtype]:[base62]
-        var firstIndex = uri.IndexOf(':');
-        ReadOnlySpan<char> service = uri.Slice(0, firstIndex);
-        var lastIndex = uri.LastIndexOf(':');
-        if (firstIndex != lastIndex)
+        if (!uri.StartsWith("spotify:local:"))
         {
-            ReadOnlySpan<char> type = uri.Slice(service.Length + 1, lastIndex - service.Length - 1);
-            ReadOnlySpan<char> base62 = uri.Slice(lastIndex + 1);
+            //[local,spotify]:[itemtype]:[base62]
+            var firstIndex = uri.IndexOf(':');
+            ReadOnlySpan<char> service = uri.Slice(0, firstIndex);
+            var lastIndex = uri.LastIndexOf(':');
+            if (firstIndex != lastIndex)
+            {
+                ReadOnlySpan<char> type = uri.Slice(service.Length + 1, lastIndex - service.Length - 1);
+                ReadOnlySpan<char> base62 = uri.Slice(lastIndex + 1);
 
-            return FromBase62(base62, GetTypeFrom(type));
-            //return new AudioId( GetTypeFrom(type), GetServiceFrom(service));
+                return FromBase62(base62, GetTypeFrom(type));
+                //return new AudioId( GetTypeFrom(type), GetServiceFrom(service));
+            }
+
+            return new SpotifyId(0, SpotifyItemType.Track);
         }
-
-        return new SpotifyId(0, SpotifyItemType.Track);
+        else
+        {
+            // :local: -> 7 
+            var firstIndex = uri.IndexOf(':') + 7;
+            var everythingAfterLocal = uri.Slice(firstIndex);
+            var asBytes = everythingAfterLocal.AsBytes();
+            var bigInt = new BigInteger(asBytes);
+            return new SpotifyId(bigInt, SpotifyItemType.Track, true);
+        }
     }
 
     public static SpotifyId FromBase62(ReadOnlySpan<char> base62,
@@ -122,7 +145,7 @@ public readonly record struct SpotifyId(BigInteger Id, SpotifyItemType Type)
 
     public override string ToString()
     {
-        return $"spotify:{GetTypeString(Type)}:{ToBase62()}";
+        return $"spotify:{GetTypeString(Type, IsLocal)}:{ToBase62()}";
     }
 
     private static SpotifyItemType GetTypeFrom(ReadOnlySpan<char> type)
@@ -140,20 +163,27 @@ public readonly record struct SpotifyId(BigInteger Id, SpotifyItemType Type)
         };
     }
 
-    private static string GetTypeString(SpotifyItemType type)
+    private static string GetTypeString(SpotifyItemType type, bool local)
     {
-        return type switch
+        if (!local)
         {
-            SpotifyItemType.Track => track,
-            SpotifyItemType.Album => album,
-            SpotifyItemType.Artist => artist,
-            SpotifyItemType.Playlist => playlist,
-            SpotifyItemType.PodcastEpisode => episode,
-            SpotifyItemType.UserCollection => collection,
-            SpotifyItemType.Prerelease => prerelease,
-            SpotifyItemType.Unknown => unknown,
-            _ => unknown
-        };
+            return type switch
+            {
+                SpotifyItemType.Track => track,
+                SpotifyItemType.Album => album,
+                SpotifyItemType.Artist => artist,
+                SpotifyItemType.Playlist => playlist,
+                SpotifyItemType.PodcastEpisode => episode,
+                SpotifyItemType.UserCollection => collection,
+                SpotifyItemType.Prerelease => prerelease,
+                SpotifyItemType.Unknown => unknown,
+                _ => unknown
+            };
+        }
+        else
+        {
+            return "local";
+        }
     }
 
     const string local = "local";
