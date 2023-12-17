@@ -29,6 +29,13 @@ public sealed partial class PlaylistPage : Page, INavigeablePage<PlaylistViewMod
         }
     }
 
+    protected override void OnNavigatedFrom(NavigationEventArgs e)
+    {
+        base.OnNavigatedFrom(e);
+
+        this.Bindings.StopTracking();
+    }
+
     public PlaylistViewModel ViewModel
     {
         get
@@ -68,9 +75,10 @@ public sealed partial class PlaylistPage : Page, INavigeablePage<PlaylistViewMod
 
         // 01:24:30 -> 1 hr 24 min 30 sec
         var sb = new StringBuilder();
-        if (timeSpan.Value.Hours > 0)
+
+        if (timeSpan.Value.TotalHours >= 1)
         {
-            sb.Append($"{timeSpan.Value.Hours} hr ");
+            sb.Append($"{(int)timeSpan.Value.TotalHours} hr ");
         }
 
         if (timeSpan.Value.Minutes > 0)
