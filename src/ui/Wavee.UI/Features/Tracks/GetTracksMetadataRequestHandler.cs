@@ -5,6 +5,7 @@ using Wavee.Spotify.Application.Metadata.Query;
 using Wavee.Spotify.Common;
 using Wavee.Spotify.Common.Contracts;
 using Wavee.Spotify.Infrastructure.LegacyAuth;
+using System.Linq;
 
 namespace Wavee.UI.Features.Tracks;
 
@@ -54,10 +55,19 @@ public sealed class GetTracksMetadataRequestHandler : IRequestHandler<GetTracksM
                         switch (id.Type)
                         {
                             case SpotifyItemType.Track:
-                                output[requestId] = new TrackOrEpisode(Track.Parser.ParseFrom(fetchedEntity), null);
+                                var parsed = Track.Parser.ParseFrom(fetchedEntity);
+                                if (Match(parsed, request.SearchTerms))
+                                {
+                                    output[requestId] = new TrackOrEpisode(parsed, null);
+                                }
                                 break;
                             case SpotifyItemType.PodcastEpisode:
-                                output[requestId] = new TrackOrEpisode(null, Episode.Parser.ParseFrom(fetchedEntity));
+                                var parsedEpisode = Episode.Parser.ParseFrom(fetchedEntity);
+                                if (Match(parsedEpisode, request.SearchTerms))
+                                {
+                                    output[requestId] =
+                                        new TrackOrEpisode(null, parsedEpisode);
+                                }
                                 break;
                         }
                     }
@@ -66,5 +76,18 @@ public sealed class GetTracksMetadataRequestHandler : IRequestHandler<GetTracksM
         }
 
         return output;
+    }
+
+    private bool Match(Track track, IReadOnlyCollection<string> requestSearchTerms)
+    {
+        return requestSearchTerms.Any(f =>
+            track.Name.Contains(f, StringComparison.InvariantCultureIgnoreCase)
+            || track.Artist.Any(a => a.Name.Contains(f, StringComparison.InvariantCultureIgnoreCase)
+                                     || track.Album.Name.Contains(f, StringComparison.InvariantCultureIgnoreCase)));
+    }
+
+    private bool Match(Episode parsedEpisode, IReadOnlyCollection<string> requestSearchTerms)
+    {
+        throw new NotImplementedException();
     }
 }

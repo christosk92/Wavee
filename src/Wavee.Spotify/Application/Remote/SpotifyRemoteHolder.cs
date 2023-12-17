@@ -40,6 +40,7 @@ internal sealed partial class SpotifyRemoteHolder : ISpotifyRemoteClient
     public event EventHandler<Cluster>? RemoteStateChanged;
     public event EventHandler<IReadOnlyCollection<SpotifyLibraryItem<SpotifyId>>>? ItemAdded;
     public event EventHandler<IReadOnlyCollection<SpotifyId>>? ItemRemoved;
+    public event EventHandler<Eum.Spotify.playlist4.PlaylistModificationInfo>? PlaylistChanged;
 
     public async Task Initialize(CancellationToken cancellationToken = default)
     {
@@ -50,12 +51,19 @@ internal sealed partial class SpotifyRemoteHolder : ISpotifyRemoteClient
         _websocket.ConnectionId += OnConnectionId;
         _websocket.RemoteClusterUpdate += OnRemoteClusterUpdate;
         _websocket.LibraryUpdate += OnLibraryUpdate;
+        _websocket.PlaylistChanged += OnPlaylistUpdate;
+
 
         await Task.Factory.StartNew(async () =>
         {
             await Task.Delay(10, cancellationToken);
             await _websocket.Listen();
         }, cancellationToken);
+    }
+
+    private void OnPlaylistUpdate(object? sender, Eum.Spotify.playlist4.PlaylistModificationInfo mod)
+    {
+        PlaylistChanged?.Invoke(this, mod);
     }
 
     private void OnLibraryUpdate(object? sender, (string, JsonElement) e)
@@ -146,6 +154,7 @@ internal sealed partial class SpotifyRemoteHolder : ISpotifyRemoteClient
             spotifyWebsocketHolder.ConnectionId -= OnConnectionId;
             spotifyWebsocketHolder.RemoteClusterUpdate -= OnRemoteClusterUpdate;
             spotifyWebsocketHolder.LibraryUpdate -= OnLibraryUpdate;
+            spotifyWebsocketHolder.PlaylistChanged -= OnPlaylistUpdate;
 
             spotifyWebsocketHolder.Dispose();
         }
@@ -235,9 +244,11 @@ internal sealed partial class SpotifyRemoteHolder : ISpotifyRemoteClient
                             {
                                 LibraryUpdate?.Invoke(this, (uri, root.Clone()));
                             }
-                            else
+                            else if(uri.StartsWith("hm://playlist/v2/playlist/"))
                             {
-
+                                var payload = root.GetProperty("payloads");
+                                var diff = ParsePlaylist(payload);
+                                PlaylistChanged?.Invoke(this, diff);
                             }
                         }
                     }
@@ -252,6 +263,25 @@ internal sealed partial class SpotifyRemoteHolder : ISpotifyRemoteClient
                     Disconnected?.Invoke(this, e);
                 }
             }
+        }
+
+        private Eum.Spotify.playlist4.PlaylistModificationInfo ParsePlaylist(JsonElement payload)
+        {
+            ReadOnlySpan<byte> output = stackalloc byte[0];
+            using var enu = payload.EnumerateArray();
+            while (enu.MoveNext())
+            {
+                var item = enu.Current;
+                Span<byte> buffer = item.GetBytesFromBase64();
+                //Add to output
+                Span<byte> newOutput = stackalloc byte[output.Length + buffer.Length];
+                output.CopyTo(newOutput);
+                buffer.CopyTo(newOutput.Slice(output.Length));
+                output = newOutput;
+            }
+
+            var x = Eum.Spotify.playlist4.PlaylistModificationInfo.Parser.ParseFrom(output);
+            return x;
         }
 
         private static ClusterUpdate ParseClusterUpdate(JsonElement payload, JsonElement headers)
@@ -291,6 +321,7 @@ internal sealed partial class SpotifyRemoteHolder : ISpotifyRemoteClient
         public event EventHandler<Exception> Disconnected;
         public event EventHandler<ClusterUpdate> RemoteClusterUpdate;
         public event EventHandler<(string, JsonElement)>? LibraryUpdate;
+        public event EventHandler<Eum.Spotify.playlist4.PlaylistModificationInfo> PlaylistChanged; 
 
 
         [GeneratedRegex(@"hm://pusher/v1/connections/([^/]+)")]

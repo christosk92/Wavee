@@ -11,6 +11,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:viewModel="using:Wavee.UI.Features.Playlists.ViewModel"
     xmlns:winUi="using:CommunityToolkit.Labs.WinUI"
+    xmlns:winUi1="using:CommunityToolkit.WinUI"
     mc:Ignorable="d">
 
     <Page.Resources>
@@ -19,6 +20,7 @@
     <ScrollView>
         <Grid>
             <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition />
             </Grid.RowDefinitions>
@@ -30,13 +32,21 @@
                 BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                 BorderThickness="1"
                 CornerRadius="8">
-                <controls:AlbumCoverControl
+                <Grid
                     x:Name="PlaylistImage"
                     Width="240"
-                    Height="240"
-                    DecodePixelHeight="240"
-                    DecodePixelWidth="240"
-                    Source="{x:Bind ViewModel.BigImage, Mode=OneWay}" />
+                    Height="240">
+                    <controls:AlbumCoverControl
+                        DecodePixelHeight="240"
+                        DecodePixelWidth="240"
+                        Source="{x:Bind ViewModel.BigImage, Mode=OneWay}"
+                        Visibility="{x:Bind ViewModel.HasImage, Mode=OneWay, Converter={StaticResource TrueToVisibleConverter}}" />
+
+                    <controls:PlaylistImageGridControl
+                        x:Name="PlaylistImageGridControl"
+                        x:Load="{x:Bind Negate(ViewModel.HasImage), Mode=OneWay}"
+                        Tracks="{x:Bind ViewModel.Tracks, Mode=OneWay}" />
+                </Grid>
 
                 <TextBlock
                     x:Name="TitleBlock"
@@ -55,18 +65,25 @@
                     RelativePanel.RightOf="PlaylistImage"
                     Style="{ThemeResource TextBlockButtonStyle}" />
 
-                <TextBlock
+                <Grid
                     x:Name="InformationBlock"
                     Margin="12,4,0,0"
-                    Foreground="{ThemeResource ApplicationSecondaryForegroundThemeBrush}"
                     RelativePanel.Below="OwnerBlock"
                     RelativePanel.RightOf="PlaylistImage">
-                    <Run Foreground="{ThemeResource ApplicationForegroundThemeBrush}" Text="{x:Bind FormatPopCount(ViewModel.PopCount), Mode=OneWay}" />
-                    <Run Text="likes •" />
-                    <Run Foreground="{ThemeResource ApplicationForegroundThemeBrush}" Text="{x:Bind ViewModel.Tracks.Count, Mode=OneWay}" />
-                    <Run Text="songs •" />
-                    <Run Text="{x:Bind FormatTime(ViewModel.TotalDuration), Mode=OneWay}" />
-                </TextBlock>
+                    <TextBlock Foreground="{ThemeResource ApplicationSecondaryForegroundThemeBrush}" Visibility="{x:Bind ViewModel.HidePopCount, Mode=OneWay, Converter={StaticResource TrueToCollapsedConverter}}">
+                        <Run Foreground="{ThemeResource ApplicationForegroundThemeBrush}" Text="{x:Bind FormatPopCount(ViewModel.PopCount), Mode=OneWay}" />
+                        <Run Text="likes •" />
+                        <Run Foreground="{ThemeResource ApplicationForegroundThemeBrush}" Text="{x:Bind ViewModel.Tracks.Count, Mode=OneWay}" />
+                        <Run Text="songs •" />
+                        <Run Text="{x:Bind FormatTime(ViewModel.TotalDuration), Mode=OneWay}" />
+                    </TextBlock>
+                    <TextBlock Foreground="{ThemeResource ApplicationSecondaryForegroundThemeBrush}" Visibility="{x:Bind ViewModel.HidePopCount, Mode=OneWay, Converter={StaticResource TrueToVisibleConverter}}">
+                        <Run Foreground="{ThemeResource ApplicationForegroundThemeBrush}" Text="{x:Bind ViewModel.Tracks.Count, Mode=OneWay}" />
+                        <Run Text="songs •" />
+                        <Run Text="{x:Bind FormatTime(ViewModel.TotalDuration), Mode=OneWay}" />
+                    </TextBlock>
+
+                </Grid>
 
 
                 <TextBlock
@@ -81,6 +98,7 @@
                     TextWrapping="WrapWholeWords" />
 
                 <StackPanel
+                    x:Name="ButtonsPanel"
                     Margin="12,0,0,12"
                     Orientation="Horizontal"
                     RelativePanel.AlignBottomWith="PlaylistImage"
@@ -105,9 +123,90 @@
                         </StackPanel>
                     </Button>
                 </StackPanel>
+
+
+                <controls1:TokenizingTextBox
+                    x:Name="TokenBox"
+                    MaxWidth="300"
+                    Margin="12,0,12,12"
+                    HorizontalAlignment="Right"
+                    PlaceholderText="Search"
+                    QueryIcon="{winUi1:FontIconSource Glyph=&#xE721;,
+                                                      FontSize=12}"
+                    RelativePanel.AlignBottomWith="PlaylistImage"
+                    RelativePanel.AlignRightWithPanel="True"
+                    RelativePanel.RightOf="ButtonsPanel"
+                    TextChanged="TokenBox_OnTextChanged"
+                    TextMemberPath="Text"
+                    TokenDelimiter=","
+                    TokenItemAdded="TokenBox_OnTokenItemAdded"
+                    TokenItemRemoved="TokenBox_OnTokenItemRemoved">
+                    <controls1:TokenizingTextBox.TokenItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Padding="8,0,0,0" Text="{Binding}" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </controls1:TokenizingTextBox.TokenItemTemplate>
+                </controls1:TokenizingTextBox>
+
+
             </RelativePanel>
 
-            <Grid Grid.Row="1">
+            <Grid
+                Grid.Row="1"
+                Height="40"
+                Margin="0,0,8,12"
+                Background="{ThemeResource LayerFillColorDefaultBrush}"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                ColumnSpacing="12"
+                CornerRadius="8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="115" />
+                    <!--  127 - 12  -->
+                    <ColumnDefinition Width="2*" />
+                    <ColumnDefinition />
+                    <ColumnDefinition />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="50" />
+                </Grid.ColumnDefinitions>
+
+                <TextBlock
+                    Margin="24,0"
+                    VerticalAlignment="Center"
+                    Text="#" />
+
+                <TextBlock
+                    Grid.Column="1"
+                    VerticalAlignment="Center"
+                    Text="Title" />
+
+
+                <TextBlock
+                    Grid.Column="2"
+                    VerticalAlignment="Center"
+                    Text="Artist" />
+
+                <TextBlock
+                    Grid.Column="3"
+                    VerticalAlignment="Center"
+                    Text="Album" />
+
+                <TextBlock
+                    Grid.Column="4"
+                    VerticalAlignment="Center"
+                    FontFamily="{StaticResource FluentIcons}"
+                    Text="&#xE787;" />
+
+                <TextBlock
+                    Grid.Column="5"
+                    VerticalAlignment="Center"
+                    FontFamily="{StaticResource FluentIcons}"
+                    Text="&#xE916;" />
+            </Grid>
+
+            <Grid Grid.Row="2" Margin="0,0,8,0">
                 <ItemsView ItemsSource="{x:Bind ViewModel.Tracks}" Visibility="{x:Bind ViewModel.TracksLoaded, Mode=OneWay, Converter={StaticResource TrueToVisibleConverter}}">
                     <ItemsView.ItemTemplate>
                         <DataTemplate x:DataType="viewModel:LazyPlaylistTrackViewModel">

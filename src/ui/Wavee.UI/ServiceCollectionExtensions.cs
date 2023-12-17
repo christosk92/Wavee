@@ -12,6 +12,7 @@ using Wavee.UI.Features.Listen;
 using Wavee.UI.Features.MainWindow;
 using Wavee.UI.Features.NowPlaying.ViewModels;
 using Wavee.UI.Features.Playback.ViewModels;
+using Wavee.UI.Features.Playlists.Services;
 using Wavee.UI.Features.Playlists.ViewModel;
 using Wavee.UI.Features.RightSidebar.ViewModels;
 using Wavee.UI.Features.Search.ViewModels;
@@ -27,25 +28,26 @@ public static class ServiceCollectionExtensions
         string storagePath)
     {
         return collection.AddSpotify(new SpotifyClientConfig
-        {
-            Storage = new StorageSettings
             {
-                Path = storagePath
-            },
-            Remote = new SpotifyRemoteConfig
-            {
-                DeviceName = "Wavee",
-                DeviceType = DeviceType.Computer
-            },
-            Playback = new SpotifyPlaybackConfig
-            {
-                InitialVolume = 0,
-                PreferedQuality = SpotifyAudioQuality.Normal
-            }
-        })
+                Storage = new StorageSettings
+                {
+                    Path = storagePath
+                },
+                Remote = new SpotifyRemoteConfig
+                {
+                    DeviceName = "Wavee",
+                    DeviceType = DeviceType.Computer
+                },
+                Playback = new SpotifyPlaybackConfig
+                {
+                    InitialVolume = 0,
+                    PreferedQuality = SpotifyAudioQuality.Normal
+                }
+            })
             .WithStoredOrOAuthModule(openBrowser)
             .WithPlayer<NAudioPlayer>()
-            .AddYoutube();
+            .AddYoutube()
+            .AddSingleton<ICachedPlaylistInfoService, CachedPlaylistInfoService>();
     }
 
     public static IServiceCollection AddViewModels(this IServiceCollection collection)

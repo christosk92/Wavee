@@ -23,6 +23,7 @@
 	  <None Remove="Assets\amb.png" />
 	  <None Remove="Assets\equaliser.gif" />
 	  <None Remove="Controls\ArtistDiscographyGroupComponent.xaml" />
+	  <None Remove="Controls\PlaylistImageGridControl.xaml" />
 	  <None Remove="Dialogs\DeviceSelectionDialog.xaml" />
 	  <None Remove="Styles\ButtonStyles.xaml" />
 	  <None Remove="Styles\ItemContainerStyles.xaml" />
@@ -66,6 +67,7 @@
 		<PackageReference Include="CommunityToolkit.WinUI.Controls.MetadataControl" Version="8.0.230907" />
 		<PackageReference Include="CommunityToolkit.WinUI.Controls.Segmented" Version="8.0.230907" />
 		<PackageReference Include="CommunityToolkit.WinUI.Controls.Sizers" Version="8.0.230907" />
+		<PackageReference Include="CommunityToolkit.WinUI.Controls.TokenizingTextBox" Version="8.0.230907" />
 		<PackageReference Include="CommunityToolkit.WinUI.UI.Animations" Version="7.1.2" />
 		<PackageReference Include="CommunityToolkit.WinUI.UI.Behaviors" Version="7.1.2" />
 		<PackageReference Include="CommunityToolkit.WinUI.UI.Controls.Primitives" Version="7.1.2" />
@@ -108,6 +110,9 @@
 	  <None Update="Controls\AlbumCoverControl.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </None>
+	  <Page Update="Controls\PlaylistImageGridControl.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </Page>
 	  <Page Update="Views\Playlist\PlaylistPage.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </Page>

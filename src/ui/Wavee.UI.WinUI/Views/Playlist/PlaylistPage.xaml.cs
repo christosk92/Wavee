@@ -3,6 +3,7 @@ using Microsoft.UI.Xaml.Navigation;
 using System;
 using System.Text;
 using System.Threading;
+using CommunityToolkit.WinUI.Controls;
 using Wavee.UI.Features.Library.ViewModels.Artist;
 using Wavee.UI.Features.Playlists.ViewModel;
 using Wavee.UI.WinUI.Contracts;
@@ -83,5 +84,42 @@ public sealed partial class PlaylistPage : Page, INavigeablePage<PlaylistViewMod
         }
 
         return sb.ToString();
+    }
+
+    public bool Negate(bool b)
+    {
+        return !b;
+    }
+
+    private async void TokenBox_OnTextChanged(AutoSuggestBox sender, AutoSuggestBoxTextChangedEventArgs args)
+    {
+        if (args.Reason is AutoSuggestionBoxTextChangeReason.UserInput)
+        {
+            ViewModel.GeneralSearchTerm = sender.Text;
+
+            await ViewModel.RefreshTracks();
+        }
+    }
+
+    private async void TokenBox_OnTokenItemAdded(TokenizingTextBox sender, object args)
+    {
+        if (args is string x)
+        {
+            ViewModel.SearchTerms.Add(x);
+            await ViewModel.RefreshTracks();
+        }
+    }
+
+    private async void TokenBox_OnTokenItemRemoved(TokenizingTextBox sender, object args)
+    {
+        if (args is string x)
+        {
+            ViewModel.SearchTerms.Remove(x);
+            if (ViewModel.SearchTerms.Count is 0)
+            {
+                ViewModel.GeneralSearchTerm = TokenBox.Text;
+            }
+            await ViewModel.RefreshTracks();
+        }
     }
 }

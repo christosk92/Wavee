@@ -5,27 +5,48 @@ using Mediator;
 using Wavee.Spotify.Common;
 using Wavee.Spotify.Common.Contracts;
 using Wavee.UI.Domain.Playlist;
+using Wavee.UI.Extensions;
+using Wavee.UI.Features.Navigation;
 using Wavee.UI.Features.Playlists.Queries;
+using Wavee.UI.Features.Playlists.Services;
 
 namespace Wavee.UI.Features.Playlists.QueryHandlers;
 
-public sealed class GetPlaylistTracksIdsQueryHandler : IQueryHandler<GetPlaylistTracksIdsQuery, IReadOnlyCollection<PlaylistTrackInfo>>
+public sealed class GetPlaylistTracksIdsQueryHandler : 
+    IQueryHandler<GetPlaylistTracksIdsQuery, IReadOnlyCollection<PlaylistTrackInfo>>
 {
     private readonly ISpotifyClient _spotifyClient;
+    private readonly ICachedPlaylistInfoService _cachedPlaylistInfoService;
 
-    public GetPlaylistTracksIdsQueryHandler(ISpotifyClient spotifyClient)
+    public GetPlaylistTracksIdsQueryHandler(
+        ISpotifyClient spotifyClient,
+        ICachedPlaylistInfoService cachedPlaylistInfoService)
     {
         _spotifyClient = spotifyClient;
+        _cachedPlaylistInfoService = cachedPlaylistInfoService;
     }
 
     public async ValueTask<IReadOnlyCollection<PlaylistTrackInfo>> Handle(GetPlaylistTracksIdsQuery query, CancellationToken cancellationToken)
     {
-        var selectedList = await _spotifyClient.Playlists.GetPlaylist(SpotifyId.FromUri(query.PlaylistId), cancellationToken);
-        var items = selectedList.Contents.Items;
-        return ParseItems(items);
+        if (!_cachedPlaylistInfoService.
+                TryGetTracks(query.PlaylistId,
+                null,
+                out var existingtracks))
+        {
+            var selectedList =
+                await _spotifyClient.Playlists.GetPlaylist(SpotifyId.FromUri(query.PlaylistId), cancellationToken);
+            var items = selectedList.Contents.Items;
+            var x = ParseItems(items);
+            _cachedPlaylistInfoService.SetTracks(query.PlaylistId, 
+                selectedList.Revision.ToBigInteger(),
+                x);
+            return x;
+        }
+
+        return existingtracks;
     }
 
-    private IReadOnlyCollection<PlaylistTrackInfo> ParseItems(RepeatedField<Item> items)
+    internal static IReadOnlyCollection<PlaylistTrackInfo> ParseItems(RepeatedField<Item> items)
     {
         Span<PlaylistTrackInfo> output = new PlaylistTrackInfo[items.Count];
         for (var index = 0; index < items.Count; index++)

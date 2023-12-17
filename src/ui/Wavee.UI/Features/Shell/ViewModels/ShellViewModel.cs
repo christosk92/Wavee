@@ -10,6 +10,8 @@ using Wavee.UI.Features.Navigation;
 using Wavee.UI.Features.Navigation.ViewModels;
 using Wavee.UI.Features.NowPlaying.ViewModels;
 using Wavee.UI.Features.Playback.ViewModels;
+using Wavee.UI.Features.Playlists.Contracts;
+using Wavee.UI.Features.Playlists.Services;
 using Wavee.UI.Features.Playlists.ViewModel;
 using Wavee.UI.Features.RightSidebar.ViewModels;
 using Wavee.UI.Features.Search.ViewModels;
@@ -32,7 +34,8 @@ public sealed class ShellViewModel : ObservableObject
         IMediator mediator,
         IServiceProvider serviceProvider,
         RightSidebarViewModel rightSidebar,
-        PlaylistsNavItem playlists)
+        PlaylistsNavItem playlists,
+        ICachedPlaylistInfoService cachedPlaylistInfoService)
     {
         Playlists = playlists;
         TopNavItems = new object[]
@@ -96,6 +99,17 @@ public sealed class ShellViewModel : ObservableObject
             {
                 SelectedItem = new NothingSelectedViewModel();
             }
+        };
+
+        cachedPlaylistInfoService.PlaylistChanged += (sender, e) =>
+        {
+            _dispatcherFactory().Invoke(() =>
+            {
+                if (navigation.CurrentViewModel is IPlaylistListener p && p.Id == e)
+                {
+                    p.OnPlaylistChanged_Dumb();
+                }
+            });
         };
     }
 
