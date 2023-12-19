@@ -1,5 +1,4 @@
-﻿using System.Collections.Immutable;
-using Mediator;
+﻿using Mediator;
 using Wavee.Spotify.Common;
 using Wavee.UI.Features.Library.Notifications;
 using Wavee.UI.Features.Library.ViewModels.Album;
@@ -47,7 +46,7 @@ public sealed class LibrariesViewModel : NavigationItemViewModel,
             {
                 case SpotifyItemType.Artist:
                     {
-                        await (Artists as LibraryArtistsViewModel)!.Add(group.Count());
+                        //await (Artists as LibraryArtistsViewModel)!.Add(group.Count());
                         break;
                     }
             }
@@ -63,7 +62,7 @@ public sealed class LibrariesViewModel : NavigationItemViewModel,
             {
                 case SpotifyItemType.Artist:
                     {
-                        (Artists as LibraryArtistsViewModel)!.Remove(group.Select(f => f.Id).ToImmutableArray());
+                       // (Artists as LibraryArtistsViewModel)!.Remove(group.Select(f => f.Id).ToImmutableArray());
                         break;
                     }
             }

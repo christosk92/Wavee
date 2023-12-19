@@ -28,7 +28,7 @@ public sealed partial class SongLibraryPage : Page, INavigeablePage<LibrarySongs
 
     public void UpdateBindings()
     {
-        //this.Bindings.Update();
+        this.Bindings.Update();
     }
 
     public LibrarySongsViewModel ViewModel => DataContext is LibrarySongsViewModel vm ? vm : null;

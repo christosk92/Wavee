@@ -1,25 +1,22 @@
-﻿using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Collections.Immutable;
+﻿using System.Collections.Immutable;
 using System.Numerics;
 using System.Text;
 using Eum.Spotify.playlist4;
-using Google.Protobuf;
 using Google.Protobuf.Collections;
-using LanguageExt.UnitsOfMeasure;
 using Nito.AsyncEx;
 using Wavee.Domain.Library;
+using Wavee.Spotify.Application.Library;
 using Wavee.Spotify.Application.Playlist;
 using Wavee.Spotify.Common;
 using Wavee.Spotify.Common.Contracts;
 using Wavee.Spotify.Domain.Library;
-using Wavee.Spotify.Domain.State;
+using Wavee.UI.Domain.Library;
 using Wavee.UI.Domain.Playlist;
+using Wavee.UI.Domain.Track;
 using Wavee.UI.Extensions;
+using Wavee.UI.Features.Library.Queries;
 using Wavee.UI.Features.Library.QueryHandlers;
-using Wavee.UI.Features.Playback;
 using Wavee.UI.Features.Playlists.QueryHandlers;
-using YoutubeExplode.Playlists;
 
 namespace Wavee.UI.Features.Playlists.Services;
 
@@ -42,7 +39,7 @@ internal sealed class CachedPlaylistInfoService : ICachedPlaylistInfoService
             return obj is PlaylistTracksInfoKey other ? CompareTo(other) : throw new ArgumentException($"Object must be of type {nameof(PlaylistTracksInfoKey)}");
         }
     }
-    private readonly Dictionary<string, SpotifyPlaylistChangeListener> _changeListeners = new();
+    private readonly Dictionary<string, object> _changeListeners = new();
     private readonly SortedDictionary<PlaylistTracksInfoKey, IReadOnlyCollection<PlaylistTrackInfo>> _tracks = new();
     private readonly ISpotifyClient _spotifyClient;
     private readonly AsyncLock _lock = new AsyncLock();
@@ -111,6 +108,7 @@ internal sealed class CachedPlaylistInfoService : ICachedPlaylistInfoService
                     // Register as playlist
                     var changeListener = _spotifyClient.Playlists.ChangeListener(spotifyPlaylistId);
                     changeListener.ItemsChanged += OnItemsChanged;
+                    _changeListeners[playlistId] = changeListener;
                 }
                 else if (playlistId.StartsWith("spotify:collection:"))
                 {
@@ -118,6 +116,7 @@ internal sealed class CachedPlaylistInfoService : ICachedPlaylistInfoService
                     var collectionType = Enum.Parse<SpotifyLibaryType>(last, true);
                     var changeListener = _spotifyClient.Library.ChangeListener(collectionType);
                     changeListener.ItemsChanged += OnLibraryItemsChanged;
+                    _changeListeners[playlistId] = changeListener;
                 }
             }
 
@@ -130,7 +129,12 @@ internal sealed class CachedPlaylistInfoService : ICachedPlaylistInfoService
     {
         if (_changeListeners.Remove(playlistId, out var changeListener))
         {
-            changeListener.ItemsChanged -= OnItemsChanged;
+            if (changeListener is SpotifyPlaylistChangeListener playlistChangeListener)
+                playlistChangeListener.ItemsChanged -= OnItemsChanged;
+            else if (changeListener is SpotifyLibraryChangeListener libraryChangeListener)
+                libraryChangeListener.ItemsChanged -= OnLibraryItemsChanged;
+            else
+                throw new ArgumentOutOfRangeException();
         }
 
         foreach (var apropriatekey in _tracks.Where(f => f.Key.Id == playlistId))
@@ -140,7 +144,7 @@ internal sealed class CachedPlaylistInfoService : ICachedPlaylistInfoService
     }
 
     public event EventHandler<string>? PlaylistChanged;
-    public event EventHandler<WaveeLibraryType>? LibraryChanged; 
+    public event EventHandler<WaveeLibraryType>? LibraryChanged;
 
     private async void OnLibraryItemsChanged(object? sender, LibraryModificationInfo libraryModification)
     {
@@ -154,9 +158,19 @@ internal sealed class CachedPlaylistInfoService : ICachedPlaylistInfoService
             _ => throw new ArgumentOutOfRangeException()
         };
 
-        var items = await _spotifyClient.Library.GetTrackIdsAsync(CancellationToken.None);
+        var items = await _spotifyClient.Library.GetTracks(CancellationToken.None);
+
         var newKey = new PlaylistTracksInfoKey(uri, BigInteger.Zero);
-        _tracks[newKey] = GetLibrarySongsQueryHandler.ToPlaylistItems(items.Items);
+        _tracks[newKey] = GetLibrarySongsQueryHandler.ToPlaylistItems(new LibraryItems<SimpleTrackEntity>
+        {
+            Items = items.Items.Select(f => new LibraryItem<SimpleTrackEntity>
+            {
+                Item = f.Item.ToSimpleTrack(),
+                AddedAt = f.AddedAt,
+                LastPlayedAt = f.LastPlayedAt
+            }).ToImmutableArray(),
+            Total = items.Items.Count
+        });
         LibraryChanged?.Invoke(this, libraryModification.Type switch
         {
             SpotifyLibaryType.Artist => WaveeLibraryType.Artist,
@@ -175,9 +189,11 @@ internal sealed class CachedPlaylistInfoService : ICachedPlaylistInfoService
         if (!_tracks.TryGetValue(fromRevision, out var fromRevisionTracks))
         {
             // We are out of sync, its easier to refetch the entire list
-            var selectedList =
-                await _spotifyClient.Playlists.GetPlaylist(SpotifyId.FromUri(uri), CancellationToken.None);
-            var newItems = GetPlaylistTracksIdsQueryHandler.ParseItems(selectedList.Contents.Items);
+            var (selectedList, tracks) =
+                await _spotifyClient.Playlists.GetPlaylistWithTracks(SpotifyId.FromUri(uri), CancellationToken.None);
+
+            var adapted = tracks.ToDictionary(f => f.Id.ToString(), f => f.MapToSimpleEntity());
+            var newItems = GetPlaylistTracksIdsQueryHandler.ParseItems(selectedList.Contents.Items, adapted);
             var newKey = new PlaylistTracksInfoKey(uri, newRevisionId);
             _tracks[newKey] = newItems;
             PlaylistChanged?.Invoke(this, uri);
@@ -187,7 +203,7 @@ internal sealed class CachedPlaylistInfoService : ICachedPlaylistInfoService
         using (_lock.Lock())
         {
             // Create a new list
-            var newList = DiffList(playlistModificationInfo.Ops, fromRevisionTracks);
+            var newList = await DiffList(playlistModificationInfo.Ops, fromRevisionTracks);
             var newKey = new PlaylistTracksInfoKey(uri, newRevisionId);
             _tracks[newKey] = newList;
         }
@@ -195,7 +211,7 @@ internal sealed class CachedPlaylistInfoService : ICachedPlaylistInfoService
         PlaylistChanged?.Invoke(this, uri);
     }
 
-    private static IReadOnlyCollection<PlaylistTrackInfo> DiffList(RepeatedField<Op> ops, IReadOnlyCollection<PlaylistTrackInfo> fromRevisionTracks)
+    private async Task<IReadOnlyCollection<PlaylistTrackInfo>> DiffList(RepeatedField<Op> ops, IReadOnlyCollection<PlaylistTrackInfo> fromRevisionTracks)
     {
         var newList = fromRevisionTracks.ToList();
         foreach (var op in ops)
@@ -209,7 +225,7 @@ internal sealed class CachedPlaylistInfoService : ICachedPlaylistInfoService
                         var add = op.Add;
                         if (add.HasFromIndex)
                         {
-                            newList.InsertRange(add.FromIndex, GetPlaylistTracksIdsQueryHandler.ParseItems(add.Items));
+                            newList.InsertRange(add.FromIndex, GetPlaylistTracksIdsQueryHandler.ParseItems(add.Items, null));
                         }
                         else
                         {

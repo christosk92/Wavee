@@ -11,9 +11,9 @@ sealed class SortFieldToTextConverter : IValueConverter
     {
         return value switch
         {
-            nameof(LibraryItem<SimpleArtistEntity>.AddedAt) => "Added At",
-            nameof(LibraryItem<SimpleArtistEntity>.Item.Name) => "Alphabetical",
-            "Recents" => "Recently played"
+            ArtistLibrarySortField.RecentlyAdded => "Added At",
+            ArtistLibrarySortField.Alphabetical => "Alphabetical",
+            ArtistLibrarySortField.Recents => "Recently played"
         };
     }
 

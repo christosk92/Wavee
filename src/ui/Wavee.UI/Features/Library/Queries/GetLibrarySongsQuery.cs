@@ -1,6 +1,9 @@
-﻿namespace Wavee.UI.Features.Library.Queries;
+﻿using Wavee.UI.Domain.Library;
+using Wavee.UI.Domain.Track;
 
-public sealed class GetLibrarySongsQuery : GetLibraryItemsQuery<string>
+namespace Wavee.UI.Features.Library.Queries;
+
+public sealed class GetLibrarySongsQuery : GetLibraryItemsQuery<SimpleTrackEntity, TrackLibrarySortField>
 {
 
 }

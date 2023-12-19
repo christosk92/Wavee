@@ -1,13 +1,13 @@
 ﻿using NeoSmart.AsyncLock;
 using System.Collections.ObjectModel;
+using System.Runtime.InteropServices;
 using Mediator;
 using Wavee.UI.Features.Navigation.ViewModels;
 using Wavee.UI.Features.Playlists.ViewModel;
-using System.Collections.Immutable;
-using Wavee.UI.Features.Playlists.Queries;
-using Wavee.UI.Features.Tracks;
 using Wavee.UI.Test;
 using Wavee.UI.Features.Library.Queries;
+using Wavee.UI.Domain.Library;
+using Wavee.UI.Domain.Track;
 
 namespace Wavee.UI.Features.Library.ViewModels;
 
@@ -20,11 +20,20 @@ public sealed class LibrarySongsViewModel : NavigationItemViewModel
 
     private readonly IMediator _mediator;
     private readonly IUIDispatcher _uiDispatcher;
+    private string _sortField = nameof(LibraryItem<SimpleTrackEntity>.AddedAt);
+    private ObservableCollection<LazyPlaylistTrackViewModel> _tracks;
 
     public LibrarySongsViewModel(IMediator mediator, IUIDispatcher uiDispatcher)
     {
         _mediator = mediator;
         _uiDispatcher = uiDispatcher;
+        Tracks = new ObservableCollection<LazyPlaylistTrackViewModel>();
+    }
+
+    public string SortField
+    {
+        get => _sortField;
+        set => SetProperty(ref _sortField, value);
     }
 
     public bool TracksLoaded
@@ -32,7 +41,12 @@ public sealed class LibrarySongsViewModel : NavigationItemViewModel
         get => _tracksLoaded;
         set => SetProperty(ref _tracksLoaded, value);
     }
-    public ObservableCollection<LazyPlaylistTrackViewModel> Tracks { get; } = new();
+
+    public ObservableCollection<LazyPlaylistTrackViewModel> Tracks
+    {
+        get => _tracks;
+        set => SetProperty(ref _tracks, value);
+    }
 
     public TimeSpan? TotalDuration
     {
@@ -56,52 +70,49 @@ public sealed class LibrarySongsViewModel : NavigationItemViewModel
     {
         using (await _lock.LockAsync())
         {
+            var searchTerms = SearchTerms.ToList();
+            if (!string.IsNullOrWhiteSpace(GeneralSearchTerm))
+            {
+                searchTerms.Add(GeneralSearchTerm);
+            }
+
             var trackIdsAndAttributes = await _mediator.Send(new GetLibrarySongsQuery
             {
-                Offset = 0,
-                Limit = int.MaxValue,
-                Search = string.Empty,
-                SortField = string.Empty
-            });
-            var tracks = trackIdsAndAttributes.Items.ToDictionary(x => x.Item, x => x);
-
-            var tracksMetadata = await _mediator.Send(new GetTracksMetadataRequest
-            {
-                Ids = tracks.Select(f => f.Value.Item).ToImmutableArray(),
-                SearchTerms = SearchTerms.Concat(new[]
-                {
-                    GeneralSearchTerm
-                }).ToImmutableArray()
+                Search = searchTerms,
+                SortField = TrackLibrarySortField.Added,
+                SortDescending = true
             });
 
             _uiDispatcher.Invoke(() =>
             {
-                Tracks.Clear();
+                try
+                {
+                    Tracks?.Clear();
+                }
+                catch (COMException e)
+                {
+                    Tracks = new ObservableCollection<LazyPlaylistTrackViewModel>();
+                }
+
                 int index = 0;
                 TracksLoaded = true;
                 double totalSeconds = 0;
                 var tempTracks = new List<LazyPlaylistTrackViewModel>();
-                foreach (var info in tracks.Values)
+                foreach (var root in trackIdsAndAttributes.Items)
                 {
-                    if (tracksMetadata.TryGetValue(info.Item, out var track))
-                    {
-                        if (track.HasValue)
-                        {
-                            PlaylistTrackViewModel? trackasVm = null;
-                            if (track.Value.Track is not null)
-                            {
-                                trackasVm = new PlaylistTrackViewModel(track.Value.Track, info);
-                                totalSeconds += trackasVm.Duration.TotalSeconds;
-                            }
+                    var track = root.Item;
+                    PlaylistTrackViewModel? trackasVm = null;
+                    trackasVm = new PlaylistTrackViewModel(
+                        spotifyTrack: track, 
+                        addedAt: root.AddedAt);
+                    totalSeconds += trackasVm.Duration.TotalSeconds;
 
-                            tempTracks.Add(new LazyPlaylistTrackViewModel
-                            {
-                                HasValue = true,
-                                Track = trackasVm!,
-                                Index = index++
-                            });
-                        }
-                    }
+                    tempTracks.Add(new LazyPlaylistTrackViewModel
+                    {
+                        HasValue = true,
+                        Track = trackasVm!,
+                        Index = index++
+                    });
                 }
 
                 index = 0;

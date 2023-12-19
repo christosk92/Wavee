@@ -1,10 +1,15 @@
 ﻿using System.Collections.Immutable;
 using Eum.Spotify.playlist4;
 using Google.Protobuf.Collections;
+using LanguageExt;
 using Mediator;
+using Spotify.Metadata;
+using Wavee.Spotify.Application.Metadata.Query;
 using Wavee.Spotify.Common;
 using Wavee.Spotify.Common.Contracts;
 using Wavee.UI.Domain.Playlist;
+using Wavee.UI.Domain.Podcast;
+using Wavee.UI.Domain.Track;
 using Wavee.UI.Extensions;
 using Wavee.UI.Features.Navigation;
 using Wavee.UI.Features.Playlists.Queries;
@@ -12,7 +17,7 @@ using Wavee.UI.Features.Playlists.Services;
 
 namespace Wavee.UI.Features.Playlists.QueryHandlers;
 
-public sealed class GetPlaylistTracksIdsQueryHandler : 
+public sealed class GetPlaylistTracksIdsQueryHandler :
     IQueryHandler<GetPlaylistTracksIdsQuery, IReadOnlyCollection<PlaylistTrackInfo>>
 {
     private readonly ISpotifyClient _spotifyClient;
@@ -31,13 +36,17 @@ public sealed class GetPlaylistTracksIdsQueryHandler :
         if (!_cachedPlaylistInfoService.
                 TryGetTracks(query.PlaylistId,
                 null,
-                out var existingtracks))
+                out var existingtracks)
+            || existingtracks.Any(f=> f.Item is null))
         {
-            var selectedList =
-                await _spotifyClient.Playlists.GetPlaylist(SpotifyId.FromUri(query.PlaylistId), cancellationToken);
+            var (selectedList, tracks)=
+                await _spotifyClient.Playlists.GetPlaylistWithTracks(SpotifyId.FromUri(query.PlaylistId), cancellationToken);
+
             var items = selectedList.Contents.Items;
-            var x = ParseItems(items);
-            _cachedPlaylistInfoService.SetTracks(query.PlaylistId, 
+            var x = ParseItems(items, tracks.Select(f => f.MapToSimpleEntity())
+                .ToDictionary(x => x.Id, x => x));
+
+            _cachedPlaylistInfoService.SetTracks(query.PlaylistId,
                 selectedList.Revision.ToBigInteger(),
                 x);
             return x;
@@ -46,17 +55,30 @@ public sealed class GetPlaylistTracksIdsQueryHandler :
         return existingtracks;
     }
 
-    internal static IReadOnlyCollection<PlaylistTrackInfo> ParseItems(RepeatedField<Item> items)
+    internal static IReadOnlyCollection<PlaylistTrackInfo> ParseItems(RepeatedField<Item> items,
+        IReadOnlyDictionary<string, WaveeTrackOrEpisodeOrArtist>? tracks)
     {
         Span<PlaylistTrackInfo> output = new PlaylistTrackInfo[items.Count];
+        tracks ??= new Dictionary<string, WaveeTrackOrEpisodeOrArtist>();
         for (var index = 0; index < items.Count; index++)
         {
             var item = items[index];
             output[index] = new PlaylistTrackInfo(item.Uri)
             {
-                AddedBy = item.Attributes.HasAddedBy ? item.Attributes.AddedBy : null,
-                AddedAt = item.Attributes.HasTimestamp ? DateTimeOffset.FromUnixTimeMilliseconds(item.Attributes.Timestamp) : null,
-                UniqueItemId = item.Attributes.HasItemId ? item.Attributes.ItemId.ToBase64() : null,
+                AddedBy = item.Attributes.HasAddedBy
+                    ? item.Attributes.AddedBy
+                    : null,
+                AddedAt = item.Attributes.HasTimestamp
+                    ? DateTimeOffset.FromUnixTimeMilliseconds(item.Attributes.Timestamp)
+                    : null,
+                UniqueItemId = item.Attributes.HasItemId
+                    ? item.Attributes.ItemId.ToBase64()
+                    : null,
+                Item = tracks.TryGetValue(item.Uri,
+                    out var track)
+                    ? track
+                    : null,
+                LastPlayedAt = null
             };
         }
 

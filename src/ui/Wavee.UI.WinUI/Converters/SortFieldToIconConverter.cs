@@ -13,9 +13,9 @@ sealed class SortFieldToIconConverter : IValueConverter
     {
         return value switch
         {
-            nameof(LibraryItem<SimpleArtistEntity>.AddedAt) => Create('\uED0E', SegoeFluentIcons),
-            nameof(LibraryItem<SimpleArtistEntity>.Item.Name) => Create('\uE97E', SegoeFluentIcons),
-            "Recents" => Create('\uE823', SegoeFluentIcons),
+            ArtistLibrarySortField.RecentlyAdded => Create('\uED0E', SegoeFluentIcons),
+            ArtistLibrarySortField.Alphabetical => Create('\uE97E', SegoeFluentIcons),
+            ArtistLibrarySortField.Recents => Create('\uE823', SegoeFluentIcons),
         };
     }
 

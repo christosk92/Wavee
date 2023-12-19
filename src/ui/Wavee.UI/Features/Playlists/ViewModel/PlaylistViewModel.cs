@@ -1,16 +1,12 @@
 ﻿using System.Collections.Immutable;
 using System.Collections.ObjectModel;
-using AngleSharp.Dom;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Mediator;
 using Nito.AsyncEx;
-using Spotify.Metadata;
-using Wavee.Spotify.Common;
-using Wavee.UI.Domain.Library;
 using Wavee.UI.Domain.Playlist;
+using Wavee.UI.Domain.Track;
 using Wavee.UI.Features.Playlists.Contracts;
 using Wavee.UI.Features.Playlists.Queries;
-using Wavee.UI.Features.Tracks;
 using Wavee.UI.Test;
 
 namespace Wavee.UI.Features.Playlists.ViewModel;
@@ -121,16 +117,6 @@ public sealed class PlaylistViewModel : ObservableObject, IPlaylistListener
             {
                 PlaylistId = Id
             });
-            var tracks = trackIdsAndAttributes.ToDictionary(x => x.UniqueItemId ?? x.Id, x => x);
-
-            var tracksMetadata = await _mediator.Send(new GetTracksMetadataRequest
-            {
-                Ids = tracks.Select(f => f.Value.Id).ToImmutableArray(),
-                SearchTerms = SearchTerms.Concat(new[]
-                {
-                    GeneralSearchTerm
-                }).ToImmutableArray()
-            });
 
             _uiDispatcher.Invoke(() =>
             {
@@ -138,26 +124,23 @@ public sealed class PlaylistViewModel : ObservableObject, IPlaylistListener
                 int index = 0;
                 TracksLoaded = true;
                 double totalSeconds = 0;
-                foreach (var info in tracks.Values)
+                foreach (var info in trackIdsAndAttributes)
                 {
-                    if (tracksMetadata.TryGetValue(info.Id, out var track))
+                    if (info.Item.HasValue)
                     {
-                        if (track.HasValue)
+                        PlaylistTrackViewModel? trackasVm = null;
+                        if (info.Item.Value.Track is not null)
                         {
-                            PlaylistTrackViewModel? trackasVm = null;
-                            if (track.Value.Track is not null)
-                            {
-                                trackasVm = new PlaylistTrackViewModel(track.Value.Track, info);
-                                totalSeconds += trackasVm.Duration.TotalSeconds;
-                            }
-
-                            Tracks.Add(new LazyPlaylistTrackViewModel
-                            {
-                                HasValue = true,
-                                Track = trackasVm!,
-                                Index = index++
-                            });
+                            trackasVm = new PlaylistTrackViewModel(info.Item.Value.Track, info);
+                            totalSeconds += trackasVm.Duration.TotalSeconds;
                         }
+
+                        Tracks.Add(new LazyPlaylistTrackViewModel
+                        {
+                            HasValue = true,
+                            Track = trackasVm!,
+                            Index = index++
+                        });
                     }
                 }
 
@@ -249,38 +232,25 @@ public sealed class LazyPlaylistTrackViewModel : ObservableObject
 
 public sealed class PlaylistTrackViewModel
 {
-    private PlaylistTrackViewModel(Track spotifyTrack)
+    private PlaylistTrackViewModel(SimpleTrackEntity spotifyTrack)
     {
         Name = spotifyTrack.Name;
-
-        const string url = "https://i.scdn.co/image/";
-        var images = spotifyTrack.Album.CoverGroup.Image.Select(c =>
-        {
-            var id = SpotifyId.FromRaw(c.FileId.Span, SpotifyItemType.Unknown);
-            var hex = id.ToBase16();
-
-            return ($"{url}{hex}", c.Width);
-        }).ToList();
-        SmallestImageUrl =images.OrderBy(x => x.Width).FirstOrDefault().Item1;
-        BiggestImageUrl = images.OrderByDescending(x => x.Width).FirstOrDefault().Item1;
-
-        Artists = spotifyTrack.Artist.Select(x => (SpotifyId.FromRaw(x.Gid.Span, SpotifyItemType.Artist).ToString(), x.Name))
-            .ToImmutableArray();
-        Album = (SpotifyId.FromRaw(spotifyTrack.Album.Gid.Span, SpotifyItemType.Album).ToString(),
-            spotifyTrack.Album.Name);
-        Duration = TimeSpan.FromMilliseconds(spotifyTrack.Duration);
-
+        SmallestImageUrl = spotifyTrack.SmallestImageUrl;
+        Artists = spotifyTrack.Artists;
+        Album = spotifyTrack.Album;
+        Duration = spotifyTrack.Duration;
+        BiggestImageUrl = spotifyTrack.BiggestImageUrl;
     }
-    public PlaylistTrackViewModel(Track spotifyTrack, PlaylistTrackInfo trackInfo) : this(spotifyTrack)
+    public PlaylistTrackViewModel(SimpleTrackEntity spotifyTrack, PlaylistTrackInfo trackInfo) : this(spotifyTrack)
     {
         AddedAt = trackInfo.AddedAt;
         AddedBy = trackInfo.AddedBy;
         UniquePlaylistItemId = trackInfo.UniqueItemId;
     }
 
-    public PlaylistTrackViewModel(Track spotifyTrack, LibraryItem<string> trackInfo) : this(spotifyTrack)
+    public PlaylistTrackViewModel(SimpleTrackEntity spotifyTrack, DateTimeOffset addedAt) : this(spotifyTrack)
     {
-        AddedAt = trackInfo.AddedAt;
+        AddedAt = addedAt;
         AddedBy = null;
         UniquePlaylistItemId = null;
     }

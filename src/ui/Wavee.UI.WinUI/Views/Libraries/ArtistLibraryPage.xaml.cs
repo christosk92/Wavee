@@ -8,6 +8,7 @@ using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media.Animation;
 using Microsoft.UI.Xaml.Navigation;
 using Nito.AsyncEx;
+using Wavee.UI.Domain.Artist;
 using Wavee.UI.Features.Library.ViewModels.Artist;
 using Wavee.UI.WinUI.Contracts;
 using Wavee.UI.WinUI.Views.Libraries.Components;
@@ -94,7 +95,7 @@ public sealed partial class ArtistLibraryPage : Page, INavigeablePage<LibraryArt
     {
         var vm = ViewModel;
         var selected = sender.SelectedItem;
-        if (selected is string v)
+        if (selected is ArtistLibrarySortField v)
         {
             vm.SortField = v;
         }
@@ -112,32 +113,6 @@ public sealed partial class ArtistLibraryPage : Page, INavigeablePage<LibraryArt
         {
             ViewModel.Query = sender.Text;
             await ViewModel.Initialize(true);
-        }
-    }
-
-    private void ArtistsItemsViewLoaded(object sender, RoutedEventArgs e)
-    {
-        var itemsView = sender as ItemsView;
-        var scroller = itemsView?.FindDescendant<ScrollView>();
-        scroller.ViewChanged += ScrollerOnViewChanged;
-    }
-
-    private async void ScrollerOnViewChanged(ScrollView sender, object args)
-    {
-        using (await _lock.LockAsync())
-        {
-            //load more items when the user scrolls to the bottom
-            var verticalOffset = sender.VerticalOffset;
-            var maxVerticalOffset = sender.ScrollableHeight;
-            //with a margin of 200
-
-            if (sender.VerticalOffset >= sender.ScrollableHeight - 200)
-            {
-                await ViewModel.FetchPage(
-                    offset: ViewModel.Artists.Count,
-                    cancellationToken: CancellationToken.None
-                );
-            }
         }
     }
 

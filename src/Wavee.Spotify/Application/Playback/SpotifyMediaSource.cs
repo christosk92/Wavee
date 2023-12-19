@@ -30,10 +30,17 @@ public sealed class SpotifyMediaSource : IWaveeMediaSource
             return _stream;
 
         var id = SpotifyId.FromUri(_uri);
-        var track = await _client.Tracks.GetTrack(id, CancellationToken.None);
+        
+        // Read metadata first to get the correct fileID
+        var track = await _client!.Tracks.GetTrack(id, CancellationToken.None);
+
         var preferedQuality = _client.Config.Playback.PreferedQuality;
         var file = FindFile(track, preferedQuality);
+
+        // Get AES decryption key
         var audioKeyTask = _client.AudioKeys.GetAudioKey(id, file.FileId, CancellationToken.None).AsTask();
+
+        // Resolve CDN file URL!! (Note this does not actually fetch the file yet)
         var streamingFileTask = _client.StorageResolver.GetStorageFile(file.FileId, CancellationToken.None).AsTask();
         await Task.WhenAll(audioKeyTask, streamingFileTask);
 

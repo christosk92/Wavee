@@ -1,18 +1,13 @@
 ﻿using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.Input;
-using CommunityToolkit.Mvvm.Messaging;
 using Mediator;
-using Wavee.Spotify.Common;
-using Wavee.Spotify.Domain.Common;
 using Wavee.UI.Domain.Artist;
 using Wavee.UI.Domain.Library;
 using Wavee.UI.Domain.Playback;
 using Wavee.UI.Extensions;
 using Wavee.UI.Features.Album.ViewModels;
 using Wavee.UI.Features.Artist.Queries;
-using Wavee.UI.Features.Artist.ViewModels;
-using Wavee.UI.Features.Library.Notifications;
 using Wavee.UI.Features.Library.Queries;
 using Wavee.UI.Features.Navigation;
 using Wavee.UI.Features.Navigation.ViewModels;
@@ -28,7 +23,7 @@ public sealed class LibraryArtistsViewModel : NavigationItemViewModel, IPlayback
 
     private string? _query;
     private bool _isLoading;
-    private string _sortField;
+    private ArtistLibrarySortField _sortField;
     private int _total;
     private LibraryArtistViewModel? _selectedArtist;
     private readonly INavigationService _navigationService;
@@ -67,13 +62,13 @@ public sealed class LibraryArtistsViewModel : NavigationItemViewModel, IPlayback
 
             }
         });
-        _sortField = nameof(LibraryItem<SimpleArtistEntity>.AddedAt);
+        _sortField = ArtistLibrarySortField.RecentlyAdded;
 
         SortFields = new[]
         {
-            nameof(LibraryItem<SimpleArtistEntity>.AddedAt),
-            nameof(LibraryItem<SimpleArtistEntity>.Item.Name),
-            "Recents"
+            ArtistLibrarySortField.RecentlyAdded,
+            ArtistLibrarySortField.Alphabetical,
+            ArtistLibrarySortField.Recents
         };
         Artists = new ObservableCollection<LibraryArtistViewModel>();
     }
@@ -104,13 +99,13 @@ public sealed class LibraryArtistsViewModel : NavigationItemViewModel, IPlayback
         set => SetProperty(ref _selectedArtist, value);
     }
 
-    public string SortField
+    public ArtistLibrarySortField SortField
     {
         get => _sortField;
         set => SetProperty(ref _sortField, value);
     }
 
-    public IReadOnlyCollection<string> SortFields { get; }
+    public IReadOnlyCollection<ArtistLibrarySortField> SortFields { get; }
 
     public async Task Initialize(bool overrideCountCheck = false)
     {
@@ -119,32 +114,23 @@ public sealed class LibraryArtistsViewModel : NavigationItemViewModel, IPlayback
             Artists ??= new ObservableCollection<LibraryArtistViewModel>();
             if (!overrideCountCheck && Artists.Count is not 0) return;
             Artists.Clear();
-            var library = await _mediator.Send(new GetLibraryArtistsQuery()
+            var library = await _mediator.Send(new GetLibraryArtistsQuery
             {
-                Offset = 0,
-                Limit = 20,
-                Search = _query,
-                SortField = _sortField
+                Search =
+                    !string.IsNullOrEmpty(_query) ?
+                    new[]
+                {
+                    _query
+                }: System.Array.Empty<string>(),
+                SortField = _sortField,
+                SortDescending = _sortField switch
+                {
+                    ArtistLibrarySortField.RecentlyAdded => true,
+                    ArtistLibrarySortField.Alphabetical => false,
+                    ArtistLibrarySortField.Recents => true,
+                    _ => throw new ArgumentOutOfRangeException()
+                }
             });
-            HandleResult(library);
-        }
-        catch (Exception e)
-        {
-            HandleError(e);
-        }
-    }
-
-    public async Task FetchPage(int offset, CancellationToken cancellationToken)
-    {
-        try
-        {
-            var library = await _mediator.Send(new GetLibraryArtistsQuery()
-            {
-                Offset = offset,
-                Limit = 20,
-                Search = _query,
-                SortField = _sortField
-            }, cancellationToken);
             HandleResult(library);
         }
         catch (Exception e)
@@ -157,16 +143,16 @@ public sealed class LibraryArtistsViewModel : NavigationItemViewModel, IPlayback
     {
         foreach (var artist in artistsResult.Items)
         {
-            var bigImage = artist.Item.Images.MaxBy(z => z.Height ?? 0);
-            var smallestImage = artist.Item.Images.MinBy(z => z.Height ?? 0);
-            var mediumImage = artist.Item.Images.OrderBy(z => z.Height ?? 0).Skip(1).FirstOrDefault();
+            // var bigImage = artist.Item.Images.MaxBy(z => z.Height ?? 0);
+            // var smallestImage = artist.Item.Images.MinBy(z => z.Height ?? 0);
+            // var mediumImage = artist.Item.Images.OrderBy(z => z.Height ?? 0).Skip(1).FirstOrDefault();
             var vm = new LibraryArtistViewModel
             {
                 Name = artist.Item.Name,
                 Id = artist.Item.Id,
-                BigImageUrl = bigImage.Url,
-                MediumImageUrl = mediumImage.Url,
-                SmallImageUrl = smallestImage.Url,
+                BigImageUrl = artist.Item.BiggestImageUrl,
+                MediumImageUrl = artist.Item.BiggestImageUrl,
+                SmallImageUrl = artist.Item.SmallestImageUrl,
                 AddedAt = artist.AddedAt,
                 TotalAlbums = null
             };
@@ -226,20 +212,6 @@ public sealed class LibraryArtistsViewModel : NavigationItemViewModel, IPlayback
     }
 
     public AsyncRelayCommand<object> PlayCommand { get; }
-
-    public async Task Add(int items)
-    {
-        var itemsCount = Artists.Count;
-        var library = await _mediator.Send(new GetLibraryArtistsQuery()
-        {
-            Offset = 0,
-            Limit = itemsCount + items,
-            Search = _query,
-            SortField = _sortField
-        });
-        Artists.Clear();
-        HandleResult(library);
-    }
 
     public void Remove(ImmutableArray<string> ids)
     {

@@ -8,6 +8,7 @@ public sealed class SimpleArtistEntity : IArtistRelatedItem
     [BsonId]
     public required string Id { get; set; }
     public required string Name { get; set; }
-    public required IReadOnlyCollection<SpotifyImage> Images { get; set; }
+    public required string BiggestImageUrl { get; init; }
+    public required string SmallestImageUrl { get; init; }
 }
 

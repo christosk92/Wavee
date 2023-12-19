@@ -32,7 +32,7 @@
     <ProjectReference Include="..\..\Wavee\Wavee.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Domain\Track\" />
+    <Folder Include="Features\Tracks\" />
   </ItemGroup>
 
 </Project>

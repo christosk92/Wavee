@@ -44,11 +44,16 @@ public sealed class GetArtistViewQueryHandler : IQueryHandler<GetArtistViewQuery
                 Playcount = x.Playcount,
                 Id =  x.Id.ToString(),
                 Name = x.Name,
-                Artists = x.Artists.Select(f=> new SimpleArtistEntity
+                Artists = x.Artists.Select(f => new SimpleArtistEntity
                 {
                     Id = f.Uri.ToString(),
                     Name = f.Name,
-                    Images = f.Images
+                    BiggestImageUrl = f.Images.OrderByDescending(x => x.Width)
+                        .FirstOrDefault()
+                        .Url,
+                    SmallestImageUrl = f.Images.OrderBy(x => x.Width)
+                        .FirstOrDefault()
+                        .Url,
                 }).ToImmutableArray(),
                 Images = x.Images,
                 Duration = x.Duration,
@@ -145,7 +150,8 @@ public sealed class GetArtistViewQueryHandler : IQueryHandler<GetArtistViewQuery
         {
             Name = arg.Name,
             Id = arg.Uri.ToString(),
-            Images = arg.Images
+            BiggestImageUrl = null,
+            SmallestImageUrl = null
         };
     }
 

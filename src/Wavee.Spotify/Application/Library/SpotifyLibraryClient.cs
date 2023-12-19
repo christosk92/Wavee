@@ -16,6 +16,8 @@ using Wavee.Spotify.Domain.Common;
 using Wavee.Spotify.Domain.Library;
 using Wavee.Spotify.Infrastructure.LegacyAuth;
 using Eum.Spotify.playlist4;
+using Spotify.Metadata;
+using Wavee.Spotify.Domain.Tracks;
 
 namespace Wavee.Spotify.Application.Library;
 
@@ -89,16 +91,12 @@ internal class SpotifyLibraryClient : ISpotifyLibraryClient
         };
     }
 
-    public async Task<(SpotifyLibraryItem<SpotifySimpleArtist>[] Items, int Total)> GetArtists(
-        string? query,
-        SpotifyArtistLibrarySortField order,
-        int offset, int limit,
-        CancellationToken cancellationToken = default)
+    public async Task<SpotifyArtistsLibrary> GetArtists(bool orderOnRecentlyPlayed,CancellationToken cancellationToken = default)
     {
         var user = _tcpHolder.WelcomeMessage.Result.CanonicalUsername;
         var recentlyPlayedTask = Task.Run(async () =>
         {
-            if (order is SpotifyArtistLibrarySortField.Recents)
+            if (orderOnRecentlyPlayed is true)
             {
                 return await _mediator.Send(new FetchRecentlyPlayedQuery
                 {
@@ -134,25 +132,27 @@ internal class SpotifyLibraryClient : ISpotifyLibraryClient
         var finalList = metadata.Select(x =>
         {
             var libraryItem = uris[x.Key];
-            var recentlyPlayedItem = recentlyPlayed?.FirstOrDefault(f => f.Uri == x.Key)?.PlayedAt;
-            return new SpotifyLibraryItem<SpotifySimpleArtist>
+            var recentlyPlayedItem = recentlyPlayed?
+                .Where(f => f.Uri == x.Key)?
+                .OrderByDescending(x=> x.PlayedAt)?
+                .FirstOrDefault()?
+                .PlayedAt;
+            return new SpotifyLibraryItem<global::Spotify.Metadata.Artist>
             {
-                Item = new SpotifySimpleArtist
-                {
-                    Uri = SpotifyId.FromUri(x.Key),
-                    Name = x.Value.Name,
-                    Images = BuildImages(x.Value),
-                },
+                Item = x.Value,
                 AddedAt = libraryItem.AddedAt,
                 LastPlayedAt = recentlyPlayedItem
             };
         });
 
 
-        return (FilterSortLimit(finalList, query, order, offset, limit), uris.Count);
+        return new SpotifyArtistsLibrary
+        {
+            Items = finalList.ToImmutableArray()
+        };
     }
 
-    public async Task<SpotifySongsLibrary> GetTrackIdsAsync(CancellationToken cancellationToken)
+    public async Task<SpotifySongsLibrary> GetTracks(CancellationToken cancellationToken)
     {
         var user = _tcpHolder.WelcomeMessage.Result.CanonicalUsername;
         //Get 
@@ -162,11 +162,28 @@ internal class SpotifyLibraryClient : ISpotifyLibraryClient
             WithAlbums = false
         }, cancellationToken);
 
-        var finalList = items.Select(x => new SpotifyLibraryItem<SpotifyId>
+        var uris = items.ToDictionary(x => x.Item.ToString(), x => x);
+        var metadataRaw = await _mediator.Send(new FetchBatchedMetadataQuery
         {
-            Item = x.Item,
-            AddedAt = x.AddedAt,
-            LastPlayedAt = null
+            AllowCache = true,
+            Uris = uris.Keys,
+            Country = _tcpHolder.Country,
+            ItemsType = SpotifyItemType.Artist
+        }, cancellationToken);
+
+        var metadata = metadataRaw
+            .ToDictionary(x => x.Key,
+                x => global::Spotify.Metadata.Track.Parser.ParseFrom(x.Value));
+
+        var finalList = metadata.Select(x =>
+        {
+            var libraryItem = uris[x.Key];
+            return new SpotifyLibraryItem<Track>
+            {
+                Item = x.Value,
+                AddedAt = libraryItem.AddedAt,
+                LastPlayedAt = null
+            };
         });
 
         return new SpotifySongsLibrary
@@ -247,9 +264,9 @@ internal class SpotifyLibraryClient : ISpotifyLibraryClient
 
 public interface ISpotifyLibraryClient
 {
-    Task<(SpotifyLibraryItem<SpotifySimpleArtist>[] Items, int Total)> GetArtists(string? query, SpotifyArtistLibrarySortField order, int offset, int limit, CancellationToken cancellationToken = default);
+    Task<SpotifyArtistsLibrary> GetArtists(bool orderOnRecentlyPlayed, CancellationToken cancellationToken = default);
 
-    Task<SpotifySongsLibrary> GetTrackIdsAsync(CancellationToken cancellationToken);
+    Task<SpotifySongsLibrary> GetTracks(CancellationToken cancellationToken);
 
     SpotifyLibraryChangeListener ChangeListener(SpotifyLibaryType library);
 }
