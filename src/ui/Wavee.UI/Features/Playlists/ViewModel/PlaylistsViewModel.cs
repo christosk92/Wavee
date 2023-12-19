@@ -68,6 +68,7 @@ public sealed class PlaylistsViewModel : ObservableObject
                         BigImage = bigImage.Url,
                         Items = playlist.Length,
                         Description = playlist.Description,
+                        Revision = playlist.Revision,
                     };
 
                     return playlistViewModel;

@@ -13,7 +13,7 @@ public sealed class AlbumTrackViewModel : ObservableObject
     public required string Name { get; init; }
     public required TimeSpan Duration { get; init; }
     public required int Number { get; init; }
-
+    public required ulong? Playcount { get; init; }
     public string DurationString
     {
         get
@@ -29,6 +29,21 @@ public sealed class AlbumTrackViewModel : ObservableObject
             else
             {
                 return Duration.ToString(@"mm\:ss");
+            }
+        }
+    }
+
+    public string PlaycountString
+    {
+        get
+        {
+            if (Playcount is null)
+            {
+                return "";
+            }
+            else
+            {
+                return Playcount.Value.ToString("N0");
             }
         }
     }

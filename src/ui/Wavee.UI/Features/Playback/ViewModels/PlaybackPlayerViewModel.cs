@@ -49,14 +49,7 @@ public abstract class PlaybackPlayerViewModel : ObservableObject, IDisposable, I
         {
             static void Navigate(string id, SpotifyItemType type, INavigationService service)
             {
-                switch (type)
-                {
-                    case SpotifyItemType.Artist:
-                        service.NavigateToArtist(id);
-                        break;
-                    default:
-                        throw new ArgumentOutOfRangeException(nameof(type), type, null);
-                }
+                service.NavigateTo(id);
             }
 
             if (SpotifyId.TryParse(s, out var id))

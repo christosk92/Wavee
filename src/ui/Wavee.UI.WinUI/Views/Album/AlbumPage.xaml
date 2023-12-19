@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Page
+    x:Class="Wavee.UI.WinUI.Views.Album.AlbumPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:Wavee.UI.WinUI.Controls"
+    xmlns:controls1="using:CommunityToolkit.WinUI.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="using:Wavee.UI.WinUI.Views.Album"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:ui="using:CommunityToolkit.Labs.WinUI"
+    xmlns:viewModels="using:Wavee.UI.Features.Album.ViewModels"
+    mc:Ignorable="d">
+
+    <ScrollView>
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition />
+            </Grid.RowDefinitions>
+            <RelativePanel
+                Margin="16"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Top"
+                Background="{ThemeResource LayerFillColorDefaultBrush}"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                CornerRadius="8">
+                <Grid
+                    x:Name="PlaylistImage"
+                    Width="240"
+                    Height="240">
+                    <controls:AlbumCoverControl
+                        DecodePixelHeight="240"
+                        DecodePixelWidth="240"
+                        Source="{x:Bind ViewModel.LargeImageUrl, Mode=OneWay}" />
+                </Grid>
+
+                <TextBlock
+                    x:Name="AlbumType"
+                    Margin="12,28,0,0"
+                    FontSize="11"
+                    FontWeight="SemiBold"
+                    Opacity=".8"
+                    RelativePanel.Above="TitleBlock"
+                    RelativePanel.RightOf="PlaylistImage"
+                    Text="ALBUM" />
+                <TextBlock
+                    x:Name="TitleBlock"
+                    Margin="12,0,0,0"
+                    FontSize="24"
+                    FontWeight="ExtraBlack"
+                    RelativePanel.AlignVerticalCenterWithPanel="True"
+                    RelativePanel.RightOf="PlaylistImage"
+                    Text="{x:Bind ViewModel.Name, Mode=OneWay}" />
+
+
+                <TextBlock
+                    x:Name="InformationBlock"
+                    Margin="12,4,0,0"
+                    Foreground="{ThemeResource ApplicationSecondaryForegroundThemeBrush}"
+                    RelativePanel.Below="TitleBlock"
+                    RelativePanel.RightOf="PlaylistImage">
+                    <Run Foreground="{ThemeResource ApplicationForegroundThemeBrush}" Text="{x:Bind ViewModel.TracksCount, Mode=OneWay}" />
+                    <Run Text="songs •" />
+                    <Run Text="{x:Bind ViewModel.TotalDurationString, Mode=OneWay}" />
+                    <Run Text="•" />
+                    <Run Text="{x:Bind ViewModel.ReleaseDateString, Mode=OneWay}" />
+                </TextBlock>
+
+
+
+
+                <StackPanel
+                    x:Name="ButtonsPanel"
+                    Margin="12,0,0,12"
+                    Orientation="Horizontal"
+                    RelativePanel.AlignBottomWith="PlaylistImage"
+                    RelativePanel.RightOf="PlaylistImage"
+                    Spacing="8">
+                    <Button
+                        Background="{ThemeResource SystemControlBackgroundAccentBrush}"
+                        Foreground="White"
+                        Style="{ThemeResource AccentButtonStyle}">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <FontIcon FontFamily="{StaticResource MediaPlayerIcons}" Glyph="&#xF5B0;" />
+                            <TextBlock Text="Play" />
+                        </StackPanel>
+                    </Button>
+                    <Button
+                        Background="{ThemeResource SystemControlBackgroundAccentBrush}"
+                        Foreground="White"
+                        Style="{ThemeResource AccentButtonStyle}">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <FontIcon FontFamily="{StaticResource MediaPlayerIcons}" Glyph="&#xE8B1;" />
+                            <TextBlock Text="Shuffle" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+
+            </RelativePanel>
+
+            <Grid
+                Grid.Row="1"
+                Height="40"
+                Margin="8,0,8,12"
+                Background="{ThemeResource LayerFillColorDefaultBrush}"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                ColumnSpacing="12"
+                CornerRadius="8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="60" />
+                    <!--  127 - 12  -->
+                    <ColumnDefinition Width="2*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="50" />
+                </Grid.ColumnDefinitions>
+
+                <TextBlock
+                    Margin="24,0"
+                    VerticalAlignment="Center"
+                    Text="#" />
+
+                <TextBlock
+                    Grid.Column="1"
+                    VerticalAlignment="Center"
+                    Text="Title" />
+
+
+                <TextBlock
+                    Grid.Column="2"
+                    VerticalAlignment="Center"
+                    Text="Plays" />
+
+
+                <TextBlock
+                    Grid.Column="3"
+                    VerticalAlignment="Center"
+                    FontFamily="{StaticResource FluentIcons}"
+                    Text="&#xE916;" />
+            </Grid>
+
+            <Grid Grid.Row="2" Margin="0,0,8,0">
+                <ItemsView ItemsSource="{x:Bind CreateCvs(ViewModel.Discs), Mode=OneWay}" Visibility="{x:Bind ViewModel.Loaded, Mode=OneWay, Converter={StaticResource TrueToVisibleConverter}}">
+                    <ItemsView.ItemTemplate>
+                        <DataTemplate x:DataType="viewModels:AlbumTrackViewModel">
+                            <ItemContainer>
+                                <controls:TrackControl
+                                    AlternateColors="True"
+                                    Number="{x:Bind Number, Mode=OneWay}"
+                                    ShowImage="False">
+                                    <controls:TrackControl.MainContent>
+                                        <Grid HorizontalAlignment="Stretch" ColumnSpacing="12">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="2*" />
+                                                <ColumnDefinition />
+                                                <ColumnDefinition Width="50" />
+                                            </Grid.ColumnDefinitions>
+
+                                            <TextBlock
+                                                Grid.Column="0"
+                                                VerticalAlignment="Center"
+                                                Text="{x:Bind Name, Mode=OneWay}"
+                                                TextTrimming="CharacterEllipsis" />
+
+                                            <TextBlock
+                                                Grid.Column="1"
+                                                VerticalAlignment="Center"
+                                                Text="{x:Bind PlaycountString, Mode=OneWay}" />
+
+                                            <TextBlock
+                                                Grid.Column="2"
+                                                VerticalAlignment="Center"
+                                                Text="{x:Bind DurationString, Mode=OneWay}" />
+                                        </Grid>
+                                    </controls:TrackControl.MainContent>
+                                </controls:TrackControl>
+                            </ItemContainer>
+                        </DataTemplate>
+                    </ItemsView.ItemTemplate>
+                </ItemsView>
+                <ItemsRepeater ItemsSource="{x:Bind ViewModel.NoTracks}" Visibility="{x:Bind ViewModel.Loaded, Mode=OneWay, Converter={StaticResource TrueToCollapsedConverter}}">
+                    <ItemsRepeater.ItemTemplate>
+                        <DataTemplate x:DataType="x:Int32">
+                            <Grid
+                                x:Name="LayoutRoot"
+                                Height="44"
+                                Margin="0,0,18,8"
+                                HorizontalAlignment="Stretch"
+                                VerticalAlignment="Stretch"
+                                Background="Transparent"
+                                ColumnSpacing="8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="48" />
+                                    <ColumnDefinition Width="2*" />
+                                    <!--  Title  -->
+                                    <ColumnDefinition />
+                                    <!--  Artist  -->
+                                    <ColumnDefinition />
+                                    <!--  Album  -->
+                                    <ColumnDefinition Width="*" />
+                                    <!--  Added At  -->
+                                    <ColumnDefinition Width="50" />
+                                    <!--  Duration  -->
+                                </Grid.ColumnDefinitions>
+                                <ui:Shimmer Grid.Column="0" />
+                                <ui:Shimmer Grid.Column="1" />
+                                <ui:Shimmer Grid.Column="2" />
+                                <ui:Shimmer Grid.Column="3" />
+                                <ui:Shimmer Grid.Column="4" />
+                                <ui:Shimmer Grid.Column="5" />
+                            </Grid>
+                        </DataTemplate>
+                    </ItemsRepeater.ItemTemplate>
+                </ItemsRepeater>
+            </Grid>
+        </Grid>
+    </ScrollView>
+</Page>

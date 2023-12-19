@@ -318,7 +318,7 @@ public sealed partial class ShellView : UserControl
         }
         else if (query is SearchSuggestionEntityViewModel entity)
         {
-            ViewModel.Navigation.NavigateToArtist(entity.Id);
+            ViewModel.Navigation.NavigateTo(entity.Id);
         }
     }
     public bool CompositeBool(bool x, bool y, bool xShouldBe, bool yShouldBe)

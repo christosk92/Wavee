@@ -1,5 +1,6 @@
 ﻿using System.Collections.Immutable;
 using System.Collections.ObjectModel;
+using System.Numerics;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Mediator;
 using Nito.AsyncEx;
@@ -7,6 +8,7 @@ using Wavee.UI.Domain.Playlist;
 using Wavee.UI.Domain.Track;
 using Wavee.UI.Features.Playlists.Contracts;
 using Wavee.UI.Features.Playlists.Queries;
+using Wavee.UI.Features.Playlists.Requests;
 using Wavee.UI.Test;
 
 namespace Wavee.UI.Features.Playlists.ViewModel;
@@ -26,9 +28,11 @@ public sealed class PlaylistViewModel : ObservableObject, IPlaylistListener
     private bool _hidePopCount;
     private string _generalSearchTerm = string.Empty;
     private readonly AsyncLock _lock = new AsyncLock();
+    private BigInteger _revision;
 
     public PlaylistViewModel(PlaylistSidebarItemViewModel sidebarItem, IMediator mediator, IUIDispatcher uiDispatcher)
     {
+        _revision = sidebarItem.Revision;
         _mediator = mediator;
         _uiDispatcher = uiDispatcher;
         Id = sidebarItem.Id;

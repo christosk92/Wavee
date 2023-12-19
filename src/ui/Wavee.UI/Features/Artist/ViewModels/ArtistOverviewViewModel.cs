@@ -53,7 +53,8 @@ public sealed class ArtistOverviewViewModel : NavigationItemViewModel
                     Name = null,
                     Duration = default,
                     PlayCommand = null,
-                    Album = null
+                    Album = null,
+                    Playcount = null
                 };
             }
 

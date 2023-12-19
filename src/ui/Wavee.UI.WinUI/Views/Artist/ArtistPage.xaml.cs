@@ -60,26 +60,6 @@ public sealed partial class ArtistPage : Page,
             var hideBackgroundHeight = HideBackground.ActualHeight;
             var progress = Math.Clamp(sender.VerticalOffset / hideBackgroundHeight, 0, 1);
             HideBackground.Opacity = progress;
-
-            // if (ViewModel.SelectedItem is ArtistOverviewViewModel ov)
-            // {
-            //     ov.ScrollPosition = sender.VerticalOffset;
-            //     //Check if we are at the bottom of the scrollviewer with a 100px margin
-            //     if (sender.VerticalOffset >= sender.ScrollableHeight - 200)
-            //     {
-            //         double epsilon = 0.0001;
-            //         if (Math.Abs(beforeLock - afterLock) > epsilon)
-            //         {
-            //             Debug.WriteLine("View changed while waiting for lock");
-            //             return;
-            //         }
-            //         Debug.WriteLine("Fetching next page");
-            //
-            //         await ov.FetchNextDiscography();
-            //     }
-            //
-            //     await Task.Delay(100);
-            // }
         }
     }
     private void ArtistPage_OnSizeChanged(object sender, SizeChangedEventArgs e)

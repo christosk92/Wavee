@@ -1,4 +1,6 @@
-﻿using System.Diagnostics;
+﻿using System.Buffers.Binary;
+using System.Diagnostics;
+using System.Numerics;
 using Eum.Spotify.connectstate;
 using Eum.Spotify.playplay;
 using Google.Protobuf;
@@ -9,9 +11,31 @@ using Wavee.Application.Playback;
 using Wavee.Domain.Playback.Player;
 using Wavee.Players.NAudio;
 using Wavee.Spotify;
+using Wavee.Spotify.Application.AudioKeys.QueryHandlers;
 using Wavee.Spotify.Application.Authentication.Modules;
 using Wavee.Spotify.Application.Playback;
 using Wavee.Spotify.Common.Contracts;
+static string CreateRevisionString(BigInteger b)
+{
+    Span<byte> bytes = b.ToByteArray(true, true);
+    //First 4 bytes
+    var number = BinaryPrimitives.ReadUInt32BigEndian(bytes.Slice(0, sizeof(uint)));
+    var hex = SpotifyGetAudioKeyQueryHandler.ToBase16(bytes.Slice(sizeof(uint))).ToLower();
+    var together = $"{number},{hex}";
+    const string test = "1699989720,00000000b779d19ce3245e1fa1d66789efe49399";
+    if (!test.Equals(together))
+    {
+        throw new ArgumentException();
+    }
+    return string.Empty;
+}
+//base64 ZVPI2AAAAAC3edGc4yReH6HWZ4nv5JOZ -> 1699989720,00000000b779d19ce3245e1fa1d66789efe49399
+var base64 = "ZVPI2AAAAAC3edGc4yReH6HWZ4nv5JOZ";
+var bytes = ByteString.FromBase64(base64);
+var fromRevision = new BigInteger(bytes.Span, true, true);
+var revisionString = CreateRevisionString(fromRevision);
+
+
 
 var storagePath = "/d/";
 const string b =

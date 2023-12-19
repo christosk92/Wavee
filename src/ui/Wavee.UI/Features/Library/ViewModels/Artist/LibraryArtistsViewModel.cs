@@ -197,15 +197,17 @@ public sealed class LibraryArtistsViewModel : NavigationItemViewModel, IPlayback
                 MediumImageUrl = mediumImage.Url,
             };
             vm.Tracks = album.Tracks.Select((x, i) => new AlbumTrackViewModel
-            {
-                Id = x.Id,
-                Name = x.Name,
-                Duration = x.Duration,
-                Number = i + 1,
-                PlayCommand = PlayCommand,
-                Album = vm,
-                PlaybackState = _playback.IsPlaying(x.Id, null)
-            })
+                {
+                    Id = x.Id,
+                    Name = x.Name,
+                    Duration = x.Duration,
+                    Number = i + 1,
+                    PlayCommand = PlayCommand,
+                    Album = vm,
+                    PlaybackState = _playback.IsPlaying(x.Id,
+                        null),
+                    Playcount = x.PlayCount
+                })
                 .ToArray();
             artist.Albums.Add(vm);
         }
@@ -224,7 +226,7 @@ public sealed class LibraryArtistsViewModel : NavigationItemViewModel, IPlayback
 
     public void NavigateToArtist(string id)
     {
-        _navigationService.NavigateToArtist(id);
+        _navigationService.NavigateTo(id);
         // _navigationService.Navigate(null, new ArtistViewModel(_mediator, id, _dispatcher));
     }
 

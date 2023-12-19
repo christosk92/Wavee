@@ -1,8 +1,9 @@
-﻿using Wavee.UI.Features.Artist.Queries;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+using Wavee.UI.Features.Artist.Queries;
 
 namespace Wavee.UI.Features.Album.ViewModels;
 
-public sealed class AlbumViewModel
+public sealed class AlbumViewModel 
 {
     public string Id { get; set; }
     public string BigImageUrl { get; set; }

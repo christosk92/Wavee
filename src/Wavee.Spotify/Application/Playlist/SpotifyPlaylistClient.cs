@@ -1,4 +1,7 @@
-﻿using System.Collections.Immutable;
+﻿using System;
+using System.Buffers.Binary;
+using System.Collections.Immutable;
+using System.Numerics;
 using System.Text;
 using System.Text.Json;
 using Eum.Spotify.playlist4;
@@ -8,6 +11,7 @@ using LanguageExt;
 using Mediator;
 using Spotify.Metadata;
 using TagLib.Ape;
+using Wavee.Spotify.Application.AudioKeys.QueryHandlers;
 using Wavee.Spotify.Application.Metadata.Query;
 using Wavee.Spotify.Application.Remote;
 using Wavee.Spotify.Common;
@@ -32,6 +36,47 @@ internal sealed class SpotifyPlaylistClient : ISpotifyPlaylistClient
         _httpClient = httpClientFactory.CreateClient(Constants.SpotifyRemoteStateHttpClietn);
 
         remoteHolder.PlaylistChanged += RemoteHolderOnPlaylistChanged;
+    }
+
+    public async Task<Diff> DiffPlaylist(SpotifyId id, BigInteger fromRevision, CancellationToken cancellationToken)
+    {
+        //https://gae2-spclient.spotify.com/playlist/v2/playlist/37i9dQZEVXcWZn0ZycxMML/diff?revision=0%2C000000003d22e7b3feb9d5b21a2330fc33481752&handlesContent=
+
+        //base64 ZVPI2AAAAAC3edGc4yReH6HWZ4nv5JOZ -> 1699989720,00000000b779d19ce3245e1fa1d66789efe49399
+        static string CreateRevisionString(BigInteger b)
+        {
+            Span<byte> bytes = b.ToByteArray(true, true);
+            //First 4 bytes (only if length is 24)
+            var missing = 24 - bytes.Length;
+            uint number = 0;
+            int offset = sizeof(uint);
+            if (missing is 0)
+            {
+                number = BinaryPrimitives.ReadUInt32BigEndian(bytes.Slice(0, sizeof(uint)));
+            }
+            else
+            {
+                var getNumb = sizeof(uint) - missing;
+                var numberBytes = bytes.Slice(0, getNumb);
+                offset = numberBytes.Length;
+                number = numberBytes[0];
+            }
+
+            var hex = SpotifyGetAudioKeyQueryHandler.ToBase16(bytes.Slice(offset)).ToLower();
+            var together = $"{number},{hex}";
+            return together;
+        }
+
+        var revisionString = CreateRevisionString(fromRevision);
+
+        const string endpoint =
+            "https://spclient.com/playlist/v2/playlist/{0}/diff?revision={1}&handlesContent=";
+        var uri = string.Format(endpoint, id.ToBase62(), revisionString);
+        using var response = await _httpClient.GetAsync(uri, cancellationToken);
+        response.EnsureSuccessStatusCode();
+        await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
+        var diff = Diff.Parser.ParseFrom(stream);
+        return diff;
     }
 
     public async Task<SelectedListContent> GetRootList(CancellationToken cancellationToken)
@@ -129,7 +174,7 @@ internal sealed class SpotifyPlaylistClient : ISpotifyPlaylistClient
     {
         foreach (var listener in _changeListeners)
         {
-            if(listener is not SpotifyPlaylistChangeListener listener1)
+            if (listener is not SpotifyPlaylistChangeListener listener1)
                 continue;
             if (listener1.Id.ToString() == Encoding.UTF8.GetString(playlistModificationInfo.Uri.Span))
             {
@@ -141,6 +186,7 @@ internal sealed class SpotifyPlaylistClient : ISpotifyPlaylistClient
 
 public interface ISpotifyPlaylistClient
 {
+    Task<Diff> DiffPlaylist(SpotifyId id, BigInteger fromRevision, CancellationToken cancellationToken);
     Task<SelectedListContent> GetRootList(CancellationToken cancellationToken);
     Task<ulong?> GetPopCount(SpotifyId fromUri, CancellationToken cancellationToken);
     Task<SelectedListContent> GetPlaylist(SpotifyId fromUri, CancellationToken cancellationToken);

@@ -1,7 +1,10 @@
 ﻿using System.Collections.Immutable;
 using Spotify.Metadata;
 using Wavee.Spotify.Common;
+using Wavee.Spotify.Domain.Album;
+using Wavee.Spotify.Domain.Artist;
 using Wavee.Spotify.Domain.Common;
+using Wavee.UI.Domain.Album;
 using Wavee.UI.Domain.Artist;
 using Wavee.UI.Domain.Playlist;
 using Wavee.UI.Domain.Podcast;
@@ -10,6 +13,32 @@ namespace Wavee.UI.Domain.Track;
 
 public static class TrackExtensions
 {
+    public static SimpleAlbumEntity ToSimpleAlbum(this SpotifySimpleAlbum x)
+    {
+        return new SimpleAlbumEntity
+        {
+            Id = x.Uri.ToString(),
+            Name = x.Name,
+            Images = x.Images,
+            Year = (ushort?)x.ReleaseDate.Year,
+            Type = x.Type
+        };
+    }
+    public static SimpleArtistEntity ToSimpleArtist(this SpotifySimpleArtist x)
+    {
+        return new SimpleArtistEntity
+        {
+            Id = x.Uri.ToString(),
+            Name = x.Name,
+            BiggestImageUrl = x.Images.OrderByDescending(x => x.Width ?? 0)
+                .FirstOrDefault()
+                .Url,
+            SmallestImageUrl = x.Images.OrderBy(x => x.Width ?? 0)
+                .FirstOrDefault()
+                .Url,
+        };
+    }
+
     public static WaveeTrackOrEpisodeOrArtist MapToSimpleEntity(
         this SpotifyTrackOrEpisode item)
     {

@@ -2,6 +2,7 @@
 using Eum.Spotify.playlist4;
 using Google.Protobuf.Collections;
 using LanguageExt;
+using MathNet.Numerics;
 using Mediator;
 using Spotify.Metadata;
 using Wavee.Spotify.Application.Metadata.Query;
@@ -13,6 +14,7 @@ using Wavee.UI.Domain.Track;
 using Wavee.UI.Extensions;
 using Wavee.UI.Features.Navigation;
 using Wavee.UI.Features.Playlists.Queries;
+using Wavee.UI.Features.Playlists.Requests;
 using Wavee.UI.Features.Playlists.Services;
 
 namespace Wavee.UI.Features.Playlists.QueryHandlers;
@@ -22,13 +24,15 @@ public sealed class GetPlaylistTracksIdsQueryHandler :
 {
     private readonly ISpotifyClient _spotifyClient;
     private readonly ICachedPlaylistInfoService _cachedPlaylistInfoService;
+    private readonly IMediator _mediator;
 
     public GetPlaylistTracksIdsQueryHandler(
         ISpotifyClient spotifyClient,
-        ICachedPlaylistInfoService cachedPlaylistInfoService)
+        ICachedPlaylistInfoService cachedPlaylistInfoService, IMediator mediator)
     {
         _spotifyClient = spotifyClient;
         _cachedPlaylistInfoService = cachedPlaylistInfoService;
+        _mediator = mediator;
     }
 
     public async ValueTask<IReadOnlyCollection<PlaylistTrackInfo>> Handle(GetPlaylistTracksIdsQuery query, CancellationToken cancellationToken)
@@ -37,7 +41,7 @@ public sealed class GetPlaylistTracksIdsQueryHandler :
                 TryGetTracks(query.PlaylistId,
                 null,
                 out var existingtracks)
-            || existingtracks.Any(f=> f.Item is null))
+            || existingtracks.Any(f => f.Item is null))
         {
             var (selectedList, tracks)=
                 await _spotifyClient.Playlists.GetPlaylistWithTracks(SpotifyId.FromUri(query.PlaylistId), cancellationToken);
@@ -51,6 +55,27 @@ public sealed class GetPlaylistTracksIdsQueryHandler :
                 x);
             return x;
         }
+
+        if (SpotifyId.TryParse(query.PlaylistId, out var id))
+        {
+            var idStr = id.ToString();
+            var revision = _cachedPlaylistInfoService.LatestRevision(idStr);
+            if (revision is not null)
+            {
+                //Start a diff
+                _ =  Task.Run(async () =>
+                 {
+                     var diff = await _mediator.Send(new DiffPlaylistRevisionsRequest
+                     {
+                         Id = idStr,
+                         Revision = revision.Value
+                     }, cancellationToken);
+
+
+                 });
+            }
+        }
+
 
         return existingtracks;
     }

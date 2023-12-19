@@ -221,14 +221,23 @@ internal static class SpotifyArtistViewParser
             try
             {
 #endif
-                if (item.TryGetProperty("releases", out var releasesArr))
+            if (item.TryGetProperty("data", out var dt)
+                && dt.TryGetProperty("__typename", out var typeNameProp))
+            {
+                if (typeNameProp.GetString() is "NotFound")
                 {
-                    using var releases = releasesArr.GetProperty("items").EnumerateArray();
-                    releases.MoveNext();
-                    item = releases.Current;
+                    //itemsParsed[items_idx++] = default(T);
+                    continue;
                 }
+            }
+            if (item.TryGetProperty("releases", out var releasesArr))
+            {
+                using var releases = releasesArr.GetProperty("items").EnumerateArray();
+                releases.MoveNext();
+                item = releases.Current;
+            }
 
-                itemsParsed[items_idx++] = parser(item);
+            itemsParsed[items_idx++] = parser(item);
 #if DEBUG 
             }
             catch (KeyNotFoundException x)

@@ -145,6 +145,19 @@ internal sealed class CachedPlaylistInfoService : ICachedPlaylistInfoService
 
     public event EventHandler<string>? PlaylistChanged;
     public event EventHandler<WaveeLibraryType>? LibraryChanged;
+    public BigInteger? LatestRevision(string id)
+    {
+        var filtered = _tracks
+            .Where(f => f.Key.Id == id)
+            .ToImmutableArray();
+
+        if (filtered.Length > 0)
+        {
+            var maxRevision = filtered.MaxBy(f => f.Key.Revision);
+            return maxRevision.Key.Revision;
+        }
+        return null;
+    }
 
     private async void OnLibraryItemsChanged(object? sender, LibraryModificationInfo libraryModification)
     {
@@ -291,4 +304,5 @@ public interface ICachedPlaylistInfoService
     void Clear(string playlistId);
     event EventHandler<string> PlaylistChanged;
     event EventHandler<WaveeLibraryType> LibraryChanged;
+    BigInteger? LatestRevision(string id);
 }

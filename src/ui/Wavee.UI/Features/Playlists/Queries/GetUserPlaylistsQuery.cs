@@ -1,4 +1,5 @@
-﻿using Mediator;
+﻿using System.Numerics;
+using Mediator;
 using Wavee.Spotify.Common;
 using Wavee.Spotify.Domain.Common;
 
@@ -47,4 +48,5 @@ public sealed class PlaylistUserPlaylistItem : AbsUserPlaylistItem
     public required bool HasImages { get; init; }
 
     public required IReadOnlyDictionary<string, string> Metadata { get; init; }
+    public required BigInteger Revision { get; init; }
 }

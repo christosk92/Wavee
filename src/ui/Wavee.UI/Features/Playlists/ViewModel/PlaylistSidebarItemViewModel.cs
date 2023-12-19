@@ -1,4 +1,5 @@
 ﻿using System.Collections.ObjectModel;
+using System.Numerics;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Wavee.Spotify.Domain.Common;
 
@@ -26,4 +27,5 @@ public sealed class PlaylistSidebarItemViewModel : AbsPlaylistSidebarItemViewMod
     public required string? BigImage { get; init; }
     public required int Items { get; init; }
     public required string? Description { get; init; }
+    public required BigInteger Revision { get; init; }
 }

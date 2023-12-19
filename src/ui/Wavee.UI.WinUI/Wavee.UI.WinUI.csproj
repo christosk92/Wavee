@@ -29,6 +29,7 @@
 	  <None Remove="Styles\ItemContainerStyles.xaml" />
 	  <None Remove="Styles\NavigationView\ExtendedNavigationViewStyle.xaml" />
 	  <None Remove="Styles\TextBlockStyles.xaml" />
+	  <None Remove="Views\Album\AlbumPage.xaml" />
 	  <None Remove="Views\Artist\ArtistAboutPage.xaml" />
 	  <None Remove="Views\Artist\ArtistOverviewPage.xaml" />
 	  <None Remove="Views\Artist\ArtistPage.xaml" />
@@ -109,6 +110,9 @@
 	  <None Update="Controls\AlbumCoverControl.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </None>
+	  <Page Update="Views\Album\AlbumPage.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </Page>
 	  <Page Update="Controls\PlaylistImageGridControl.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </Page>

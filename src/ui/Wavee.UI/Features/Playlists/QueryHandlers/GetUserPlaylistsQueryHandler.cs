@@ -1,4 +1,5 @@
 ﻿using System.Collections.Immutable;
+using System.Numerics;
 using Eum.Spotify.playlist4;
 using Mediator;
 using Wavee.Spotify.Application.AudioKeys.QueryHandlers;
@@ -76,6 +77,7 @@ public sealed class GetUserPlaylistsQueryHandler : IQueryHandler<GetUserPlaylist
                     Metadata = metaItem.Attributes.FormatAttributes.ToDictionary(x => x.Key,
                         x => x.Value),
                     Description = metaItem.Attributes.Description,
+                    Revision = new BigInteger(metaItem.Revision.Span, true, true),
                 };
 
                 if (currentFolder is not null)
