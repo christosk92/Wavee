@@ -8,12 +8,15 @@ using Google.Protobuf;
 using Google.Protobuf.Collections;
 using LanguageExt.UnitsOfMeasure;
 using Nito.AsyncEx;
+using Wavee.Domain.Library;
 using Wavee.Spotify.Application.Playlist;
 using Wavee.Spotify.Common;
 using Wavee.Spotify.Common.Contracts;
+using Wavee.Spotify.Domain.Library;
 using Wavee.Spotify.Domain.State;
 using Wavee.UI.Domain.Playlist;
 using Wavee.UI.Extensions;
+using Wavee.UI.Features.Library.QueryHandlers;
 using Wavee.UI.Features.Playback;
 using Wavee.UI.Features.Playlists.QueryHandlers;
 using YoutubeExplode.Playlists;
@@ -102,11 +105,19 @@ internal sealed class CachedPlaylistInfoService : ICachedPlaylistInfoService
         {
             if (!_changeListeners.TryGetValue(playlistId, out _))
             {
-                if (SpotifyId.TryParse(playlistId, out var spotifyPlaylistId))
+                if (SpotifyId.TryParse(playlistId, out var spotifyPlaylistId)
+                    && spotifyPlaylistId.Type == SpotifyItemType.Playlist)
                 {
-                    // Register
+                    // Register as playlist
                     var changeListener = _spotifyClient.Playlists.ChangeListener(spotifyPlaylistId);
                     changeListener.ItemsChanged += OnItemsChanged;
+                }
+                else if (playlistId.StartsWith("spotify:collection:"))
+                {
+                    var last = playlistId.Split(":").Last();
+                    var collectionType = Enum.Parse<SpotifyLibaryType>(last, true);
+                    var changeListener = _spotifyClient.Library.ChangeListener(collectionType);
+                    changeListener.ItemsChanged += OnLibraryItemsChanged;
                 }
             }
 
@@ -129,7 +140,31 @@ internal sealed class CachedPlaylistInfoService : ICachedPlaylistInfoService
     }
 
     public event EventHandler<string>? PlaylistChanged;
+    public event EventHandler<WaveeLibraryType>? LibraryChanged; 
 
+    private async void OnLibraryItemsChanged(object? sender, LibraryModificationInfo libraryModification)
+    {
+        // So because we are using an old version of the library, we need to refetch the entire list.
+        var userId = _spotifyClient.User.Result.CanonicalUsername;
+        var uri = libraryModification.Type switch
+        {
+            SpotifyLibaryType.Artist => $"spotify:collection:{userId}:artist",
+            SpotifyLibaryType.Album => $"spotify:collection:{userId}:album",
+            SpotifyLibaryType.Songs => $"spotify:collection:{userId}:songs",
+            _ => throw new ArgumentOutOfRangeException()
+        };
+
+        var items = await _spotifyClient.Library.GetTrackIdsAsync(CancellationToken.None);
+        var newKey = new PlaylistTracksInfoKey(uri, BigInteger.Zero);
+        _tracks[newKey] = GetLibrarySongsQueryHandler.ToPlaylistItems(items.Items);
+        LibraryChanged?.Invoke(this, libraryModification.Type switch
+        {
+            SpotifyLibaryType.Artist => WaveeLibraryType.Artist,
+            SpotifyLibaryType.Album => WaveeLibraryType.Album,
+            SpotifyLibaryType.Songs => WaveeLibraryType.Songs,
+            _ => throw new ArgumentOutOfRangeException()
+        });
+    }
     private async void OnItemsChanged(object? sender, PlaylistModificationInfo playlistModificationInfo)
     {
         var newRevisionId = playlistModificationInfo.NewRevision.ToBigInteger();
@@ -239,4 +274,5 @@ public interface ICachedPlaylistInfoService
 
     void Clear(string playlistId);
     event EventHandler<string> PlaylistChanged;
+    event EventHandler<WaveeLibraryType> LibraryChanged;
 }

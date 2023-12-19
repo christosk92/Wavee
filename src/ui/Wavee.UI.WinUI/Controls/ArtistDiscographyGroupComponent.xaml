@@ -3,20 +3,13 @@
     x:Class="Wavee.UI.WinUI.Controls.ArtistDiscographyGroupComponent"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:ani="using:CommunityToolkit.WinUI.UI.Animations"
-    xmlns:behaviors1="using:CommunityToolkit.WinUI.UI.Behaviors"
     xmlns:components="using:Wavee.UI.WinUI.Views.Libraries.Components"
-    xmlns:controls="using:CommunityToolkit.WinUI.Controls"
-    xmlns:controls1="using:CommunityToolkit.WinUI.UI.Controls"
-    xmlns:controls2="using:Wavee.UI.WinUI.Controls"
+    xmlns:controls="using:Wavee.UI.WinUI.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:interactions="using:Microsoft.Xaml.Interactions.Core"
-    xmlns:interactivity="using:Microsoft.Xaml.Interactivity"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:media="using:CommunityToolkit.WinUI.UI.Media"
-    xmlns:ui="using:CommunityToolkit.WinUI.UI"
+    xmlns:toolkit="using:CommunityToolkit.WinUI.Controls"
+    xmlns:ui="using:CommunityToolkit.Labs.WinUI"
     xmlns:viewModels="using:Wavee.UI.Features.Artist.ViewModels"
-    xmlns:winUi="using:CommunityToolkit.Labs.WinUI"
     VerticalAlignment="Top"
     VerticalContentAlignment="Top"
     DataContext="{x:Bind Item, Mode=OneWay}"
@@ -34,23 +27,23 @@
                 FontWeight="SemiBold"
                 Text="{x:Bind Item.Title, Mode=OneWay}" />
 
-            <controls:Segmented
+            <toolkit:Segmented
                 Grid.Row="0"
                 Grid.Column="1"
                 SelectedIndex="{x:Bind Item.SelectedIndex, Mode=TwoWay}">
-                <controls:Segmented.Items>
-                    <controls:SegmentedItem>
-                        <controls:SegmentedItem.Icon>
+                <toolkit:Segmented.Items>
+                    <toolkit:SegmentedItem>
+                        <toolkit:SegmentedItem.Icon>
                             <FontIcon FontFamily="/Assets/Fonts/MediaPlayerIcons.ttf#Media Player Fluent Icons" Glyph="&#xF0E2;" />
-                        </controls:SegmentedItem.Icon>
-                    </controls:SegmentedItem>
-                    <controls:SegmentedItem>
-                        <controls:SegmentedItem.Icon>
+                        </toolkit:SegmentedItem.Icon>
+                    </toolkit:SegmentedItem>
+                    <toolkit:SegmentedItem>
+                        <toolkit:SegmentedItem.Icon>
                             <FontIcon FontFamily="/Assets/Fonts/MediaPlayerIcons.ttf#Media Player Fluent Icons" Glyph="&#xEA37;" />
-                        </controls:SegmentedItem.Icon>
-                    </controls:SegmentedItem>
-                </controls:Segmented.Items>
-            </controls:Segmented>
+                        </toolkit:SegmentedItem.Icon>
+                    </toolkit:SegmentedItem>
+                </toolkit:Segmented.Items>
+            </toolkit:Segmented>
         </Grid>
 
         <ItemsRepeater
@@ -71,7 +64,7 @@
                             MaxHeight="400"
                             VerticalAlignment="Top">
                             <Image MaxHeight="150" Source="ms-appx:///Assets/AlbumPlaceholder.png" />
-                            <controls2:PlayableContentControl
+                            <controls:PlayableContentControl
                                 Title="{x:Bind Value.Album.Name, Mode=OneWay}"
                                 x:Phase="1"
                                 Description="{x:Bind Value.Album.Year, Mode=OneWay}"
@@ -90,16 +83,16 @@
                                 <RowDefinition />
                                 <RowDefinition Height="Auto" />
                             </Grid.RowDefinitions>
-                            <controls1:ConstrainedBox
+                            <toolkit:ConstrainedBox
                                 Grid.Row="0"
                                 MaxWidth="400"
                                 MaxHeight="400"
                                 VerticalAlignment="Top"
                                 AspectRatio="1:1">
-                                <winUi:Shimmer x:Phase="1" Tag="{x:Bind Value, Mode=OneWay}" />
-                            </controls1:ConstrainedBox>
+                                <ui:Shimmer x:Phase="1" Tag="{x:Bind Value, Mode=OneWay}" />
+                            </toolkit:ConstrainedBox>
 
-                            <winUi:Shimmer
+                            <ui:Shimmer
                                 Grid.Row="1"
                                 Height="60"
                                 Margin="0,6,0,0"

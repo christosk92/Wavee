@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Threading.Tasks;
+using CommunityToolkit.WinUI;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.UI.Dispatching;
 using Wavee.UI.Features.Navigation;
 using Wavee.UI.Test;
 using Wavee.UI.WinUI.Dialogs;
@@ -47,5 +50,10 @@ public sealed class WinUIDispatcher : IUIDispatcher
     public void Invoke(Action action)
     {
         _dispatcher.TryEnqueue(() => action());
+    }
+
+    public async Task InvokeAsync(Func<Task> func)
+    {
+        await _dispatcher.EnqueueAsync(async() => await func(), DispatcherQueuePriority.Normal);
     }
 }

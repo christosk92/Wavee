@@ -3,7 +3,7 @@ using System.IO;
 using System.Numerics;
 using System.Threading.Tasks;
 using Windows.Foundation;
-using CommunityToolkit.WinUI.UI.Animations;
+using CommunityToolkit.WinUI.Animations;
 using Microsoft.Graphics.Canvas.Effects;
 using Microsoft.UI.Composition;
 using Microsoft.UI.Xaml;

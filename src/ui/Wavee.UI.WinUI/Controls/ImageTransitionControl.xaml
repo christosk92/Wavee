@@ -7,13 +7,14 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:ui="using:CommunityToolkit.WinUI.UI"
+    xmlns:winUi="using:CommunityToolkit.WinUI"
     mc:Ignorable="d">
     <Grid Background="Transparent">
         <Border
             x:Name="Image"
             HorizontalAlignment="{Binding HorizontalAlignment, ElementName=rootElement}"
             VerticalAlignment="{Binding VerticalAlignment, ElementName=rootElement}"
-            ui:VisualExtensions.NormalizedCenterPoint="0.5"
+            winUi:VisualExtensions.NormalizedCenterPoint="0.5"
             Loaded="Image_OnLoaded"
             Opacity="1">
             <Border.Background>

@@ -6,6 +6,7 @@
     xmlns:converters="using:CommunityToolkit.WinUI.UI.Converters"
     xmlns:converters1="using:Wavee.UI.WinUI.Converters"
     xmlns:media="using:CommunityToolkit.WinUI.UI.Media"
+    xmlns:media1="using:CommunityToolkit.WinUI.Media"
     xmlns:system="using:System"
     xmlns:xaml="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
     <Application.Resources>
@@ -25,18 +26,18 @@
                 <ResourceDictionary Source="/Styles/TextBlockStyles.xaml" />
                 <ResourceDictionary Source="/Styles/ItemContainerStyles.xaml" />
             </ResourceDictionary.MergedDictionaries>
-            <media:AttachedCardShadow
+            <media1:AttachedCardShadow
                 x:Key="CommonShadow"
                 CornerRadius="6"
                 Opacity=".3"
                 Offset="2" />
             <FontFamily x:Key="MediaPlayerIcons">/Assets/Fonts/MediaPlayerIcons.ttf#Media Player Fluent Icons</FontFamily>
             <FontFamily x:Key="FluentIcons">/Assets/Fonts/SegoeFluentIcons.ttf#Segoe Fluent Icons</FontFamily>
-            <converters:BoolToVisibilityConverter
+            <converters1:BoolToVisibilityConverter
                 x:Key="TrueToVisibleConverter"
                 FalseValue="Collapsed"
                 TrueValue="Visible" />
-            <converters:BoolToVisibilityConverter
+            <converters1:BoolToVisibilityConverter
                 x:Key="TrueToCollapsedConverter"
                 FalseValue="Visible"
                 TrueValue="Collapsed" />

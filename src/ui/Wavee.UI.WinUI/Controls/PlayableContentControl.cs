@@ -1,6 +1,6 @@
 using System;
 using System.Numerics;
-using CommunityToolkit.WinUI.UI.Animations;
+using CommunityToolkit.WinUI.Animations;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;

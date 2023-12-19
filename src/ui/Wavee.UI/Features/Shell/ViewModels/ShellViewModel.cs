@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using System.Collections.Generic;
 using Mediator;
+using Wavee.Domain.Library;
 using Wavee.UI.Features.Artist.ViewModels;
 using Wavee.UI.Features.Library.ViewModels;
 using Wavee.UI.Features.Library.ViewModels.Album;
@@ -50,10 +51,7 @@ public sealed class ShellViewModel : ObservableObject
         Search = search;
         Mediator = mediator;
         RightSidebar = rightSidebar;
-        _dispatcherFactory = () =>
-        {
-            return (IUIDispatcher)serviceProvider.GetService(typeof(IUIDispatcher));
-        };
+        _dispatcherFactory = () => { return (IUIDispatcher)serviceProvider.GetService(typeof(IUIDispatcher)); };
 
         navigation.NavigatedTo += (sender, o) =>
         {
@@ -110,6 +108,45 @@ public sealed class ShellViewModel : ObservableObject
                     p.OnPlaylistChanged_Dumb();
                 }
             });
+        };
+        cachedPlaylistInfoService.LibraryChanged += async (sender, type) =>
+        {
+            switch (type)
+            {
+                case WaveeLibraryType.Album:
+                    {
+                        _dispatcherFactory().Invoke(() =>
+                        {
+                            if (navigation.CurrentViewModel is LibraryAlbumsViewModel p)
+                            {
+                                //p.OnLibraryChanged_Dumb();
+                            }
+                        });
+                        break;
+                    }
+                case WaveeLibraryType.Artist:
+                    {
+                        _dispatcherFactory().Invoke(() =>
+                        {
+                            if (navigation.CurrentViewModel is LibraryArtistsViewModel p)
+                            {
+                                //p.OnLibraryChanged_Dumb();
+                            }
+                        });
+                        break;
+                    }
+                case WaveeLibraryType.Songs:
+                    {
+                        await _dispatcherFactory().InvokeAsync(async () =>
+                        {
+                            if (navigation.CurrentViewModel is LibrarySongsViewModel p)
+                            {
+                                await p.OnLibraryChanged_Dumb();
+                            }
+                        });
+                        break;
+                    }
+            }
         };
     }
 

@@ -1,5 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.Collections.Immutable;
+using System.Text;
 using Mediator;
 using System.Text.Json;
 using NeoSmart.AsyncLock;
@@ -7,12 +8,14 @@ using Wavee.Spotify.Application.Common.Queries;
 using Wavee.Spotify.Application.GraphQL.Queries;
 using Wavee.Spotify.Application.Library.Query;
 using Wavee.Spotify.Application.Metadata.Query;
+using Wavee.Spotify.Application.Playlist;
 using Wavee.Spotify.Application.Remote;
 using Wavee.Spotify.Common;
 using Wavee.Spotify.Domain.Artist;
 using Wavee.Spotify.Domain.Common;
 using Wavee.Spotify.Domain.Library;
 using Wavee.Spotify.Infrastructure.LegacyAuth;
+using Eum.Spotify.playlist4;
 
 namespace Wavee.Spotify.Application.Library;
 
@@ -21,8 +24,7 @@ internal class SpotifyLibraryClient : ISpotifyLibraryClient
     private readonly record struct LibraryKeyComposite(string User, SpotifyItemType Type);
     private readonly IMediator _mediator;
     private readonly SpotifyTcpHolder _tcpHolder;
-    private static readonly AsyncLock _libraryPerUserLock = new AsyncLock();
-    private static Dictionary<LibraryKeyComposite, IReadOnlyCollection<SpotifyLibraryItem<SpotifyId>>> _libraryPerUser = new();
+    private readonly List<SpotifyLibraryChangeListener> _changeListeners = new();
 
     public SpotifyLibraryClient(IMediator mediator,
         SpotifyTcpHolder tcpHolder,
@@ -33,193 +35,152 @@ internal class SpotifyLibraryClient : ISpotifyLibraryClient
 
         remoteHolder.ItemAdded += (sender, item) =>
         {
-            using (_libraryPerUserLock.Lock())
+            foreach (var group in item.GroupBy(x => x.Item.Type switch
+                     {
+                         SpotifyItemType.Track => SpotifyLibaryType.Songs,
+                         SpotifyItemType.Album => SpotifyLibaryType.Album,
+                         SpotifyItemType.Artist => SpotifyLibaryType.Artist,
+                         _ => throw new ArgumentOutOfRangeException()
+                     }))
             {
-                var user = _tcpHolder.WelcomeMessage.Result.CanonicalUsername;
-                var groups = item.GroupBy(x => x.Item.Type);
-                foreach (var group in groups)
+                var notification = new LibraryModificationInfo
                 {
-                    var key = new LibraryKeyComposite(user, group.Key);
-                    if (!_libraryPerUser.TryGetValue(key, out var libraryForUserAlreadyCached))
+                    Added = group.Select(f => f)
+                        .ToImmutableArray(),
+                    Removed = null,
+                    IsAdded = true,
+                    Type = group.Key
+                };
+                foreach (var listener in _changeListeners)
+                {
+                    if (listener.Type == group.Key)
                     {
-                        libraryForUserAlreadyCached = new List<SpotifyLibraryItem<SpotifyId>>().AsReadOnly();
-                        _libraryPerUser[key] = libraryForUserAlreadyCached;
+                        listener.Incoming(notification);
                     }
-
-                    var list = libraryForUserAlreadyCached.ToList();
-                    list.AddRange(group);
-                    _libraryPerUser[key] = list.AsReadOnly();
                 }
-
-                ItemAdded?.Invoke(this, item);
             }
         };
         remoteHolder.ItemRemoved += (sender, e) =>
         {
-            using (_libraryPerUserLock.Lock())
+            foreach (var group in e.GroupBy(x => x.Type switch
+                     {
+                         SpotifyItemType.Track => SpotifyLibaryType.Songs,
+                         SpotifyItemType.Album => SpotifyLibaryType.Album,
+                         SpotifyItemType.Artist => SpotifyLibaryType.Artist,
+                         _ => throw new ArgumentOutOfRangeException()
+                     }))
             {
-                var uery = e.Select(x => x.ToString()).ToArray();
-                var user = _tcpHolder.WelcomeMessage.Result.CanonicalUsername;
-                var key = new LibraryKeyComposite(user, SpotifyItemType.Artist);
-                if (!_libraryPerUser.TryGetValue(key, out var libraryForUserAlreadyCached))
+                var notification = new LibraryModificationInfo
                 {
-                    //add new one
-                    libraryForUserAlreadyCached = new List<SpotifyLibraryItem<SpotifyId>>().AsReadOnly();
-                    _libraryPerUser[key] = libraryForUserAlreadyCached;
-                }
-                else
+                    Added = null,
+                    Removed = group.Select(f => f)
+                        .ToImmutableArray(),
+                    IsAdded = false,
+                    Type = group.Key
+                };
+                foreach (var listener in _changeListeners)
                 {
-                    libraryForUserAlreadyCached = libraryForUserAlreadyCached
-                        .Where(x => !e.Contains(x.Item))
-                        .ToArray()
-                        .AsReadOnly();
-                    _libraryPerUser[key] = libraryForUserAlreadyCached;
+                    if (listener.Type == group.Key)
+                    {
+                        listener.Incoming(notification);
+                    }
                 }
-
-                ItemRemoved?.Invoke(this, e);
             }
         };
     }
+
     public async Task<(SpotifyLibraryItem<SpotifySimpleArtist>[] Items, int Total)> GetArtists(
         string? query,
         SpotifyArtistLibrarySortField order,
         int offset, int limit,
         CancellationToken cancellationToken = default)
     {
-
         var user = _tcpHolder.WelcomeMessage.Result.CanonicalUsername;
-        var key = new LibraryKeyComposite(user, SpotifyItemType.Artist);
-        using (await _libraryPerUserLock.LockAsync(cancellationToken))
+        var recentlyPlayedTask = Task.Run(async () =>
         {
-            var recentlyPlayedTask = Task.Run(async () =>
+            if (order is SpotifyArtistLibrarySortField.Recents)
             {
-                if (order is SpotifyArtistLibrarySortField.Recents)
-                {
-                    return await _mediator.Send(new FetchRecentlyPlayedQuery
-                    {
-                        User = user,
-                        Limit = 50,
-                        Filter = "default,track,collection-new-episodes"
-                    }, cancellationToken);
-                }
-                return null;
-            }, cancellationToken);
-
-            if (!_libraryPerUser.TryGetValue(key, out var libraryForUserAlreadyCached))
-            {
-                //Get 
-                var items = await _mediator.Send(new FetchArtistCollectionQuery
+                return await _mediator.Send(new FetchRecentlyPlayedQuery
                 {
                     User = user,
+                    Limit = 50,
+                    Filter = "default,track,collection-new-episodes"
                 }, cancellationToken);
-                libraryForUserAlreadyCached = items;
-                _libraryPerUser[key] = libraryForUserAlreadyCached;
             }
 
+            return null;
+        }, cancellationToken);
+        //Get 
+        var items = await _mediator.Send(new FetchArtistCollectionQuery
+        {
+            User = user,
+        }, cancellationToken);
 
-            var uris = libraryForUserAlreadyCached.ToDictionary(x => x.Item.ToString(), x => x);
-            var metadataRaw = await _mediator.Send(new FetchBatchedMetadataQuery
+
+        var uris = items.ToDictionary(x => x.Item.ToString(), x => x);
+        var metadataRaw = await _mediator.Send(new FetchBatchedMetadataQuery
+        {
+            AllowCache = true,
+            Uris = uris.Keys,
+            Country = _tcpHolder.Country,
+            ItemsType = SpotifyItemType.Artist
+        }, cancellationToken);
+
+        var metadata = metadataRaw
+            .ToDictionary(x => x.Key,
+                x => global::Spotify.Metadata.Artist.Parser.ParseFrom(x.Value));
+
+        var recentlyPlayed = await recentlyPlayedTask;
+        var finalList = metadata.Select(x =>
+        {
+            var libraryItem = uris[x.Key];
+            var recentlyPlayedItem = recentlyPlayed?.FirstOrDefault(f => f.Uri == x.Key)?.PlayedAt;
+            return new SpotifyLibraryItem<SpotifySimpleArtist>
             {
-                AllowCache = true,
-                Uris = uris.Keys,
-                Country = _tcpHolder.Country,
-                ItemsType = SpotifyItemType.Artist
-            }, cancellationToken);
-
-            var metadata = metadataRaw
-                .ToDictionary(x => x.Key,
-                    x => global::Spotify.Metadata.Artist.Parser.ParseFrom(x.Value));
-
-            var recentlyPlayed = await recentlyPlayedTask;
-            var finalList = metadata.Select(x =>
-            {
-                var libraryItem = uris[x.Key];
-                var recentlyPlayedItem = recentlyPlayed?.FirstOrDefault(f => f.Uri == x.Key)?.PlayedAt;
-                return new SpotifyLibraryItem<SpotifySimpleArtist>
+                Item = new SpotifySimpleArtist
                 {
-                    Item = new SpotifySimpleArtist
-                    {
-                        Uri = SpotifyId.FromUri(x.Key),
-                        Name = x.Value.Name,
-                        Images = BuildImages(x.Value),
-                    },
-                    AddedAt = libraryItem.AddedAt,
-                    LastPlayedAt = recentlyPlayedItem
-                };
-            });
+                    Uri = SpotifyId.FromUri(x.Key),
+                    Name = x.Value.Name,
+                    Images = BuildImages(x.Value),
+                },
+                AddedAt = libraryItem.AddedAt,
+                LastPlayedAt = recentlyPlayedItem
+            };
+        });
 
 
-            return (FilterSortLimit(finalList, query, order, offset, limit), uris.Count);
-        }
-
-
-        // const string operationName = "libraryV3";
-        // var variables = new Dictionary<string, object>
-        // {
-        //     { "filters", new[] { "Artists" } },
-        //     {
-        //         "order", order switch
-        //         {
-        //             SpotifyArtistLibrarySortField.Recents => "Recents",
-        //             SpotifyArtistLibrarySortField.RecentlyAdded => "Recently Added",
-        //             SpotifyArtistLibrarySortField.Alphabetical => "Alphabetical",
-        //             _ => throw new ArgumentOutOfRangeException(nameof(order), order, null)
-        //         }
-        //     },
-        //     { "textFilter", query ?? string.Empty },
-        //     { "features", new[] { "LIKED_SONGS", "YOUR_EPISODES" } },
-        //     { "limit", limit },
-        //     { "offset", offset },
-        //     { "flatten", false },
-        //     { "expandedFolders", Array.Empty<string>() },
-        //     { "folderUri", (string?)null },
-        //     { "includeFoldersWhenFlattening", true },
-        //     { "withCuration", false }
-        // };
-        //
-        // const string hash = "17d801ba80f3a3d7405966641818c334fe32158f97e9e8b38f1a92f764345df9";
-        //
-        // using var response = await _mediator.Send(new GetSpotifyGraphQLQuery
-        // {
-        //     OperationName = operationName,
-        //     Variables = variables,
-        //     Hash = hash
-        // }, cancellationToken);
-        // await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
-        // using var jsonDocument = await JsonDocument.ParseAsync(stream, cancellationToken: cancellationToken);
-        // var libraryV3 = jsonDocument.RootElement.GetProperty("data").GetProperty("me").GetProperty("libraryV3");
-        // var totalCount = libraryV3.GetProperty("totalCount").GetInt32();
-        // var items = libraryV3.GetProperty("items");
-        // using var enumerator = items.EnumerateArray();
-        // var output = new SpotifyLibraryItem<SpotifySimpleArtist>[items.GetArrayLength()];
-        // var i = 0;
-        // while (enumerator.MoveNext())
-        // {
-        //     var curr = enumerator.Current;
-        //     var addedAt = curr.GetProperty("addedAt").GetProperty("isoString").GetDateTime();
-        //     var item = curr.GetProperty("item").GetProperty("data");
-        //     var uri = item.GetProperty("uri").GetString();
-        //     var name = item.GetProperty("profile").GetProperty("name").GetString();
-        //     var images = ParseVisuals(item.GetProperty("visuals").GetProperty("avatarImage"));
-        //     var artist = new SpotifySimpleArtist
-        //     {
-        //         Id = SpotifyId.FromUri(uri),
-        //         Name = name,
-        //         Images = images
-        //     };
-        //     output[i++] = new SpotifyLibraryItem<SpotifySimpleArtist>
-        //     {
-        //         Item = artist,
-        //         AddedAt = new DateTimeOffset(addedAt, TimeSpan.Zero)
-        //     };
-        // }
-        //
-        //
-        // return (output, totalCount);
+        return (FilterSortLimit(finalList, query, order, offset, limit), uris.Count);
     }
 
-    public event EventHandler<IReadOnlyCollection<SpotifyLibraryItem<SpotifyId>>>? ItemAdded;
-    public event EventHandler<IReadOnlyCollection<SpotifyId>>? ItemRemoved;
+    public async Task<SpotifySongsLibrary> GetTrackIdsAsync(CancellationToken cancellationToken)
+    {
+        var user = _tcpHolder.WelcomeMessage.Result.CanonicalUsername;
+        //Get 
+        var items = await _mediator.Send(new FetchTracksCollectionQuery
+        {
+            User = user,
+            WithAlbums = false
+        }, cancellationToken);
+
+        var finalList = items.Select(x => new SpotifyLibraryItem<SpotifyId>
+        {
+            Item = x.Item,
+            AddedAt = x.AddedAt,
+            LastPlayedAt = null
+        });
+
+        return new SpotifySongsLibrary
+        {
+            Items = finalList.ToImmutableArray()
+        };
+    }
+
+    public SpotifyLibraryChangeListener ChangeListener(SpotifyLibaryType library)
+    {
+        var listener = new SpotifyLibraryChangeListener(library);
+        _changeListeners.Add(listener);
+        return listener;
+    }
 
     private SpotifyLibraryItem<SpotifySimpleArtist>[] FilterSortLimit(
         IEnumerable<SpotifyLibraryItem<SpotifySimpleArtist>> finalList,
@@ -288,6 +249,23 @@ public interface ISpotifyLibraryClient
 {
     Task<(SpotifyLibraryItem<SpotifySimpleArtist>[] Items, int Total)> GetArtists(string? query, SpotifyArtistLibrarySortField order, int offset, int limit, CancellationToken cancellationToken = default);
 
-    event EventHandler<IReadOnlyCollection<SpotifyLibraryItem<SpotifyId>>> ItemAdded;
-    event EventHandler<IReadOnlyCollection<SpotifyId>> ItemRemoved;
+    Task<SpotifySongsLibrary> GetTrackIdsAsync(CancellationToken cancellationToken);
+
+    SpotifyLibraryChangeListener ChangeListener(SpotifyLibaryType library);
+}
+
+public sealed class SpotifyLibraryChangeListener
+{
+    internal SpotifyLibraryChangeListener(SpotifyLibaryType type)
+    {
+        Type = type;
+    }
+    public SpotifyLibaryType Type { get; }
+
+    public event EventHandler<LibraryModificationInfo>? ItemsChanged;
+
+    public void Incoming(LibraryModificationInfo libarryLibraryModificationInfo)
+    {
+        ItemsChanged?.Invoke(this, libarryLibraryModificationInfo);
+    }
 }

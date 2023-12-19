@@ -34,8 +34,6 @@ internal sealed class SpotifyRemotePlaybackPlayerViewModel : PlaybackPlayerViewM
         _dispatcher = dispatcher;
         _mediator = mediator;
         spotifyClient.PlaybackStateChanged += SpotifyClientOnPlaybackStateChanged;
-        spotifyClient.Library.ItemAdded += LibraryOnItemAdded;
-        spotifyClient.Library.ItemRemoved += LibraryOnItemRemoved;
     }
 
     public SpotifyDevice? Device
@@ -44,29 +42,29 @@ internal sealed class SpotifyRemotePlaybackPlayerViewModel : PlaybackPlayerViewM
         set => SetProperty(ref _device, value);
     }
 
-    private void LibraryOnItemRemoved(object? sender, IReadOnlyCollection<SpotifyId> e)
-    {
-        _dispatcher.Invoke(() =>
-        {
-            _mediator.Publish(new LibraryItemRemovedNotification()
-            {
-                Id = e.Select(x => (x.ToString(), x.Type))
-            });
-        });
-    }
-
-    private void LibraryOnItemAdded(object? sender, IReadOnlyCollection<SpotifyLibraryItem<SpotifyId>> e)
-    {
-        _dispatcher.Invoke(() =>
-        {
-            _mediator.Publish(new LibraryItemAddedNotification()
-            {
-                Items = e.Select(x => (x.Item.ToString(),
-                    x.Item.Type,
-                    x.AddedAt))
-            });
-        });
-    }
+    // private void LibraryOnItemRemoved(object? sender, IReadOnlyCollection<SpotifyId> e)
+    // {
+    //     _dispatcher.Invoke(() =>
+    //     {
+    //         _mediator.Publish(new LibraryItemRemovedNotification()
+    //         {
+    //             Id = e.Select(x => (x.ToString(), x.Type))
+    //         });
+    //     });
+    // }
+    //
+    // private void LibraryOnItemAdded(object? sender, IReadOnlyCollection<SpotifyLibraryItem<SpotifyId>> e)
+    // {
+    //     _dispatcher.Invoke(() =>
+    //     {
+    //         _mediator.Publish(new LibraryItemAddedNotification()
+    //         {
+    //             Items = e.Select(x => (x.Item.ToString(),
+    //                 x.Item.Type,
+    //                 x.AddedAt))
+    //         });
+    //     });
+    // }
 
     private async void SpotifyClientOnPlaybackStateChanged(object? sender, SpotifyPlaybackState e)
     {
@@ -143,8 +141,6 @@ internal sealed class SpotifyRemotePlaybackPlayerViewModel : PlaybackPlayerViewM
         if (disposing)
         {
             _spotifyClient.PlaybackStateChanged -= SpotifyClientOnPlaybackStateChanged;
-            _spotifyClient.Library.ItemAdded -= LibraryOnItemAdded;
-            _spotifyClient.Library.ItemRemoved -= LibraryOnItemRemoved;
         }
     }
 }

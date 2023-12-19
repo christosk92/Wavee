@@ -6,6 +6,7 @@ using Mediator;
 using Nito.AsyncEx;
 using Spotify.Metadata;
 using Wavee.Spotify.Common;
+using Wavee.UI.Domain.Library;
 using Wavee.UI.Domain.Playlist;
 using Wavee.UI.Features.Playlists.Contracts;
 using Wavee.UI.Features.Playlists.Queries;
@@ -248,7 +249,7 @@ public sealed class LazyPlaylistTrackViewModel : ObservableObject
 
 public sealed class PlaylistTrackViewModel
 {
-    public PlaylistTrackViewModel(Track spotifyTrack, PlaylistTrackInfo trackInfo)
+    private PlaylistTrackViewModel(Track spotifyTrack)
     {
         Name = spotifyTrack.Name;
 
@@ -269,9 +270,19 @@ public sealed class PlaylistTrackViewModel
             spotifyTrack.Album.Name);
         Duration = TimeSpan.FromMilliseconds(spotifyTrack.Duration);
 
+    }
+    public PlaylistTrackViewModel(Track spotifyTrack, PlaylistTrackInfo trackInfo) : this(spotifyTrack)
+    {
         AddedAt = trackInfo.AddedAt;
         AddedBy = trackInfo.AddedBy;
         UniquePlaylistItemId = trackInfo.UniqueItemId;
+    }
+
+    public PlaylistTrackViewModel(Track spotifyTrack, LibraryItem<string> trackInfo) : this(spotifyTrack)
+    {
+        AddedAt = trackInfo.AddedAt;
+        AddedBy = null;
+        UniquePlaylistItemId = null;
     }
 
     public string Name { get; }

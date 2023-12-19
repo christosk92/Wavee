@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Net.Http.Headers;
 using System.Net.WebSockets;
+using System.Numerics;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using Eum.Spotify.connectstate;
@@ -70,9 +71,28 @@ internal sealed partial class SpotifyRemoteHolder : ISpotifyRemoteClient
     {
         try
         {
-            if (e.Item1.StartsWith("hm://collection/artist/"))
+            static bool IsArtistUpdate(string x) => x.StartsWith("hm://collection/artist/");
+            static bool IsTracksUpdate(string x) => x.StartsWith("hm://collection/collection");
+
+            bool isArtistUpdate = IsArtistUpdate(e.Item1);
+            bool isTracksUpdate = IsTracksUpdate(e.Item1);
+            if (isArtistUpdate || isTracksUpdate)
             {
-                //Artist update
+                SpotifyItemType itemType;
+                if (isArtistUpdate)
+                {
+                    itemType = SpotifyItemType.Artist;
+                }
+                else if (isTracksUpdate)
+                {
+                    itemType = SpotifyItemType.Track;
+                }
+                else
+                {
+                    return;
+                }
+
+            //Artist update
                 using var payloads = e.Item2.GetProperty("payloads").EnumerateArray();
                 payloads.MoveNext();
                 var payloadStr = payloads.Current.GetString();
@@ -86,7 +106,7 @@ internal sealed partial class SpotifyRemoteHolder : ISpotifyRemoteClient
                 foreach (var item in items.EnumerateArray())
                 {
                     ReadOnlySpan<char> id = item.GetProperty("identifier").GetString();
-                    var spotifyId = SpotifyId.FromBase62(id, SpotifyItemType.Artist);
+                    var spotifyId = SpotifyId.FromBase62(id, itemType);
                     var removed = item.GetProperty("removed").GetBoolean();
                     if (removed)
                     {
@@ -110,7 +130,7 @@ internal sealed partial class SpotifyRemoteHolder : ISpotifyRemoteClient
                     ItemAdded?.Invoke(this, added);
                 }
 
-                added = added.Where(x => x is not null).ToArray();
+                removedItems = removedItems.Where(x => x.Id != BigInteger.Zero).ToArray();
                 if (removedItems.Length > 0)
                 {
                     ItemRemoved?.Invoke(this, removedItems);

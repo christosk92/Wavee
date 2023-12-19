@@ -2,10 +2,11 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="using:Wavee.UI.WinUI.Controls"
-    xmlns:controls1="using:CommunityToolkit.WinUI.UI.Controls"
     xmlns:local="using:Wavee.UI.WinUI"
     xmlns:media="using:CommunityToolkit.WinUI.UI.Media"
-    xmlns:ui="using:CommunityToolkit.WinUI.UI">
+    xmlns:toolkit="using:CommunityToolkit.WinUI.Controls"
+    xmlns:ui="using:CommunityToolkit.WinUI.UI"
+    xmlns:winUi="using:CommunityToolkit.WinUI">
     <Style TargetType="controls:TrackControl">
         <Setter Property="Template">
             <Setter.Value>
@@ -208,17 +209,17 @@
                                 Text="{TemplateBinding Description}" />
                         </StackPanel>
 
-                        <controls1:ConstrainedBox
+                        <toolkit:ConstrainedBox
                             x:Name="AlbumImageBox"
                             Grid.Row="0"
                             MaxWidth="400"
                             MaxHeight="400"
                             VerticalAlignment="Top"
-                            ui:Effects.Shadow="{StaticResource CommonShadow}"
-                            ui:VisualExtensions.NormalizedCenterPoint="0.5,0.5"
+                            winUi:Effects.Shadow="{StaticResource CommonShadow}"
+                            winUi:VisualExtensions.NormalizedCenterPoint="0.5,0.5"
                             AspectRatio="1:1">
                             <Image x:Name="AlbumImageBoxImage" />
-                        </controls1:ConstrainedBox>
+                        </toolkit:ConstrainedBox>
 
                         <VisualStateManager.VisualStateGroups>
                             <VisualStateGroup x:Name="ViewStates">

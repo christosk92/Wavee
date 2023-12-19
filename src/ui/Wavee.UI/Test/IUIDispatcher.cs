@@ -3,4 +3,5 @@
 public interface IUIDispatcher
 {
     void Invoke(Action action);
+    Task InvokeAsync(Func<Task> func);
 }

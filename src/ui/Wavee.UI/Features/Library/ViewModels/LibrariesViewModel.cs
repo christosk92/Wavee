@@ -1,5 +1,4 @@
 ﻿using System.Collections.Immutable;
-using CommunityToolkit.Mvvm.Messaging;
 using Mediator;
 using Wavee.Spotify.Common;
 using Wavee.UI.Features.Library.Notifications;
