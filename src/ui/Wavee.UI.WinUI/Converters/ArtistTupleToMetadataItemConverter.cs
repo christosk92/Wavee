@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.WinUI.Controls;
 using Microsoft.UI.Xaml.Data;
+using Wavee.UI.Extensions;
 
 namespace Wavee.UI.WinUI.Converters;
 
@@ -14,7 +16,9 @@ public sealed class ArtistTupleToMetadataItemConverter : IValueConverter
         {
             return x.Select(f => new MetadataItem
             {
-                Label = f.Item2
+                Label = f.Item2,
+                Command = Constants.NavigationCommand,
+                CommandParameter = f.Item1
             });
         }
 

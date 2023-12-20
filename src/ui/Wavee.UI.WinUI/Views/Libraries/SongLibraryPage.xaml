@@ -196,10 +196,18 @@
                                                 </controls:MetadataControl.TextBlockStyle>
                                             </controls:MetadataControl>
 
-                                            <TextBlock
+
+                                            <Button
                                                 Grid.Column="2"
-                                                VerticalAlignment="Center"
-                                                Text="{x:Bind Track.Album.Item2, Mode=OneWay}" />
+                                                Padding="0,8"
+                                                HorizontalAlignment="Stretch"
+                                                VerticalAlignment="Stretch"
+                                                HorizontalContentAlignment="Stretch"
+                                                Content="{x:Bind Track.Album.Item2, Mode=OneWay}"
+                                                Foreground="{ThemeResource ApplicationForegroundThemeBrush}"
+                                                Style="{ThemeResource TextBlockButtonStyle}"
+                                                Tag="{x:Bind Track.Album.Item1, Mode=OneWay}"
+                                                Tapped="AlbumTapped" />
 
                                             <TextBlock
                                                 Grid.Column="4"

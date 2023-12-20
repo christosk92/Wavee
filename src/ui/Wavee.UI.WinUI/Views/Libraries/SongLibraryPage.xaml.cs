@@ -3,8 +3,13 @@ using CommunityToolkit.WinUI.Controls;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
 using System.Text;
+using Windows.Foundation;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Input;
+using Wavee.UI.Extensions;
 using Wavee.UI.Features.Library.ViewModels;
 using Wavee.UI.WinUI.Contracts;
+using WinRT;
 
 
 namespace Wavee.UI.WinUI.Views.Libraries;
@@ -89,6 +94,14 @@ public sealed partial class SongLibraryPage : Page, INavigeablePage<LibrarySongs
                 ViewModel.GeneralSearchTerm = TokenBox.Text;
             }
             await ViewModel.RefreshTracks();
+        }
+    }
+
+    private void AlbumTapped(object sender, TappedRoutedEventArgs e)
+    {
+        if (sender is FrameworkElement fe && fe.Tag is string vm)
+        {
+            Constants.NavigationCommand.Execute(vm);
         }
     }
 }

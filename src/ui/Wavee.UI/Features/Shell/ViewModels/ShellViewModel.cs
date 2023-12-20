@@ -1,7 +1,9 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using System.Collections.Generic;
+using CommunityToolkit.Mvvm.Input;
 using Mediator;
 using Wavee.Domain.Library;
+using Wavee.UI.Extensions;
 using Wavee.UI.Features.Artist.ViewModels;
 using Wavee.UI.Features.Library.ViewModels;
 using Wavee.UI.Features.Library.ViewModels.Album;
@@ -148,6 +150,12 @@ public sealed class ShellViewModel : ObservableObject
                     }
             }
         };
+
+        Constants.NavigationCommand = new RelayCommand<string>(s =>
+        {
+            if (!string.IsNullOrEmpty(s))
+                Navigation.NavigateToId(s);
+        });
     }
 
     public INavigationService Navigation { get; }

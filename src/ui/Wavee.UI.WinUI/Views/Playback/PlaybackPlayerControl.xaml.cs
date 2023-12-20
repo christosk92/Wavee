@@ -8,6 +8,7 @@ using CommunityToolkit.WinUI.Controls;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
+using Wavee.UI.Extensions;
 using Wavee.UI.Features.Playback.ViewModels;
 using Wavee.UI.Features.RightSidebar.ViewModels;
 using Wavee.UI.Features.Shell.ViewModels;
@@ -72,7 +73,7 @@ public sealed partial class PlaybackPlayerControl : UserControl
             yield return new MetadataItem
             {
                 Label = item2,
-                Command = Player.NavigationCommand,
+                Command = Constants.NavigationCommand,
                 CommandParameter = item1
             };
         }
@@ -101,6 +102,14 @@ public sealed partial class PlaybackPlayerControl : UserControl
         if (LyricsButton.IsChecked is false)
         {
             SelectedSidebarComponent = null;
+        }
+    }
+
+    private void TitleBlock_OnTapped(object sender, TappedRoutedEventArgs e)
+    {
+        if (Player is not null && !string.IsNullOrEmpty(Player.GroupId))
+        {
+            Constants.NavigationCommand.Execute(Player.GroupId);
         }
     }
 }

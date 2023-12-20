@@ -57,4 +57,6 @@ public sealed class AlbumTrackViewModel : ObservableObject
         get => _playbackState;
         set => SetProperty(ref _playbackState, value);
     }
+
+    public required string UniqueItemIdd { get; init; }
 }

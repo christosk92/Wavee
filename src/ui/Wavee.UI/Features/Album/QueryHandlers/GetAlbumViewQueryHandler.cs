@@ -77,7 +77,8 @@ public sealed class GetAlbumViewQueryHandler : IQueryHandler<GetAlbumViewQuery, 
                 Id = spotifyAlbumTrack.Uri.ToString(),
                 Name = spotifyAlbumTrack.Name,
                 Duration = spotifyAlbumTrack.Duration,
-                PlayCount = spotifyAlbumTrack.PlayCount
+                PlayCount = spotifyAlbumTrack.PlayCount,
+                UniqueItemId = spotifyAlbumTrack.UniqueItemId
             };
         }
 

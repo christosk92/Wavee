@@ -4,6 +4,9 @@ using System;
 using System.Text;
 using System.Threading;
 using CommunityToolkit.WinUI.Controls;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Input;
+using Wavee.UI.Extensions;
 using Wavee.UI.Features.Library.ViewModels.Artist;
 using Wavee.UI.Features.Playlists.ViewModel;
 using Wavee.UI.WinUI.Contracts;
@@ -128,6 +131,14 @@ public sealed partial class PlaylistPage : Page, INavigeablePage<PlaylistViewMod
                 ViewModel.GeneralSearchTerm = TokenBox.Text;
             }
             await ViewModel.RefreshTracks();
+        }
+    }
+
+    private void AlbumTapped(object sender, TappedRoutedEventArgs e)
+    {
+        if (sender is FrameworkElement fe && fe.Tag is string x)
+        {
+            Constants.NavigationCommand.Execute(x);
         }
     }
 }

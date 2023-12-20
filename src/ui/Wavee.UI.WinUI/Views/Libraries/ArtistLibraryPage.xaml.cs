@@ -122,7 +122,7 @@ public sealed partial class ArtistLibraryPage : Page, INavigeablePage<LibraryArt
         var tag = container?.Tag;
         if (tag is string id)
         {
-            ViewModel.NavigateToArtist(id);
+            Constants.NavigationCommand.Execute(id);
         }
     }
 }

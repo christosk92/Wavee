@@ -8,4 +8,5 @@ public sealed class AlbumTrackEntity
     public required string Id { get; init; }
     public required string Name { get; init; }
     public required ulong? PlayCount { get; init; }
+    public required string UniqueItemId { get; init; }
 }

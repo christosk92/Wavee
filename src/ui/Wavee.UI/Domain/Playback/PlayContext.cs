@@ -30,6 +30,8 @@ public class PlayContext
       artist.Overview.TopTracks,
       autoplay);
 
+    public static AlbumBuilder FromAlbum(string id) => new AlbumBuilder(id);
+
     public class ArtistBuilder
     {
         internal IEnumerable<ArtistTopTrackViewModel> _topTracks;
@@ -177,26 +179,53 @@ public class PlayContext
                 _builder
                     ._playContext._playOptions.License = "premium";
 
-                return new AlbumBuilder(_builder);
+                return new AlbumBuilder(_builder._playContext);
             }
         }
     }
 
     public class AlbumBuilder
     {
-        private readonly ArtistBuilder _builder;
+        private readonly PlayContext _ctx;
 
-        internal AlbumBuilder(ArtistBuilder context)
+        internal AlbumBuilder(PlayContext context)
         {
-            _builder = context;
+            _ctx = context;
+        }
+
+        public AlbumBuilder(string id)
+        {
+            _ctx = new PlayContext();
+            _ctx._spContext.Uri = id;
+            _ctx._spContext.Url = $"context://{id}";
+            _ctx._playOrigin = new PlayOrigin()
+            {
+                DeviceIdentifier = string.Empty,
+                FeatureIdentifier = "album",
+                FeatureVersion = "xpui_2023-12-04_1701707306292_36b715a",
+                ViewUri = string.Empty,
+                ExternalReferrer = string.Empty,
+                ReferrerIdentifier = "search",
+                FeatureClasses = { },
+            };
+            _ctx._playOptions = new PreparePlayOptions();
         }
 
         public TrackBuilder StartWithTrack(AlbumTrackViewModel track)
         {
-            _builder._playContext._playOptions.SkipTo??= new SkipToTrack();
-            _builder._playContext._playOptions.SkipTo.TrackIndex = (ulong)(track.Number -1);
+            _ctx._playOptions.SkipTo??= new SkipToTrack();
+            _ctx._playOptions.SkipTo.TrackIndex = (ulong)(track.Number -1);
+            if (!string.IsNullOrEmpty(track.Id))
+            {
+                _ctx._playOptions.SkipTo.TrackUri = track.Id;
+            }
 
-            return new TrackBuilder(_builder._playContext);
+            if (!string.IsNullOrEmpty(track.UniqueItemIdd))
+            {
+                _ctx._playOptions.SkipTo.TrackUid = track.UniqueItemIdd;
+            }
+
+            return new TrackBuilder(_ctx);
         }
     }
 

@@ -515,12 +515,15 @@
             Margin="6,4,0,4"
             VerticalAlignment="Bottom">
             <StackPanel x:Name="MetadataInfo" Orientation="Vertical">
-                <TextBlock
+                <Button
                     x:Name="TitleBlock"
+                    Padding="0"
                     FontSize="24"
+                    Tapped="TitleBlock_OnTapped"
                     FontWeight="Bold"
-                    Text="{x:Bind Player.Title, Mode=OneWay}"
-                    TextTrimming="CharacterEllipsis" />
+                    Style="{ThemeResource TextBlockButtonStyle}">
+                    <TextBlock Text="{x:Bind Player.Title, Mode=OneWay}" TextTrimming="CharacterEllipsis" />
+                </Button>
                 <controls1:MetadataControl Items="{x:Bind ConvertToMetadataItem(Player.Artists), Mode=OneWay}" RelativePanel.Below="TitleBlock">
                     <controls1:MetadataControl.TextBlockStyle>
                         <Style TargetType="TextBlock">

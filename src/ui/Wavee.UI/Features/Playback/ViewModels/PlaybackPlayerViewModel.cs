@@ -38,29 +38,13 @@ public abstract class PlaybackPlayerViewModel : ObservableObject, IDisposable, I
     private bool _paused;
 
     protected ObservableCollection<RemoteDevice> _devices = new ObservableCollection<RemoteDevice>();
+    private string? _groupId;
 
     protected PlaybackPlayerViewModel(IUIDispatcher dispatcher, 
-        INavigationService navigationService,
         RightSidebarLyricsViewModel lyrics)
     {
         _dispatcher = dispatcher;
         Lyrics = lyrics;
-        NavigationCommand = new RelayCommand<string>(s =>
-        {
-            static void Navigate(string id, SpotifyItemType type, INavigationService service)
-            {
-                service.NavigateTo(id);
-            }
-
-            if (SpotifyId.TryParse(s, out var id))
-            {
-                Navigate(id.ToString(), id.Type, navigationService);
-            }
-            else
-            {
-                //TODO:
-            }
-        });
 
         _timer = new Timer(state =>
         {
@@ -106,6 +90,11 @@ public abstract class PlaybackPlayerViewModel : ObservableObject, IDisposable, I
         protected set => SetProperty(ref _title, value);
     }
 
+    public string? GroupId
+    {
+        get => _groupId;
+        protected set => SetProperty(ref _groupId, value);
+    }
     public (string, string)[]? Artists
     {
         get => _artists;
@@ -125,8 +114,7 @@ public abstract class PlaybackPlayerViewModel : ObservableObject, IDisposable, I
         protected set => SetProperty(ref _id, value);
     }
 
-    public ICommand NavigationCommand { get; }
-
+ 
     public bool IsPaused
     {
         get => _paused;

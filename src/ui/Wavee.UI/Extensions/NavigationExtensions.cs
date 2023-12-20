@@ -14,7 +14,7 @@ namespace Wavee.UI.Extensions;
 
 public static class NavigationExtensions
 {
-    public static void NavigateTo(this INavigationService service, string id)
+    public static void NavigateToId(this INavigationService service, string id)
     {
         if (SpotifyId.TryParse(id, out var spId))
         {

@@ -27,8 +27,7 @@ internal sealed class SpotifyRemotePlaybackPlayerViewModel : PlaybackPlayerViewM
         ISpotifyClient spotifyClient,
         IUIDispatcher dispatcher,
         IMediator mediator,
-        INavigationService navigationService,
-        RightSidebarLyricsViewModel lyricsRightSidebarViewModel) : base(dispatcher, navigationService, lyricsRightSidebarViewModel)
+        RightSidebarLyricsViewModel lyricsRightSidebarViewModel) : base(dispatcher, lyricsRightSidebarViewModel)
     {
         _spotifyClient = spotifyClient;
         _dispatcher = dispatcher;
@@ -93,6 +92,7 @@ internal sealed class SpotifyRemotePlaybackPlayerViewModel : PlaybackPlayerViewM
                 Duration = TimeSpan.FromMilliseconds(trackMetadata.Duration);
                 CoverSmallImageUrl = smallest.Item1;
                 Title = trackMetadata.Name;
+                GroupId = SpotifyId.FromRaw(trackMetadata.Album.Gid.Span, SpotifyItemType.Album).ToString();
                 Artists = trackMetadata.Artist.Select(a => (SpotifyId.FromRaw(a.Gid.Span, SpotifyItemType.Artist).ToString(), a.Name)).ToArray();
                 Id = trackId;
 

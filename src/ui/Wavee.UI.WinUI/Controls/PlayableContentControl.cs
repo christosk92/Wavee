@@ -4,6 +4,8 @@ using CommunityToolkit.WinUI.Animations;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
+using Wavee.UI.Extensions;
+using Wavee.UI.WinUI.Views.Shell;
 
 namespace Wavee.UI.WinUI.Controls;
 
@@ -29,10 +31,7 @@ public sealed class PlayableContentControl : Control
                 {
                     if (!string.IsNullOrEmpty(newImage))
                     {
-                        var albumSquare = (Image)GetTemplateChild("AlbumImageBoxImage");
-                        var bmpg = new Microsoft.UI.Xaml.Media.Imaging.BitmapImage();
-                        bmpg.UriSource = new Uri(newImage);
-                        albumSquare.Source = bmpg;
+                        Render();
                     }
 
                     break;
@@ -45,6 +44,16 @@ public sealed class PlayableContentControl : Control
     public PlayableContentControl()
     {
         this.DefaultStyleKey = typeof(PlayableContentControl);
+    }
+
+    protected override void OnTapped(TappedRoutedEventArgs e)
+    {
+        base.OnTapped(e);
+
+        if (!string.IsNullOrEmpty(Id))
+        {
+            Constants.NavigationCommand.Execute(this.Id);
+        }
     }
 
     protected override void OnApplyTemplate()
@@ -61,6 +70,25 @@ public sealed class PlayableContentControl : Control
             case PlayableContentViewType.AlbumSquare:
                 {
                     VisualStateManager.GoToState(this, "AlbumSquare", false);
+
+                    var albumSquare = (Image)GetTemplateChild("AlbumImageBoxImage");
+                    if (albumSquare is null)
+                    {
+                        return;
+                    }
+
+                    if (!string.IsNullOrEmpty(Image))
+                    {
+
+                        var bmpg = new Microsoft.UI.Xaml.Media.Imaging.BitmapImage();
+                        bmpg.UriSource = new Uri(Image);
+                        albumSquare.Source = bmpg;
+                    }
+                    else
+                    {
+                        albumSquare.Source = null;
+                    }
+
                     break;
                 }
             default:

@@ -10,6 +10,10 @@ using Wavee.UI.Features.Album.Queries;
 using Wavee.UI.Features.Artist.Queries;
 using Wavee.UI.Features.Playback.ViewModels;
 using System.Text;
+using Wavee.Spotify.Domain.Album;
+using Eum.Spotify.transfer;
+using Wavee.UI.Domain.Playback;
+using Wavee.UI.Features.Library.ViewModels.Artist;
 
 namespace Wavee.UI.Features.Album.ViewModels;
 
@@ -27,7 +31,7 @@ public sealed class AlbumViewViewModel : ObservableObject
     private string? _mediumImageUrl;
 
     private IReadOnlyCollection<AlbumDiscViewModel>? _discs;
-    private IReadOnlyCollection<SimpleAlbumEntity>? moreAlbumsByArtist;
+    private IReadOnlyCollection<AlbumViewModel>? moreAlbumsByArtist;
 
     private IReadOnlyCollection<Copyright>? _copyrights;
     private string? _label;
@@ -37,12 +41,42 @@ public sealed class AlbumViewViewModel : ObservableObject
     private uint _tracksCount;
     private string? _totalDurationString;
     private string? _releaseDateString;
+    private string? _copyrightsString;
+    private string? _releaseDateFullString;
+    private string _mainArtistName;
+
+
 
     public AlbumViewViewModel(string id, IMediator mediator, PlaybackViewModel playbackViewModel)
     {
         _id = id;
         _mediator = mediator;
+
+        PlayCommand = new RelayCommand<object>(async x =>
+        {
+            try
+            {
+                var playbackVm = playbackViewModel;
+                switch (x)
+                {
+                    case AlbumTrackViewModel track:
+                        //TODO: Can this be more??
+                        var ctx = PlayContext
+                            .FromAlbum(this._id)
+                            .StartWithTrack(track)
+                            .Build();
+                        await playbackVm.Play(ctx);
+                        break;
+                }
+            }
+            catch (InvalidOperationException)
+            {
+
+            }
+        });
     }
+
+    public RelayCommand<object> PlayCommand { get; }
 
     public bool Loaded
     {
@@ -86,7 +120,7 @@ public sealed class AlbumViewViewModel : ObservableObject
         set => SetProperty(ref _discs, value);
     }
 
-    public IReadOnlyCollection<SimpleAlbumEntity>? MoreAlbumsByArtist
+    public IReadOnlyCollection<AlbumViewModel>? MoreAlbumsByArtist
     {
         get => moreAlbumsByArtist;
         set => SetProperty(ref moreAlbumsByArtist, value);
@@ -130,6 +164,24 @@ public sealed class AlbumViewViewModel : ObservableObject
         set => SetProperty(ref _releaseDateString, value);
     }
 
+    public string? ReleaseDateFullString
+    {
+        get => _releaseDateFullString;
+        set => SetProperty(ref _releaseDateFullString, value);
+    }
+
+    public string? CopyrightsString
+    {
+        get => _copyrightsString;
+        set => SetProperty(ref _copyrightsString, value);
+    }
+
+    public string MainArtistName
+    {
+        get => _mainArtistName;
+        set => SetProperty(ref _mainArtistName, value);
+    }
+
 
     public async Task Initialize()
     {
@@ -141,6 +193,7 @@ public sealed class AlbumViewViewModel : ObservableObject
         });
 
         Name = album.Name;
+        MainArtistName = album.Artists.First().Name;
         ReleaseDate = album.ReleaseDate;
         Artists = album.Artists;
         LargeImageUrl = album.LargeImageUrl;
@@ -154,12 +207,21 @@ public sealed class AlbumViewViewModel : ObservableObject
                 Name = f.Name,
                 Duration = f.Duration,
                 Number = i + 1,
-                PlayCommand = null,
+                PlayCommand = PlayCommand,
                 Album = null,
-                Playcount = f.PlayCount
+                Playcount = f.PlayCount,
+                UniqueItemIdd = f.UniqueItemId
             }).ToImmutableArray()
         }).ToImmutableArray();
-        MoreAlbumsByArtist = album.MoreAlbumsByArtist;
+        MoreAlbumsByArtist = album.MoreAlbumsByArtist.Select(x=> new AlbumViewModel
+        {
+            BigImageUrl = x.Images.OrderByDescending(x=> x.Width ??0).FirstOrDefault().Url,
+            MediumImageUrl = x.Images.OrderByDescending(x=> x.Width ??0).Skip(1).FirstOrDefault().Url,
+            Name = x.Name,
+            Id = x.Id,
+            Year = x.Year ?? 1,
+            Type = x.Type,
+        }).ToImmutableArray();
         Label = album.Label;
         Copyrights = album.Copyrights;
 
@@ -179,6 +241,26 @@ public sealed class AlbumViewViewModel : ObservableObject
         TotalDurationString = FormatTime(TotalDuration);
         ReleaseDateString = ReleaseDateStr(ReleaseDate);
 
+        var sb = new StringBuilder();
+        foreach (var copy in album.Copyrights)
+        {
+            sb.Append(copy.Type switch
+            {
+                Copyright.Types.Type.C => '©',
+                Copyright.Types.Type.P => '℗',
+            });
+            sb.Append(' ');
+            sb.Append(copy.Text);
+            sb.Append(Environment.NewLine);
+        }
+
+        if (sb.Length > 0)
+        {
+            sb.Remove(sb.Length - Environment.NewLine.Length, Environment.NewLine.Length);
+        }
+
+        CopyrightsString = sb.ToString();
+        ReleaseDateFullString = ReleaseDateStrFull(ReleaseDate, album.ReleaseDatePrecision);
 
 
         _initialized = true;
@@ -216,6 +298,31 @@ public sealed class AlbumViewViewModel : ObservableObject
     private static string ReleaseDateStr(DateOnly? dateOnly)
     {
         return dateOnly?.Year.ToString() ?? "--";
+    }
+    private static string ReleaseDateStrFull(DateOnly? releaseDate, ReleaseDatePrecision albumReleaseDatePrecision)
+    {
+        if (releaseDate is null)
+        {
+            return "--";
+        }
+
+        var sb = new StringBuilder();
+        switch (albumReleaseDatePrecision)
+        {
+            case ReleaseDatePrecision.Day:
+                sb.Append(releaseDate.Value.ToString("D"));
+                break;
+            case ReleaseDatePrecision.Month:
+                sb.Append(releaseDate.Value.ToString("MMMM yyyy"));
+                break;
+            case ReleaseDatePrecision.Year:
+                sb.Append(releaseDate.Value.ToString("yyyy"));
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(albumReleaseDatePrecision), albumReleaseDatePrecision, null);
+        }
+
+        return sb.ToString();
     }
 }
 

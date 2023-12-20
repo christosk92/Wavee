@@ -51,13 +51,19 @@ internal sealed class SpotifyAlbumClient : ISpotifyAlbumClient
         while (enumrator.MoveNext())
         {
             var root = enumrator.Current;
+            var uid = root.GetProperty("uid").GetString();
             var item = root.GetProperty("track");
             var track = new SpotifyAlbumTrack
             {
-                Duration = TimeSpan.FromMilliseconds(item.GetProperty("duration").GetProperty("totalMilliseconds").GetUInt32()),
-                Name = item.GetProperty("name").GetString(),
-                Uri = SpotifyId.FromUri(item.GetProperty("uri").GetString()),
-                PlayCount = GetPlayCount(item)
+                Duration = TimeSpan.FromMilliseconds(item.GetProperty("duration")
+                    .GetProperty("totalMilliseconds")
+                    .GetUInt32()),
+                Name = item.GetProperty("name")
+                    .GetString(),
+                Uri = SpotifyId.FromUri(item.GetProperty("uri")
+                    .GetString()),
+                PlayCount = GetPlayCount(item),
+                UniqueItemId = uid
             };
             output[i++] = track;
         }
@@ -168,9 +174,11 @@ internal sealed class SpotifyAlbumClient : ISpotifyAlbumClient
 
             int trackIndex = 0;
             Span<SpotifyAlbumTrack> currentDiscTracks = new SpotifyAlbumTrack[tracksTotalCount];
-            while (trackEnumrator.MoveNext())
+            while (trackIndex < tracksTotalCount)
             {
+                trackEnumrator.MoveNext();
                 var x = trackEnumrator.Current;
+                var uid = x.GetProperty("uid").GetString();
                 var item = x.GetProperty("track");
                 var discNumber = item.GetProperty("discNumber").GetUInt16();
                 var trackNumber = item.GetProperty("trackNumber").GetUInt16();
@@ -181,10 +189,15 @@ internal sealed class SpotifyAlbumClient : ISpotifyAlbumClient
 
                 var track = new SpotifyAlbumTrack
                 {
-                    Duration = TimeSpan.FromMilliseconds(item.GetProperty("duration").GetProperty("totalMilliseconds").GetUInt32()),
-                    Name = item.GetProperty("name").GetString(),
-                    Uri = SpotifyId.FromUri(item.GetProperty("uri").GetString()),
-                    PlayCount = GetPlayCount(item)
+                    Duration = TimeSpan.FromMilliseconds(item.GetProperty("duration")
+                        .GetProperty("totalMilliseconds")
+                        .GetUInt32()),
+                    Name = item.GetProperty("name")
+                        .GetString(),
+                    Uri = SpotifyId.FromUri(item.GetProperty("uri")
+                        .GetString()),
+                    PlayCount = GetPlayCount(item),
+                    UniqueItemId = uid
                 };
                 currentDiscTracks[trackIndex++] = track;
             }
@@ -206,9 +219,9 @@ internal sealed class SpotifyAlbumClient : ISpotifyAlbumClient
         {
             case "DAY":
                 var parsed = DateTime.Parse(date.GetProperty("isoString").GetString()!);
-                return (DateOnly.FromDateTime(parsed), ReleaseDatePrecision.Year);
+                return (DateOnly.FromDateTime(parsed), ReleaseDatePrecision.Day);
             default:
-                return (new DateOnly(1, 1, 1), ReleaseDatePrecision.Day);
+                return (new DateOnly(1, 1, 1), ReleaseDatePrecision.Year);
         }
     }
 

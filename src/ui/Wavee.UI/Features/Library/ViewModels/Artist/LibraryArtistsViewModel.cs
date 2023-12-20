@@ -26,16 +26,13 @@ public sealed class LibraryArtistsViewModel : NavigationItemViewModel, IPlayback
     private ArtistLibrarySortField _sortField;
     private int _total;
     private LibraryArtistViewModel? _selectedArtist;
-    private readonly INavigationService _navigationService;
     private IUIDispatcher _dispatcher;
     private readonly PlaybackViewModel _playback;
     public LibraryArtistsViewModel(IMediator mediator,
-        INavigationService navigationService,
         IUIDispatcher dispatcher,
         PlaybackViewModel playback)
     {
         _mediator = mediator;
-        _navigationService = navigationService;
         _dispatcher = dispatcher;
         _playback = playback;
         PlayCommand = new AsyncRelayCommand<object>(async x =>
@@ -206,7 +203,8 @@ public sealed class LibraryArtistsViewModel : NavigationItemViewModel, IPlayback
                     Album = vm,
                     PlaybackState = _playback.IsPlaying(x.Id,
                         null),
-                    Playcount = x.PlayCount
+                    Playcount = x.PlayCount,
+                    UniqueItemIdd = x.UniqueItemId
                 })
                 .ToArray();
             artist.Albums.Add(vm);
@@ -222,12 +220,6 @@ public sealed class LibraryArtistsViewModel : NavigationItemViewModel, IPlayback
         {
             Artists.Remove(artist);
         }
-    }
-
-    public void NavigateToArtist(string id)
-    {
-        _navigationService.NavigateTo(id);
-        // _navigationService.Navigate(null, new ArtistViewModel(_mediator, id, _dispatcher));
     }
 
     public void OnPlaybackChanged(PlaybackViewModel player)

@@ -87,12 +87,13 @@ public sealed class GetAlbumsForArtistQueryHandler : IQueryHandler<GetAlbumsForA
             Id = f.Uri.ToString(),
             Tracks = tracks.TryGetValue(f.Uri, out var tr)
                 ? tr
-                    .Select(x => new AlbumTrackEntity()
+                    .Select(x => new AlbumTrackEntity
                     {
                         Duration = x.Duration,
                         Id = x.Uri.ToString(),
                         Name = x.Name,
-                        PlayCount = x.PlayCount
+                        PlayCount = x.PlayCount,
+                        UniqueItemId = x.UniqueItemId
                     })
                     .ToArray()
                 : null,
