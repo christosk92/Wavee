@@ -2,13 +2,6 @@ namespace Wavee.Spotify;
 
 internal static class Constants
 {
-    public const string SpotifyPublicApiHttpClient = nameof(SpotifyPublicApiHttpClient);
-    public const string SpotifyPartnerApiHttpClient = nameof(SpotifyPartnerApiHttpClient);
-    public const string SpotifyRemoteStateHttpClietn = nameof(SpotifyRemoteStateHttpClietn);
-    public const string SpotifyAccountsApiHttpClient = nameof(SpotifyAccountsApiHttpClient);
-    public const string SpotifyCdnPlaybackClientName = nameof(SpotifyCdnPlaybackClientName);
-
-
     public static byte[] SERVER_KEY =
     {
         0xac, 0xe0, 0x46, 0x0b, 0xff, 0xc2, 0x30, 0xaf, 0xf4, 0x6b, 0xfe, 0xc3, 0xbf, 0xbf, 0x86, 0x3d,
