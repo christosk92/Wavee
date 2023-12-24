@@ -3,6 +3,7 @@ using ConsoleApp1;
 using LiteDB;
 using Wavee;
 using Wavee.Core.Enums;
+using Wavee.Players.NAudio;
 using Wavee.Spotify;
 using Wavee.Spotify.Core.Models.Common;
 
@@ -31,9 +32,20 @@ var config = new WaveeSpotifyConfig
     },
     CachingProvider = NullCachingService.Instance
 };
-var client = WaveeSpotifyClient.Create(config, OpenBrowserAndReturnCallback);
+var player = new NAudioPlayer();
+player.PlaybackStateChanged += (sender, args) =>
+{
+    Console.WriteLine($"Playback state changed to {args}");
+};
+player.PlaybackError += (sender, args) =>
+{
+    Console.WriteLine($"Playback error: {args}");
+};
+var client = WaveeSpotifyClient.Create(player, config, OpenBrowserAndReturnCallback);
 var sw = Stopwatch.StartNew();
-var trackStream = await client.Playback.CreateStream(SpotifyId.FromBase62("1aZb15alCyanO61gVWpNnw", AudioItemType.Track));
+var trackStream =
+    await client.Playback.CreateStream(SpotifyId.FromBase62("0ZoHHROTzwIYeNAHRPedTY", AudioItemType.Track));
+await player.Play(trackStream);
 var newConnectionMade = await client.Remote.Connect();
 if (newConnectionMade)
 {
@@ -43,15 +55,17 @@ else
 {
     Console.WriteLine("Already connected!");
 }
+
 var test = "";
+
 Task<string> OpenBrowserAndReturnCallback(string url)
 {
     // Console.WriteLine($"Please open this url in your browser: {url}");
     // Console.WriteLine("Please enter the callback url:");
     // return Task.FromResult(Console.ReadLine());
-    
+
     Console.WriteLine($"Please open this url in your browser: {url}");
-    
+
     Console.WriteLine("Please enter the callback url:");
     var callbackUrl = Console.ReadLine();
     return Task.FromResult(callbackUrl);

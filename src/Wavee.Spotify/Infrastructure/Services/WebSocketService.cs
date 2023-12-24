@@ -83,6 +83,6 @@ internal sealed class WebSocketService : IWebSocketService
 
     private void ConnectionOnOnError(object? sender, Exception e)
     {
-        throw new NotImplementedException();
+        
     }
 }

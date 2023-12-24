@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using Eum.Spotify.storage;
+using Wavee.Interfaces;
 using Wavee.Spotify.Core;
 using Wavee.Spotify.Core.Clients;
 using Wavee.Spotify.Core.Clients.Playback;
@@ -29,6 +30,7 @@ public sealed class WaveeSpotifyClient : IWaveeSpotifyClient
     }
 
     public static IWaveeSpotifyClient Create(
+        IWaveePlayer player,
         WaveeSpotifyConfig config,
         OAuthCallbackDelegate oAuthCallbackDelegate)
     {
@@ -63,7 +65,7 @@ public sealed class WaveeSpotifyClient : IWaveeSpotifyClient
 
         var cache = config.CachingProvider ?? NullCachingService.Instance;
 
-        var remoteClient = new SpotifyRemoteClient(webSocketService);
+        var remoteClient = new SpotifyRemoteClient(webSocketService,player);
 
         var tokenClient = new SpotifyTokenClient(tokenService);
 

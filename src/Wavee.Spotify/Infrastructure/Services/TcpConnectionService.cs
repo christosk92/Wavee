@@ -62,7 +62,7 @@ internal sealed class TcpConnectionService : ITcpConnectionService
         CancellationToken cancellationToken)
     {
         await ConnectAsync(cancellationToken);
-        
+
         var waiter = SendAudioRequest(itemId, fileId);
         await waiter.WaitAsync(cancellationToken);
         return await Task.FromResult(waiter.Result);
@@ -122,22 +122,37 @@ internal sealed class TcpConnectionService : ITcpConnectionService
 
     private async void ConnectionOnOnError(object? sender, Exception e)
     {
-        var instanceBefore = _connection;
-        await _reconnectSemaphore.WaitAsync();
-        try
-        {
-            if (_dontReconnect || _connection is null || _connection != instanceBefore)
-            {
-                return;
-            }
 
-            _connection?.Dispose();
-            _connection = null;
-            await ConnectAsync(CancellationToken.None);
-        }
-        finally
+        bool done = false;
+        while (!done)
         {
-            _reconnectSemaphore.Release();
+            //Log: Reconnecting in 5 sec. Connection error: {e}. 
+            Console.WriteLine($"Reconnecting in 5 sec. Connection error: {e.Message}");
+            await Task.Delay(TimeSpan.FromSeconds(5));
+            Console.WriteLine("Reconnecting");
+
+            var instanceBefore = _connection;
+            await _reconnectSemaphore.WaitAsync();
+            try
+            {
+                if (_dontReconnect)
+                {
+                    return;
+                }
+
+                _connection?.Dispose();
+                _connection = null;
+                await ConnectAsync(CancellationToken.None);
+                done = true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Reconnect failed: {ex.Message}");
+            }
+            finally
+            {
+                _reconnectSemaphore.Release();
+            }
         }
     }
 

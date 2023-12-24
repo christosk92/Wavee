@@ -1,8 +1,9 @@
-using System.Collections.Concurrent;
 using System.Runtime.InteropServices;
 using NAudio.Wave;
 using Nito.AsyncEx;
-using Wavee.Domain.Playback.Player;
+using Wavee.Core.Enums;
+using Wavee.Core.Playback;
+using Wavee.Interfaces;
 using Wavee.Players.NAudio.VorbisDecoder;
 using AsyncLock = NeoSmart.AsyncLock.AsyncLock;
 
@@ -20,6 +21,7 @@ public sealed class NAudioPlayer : IWaveePlayer
 
     private TimeSpan? _crossfadeDuration = null;
     private AsyncManualResetEvent _playbackStopped = new AsyncManualResetEvent(true);
+
     public NAudioPlayer()
     {
         const int sampleRate = 44100;
@@ -32,6 +34,9 @@ public sealed class NAudioPlayer : IWaveePlayer
 
         Task.Factory.StartNew(async () => await StartReadingPackets(), TaskCreationOptions.LongRunning);
     }
+
+    public event EventHandler<WaveePlaybackStateType>? PlaybackStateChanged;
+    public event EventHandler<Exception>? PlaybackError;
 
     public ValueTask Play(WaveePlaybackList playlist)
     {
@@ -72,6 +77,8 @@ public sealed class NAudioPlayer : IWaveePlayer
         WaveStream? stream_one = null;
         WaveStream? stream_two = null;
         IWaveeMediaSource? sourceOneRaw = null;
+        bool notifiedStartedPlaying = false;
+
         while (!_cts.IsCancellationRequested)
         {
             using (await _lock.LockAsync())
@@ -86,14 +93,23 @@ public sealed class NAudioPlayer : IWaveePlayer
                         stream_two = null;
                         _playbackStopped.Set();
                         await Task.Delay(10, _cts.Token);
+                        if (notifiedStartedPlaying)
+                            NotifyPlaybackStateChanged(WaveePlaybackStateType.Stopped);
+                        notifiedStartedPlaying = false;
                         continue;
                     }
+
                     _playbackStopped.Reset();
 
                     if (stream_one is null)
                     {
+                        NotifyPlaybackStateChanged(WaveePlaybackStateType.Buffering);
+
                         sourceOneRaw = await source.Value();
-                        var streamOneRaw = await sourceOneRaw.CreateStream();
+                        sourceOneRaw.BufferingStream += SourceOneRawOnBufferingStream;
+                        sourceOneRaw.OnError += SourceOneRawOnOnError;
+
+                        var streamOneRaw = sourceOneRaw.AsStream();
                         stream_one_duration = sourceOneRaw.Duration;
                         stream_one = CreateStream(streamOneRaw);
                     }
@@ -122,6 +138,12 @@ public sealed class NAudioPlayer : IWaveePlayer
 
 
                     _bufferedWaveProvider.AddSamples(packet, 0, copied);
+                    if (!notifiedStartedPlaying)
+                    {
+                        NotifyPlaybackStateChanged(WaveePlaybackStateType.Playing);
+                        notifiedStartedPlaying = true;
+                    }
+
                     while (_bufferedWaveProvider.BufferedDuration.TotalSeconds > 0.5)
                     {
                         await Task.Delay(10, _cts.Token);
@@ -129,7 +151,13 @@ public sealed class NAudioPlayer : IWaveePlayer
 
                     if (copied is 0 || stream_one.CurrentTime >= stream_one_duration.Value)
                     {
-                        sourceOneRaw?.Dispose();
+                        if (sourceOneRaw is not null)
+                        {
+                            sourceOneRaw.BufferingStream -= SourceOneRawOnBufferingStream;
+                            sourceOneRaw.OnError -= SourceOneRawOnOnError;
+                            sourceOneRaw.Dispose();
+                        }
+
                         stream_one = null;
                         source = source.Next;
                         continue;
@@ -158,10 +186,32 @@ public sealed class NAudioPlayer : IWaveePlayer
                 catch (Exception e)
                 {
                     Console.WriteLine(e);
-                    throw;
+                    PlaybackError?.Invoke(this, e);
+                    NotifyPlaybackStateChanged(WaveePlaybackStateType.Error);
                 }
             }
         }
+    }
+
+    private void SourceOneRawOnOnError(object? sender, Exception e)
+    {
+        PlaybackError?.Invoke(this, e);
+        NotifyPlaybackStateChanged(WaveePlaybackStateType.Error);
+    }
+
+    private void SourceOneRawOnBufferingStream(object? sender, EventArgs e)
+    {
+        NotifyPlaybackStateChanged(WaveePlaybackStateType.Buffering);
+    }
+
+    private WaveePlaybackStateType _state;
+    private void NotifyPlaybackStateChanged(WaveePlaybackStateType x)
+    {
+        if (_state == x)
+            return;
+        
+        _state = x;
+        PlaybackStateChanged?.Invoke(this, x);
     }
 
     private static byte[] Mix(byte[] packet, byte[] packetTwo, double volumeIn, double volumeOut)
@@ -192,17 +242,17 @@ public sealed class NAudioPlayer : IWaveePlayer
         switch (format)
         {
             case WaveeAudioFormat.MP3:
-                {
-                    var mp3reader = new Mp3FileReader(streamOneRaw);
-                    return new WaveChannel32(mp3reader);
-                    break;
-                }
+            {
+                var mp3reader = new Mp3FileReader(streamOneRaw);
+                return new WaveChannel32(mp3reader);
+                break;
+            }
             case WaveeAudioFormat.OGG:
-                {
-                    var oggReader = new VorbisWaveReader(streamOneRaw, true);
-                    return oggReader;
-                    break;
-                }
+            {
+                var oggReader = new VorbisWaveReader(streamOneRaw, true);
+                return oggReader;
+                break;
+            }
         }
 
         return null;

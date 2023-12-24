@@ -1,6 +1,6 @@
 namespace Wavee.Interfaces;
 
-public interface IWaveeAudioStream
+public interface IWaveePlayer
 {
     
 }

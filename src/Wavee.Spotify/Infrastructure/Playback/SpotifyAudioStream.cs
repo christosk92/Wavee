@@ -7,20 +7,21 @@ using Wavee.Spotify.Interfaces.Clients.Playback;
 
 namespace Wavee.Spotify.Infrastructure.Playback;
 
-public abstract class SpotifyAudioStream : Stream, IWaveeAudioStream
+public abstract class SpotifyAudioStream : Stream, IWaveeMediaSource
 {
     private long _pos;
     internal const int ChunkSize = 2 * 2 * 128 * 1024;
     private readonly Dictionary<int, byte[]> _decryptedChunks = new();
     private readonly IAudioDecrypt? _decrypt;
-
+    
     private static byte[] AUDIO_AES_IV = new byte[]
     {
         0x72, 0xe0, 0x67, 0xfb, 0xdd, 0xcb, 0xcf, 0x77, 0xeb, 0xe8, 0xbc, 0x64, 0x3f, 0x63, 0x0d, 0x93,
     };
 
-    internal SpotifyAudioStream(SpotifyAudioKey audioKey)
+    internal SpotifyAudioStream(SpotifyAudioKey audioKey, TimeSpan duration)
     {
+        Duration = duration;
         if (audioKey.HasKey)
         {
             _decrypt = new BouncyCastleDecrypt(audioKey.Key!, AUDIO_AES_IV, ChunkSize);
@@ -36,26 +37,38 @@ public abstract class SpotifyAudioStream : Stream, IWaveeAudioStream
 
     public override int Read(byte[] buffer, int offset, int count)
     {
-        var chunkIndex = (int)(_pos / ChunkSize);
-        var chunkOffset = (int)(_pos % ChunkSize);
-
-        if (!_decryptedChunks.TryGetValue(chunkIndex, out var chunk))
+        try
         {
-            chunk = GetChunk(chunkIndex,
-                    false,
-                    CancellationToken.None)
-                .ToArray(); //create a copy
-            if (_decrypt != null)
-            {
-                _decrypt.Decrypt(chunkIndex, chunk);
-            }
-            _decryptedChunks[chunkIndex] = chunk;
-        }
+            var chunkIndex = (int)(_pos / ChunkSize);
+            var chunkOffset = (int)(_pos % ChunkSize);
 
-        var bytesToRead = Math.Max(0, Math.Min(count, chunk.Length - chunkOffset));
-        Array.Copy(chunk, chunkOffset, buffer, offset, bytesToRead);
-        _pos += bytesToRead;
-        return bytesToRead;
+            if (!_decryptedChunks.TryGetValue(chunkIndex, out var chunk))
+            {
+                BufferingStream?.Invoke(this, EventArgs.Empty);
+                chunk = GetChunk(chunkIndex,
+                        false,
+                        CancellationToken.None)
+                    .ToArray(); //create a copy
+                if (_decrypt != null)
+                {
+                    _decrypt.Decrypt(chunkIndex, chunk);
+                }
+
+                _decryptedChunks[chunkIndex] = chunk;
+            }
+
+            var bytesToRead = Math.Max(0, Math.Min(count, chunk.Length - chunkOffset));
+            Array.Copy(chunk, chunkOffset, buffer, offset, bytesToRead);
+            _pos += bytesToRead;
+            return bytesToRead;
+        }
+        catch (Exception requestException)
+        {
+            OnError?.Invoke(this, requestException);
+            // Wait 2 seconds before trying again?
+            Task.Delay(TimeSpan.FromSeconds(2)).ConfigureAwait(false).GetAwaiter().GetResult();
+            throw;
+        }
     }
 
     public override long Seek(long offset, SeekOrigin origin)
@@ -124,4 +137,10 @@ public abstract class SpotifyAudioStream : Stream, IWaveeAudioStream
         _decryptedChunks.Clear();
         base.Dispose(disposing);
     }
+
+    public Stream AsStream() => this;
+
+    public TimeSpan Duration { get; }
+    public event EventHandler? BufferingStream;
+    public event EventHandler<Exception> OnError; 
 }
