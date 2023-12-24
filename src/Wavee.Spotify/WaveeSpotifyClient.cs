@@ -40,7 +40,7 @@ public sealed class WaveeSpotifyClient : IWaveeSpotifyClient
         {
             BaseAddress = new Uri("https://audio4-ak-spotify-com.akamaized.net")
         };
-        
+
         var authClient =
             new SpotifyAuthenticationClient(sharedClient);
         var repo = new SpotifyCredentialsRepository(config);
@@ -65,7 +65,7 @@ public sealed class WaveeSpotifyClient : IWaveeSpotifyClient
 
         var cache = config.CachingProvider ?? NullCachingService.Instance;
 
-        var remoteClient = new SpotifyRemoteClient(webSocketService,player);
+        var remoteClient = new SpotifyRemoteClient(webSocketService, player, config);
 
         var tokenClient = new SpotifyTokenClient(tokenService);
 

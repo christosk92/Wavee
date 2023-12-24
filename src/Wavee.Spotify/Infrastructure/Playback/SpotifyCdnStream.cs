@@ -13,7 +13,7 @@ internal sealed class SpotifyCdnStream : SpotifyAudioStream
     public SpotifyCdnStream(IWaveePlayableItem item,
         SpotifyStreamingFile file,
         SpotifyAudioKey audioKey,
-        bool isOgg) : base(audioKey, item.Duration)
+        bool isOgg) : base(audioKey, item.Duration, item)
     {
         Offset = isOgg ? SPOTIFY_OGG_HEADER_SIZE : 0;
         AudioFileSize = file.Length;

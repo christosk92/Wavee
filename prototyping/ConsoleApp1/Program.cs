@@ -44,7 +44,7 @@ player.PlaybackError += (sender, args) =>
 var client = WaveeSpotifyClient.Create(player, config, OpenBrowserAndReturnCallback);
 var sw = Stopwatch.StartNew();
 var trackStream =
-    await client.Playback.CreateStream(SpotifyId.FromBase62("3HltbvkfjVeyjESx3JbuLD", AudioItemType.Track));
+    await client.Playback.CreateStream(SpotifyId.FromBase62("6ru2VMkOMkSBUKWqrTZYwe", AudioItemType.Track));
 await player.Play(trackStream);
 var newConnectionMade = await client.Remote.Connect();
 if (newConnectionMade)

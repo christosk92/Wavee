@@ -1,9 +1,11 @@
 using Wavee.Infrastructure.Playback.Decrypt;
 using Wavee.Interfaces;
+using Wavee.Interfaces.Models;
 using Wavee.Spotify.Core.Clients.Playback;
 using Wavee.Spotify.Core.Models.Track;
 using Wavee.Spotify.Decrypt;
 using Wavee.Spotify.Interfaces.Clients.Playback;
+using Wavee.Spotify.Interfaces.Models;
 
 namespace Wavee.Spotify.Infrastructure.Playback;
 
@@ -20,9 +22,10 @@ public abstract class SpotifyAudioStream : Stream, IWaveeMediaSource
         0x72, 0xe0, 0x67, 0xfb, 0xdd, 0xcb, 0xcf, 0x77, 0xeb, 0xe8, 0xbc, 0x64, 0x3f, 0x63, 0x0d, 0x93,
     };
 
-    internal SpotifyAudioStream(SpotifyAudioKey audioKey, TimeSpan duration)
+    internal SpotifyAudioStream(SpotifyAudioKey audioKey, TimeSpan duration, IWaveePlayableItem item)
     {
         Duration = duration;
+        Item = item;
         if (audioKey.HasKey)
         {
             _decrypt = new BouncyCastleDecrypt(audioKey.Key!, AUDIO_AES_IV, ChunkSize);
@@ -151,6 +154,8 @@ public abstract class SpotifyAudioStream : Stream, IWaveeMediaSource
         base.Dispose(disposing);
     }
 
+    public ISpotifyPlayableItem AsSpotifyItem() => Item as ISpotifyPlayableItem ?? throw new InvalidOperationException();
+    public IWaveePlayableItem Item { get; }
     public Stream AsStream() => this;
 
     public TimeSpan Duration { get; }

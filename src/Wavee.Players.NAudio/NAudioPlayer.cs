@@ -1,7 +1,9 @@
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using NAudio.Wave;
 using Nito.AsyncEx;
 using Wavee.Core.Enums;
+using Wavee.Core.Models;
 using Wavee.Core.Playback;
 using Wavee.Interfaces;
 using Wavee.Players.NAudio.VorbisDecoder;
@@ -11,6 +13,7 @@ namespace Wavee.Players.NAudio;
 
 public sealed class NAudioPlayer : IWaveePlayer
 {
+    private WaveePlaybackState _playbackState;
     private readonly CancellationTokenSource _cts = new CancellationTokenSource();
     private readonly IWavePlayer _wavePlayer;
     private readonly WaveFormat waveFormat;
@@ -22,6 +25,11 @@ public sealed class NAudioPlayer : IWaveePlayer
     private TimeSpan? _crossfadeDuration = null;
     private AsyncManualResetEvent _playbackStopped = new AsyncManualResetEvent(true);
 
+    // private TimeSpan? _positionSinceStopwatch;
+    // private Stopwatch? _positionWatch;
+    private (TimeSpan Pos, Stopwatch Sw)? _position;
+    private TimeSpan? _seekRequested;
+
     public NAudioPlayer()
     {
         const int sampleRate = 44100;
@@ -31,6 +39,14 @@ public sealed class NAudioPlayer : IWaveePlayer
         _bufferedWaveProvider = new BufferedWaveProvider(waveFormat);
         _wavePlayer = new WaveOutEvent();
         _wavePlayer.Init(_bufferedWaveProvider);
+        _playbackState = new WaveePlaybackState
+        {
+            Track = null,
+            RepeatMode = WaveeRepeatStateType.None,
+            IsShuffling = false,
+            PlaybackState = WaveePlaybackStateType.None,
+            PlaybackId = null
+        };
 
         Task.Factory.StartNew(async () => await StartReadingPackets(), TaskCreationOptions.LongRunning);
     }
@@ -94,8 +110,13 @@ public sealed class NAudioPlayer : IWaveePlayer
                         _playbackStopped.Set();
                         await Task.Delay(10, _cts.Token);
                         if (notifiedStartedPlaying)
-                            NotifyPlaybackStateChanged(WaveePlaybackStateType.Stopped);
+                            NotifyPlaybackStateChanged(_playbackState with
+                            {
+                                PlaybackState = WaveePlaybackStateType.Stopped,
+                                Track = null
+                            });
                         notifiedStartedPlaying = false;
+                        _position = null;
                         continue;
                     }
 
@@ -103,16 +124,29 @@ public sealed class NAudioPlayer : IWaveePlayer
 
                     if (stream_one is null)
                     {
-                        NotifyPlaybackStateChanged(WaveePlaybackStateType.Buffering);
-
                         sourceOneRaw = await source.Value();
+                        NotifyPlaybackStateChanged(_playbackState with
+                        {
+                            Track = sourceOneRaw,
+                            PlaybackState = WaveePlaybackStateType.Buffering,
+                            PlaybackId = Guid.NewGuid().ToString()
+                        });
                         sourceOneRaw.BufferingStream += SourceOneRawOnBufferingStream;
                         sourceOneRaw.OnError += SourceOneRawOnOnError;
                         sourceOneRaw.ResumedFromError += SourceOneRawOnOnResumedFromError;
 
+
                         var streamOneRaw = sourceOneRaw.AsStream();
                         stream_one_duration = sourceOneRaw.Duration;
                         stream_one = CreateStream(streamOneRaw);
+                    }
+
+                    if (_seekRequested is not null)
+                    {
+                        stream_one.CurrentTime = _seekRequested.Value;
+                        _seekRequested = null;
+
+                        PlaybackChanged?.Invoke(this, _playbackState);
                     }
 
                     //Read packet from stream_one
@@ -137,11 +171,15 @@ public sealed class NAudioPlayer : IWaveePlayer
                         packet = Mix(packet, packet_two, volumeIn, volumeOut);
                     }
 
+                    _position ??= (stream_one.CurrentTime, Stopwatch.StartNew());
 
                     _bufferedWaveProvider.AddSamples(packet, 0, copied);
                     if (!notifiedStartedPlaying)
                     {
-                        NotifyPlaybackStateChanged(WaveePlaybackStateType.Playing);
+                        NotifyPlaybackStateChanged(_playbackState with
+                        {
+                            PlaybackState = WaveePlaybackStateType.Playing
+                        });
                         notifiedStartedPlaying = true;
                     }
 
@@ -188,7 +226,10 @@ public sealed class NAudioPlayer : IWaveePlayer
                 {
                     Console.WriteLine(e);
                     PlaybackError?.Invoke(this, e);
-                    NotifyPlaybackStateChanged(WaveePlaybackStateType.Error);
+                    NotifyPlaybackStateChanged(_playbackState with
+                    {
+                        PlaybackState = WaveePlaybackStateType.Error
+                    });
                 }
             }
         }
@@ -197,13 +238,29 @@ public sealed class NAudioPlayer : IWaveePlayer
     private void SourceOneRawOnOnResumedFromError(object? sender, Exception _)
     {
         var isPaused = _wavePlayer.PlaybackState == PlaybackState.Paused;
-        NotifyPlaybackStateChanged(isPaused ? WaveePlaybackStateType.Paused : WaveePlaybackStateType.Playing);
+        if (isPaused)
+        {
+            NotifyPlaybackStateChanged(_playbackState with
+            {
+                PlaybackState = WaveePlaybackStateType.Paused
+            });
+        }
+        else
+        {
+            NotifyPlaybackStateChanged(_playbackState with
+            {
+                PlaybackState = WaveePlaybackStateType.Playing
+            });
+        }
     }
 
     private void SourceOneRawOnOnError(object? sender, Exception e)
     {
         PlaybackError?.Invoke(this, e);
-        NotifyPlaybackStateChanged(WaveePlaybackStateType.Error);
+        NotifyPlaybackStateChanged(_playbackState with
+        {
+            PlaybackState = WaveePlaybackStateType.Error
+        });
     }
 
     private void SourceOneRawOnBufferingStream(object? sender, TaskCompletionSource e)
@@ -216,23 +273,28 @@ public sealed class NAudioPlayer : IWaveePlayer
             if (e.Task.IsCompleted || e.Task.IsFaulted)
                 return;
 
-            NotifyPlaybackStateChanged(WaveePlaybackStateType.Buffering);
+            NotifyPlaybackStateChanged(_playbackState with
+            {
+                PlaybackState = WaveePlaybackStateType.Buffering
+            });
+           // NotifyPlaybackStateChanged(WaveePlaybackStateType.Buffering);
             await e.Task;
-            NotifyPlaybackStateChanged(_wavePlayer.PlaybackState == PlaybackState.Paused
-                ? WaveePlaybackStateType.Paused
-                : WaveePlaybackStateType.Playing);
+            NotifyPlaybackStateChanged(_playbackState with
+            {
+                PlaybackState = WaveePlaybackStateType.Playing
+            });
         });
     }
-
-    private WaveePlaybackStateType _state;
-
-    private void NotifyPlaybackStateChanged(WaveePlaybackStateType x)
+    
+    private void NotifyPlaybackStateChanged(WaveePlaybackState x)
     {
-        if (_state == x)
+        var oldState = _playbackState;
+        _playbackState = x;
+        PlaybackChanged?.Invoke(this, x);
+        if (oldState.PlaybackState == x.PlaybackState)
             return;
 
-        _state = x;
-        PlaybackStateChanged?.Invoke(this, x);
+        PlaybackStateChanged?.Invoke(this, x.PlaybackState);
     }
 
     private static byte[] Mix(byte[] packet, byte[] packetTwo, double volumeIn, double volumeOut)
@@ -311,6 +373,23 @@ public sealed class NAudioPlayer : IWaveePlayer
         var multiplier = Math.Clamp(progress, 0, 1);
         multiplier = 1 - multiplier;
         return multiplier;
+    }
+
+    public event EventHandler<WaveePlaybackState>? PlaybackChanged;
+    public double Volume { get; set; }
+
+    public TimeSpan Position
+    {
+        get
+        {
+            if (_position is null)
+                return TimeSpan.Zero;
+
+            var (pos, sw) = _position.Value;
+            var elapsed = sw.Elapsed;
+            return pos + elapsed;
+        }
+        set => _seekRequested = value;
     }
 }
 

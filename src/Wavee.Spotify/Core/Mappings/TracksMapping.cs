@@ -15,7 +15,7 @@ internal static class TracksMapping
     {
         return new SpotifyTrack
         {
-            Id = SpotifyId.FromRaw(track.Gid.Span, AudioItemType.Track),
+            Uri = SpotifyId.FromRaw(track.Gid.Span, AudioItemType.Track),
             Name = track.Name,
             Album = new SpotifyTrackAlbum
             {

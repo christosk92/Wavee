@@ -8,7 +8,7 @@ namespace Wavee.Spotify.Core.Models.Track;
 
 public readonly struct SpotifyTrack : ISpotifyPlayableItem
 {
-    public required SpotifyId Id { get; init; }
+    public required SpotifyId Uri { get; init; }
     public required string Name { get; init; }
     public required SpotifyTrackAlbum Album { get; init; }
     public required IReadOnlyCollection<SpotifyTrackArtist> Artists { get; init; }

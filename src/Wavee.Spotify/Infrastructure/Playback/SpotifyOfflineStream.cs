@@ -13,7 +13,7 @@ internal sealed class SpotifyOfflineStream : SpotifyAudioStream
         SpotifyAudioFile file,
         SpotifyAudioKey audioKey,
         bool isOgg,
-        Stream fileStream) : base(audioKey, item.Duration)
+        Stream fileStream) : base(audioKey, item.Duration, item)
     {
         _fileStream = fileStream;
     }

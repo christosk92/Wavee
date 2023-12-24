@@ -67,6 +67,15 @@ internal sealed class WebSocketService : IWebSocketService
         }
     }
 
+    public async Task PutState(PutStateRequest request, CancellationToken cancellationToken)
+    {
+        if (_activeConnectionId is null)
+        {
+            await ConnectAsync(cancellationToken);
+        }
+        await _httpClient.PutStateAsync(_activeConnectionId!, request, cancellationToken);
+    }
+
     private Task<SpotifyRemoteRequestResult> OnRequest(SpotifyRemoteRequestRequest arg)
     {
         return Task.FromResult(new SpotifyRemoteRequestResult

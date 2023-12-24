@@ -1,7 +1,11 @@
+using Wavee.Interfaces.Models;
+
 namespace Wavee.Interfaces;
 
 public interface IWaveeMediaSource : IDisposable
 {
+    IWaveePlayableItem Item { get; }
+    
     Stream AsStream();
     TimeSpan Duration { get; }
 

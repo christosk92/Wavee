@@ -108,7 +108,7 @@ internal sealed class SpotifyPlaybackClient : ISpotifyPlaybackClient
         //timeout of 5 seconds for the audio key
         using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
         using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, cts.Token);
-        var audioKeyTask = _audioKeysService.GetAudioKey(track.Id, file.FileIdBase16, linkedCts.Token);
+        var audioKeyTask = _audioKeysService.GetAudioKey(track.Uri, file.FileIdBase16, linkedCts.Token);
         await Task.WhenAll(storageResolveTask, audioKeyTask);
         
         // Store audio key 

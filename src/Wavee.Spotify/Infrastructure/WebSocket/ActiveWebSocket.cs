@@ -1,12 +1,10 @@
 using System.Collections.Concurrent;
-using System.Net.Sockets;
 using System.Net.WebSockets;
 using System.Text.Json;
 using System.Text.RegularExpressions;
-using CommunityToolkit.HighPerformance;
 using Eum.Spotify.connectstate;
 using Wavee.Spotify.Core.Clients.Remote;
-using Wavee.Spotify.Core.Clients.Remote.State;
+using Wavee.Spotify.Core.Mappings;
 using Wavee.Spotify.Core.Utils;
 using Wavee.Spotify.Infrastructure.HttpClients;
 using Wavee.Spotify.Interfaces;
@@ -25,7 +23,6 @@ internal sealed partial class ActiveWebSocket : IDisposable
 
     private ISpotifyWebSocket? _client;
 
-    private readonly SpotifyLocalState _localState;
     private readonly WaveeSpotifyConfig _config;
 
     private readonly SpotifyInternalHttpClient _apiClient;
@@ -35,7 +32,7 @@ internal sealed partial class ActiveWebSocket : IDisposable
     public ActiveWebSocket(ISpotifyWebSocketFactory clientFactory,
         ISpotifyTokenService tokenService,
         WaveeSpotifyConfig config,
-        SpotifyInternalHttpClient apiClient, 
+        SpotifyInternalHttpClient apiClient,
         Func<SpotifyRemoteRequestRequest, Task<SpotifyRemoteRequestResult>> onRequest)
     {
         _clientFactory = clientFactory;
@@ -45,8 +42,6 @@ internal sealed partial class ActiveWebSocket : IDisposable
         _onRequest = onRequest;
 
         _sendQueue = new();
-
-        _localState = SpotifyLocalState.Empty(config);
     }
 
     public async Task<string> ConnectAsync(string host, ushort port, CancellationToken cancellationToken)
@@ -67,14 +62,35 @@ internal sealed partial class ActiveWebSocket : IDisposable
             throw new InvalidOperationException("ConnectionId was null or empty");
         }
 
-        var localState = _localState.BuildPutState(_config,
-            PutStateReason.NewDevice,
-            null,
-            DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()); //TODO: Get timestamp from somewhere
+        var playerState = new PlayerState();
+        playerState.PlaybackSpeed = 1.0;
+        playerState.SessionId = string.Empty;
+        playerState.PlaybackId = string.Empty;
+        playerState.Suppressions = new Suppressions();
+        playerState.ContextRestrictions = new Restrictions();
+        playerState.Options = new ContextPlayerOptions
+        {
+            RepeatingTrack = false,
+            ShufflingContext = false,
+            RepeatingContext = false
+        };
+        playerState.Position = 0;
+        playerState.PositionAsOfTimestamp = 0;
+        playerState.IsPlaying = false;
+        playerState.IsSystemInitiated = true;
+
+        var putState = playerState.ToPutState(PutStateReason.NewDevice,
+            volume: _config.Playback.InitialVolume,
+            playerPosition: null,
+            hasBeenPlayingSince: null,
+            now: DateTimeOffset.UtcNow,
+            lastCommandSentBy: null,
+            lastCommandId: null,
+            _config.Remote);
 
         var initialCluster = await _apiClient.PutStateAsync(
             connectionId: connectionId,
-            localState,
+            putState,
             cancellationToken);
 
         Cluster = initialCluster;
@@ -93,12 +109,13 @@ internal sealed partial class ActiveWebSocket : IDisposable
 
         return connectionId;
     }
+    
 
     public Cluster? Cluster { get; private set; }
 
     public event EventHandler<ClusterUpdate> OnClusterUpdate;
-    
-    
+
+
     private static void ListenLoop(
         ISpotifyWebSocket stream,
         Action<Exception> onError,
@@ -162,12 +179,13 @@ internal sealed partial class ActiveWebSocket : IDisposable
                             var update = ClusterUpdate.Parser.ParseFrom(payload.Span);
                             onCluster(update);
                         }
+
                         break;
                     }
                 }
             }
         }
-        catch (Exception ex) 
+        catch (Exception ex)
         {
             // Handle exceptions and possibly trigger reconnection
             onError(ex);
