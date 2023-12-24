@@ -1,6 +1,10 @@
-﻿using ConsoleApp1;
+﻿using System.Diagnostics;
+using ConsoleApp1;
 using LiteDB;
+using Wavee;
+using Wavee.Core.Enums;
 using Wavee.Spotify;
+using Wavee.Spotify.Core.Models.Common;
 
 var db = new LiteDatabase("credentials.db");
 var repo = new LiteDbCredentialsStorage(db);
@@ -9,21 +13,27 @@ var config = new WaveeSpotifyConfig
     CredentialsStorage = new WaveeSpotifyCredentialsStorageConfig
     {
         GetDefaultUsername = () => repo.GetDefaultUserName(),
-        OpenCredentials = (name, type) =>
+        OpenCredentials = (name,
+            type) =>
         {
-            var credentials = repo.GetFor(name, type);
+            var credentials = repo.GetFor(name,
+                type);
             return credentials;
         },
-        SaveCredentials = (name, type, data) =>
+        SaveCredentials = (name,
+            type,
+            data) =>
         {
-            repo.Store(name, type, data);
+            repo.Store(name,
+                type,
+                data);
         }
-    }
+    },
+    CachingProvider = NullCachingService.Instance
 };
 var client = WaveeSpotifyClient.Create(config, OpenBrowserAndReturnCallback);
-var track = await client.Track.GetTrackAsync("4o8YocVCmZZimcqyY1Z5rO", false,
-    cancellationToken: CancellationToken.None);
-//var token = await client.Token.GetAccessToken();
+var sw = Stopwatch.StartNew();
+var trackStream = await client.Playback.CreateStream(SpotifyId.FromBase62("1aZb15alCyanO61gVWpNnw", AudioItemType.Track));
 var newConnectionMade = await client.Remote.Connect();
 if (newConnectionMade)
 {

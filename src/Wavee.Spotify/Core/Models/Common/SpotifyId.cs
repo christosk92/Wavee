@@ -1,11 +1,11 @@
 ﻿using System.Numerics;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using CommunityToolkit.HighPerformance;
 using Wavee.Core.Enums;
+using Wavee.Spotify.Core.Extension;
 
-namespace Wavee.Spotify.Common;
+namespace Wavee.Spotify.Core.Models.Common;
 
 /// <summary>
 /// A struct representing an audio item.
@@ -61,13 +61,7 @@ public readonly record struct SpotifyId(BigInteger Id, AudioItemType Type, bool 
 
         bytes.Reverse();
 
-        var hex = new StringBuilder(bytes.Length * 2);
-        foreach (var b in bytes)
-        {
-            hex.AppendFormat("{0:x2}", b);
-        }
-
-        return hex.ToString();
+        return ((ReadOnlySpan<byte>)bytes).ToBase16();
     }
 
     public string ToBase62()

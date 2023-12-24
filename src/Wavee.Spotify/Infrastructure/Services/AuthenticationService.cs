@@ -1,8 +1,9 @@
 using Eum.Spotify;
 using Wavee.Spotify.Core;
-using Wavee.Spotify.Core.Interfaces;
 using Wavee.Spotify.Core.Mappings;
 using Wavee.Spotify.Infrastructure.HttpClients;
+using Wavee.Spotify.Interfaces;
+using Wavee.Spotify.Interfaces.Clients;
 
 namespace Wavee.Spotify.Infrastructure.Services;
 
@@ -28,15 +29,26 @@ internal sealed class AuthenticationService : IAuthenticationService
         var deviceId = _config.Remote.DeviceId;
         
         // try to get credentials from storage
-        if (_credentialsStorage.TryGetDefault(SpotifyCredentialsType.OAuth, out var credentials))
+        if (_credentialsStorage.TryGetDefault(SpotifyCredentialsType.Full, out var fullCredentials))
         {
-            return (credentials.ToLoginCredentials()!, deviceId);
+            if (!fullCredentials!.Value.IsExpired)
+            {
+                return (fullCredentials.ToLoginCredentials()!, deviceId);
+            }
         }
         
+        if (_credentialsStorage.TryGetDefault(SpotifyCredentialsType.OAuth, out var credentials))
+        {
+            if (!credentials!.Value.IsExpired)
+            {
+                return (credentials.ToLoginCredentials()!, deviceId);
+            }
+        }
+
         // get credentials from OAuth
         var storedCredentials = await _authenticationClient.GetCredentialsFromOAuth(_oAuthCallbackDelegate, cancellationToken);
         // Store them as default
-        _credentialsStorage.Store(storedCredentials!.Username, SpotifyCredentialsType.OAuth, storedCredentials.ToStoredCredentials());
+        _credentialsStorage.Store(storedCredentials!.Username, SpotifyCredentialsType.OAuth, storedCredentials.ToStoredCredentials(SpotifyCredentialsType.OAuth));
         return (storedCredentials, deviceId);
     }
 

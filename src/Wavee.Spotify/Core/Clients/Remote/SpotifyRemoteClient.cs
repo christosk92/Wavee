@@ -1,5 +1,5 @@
-using Wavee.Spotify.Core.Interfaces;
-using Wavee.Spotify.Core.Interfaces.Clients;
+using Wavee.Spotify.Interfaces;
+using Wavee.Spotify.Interfaces.Clients;
 
 namespace Wavee.Spotify.Core.Clients.Remote;
 

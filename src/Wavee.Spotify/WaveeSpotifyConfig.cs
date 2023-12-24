@@ -1,5 +1,6 @@
 using Eum.Spotify.connectstate;
-using Wavee.Spotify.Core.Interfaces;
+using Wavee.Interfaces;
+using Wavee.Spotify.Interfaces;
 
 namespace Wavee.Spotify;
 
@@ -9,6 +10,7 @@ public sealed class WaveeSpotifyConfig
     public WaveeSpotifyPlaybackConfig Playback { get; } = new();
 
     public required WaveeSpotifyCredentialsStorageConfig CredentialsStorage { get; init; }
+    public required IWaveeCachingProvider? CachingProvider { get; init; } = null;
 }
 
 public sealed class WaveeSpotifyCredentialsStorageConfig
@@ -25,6 +27,14 @@ public sealed class WaveeSpotifyCredentialsStorageConfig
 public sealed class WaveeSpotifyPlaybackConfig
 {
     public double InitialVolume { get; internal set; } = 0.5;
+    public WaveeSpotifyPreferedQuality PreferedQuality { get; internal set; }  = WaveeSpotifyPreferedQuality.Normal;
+}
+
+public enum WaveeSpotifyPreferedQuality
+{
+    Low,
+    Normal,
+    High
 }
 
 public sealed class WaveeSpotifyRemoteConfig

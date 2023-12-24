@@ -1,8 +1,8 @@
 using Eum.Spotify;
 using Google.Protobuf;
 using LiteDB;
-using Wavee.Spotify.Core.Interfaces;
 using Wavee.Spotify.Core.Models.Credentials;
+using Wavee.Spotify.Interfaces;
 
 namespace Wavee.Spotify.Core.Mappings;
 
@@ -21,18 +21,19 @@ internal static class CredentialsMapping
             Username = credentials.Username,
             AuthData = credentials.Type switch
             {
-                SpotifyCredentialsType.OAuth => ByteString.CopyFromUtf8(credentials.AuthDataBase64),
+                SpotifyCredentialsType.OAuth or SpotifyCredentialsType.AccessToken => ByteString.CopyFromUtf8(credentials.AuthDataBase64),
                 SpotifyCredentialsType.Full => ByteString.FromBase64(credentials.AuthDataBase64),
+                _ => throw new ArgumentOutOfRangeException()
             },
             Typ = credentials.Type switch
             {
-                SpotifyCredentialsType.OAuth => AuthenticationType.AuthenticationSpotifyToken,
+                SpotifyCredentialsType.OAuth or SpotifyCredentialsType.AccessToken => AuthenticationType.AuthenticationSpotifyToken,
                 SpotifyCredentialsType.Full => AuthenticationType.AuthenticationStoredSpotifyCredentials,
             }
         };
     }
 
-    public static SpotifyStoredCredentialsEntity ToStoredCredentials(this LoginCredentials credentials)
+    public static SpotifyStoredCredentialsEntity ToStoredCredentials(this LoginCredentials credentials, SpotifyCredentialsType type)
     {
         return new SpotifyStoredCredentialsEntity(
             Id: ObjectId.NewObjectId(),
@@ -48,11 +49,7 @@ internal static class CredentialsMapping
                 AuthenticationType.AuthenticationSpotifyToken => credentials.AuthData.ToStringUtf8(),
                 AuthenticationType.AuthenticationStoredSpotifyCredentials => credentials.AuthData.ToBase64(),
             },
-            Type: credentials.Typ switch
-            {
-                AuthenticationType.AuthenticationSpotifyToken => SpotifyCredentialsType.OAuth,
-                AuthenticationType.AuthenticationStoredSpotifyCredentials => SpotifyCredentialsType.Full,
-            },
+            Type: type,
             InstanceId: Constants.InstanceId
         );
     }

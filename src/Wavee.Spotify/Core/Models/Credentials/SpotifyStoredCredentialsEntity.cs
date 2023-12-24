@@ -1,5 +1,5 @@
 using LiteDB;
-using Wavee.Spotify.Core.Interfaces;
+using Wavee.Spotify.Interfaces;
 
 namespace Wavee.Spotify.Core.Models.Credentials;
 

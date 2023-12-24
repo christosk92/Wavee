@@ -1,4 +1,4 @@
-using Wavee.Spotify.Common;
+using Wavee.Spotify.Core.Models.Common;
 
 namespace Wavee.Spotify.Core.Models.User;
 

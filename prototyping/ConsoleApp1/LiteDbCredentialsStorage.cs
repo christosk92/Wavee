@@ -1,6 +1,6 @@
 using LiteDB;
-using Wavee.Spotify.Core.Interfaces;
 using Wavee.Spotify.Core.Models.Credentials;
+using Wavee.Spotify.Interfaces;
 
 namespace ConsoleApp1;
 

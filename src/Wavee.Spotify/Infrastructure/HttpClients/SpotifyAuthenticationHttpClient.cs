@@ -7,7 +7,8 @@ using Eum.Spotify;
 using Eum.Spotify.login5v3;
 using Google.Protobuf;
 using Wavee.Spotify.Core;
-using Wavee.Spotify.Core.Interfaces;
+using Wavee.Spotify.Interfaces;
+using Wavee.Spotify.Interfaces.Clients;
 using ClientInfo = Eum.Spotify.login5v3.ClientInfo;
 
 namespace Wavee.Spotify.Infrastructure.HttpClients;

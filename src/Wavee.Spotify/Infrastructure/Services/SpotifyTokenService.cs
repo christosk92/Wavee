@@ -1,8 +1,9 @@
 using Eum.Spotify;
 using Google.Protobuf;
 using LiteDB;
-using Wavee.Spotify.Core.Interfaces;
 using Wavee.Spotify.Core.Models.Credentials;
+using Wavee.Spotify.Interfaces;
+using Wavee.Spotify.Interfaces.Clients;
 
 namespace Wavee.Spotify.Infrastructure.Services;
 
@@ -28,7 +29,7 @@ internal sealed class SpotifyTokenService : ISpotifyTokenService
         var username = _tcpConnectionService.WelcomeMessage?.CanonicalUsername;
 
         if (!string.IsNullOrEmpty(username) &&
-            _credentialsStorage.TryGetFor(username, SpotifyCredentialsType.Full, out var accessToken))
+            _credentialsStorage.TryGetFor(username, SpotifyCredentialsType.AccessToken, out var accessToken))
         {
             if (accessToken is { IsExpired: false })
             {
@@ -58,11 +59,23 @@ internal sealed class SpotifyTokenService : ISpotifyTokenService
         _credentialsStorage.Store(storedCredentials.Ok.Username, SpotifyCredentialsType.Full,
             new SpotifyStoredCredentialsEntity
             {
+                AuthDataBase64 = welcome.ReusableAuthCredentials.ToBase64(),
+                Expiration = DateTimeOffset.MaxValue,
+                Id = ObjectId.NewObjectId(),
+                Username = welcome.CanonicalUsername,
+                Type = SpotifyCredentialsType.Full,
+                InstanceId = Constants.InstanceId
+            });
+
+        
+        _credentialsStorage.Store(storedCredentials.Ok.Username, SpotifyCredentialsType.AccessToken,
+            new SpotifyStoredCredentialsEntity
+            {
                 AuthDataBase64 = storedCredentials.Ok.AccessToken,
-                Expiration = DateTimeOffset.UtcNow.AddSeconds(storedCredentials.Ok.AccessTokenExpiresIn),
+                Expiration = DateTimeOffset.UtcNow.AddHours(1),
                 Id = ObjectId.NewObjectId(),
                 Username = storedCredentials.Ok.Username,
-                Type = SpotifyCredentialsType.Full,
+                Type = SpotifyCredentialsType.AccessToken,
                 InstanceId = Constants.InstanceId
             });
 

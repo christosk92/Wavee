@@ -6,8 +6,8 @@ using System.Security.Cryptography;
 using Eum.Spotify;
 using Google.Protobuf;
 using Wavee.Spotify.Core.Cryptography;
-using Wavee.Spotify.Core.Interfaces.Connection;
 using Wavee.Spotify.Core.Models.Connection;
+using Wavee.Spotify.Interfaces.Connection;
 
 namespace Wavee.Spotify.Infrastructure.Connection;
 
@@ -159,6 +159,7 @@ internal sealed class LiveSpotifyTcpClient : ISpotifyTcpClient
                 return APWelcome.Parser.ParseFrom(response.Data);
             case SpotifyPacketType.AuthFailure:
             {
+                var authFailure = APLoginFailed.Parser.ParseFrom(response.Data);
                 break;
             }
         }

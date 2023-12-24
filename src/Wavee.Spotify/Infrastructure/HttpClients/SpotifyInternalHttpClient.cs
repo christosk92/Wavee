@@ -1,9 +1,9 @@
 using System.Net.Http.Headers;
 using Eum.Spotify.connectstate;
 using Google.Protobuf;
-using Wavee.Spotify.Core.Interfaces;
 using Wavee.Spotify.Core.Utils;
 using Wavee.Spotify.Infrastructure.Services;
+using Wavee.Spotify.Interfaces;
 
 namespace Wavee.Spotify.Infrastructure.HttpClients;
 

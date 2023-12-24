@@ -1,6 +1,6 @@
 using System.Text.Json;
-using Wavee.Spotify.Core.Interfaces;
 using Wavee.Spotify.Infrastructure.HttpClients;
+using Wavee.Spotify.Interfaces;
 
 namespace Wavee.Spotify.Infrastructure.Services;
 

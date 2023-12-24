@@ -1,4 +1,4 @@
-using Wavee.Spotify.Core.Interfaces.WebSocket;
+using Wavee.Spotify.Interfaces.WebSocket;
 
 namespace Wavee.Spotify.Infrastructure.WebSocket;
 

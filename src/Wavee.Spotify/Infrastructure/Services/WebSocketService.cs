@@ -1,9 +1,9 @@
 using Eum.Spotify.connectstate;
 using Wavee.Spotify.Core.Clients.Remote;
-using Wavee.Spotify.Core.Interfaces;
-using Wavee.Spotify.Core.Interfaces.WebSocket;
 using Wavee.Spotify.Infrastructure.HttpClients;
 using Wavee.Spotify.Infrastructure.WebSocket;
+using Wavee.Spotify.Interfaces;
+using Wavee.Spotify.Interfaces.WebSocket;
 
 namespace Wavee.Spotify.Infrastructure.Services;
 

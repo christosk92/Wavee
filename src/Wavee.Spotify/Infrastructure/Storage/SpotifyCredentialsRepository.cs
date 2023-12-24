@@ -1,7 +1,7 @@
 using System.Text.Json;
 using Eum.Spotify;
-using Wavee.Spotify.Core.Interfaces;
 using Wavee.Spotify.Core.Models.Credentials;
+using Wavee.Spotify.Interfaces;
 
 namespace Wavee.Spotify.Infrastructure.Storage;
 

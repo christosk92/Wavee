@@ -1,4 +1,4 @@
-using Wavee.Spotify.Core.Interfaces.Connection;
+using Wavee.Spotify.Interfaces.Connection;
 
 namespace Wavee.Spotify.Infrastructure.Connection;
 
