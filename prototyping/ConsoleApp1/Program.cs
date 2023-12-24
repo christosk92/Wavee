@@ -39,12 +39,12 @@ player.PlaybackStateChanged += (sender, args) =>
 };
 player.PlaybackError += (sender, args) =>
 {
-    Console.WriteLine($"Playback error: {args}");
+    Console.WriteLine($"Playback error: {args.Message}");
 };
 var client = WaveeSpotifyClient.Create(player, config, OpenBrowserAndReturnCallback);
 var sw = Stopwatch.StartNew();
 var trackStream =
-    await client.Playback.CreateStream(SpotifyId.FromBase62("0ZoHHROTzwIYeNAHRPedTY", AudioItemType.Track));
+    await client.Playback.CreateStream(SpotifyId.FromBase62("3HltbvkfjVeyjESx3JbuLD", AudioItemType.Track));
 await player.Play(trackStream);
 var newConnectionMade = await client.Remote.Connect();
 if (newConnectionMade)

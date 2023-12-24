@@ -108,6 +108,7 @@ public sealed class NAudioPlayer : IWaveePlayer
                         sourceOneRaw = await source.Value();
                         sourceOneRaw.BufferingStream += SourceOneRawOnBufferingStream;
                         sourceOneRaw.OnError += SourceOneRawOnOnError;
+                        sourceOneRaw.ResumedFromError += SourceOneRawOnOnResumedFromError;
 
                         var streamOneRaw = sourceOneRaw.AsStream();
                         stream_one_duration = sourceOneRaw.Duration;
@@ -193,23 +194,43 @@ public sealed class NAudioPlayer : IWaveePlayer
         }
     }
 
+    private void SourceOneRawOnOnResumedFromError(object? sender, Exception _)
+    {
+        var isPaused = _wavePlayer.PlaybackState == PlaybackState.Paused;
+        NotifyPlaybackStateChanged(isPaused ? WaveePlaybackStateType.Paused : WaveePlaybackStateType.Playing);
+    }
+
     private void SourceOneRawOnOnError(object? sender, Exception e)
     {
         PlaybackError?.Invoke(this, e);
         NotifyPlaybackStateChanged(WaveePlaybackStateType.Error);
     }
 
-    private void SourceOneRawOnBufferingStream(object? sender, EventArgs e)
+    private void SourceOneRawOnBufferingStream(object? sender, TaskCompletionSource e)
     {
-        NotifyPlaybackStateChanged(WaveePlaybackStateType.Buffering);
+        //NotifyPlaybackStateChanged(WaveePlaybackStateType.Buffering);
+        //If we are buffering for more than 1 seconds, then report the buffering state
+        Task.Factory.StartNew(async () =>
+        {
+            await Task.Delay(TimeSpan.FromSeconds(1));
+            if (e.Task.IsCompleted || e.Task.IsFaulted)
+                return;
+
+            NotifyPlaybackStateChanged(WaveePlaybackStateType.Buffering);
+            await e.Task;
+            NotifyPlaybackStateChanged(_wavePlayer.PlaybackState == PlaybackState.Paused
+                ? WaveePlaybackStateType.Paused
+                : WaveePlaybackStateType.Playing);
+        });
     }
 
     private WaveePlaybackStateType _state;
+
     private void NotifyPlaybackStateChanged(WaveePlaybackStateType x)
     {
         if (_state == x)
             return;
-        
+
         _state = x;
         PlaybackStateChanged?.Invoke(this, x);
     }

@@ -13,7 +13,8 @@ public abstract class SpotifyAudioStream : Stream, IWaveeMediaSource
     internal const int ChunkSize = 2 * 2 * 128 * 1024;
     private readonly Dictionary<int, byte[]> _decryptedChunks = new();
     private readonly IAudioDecrypt? _decrypt;
-    
+    private Exception? _lastException;
+
     private static byte[] AUDIO_AES_IV = new byte[]
     {
         0x72, 0xe0, 0x67, 0xfb, 0xdd, 0xcb, 0xcf, 0x77, 0xeb, 0xe8, 0xbc, 0x64, 0x3f, 0x63, 0x0d, 0x93,
@@ -37,6 +38,8 @@ public abstract class SpotifyAudioStream : Stream, IWaveeMediaSource
 
     public override int Read(byte[] buffer, int offset, int count)
     {
+        TaskCompletionSource? tcs = null;
+
         try
         {
             var chunkIndex = (int)(_pos / ChunkSize);
@@ -44,7 +47,8 @@ public abstract class SpotifyAudioStream : Stream, IWaveeMediaSource
 
             if (!_decryptedChunks.TryGetValue(chunkIndex, out var chunk))
             {
-                BufferingStream?.Invoke(this, EventArgs.Empty);
+                tcs = new TaskCompletionSource();
+                BufferingStream?.Invoke(this, tcs);
                 chunk = GetChunk(chunkIndex,
                         false,
                         CancellationToken.None)
@@ -55,15 +59,24 @@ public abstract class SpotifyAudioStream : Stream, IWaveeMediaSource
                 }
 
                 _decryptedChunks[chunkIndex] = chunk;
+                tcs.SetResult();
             }
 
             var bytesToRead = Math.Max(0, Math.Min(count, chunk.Length - chunkOffset));
             Array.Copy(chunk, chunkOffset, buffer, offset, bytesToRead);
             _pos += bytesToRead;
+            if (_lastException != null)
+            {
+                ResumedFromError?.Invoke(this, _lastException);
+                _lastException = null;
+            }
+
             return bytesToRead;
         }
         catch (Exception requestException)
         {
+            tcs?.SetException(requestException);
+            _lastException = requestException;
             OnError?.Invoke(this, requestException);
             // Wait 2 seconds before trying again?
             Task.Delay(TimeSpan.FromSeconds(2)).ConfigureAwait(false).GetAwaiter().GetResult();
@@ -141,6 +154,7 @@ public abstract class SpotifyAudioStream : Stream, IWaveeMediaSource
     public Stream AsStream() => this;
 
     public TimeSpan Duration { get; }
-    public event EventHandler? BufferingStream;
-    public event EventHandler<Exception> OnError; 
+    public event EventHandler<TaskCompletionSource>? BufferingStream;
+    public event EventHandler<Exception> OnError;
+    public event EventHandler<Exception>? ResumedFromError;
 }
