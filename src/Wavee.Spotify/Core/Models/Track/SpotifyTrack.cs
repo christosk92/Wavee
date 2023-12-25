@@ -14,6 +14,7 @@ public readonly struct SpotifyTrack : ISpotifyPlayableItem
     public required IReadOnlyCollection<SpotifyTrackArtist> Artists { get; init; }
     public required uint Number { get; init; }
     public required TimeSpan Duration { get; init; }
+    public string? Id => Uri.ToString();
     public required uint DiscNumber { get; init; }
     public required bool Explicit { get; init; }
     public required SpotifyTrackRestrictions Restrictions { get; init; }

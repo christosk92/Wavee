@@ -20,7 +20,7 @@ public sealed class NAudioPlayer : IWaveePlayer
     private readonly AsyncLock _lock = new AsyncLock();
     private readonly BufferedWaveProvider _bufferedWaveProvider;
 
-    private LinkedListNode<Func<ValueTask<IWaveeMediaSource>>>? source = null;
+    private LinkedListNode<WaveePlaybackItem>? source = null;
 
     private TimeSpan? _crossfadeDuration = null;
     private AsyncManualResetEvent _playbackStopped = new AsyncManualResetEvent(true);
@@ -54,10 +54,10 @@ public sealed class NAudioPlayer : IWaveePlayer
     public event EventHandler<WaveePlaybackStateType>? PlaybackStateChanged;
     public event EventHandler<Exception>? PlaybackError;
 
-    public ValueTask Play(WaveePlaybackList playlist)
+    public async ValueTask Play(WaveePlaybackList playlist)
     {
         //TODO:
-        var stream = playlist.Get(0);
+        var stream = await playlist.Get(0);
         using (_lock.Lock())
         {
             source = null;
@@ -72,7 +72,7 @@ public sealed class NAudioPlayer : IWaveePlayer
         }
 
         _wavePlayer.Play();
-        return new ValueTask();
+        return;
     }
 
     public ValueTask Play(IWaveeMediaSource source)
@@ -124,7 +124,7 @@ public sealed class NAudioPlayer : IWaveePlayer
 
                     if (stream_one is null)
                     {
-                        sourceOneRaw = await source.Value();
+                        sourceOneRaw = await source.Value.Factory();
                         NotifyPlaybackStateChanged(_playbackState with
                         {
                             Track = sourceOneRaw,

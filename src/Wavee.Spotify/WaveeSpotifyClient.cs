@@ -7,6 +7,7 @@ using Wavee.Spotify.Core.Clients.Playback;
 using Wavee.Spotify.Core.Clients.Remote;
 using Wavee.Spotify.Core.Models.User;
 using Wavee.Spotify.Infrastructure.Connection;
+using Wavee.Spotify.Infrastructure.Context;
 using Wavee.Spotify.Infrastructure.HttpClients;
 using Wavee.Spotify.Infrastructure.Services;
 using Wavee.Spotify.Infrastructure.Storage;
@@ -18,15 +19,19 @@ namespace Wavee.Spotify;
 
 public sealed class WaveeSpotifyClient : IWaveeSpotifyClient
 {
+    private readonly ISpotifyContextClient _context;
+
     private WaveeSpotifyClient(ISpotifyTokenClient tokenClient,
         ISpotifyRemoteClient remote,
         ISpotifyTrackClient track,
-        ISpotifyPlaybackClient playback)
+        ISpotifyPlaybackClient playback, 
+        ISpotifyContextClient context)
     {
         Token = tokenClient;
         Remote = remote;
         Track = track;
         Playback = playback;
+        _context = context;
     }
 
     public static IWaveeSpotifyClient Create(
@@ -85,13 +90,16 @@ public sealed class WaveeSpotifyClient : IWaveeSpotifyClient
             cache,
             config);
 
-        return new WaveeSpotifyClient(tokenClient, remoteClient, track, playback);
+        var context = new SpotifyContextClient(tokenService, httpClient);
+        
+        return new WaveeSpotifyClient(tokenClient, remoteClient, track, playback, context);
     }
 
     public ISpotifyTokenClient Token { get; }
     public ISpotifyRemoteClient Remote { get; }
     public ISpotifyTrackClient Track { get; }
     public ISpotifyPlaybackClient Playback { get; }
+    ISpotifyContextClient IWaveeSpotifyClient.Context => _context;
 }
 
 public interface IWaveeSpotifyClient
@@ -100,4 +108,5 @@ public interface IWaveeSpotifyClient
     ISpotifyRemoteClient Remote { get; }
     ISpotifyTrackClient Track { get; }
     ISpotifyPlaybackClient Playback { get; }
+    internal ISpotifyContextClient Context { get; }
 }

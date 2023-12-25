@@ -2,40 +2,62 @@ using Wavee.Interfaces;
 
 namespace Wavee.Core.Playback;
 
+public sealed class WaveePlaybackItem
+{
+    public required Func<ValueTask<IWaveeMediaSource>> Factory { get; init; }
+    public required string? Id { get; init; }
+}
+
 public sealed class WaveePlaybackList
 {
-    private readonly LinkedList<Func<ValueTask<IWaveeMediaSource>>> _factory;
-    private readonly WaveePlaybackContextCount _count;
+    private readonly Func<ValueTask<LinkedList<WaveePlaybackItem>>> _factory;
 
-    private WaveePlaybackList(Func<int, ValueTask<IWaveeMediaSource>> factory,
-        WaveePlaybackContextCount count)
+    private WaveePlaybackList(IWaveePlaybackContextCount count, params WaveePlaybackItem[] initialItems)
     {
-        if (count.IsInfinite)
-        {
-            //TODO:
-        }
-        else
-        {
-            var countVal = count.Count;
-
-            var list = new LinkedList<Func<ValueTask<IWaveeMediaSource>>>();
-            for (var i = 0; i < countVal; i++)
-            {
-                var num = i;
-                var factoryFunc = () => factory(num);
-                list.AddLast(factoryFunc);
-            }
-            
-            _factory = list;
-        }
-
-        _count = count;
+        _factory = () => new ValueTask<LinkedList<WaveePlaybackItem>>(new LinkedList<WaveePlaybackItem>(initialItems));
+        Count = count;
     }
 
-    public LinkedListNode<Func<ValueTask<IWaveeMediaSource>>>? Get(int index)
+    private WaveePlaybackList(WaveePlaybackAdaptiveCount count, Func<Task<WaveePlaybackItem[]>>? initialItems)
+    {
+        _factory = () => CreateLinkedList(initialItems);
+        Count = count;
+    }
+
+    private async ValueTask<LinkedList<WaveePlaybackItem>> CreateLinkedList(Func<Task<WaveePlaybackItem[]>>? initialItems)
+    {
+        var items = await initialItems!();
+        return new LinkedList<WaveePlaybackItem>(items);
+    }
+
+    public IWaveePlaybackContextCount Count { get; }
+
+    public string Id { get; }
+    public string? Name { get; }
+    public string? Description { get; }
+
+    public ValueTask<LinkedListNode<WaveePlaybackItem>?> Get(int index)
+    {
+        var factory = _factory();
+        if (factory.IsCompletedSuccessfully)
+        {
+            return new ValueTask<LinkedListNode<WaveePlaybackItem>?>(GetSync(factory.Result, index));
+        }
+
+        return new ValueTask<LinkedListNode<WaveePlaybackItem>?>(GetAsync(factory, index));
+    }
+
+    private async Task<LinkedListNode<WaveePlaybackItem>?> GetAsync(ValueTask<LinkedList<WaveePlaybackItem>> valueTask,
+        int index)
+    {
+        var factory = await valueTask;
+        return GetSync(factory, index);
+    }
+
+    private LinkedListNode<WaveePlaybackItem>? GetSync(LinkedList<WaveePlaybackItem> factoryResult, int index)
     {
         int i = 0;
-        var node = _factory.First;
+        var node = factoryResult.First;
         while (i < index)
         {
             node = node.Next;
@@ -44,54 +66,78 @@ public sealed class WaveePlaybackList
 
         return node;
     }
-
-    public bool TryGet(int index, out LinkedListNode<Func<ValueTask<IWaveeMediaSource>>> source)
-    {
-        if (index < 0)
-        {
-            source = default!;
-            return false;
-        }
-
-        var node = Get(index);
-        if (node is null)
-        {
-            source = default!;
-            return false;
-        }
-
-        source = node;
-        return true;
-    }
-
+    
     public static WaveePlaybackList Create(params IWaveeMediaSource[] sources)
     {
         return new WaveePlaybackList(
-            factory: i => new ValueTask<IWaveeMediaSource>(sources[i]),
-            count: WaveePlaybackContextCount.Create(sources.Length));
+            count: WaveePlaybackContextCount.Create(sources.Length),
+            sources.Select(source => new WaveePlaybackItem
+            {
+                Factory = () => new ValueTask<IWaveeMediaSource>(source),
+                Id = source.Item.Id
+            }).ToArray());
     }
 
-    public static WaveePlaybackList Create(Func<int, ValueTask<IWaveeMediaSource>> factory, int count)
+    public static WaveePlaybackList Create(int count, params WaveePlaybackItem[] items)
     {
         return new WaveePlaybackList(
-            factory: factory,
-            count: WaveePlaybackContextCount.Create(count));
+            count: WaveePlaybackContextCount.Create(count),
+            items
+            );
+    }
+    public static WaveePlaybackList Create(params WaveePlaybackItem[] items)
+    {
+        return new WaveePlaybackList(
+            count: WaveePlaybackContextCount.Adaptive,
+            items
+        );
+    }
+    public static WaveePlaybackList Create(Func<Task<WaveePlaybackItem[]>>? sources)
+    {
+        return new WaveePlaybackList(
+            count: WaveePlaybackContextCount.Adaptive,
+            sources
+        );
     }
 
 
     private readonly record struct InfiniteContext;
 }
 
-internal sealed class WaveePlaybackContextCount
+internal sealed class WaveePlaybackContextCount : IWaveePlaybackContextCount
 {
-    private WaveePlaybackContextCount(bool infinite, int count)
+    private readonly int _count;
+    private WaveePlaybackContextCount(int count)
     {
-        IsInfinite = infinite;
-        Count = count;
+        _count = count;
     }
+    
 
-    public static WaveePlaybackContextCount Infinite { get; } = new(true, -1);
-    public static WaveePlaybackContextCount Create(int count) => new(false, count);
-    public bool IsInfinite { get; }
-    public int Count { get; }
+    public static WaveePlaybackInfiniteContextCount Infinite { get; } = new WaveePlaybackInfiniteContextCount();
+    public static WaveePlaybackContextCount Create(int count) => new(count);
+    public static WaveePlaybackAdaptiveCount Adaptive { get; set; }
+    public ValueTask<int> GetCount()
+    {
+        return new ValueTask<int>(_count);
+    }
+}
+
+internal sealed class WaveePlaybackInfiniteContextCount : IWaveePlaybackContextCount
+{
+    public ValueTask<int> GetCount()
+    {
+        throw new NotSupportedException("Infinite context does not have a count");
+    }
+}
+internal sealed class WaveePlaybackAdaptiveCount : IWaveePlaybackContextCount
+{
+    public ValueTask<int> GetCount()
+    {
+        throw new NotImplementedException();
+    }
+}
+
+public interface IWaveePlaybackContextCount
+{
+    ValueTask<int> GetCount();
 }
