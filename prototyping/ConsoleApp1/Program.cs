@@ -3,6 +3,7 @@ using ConsoleApp1;
 using LiteDB;
 using Wavee;
 using Wavee.Core.Enums;
+using Wavee.Core.Playback;
 using Wavee.Players.NAudio;
 using Wavee.Spotify;
 using Wavee.Spotify.Core.Models.Common;
@@ -33,19 +34,18 @@ var config = new WaveeSpotifyConfig
     CachingProvider = NullCachingService.Instance
 };
 var player = new NAudioPlayer();
-player.PlaybackStateChanged += (sender, args) =>
-{
-    Console.WriteLine($"Playback state changed to {args}");
-};
-player.PlaybackError += (sender, args) =>
-{
-    Console.WriteLine($"Playback error: {args.Message}");
-};
+player.PlaybackStateChanged += (sender, args) => { Console.WriteLine($"Playback state changed to {args}"); };
+player.PlaybackError += (sender, args) => { Console.WriteLine($"Playback error: {args.Message}"); };
 var client = WaveeSpotifyClient.Create(player, config, OpenBrowserAndReturnCallback);
-var sw = Stopwatch.StartNew();
-var trackStream =
-    await client.Playback.CreateStream(SpotifyId.FromBase62("6ru2VMkOMkSBUKWqrTZYwe", AudioItemType.Track));
-await player.Play(trackStream);
+var ids = new[]
+{
+    SpotifyId.FromBase62("6WeCNrVIIGnmWH9LX5NpeH", AudioItemType.Track),
+    SpotifyId.FromBase62("3HltbvkfjVeyjESx3JbuLD", AudioItemType.Track)
+};
+
+var list = WaveePlaybackList.Create(async i => await client.Playback.CreateStream(ids[i], CancellationToken.None),
+    ids.Length);
+await player.Play(list);
 var newConnectionMade = await client.Remote.Connect();
 if (newConnectionMade)
 {

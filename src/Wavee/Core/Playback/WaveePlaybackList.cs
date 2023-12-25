@@ -71,6 +71,14 @@ public sealed class WaveePlaybackList
             count: WaveePlaybackContextCount.Create(sources.Length));
     }
 
+    public static WaveePlaybackList Create(Func<int, ValueTask<IWaveeMediaSource>> factory, int count)
+    {
+        return new WaveePlaybackList(
+            factory: factory,
+            count: WaveePlaybackContextCount.Create(count));
+    }
+
+
     private readonly record struct InfiniteContext;
 }
 

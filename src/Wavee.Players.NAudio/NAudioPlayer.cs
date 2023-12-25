@@ -139,6 +139,8 @@ public sealed class NAudioPlayer : IWaveePlayer
                         var streamOneRaw = sourceOneRaw.AsStream();
                         stream_one_duration = sourceOneRaw.Duration;
                         stream_one = CreateStream(streamOneRaw);
+                        
+                        notifiedStartedPlaying = false;
                     }
 
                     if (_seekRequested is not null)
