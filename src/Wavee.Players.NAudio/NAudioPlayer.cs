@@ -48,7 +48,7 @@ public sealed class NAudioPlayer : IWaveePlayer
             PlaybackId = null
         };
 
-        Task.Factory.StartNew(async () => await StartReadingPackets(), TaskCreationOptions.LongRunning);
+        Task.Factory.StartNew(() => StartReadingPackets(), TaskCreationOptions.LongRunning);
     }
 
     public event EventHandler<WaveePlaybackStateType>? PlaybackStateChanged;
@@ -57,7 +57,7 @@ public sealed class NAudioPlayer : IWaveePlayer
     public async ValueTask Play(WaveePlaybackList playlist)
     {
         //TODO:
-        var stream = await playlist.Get(0);
+        var stream = await playlist.Get(0, true);
         using (_lock.Lock())
         {
             source = null;
@@ -75,6 +75,28 @@ public sealed class NAudioPlayer : IWaveePlayer
         return;
     }
 
+    public ValueTask Seek(TimeSpan timeSpan)
+    {
+        using (_lock.Lock())
+        {
+            _seekRequested = timeSpan;
+        }
+
+        return new ValueTask();
+    }
+
+    public ValueTask Stop()
+    {
+        using (_lock.Lock())
+        {
+            source = null;
+            _bufferedWaveProvider.ClearBuffer();
+        }
+
+        _wavePlayer.Stop();
+        return new ValueTask();
+    }
+
     public ValueTask Play(IWaveeMediaSource source)
     {
         var list = WaveePlaybackList.Create(source);
@@ -86,7 +108,7 @@ public sealed class NAudioPlayer : IWaveePlayer
         _crossfadeDuration = crossfadeDuration;
     }
 
-    private async Task StartReadingPackets()
+    private void StartReadingPackets()
     {
         TimeSpan? stream_one_duration = null;
         TimeSpan? stream_two_duration = null;
@@ -95,9 +117,11 @@ public sealed class NAudioPlayer : IWaveePlayer
         IWaveeMediaSource? sourceOneRaw = null;
         bool notifiedStartedPlaying = false;
 
+        Span<byte> packet = stackalloc byte[1024];
+        Span<byte> packet_two = stackalloc byte[1024];
         while (!_cts.IsCancellationRequested)
         {
-            using (await _lock.LockAsync())
+            using (_lock.Lock())
             {
                 try
                 {
@@ -108,7 +132,7 @@ public sealed class NAudioPlayer : IWaveePlayer
                         stream_one = null;
                         stream_two = null;
                         _playbackStopped.Set();
-                        await Task.Delay(10, _cts.Token);
+                        Task.Delay(10, _cts.Token).Wait(_cts.Token);
                         if (notifiedStartedPlaying)
                             NotifyPlaybackStateChanged(_playbackState with
                             {
@@ -124,7 +148,7 @@ public sealed class NAudioPlayer : IWaveePlayer
 
                     if (stream_one is null)
                     {
-                        sourceOneRaw = await source.Value.Factory();
+                        sourceOneRaw = source.Value.Factory().ConfigureAwait(false).GetAwaiter().GetResult();
                         NotifyPlaybackStateChanged(_playbackState with
                         {
                             Track = sourceOneRaw,
@@ -139,27 +163,25 @@ public sealed class NAudioPlayer : IWaveePlayer
                         var streamOneRaw = sourceOneRaw.AsStream();
                         stream_one_duration = sourceOneRaw.Duration;
                         stream_one = CreateStream(streamOneRaw);
-                        
+                        _position = null;
                         notifiedStartedPlaying = false;
                     }
 
                     if (_seekRequested is not null)
                     {
                         stream_one.CurrentTime = _seekRequested.Value;
+                        _position = (_seekRequested.Value, Stopwatch.StartNew());
                         _seekRequested = null;
-
                         PlaybackChanged?.Invoke(this, _playbackState);
                     }
 
                     //Read packet from stream_one
-                    var packet = new byte[1024];
-                    var copied = stream_one.Read(packet, 0, packet.Length);
+                    var copied = stream_one.Read(packet);
                     if (stream_two is not null)
                     {
                         //When we are crossfading, stream_one is always the "main stream", hence this one is fading in.
                         //Stream_two is the outgoing stream, so that one is fading out.
-                        var packet_two = new byte[1024];
-                        stream_two.Read(packet_two, 0, packet_two.Length);
+                        stream_two.Read(packet_two);
 
                         //Crossfade
                         var volumeOut = CalculateCrossfadeOut(_crossfadeDuration.Value,
@@ -175,7 +197,7 @@ public sealed class NAudioPlayer : IWaveePlayer
 
                     _position ??= (stream_one.CurrentTime, Stopwatch.StartNew());
 
-                    _bufferedWaveProvider.AddSamples(packet, 0, copied);
+                    _bufferedWaveProvider.AddSamples(packet.ToArray(), 0, copied);
                     if (!notifiedStartedPlaying)
                     {
                         NotifyPlaybackStateChanged(_playbackState with
@@ -187,7 +209,7 @@ public sealed class NAudioPlayer : IWaveePlayer
 
                     while (_bufferedWaveProvider.BufferedDuration.TotalSeconds > 0.5)
                     {
-                        await Task.Delay(10, _cts.Token);
+                        Task.Delay(10, _cts.Token).Wait(_cts.Token);
                     }
 
                     if (copied is 0 || stream_one.CurrentTime >= stream_one_duration.Value)
@@ -279,7 +301,7 @@ public sealed class NAudioPlayer : IWaveePlayer
             {
                 PlaybackState = WaveePlaybackStateType.Buffering
             });
-           // NotifyPlaybackStateChanged(WaveePlaybackStateType.Buffering);
+            // NotifyPlaybackStateChanged(WaveePlaybackStateType.Buffering);
             await e.Task;
             NotifyPlaybackStateChanged(_playbackState with
             {
@@ -287,7 +309,7 @@ public sealed class NAudioPlayer : IWaveePlayer
             });
         });
     }
-    
+
     private void NotifyPlaybackStateChanged(WaveePlaybackState x)
     {
         var oldState = _playbackState;
@@ -299,7 +321,7 @@ public sealed class NAudioPlayer : IWaveePlayer
         PlaybackStateChanged?.Invoke(this, x.PlaybackState);
     }
 
-    private static byte[] Mix(byte[] packet, byte[] packetTwo, double volumeIn, double volumeOut)
+    private static Span<byte>Mix(Span<byte> packet, Span<byte> packetTwo, double volumeIn, double volumeOut)
     {
         var x_floats = MemoryMarshal.Cast<byte, float>(packet);
         var y_floats = MemoryMarshal.Cast<byte, float>(packetTwo);
@@ -317,7 +339,7 @@ public sealed class NAudioPlayer : IWaveePlayer
         }
 
         var mixedBytes = MemoryMarshal.Cast<float, byte>(mixed);
-        return mixedBytes.ToArray();
+        return mixedBytes;
     }
 
     private WaveStream CreateStream(Stream streamOneRaw)

@@ -1,3 +1,4 @@
+using System.Text;
 using Eum.Spotify.context;
 using Wavee.Spotify.Core.Models.Common;
 using Wavee.Spotify.Infrastructure.Context;
@@ -16,6 +17,7 @@ internal sealed class SpotifyContextClient : ISpotifyContextClient
     {
         _tokenService = tokenService;
         _httpClient = httpClient;
+        Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
     }
 
     public async Task<Context> ResolveContext(string contextId, CancellationToken cancellationToken)
@@ -31,5 +33,23 @@ internal sealed class SpotifyContextClient : ISpotifyContextClient
     public Task<Context> ResolveArtistContext(SpotifyId artistId, CancellationToken cancellationToken)
     {
         throw new NotImplementedException();
+    }
+
+    public async Task<ContextPage> ResolveContextRaw(string pageUrl, CancellationToken cancellationToken)
+    {
+        //if pageUrl does not have a / at the start, add it
+        if (!pageUrl.StartsWith("/"))
+        {
+            pageUrl = "/" + pageUrl;
+        }
+        using var response = await _httpClient.Get(pageUrl, cancellationToken: cancellationToken);
+        string s;
+        using (var sr = new StreamReader(await response.Content.ReadAsStreamAsync(cancellationToken)))
+        {
+            s = await sr.ReadToEndAsync(cancellationToken);
+        }
+        
+        var context = ContextPage.Parser.ParseJson(s);
+        return context;
     }
 }

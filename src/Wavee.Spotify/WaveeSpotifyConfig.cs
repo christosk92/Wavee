@@ -10,7 +10,7 @@ public sealed class WaveeSpotifyConfig
     public WaveeSpotifyPlaybackConfig Playback { get; } = new();
 
     public required WaveeSpotifyCredentialsStorageConfig CredentialsStorage { get; init; }
-    public required IWaveeCachingProvider? CachingProvider { get; init; } = null;
+    public IWaveeCachingProvider CachingProvider { get; init; } = NullCachingService.Instance;
 }
 
 public sealed class WaveeSpotifyCredentialsStorageConfig

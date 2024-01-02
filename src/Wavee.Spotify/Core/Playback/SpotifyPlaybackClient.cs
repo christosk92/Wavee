@@ -1,37 +1,35 @@
 using System.Collections.Immutable;
-using System.Threading.Tasks.Sources;
+using Spotify.Metadata;
 using Wavee.Core.Enums;
 using Wavee.Interfaces;
 using Wavee.Spotify.Core.Exceptions;
+using Wavee.Spotify.Core.Mappings;
 using Wavee.Spotify.Core.Models.Common;
-using Wavee.Spotify.Core.Models.Episode;
+using Wavee.Spotify.Core.Models.Metadata;
 using Wavee.Spotify.Core.Models.Track;
-using Wavee.Spotify.Infrastructure.HttpClients;
 using Wavee.Spotify.Infrastructure.Playback;
 using Wavee.Spotify.Interfaces.Clients;
 using Wavee.Spotify.Interfaces.Clients.Playback;
 using Wavee.Spotify.Interfaces.Models;
+using static Spotify.Metadata.AudioFile.Types.Format;
 
-namespace Wavee.Spotify.Core.Clients.Playback;
+namespace Wavee.Spotify.Core.Playback;
 
 internal sealed class SpotifyPlaybackClient : ISpotifyPlaybackClient
 {
-    private readonly ISpotifyTrackClient _trackClient;
-    private readonly ISpotifyEpisodeClient _episodeClient;
+    private readonly ISpotifyMetadataClient _metadataClient;
     private readonly ISpotifyStorageResolveService _storageResolveService;
     private readonly ISpotifyAudioKeyService _audioKeysService;
     private readonly IWaveeCachingProvider _cache;
     private readonly WaveeSpotifyConfig _config;
 
-    public SpotifyPlaybackClient(ISpotifyTrackClient trackClient,
-        ISpotifyEpisodeClient episodeClient,
+    public SpotifyPlaybackClient(ISpotifyMetadataClient metadataClient,
         ISpotifyStorageResolveService storageResolveService,
         ISpotifyAudioKeyService audioKeysService,
         IWaveeCachingProvider cache,
         WaveeSpotifyConfig config)
     {
-        _trackClient = trackClient;
-        _episodeClient = episodeClient;
+        _metadataClient = metadataClient;
         _storageResolveService = storageResolveService;
         _audioKeysService = audioKeysService;
         _cache = cache;
@@ -60,22 +58,23 @@ internal sealed class SpotifyPlaybackClient : ISpotifyPlaybackClient
     {
         switch (result)
         {
-            case SpotifyTrack track:
+            case SpotifySimpleTrack track:
                 return CreateTrackStream(track, cancellationToken);
-            case SpotifyEpisode episode:
+            case SpotifySimpleEpisode episode:
                 return CreateEpisodeStream(episode, cancellationToken);
             default:
                 throw new SpotifyCannotPlayContentException(SpotifyCannotPlayReason.NotTrackOrEpisode);
         }
     }
 
-    private ValueTask<SpotifyAudioStream> CreateEpisodeStream(SpotifyEpisode episode,
+    private ValueTask<SpotifyAudioStream> CreateEpisodeStream(SpotifySimpleEpisode episode,
         CancellationToken cancellationToken)
     {
         throw new SpotifyCannotPlayContentException(SpotifyCannotPlayReason.NotYetImplemented);
     }
 
-    private ValueTask<SpotifyAudioStream> CreateTrackStream(SpotifyTrack track, CancellationToken cancellationToken)
+    private ValueTask<SpotifyAudioStream> CreateTrackStream(SpotifySimpleTrack track,
+        CancellationToken cancellationToken)
     {
         var preferedQuality = _config.Playback.PreferedQuality;
         var file = FindFile(track.AudioFiles, preferedQuality, true);
@@ -83,13 +82,13 @@ internal sealed class SpotifyPlaybackClient : ISpotifyPlaybackClient
         const string bucket = "tracks";
         var audioKeycacheKey = $"spotify:audiokey:{file.FileIdBase16}";
         if (_cache.TryGetFile(bucket, file.FileIdBase16, out var fileStream)
-            && _cache.TryGet<SpotifyAudioKey>(audioKeycacheKey, out var audioKey))
+            && _cache.TryGet(audioKeycacheKey, out var audioKey))
         {
             return new ValueTask<SpotifyAudioStream>(
                 new SpotifyOfflineStream(
                     item: track,
                     file: file,
-                    audioKey: audioKey,
+                    audioKey: new SpotifyAudioKey(audioKey, !audioKey.All(x => x is 0)),
                     isOgg: IsVorbis(file),
                     fileStream: fileStream
                 )
@@ -97,10 +96,10 @@ internal sealed class SpotifyPlaybackClient : ISpotifyPlaybackClient
         }
 
         // We need to stream from CDN.
-        return new ValueTask<SpotifyAudioStream>(StreamFromCdn(track, file,audioKeycacheKey, cancellationToken));
+        return new ValueTask<SpotifyAudioStream>(StreamFromCdn(track, file, audioKeycacheKey, cancellationToken));
     }
 
-    private async Task<SpotifyAudioStream> StreamFromCdn(SpotifyTrack track, SpotifyAudioFile file,
+    private async Task<SpotifyAudioStream> StreamFromCdn(SpotifySimpleTrack track, SpotifyAudioFile file,
         string audioKeycacheKey,
         CancellationToken cancellationToken)
     {
@@ -110,10 +109,10 @@ internal sealed class SpotifyPlaybackClient : ISpotifyPlaybackClient
         using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, cts.Token);
         var audioKeyTask = _audioKeysService.GetAudioKey(track.Uri, file.FileIdBase16, linkedCts.Token);
         await Task.WhenAll(storageResolveTask, audioKeyTask);
-        
+
         // Store audio key 
-        _cache.Set(audioKeycacheKey, audioKeyTask.Result);
-        
+        _cache.Set(audioKeycacheKey, audioKeyTask.Result.Key ?? new byte[16]);
+
         return new SpotifyCdnStream(
             item: track,
             file: storageResolveTask.Result,
@@ -124,8 +123,8 @@ internal sealed class SpotifyPlaybackClient : ISpotifyPlaybackClient
 
     private static bool IsVorbis(SpotifyAudioFile file)
     {
-        return file.Format is SpotifyAudioFileFormat.OGG_VORBIS_96 or SpotifyAudioFileFormat.OGG_VORBIS_160
-            or SpotifyAudioFileFormat.OGG_VORBIS_320;
+        return file.Format is OggVorbis96 or OggVorbis160
+            or OggVorbis320;
     }
 
     private static SpotifyAudioFile FindFile(ImmutableArray<SpotifyAudioFile> files,
@@ -138,6 +137,7 @@ internal sealed class SpotifyPlaybackClient : ISpotifyPlaybackClient
             {
                 return IsVorbis(x) && GetQuality(x) == preferedQuality;
             }
+
             return GetQuality(x) == preferedQuality;
         });
     }
@@ -146,12 +146,12 @@ internal sealed class SpotifyPlaybackClient : ISpotifyPlaybackClient
     {
         return p0.Format switch
         {
-            SpotifyAudioFileFormat.MP3_96 => WaveeSpotifyPreferedQuality.Low,
-            SpotifyAudioFileFormat.MP3_160 => WaveeSpotifyPreferedQuality.Normal,
-            SpotifyAudioFileFormat.MP3_320 => WaveeSpotifyPreferedQuality.High,
-            SpotifyAudioFileFormat.OGG_VORBIS_96 => WaveeSpotifyPreferedQuality.Low,
-            SpotifyAudioFileFormat.OGG_VORBIS_160 => WaveeSpotifyPreferedQuality.Normal,
-            SpotifyAudioFileFormat.OGG_VORBIS_320 => WaveeSpotifyPreferedQuality.High,
+            Mp396 => WaveeSpotifyPreferedQuality.Low,
+            AudioFile.Types.Format.Mp3160 => WaveeSpotifyPreferedQuality.Normal,
+            Mp3320 => WaveeSpotifyPreferedQuality.High,
+            OggVorbis96 => WaveeSpotifyPreferedQuality.Low,
+            OggVorbis160 => WaveeSpotifyPreferedQuality.Normal,
+            OggVorbis320 => WaveeSpotifyPreferedQuality.High,
             _ => WaveeSpotifyPreferedQuality.Low
         };
     }
@@ -163,22 +163,21 @@ internal sealed class SpotifyPlaybackClient : ISpotifyPlaybackClient
         {
             case AudioItemType.Track:
             {
-                if (_cache.TryGet<SpotifyTrack>(id.ToString(), out var track))
-                    return new ValueTask<ISpotifyPlayableItem>(track);
+                if (_cache.TryGet(id.ToString(), out var track))
+                    return new ValueTask<ISpotifyPlayableItem>(Track.Parser.ParseFrom(track).MapToDto());
                 break;
             }
             case AudioItemType.PodcastEpisode:
             {
-                if (_cache.TryGet<SpotifyEpisode>(id.ToString(), out var episode))
-                    return new ValueTask<ISpotifyPlayableItem>(episode);
+                if (_cache.TryGet(id.ToString(), out var episode))
+                    return new ValueTask<ISpotifyPlayableItem>(Episode.Parser.ParseFrom(episode).MapToDto());
                 break;
             }
         }
 
-        return new ValueTask<ISpotifyPlayableItem>(GetTrack(_trackClient, _episodeClient, id, cancellationToken));
+        return new ValueTask<ISpotifyPlayableItem>(GetTrack(_metadataClient, id, cancellationToken));
 
-        static async Task<ISpotifyPlayableItem> GetTrack(ISpotifyTrackClient trackClient,
-            ISpotifyEpisodeClient episode,
+        static async Task<ISpotifyPlayableItem> GetTrack(ISpotifyMetadataClient metadataClient,
             SpotifyId id,
             CancellationToken cancellationToken)
         {
@@ -188,7 +187,7 @@ internal sealed class SpotifyPlaybackClient : ISpotifyPlaybackClient
                 {
                     case AudioItemType.Track:
                     {
-                        var track = await trackClient.Get(id, cancellationToken);
+                        var track = await metadataClient.GetTrack(id, cancellationToken);
                         return track;
                     }
                     case AudioItemType.PodcastEpisode:

@@ -1,3 +1,5 @@
+using Wavee.Spotify.Core.Models.Common;
+
 namespace Wavee.Spotify;
 
 internal static class Constants
@@ -25,4 +27,9 @@ internal static class Constants
     public const ulong SPOTIFY_DESKTOP_VERSION = 117300517;
     public const string SpotifyClientId = "65b708073fc0480ea92a077233ca87bd";
     public static string InstanceId { get; } = Guid.NewGuid().ToString();
+
+    public static class Caching
+    {
+        public static string SimpleItem(SpotifyId id) => $"simple_{id.ToString()}";
+    }
 }

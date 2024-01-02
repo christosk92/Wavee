@@ -7,4 +7,6 @@ internal interface IWebSocketService
     ValueTask<string> ConnectAsync(CancellationToken cancellationToken);
 
     Task PutState(PutStateRequest request, CancellationToken cancellationToken);
+    Cluster? LatestCluster { get; }
+    event EventHandler<ClusterUpdate> ClusterChanged;
 }

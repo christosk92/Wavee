@@ -2,7 +2,7 @@ using Wavee.Spotify.Core.Models.Common;
 using Wavee.Spotify.Interfaces;
 using Wavee.Spotify.Interfaces.Clients.Playback;
 
-namespace Wavee.Spotify.Core.Clients.Playback;
+namespace Wavee.Spotify.Core.Playback;
 
 internal sealed class SpotifyAudioKeyService : ISpotifyAudioKeyService
 {

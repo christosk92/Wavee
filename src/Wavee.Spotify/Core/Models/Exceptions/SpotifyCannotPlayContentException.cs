@@ -48,5 +48,7 @@ public enum SpotifyCannotPlayReason
     NotYetImplemented,
     [StringValue("The track or episode could not be found. Please make sure the id is correct. If it is, the track or episode might have been removed from Spotify.")]
     InvalidTrack,
-    Unknown,
+    [StringValue("The supplied context could not be build. Please check the inner exception for more details.")]
+    InvalidContext,
+    Unknown
 }

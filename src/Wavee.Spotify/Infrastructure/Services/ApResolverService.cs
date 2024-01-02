@@ -55,7 +55,7 @@ internal sealed class ApResolverService : IApResolverService
         var hosts = jsondoc.RootElement.GetProperty("spclient");
         using var hostEnumerator = hosts.EnumerateArray();
         hostEnumerator.MoveNext();
-        var host = hostEnumerator.Current.GetString();
+        var host = hostEnumerator.Current.GetString(); 
         //split host into host and port
         var split = host.Split(':');
         var port = ushort.Parse(split[1]);

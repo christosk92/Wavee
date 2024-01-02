@@ -94,7 +94,11 @@ internal sealed partial class ActiveWebSocket : IDisposable
             cancellationToken);
 
         Cluster = initialCluster;
-
+        OnClusterUpdate?.Invoke(this, new ClusterUpdate
+        {
+            Cluster = initialCluster,
+            UpdateReason = ClusterUpdateReason.DeviceNewConnection
+        });
         _listenThread = new Thread(() => ListenLoop(client, onError, _onRequest, cluster =>
         {
             Cluster = cluster.Cluster;
@@ -109,7 +113,7 @@ internal sealed partial class ActiveWebSocket : IDisposable
 
         return connectionId;
     }
-    
+
 
     public Cluster? Cluster { get; private set; }
 

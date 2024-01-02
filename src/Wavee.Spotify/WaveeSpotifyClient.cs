@@ -6,6 +6,8 @@ using Wavee.Spotify.Core.Clients;
 using Wavee.Spotify.Core.Clients.Playback;
 using Wavee.Spotify.Core.Clients.Remote;
 using Wavee.Spotify.Core.Models.User;
+using Wavee.Spotify.Core.Playback;
+using Wavee.Spotify.Core.Remote;
 using Wavee.Spotify.Infrastructure.Connection;
 using Wavee.Spotify.Infrastructure.Context;
 using Wavee.Spotify.Infrastructure.HttpClients;
@@ -23,13 +25,13 @@ public sealed class WaveeSpotifyClient : IWaveeSpotifyClient
 
     private WaveeSpotifyClient(ISpotifyTokenClient tokenClient,
         ISpotifyRemoteClient remote,
-        ISpotifyTrackClient track,
-        ISpotifyPlaybackClient playback, 
+        ISpotifyMetadataClient track,
+        ISpotifyPlaybackClient playback,
         ISpotifyContextClient context)
     {
         Token = tokenClient;
         Remote = remote;
-        Track = track;
+        Metadata = track;
         Playback = playback;
         _context = context;
     }
@@ -70,34 +72,47 @@ public sealed class WaveeSpotifyClient : IWaveeSpotifyClient
 
         var cache = config.CachingProvider ?? NullCachingService.Instance;
 
-        var remoteClient = new SpotifyRemoteClient(webSocketService, player, config);
 
         var tokenClient = new SpotifyTokenClient(tokenService);
 
-        var track = new SpotifyTrackClient(tokenService, httpClient);
-        var episode = new SpotifyEpisodeClient(tokenService, httpClient);
+        var metadata = new SpotifyMetadataClient(httpClient, config.CachingProvider);
 
+        var remoteClient = new SpotifyRemoteClient(webSocketService, player, config, metadata);
+
+        
         var audioKeys = new SpotifyAudioKeyService(tcpConnectionService);
 
         var audioStreamingClient = new AudioStreamingHttpClient(streamingHttpClient, cache);
         var storageResolveService = new SpotifyStorageResolveService(tokenService, httpClient, audioStreamingClient);
 
 
-        var playback = new SpotifyPlaybackClient(track,
-            episode,
+        var playback = new SpotifyPlaybackClient(metadata,
             storageResolveService,
             audioKeys,
             cache,
             config);
 
         var context = new SpotifyContextClient(tokenService, httpClient);
-        
-        return new WaveeSpotifyClient(tokenClient, remoteClient, track, playback, context);
+
+        var client = new WaveeSpotifyClient(tokenClient, remoteClient, metadata, playback, context);
+
+
+        webSocketService.PlayRequested += async (sender, builder) =>
+        {
+            var context = builder.Build(client);
+            await player.Play(context);
+        };
+        webSocketService.SeekRequested += async (sender, timeSpan) =>
+        {
+            await player.Seek(timeSpan);
+        };
+
+        return client;
     }
 
     public ISpotifyTokenClient Token { get; }
     public ISpotifyRemoteClient Remote { get; }
-    public ISpotifyTrackClient Track { get; }
+    public ISpotifyMetadataClient Metadata { get; }
     public ISpotifyPlaybackClient Playback { get; }
     ISpotifyContextClient IWaveeSpotifyClient.Context => _context;
 }
@@ -106,7 +121,7 @@ public interface IWaveeSpotifyClient
 {
     ISpotifyTokenClient Token { get; }
     ISpotifyRemoteClient Remote { get; }
-    ISpotifyTrackClient Track { get; }
+    ISpotifyMetadataClient Metadata { get; }
     ISpotifyPlaybackClient Playback { get; }
     internal ISpotifyContextClient Context { get; }
 }

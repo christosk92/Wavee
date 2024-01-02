@@ -38,13 +38,22 @@ var player = new NAudioPlayer();
 player.PlaybackStateChanged += (sender, args) => { Console.WriteLine($"Playback state changed to {args}"); };
 player.PlaybackError += (sender, args) => { Console.WriteLine($"Playback error: {args.Message}"); };
 var client = WaveeSpotifyClient.Create(player, config, OpenBrowserAndReturnCallback);
-var context = SpotifyContextBuilder.New(client)
-    .FromArtist(SpotifyId.FromUri("spotify:artist:0oSGxfWSnnOXhD2fKuz2Gy"))
+var topTrackContext = SpotifyContextBuilder.New()
+    .FromArtist(SpotifyId.FromUri("spotify:artist:3nlHsNqwCSvT988ZfSW1Yh"))
     .FromTopTracks()
+    .StartFromIndex(1)
+    .Build(client);
+var albumContext = SpotifyContextBuilder.New()
+    .FromArtist(SpotifyId.FromUri("spotify:artist:28Ky95tmlHktB96DBUoB0g"))
+    .FromAlbum(SpotifyId.FromUri("spotify:album:2SxoeF005n621Jca66RRdu"))
     .StartFromIndex(0)
-    .Build();
+    .Build(client);
 
-await player.Play(context);
+//await player.Play(albumContext);
+client.Remote.State.Subscribe(x =>
+{
+    
+});
 var newConnectionMade = await client.Remote.Connect();
 if (newConnectionMade)
 {
