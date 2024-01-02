@@ -73,6 +73,7 @@ message Track {
   optional sint32 disc_number = 6;
   optional sint32 duration = 7;
   optional sint32 popularity = 8;
+  optional Audio original_audio = 24;
   optional bool explicit = 9;
   repeated ExternalId external_id = 10;
   repeated Restriction restriction = 11;
@@ -91,7 +92,9 @@ message Track {
   optional string version_title = 28;
   repeated ArtistWithRole artist_with_role = 32;
 }
-
+message Audio {
+  optional bytes uuid = 1;
+}
 message ArtistWithRole {
   optional bytes artist_gid = 1;
   optional string artist_name = 2;

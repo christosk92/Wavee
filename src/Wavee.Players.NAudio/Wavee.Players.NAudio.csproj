@@ -14,6 +14,7 @@
 		<PublishReadyToRunExclude Include="LanguageExt.Core.dll" />
 	</ItemGroup>
     <ItemGroup>
+        <PackageReference Include="LanguageExt.Core" Version="4.4.7" />
         <PackageReference Include="NAudio" Version="2.2.1" />
         <PackageReference Include="NeoSmart.AsyncLock" Version="3.2.1" />
         <PackageReference Include="Nito.AsyncEx.Coordination" Version="5.1.2" />
