@@ -1,4 +1,7 @@
 ﻿using Microsoft.UI.Xaml;
+using Wavee.UI.Navigation;
+using Wavee.UI.ViewModels.Profile;
+
 namespace Wavee.UI.WinUI;
 
 public partial class App : Application
@@ -6,6 +9,10 @@ public partial class App : Application
     public App()
     {
         this.InitializeComponent();
+        
+        var viewFactory = WinUIViewFactory.Create()
+            .Add<ProfileViewModel, ProfileViewModel>(ViewType.Dialog)
+            .Build();
     }
 
     /// <summary>

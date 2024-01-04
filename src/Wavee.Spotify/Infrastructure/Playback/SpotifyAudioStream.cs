@@ -1,4 +1,3 @@
-using Wavee.Infrastructure.Playback.Decrypt;
 using Wavee.Interfaces;
 using Wavee.Interfaces.Models;
 using Wavee.Spotify.Core.Clients.Playback;

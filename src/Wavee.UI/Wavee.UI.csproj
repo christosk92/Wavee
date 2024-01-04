@@ -7,7 +7,25 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Folder Include="Command\Contracts\" />
+    <Folder Include="Command\Handlers\" />
+    <Folder Include="Query\Handlers\" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Mediator.Abstractions" Version="3.0.0-preview.15" />
+    <PackageReference Include="Mediator.SourceGenerator" Version="3.0.0-preview.15">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
+    <PackageReference Include="ReactiveUI" Version="19.5.39" />
+    <PackageReference Include="System.Reactive" Version="6.0.0" />
+    <PackageReference Include="Tango" Version="3.1.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Wavee.Spotify\Wavee.Spotify.csproj" />
   </ItemGroup>
 
 </Project>
