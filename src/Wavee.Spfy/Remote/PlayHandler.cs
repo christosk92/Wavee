@@ -7,6 +7,7 @@ using Google.Protobuf;
 using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
 using Wavee.Spfy.Playback;
+using Wavee.Spfy.Playback.Contexts;
 using PlayOrigin = Eum.Spotify.connectstate.PlayOrigin;
 
 namespace Wavee.Spfy.Remote;

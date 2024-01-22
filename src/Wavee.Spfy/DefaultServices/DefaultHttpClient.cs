@@ -113,7 +113,7 @@ internal sealed class DefaultHttpClient : IHttpClient
         });
     }
 
-    public async Task<Context> ResolveContext(string itemId,string accessToken)
+    public async Task<Context> ResolveContext(string itemId, string accessToken)
     {
         var url = $"/context-resolve/v1/{itemId.ToString()}";
         var spclient = await ApResolve.GetSpClient(this);
@@ -133,20 +133,24 @@ internal sealed class DefaultHttpClient : IHttpClient
         {
             pageUrl = "/" + pageUrl;
         }
+
         var spclient = await ApResolve.GetSpClient(this);
         var finalUrl = $"https://{spclient}{pageUrl}";
-        using var response = await _httpClient.GetAsync(pageUrl, cancellationToken: CancellationToken.None);
+        using var request = new HttpRequestMessage(HttpMethod.Get, finalUrl);
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+        using var response = await _httpClient.SendAsync(request);
         string s;
         using (var sr = new StreamReader(await response.Content.ReadAsStreamAsync(CancellationToken.None)))
         {
             s = await sr.ReadToEndAsync(CancellationToken.None);
         }
-        
+
         var context = ContextPage.Parser.ParseJson(s);
         return context;
     }
 
-    private async Task<(byte[] bytes, long totalSize)> GetChunk(string cdnUrl, long start, long end, CancellationToken cancellationToken = default)
+    private async Task<(byte[] bytes, long totalSize)> GetChunk(string cdnUrl, long start, long end,
+        CancellationToken cancellationToken = default)
     {
         using var request = new HttpRequestMessage(HttpMethod.Get, cdnUrl);
         request.Headers.Range = new RangeHeaderValue(start, end);

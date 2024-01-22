@@ -1,16 +1,9 @@
-﻿using Eum.Spotify.connectstate;
-using Google.Protobuf;
-using Konsole;
-using LanguageExt;
-using LanguageExt.UnsafeValueAccess;
+﻿using LanguageExt;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
-using NAudio.Wave;
 using Serilog;
 using Wavee;
 using Wavee.Spfy;
 using Wavee.Spfy.Remote;
-using Wavee.Spotify.Utils;
 
 Serilog.Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()

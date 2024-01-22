@@ -9,3 +9,7 @@ public interface ISpotifyContext : IWaveePlayerContext
     string ContextUrl { get; }
     HashMap<string, string> ContextMetadata { get; }
 }
+
+internal readonly record struct SpotifyContextPage(LinkedList<SpotifyContextTrack> Tracks, uint Index);
+
+internal readonly record struct SpotifyContextTrack(SpotifyId Gid, Option<string> Uid, int Index);

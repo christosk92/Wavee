@@ -2,7 +2,7 @@ using Eum.Spotify.context;
 using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
 
-namespace Wavee.Spfy.Playback;
+namespace Wavee.Spfy.Playback.Contexts;
 
 internal sealed class LazySpotifyContext : SpotifyRealContext
 {
@@ -83,8 +83,6 @@ internal sealed class LazySpotifyContext : SpotifyRealContext
 
                     return x;
                 }
-
-                return Option<SpotifyContextPage>.None;
             }
 
             if (!_fetched && _context.Pages.Count == 0)
@@ -124,10 +122,27 @@ internal sealed class LazySpotifyContext : SpotifyRealContext
                 return Option<SpotifyContextPage>.None;
             }
 
+            if (firstPage.Tracks.Count is 0 && !string.IsNullOrEmpty(firstPage.PageUrl))
+            {
+                try
+                {
+                    firstPage.PageUrl = firstPage.PageUrl.Replace("hm://", "");
+                    var data = await FetchPage(firstPage.PageUrl);
+                    firstPage.Tracks.AddRange(data.Tracks);
+                    firstPage.NextPageUrl = data.NextPageUrl;
+                    firstPage.PageUrl = string.Empty;
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                }
+            }
+
             if (mutate)
             {
                 _lastPage = firstPage;
             }
+
 
             var y = MapToSpotifyContextPage(firstPage, Option<int>.None, mutate);
             // if (addToList)
@@ -160,7 +175,7 @@ internal sealed class LazySpotifyContext : SpotifyRealContext
         for (var index = 0; index < nextPage.Tracks.Count; index++)
         {
             var track = nextPage.Tracks[index];
-            var trackIdx = _seenTracks + index;
+            var trackIdx = index;
 
             SpotifyId id = default;
             if (!string.IsNullOrEmpty(track.Uri))
@@ -228,7 +243,7 @@ internal sealed class LazySpotifyContext : SpotifyRealContext
     private async ValueTask<int> FindIndex(Func<ContextTrack, bool> predicate, Option<WaveeContextStream> firstStream)
     {
         int foundPage = 0;
-        int foundIndex = 0;
+        int foundIndex = -1;
         int seendTracks = 0;
 
         var previousContext = _context.Clone();
@@ -260,14 +275,15 @@ internal sealed class LazySpotifyContext : SpotifyRealContext
 
 
             seendTracks += _lastPage.Tracks.Count;
+            foundPage++;
+            if (foundIndex is not -1)
+                break;
 
             var x = await NextPageInner(true);
             if (x.IsNone)
             {
                 break;
             }
-
-            foundPage++;
         }
 
 

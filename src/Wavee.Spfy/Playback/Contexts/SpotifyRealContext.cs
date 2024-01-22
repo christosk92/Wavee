@@ -1,11 +1,10 @@
 using Eum.Spotify.context;
-using Google.Protobuf.WellKnownTypes;
 using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
 using Wavee.Contexting;
 using static LanguageExt.Prelude;
 
-namespace Wavee.Spfy.Playback;
+namespace Wavee.Spfy.Playback.Contexts;
 
 internal abstract class SpotifyRealContext : ISpotifyContext
 {
@@ -82,7 +81,7 @@ internal abstract class SpotifyRealContext : ISpotifyContext
         {
             // Move to the next track in the current page
             //currentTrack = currentTrack.ValueUnsafe().Next;
-            _currentTrack = currentTrack.Bind(x =>
+            currentTrack = currentTrack.Bind(x =>
             {
                 if (skipped)
                     return x;
@@ -94,8 +93,9 @@ internal abstract class SpotifyRealContext : ISpotifyContext
 
                 return Prelude.Some(next);
             });
+            _currentTrack = currentTrack;
 
-            if (currentTrack == null)
+            if (currentTrack == Option<LinkedListNode<SpotifyContextTrack>>.None)
             {
                 // Reached the end of the current page, fetch the next page
                 var nextPage = await NextPage();
@@ -113,6 +113,12 @@ internal abstract class SpotifyRealContext : ISpotifyContext
                     return Option<WaveeContextStream>.None;
                 }
             }
+        }
+
+        if (_currentTrack == Option<LinkedListNode<SpotifyContextTrack>>.None &&
+            _currentPage != Option<LinkedListNode<SpotifyContextPage>>.None)
+        {
+            _currentTrack = _currentPage.ValueUnsafe().Value.Tracks.First;
         }
 
         var waveeStream = await _streamFactory(_currentTrack.ValueUnsafe().Value.Gid, CancellationToken.None);
@@ -186,6 +192,12 @@ internal abstract class SpotifyRealContext : ISpotifyContext
                 // We can skip the remaining count within the current page
                 for (int i = 0; i < count; i++)
                 {
+                    if (currentTrack == Option<LinkedListNode<SpotifyContextTrack>>.None)
+                    {
+                        currentTrack = currentPage.ValueUnsafe().Value.Tracks.First;
+                        _currentTrack = currentTrack;
+                        continue;
+                    }
                     currentTrack = currentTrack.ValueUnsafe().Next;
                     if (currentTrack == null)
                     {
@@ -256,7 +268,7 @@ internal abstract class SpotifyRealContext : ISpotifyContext
         // Iterate through pages and tracks to skip the specified count
         while (count > 0)
         {
-            if (currentPage == Prelude.None || currentTrack == Prelude.None)
+            if (currentPage == Prelude.None && currentTrack == Prelude.None)
             {
                 var nextPage = await PeekNextPage();
                 if (nextPage.IsSome)
@@ -274,12 +286,21 @@ internal abstract class SpotifyRealContext : ISpotifyContext
             }
 
             var remainingTracksInPage = currentPage.ValueUnsafe().Value.Tracks.Count -
-                                        (currentTrack.ValueUnsafe().Value.Index + 1);
+                                        (currentTrack.Match(
+                                            Some: x => x.Value.Index + 1,
+                                            None: () => 0
+                                        ));
             if (count <= remainingTracksInPage)
             {
                 // We can skip the remaining count within the current page
                 for (int i = 0; i < count; i++)
                 {
+                    if (currentTrack == Option<LinkedListNode<SpotifyContextTrack>>.None)
+                    {
+                        currentTrack = currentPage.ValueUnsafe().Value.Tracks.First;
+                        continue;
+                    }
+
                     currentTrack = currentTrack.ValueUnsafe().Next;
                     if (currentTrack == null)
                     {
@@ -312,7 +333,9 @@ internal abstract class SpotifyRealContext : ISpotifyContext
                 {
                     currentPage = pagesCopy.AddLast(nextPage.ValueUnsafe());
                     // _currentPage = currentPage;
-                    currentTrack = currentPage.ValueUnsafe().Value.Tracks.First;
+
+                    //Setting currentTrack to null will cause the next iteration to fetch the first track in the page
+                    currentTrack = null;
                     // _currentTrack = currentTrack;
                 }
                 else
@@ -353,7 +376,7 @@ internal abstract class SpotifyRealContext : ISpotifyContext
         LinkedListNode<SpotifyContextTrack>? currentTrack = currentPage?.Value.Tracks?.First;
         while (index > 0)
         {
-            if (currentPage == null || currentTrack == null)
+            if (currentPage == null && currentTrack == null)
             {
                 var nextPage = await NextPage();
                 if (nextPage.IsSome)
@@ -370,14 +393,23 @@ internal abstract class SpotifyRealContext : ISpotifyContext
                 }
             }
 
-            var remainingTracksInPage = currentPage.Value.Tracks.Count -
+            var remainingTracksInPage = 0;
+            if (currentTrack is null)
+            {
+                remainingTracksInPage = currentPage.Value.Tracks.Count;
+            }
+            else
+            {
+                remainingTracksInPage = currentPage.Value.Tracks.Count -
                                         (currentTrack.Value.Index + 1);
+            }
+
             if (index <= remainingTracksInPage)
             {
                 // We can skip the remaining count within the current page
                 for (int i = 0; i < index; i++)
                 {
-                    currentTrack = currentTrack.Next;
+                    currentTrack = currentTrack?.Next;
                     if (currentTrack == null)
                     {
                         // Reached the end of the current page, fetch the next page
@@ -410,8 +442,8 @@ internal abstract class SpotifyRealContext : ISpotifyContext
                 {
                     currentPage = _pages.AddLast(nextPage.ValueUnsafe());
                     _currentPage = currentPage;
-                    currentTrack = currentPage.Value.Tracks.First;
-                    _currentTrack = currentTrack;
+                    currentTrack = null;
+                    _currentTrack = null;
                 }
                 else
                 {
@@ -552,7 +584,7 @@ internal sealed class SpotifyPlaylistOrAlbumContext : SpotifyRealContext
                 continue;
             }
 
-            tracks.AddLast(new SpotifyContextTrack(id, track.Uid, _tracksBefore + i));
+            tracks.AddLast(new SpotifyContextTrack(id, track.Uid, i));
         }
 
         if (mutate)
@@ -588,6 +620,7 @@ internal sealed class SpotifyArtistContext : SpotifyRealContext
         throw new NotImplementedException();
     }
 }
+
 internal sealed class SingularTrackContext : IWaveePlayerContext
 {
     private Func<Task<WaveeStream>> _trackStreamFactory;
@@ -642,16 +675,3 @@ internal sealed class SingularTrackContext : IWaveePlayerContext
         return CurrentStream;
     }
 }
-
-
-public interface ISpotifyContext : IWaveePlayerContext
-{
-    string ContextUri { get; }
-    string ContextUrl { get; }
-    HashMap<string, string> ContextMetadata { get; }
-}
-
-internal readonly record struct SpotifyContextPage(LinkedList<SpotifyContextTrack> Tracks, uint Index);
-
-internal readonly record struct SpotifyContextTrack(SpotifyId Gid, Option<string> Uid, int Index);
-
