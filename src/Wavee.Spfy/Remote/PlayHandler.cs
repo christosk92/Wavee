@@ -69,8 +69,7 @@ internal static class PlayHandler
         var playContext = Common.CreateContext(instanceId, context);
         if (skipToIndex.HasValue)
         {
-            var minusOneMax = Math.Max(0, skipToIndex.Value - 1);
-            var skipped = await playContext.TrySkip(minusOneMax);
+            var skipped = await playContext.MoveTo(skipToIndex.Value);
             if (!skipped)
             {
                 Debugger.Break();

@@ -145,8 +145,16 @@ internal sealed class DefaultHttpClient : IHttpClient
             s = await sr.ReadToEndAsync(CancellationToken.None);
         }
 
-        var context = ContextPage.Parser.ParseJson(s);
-        return context;
+        try
+        {
+            var context = ContextPage.Parser.ParseJson(s);
+            return context;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
     }
 
     private async Task<(byte[] bytes, long totalSize)> GetChunk(string cdnUrl, long start, long end,

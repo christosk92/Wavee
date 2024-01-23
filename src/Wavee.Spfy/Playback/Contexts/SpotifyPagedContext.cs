@@ -27,7 +27,7 @@ internal abstract class SpotifyPagedContext : SpotifyRealContext
     }
 
     public override HashMap<string, string> ContextMetadata => _contextMetadata;
-    
+
     protected override async ValueTask<Option<SpotifyContextPage>> NextPage()
     {
         var lastActivePage = _currentPageNode?.Value;
@@ -152,6 +152,7 @@ internal abstract class SpotifyPagedContext : SpotifyRealContext
 
     private async Task<ContextPage> ResolvePage(string currentPagePageUrl)
     {
+        currentPagePageUrl = currentPagePageUrl.Replace("hm://", string.Empty);
         if (EntityManager.TryGetClient(_connectionId, out var client))
         {
             var context = await client.Playback.ResolveContextRaw(currentPagePageUrl, CancellationToken.None);

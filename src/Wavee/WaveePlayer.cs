@@ -729,8 +729,7 @@ public sealed class WaveePlayer
             return false;
         }
 
-        var minusOneMax = Math.Max(0, index - 1);
-        var moved = await _currentContext.TrySkip(minusOneMax);
+        var moved = await _currentContext.MoveTo(index);
         if (moved)
         {
             await _semaphore.WaitAsync();

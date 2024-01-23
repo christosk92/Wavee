@@ -42,4 +42,6 @@ public interface IWaveePlayerContext
     /// Number of streams that were skipped. This is always 0 if the skip was unsuccessful
     /// </param>
     ValueTask<bool> TrySkip(int count);
+
+    ValueTask<bool> MoveTo(int absoluteIndex);
 }
