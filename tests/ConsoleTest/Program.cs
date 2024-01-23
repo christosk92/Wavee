@@ -1,9 +1,21 @@
-﻿using LanguageExt;
+﻿using System.Text;
+using LanguageExt;
 using Microsoft.Extensions.Logging;
 using Serilog;
 using Wavee;
 using Wavee.Spfy;
 using Wavee.Spfy.Remote;
+using Wavee.Spfy.Utils;
+
+// var testUri = SpotifyId.FromUri("spotify:track:1dxqk42KIlMyrSawZ5YjBE");
+// var number = testUri.Id;
+// var raw = testUri.ToRaw().ToArray();
+// var rawBase16 = testUri.ToRaw().ToBase16();
+//
+// var targetStr = "95342ed0b4c54707e8fb";
+// var base16 = targetStr.ToBase16();
+// var base62 = SpotifyId.FromRaw(base16.AsSpan(), AudioItemType.Track);
+// var number2 = base62.Id;
 
 Serilog.Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
@@ -160,10 +172,13 @@ _ = client.CountryCode.AsTask().ContinueWith(x =>
     appLogger.LogInformation("CountryCode: {CountryCode}", x.Result);
 });
 await client.Authenticate();
+//var re = await client.InstanceId.Get("hm://context-resolve/v1/spotify:user:7ucghdgquf6byqusqkliltwc2:collection");
+
+
 //https://open.spotify.com/track/2zDIxlHcudE8yaB88wQAoP?si=b5defc41768e4a71
 //await client.Playback.Play(SpotifyId.FromUri("spotify:track:1z4mivQugjaobIZAqR4N4U"), Option<int>.None);
-await client.Playback.Play(SpotifyId.FromUri("spotify:playlist:1xaI099prElMKypSdl40Bl"), Option<int>.Some(0));
-//await client.Playback.Play(SpotifyId.FromUri("spotify:album:56XzxNKUGySZcu1nByxo3y"), Option<int>.Some(1));
+//await client.Playback.Play(SpotifyId.FromUri("spotify:playlist:1xaI099prElMKypSdl40Bl"), Option<int>.Some(0));
+//await client.Playback.Play(Spotif Id.FromUri("spotify:album:56XzxNKUGySZcu1nByxo3y"), Option<int>.Some(1));
 
 
 var testmp3 = "C:\\Users\\chris\\Music\\Tristam Questions.mp3";

@@ -240,6 +240,12 @@ public sealed class WaveeSpotifyRemoteClient
                 Provider = FindProvider(currentStream.IdInContext),
                 Uid = FindUid(currentStream.IdInContext),
             };
+            var metadata = FindMetadata(currentStream.IdInContext);
+            foreach (var (key, value) in metadata)
+            {
+                state.Track.Metadata.Add(key, value);
+            }
+
             if (spotifyItem.Uri.Type is AudioItemType.Track)
             {
                 state.Track.Metadata["track_player"] = "audio";
@@ -406,6 +412,26 @@ public sealed class WaveeSpotifyRemoteClient
         }
 
         return string.Empty;
+    }
+
+    private HashMap<string, string> FindMetadata(ComposedKey currentStreamIdInContext)
+    {
+        var metadata = new HashMap<string, string>();
+        foreach (var key in currentStreamIdInContext.Keys)
+        {
+            if (key is SpotifyContextTrackKey x && x.Type is SpotifyContextTrackKeyType.Metadata)
+            {
+                // ; seperator
+                var split = x.Value.Split(';');
+                if (split.Length != 2)
+                    continue;
+                var a = split[0];
+                var b = split[1];
+                metadata = metadata.Add(a, b);
+            }
+        }
+
+        return metadata;
     }
 
     public event EventHandler<RemoteConnectionStatusType> StatusChanged;

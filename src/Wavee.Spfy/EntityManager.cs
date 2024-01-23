@@ -118,6 +118,8 @@ internal static class EntityManager
         SendSequenceLocks.Add(instanceId, new SemaphoreSlim(1, 1));
         ReceiveSequenceLocks.Add(instanceId, new SemaphoreSlim(1, 1));
         AesKeySequencesLocks.Add(instanceId, new SemaphoreSlim(1, 1));
+        MercurySequenceLocks.Add(instanceId, new SemaphoreSlim(1, 1));
+        MercurySequences.Add(instanceId, 0);
     }
 
     internal static void RemoveConnection(Guid instanceId)
@@ -144,6 +146,10 @@ internal static class EntityManager
         recvSeqLock?.Dispose();
              
         AesKeySequencesLocks.Remove(instanceId, out var aesSeqLock);
+        MercurySequenceLocks.Remove(instanceId, out var mercurySeqLock);
+        mercurySeqLock?.Dispose();
+        
+        MercurySequences.Remove(instanceId);
         aesSeqLock?.Dispose();
     }
 
@@ -224,6 +230,23 @@ internal static class EntityManager
         }
 
         connId = default;
+        return false;
+    }
+
+    public static bool TryGetMercurySeq(Guid instanceId, out ulong o)
+    {
+        if (MercurySequenceLocks.TryGetValue(instanceId, out var lockObj))
+        {
+            lockObj.Wait();
+            var seq = MercurySequences[instanceId];
+            MercurySequences[instanceId] = seq + 1;
+            lockObj.Release();
+
+            o = seq;
+            return true;
+        }
+        
+        o = default;
         return false;
     }
 }

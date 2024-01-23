@@ -42,13 +42,4 @@ public interface IWaveePlayerContext
     /// Number of streams that were skipped. This is always 0 if the skip was unsuccessful
     /// </param>
     ValueTask<bool> TrySkip(int count);
-
-    /// <summary>
-    /// Try to peek the next stream in the context without fetching it and without skipping it
-    /// </summary>
-    /// <param name="count"></param>
-    /// <returns></returns>
-    ValueTask<bool> TryPeek(int count);
-
-    ValueTask<bool> MoveTo(int index);
 }

@@ -360,35 +360,25 @@ public sealed class WaveePlayer
     //     _semaphore.Release();
     // }
 
-    private async ValueTask RequestNextStream()
+    private ValueTask RequestNextStream()
     {
         if (_currentContext is null)
         {
             //TODO: maybe pop queue! 
-            return;
+            return ValueTask.CompletedTask;
         }
 
         _semaphore.Wait();
-        if (await _currentContext.TryPeek(1))
-        {
-            var nextStreamTask = _currentContext.GetNextStream();
+        var nextStreamTask = _currentContext.GetNextStream();
 
-            _state = _state with
-            {
-                NextStream = Option<ValueTask<Option<WaveeContextStream>>>.Some(nextStreamTask)
-            };
-        }
-        else
+        _state = _state with
         {
-            _state = _state with
-            {
-                NextStream = Option<ValueTask<Option<WaveeContextStream>>>.None
-            };
-        }
+            NextStream = Option<ValueTask<Option<WaveeContextStream>>>.Some(nextStreamTask)
+        };
 
         _semaphore.Release();
 
-        return;
+        return ValueTask.CompletedTask;
     }
 
     private static WaveePlayerState Loop(WaveePlayerState state, WriteSamples writeSamples,
@@ -739,7 +729,8 @@ public sealed class WaveePlayer
             return false;
         }
 
-        var moved = await _currentContext.MoveTo(index);
+        var minusOneMax = Math.Max(0, index - 1);
+        var moved = await _currentContext.TrySkip(minusOneMax);
         if (moved)
         {
             await _semaphore.WaitAsync();
@@ -747,10 +738,12 @@ public sealed class WaveePlayer
             {
                 await _state.StreamOne.ValueUnsafe().Stream.DisposeAsync();
             }
+
             if (_state.StreamTwo.IsSome)
             {
                 await _state.StreamTwo.ValueUnsafe().Stream.DisposeAsync();
             }
+
             _state = _state with
             {
                 NextStream = Option<ValueTask<Option<WaveeContextStream>>>.Some(_currentContext.GetNextStream()),
@@ -761,10 +754,10 @@ public sealed class WaveePlayer
                 PauseRequest = Option<bool>.None
             };
             _semaphore.Release();
-            
+
             return true;
         }
-        
+
         return false;
     }
 }

@@ -130,6 +130,7 @@ public sealed class WaveeSpotifyClient
     public ValueTask<string> GetAccessToken() => TokenFactory();
     public Exception LastError { get; private set; }
     public ValueTask<string> CountryCode => _countryCodeTaskFactory();
+    public Guid InstanceId => _instanceId;
 
     /// <summary>
     /// Authenticates the client with the specified username.
@@ -307,36 +308,41 @@ public sealed class WaveeSpotifyClient
 
             new Thread(async () =>
             {
-                while (!cts.IsCancellationRequested)
+                try
                 {
-                    var canRead = await _sendChannel.Reader.WaitToReadAsync(cts.Token);
-                    if (!canRead)
+                    while (!cts.IsCancellationRequested)
                     {
-                        break;
-                    }
+                        var canRead = await _sendChannel.Reader.WaitToReadAsync(cts.Token);
+                        if (!canRead)
+                        {
+                            break;
+                        }
 
-                    var msg = await _sendChannel.Reader.ReadAsync(cts.Token);
-                    if (!EntityManager.TryGetConnection(_instanceId, out var tcp, out var _))
-                    {
-                        // Put the message back in the channel
-                        await _sendChannel.Writer.WriteAsync(msg, cts.Token);
-                        break;
-                    }
+                        var msg = await _sendChannel.Reader.ReadAsync(cts.Token);
+                        if (!EntityManager.TryGetConnection(_instanceId, out var tcp, out var _))
+                        {
+                            // Put the message back in the channel
+                            await _sendChannel.Writer.WriteAsync(msg, cts.Token);
+                            break;
+                        }
 
-                    try
-                    {
-                        tcp?.Send(msg.Type, msg.Payload.Span);
-                    }
-                    catch (Exception e)
-                    {
-                        _logger.LogError(e, "Failed to send message(Type={MessageType}) to Spotify", msg.Type);
-                        // Put the message back in the channel
-                        await _sendChannel.Writer.WriteAsync(msg, cts.Token);
-                        break;
+                        try
+                        {
+                            tcp?.Send(msg.Type, msg.Payload.Span);
+                        }
+                        catch (Exception e)
+                        {
+                            _logger.LogError(e, "Failed to send message(Type={MessageType}) to Spotify", msg.Type);
+                            // Put the message back in the channel
+                            await _sendChannel.Writer.WriteAsync(msg, cts.Token);
+                            break;
+                        }
                     }
                 }
-
-                cts.Dispose();
+                finally
+                {
+                    cts.Dispose();
+                }
             }).Start();
 
             var remoteConnectionTask = Remote.Connect("Wavee", DeviceType.Computer).AsTask();

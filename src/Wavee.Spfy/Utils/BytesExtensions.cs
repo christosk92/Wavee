@@ -2,7 +2,7 @@ using System.Text;
 
 namespace Wavee.Spfy.Utils;
 
-internal static class BytesExtensions
+public static class BytesExtensions
 {
     public static string ToBase16(this ReadOnlySpan<byte> x)
     {
@@ -13,5 +13,16 @@ internal static class BytesExtensions
         }
 
         return hex.ToString();
+    }
+    
+    public static byte[] ToBase16(this string x)
+    {
+        var bytes = new byte[x.Length / 2];
+        for (var i = 0; i < bytes.Length; i++)
+        {
+            bytes[i] = byte.Parse(x.Substring(i * 2, 2), System.Globalization.NumberStyles.HexNumber);
+        }
+
+        return bytes;
     }
 }

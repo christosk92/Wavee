@@ -22,39 +22,14 @@ internal static class RemoteTransfer
             throw new NotSupportedException();
         }
 
+        var playContext = Common.CreateContext(connectionId, transferState.CurrentSession.Context);
+
         if (transferState.Playback?.CurrentTrack is not null)
         {
-            // TODO: Episode
-            var trackId = SpotifyId.FromRaw(transferState.Playback.CurrentTrack.Gid.Span, AudioItemType.Track);
-
-            var stream = await spotifyClient.Playback.CreateSpotifyStream(trackId, CancellationToken.None);
-            var ctxStream = new WaveeContextStream(stream,
-                Common.ConstructComposedKeyForCurrentTrack(transferState.Playback, trackId));
-            var x = BuildContext(transferState, connectionId, spotifyClient.Playback.CreateSpotifyStream, ctxStream);
-            await spotifyClient.WaveePlayer.Play(ctxStream, x);
-            return;
+            //TODO: Skip to track
         }
 
-        // just play the first track
-        // TODO:
-        var context = BuildContext(transferState, connectionId, spotifyClient.Playback.CreateSpotifyStream,
-            Option<WaveeContextStream>.None);
-        await spotifyClient.WaveePlayer.Play(context);
-    }
-
-    private static SpotifyRealContext BuildContext(TransferState transferState,
-        Guid connectionId,
-        Func<SpotifyId, CancellationToken, Task<WaveeStream>> streamFactory,
-        Option<WaveeContextStream> firstStream)
-    {
-        return new LazySpotifyContext(connectionId,
-            transferState.CurrentSession.Context,
-            track => Common.Predicate(track, 
-                transferState.Playback?.CurrentTrack?.Uri,
-                transferState.Playback?.CurrentTrack?.Gid ?? ByteString.Empty,
-                transferState.Playback?.CurrentTrack?.Uid),
-            streamFactory,
-            firstStream);
+        await spotifyClient.WaveePlayer.Play(playContext);
     }
 }
 

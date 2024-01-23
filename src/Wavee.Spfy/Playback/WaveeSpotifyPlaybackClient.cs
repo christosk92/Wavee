@@ -24,7 +24,8 @@ public enum SpotifyContextTrackKeyType
     Provider,
     Uid,
     Index,
-    PageIndex
+    PageIndex,
+    Metadata
 }
 
 public sealed class WaveeSpotifyPlaybackClient
@@ -55,7 +56,6 @@ public sealed class WaveeSpotifyPlaybackClient
 
     public ValueTask Play(SpotifyId itemId, Option<int> startIndex)
     {
-        var startIndexAsValueTask = startIndex.Map(x => new ValueTask<int>(x));
         if (itemId.Type is AudioItemType.Track or AudioItemType.PodcastEpisode)
         {
             // just play the track !
@@ -66,18 +66,11 @@ public sealed class WaveeSpotifyPlaybackClient
             });
             return _waveePlayer.Play(context);
         }
-        else if (itemId.Type is AudioItemType.Playlist or AudioItemType.Album)
+        else
         {
-            var playlistContext =
-                new SpotifyPlaylistOrAlbumContext(_connectionId, itemId, startIndexAsValueTask, CreateSpotifyStream);
-            return _waveePlayer.Play(playlistContext);
+            throw new NotImplementedException();
         }
-        else if (itemId.Type is AudioItemType.Artist)
-        {
-            var artistContext =
-                new SpotifyArtistContext(_connectionId, itemId, startIndexAsValueTask, CreateSpotifyStream);
-            return _waveePlayer.Play(artistContext);
-        }
+
 
         //What other types are there ?
         throw new NotSupportedException();

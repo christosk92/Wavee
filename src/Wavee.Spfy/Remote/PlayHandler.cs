@@ -1,12 +1,7 @@
 using System.Diagnostics;
 using System.Text.Json;
 using Eum.Spotify.context;
-using Eum.Spotify.playback;
-using Eum.Spotify.transfer;
-using Google.Protobuf;
-using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
-using Wavee.Spfy.Playback;
 using Wavee.Spfy.Playback.Contexts;
 using PlayOrigin = Eum.Spotify.connectstate.PlayOrigin;
 
@@ -60,27 +55,35 @@ internal static class PlayHandler
 
                     if (!string.IsNullOrEmpty(skipToUid))
                     {
-                        
                     }
 
                     if (!string.IsNullOrEmpty(skipToUri))
                     {
-                        
                     }
-                    
+
                     return;
                 }
             }
         }
 
-        var playContext = new LazySpotifyContext(instanceId,
-            context,
-            track => Common.Predicate(track,
-                skipToUri,
-                ByteString.Empty,
-                skipToUid),
-            spotifyClient.Playback.CreateSpotifyStream,
-            Option<WaveeContextStream>.None);
+        var playContext = Common.CreateContext(instanceId, context);
+        if (skipToIndex.HasValue)
+        {
+            var minusOneMax = Math.Max(0, skipToIndex.Value - 1);
+            var skipped = await playContext.TrySkip(minusOneMax);
+            if (!skipped)
+            {
+                Debugger.Break();
+            }
+        }
+        else if (!string.IsNullOrEmpty(skipToUid))
+        {
+            //TODO:
+        }
+        else if (!string.IsNullOrEmpty(skipToUri))
+        {
+            // TODO:
+        }
 
         await spotifyClient.WaveePlayer.Play(playContext);
     }
