@@ -23,6 +23,8 @@ public interface IWaveePlayerContext
     /// </returns>
     ValueTask<Option<WaveeContextStream>> GetPreviousStream();
 
+    
+    ValueTask<Option<WaveeContextStream>> GetCurrentStream();
     /// <summary>
     /// Get the current stream in the context
     /// </summary>

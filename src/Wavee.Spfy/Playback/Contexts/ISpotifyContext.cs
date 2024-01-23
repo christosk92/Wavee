@@ -1,3 +1,4 @@
+using Eum.Spotify.context;
 using LanguageExt;
 using Wavee.Contexting;
 
@@ -8,6 +9,7 @@ public interface ISpotifyContext : IWaveePlayerContext
     string ContextUri { get; }
     string ContextUrl { get; }
     HashMap<string, string> ContextMetadata { get; }
+    ValueTask RefreshContext(Context ctx);
 }
 
 internal readonly record struct SpotifyContextPage(LinkedList<SpotifyContextTrack> Tracks, uint Index);

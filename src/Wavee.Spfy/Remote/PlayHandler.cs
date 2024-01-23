@@ -37,9 +37,7 @@ internal static class PlayHandler
             skipto.TryGetProperty("track_index", out var skptdx)
                 ? skptdx.GetInt32()
                 : (int?)null;
-
-        var sessionId = options.GetProperty("session_id").GetString();
-
+        
         if (spotifyClient.WaveePlayer.Context.IsSome)
         {
             var ctx = spotifyClient.WaveePlayer.Context.ValueUnsafe();

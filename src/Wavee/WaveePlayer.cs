@@ -131,6 +131,15 @@ public sealed class WaveePlayer
                             };
                             Task.Run(async () => await RequestNextStream());
                         }
+                        else if (_state.RequestPreviousStream)
+                        {
+                            _state = _state with
+                            {
+                                RequestPreviousStream = false,
+                                NextStream = Option<ValueTask<Option<WaveeContextStream>>>.None
+                            };
+                            Task.Run(async () => await RequestPreviousStream());
+                        }
 
                         if (_state.StreamOne.IsSome && lastTrack != _state.StreamOne.ValueUnsafe().Stream.Metadata)
                         {
@@ -280,6 +289,7 @@ public sealed class WaveePlayer
                 CrossFadeDuration: Option<TimeSpan>.None,
                 NextStream: Option<ValueTask<Option<WaveeContextStream>>>.None,
                 RequestNextStream: false,
+                RequestPreviousStream: false,
                 SeekRequest: Option<TimeSpan>.None,
                 PauseRequest: Option<bool>.None
             );
@@ -323,6 +333,7 @@ public sealed class WaveePlayer
                 CrossFadeDuration: Option<TimeSpan>.None,
                 NextStream: Option<ValueTask<Option<WaveeContextStream>>>.None,
                 RequestNextStream: false,
+                RequestPreviousStream: false,
                 SeekRequest: Option<TimeSpan>.None,
                 PauseRequest: Option<bool>.None
             );
@@ -359,6 +370,26 @@ public sealed class WaveePlayer
     //
     //     _semaphore.Release();
     // }
+
+    private ValueTask RequestPreviousStream()
+    {
+        if (_currentContext is null)
+        {
+            return ValueTask.CompletedTask;
+        }
+        
+        _semaphore.Wait();
+        var previousStreamTask = _currentContext.GetCurrentStream();
+        
+        _state = _state with
+        {
+            NextStream = Option<ValueTask<Option<WaveeContextStream>>>.Some(previousStreamTask)
+        };
+        
+        _semaphore.Release();
+        
+        return ValueTask.CompletedTask;
+    }
 
     private ValueTask RequestNextStream()
     {
@@ -637,6 +668,7 @@ public sealed class WaveePlayer
         Option<TimeSpan> CrossFadeDuration,
         Option<ValueTask<Option<WaveeContextStream>>> NextStream,
         bool RequestNextStream,
+        bool RequestPreviousStream,
         Option<TimeSpan> SeekRequest,
         Option<bool> PauseRequest);
 
@@ -671,6 +703,55 @@ public sealed class WaveePlayer
         _state = _state with
         {
             PauseRequest = Option<bool>.Some(true)
+        };
+        _semaphore.Release();
+    }
+
+    public void SkipPrevious()
+    {
+        _semaphore.Wait();
+        if (_state.StreamOne.IsSome)
+        {
+            _state.StreamOne.ValueUnsafe().Stream.Dispose();
+        }
+
+        if (_state.StreamTwo.IsSome)
+        {
+            _state.StreamTwo.ValueUnsafe().Stream.Dispose();
+        }
+
+        _state = _state with
+        {
+            RequestNextStream = false,
+            RequestPreviousStream = true,
+            SeekRequest = Option<TimeSpan>.None,
+            PauseRequest = Option<bool>.None,
+            StreamOne = Option<WaveeContextStream>.None,
+            StreamTwo = Option<WaveeContextStream>.None
+        };
+        _semaphore.Release();
+    }
+
+    public void SkipNext()
+    {
+        _semaphore.Wait();
+        if (_state.StreamOne.IsSome)
+        {
+            _state.StreamOne.ValueUnsafe().Stream.Dispose();
+        }
+
+        if (_state.StreamTwo.IsSome)
+        {
+            _state.StreamTwo.ValueUnsafe().Stream.Dispose();
+        }
+
+        _state = _state with
+        {
+            RequestNextStream = true,
+            SeekRequest = Option<TimeSpan>.None,
+            PauseRequest = Option<bool>.None,
+            StreamOne = Option<WaveeContextStream>.None,
+            StreamTwo = Option<WaveeContextStream>.None
         };
         _semaphore.Release();
     }
@@ -715,6 +796,7 @@ public sealed class WaveePlayer
             CrossFadeDuration: Option<TimeSpan>.None,
             NextStream: Option<ValueTask<Option<WaveeContextStream>>>.None,
             RequestNextStream: false,
+            RequestPreviousStream: false,
             SeekRequest: Option<TimeSpan>.None,
             PauseRequest: Option<bool>.None
         );
@@ -745,7 +827,7 @@ public sealed class WaveePlayer
 
             _state = _state with
             {
-                NextStream = Option<ValueTask<Option<WaveeContextStream>>>.Some(_currentContext.GetNextStream()),
+                NextStream = Option<ValueTask<Option<WaveeContextStream>>>.Some(_currentContext.GetCurrentStream()),
                 StreamOne = Option<WaveeContextStream>.None,
                 StreamTwo = Option<WaveeContextStream>.None,
                 RequestNextStream = false,

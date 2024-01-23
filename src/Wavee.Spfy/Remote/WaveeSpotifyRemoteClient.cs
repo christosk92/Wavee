@@ -600,6 +600,35 @@ public sealed class WaveeSpotifyRemoteClient
 
                         switch (endpoint)
                         {
+                            case "set_queue":
+                            {
+                                break;
+                            }
+                            case "update_context":
+                            {
+                                var ctx = Eum.Spotify.context.Context.Parser.ParseJson(cmd.GetProperty("context")
+                                    .GetRawText());
+                                if (_player.Context.IsSome)
+                                {
+                                    var currentContext = _player.Context.ValueUnsafe();
+                                    if (currentContext is ISpotifyContext spotifyCtx && spotifyCtx.ContextUri == ctx.Uri)
+                                    {
+                                        await spotifyCtx.RefreshContext(ctx);
+                                    }
+                                }
+
+                                break;
+                            }
+                            case "skip_prev":
+                            {
+                                _player.SkipPrevious();
+                                break;
+                            }
+                            case "skip_next":
+                            {
+                                _player.SkipNext();
+                                break;
+                            }
                             case "play":
                             {
                                 await PlayHandler.HandlePlay(cmd, _instanceId);
@@ -626,6 +655,11 @@ public sealed class WaveeSpotifyRemoteClient
                                 var transfer =
                                     TransferState.Parser.ParseFrom(cmd.GetProperty("data").GetBytesFromBase64());
                                 await RemoteTransfer.HandleTransfer(transfer, _instanceId);
+                                break;
+                            }
+                            default:
+                            {
+                                Debugger.Break();
                                 break;
                             }
                         }

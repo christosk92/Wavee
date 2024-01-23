@@ -1,3 +1,4 @@
+using Eum.Spotify.context;
 using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
 using Wavee.Contexting;
@@ -28,6 +29,12 @@ internal abstract class SpotifyRealContext : ISpotifyContext
     public string ContextUri { get; }
     public string ContextUrl { get; }
     public abstract HashMap<string, string> ContextMetadata { get; }
+
+    public ValueTask RefreshContext(Context ctx)
+    {
+        return ValueTask.CompletedTask;
+    }
+
     protected abstract ValueTask<Option<SpotifyContextPage>> NextPage();
 
     public async ValueTask<Option<WaveeContextStream>> GetNextStream()
@@ -80,9 +87,59 @@ internal abstract class SpotifyRealContext : ISpotifyContext
         return track.Value;
     }
 
-    public ValueTask<Option<WaveeContextStream>> GetPreviousStream()
+    public async ValueTask<Option<WaveeContextStream>> GetPreviousStream()
     {
-        throw new NotImplementedException();
+        if (_activePage is null)
+        {
+            return Option<WaveeContextStream>.None;
+        }
+
+        if (_activePage.CurrentTrack is null)
+        {
+            return Option<WaveeContextStream>.None;
+        }
+
+        var prevTrack = _activePage.CurrentTrack.Previous;
+        if (prevTrack is null)
+        {
+            // try to fetch the previous page
+            var prevPage = _activePage.CurrentPage.Previous;
+            if (prevPage is null)
+            {
+                return Option<WaveeContextStream>.None;
+            }
+
+            _activePage = new ActiveSpotifyContextPage(prevPage);
+            prevTrack = _activePage.CurrentTrack;
+        }
+
+
+        _activePage.CurrentTrack = prevTrack;
+        var stream = await _streamFactory(prevTrack.Value.Gid, CancellationToken.None);
+        var ctxStream = new WaveeContextStream(stream,
+            Common.ConstructComposedKeyForCurrentTrack(prevTrack.Value, prevTrack.Value.Gid));
+        CurrentStream = Option<WaveeContextStream>.Some(ctxStream);
+        return CurrentStream;
+    }
+
+    public async ValueTask<Option<WaveeContextStream>> GetCurrentStream()
+    {
+        if (_activePage is null)
+        {
+            return Option<WaveeContextStream>.None;
+        }
+
+        if (_activePage.CurrentTrack is null)
+        {
+            return Option<WaveeContextStream>.None;
+        }
+
+        var stream = await _streamFactory(_activePage.CurrentTrack.Value.Gid, CancellationToken.None);
+        var ctxStream = new WaveeContextStream(stream,
+            Common.ConstructComposedKeyForCurrentTrack(_activePage.CurrentTrack.Value,
+                _activePage.CurrentTrack.Value.Gid));
+        CurrentStream = Option<WaveeContextStream>.Some(ctxStream);
+        return CurrentStream;
     }
 
     public Option<WaveeContextStream> CurrentStream { get; private set; }
@@ -118,14 +175,15 @@ internal abstract class SpotifyRealContext : ISpotifyContext
 
             seenTracks += pageCache.Tracks.Count;
         }
+
         // try next page
         var nextPageA = await NextPage();
         if (nextPageA.IsNone)
         {
             return false;
         }
-        return await MoveTo(absoluteIndex);
 
+        return await MoveTo(absoluteIndex);
     }
 
     public async ValueTask<bool> TrySkip(int count)
@@ -147,24 +205,38 @@ internal abstract class SpotifyRealContext : ISpotifyContext
         public ActiveSpotifyContextPage(LinkedListNode<SpotifyContextPage> currentPage)
         {
             CurrentPage = currentPage;
-            CurrentTrack = currentPage.Value.Tracks.First;
+            CurrentTrack = null;
         }
 
         public bool IsDone { get; private set; }
         public LinkedListNode<SpotifyContextPage> CurrentPage { get; }
-        public LinkedListNode<SpotifyContextTrack>? CurrentTrack { get; private set; }
+        public LinkedListNode<SpotifyContextTrack>? CurrentTrack { get; internal set; }
 
         public bool TryMoveNext(out SpotifyContextTrack? track)
         {
-            if (CurrentTrack is null)
+            if (CurrentTrack is null && !IsDone)
+            {
+                CurrentTrack = CurrentPage.Value.Tracks.First;
+                track = CurrentTrack?.Value;
+                return true;
+            }
+            else if (CurrentTrack is null && IsDone)
             {
                 track = null;
-                IsDone = true;
                 return false;
             }
 
-            track = CurrentTrack.Value;
-            CurrentTrack = CurrentTrack.Next;
+            var nextTrack = CurrentTrack?.Next;
+            if (nextTrack is null)
+            {
+                IsDone = true;
+                track = null;
+                return false;
+            }
+
+            track = nextTrack?.Value;
+            CurrentTrack = nextTrack;
+
             return true;
         }
 
@@ -173,6 +245,7 @@ internal abstract class SpotifyRealContext : ISpotifyContext
             if (toIndex is 0)
             {
                 CurrentTrack = null;
+                return;
             }
 
             var idx = toIndex;
@@ -216,6 +289,19 @@ internal sealed class SingularTrackContext : IWaveePlayerContext
     public ValueTask<Option<WaveeContextStream>> GetPreviousStream()
     {
         return new ValueTask<Option<WaveeContextStream>>(Option<WaveeContextStream>.None);
+    }
+
+    public async ValueTask<Option<WaveeContextStream>> GetCurrentStream()
+    {
+        if (_trackStreamFactory is null)
+        {
+            return Option<WaveeContextStream>.None;
+        }
+
+        var stream = await _trackStreamFactory();
+        var ctxStream = new WaveeContextStream(stream, new ComposedKey(stream.Metadata.Id!));
+        CurrentStream = Option<WaveeContextStream>.Some(ctxStream);
+        return CurrentStream;
     }
 
     public Option<WaveeContextStream> CurrentStream { get; private set; }
