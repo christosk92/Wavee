@@ -37,17 +37,24 @@ internal static class PlayHandler
             skipto.TryGetProperty("track_index", out var skptdx)
                 ? skptdx.GetInt32()
                 : (int?)null;
-        
+
         if (spotifyClient.WaveePlayer.Context.IsSome)
         {
             var ctx = spotifyClient.WaveePlayer.Context.ValueUnsafe();
             if (ctx is ISpotifyContext spotifyContext)
             {
+                //artist has a weird bug
                 if (spotifyContext.ContextUri == context.Uri)
                 {
                     // Skip to a track!!
                     if (skipToIndex.HasValue)
                     {
+                        if (context.Uri.StartsWith("spotify:artist:"))
+                        {
+                            //Always refresh the context for artists !
+                            await spotifyContext.RefreshContext(context, true);
+                        }
+
                         await spotifyClient.WaveePlayer.PlayWithinContext(skipToIndex.Value);
                     }
 

@@ -339,6 +339,10 @@ public sealed class WaveeSpotifyClient
                         }
                     }
                 }
+                catch (Exception e)
+                {
+                    _logger.LogError(e, "Failed to send message to Spotify");
+                }
                 finally
                 {
                     cts.Dispose();

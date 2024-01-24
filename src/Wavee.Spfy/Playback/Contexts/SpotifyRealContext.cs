@@ -10,10 +10,9 @@ internal abstract class SpotifyRealContext : ISpotifyContext
 {
     protected readonly Guid _connectionId;
     private readonly Func<SpotifyId, CancellationToken, Task<WaveeStream>> _streamFactory;
-
     private ActiveSpotifyContextPage? _activePage;
-
-    private readonly LinkedList<SpotifyContextPage> _pagesCache = new();
+    private protected readonly LinkedList<SpotifyContextPage> PagesCache = new();
+    private Option<int> _restoreIndex = Option<int>.None;
 
     protected SpotifyRealContext(Guid connectionId,
         string contextUri,
@@ -30,15 +29,82 @@ internal abstract class SpotifyRealContext : ISpotifyContext
     public string ContextUrl { get; }
     public abstract HashMap<string, string> ContextMetadata { get; }
 
-    public ValueTask RefreshContext(Context ctx)
+    public virtual ValueTask RefreshContext(Context ctx, bool clear)
     {
-        return ValueTask.CompletedTask;
+        int idx = -1;
+        bool found = false;
+        foreach (var page in PagesCache)
+        {
+            foreach (var track in page.Tracks)
+            {
+                idx++;
+                if (track == _activePage?.CurrentTrack?.Value)
+                {
+                    found = true;
+                    break;
+                }
+            }
+
+            if (found)
+            {
+                break;
+            }
+        }
+
+        if (found)
+        {
+            _restoreIndex = idx;
+        }
+
+        PagesCache.Clear();
+        _activePage = null;
+
+        return Restore();
+    }
+
+    private async ValueTask Restore()
+    {
+        if (_restoreIndex.IsNone)
+        {
+            return;
+        }
+
+        var idx = _restoreIndex.ValueUnsafe();
+        while (!await MoveTo(idx) && idx >= 0)
+        {
+            idx--;
+        }
+
+        _restoreIndex = Option<int>.None;
     }
 
     protected abstract ValueTask<Option<SpotifyContextPage>> NextPage();
 
+    protected abstract ValueTask<IReadOnlyCollection<ContextPage>> GetAllPages();
+
+    protected async ValueTask FillAllPages()
+    {
+        var pages = await GetAllPages();
+        var newCtx = new Context();
+        newCtx.Uri = ContextUri;
+        newCtx.Url = ContextUrl;
+        foreach (var page in pages)
+        {
+            newCtx.Pages.Add(page);
+        }
+
+        foreach (var mt in ContextMetadata)
+        {
+            newCtx.Metadata.Add(mt.Key, mt.Value);
+        }
+
+        await RefreshContext(newCtx, false);
+    }
+
     public async ValueTask<Option<WaveeContextStream>> GetNextStream()
     {
+        await Restore();
+
         var nextTrack = await GetNextTrack();
         if (nextTrack.IsNone)
         {
@@ -65,7 +131,7 @@ internal abstract class SpotifyRealContext : ISpotifyContext
                 return Option<SpotifyContextTrack>.None;
             }
 
-            var newPage = _pagesCache.AddLast(nextPage.ValueUnsafe());
+            var newPage = PagesCache.AddLast(nextPage.ValueUnsafe());
             _activePage = new ActiveSpotifyContextPage(newPage);
             activePage = _activePage;
         }
@@ -79,7 +145,7 @@ internal abstract class SpotifyRealContext : ISpotifyContext
                 return Option<SpotifyContextTrack>.None;
             }
 
-            var newPage = _pagesCache.AddLast(nextPage.ValueUnsafe());
+            var newPage = PagesCache.AddLast(nextPage.ValueUnsafe());
             _activePage = new ActiveSpotifyContextPage(newPage);
             return await GetNextTrack();
         }
@@ -89,6 +155,8 @@ internal abstract class SpotifyRealContext : ISpotifyContext
 
     public async ValueTask<Option<WaveeContextStream>> GetPreviousStream()
     {
+        await Restore();
+
         if (_activePage is null)
         {
             return Option<WaveeContextStream>.None;
@@ -124,6 +192,8 @@ internal abstract class SpotifyRealContext : ISpotifyContext
 
     public async ValueTask<Option<WaveeContextStream>> GetCurrentStream()
     {
+        await Restore();
+
         if (_activePage is null)
         {
             return Option<WaveeContextStream>.None;
@@ -150,7 +220,7 @@ internal abstract class SpotifyRealContext : ISpotifyContext
         // we need to find the page that contains the track at the absolute index
 
         // We need to go back one because GetNextTrack will return the next track
-        if (_pagesCache.Count is 0)
+        if (PagesCache.Count is 0)
         {
             var nextPage = await NextPage();
             if (nextPage.IsNone)
@@ -158,18 +228,19 @@ internal abstract class SpotifyRealContext : ISpotifyContext
                 return false;
             }
 
-            _pagesCache.AddLast(nextPage.ValueUnsafe());
+            PagesCache.AddLast(nextPage.ValueUnsafe());
             return await MoveTo(absoluteIndex);
         }
 
         int seenTracks = 0;
-        foreach (var pageCache in _pagesCache)
+        foreach (var pageCache in PagesCache)
         {
             if (seenTracks + pageCache.Tracks.Count > absoluteIndex)
             {
                 // we have found the page
-                _activePage = new ActiveSpotifyContextPage(_pagesCache.Find(pageCache));
-                _activePage.MoveTo(absoluteIndex);
+                _activePage = new ActiveSpotifyContextPage(PagesCache.Find(pageCache));
+                var idx = absoluteIndex - seenTracks;
+                _activePage.MoveTo(idx);
                 return true;
             }
 
@@ -183,8 +254,12 @@ internal abstract class SpotifyRealContext : ISpotifyContext
             return false;
         }
 
+        PagesCache.AddLast(nextPageA.ValueUnsafe());
+
         return await MoveTo(absoluteIndex);
     }
+
+    public abstract ValueTask<bool> MoveToRandom();
 
     public async ValueTask<bool> TrySkip(int count)
     {
@@ -244,7 +319,7 @@ internal abstract class SpotifyRealContext : ISpotifyContext
         {
             if (toIndex is 0)
             {
-                CurrentTrack = null;
+                CurrentTrack = CurrentPage.Value.Tracks.First;
                 return;
             }
 
@@ -325,6 +400,12 @@ internal sealed class SingularTrackContext : IWaveePlayerContext
             return new ValueTask<bool>(false);
         }
 
+        return new ValueTask<bool>(true);
+    }
+
+    public ValueTask<bool> MoveToRandom()
+    {
+        // Cant move to random
         return new ValueTask<bool>(true);
     }
 

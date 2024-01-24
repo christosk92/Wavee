@@ -151,6 +151,23 @@ public sealed class WaveeSpotifyRemoteClient
                 player.Stop();
             }
         };
+        player.ShuffleChanged += async (sender, shuffle) =>
+        {
+            if (player.CurrentStream.IsNone)
+                return;
+
+            var currentStream = player.CurrentStream.ValueUnsafe();
+            if (currentStream.Stream.Metadata is not ISpotifyPlayableItem metadata)
+                return;
+
+            state.PositionAsOfTimestamp = (long)player.Position.ValueUnsafe().TotalMilliseconds;
+            state.Timestamp = (long)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+            state.Options ??= new ContextPlayerOptions();
+            state.Options.ShufflingContext = shuffle;
+
+            await SendState(PutStateReason.PlayerStateChanged);
+        };
         player.VolumeChanged += async (sender, vol) =>
         {
             if (player.CurrentStream.IsNone)
@@ -281,7 +298,7 @@ public sealed class WaveeSpotifyRemoteClient
 
             state.Options = new ContextPlayerOptions
             {
-                ShufflingContext = false,
+                ShufflingContext = player.IsShuffling,
                 RepeatingContext = false,
                 RepeatingTrack = false
             };
@@ -617,9 +634,15 @@ public sealed class WaveeSpotifyRemoteClient
                         var endpoint = cmd.GetProperty("endpoint").GetString();
                         _lastCommandId = messageId;
                         _lastCommandSentBy = sentByDeviceId;
-
+                        _logger.LogDebug("Received command {Endpoint} from {DeviceId}", endpoint, sentByDeviceId);
                         switch (endpoint)
                         {
+                            case "set_shuffling_context":
+                            {
+                                var val = cmd.GetProperty("value").GetBoolean();
+                                _player.SetShuffling(val);
+                                break;
+                            }
                             case "set_queue":
                             {
                                 break;
@@ -634,7 +657,7 @@ public sealed class WaveeSpotifyRemoteClient
                                     if (currentContext is ISpotifyContext spotifyCtx &&
                                         spotifyCtx.ContextUri == ctx.Uri)
                                     {
-                                        await spotifyCtx.RefreshContext(ctx);
+                                        await spotifyCtx.RefreshContext(ctx, true);
                                     }
                                 }
 

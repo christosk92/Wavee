@@ -52,6 +52,7 @@ public sealed class WaveePlayer
     private readonly SemaphoreSlim _semaphore = new(1, 1);
     private WaveePlayerState _state;
     private float _volume = 1f;
+
     public WaveePlayer(ILogger logger)
     {
         // TODO: Write Samples
@@ -96,6 +97,7 @@ public sealed class WaveePlayer
                 try
                 {
                     // Inner loop:
+                    bool shuffling = false;
                     while (!_closed)
                     {
                         bool trackChanged = false;
@@ -133,6 +135,7 @@ public sealed class WaveePlayer
                                 _volume);
                             _state = newState;
                         }
+
 
                         if (_state.RequestNextStream)
                         {
@@ -182,6 +185,13 @@ public sealed class WaveePlayer
 
                         var f = _volume;
                         _semaphore.Release();
+                        var newShuffle = _state.IsShuffling;
+                        if (newShuffle != shuffling)
+                        {
+                            shuffling = newShuffle;
+
+                            ShuffleChanged?.Invoke(this, shuffling);
+                        }
 
                         if (trackChanged)
                         {
@@ -283,10 +293,22 @@ public sealed class WaveePlayer
 
     public float Volume => _volume;
 
+    public bool IsShuffling
+    {
+        get
+        {
+            _semaphore.Wait();
+            var isShuffling = _state.IsShuffling;
+            _semaphore.Release();
+            return isShuffling;
+        }
+    }
+
     public event EventHandler<IWaveePlayableItem>? TrackChanged;
     public event EventHandler<WaveePlayerPositionChangedEventArgs> PositionChanged;
     public event EventHandler<bool> PausedChanged;
     public event EventHandler<float> VolumeChanged;
+    public event EventHandler<bool> ShuffleChanged;
 
     public async ValueTask Play(WaveeContextStream stream, IWaveePlayerContext context)
     {
@@ -313,7 +335,8 @@ public sealed class WaveePlayer
                 RequestPreviousStream: false,
                 SeekRequest: Option<TimeSpan>.None,
                 PauseRequest: Option<bool>.None,
-                Option<float>.None
+                Option<float>.None,
+                IsShuffling: _state.IsShuffling
             );
         }
         catch (Exception)
@@ -328,11 +351,19 @@ public sealed class WaveePlayer
 
     public async ValueTask Play(IWaveePlayerContext ctx)
     {
-        var stream = await ctx.GetNextStream();
+        var stream = await ctx.GetCurrentStream();
         if (stream.IsNone)
         {
-            // TODO: Should we clear the stack?
-            return;
+            var nextStream = await ctx.GetNextStream();
+            if (nextStream.IsNone)
+            {
+                //TODO: What now?
+                return;
+            }
+            else
+            {
+                stream = nextStream.ValueUnsafe();
+            }
         }
 
         await _semaphore.WaitAsync();
@@ -358,7 +389,8 @@ public sealed class WaveePlayer
                 RequestPreviousStream: false,
                 SeekRequest: Option<TimeSpan>.None,
                 PauseRequest: Option<bool>.None,
-                Option<float>.None
+                Option<float>.None,
+                IsShuffling: _state.IsShuffling
             );
         }
         catch (Exception)
@@ -402,7 +434,7 @@ public sealed class WaveePlayer
         }
 
         _semaphore.Wait();
-        var previousStreamTask = _currentContext.GetCurrentStream();
+        var previousStreamTask = _currentContext.GetPreviousStream();
 
         _state = _state with
         {
@@ -423,7 +455,21 @@ public sealed class WaveePlayer
         }
 
         _semaphore.Wait();
-        var nextStreamTask = _currentContext.GetNextStream();
+        ValueTask<Option<WaveeContextStream>> nextStreamTask;
+        if (_state.IsShuffling)
+        {
+            var x = _currentContext.MoveToRandom().AsTask().ContinueWith(z =>
+            {
+                if (!z.Result) return Task.FromResult(Option<WaveeContextStream>.None);
+
+                return _currentContext.GetCurrentStream().AsTask();
+            }).Unwrap();
+            nextStreamTask = new ValueTask<Option<WaveeContextStream>>(x);
+        }
+        else
+        {
+            nextStreamTask = _currentContext.GetNextStream();
+        }
 
         _state = _state with
         {
@@ -707,7 +753,8 @@ public sealed class WaveePlayer
         bool RequestPreviousStream,
         Option<TimeSpan> SeekRequest,
         Option<bool> PauseRequest,
-        Option<float> VolumeRequest);
+        Option<float> VolumeRequest,
+        bool IsShuffling);
 
     public void SeekAsFraction(double fraction)
     {
@@ -836,7 +883,8 @@ public sealed class WaveePlayer
             RequestPreviousStream: false,
             SeekRequest: Option<TimeSpan>.None,
             PauseRequest: Option<bool>.None,
-            Option<float>.None
+            Option<float>.None,
+            IsShuffling: _state.IsShuffling
         );
 
         _semaphore.Release();
@@ -886,6 +934,16 @@ public sealed class WaveePlayer
         _state = _state with
         {
             VolumeRequest = Option<float>.Some(volumePercent)
+        };
+        _semaphore.Release();
+    }
+
+    public void SetShuffling(bool v)
+    {
+        _semaphore.Wait();
+        _state = _state with
+        {
+            IsShuffling = v
         };
         _semaphore.Release();
     }

@@ -6,7 +6,7 @@ namespace Wavee.Spfy.Playback.Contexts;
 internal abstract class SpotifyPagedContext : SpotifyRealContext
 {
     private readonly LinkedList<ContextPage> _fetchedPagesCache = new LinkedList<ContextPage>();
-    private LinkedListNode<ContextPage>? _currentPageNode;
+    private protected LinkedListNode<ContextPage>? _currentPageNode;
     private bool _intialPageFetched;
     private HashMap<string, string> _contextMetadata;
 
@@ -27,6 +27,26 @@ internal abstract class SpotifyPagedContext : SpotifyRealContext
     }
 
     public override HashMap<string, string> ContextMetadata => _contextMetadata;
+
+    public override async ValueTask RefreshContext(Context ctx, bool clear)
+    {
+        _fetchedPagesCache.Clear();
+        _currentPageNode = null;
+        _intialPageFetched = false;
+
+        _contextMetadata = ctx.Metadata.ToHashMap();
+        foreach (var page in ctx.Pages)
+        {
+            _fetchedPagesCache.AddLast(page);
+        }
+
+        await base.RefreshContext(ctx, clear);
+        
+        foreach (var page in _fetchedPagesCache)
+        {
+            base.PagesCache.AddLast(ConstructPage(page));
+        }
+    }
 
     protected override async ValueTask<Option<SpotifyContextPage>> NextPage()
     {
@@ -114,7 +134,7 @@ internal abstract class SpotifyPagedContext : SpotifyRealContext
                 break;
             }
 
-            idx += page.Tracks.Count;
+            idx++;
         }
 
 
@@ -122,35 +142,42 @@ internal abstract class SpotifyPagedContext : SpotifyRealContext
         for (var index = 0; index < currentPage.Tracks.Count; index++)
         {
             var track = currentPage.Tracks[index];
-            SpotifyId id = default;
-            if (track.HasUri && !string.IsNullOrEmpty(track.Uri))
-            {
-                id = SpotifyId.FromUri(track.Uri);
-            }
-            else if (track.HasGid && !track.Gid.IsEmpty)
-            {
-                //TODO :Episodes
-                id = SpotifyId.FromRaw(track.Gid.ToByteArray(), AudioItemType.Track);
-            }
-            else
-            {
-                continue;
-            }
+            var newTrack = ConstructTrack(track, index);
 
-            var metadata = track.Metadata.ToHashMap();
-            Option<string> uid = Option<string>.None;
-            if (track.HasUid && !string.IsNullOrEmpty(track.Uid))
-            {
-                uid = track.Uid;
-            }
-
-            tracks.AddLast(new SpotifyContextTrack(id, uid, index, metadata));
+            tracks.AddLast(newTrack);
         }
 
         return new SpotifyContextPage(tracks, (uint)idx);
     }
 
-    private async Task<ContextPage> ResolvePage(string currentPagePageUrl)
+    protected SpotifyContextTrack ConstructTrack(ContextTrack track, int index)
+    {
+        SpotifyId id = default;
+        if (track.HasUri && !string.IsNullOrEmpty(track.Uri))
+        {
+            id = SpotifyId.FromUri(track.Uri);
+        }
+        else if (track.HasGid && !track.Gid.IsEmpty)
+        {
+            //TODO :Episodes
+            id = SpotifyId.FromRaw(track.Gid.ToByteArray(), AudioItemType.Track);
+        }
+        else
+        {
+            throw new InvalidOperationException("Track has no uri or gid");
+        }
+
+        var metadata = track.Metadata.ToHashMap();
+        Option<string> uid = Option<string>.None;
+        if (track.HasUid && !string.IsNullOrEmpty(track.Uid))
+        {
+            uid = track.Uid;
+        }
+
+        return new SpotifyContextTrack(id, uid, index, metadata);
+    }
+
+    protected async Task<ContextPage> ResolvePage(string currentPagePageUrl)
     {
         currentPagePageUrl = currentPagePageUrl.Replace("hm://", string.Empty);
         if (EntityManager.TryGetClient(_connectionId, out var client))
@@ -162,7 +189,7 @@ internal abstract class SpotifyPagedContext : SpotifyRealContext
         throw new InvalidOperationException("Client not found");
     }
 
-    private async Task<Context> ResolveContext()
+    protected async Task<Context> ResolveContext()
     {
         if (EntityManager.TryGetClient(_connectionId, out var client))
         {

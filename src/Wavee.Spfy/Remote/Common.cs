@@ -69,20 +69,24 @@ internal static class Common
 
     public static ISpotifyContext CreateContext(Guid instanceId, Context context)
     {
-        if(!EntityManager.TryGetClient(instanceId, out var spotifyClient))
+        if (!EntityManager.TryGetClient(instanceId, out var spotifyClient))
             throw new NotSupportedException();
-        
+
         ISpotifyContext playContext = default;
         if (context.Uri.StartsWith("spotify:station:"))
         {
             playContext = new SpotifyStationContext(instanceId, context, spotifyClient.Playback.CreateSpotifyStream);
+        }
+        else if (context.Uri.StartsWith("spotify:artist:"))
+        {
+            playContext = new SpotifyArtistContext(instanceId, context, spotifyClient.Playback.CreateSpotifyStream);
         }
         else
         {
             playContext =
                 new SpotifyNormalFiniteContext(instanceId, context, spotifyClient.Playback.CreateSpotifyStream);
         }
-        
+
         return playContext;
     }
 }

@@ -1,6 +1,8 @@
+using System.Diagnostics;
 using System.Net.Http.Headers;
 using System.Text.Json;
 using Eum.Spotify;
+using Eum.Spotify.context;
 using Eum.Spotify.context;
 using Eum.Spotify.login5v3;
 using Eum.Spotify.storage;
@@ -113,6 +115,9 @@ internal sealed class DefaultHttpClient : IHttpClient
         });
     }
 
+    private static Dictionary<string, string> _etagCache = new Dictionary<string, string>();
+    private static Dictionary<string, Context> _contextCache = new Dictionary<string, Context>();
+
     public async Task<Context> ResolveContext(string itemId, string accessToken)
     {
         var url = $"/context-resolve/v1/{itemId.ToString()}";
@@ -121,9 +126,28 @@ internal sealed class DefaultHttpClient : IHttpClient
         using var request = new HttpRequestMessage(HttpMethod.Get, finalUrl);
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
         request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/protobuf"));
-        using var response = await _httpClient.SendAsync(request);
+        if (_etagCache.TryGetValue(itemId, out var value))
+        {
+            request.Headers.IfNoneMatch.Add(new EntityTagHeaderValue(value));
+        }
+
+        var sw = Stopwatch.StartNew();
+        using var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
+        if (response.StatusCode == System.Net.HttpStatusCode.NotModified)
+        {
+            sw.Stop();
+            Console.WriteLine($"Context {itemId} was cached, took {sw.ElapsedMilliseconds}ms");
+            return _contextCache[itemId];
+        }
+
+        response.EnsureSuccessStatusCode();
+        var etag = response.Headers.ETag!.Tag!;
+        _etagCache[itemId] = etag;
         var stream = await response.Content.ReadAsStringAsync();
         var context = Context.Parser.ParseJson(stream);
+        _contextCache[itemId] = context;
+        sw.Stop();
+        Console.WriteLine($"Context {itemId} was not cached, took {sw.ElapsedMilliseconds}ms");
         return context;
     }
 
