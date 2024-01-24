@@ -51,11 +51,12 @@ public sealed class WaveePlayer
 
     private readonly SemaphoreSlim _semaphore = new(1, 1);
     private WaveePlayerState _state;
-
+    private float _volume = 1f;
     public WaveePlayer(ILogger logger)
     {
         // TODO: Write Samples
         var waveOut = new WaveOutEvent();
+        waveOut.Volume = 1f;
         var waveFormat = WaveFormat.CreateIeeeFloatWaveFormat(44100, 2);
         var floatWaveProvider = new BufferedWaveProvider(waveFormat);
         floatWaveProvider.BufferDuration = TimeSpan.FromSeconds(30); // allow us to get well ahead of ourselves   
@@ -100,6 +101,7 @@ public sealed class WaveePlayer
                         bool trackChanged = false;
                         bool pausedChanged = false;
                         bool seekChanged = false;
+                        bool volumeChanged = false;
 
                         _semaphore.Wait();
 
@@ -115,10 +117,20 @@ public sealed class WaveePlayer
                             seekChanged = true;
                         }
 
+                        if (_state.VolumeRequest.IsSome)
+                        {
+                            _volume = _state.VolumeRequest.ValueUnsafe();
+                            _state = _state with
+                            {
+                                VolumeRequest = Option<float>.None
+                            };
+                            volumeChanged = true;
+                        }
 
                         if (!Paused)
                         {
-                            var newState = Loop(_state, _writeSamples, streamOneBuffer, streamTwoBuffer, mixBuffer);
+                            var newState = Loop(_state, _writeSamples, streamOneBuffer, streamTwoBuffer, mixBuffer,
+                                _volume);
                             _state = newState;
                         }
 
@@ -168,6 +180,7 @@ public sealed class WaveePlayer
                             // PausedChanged?.Invoke(this, _state.PauseRequest.ValueUnsafe());
                         }
 
+                        var f = _volume;
                         _semaphore.Release();
 
                         if (trackChanged)
@@ -178,6 +191,11 @@ public sealed class WaveePlayer
                         if (pausedChanged)
                         {
                             PausedChanged?.Invoke(this, Paused);
+                        }
+
+                        if (volumeChanged)
+                        {
+                            VolumeChanged?.Invoke(this, f);
                         }
 
                         if (seekChanged && _state.StreamOne.IsSome)
@@ -263,9 +281,12 @@ public sealed class WaveePlayer
 
     public bool Paused { get; private set; }
 
+    public float Volume => _volume;
+
     public event EventHandler<IWaveePlayableItem>? TrackChanged;
     public event EventHandler<WaveePlayerPositionChangedEventArgs> PositionChanged;
     public event EventHandler<bool> PausedChanged;
+    public event EventHandler<float> VolumeChanged;
 
     public async ValueTask Play(WaveeContextStream stream, IWaveePlayerContext context)
     {
@@ -291,7 +312,8 @@ public sealed class WaveePlayer
                 RequestNextStream: false,
                 RequestPreviousStream: false,
                 SeekRequest: Option<TimeSpan>.None,
-                PauseRequest: Option<bool>.None
+                PauseRequest: Option<bool>.None,
+                Option<float>.None
             );
         }
         catch (Exception)
@@ -335,7 +357,8 @@ public sealed class WaveePlayer
                 RequestNextStream: false,
                 RequestPreviousStream: false,
                 SeekRequest: Option<TimeSpan>.None,
-                PauseRequest: Option<bool>.None
+                PauseRequest: Option<bool>.None,
+                Option<float>.None
             );
         }
         catch (Exception)
@@ -377,17 +400,17 @@ public sealed class WaveePlayer
         {
             return ValueTask.CompletedTask;
         }
-        
+
         _semaphore.Wait();
         var previousStreamTask = _currentContext.GetCurrentStream();
-        
+
         _state = _state with
         {
             NextStream = Option<ValueTask<Option<WaveeContextStream>>>.Some(previousStreamTask)
         };
-        
+
         _semaphore.Release();
-        
+
         return ValueTask.CompletedTask;
     }
 
@@ -415,7 +438,8 @@ public sealed class WaveePlayer
     private static WaveePlayerState Loop(WaveePlayerState state, WriteSamples writeSamples,
         Span<byte> streamOneBuffer,
         Span<byte> streamTwoBuffer,
-        Span<byte> mixBuffer)
+        Span<byte> mixBuffer,
+        float volume)
     {
         // Read samples
         // Mix samples
@@ -533,18 +557,30 @@ public sealed class WaveePlayer
                     mixBuffer[..Math.Max(firstStreamReadResult, secondStreamReadResult.ValueUnsafe())]);
             for (var i = 0; i < mixFloatBuffer.Length; i++)
             {
-                mixFloatBuffer[i] =
+                var x =
                     streamOneFloatBuffer[i] * fadeInFactor + streamTwoFloatBuffer[i] * fadeOutFactor;
+                mixFloatBuffer[i] = x * volume;
             }
 
+
             var mixByteBuffer = MemoryMarshal.Cast<float, byte>(mixFloatBuffer);
+
             writeSamples(mixByteBuffer, firstStreamVal.Stream.AudioStream.WaveFormat.SampleRate,
                 firstStreamVal.Stream.AudioStream.WaveFormat.Channels, All);
         }
         else
         {
             // Write streamOne
-            writeSamples(streamOneBuffer[..firstStreamReadResult],
+            var inSamplesFloatBuffer =
+                MemoryMarshal.Cast<byte, float>(streamOneBuffer[..firstStreamReadResult]);
+            for (var i = 0; i < inSamplesFloatBuffer.Length; i++)
+            {
+                inSamplesFloatBuffer[i] *= volume;
+            }
+
+            var inSamplesByteBuffer = MemoryMarshal.Cast<float, byte>(inSamplesFloatBuffer);
+
+            writeSamples(inSamplesByteBuffer,
                 firstStreamVal.Stream.AudioStream.WaveFormat.SampleRate,
                 firstStreamVal.Stream.AudioStream.WaveFormat.Channels, All);
         }
@@ -670,7 +706,8 @@ public sealed class WaveePlayer
         bool RequestNextStream,
         bool RequestPreviousStream,
         Option<TimeSpan> SeekRequest,
-        Option<bool> PauseRequest);
+        Option<bool> PauseRequest,
+        Option<float> VolumeRequest);
 
     public void SeekAsFraction(double fraction)
     {
@@ -798,7 +835,8 @@ public sealed class WaveePlayer
             RequestNextStream: false,
             RequestPreviousStream: false,
             SeekRequest: Option<TimeSpan>.None,
-            PauseRequest: Option<bool>.None
+            PauseRequest: Option<bool>.None,
+            Option<float>.None
         );
 
         _semaphore.Release();
@@ -840,6 +878,16 @@ public sealed class WaveePlayer
         }
 
         return false;
+    }
+
+    public void SetVolume(float volumePercent)
+    {
+        _semaphore.Wait();
+        _state = _state with
+        {
+            VolumeRequest = Option<float>.Some(volumePercent)
+        };
+        _semaphore.Release();
     }
 }
 

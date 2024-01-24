@@ -151,6 +151,16 @@ public sealed class WaveeSpotifyRemoteClient
                 player.Stop();
             }
         };
+        player.VolumeChanged += async (sender, vol) =>
+        {
+            if (player.CurrentStream.IsNone)
+                return;
+
+            state.PositionAsOfTimestamp = (long)player.Position.ValueUnsafe().TotalMilliseconds;
+            state.Timestamp = (long)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+            await SendState(PutStateReason.PlayerStateChanged);
+        };
         player.PausedChanged += async (sender, paused) =>
         {
             if (player.CurrentStream.IsNone)
@@ -281,6 +291,7 @@ public sealed class WaveeSpotifyRemoteClient
 
         async Task SendState(PutStateReason reason)
         {
+            var volume = player.Volume;
             var putState = new PutStateRequest
             {
                 MemberType = MemberType.ConnectState,
@@ -290,7 +301,7 @@ public sealed class WaveeSpotifyRemoteClient
                     DeviceInfo = new DeviceInfo()
                     {
                         CanPlay = true,
-                        Volume = (uint)(0.5 * MAX_VOLUME),
+                        Volume = (uint)(volume * MAX_VOLUME),
                         Name = _deviceName.Value,
                         DeviceId = _deviceId,
                         DeviceType = _deviceType.Value,
@@ -587,6 +598,15 @@ public sealed class WaveeSpotifyRemoteClient
                             ClusterChanged?.Invoke(this, update);
                             (await update.Cluster.ToRemoteState(_instanceId)).IfSucc(x => State = x);
                         }
+                        else if (msg.Url.Equals("hm://connect-state/v1/connect/volume"))
+                        {
+                            var setVolumeCmd = SetVolumeCommand.Parser.ParseFrom(msg.Payload.Span);
+                            var volume = setVolumeCmd.Volume;
+                            var maxVolume = WaveeSpotifyRemoteClient.MAX_VOLUME;
+                            var volumePercent = volume / (double)maxVolume;
+                            _player.SetVolume((float)volumePercent);
+                            _lastCommandId = Some((uint)setVolumeCmd.CommandOptions.MessageId);
+                        }
                     }
                     else if (msg.Type is SpotifyWebsocketMessageType.Request)
                     {
@@ -611,7 +631,8 @@ public sealed class WaveeSpotifyRemoteClient
                                 if (_player.Context.IsSome)
                                 {
                                     var currentContext = _player.Context.ValueUnsafe();
-                                    if (currentContext is ISpotifyContext spotifyCtx && spotifyCtx.ContextUri == ctx.Uri)
+                                    if (currentContext is ISpotifyContext spotifyCtx &&
+                                        spotifyCtx.ContextUri == ctx.Uri)
                                     {
                                         await spotifyCtx.RefreshContext(ctx);
                                     }
