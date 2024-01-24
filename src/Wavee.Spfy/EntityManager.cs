@@ -1,3 +1,4 @@
+using AsyncKeyedLock;
 using Eum.Spotify;
 using Wavee.Spfy.DefaultServices;
 
@@ -16,15 +17,15 @@ internal static class EntityManager
     
     private static readonly Dictionary<Guid, uint> SendSequences = new();
     private static readonly Dictionary<Guid, uint> ReceiveSequences = new();
-    private static readonly Dictionary<Guid, SemaphoreSlim> SendSequenceLocks = new();
-    private static readonly Dictionary<Guid, SemaphoreSlim> ReceiveSequenceLocks = new();
+    private static readonly Dictionary<Guid, AsyncNonKeyedLocker> SendSequenceLocks = new();
+    private static readonly Dictionary<Guid, AsyncNonKeyedLocker> ReceiveSequenceLocks = new();
 
 
     private static readonly Dictionary<Guid, uint> AesKeySequences = new();
-    private static readonly Dictionary<Guid, SemaphoreSlim> AesKeySequencesLocks = new();
+    private static readonly Dictionary<Guid, AsyncNonKeyedLocker> AesKeySequencesLocks = new();
 
     private static readonly Dictionary<Guid, ulong> MercurySequences = new();
-    private static readonly Dictionary<Guid, SemaphoreSlim> MercurySequenceLocks = new();
+    private static readonly Dictionary<Guid, AsyncNonKeyedLocker> MercurySequenceLocks = new();
 
     private static readonly Dictionary<Guid, ReadOnlyMemory<byte>> SendKeys = new();
     private static readonly Dictionary<Guid, ReadOnlyMemory<byte>> ReceiveKeys = new();
@@ -73,11 +74,12 @@ internal static class EntityManager
         if (SendKeys.TryGetValue(instanceId, out sendKey) &&
             SendSequenceLocks.TryGetValue(instanceId, out var sendSeqLock))
         {
-            sendSeqLock.Wait();
-            sendSequence = SendSequences[instanceId];
-            SendSequences[instanceId] = sendSequence + 1;
-            sendSeqLock.Release();
-            return true;
+            using (sendSeqLock.Lock())
+            {
+                sendSequence = SendSequences[instanceId];
+                SendSequences[instanceId] = sendSequence + 1;
+                return true;
+            }
         }
 
         sendKey = default;
@@ -90,11 +92,12 @@ internal static class EntityManager
         if (ReceiveKeys.TryGetValue(instanceId, out receiveKey) &&
             ReceiveSequenceLocks.TryGetValue(instanceId, out var recvSeqLock))
         {
-            recvSeqLock.Wait();
-            receiveSequence = ReceiveSequences[instanceId];
-            ReceiveSequences[instanceId] = receiveSequence + 1;
-            recvSeqLock.Release();
-            return true;
+            using (recvSeqLock.Lock())
+            {
+                receiveSequence = ReceiveSequences[instanceId];
+                ReceiveSequences[instanceId] = receiveSequence + 1;
+                return true;
+            }
         }
 
         receiveKey = default;
@@ -115,10 +118,10 @@ internal static class EntityManager
         SendSequences.Add(instanceId, 0);
         AesKeySequences.Add(instanceId, 0);
         ReceiveSequences.Add(instanceId, 0);
-        SendSequenceLocks.Add(instanceId, new SemaphoreSlim(1, 1));
-        ReceiveSequenceLocks.Add(instanceId, new SemaphoreSlim(1, 1));
-        AesKeySequencesLocks.Add(instanceId, new SemaphoreSlim(1, 1));
-        MercurySequenceLocks.Add(instanceId, new SemaphoreSlim(1, 1));
+        SendSequenceLocks.Add(instanceId, new());
+        ReceiveSequenceLocks.Add(instanceId, new());
+        AesKeySequencesLocks.Add(instanceId, new());
+        MercurySequenceLocks.Add(instanceId, new());
         MercurySequences.Add(instanceId, 0);
     }
 
@@ -157,13 +160,13 @@ internal static class EntityManager
     {
         if (AesKeySequencesLocks.TryGetValue(instanceId, out var lockObj))
         {
-            lockObj.Wait();
-            var seq = AesKeySequences[instanceId];
-            AesKeySequences[instanceId] = seq + 1;
-            lockObj.Release();
-
-            o = seq;
-            return true;
+            using (lockObj.Lock())
+            {
+                var seq = AesKeySequences[instanceId];
+                AesKeySequences[instanceId] = seq + 1;
+                o = seq;
+                return true;
+            }
         }
 
         o = default;
@@ -237,13 +240,13 @@ internal static class EntityManager
     {
         if (MercurySequenceLocks.TryGetValue(instanceId, out var lockObj))
         {
-            lockObj.Wait();
-            var seq = MercurySequences[instanceId];
-            MercurySequences[instanceId] = seq + 1;
-            lockObj.Release();
-
-            o = seq;
-            return true;
+            using (lockObj.Lock())
+            {
+                var seq = MercurySequences[instanceId];
+                MercurySequences[instanceId] = seq + 1;
+                o = seq;
+                return true;
+            }
         }
         
         o = default;

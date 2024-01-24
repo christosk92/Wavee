@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using AsyncKeyedLock;
 using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
 using NAudio.Wave;
@@ -49,7 +50,7 @@ public sealed class WaveePlayer
     private bool _closed;
     private readonly WriteSamples _writeSamples;
 
-    private readonly SemaphoreSlim _semaphore = new(1, 1);
+    private readonly AsyncNonKeyedLocker _semaphore = new(1);
     private WaveePlayerState _state;
     private float _volume = 1f;
     public WaveePlayer(ILogger logger)
@@ -102,86 +103,87 @@ public sealed class WaveePlayer
                         bool pausedChanged = false;
                         bool seekChanged = false;
                         bool volumeChanged = false;
+                        float f;
 
-                        _semaphore.Wait();
-
-                        if (_state.SeekRequest.IsSome)
+                        using (_semaphore.Lock())
                         {
-                            _state.StreamOne.ValueUnsafe().Stream.AudioStream.CurrentTime =
-                                _state.SeekRequest.ValueUnsafe();
-                            _state = _state with
+                            if (_state.SeekRequest.IsSome)
                             {
-                                SeekRequest = Option<TimeSpan>.None
-                            };
+                                _state.StreamOne.ValueUnsafe().Stream.AudioStream.CurrentTime =
+                                    _state.SeekRequest.ValueUnsafe();
+                                _state = _state with
+                                {
+                                    SeekRequest = Option<TimeSpan>.None
+                                };
 
-                            seekChanged = true;
-                        }
-
-                        if (_state.VolumeRequest.IsSome)
-                        {
-                            _volume = _state.VolumeRequest.ValueUnsafe();
-                            _state = _state with
-                            {
-                                VolumeRequest = Option<float>.None
-                            };
-                            volumeChanged = true;
-                        }
-
-                        if (!Paused)
-                        {
-                            var newState = Loop(_state, _writeSamples, streamOneBuffer, streamTwoBuffer, mixBuffer,
-                                _volume);
-                            _state = newState;
-                        }
-
-                        if (_state.RequestNextStream)
-                        {
-                            _state = _state with
-                            {
-                                RequestNextStream = false,
-                                NextStream = Option<ValueTask<Option<WaveeContextStream>>>.None
-                            };
-                            Task.Run(async () => await RequestNextStream());
-                        }
-                        else if (_state.RequestPreviousStream)
-                        {
-                            _state = _state with
-                            {
-                                RequestPreviousStream = false,
-                                NextStream = Option<ValueTask<Option<WaveeContextStream>>>.None
-                            };
-                            Task.Run(async () => await RequestPreviousStream());
-                        }
-
-                        if (_state.StreamOne.IsSome && lastTrack != _state.StreamOne.ValueUnsafe().Stream.Metadata)
-                        {
-                            lastTrack = _state.StreamOne.ValueUnsafe().Stream.Metadata;
-                            trackChanged = true;
-                        }
-
-                        if (_state.PauseRequest.IsSome)
-                        {
-                            if (_state.PauseRequest.ValueUnsafe())
-                            {
-                                Paused = true;
-                                waveOut.Pause();
-                            }
-                            else
-                            {
-                                Paused = false;
-                                waveOut.Play();
+                                seekChanged = true;
                             }
 
-                            _state = _state with
+                            if (_state.VolumeRequest.IsSome)
                             {
-                                PauseRequest = Option<bool>.None
-                            };
-                            pausedChanged = true;
-                            // PausedChanged?.Invoke(this, _state.PauseRequest.ValueUnsafe());
-                        }
+                                _volume = _state.VolumeRequest.ValueUnsafe();
+                                _state = _state with
+                                {
+                                    VolumeRequest = Option<float>.None
+                                };
+                                volumeChanged = true;
+                            }
 
-                        var f = _volume;
-                        _semaphore.Release();
+                            if (!Paused)
+                            {
+                                var newState = Loop(_state, _writeSamples, streamOneBuffer, streamTwoBuffer, mixBuffer,
+                                    _volume);
+                                _state = newState;
+                            }
+
+                            if (_state.RequestNextStream)
+                            {
+                                _state = _state with
+                                {
+                                    RequestNextStream = false,
+                                    NextStream = Option<ValueTask<Option<WaveeContextStream>>>.None
+                                };
+                                Task.Run(async () => await RequestNextStream());
+                            }
+                            else if (_state.RequestPreviousStream)
+                            {
+                                _state = _state with
+                                {
+                                    RequestPreviousStream = false,
+                                    NextStream = Option<ValueTask<Option<WaveeContextStream>>>.None
+                                };
+                                Task.Run(async () => await RequestPreviousStream());
+                            }
+
+                            if (_state.StreamOne.IsSome && lastTrack != _state.StreamOne.ValueUnsafe().Stream.Metadata)
+                            {
+                                lastTrack = _state.StreamOne.ValueUnsafe().Stream.Metadata;
+                                trackChanged = true;
+                            }
+
+                            if (_state.PauseRequest.IsSome)
+                            {
+                                if (_state.PauseRequest.ValueUnsafe())
+                                {
+                                    Paused = true;
+                                    waveOut.Pause();
+                                }
+                                else
+                                {
+                                    Paused = false;
+                                    waveOut.Play();
+                                }
+
+                                _state = _state with
+                                {
+                                    PauseRequest = Option<bool>.None
+                                };
+                                pausedChanged = true;
+                                // PausedChanged?.Invoke(this, _state.PauseRequest.ValueUnsafe());
+                            }
+
+                            f = _volume;
+                        }
 
                         if (trackChanged)
                         {
@@ -221,17 +223,6 @@ public sealed class WaveePlayer
                 {
                     logger.Error(e, "Error in WaveePlayer loop");
                 }
-                finally
-                {
-                    try
-                    {
-                        _semaphore.Release();
-                    }
-                    catch (Exception)
-                    {
-                        // Swallow
-                    }
-                }
             }
         });
 
@@ -242,12 +233,12 @@ public sealed class WaveePlayer
     {
         get
         {
-            _semaphore.Wait();
-            var position = _state.StreamOne.Match(
-                Some: x => x.Stream.AudioStream.CurrentTime,
-                None: () => TimeSpan.Zero);
-            _semaphore.Release();
-            return position;
+            using (_semaphore.Lock())
+            {
+                return _state.StreamOne.Match(
+                    Some: x => x.Stream.AudioStream.CurrentTime,
+                    None: () => TimeSpan.Zero);
+            }
         }
     }
 
@@ -255,12 +246,12 @@ public sealed class WaveePlayer
     {
         get
         {
-            _semaphore.Wait();
-            var duration = _state.StreamOne.Match(
-                Some: x => x.Stream.AudioStream.TotalTime,
-                None: () => TimeSpan.Zero);
-            _semaphore.Release();
-            return duration;
+            using (_semaphore.Lock())
+            {
+                return _state.StreamOne.Match(
+                    Some: x => x.Stream.AudioStream.TotalTime,
+                    None: () => TimeSpan.Zero);
+            }
         }
     }
 
@@ -272,10 +263,10 @@ public sealed class WaveePlayer
     {
         get
         {
-            _semaphore.Wait();
-            var stream = _state.StreamOne;
-            _semaphore.Release();
-            return stream;
+            using (_semaphore.Lock())
+            {
+                return _state.StreamOne;
+            }
         }
     }
 
@@ -290,10 +281,9 @@ public sealed class WaveePlayer
 
     public async ValueTask Play(WaveeContextStream stream, IWaveePlayerContext context)
     {
-        await _semaphore.WaitAsync();
-        _currentContext = context;
-        try
+        using (await _semaphore.LockAsync())
         {
+            _currentContext = context;
             if (_state.StreamOne.IsSome)
             {
                 await _state.StreamOne.ValueUnsafe().Stream.DisposeAsync();
@@ -316,14 +306,6 @@ public sealed class WaveePlayer
                 Option<float>.None
             );
         }
-        catch (Exception)
-        {
-            // Swallow
-        }
-        finally
-        {
-            _semaphore.Release();
-        }
     }
 
     public async ValueTask Play(IWaveePlayerContext ctx)
@@ -335,10 +317,9 @@ public sealed class WaveePlayer
             return;
         }
 
-        await _semaphore.WaitAsync();
-        _currentContext = ctx;
-        try
+        using (await _semaphore.LockAsync())
         {
+            _currentContext = ctx;
             if (_state.StreamOne.IsSome)
             {
                 await _state.StreamOne.ValueUnsafe().Stream.DisposeAsync();
@@ -360,14 +341,6 @@ public sealed class WaveePlayer
                 PauseRequest: Option<bool>.None,
                 Option<float>.None
             );
-        }
-        catch (Exception)
-        {
-            // Swallow
-        }
-        finally
-        {
-            _semaphore.Release();
         }
     }
 
@@ -401,15 +374,15 @@ public sealed class WaveePlayer
             return ValueTask.CompletedTask;
         }
 
-        _semaphore.Wait();
-        var previousStreamTask = _currentContext.GetCurrentStream();
-
-        _state = _state with
+        using (_semaphore.Lock())
         {
-            NextStream = Option<ValueTask<Option<WaveeContextStream>>>.Some(previousStreamTask)
-        };
+            var previousStreamTask = _currentContext.GetCurrentStream();
 
-        _semaphore.Release();
+            _state = _state with
+            {
+                NextStream = Option<ValueTask<Option<WaveeContextStream>>>.Some(previousStreamTask)
+            };
+        }
 
         return ValueTask.CompletedTask;
     }
@@ -422,15 +395,15 @@ public sealed class WaveePlayer
             return ValueTask.CompletedTask;
         }
 
-        _semaphore.Wait();
-        var nextStreamTask = _currentContext.GetNextStream();
-
-        _state = _state with
+        using (_semaphore.Lock())
         {
-            NextStream = Option<ValueTask<Option<WaveeContextStream>>>.Some(nextStreamTask)
-        };
+            var nextStreamTask = _currentContext.GetNextStream();
 
-        _semaphore.Release();
+            _state = _state with
+            {
+                NextStream = Option<ValueTask<Option<WaveeContextStream>>>.Some(nextStreamTask)
+            };
+        }
 
         return ValueTask.CompletedTask;
     }
@@ -711,135 +684,139 @@ public sealed class WaveePlayer
 
     public void SeekAsFraction(double fraction)
     {
-        _semaphore.Wait();
-        if (_state.StreamOne.IsSome)
+        using (_semaphore.Lock())
         {
-            _state = _state with
+            if (_state.StreamOne.IsSome)
             {
-                SeekRequest = Option<TimeSpan>.Some(TimeSpan.FromMilliseconds(
-                    fraction * _state.StreamOne.ValueUnsafe().Stream.AudioStream.TotalTime.TotalMilliseconds))
-            };
+                _state = _state with
+                {
+                    SeekRequest = Option<TimeSpan>.Some(TimeSpan.FromMilliseconds(
+                        fraction * _state.StreamOne.ValueUnsafe().Stream.AudioStream.TotalTime.TotalMilliseconds))
+                };
+            }
         }
-
-        _semaphore.Release();
     }
 
     public void Resume()
     {
-        _semaphore.Wait();
-        _state = _state with
+        using (_semaphore.Lock())
         {
-            PauseRequest = Option<bool>.Some(false)
-        };
-        _semaphore.Release();
+            _state = _state with
+            {
+                PauseRequest = Option<bool>.Some(false)
+            };
+        }
     }
 
     public void Pause()
     {
-        _semaphore.Wait();
-        _state = _state with
+        using (_semaphore.Lock())
         {
-            PauseRequest = Option<bool>.Some(true)
-        };
-        _semaphore.Release();
+            _state = _state with
+            {
+                PauseRequest = Option<bool>.Some(true)
+            };
+        }
     }
 
     public void SkipPrevious()
     {
-        _semaphore.Wait();
-        if (_state.StreamOne.IsSome)
+        using (_semaphore.Lock())
         {
-            _state.StreamOne.ValueUnsafe().Stream.Dispose();
-        }
+            if (_state.StreamOne.IsSome)
+            {
+                _state.StreamOne.ValueUnsafe().Stream.Dispose();
+            }
 
-        if (_state.StreamTwo.IsSome)
-        {
-            _state.StreamTwo.ValueUnsafe().Stream.Dispose();
-        }
+            if (_state.StreamTwo.IsSome)
+            {
+                _state.StreamTwo.ValueUnsafe().Stream.Dispose();
+            }
 
-        _state = _state with
-        {
-            RequestNextStream = false,
-            RequestPreviousStream = true,
-            SeekRequest = Option<TimeSpan>.None,
-            PauseRequest = Option<bool>.None,
-            StreamOne = Option<WaveeContextStream>.None,
-            StreamTwo = Option<WaveeContextStream>.None
-        };
-        _semaphore.Release();
+            _state = _state with
+            {
+                RequestNextStream = false,
+                RequestPreviousStream = true,
+                SeekRequest = Option<TimeSpan>.None,
+                PauseRequest = Option<bool>.None,
+                StreamOne = Option<WaveeContextStream>.None,
+                StreamTwo = Option<WaveeContextStream>.None
+            };
+        }
     }
 
     public void SkipNext()
     {
-        _semaphore.Wait();
-        if (_state.StreamOne.IsSome)
+        using (_semaphore.Lock())
         {
-            _state.StreamOne.ValueUnsafe().Stream.Dispose();
-        }
+            if (_state.StreamOne.IsSome)
+            {
+                _state.StreamOne.ValueUnsafe().Stream.Dispose();
+            }
 
-        if (_state.StreamTwo.IsSome)
-        {
-            _state.StreamTwo.ValueUnsafe().Stream.Dispose();
-        }
+            if (_state.StreamTwo.IsSome)
+            {
+                _state.StreamTwo.ValueUnsafe().Stream.Dispose();
+            }
 
-        _state = _state with
-        {
-            RequestNextStream = true,
-            SeekRequest = Option<TimeSpan>.None,
-            PauseRequest = Option<bool>.None,
-            StreamOne = Option<WaveeContextStream>.None,
-            StreamTwo = Option<WaveeContextStream>.None
-        };
-        _semaphore.Release();
+            _state = _state with
+            {
+                RequestNextStream = true,
+                SeekRequest = Option<TimeSpan>.None,
+                PauseRequest = Option<bool>.None,
+                StreamOne = Option<WaveeContextStream>.None,
+                StreamTwo = Option<WaveeContextStream>.None
+            };
+        }
     }
 
     public void SeekToPosition(TimeSpan fromMilliseconds)
     {
-        _semaphore.Wait();
-        if (_state.StreamOne.IsNone)
+        using (_semaphore.Lock())
         {
-            _semaphore.Release();
-            return;
-        }
+            if (_state.StreamOne.IsNone)
+            {
+                return;
+            }
 
-        var max = Math.Min(_state.StreamOne.ValueUnsafe().Stream.AudioStream.TotalTime.TotalMilliseconds,
-            fromMilliseconds.TotalMilliseconds);
-        //subtract 10ms
-        var min = Math.Max(0, fromMilliseconds.TotalMilliseconds - 10);
-        fromMilliseconds = TimeSpan.FromMilliseconds(min);
-        _state = _state with
-        {
-            SeekRequest = Option<TimeSpan>.Some(fromMilliseconds)
-        };
-        _semaphore.Release();
+            var max = Math.Min(_state.StreamOne.ValueUnsafe().Stream.AudioStream.TotalTime.TotalMilliseconds,
+                fromMilliseconds.TotalMilliseconds);
+            //subtract 10ms
+            var min = Math.Max(0, fromMilliseconds.TotalMilliseconds - 10);
+            fromMilliseconds = TimeSpan.FromMilliseconds(min);
+            _state = _state with
+            {
+                SeekRequest = Option<TimeSpan>.Some(fromMilliseconds)
+            };
+        }
     }
 
     public void Stop()
     {
-        _semaphore.Wait();
-        if (_state.StreamOne.IsSome)
+        using (_semaphore.Lock())
         {
-            _state.StreamOne.ValueUnsafe().Stream.Dispose();
+            if (_state.StreamOne.IsSome)
+            {
+                _state.StreamOne.ValueUnsafe().Stream.Dispose();
+            }
+
+            if (_state.StreamTwo.IsSome)
+            {
+                _state.StreamTwo.ValueUnsafe().Stream.Dispose();
+            }
+
+            _state = new WaveePlayerState(
+                StreamOne: Option<WaveeContextStream>.None,
+                StreamTwo: Option<WaveeContextStream>.None,
+                CrossFadeDuration: Option<TimeSpan>.None,
+                NextStream: Option<ValueTask<Option<WaveeContextStream>>>.None,
+                RequestNextStream: false,
+                RequestPreviousStream: false,
+                SeekRequest: Option<TimeSpan>.None,
+                PauseRequest: Option<bool>.None,
+                Option<float>.None
+            );
         }
-
-        if (_state.StreamTwo.IsSome)
-        {
-            _state.StreamTwo.ValueUnsafe().Stream.Dispose();
-        }
-
-        _state = new WaveePlayerState(
-            StreamOne: Option<WaveeContextStream>.None,
-            StreamTwo: Option<WaveeContextStream>.None,
-            CrossFadeDuration: Option<TimeSpan>.None,
-            NextStream: Option<ValueTask<Option<WaveeContextStream>>>.None,
-            RequestNextStream: false,
-            RequestPreviousStream: false,
-            SeekRequest: Option<TimeSpan>.None,
-            PauseRequest: Option<bool>.None,
-            Option<float>.None
-        );
-
-        _semaphore.Release();
     }
 
     public async ValueTask<bool> PlayWithinContext(int index)
@@ -852,27 +829,28 @@ public sealed class WaveePlayer
         var moved = await _currentContext.MoveTo(index);
         if (moved)
         {
-            await _semaphore.WaitAsync();
-            if (_state.StreamOne.IsSome)
+            using (_semaphore.Lock())
             {
-                await _state.StreamOne.ValueUnsafe().Stream.DisposeAsync();
-            }
+                if (_state.StreamOne.IsSome)
+                {
+                    await _state.StreamOne.ValueUnsafe().Stream.DisposeAsync();
+                }
 
-            if (_state.StreamTwo.IsSome)
-            {
-                await _state.StreamTwo.ValueUnsafe().Stream.DisposeAsync();
-            }
+                if (_state.StreamTwo.IsSome)
+                {
+                    await _state.StreamTwo.ValueUnsafe().Stream.DisposeAsync();
+                }
 
-            _state = _state with
-            {
-                NextStream = Option<ValueTask<Option<WaveeContextStream>>>.Some(_currentContext.GetCurrentStream()),
-                StreamOne = Option<WaveeContextStream>.None,
-                StreamTwo = Option<WaveeContextStream>.None,
-                RequestNextStream = false,
-                SeekRequest = Option<TimeSpan>.None,
-                PauseRequest = Option<bool>.None
-            };
-            _semaphore.Release();
+                _state = _state with
+                {
+                    NextStream = Option<ValueTask<Option<WaveeContextStream>>>.Some(_currentContext.GetCurrentStream()),
+                    StreamOne = Option<WaveeContextStream>.None,
+                    StreamTwo = Option<WaveeContextStream>.None,
+                    RequestNextStream = false,
+                    SeekRequest = Option<TimeSpan>.None,
+                    PauseRequest = Option<bool>.None
+                };
+            }
 
             return true;
         }
@@ -882,12 +860,13 @@ public sealed class WaveePlayer
 
     public void SetVolume(float volumePercent)
     {
-        _semaphore.Wait();
-        _state = _state with
+        using (_semaphore.Lock())
         {
-            VolumeRequest = Option<float>.Some(volumePercent)
-        };
-        _semaphore.Release();
+            _state = _state with
+            {
+                VolumeRequest = Option<float>.Some(volumePercent)
+            };
+        }
     }
 }
 

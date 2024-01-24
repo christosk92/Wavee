@@ -8,6 +8,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <PackageReference Include="AsyncKeyedLock" Version="6.3.4" />
       <PackageReference Include="LanguageExt.Core" Version="4.4.7" />
       <PackageReference Include="MathNet.Numerics" Version="6.0.0-beta1" />
       <PackageReference Include="NAudio" Version="2.2.1" />

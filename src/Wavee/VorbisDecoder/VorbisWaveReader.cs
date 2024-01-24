@@ -1,4 +1,5 @@
 ﻿using System.Runtime.InteropServices;
+using AsyncKeyedLock;
 using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
 using NAudio.Wave;
@@ -12,7 +13,7 @@ namespace Wavee.VorbisDecoder;
 
 public sealed class VorbisWaveReader : WaveStream
 {
-    private readonly SemaphoreSlim _semaphore = new(1, 1);
+    private readonly AsyncNonKeyedLocker _semaphore = new(1);
     private readonly OggReader _oggReader;
     private readonly Vorbis.Decoder.VorbisDecoder _decoder;
 
@@ -59,46 +60,44 @@ public sealed class VorbisWaveReader : WaveStream
 
     public override int Read(byte[] buffer, int offset, int count)
     {
-        _semaphore.Wait();
-        try
+        using (_semaphore.Lock())
         {
-            int bytesRead = 0; // this will store total bytes read into buffer
-
-            while (bytesRead < count)
+            try
             {
-                // If current packet is None or fully consumed, fetch a new packet
-                if (!_currentPacket.IsSome || _currentPacketOffset >= _currentPacket.ValueUnsafe().Length)
-                {
-                    _currentPacket = FetchNewPacket();
-                    _currentPacketOffset = 0;
+                int bytesRead = 0; // this will store total bytes read into buffer
 
-                    // If no new packets are available, break out of loop
-                    if (!_currentPacket.IsSome)
-                        break;
+                while (bytesRead < count)
+                {
+                    // If current packet is None or fully consumed, fetch a new packet
+                    if (!_currentPacket.IsSome || _currentPacketOffset >= _currentPacket.ValueUnsafe().Length)
+                    {
+                        _currentPacket = FetchNewPacket();
+                        _currentPacketOffset = 0;
+
+                        // If no new packets are available, break out of loop
+                        if (!_currentPacket.IsSome)
+                            break;
+                    }
+
+                    // Calculate how much bytes can be read from the current packet
+                    int bytesToRead = Math.Min(count - bytesRead,
+                        _currentPacket.ValueUnsafe().Length - _currentPacketOffset);
+
+                    // Copy data from current packet to buffer
+                    Array.Copy(_currentPacket.ValueUnsafe(), _currentPacketOffset, buffer, offset + bytesRead, bytesToRead);
+
+                    // Update counters
+                    bytesRead += bytesToRead;
+                    _currentPacketOffset += bytesToRead;
                 }
 
-                // Calculate how much bytes can be read from the current packet
-                int bytesToRead = Math.Min(count - bytesRead,
-                    _currentPacket.ValueUnsafe().Length - _currentPacketOffset);
-
-                // Copy data from current packet to buffer
-                Array.Copy(_currentPacket.ValueUnsafe(), _currentPacketOffset, buffer, offset + bytesRead, bytesToRead);
-
-                // Update counters
-                bytesRead += bytesToRead;
-                _currentPacketOffset += bytesToRead;
+                return bytesRead;
             }
-
-            return bytesRead;
-        }
-        catch (Exception e)
-        {
-            Log.Error(e, "Error reading vorbis stream");
-            throw;
-        }
-        finally
-        {
-            _semaphore.Release();
+            catch (Exception e)
+            {
+                Log.Error(e, "Error reading vorbis stream");
+                throw;
+            }
         }
     }
 
@@ -161,10 +160,11 @@ public sealed class VorbisWaveReader : WaveStream
 
     private void SeekToBytesPos(long value)
     {
-        _semaphore.Wait();
-        var bytesPerSecond = WaveFormat.AverageBytesPerSecond;
-        var position = TimeSpan.FromSeconds(value / (double)bytesPerSecond);
-        _oggReader.Seek(SeekMode.Accurate, position);
-        _semaphore.Release();
+        using (_semaphore.Lock())
+        {
+            var bytesPerSecond = WaveFormat.AverageBytesPerSecond;
+            var position = TimeSpan.FromSeconds(value / (double)bytesPerSecond);
+            _oggReader.Seek(SeekMode.Accurate, position);
+        }
     }
 }
