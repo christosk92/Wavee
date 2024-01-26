@@ -53,8 +53,12 @@ public sealed class WaveePlayer
     private WaveePlayerState _state;
     private float _volume = 1f;
 
-    public WaveePlayer(ILogger logger)
+    public WaveePlayer(ILogger? logger)
     {
+        if (logger is null)
+        {
+            logger = Serilog.Log.Logger;
+        }
         // TODO: Write Samples
         var waveOut = new WaveOutEvent();
         waveOut.Volume = 1f;
@@ -224,7 +228,7 @@ public sealed class WaveePlayer
                                     WaveePlayerPositionChangedEventType.Playback));
                         }
 
-                        Task.Delay(1).Wait();
+                        Task.Delay(10).Wait();
                     }
                 }
                 catch (Exception e)

@@ -1,5 +1,7 @@
+using System.Net.Http.Headers;
 using System.Text.Json;
 using Eum.Spotify.extendedmetadata;
+using Google.Protobuf;
 using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
 using Microsoft.Extensions.Logging;
@@ -41,29 +43,29 @@ public sealed class WaveeSpotifyMetadataClient
         switch (item)
         {
             case SpotifySimpleTrack track:
-            {
-                var fill = new LocalTrackMetadata(
-                    filePath: fileToPopulate,
-                    title: track.Name,
-                    composers: track.Descriptions.Select(x => x.Name).ToArray(),
-                    albumArtists: Option<string[]>.None,
-                    album: track.Group.Name,
-                    genres: Option<string[]>.None, // TODO
-                    comment: BuildComment(track),
-                    trackNumber: Some((int)track.TrackNumber),
-                    year: track.Group.Year,
-                    discNumber: Some((int)track.DiscNumber),
-                    getImage: Option<Func<Option<string>>>.None,
-                    getImageBytes: Some(() => DownloadImage(track.Group.Images, _httpClient)));
+                {
+                    var fill = new LocalTrackMetadata(
+                        filePath: fileToPopulate,
+                        title: track.Name,
+                        composers: track.Descriptions.Select(x => x.Name).ToArray(),
+                        albumArtists: Option<string[]>.None,
+                        album: track.Group.Name,
+                        genres: Option<string[]>.None, // TODO
+                        comment: BuildComment(track),
+                        trackNumber: Some((int)track.TrackNumber),
+                        year: track.Group.Year,
+                        discNumber: Some((int)track.DiscNumber),
+                        getImage: Option<Func<Option<string>>>.None,
+                        getImageBytes: Some(() => DownloadImage(track.Group.Images, _httpClient)));
 
-                LocalMetadata.ReplaceMetadata(fileToPopulate, fill);
-                return fill;
-            }
+                    LocalMetadata.ReplaceMetadata(fileToPopulate, fill);
+                    return fill;
+                }
             case SpotifySimpleEpisode episode:
-            {
-                throw new NotImplementedException();
-                break;
-            }
+                {
+                    throw new NotImplementedException();
+                    break;
+                }
             default:
                 throw new SpotifyItemNotSupportedException(withEntity);
         }
@@ -242,5 +244,97 @@ public sealed class WaveeSpotifyMetadataClient
         }).Result;
 
         return Some(res);
+    }
+
+    public async Task FillBatched<TKey>(Dictionary<TKey, ISpotifyItem?> idOutput,
+        string country,
+        Func<TKey, SpotifyId> idFunc) where TKey : notnull
+    {
+        //https://gae2-spclient.spotify.com/extended-metadata/v0/extended-metadata
+        var accessToken = await _tokenFactory();
+        var spclient = await ApResolve.GetSpClient(_httpClient);
+        var url = $"https://{spclient}/extended-metadata/v0/extended-metadata";
+
+        var batchedEntityRequest = new BatchedEntityRequest
+        {
+            Header = new BatchedEntityRequestHeader
+            {
+                Catalogue = "premium",
+                Country = country
+            }
+        };
+        var reverseId = new Dictionary<string, TKey>();
+        foreach (var item in idOutput)
+        {
+            var id = idFunc(item.Key);
+            var req = new EntityRequest
+            {
+                EntityUri = id.ToString(),
+                Query = { ExtensionQueries[id.Type] }
+            };
+            batchedEntityRequest.EntityRequest.Add(req);
+            reverseId[req.EntityUri] = item.Key;
+        }
+
+        using var httpReq = new HttpRequestMessage(HttpMethod.Post, url);
+        httpReq.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+        httpReq.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/protobuf"));
+        httpReq.Headers.AcceptEncoding.Add(new StringWithQualityHeaderValue("gzip"));
+        httpReq.Headers.AcceptEncoding.Add(new StringWithQualityHeaderValue("deflate"));
+        httpReq.Headers.AcceptEncoding.Add(new StringWithQualityHeaderValue("br"));
+
+
+        httpReq.Headers.AcceptLanguage.Add(new StringWithQualityHeaderValue("en"));
+
+        using var body = new ByteArrayContent(batchedEntityRequest.ToByteArray());
+        body.Headers.ContentType = new MediaTypeWithQualityHeaderValue("application/protobuf");
+        httpReq.Content = body;
+        using var httpResponse = await _gzipHttpClient.SendAsync(httpReq, CancellationToken.None);
+        await using var stream = await httpResponse.Content.ReadAsStreamAsync();
+        var response = BatchedExtensionResponse.Parser.ParseFrom(stream);
+        foreach (var group in response.ExtendedMetadata)
+        {
+            switch (group.ExtensionKind)
+            {
+                case ExtensionKind.ArtistV4:
+                    {
+                        foreach (var item in group.ExtensionData)
+                        {
+                            var id = reverseId[item.EntityUri];
+                            var artist = Artist.Parser.ParseFrom(item.ExtensionData.Value).MapToDto();
+                            idOutput[id] = artist;
+                        }
+                        break;
+                    }
+                case ExtensionKind.AlbumV4:
+                    {
+                        foreach (var item in group.ExtensionData)
+                        {
+                            var id = reverseId[item.EntityUri];
+                            var artist = Album.Parser.ParseFrom(item.ExtensionData.Value).MapToDto();
+                            idOutput[id] = artist;
+                        }
+                        break;
+                    }
+                case ExtensionKind.TrackV4:
+                    {
+                        foreach (var item in group.ExtensionData)
+                        {
+                            var id = reverseId[item.EntityUri];
+                            var artist = Track.Parser.ParseFrom(item.ExtensionData.Value).MapToDto();
+                            idOutput[id] = artist;
+                        }
+                        break;
+                    }
+                case ExtensionKind.ShowV4:
+                    {
+                        break;
+                    }
+                case ExtensionKind.EpisodeV4:
+                    {
+                        break;
+                    }
+            }
+        }
     }
 }

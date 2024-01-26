@@ -10,7 +10,7 @@ internal static class ArtistMapping
     {
         return new SpotifySimpleArtist
         {
-            Uri = default,
+            Uri = SpotifyId.FromRaw(artist.Gid.Span, AudioItemType.Artist),
             Name = artist.Name,
             Images = artist.PortraitGroup.Image.Select(x => x.MapToDto())
                 .ToImmutableArray(),

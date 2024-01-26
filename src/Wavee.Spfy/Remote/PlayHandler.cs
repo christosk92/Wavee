@@ -49,11 +49,11 @@ internal static class PlayHandler
                     // Skip to a track!!
                     if (skipToIndex.HasValue)
                     {
-                        if (context.Uri.StartsWith("spotify:artist:"))
-                        {
-                            //Always refresh the context for artists !
-                            await spotifyContext.RefreshContext(context, true);
-                        }
+                        // if (context.Uri.StartsWith("spotify:artist:"))
+                        // {
+                        //     //Always refresh the context for artists !
+                        //     await spotifyContext.RefreshContext(context, true);
+                        // }
 
                         await spotifyClient.WaveePlayer.PlayWithinContext(skipToIndex.Value);
                     }

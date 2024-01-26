@@ -117,6 +117,7 @@ internal sealed class DefaultHttpClient : IHttpClient
 
     private static Dictionary<string, string> _etagCache = new Dictionary<string, string>();
     private static Dictionary<string, Context> _contextCache = new Dictionary<string, Context>();
+    private static Dictionary<string, ContextPage> _contextPageCache = new Dictionary<string, ContextPage>();
 
     public async Task<Context> ResolveContext(string itemId, string accessToken)
     {
@@ -126,7 +127,7 @@ internal sealed class DefaultHttpClient : IHttpClient
         using var request = new HttpRequestMessage(HttpMethod.Get, finalUrl);
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
         request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/protobuf"));
-        if (_etagCache.TryGetValue(itemId, out var value))
+        if (_etagCache.TryGetValue(finalUrl, out var value))
         {
             request.Headers.IfNoneMatch.Add(new EntityTagHeaderValue(value));
         }
@@ -137,12 +138,12 @@ internal sealed class DefaultHttpClient : IHttpClient
         {
             sw.Stop();
             Console.WriteLine($"Context {itemId} was cached, took {sw.ElapsedMilliseconds}ms");
-            return _contextCache[itemId];
+            return _contextCache[finalUrl];
         }
 
         response.EnsureSuccessStatusCode();
         var etag = response.Headers.ETag!.Tag!;
-        _etagCache[itemId] = etag;
+        _etagCache[finalUrl] = etag;
         var stream = await response.Content.ReadAsStringAsync();
         var context = Context.Parser.ParseJson(stream);
         _contextCache[itemId] = context;
@@ -161,8 +162,18 @@ internal sealed class DefaultHttpClient : IHttpClient
         var spclient = await ApResolve.GetSpClient(this);
         var finalUrl = $"https://{spclient}{pageUrl}";
         using var request = new HttpRequestMessage(HttpMethod.Get, finalUrl);
+        if (_etagCache.TryGetValue(finalUrl, out var value))
+        {
+            request.Headers.IfNoneMatch.Add(new EntityTagHeaderValue(value));
+        }
+
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
         using var response = await _httpClient.SendAsync(request);
+        if (response.StatusCode == System.Net.HttpStatusCode.NotModified)
+        {
+            return _contextPageCache[finalUrl];
+        }
+
         string s;
         using (var sr = new StreamReader(await response.Content.ReadAsStreamAsync(CancellationToken.None)))
         {
@@ -172,6 +183,7 @@ internal sealed class DefaultHttpClient : IHttpClient
         try
         {
             var context = ContextPage.Parser.ParseJson(s);
+            _contextPageCache[finalUrl] = context;
             return context;
         }
         catch (Exception e)
@@ -179,6 +191,17 @@ internal sealed class DefaultHttpClient : IHttpClient
             Console.WriteLine(e);
             throw;
         }
+    }
+
+    public async Task<HttpResponseMessage> Post(string url, string token, byte[] content,
+        string contentType)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Post, url);
+        var body = new ByteArrayContent(content);
+        body.Headers.ContentType = new MediaTypeHeaderValue(contentType);
+        request.Content = body;
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        return await _httpClient.SendAsync(request);
     }
 
     private async Task<(byte[] bytes, long totalSize)> GetChunk(string cdnUrl, long start, long end,

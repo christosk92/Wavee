@@ -105,6 +105,11 @@ public sealed class WaveeSpotifyClient
             logger: logger,
             Option<ICachingProvider>.None
         );
+        Library = new WaveeSpotifyLibraryClient(
+            httpClient: services.HttpClient,
+            tokenFactory: TokenFactoryWithName,
+            Option<ICachingProvider>.None
+        );
 
         Playback = new WaveeSpotifyPlaybackClient(
             httpClient: services.HttpClient,
@@ -125,6 +130,7 @@ public sealed class WaveeSpotifyClient
     public readonly WaveeSpotifyRemoteClient Remote;
     public readonly WaveeSpotifyMetadataClient Metadata;
     public readonly WaveeSpotifyPlaybackClient Playback;
+    public readonly WaveeSpotifyLibraryClient Library;
 
     public event EventHandler<TcpConnectionStatusType> TcpConnectionStatusChanged;
     public ValueTask<string> GetAccessToken() => TokenFactory();
@@ -188,6 +194,16 @@ public sealed class WaveeSpotifyClient
         var chainedTask = ChainedAuthenticationTask();
 
         return new ValueTask(chainedTask);
+    }
+    public Task<Task> AuthenticateButFailImmediatlyIfOAuthRequired()
+    {
+        if (_services.SecureStorage.TryGetDefaultUser(out var userId))
+        {
+            return Task.FromResult(Task.Run(async () => await Authenticate(userId)));
+        }
+
+        return Task.FromResult(Task.FromException(new Exception("Requires OAuth")));
+        // return ValueTask.FromException(new Exception("No stored credentials found"));
     }
 
     private async Task ChainedAuthenticationTask()
@@ -260,25 +276,25 @@ public sealed class WaveeSpotifyClient
                                     tcp.Send(SpotifyPacketType.Pong, new byte[4]);
                                     break;
                                 case SpotifyPacketType.PongAck:
-                                {
-                                    var ping = pingTimer.Elapsed;
-                                    _logger.LogInformation("Ping: {Ping}", ping / 2);
-                                    pingTimer.Stop();
-                                    break;
-                                }
-                                default:
-                                {
-                                    foreach (var channel in _waitingForPackages.ToList())
                                     {
-                                        if (!channel.Writer.TryWrite(new SendSpotifyPacket(type, payload.ToArray())))
-                                        {
-                                            _waitingForPackages.Remove(channel);
-                                        }
+                                        var ping = pingTimer.Elapsed;
+                                        _logger.LogInformation("Ping: {Ping}", ping / 2);
+                                        pingTimer.Stop();
+                                        break;
                                     }
+                                default:
+                                    {
+                                        foreach (var channel in _waitingForPackages.ToList())
+                                        {
+                                            if (!channel.Writer.TryWrite(new SendSpotifyPacket(type, payload.ToArray())))
+                                            {
+                                                _waitingForPackages.Remove(channel);
+                                            }
+                                        }
 
-                                    _logger.LogDebug("Received unhandled packet type: {PacketType}", type);
-                                    break;
-                                }
+                                        _logger.LogDebug("Received unhandled packet type: {PacketType}", type);
+                                        break;
+                                    }
                             }
                         }
 
@@ -440,6 +456,27 @@ public sealed class WaveeSpotifyClient
 
         return new ValueTask<string>(linkedTask);
     }
+    ValueTask<(string, string)> TokenFactoryWithName()
+    {
+        if (token is not null && token.Value.Expiration > DateTimeOffset.UtcNow)
+        {
+            return new ValueTask<(string, string)>((token.Value.ForUser, token.Value.Token));
+        }
+
+        var linkedTask = Tokens.GetToken(_instanceId, _services.HttpClient, _deviceId).ContinueWith(t =>
+        {
+            if (t.IsFaulted)
+            {
+                throw t.Exception!.InnerException!;
+            }
+
+            var x = (t.Result.Username, t.Result.AccessToken, t.Result.Expires);
+            token = x;
+            return (x.Username, x.AccessToken);
+        });
+
+        return new ValueTask<(string, string)>(linkedTask);
+    }
 
 
     private static Dictionary<ByteString, Option<byte[]>> _audioKeyCache = new();
@@ -489,6 +526,8 @@ internal interface IHttpClient
     Task<SpotifyEncryptedStream> CreateEncryptedStream(string cdnUrl, CancellationToken cancellationToken = default);
     Task<Context> ResolveContext(string itemId, string accessToken);
     Task<ContextPage> ResolveContextRaw(string pageUrl, string accessToken);
+    Task<HttpResponseMessage> Post(string url, string token, byte[] content,
+        string contentType);
 }
 
 internal interface IGzipHttpClient
