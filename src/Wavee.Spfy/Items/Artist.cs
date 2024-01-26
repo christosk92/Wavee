@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using LanguageExt;
 
 namespace Wavee.Spfy.Items;
 
@@ -9,7 +10,7 @@ public readonly record struct SpotifySimpleArtist : ISpotifyItem
 
     public string Id => Uri.ToString();
 
-    public required ImmutableArray<UrlImage> Images { get; init; }
+    public required Seq<UrlImage> Images { get; init; }
     public required IEnumerable<IGrouping<SpotifyDiscographyType, SpotifyId>>? Discography { get; init; }
 }
 

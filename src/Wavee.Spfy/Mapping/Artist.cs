@@ -13,7 +13,7 @@ internal static class ArtistMapping
             Uri = SpotifyId.FromRaw(artist.Gid.Span, AudioItemType.Artist),
             Name = artist.Name,
             Images = artist.PortraitGroup.Image.Select(x => x.MapToDto())
-                .ToImmutableArray(),
+                .ToSeq(),
             Discography = BuildDiscography(artist)
         };
     }

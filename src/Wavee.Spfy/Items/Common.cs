@@ -8,6 +8,7 @@ namespace Wavee.Spfy.Items;
 public interface ISpotifyItem : IWaveeItem
 {
     SpotifyId Uri { get; }
+    Seq<UrlImage> Images { get; }
 }
 
 public interface ISpotifyPlayableItem : ISpotifyItem, IWaveePlayableItem
@@ -24,18 +25,34 @@ public interface ISpotifyPlayableItem : ISpotifyItem, IWaveePlayableItem
 
 public readonly record struct SpotifyPlayableItemDescription : ISpotifyItem, IWaveeAlbumArtist
 {
+    public SpotifyPlayableItemDescription()
+    {
+        Name = null;
+        Uri = default;
+    }
+
     public required string Name { get; init; }
 
     public string Id => Uri.ToString();
 
     public required SpotifyId Uri { get; init; }
+
+    public Seq<UrlImage> Images { get; } = Seq<UrlImage>.Empty;
 }
 
 public readonly struct SpotifyEmptyItem : ISpotifyItem
 {
+    public SpotifyEmptyItem()
+    {
+        Name = null;
+        Uri = default;
+    }
+
     public required string Name { get; init; }
     public string Id => Id.ToString();
     public required SpotifyId Uri { get; init; }
+
+    public Seq<UrlImage> Images { get; } = Seq<UrlImage>.Empty;
 }
 
 public interface ISpotifyPlayableItemGroup : ISpotifyItem

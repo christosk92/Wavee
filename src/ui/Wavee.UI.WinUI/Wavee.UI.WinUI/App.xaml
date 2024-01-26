@@ -41,6 +41,8 @@
 
             <converters:ViewModelToTextConverter x:Key="ViewModelToTextConverter" />
             <converters:ViewModelToIconConverter x:Key="ViewModelToIconConverter" />
+            <converters:WaveeItemToImageConverter x:Key="WaveeItemToImageConverter" />
+            <converters:DateTimeToRelativeConverter x:Key="DateTimeToRelativeConverter" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>

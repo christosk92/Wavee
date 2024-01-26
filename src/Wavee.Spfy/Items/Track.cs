@@ -6,6 +6,9 @@ namespace Wavee.Spfy.Items;
 public readonly record struct SpotifySimpleTrack : ISpotifyPlayableItem
 {
     public required SpotifyId Uri { get; init; }
+
+    public Seq<UrlImage> Images => Group.Images;
+
     public required string Name { get; init; }
     public required uint DiscNumber { get; init; }
     public required uint TrackNumber { get; init; }
