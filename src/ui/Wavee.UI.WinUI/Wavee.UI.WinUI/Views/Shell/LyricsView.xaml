@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<UserControl x:Class="Wavee.UI.WinUI.Views.Shell.LyricsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:converters="using:Wavee.UI.WinUI.Converters"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:local="using:Wavee.UI.WinUI.Views.Shell"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:nowPlaying="using:Wavee.UI.ViewModels.NowPlaying"
+             mc:Ignorable="d">
+    <UserControl.Resources>
+        <converters:ActiveToOpacityConverter x:Key="ActiveToOpacityConverter"
+                                             ActiveIndex="{Binding ActiveLineIndex, Mode=OneWay}" />
+        <converters:ActiveToFontWeightConverter x:Key="ActiveToFontWeightConverter" />
+        <converters:ActiveToFontSizeConverter x:Key="ActiveToFontSizeConverter" />
+
+        <Style x:Key="LyricsListViewItemStyle"
+               TargetType="ListViewItem">
+            <Setter Property="HorizontalContentAlignment"
+                    Value="Stretch" />
+            <Setter Property="VerticalContentAlignment"
+                    Value="Center" />
+            <Setter Property="Padding"
+                    Value="0" />
+            <Setter Property="Margin"
+                    Value="0,6" />
+        </Style>
+    </UserControl.Resources>
+    <Grid>
+        <ListView x:Name="LyricsListView"
+                  HorizontalAlignment="Center"
+                  IsItemClickEnabled="False"
+                  SizeChanged="LyricsListView_OnSizeChanged"
+                  ItemContainerStyle="{StaticResource LyricsListViewItemStyle}"
+                  ItemsSource="{x:Bind ViewModel.Lines, Mode=OneWay}"
+                  Loaded="OnListViewLoaded"
+                  ScrollViewer.VerticalScrollBarVisibility="Hidden"
+                  SelectionMode="None">
+            <ListView.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <StackPanel Orientation="Vertical" />
+                </ItemsPanelTemplate>
+            </ListView.ItemsPanel>
+            <ListView.Footer>
+                <Border x:Name="DoubleHeightBorder" />
+            </ListView.Footer>
+            <ListView.ItemTemplate>
+                <DataTemplate x:DataType="nowPlaying:LyricsLineViewModel">
+                    <TextBlock FontSize="{x:Bind IsActive, Converter={StaticResource ActiveToFontSizeConverter}, Mode=OneWay}"
+                               FontWeight="{x:Bind IsActive, Converter={StaticResource ActiveToFontWeightConverter}, Mode=OneWay}"
+                               Opacity="{x:Bind This, Converter={StaticResource ActiveToOpacityConverter}, Mode=OneWay}"
+                               Text="{x:Bind Text, Mode=OneWay}"
+                               TextAlignment="Left"
+                               TextWrapping="WrapWholeWords" />
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+    </Grid>
+</UserControl>

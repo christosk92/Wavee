@@ -1,77 +1,127 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<UserControl x:Class="Wavee.UI.WinUI.Views.Shell.ShellView"
-             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:behaviors="using:Wavee.UI.WinUI.Behaviors.ListViewBase"
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:interactivity="using:Microsoft.Xaml.Interactivity"
-             xmlns:local="using:Wavee.UI.WinUI.Views.Shell"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:toolkit="using:CommunityToolkit.WinUI.Controls"
-             xmlns:viewModels="using:Wavee.UI.ViewModels"
-             mc:Ignorable="d">
-
-    <Grid VerticalAlignment="Top">
+<UserControl
+    x:Class="Wavee.UI.WinUI.Views.Shell.ShellView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:behaviors="using:Wavee.UI.WinUI.Behaviors.ListViewBase"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:interactivity="using:Microsoft.Xaml.Interactivity"
+    xmlns:local="using:Wavee.UI.WinUI.Views.Shell"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:media="using:CommunityToolkit.WinUI.Media"
+    xmlns:nowPlaying="using:Wavee.UI.WinUI.Views.NowPlaying"
+    xmlns:toolkit="using:CommunityToolkit.WinUI.Controls"
+    xmlns:viewModels="using:Wavee.UI.ViewModels"
+    xmlns:winUi="using:CommunityToolkit.WinUI"
+    mc:Ignorable="d">
+    <Grid VerticalAlignment="Stretch">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <!--  Titlebar  -->
             <RowDefinition />
         </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition
+                Width="0"
+                MinWidth="0"
+                MaxWidth="300" />
+            <ColumnDefinition />
+            <ColumnDefinition
+                Width="{x:Bind RightSidebarOpenToDefaultWidth(ViewModel.RightSidebar.ShouldBeOpen), Mode=OneWay}"
+                MinWidth="{x:Bind RightSidebarOpenToMinWidth(ViewModel.RightSidebar.ShouldBeOpen, 100), Mode=OneWay}"
+                MaxWidth="300" />
+        </Grid.ColumnDefinitions>
 
-        <Grid Height="48"
-              Background="{ThemeResource LayerFillColorDefaultBrush}">
+        <Grid
+            Grid.ColumnSpan="3"
+            Height="48"
+            Background="{ThemeResource LayerFillColorDefaultBrush}">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition />
             </Grid.ColumnDefinitions>
 
-            <StackPanel Margin="8,0"
-                        Orientation="Horizontal"
-                        Spacing="4">
+            <StackPanel
+                Margin="8,0"
+                Orientation="Horizontal"
+                Spacing="4">
                 <Button Style="{StaticResource NavigationRoundButtonStyle}">
-                    <FontIcon FontFamily="/Assets/Fonts/SegoeFluentIcons.ttf#Segoe Fluent Icons"
-                              FontSize="12"
-                              Glyph="&#xE76B;" />
+                    <FontIcon
+                        FontFamily="/Assets/Fonts/SegoeFluentIcons.ttf#Segoe Fluent Icons"
+                        FontSize="12"
+                        Glyph="&#xE76B;" />
                 </Button>
                 <Button Style="{StaticResource NavigationRoundButtonStyle}">
-                    <FontIcon FontFamily="/Assets/Fonts/SegoeFluentIcons.ttf#Segoe Fluent Icons"
-                              FontSize="12"
-                              Glyph="&#xE76C;" />
+                    <FontIcon
+                        FontFamily="/Assets/Fonts/SegoeFluentIcons.ttf#Segoe Fluent Icons"
+                        FontSize="12"
+                        Glyph="&#xE76C;" />
                 </Button>
             </StackPanel>
 
-            <toolkit:Segmented Grid.Column="1"
-                               IsItemClickEnabled="True"
-                               ItemsSource="{x:Bind ViewModel.RootNavigationItems}"
-                               Style="{StaticResource PivotSegmentedStyle}">
+            <toolkit:Segmented
+                Grid.Column="1"
+                IsItemClickEnabled="True"
+                ItemsSource="{x:Bind ViewModel.RootNavigationItems}"
+                Style="{StaticResource PivotSegmentedStyle}">
                 <interactivity:Interaction.Behaviors>
                     <behaviors:ItemClickedBehavior ItemClickedCommand="{x:Bind ViewModel.RootNavigationClickedCommand}" />
                 </interactivity:Interaction.Behaviors>
                 <toolkit:Segmented.ItemTemplate>
                     <DataTemplate x:DataType="viewModels:IHasProfileViewModel">
-                        <Grid x:Name="ContentHolder"
-                              ColumnSpacing="8">
+                        <Grid x:Name="ContentHolder" ColumnSpacing="8">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto" />
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
-                            <ContentPresenter x:Name="PART_IconPresenter"
-                                              Content="{x:Bind Converter={StaticResource ViewModelToIconConverter}}" />
+                            <ContentPresenter x:Name="PART_IconPresenter" Content="{x:Bind Converter={StaticResource ViewModelToIconConverter}}" />
 
-                            <TextBlock x:Name="PART_ContentPresenter"
-                                       Grid.Column="1"
-                                       VerticalAlignment="Center"
-                                       Text="{x:Bind Converter={StaticResource ViewModelToTextConverter}}" />
+                            <TextBlock
+                                x:Name="PART_ContentPresenter"
+                                Grid.Column="1"
+                                VerticalAlignment="Center"
+                                Text="{x:Bind Converter={StaticResource ViewModelToTextConverter}}" />
                         </Grid>
                     </DataTemplate>
                 </toolkit:Segmented.ItemTemplate>
             </toolkit:Segmented>
         </Grid>
 
-        <ContentPresenter x:Name="MainContent"
-                          Grid.Row="1"
-                          VerticalAlignment="Top"
-                          HorizontalContentAlignment="Stretch"
-                          VerticalContentAlignment="Top" />
+        <ContentPresenter
+            x:Name="MainContent"
+            Grid.Row="1"
+            Grid.Column="1"
+            VerticalAlignment="Top"
+            HorizontalContentAlignment="Stretch"
+            VerticalContentAlignment="Top" />
+        <toolkit:GridSplitter
+            Grid.Row="1"
+            Grid.Column="1"
+            Width="16"
+            HorizontalAlignment="Right"
+            VerticalAlignment="Stretch"
+            Foreground="Transparent"
+            ResizeBehavior="BasedOnAlignment"
+            ResizeDirection="Auto">
+            <toolkit:GridSplitter.RenderTransform>
+                <TranslateTransform X="0" />
+            </toolkit:GridSplitter.RenderTransform>
+        </toolkit:GridSplitter>
+        <local:RightSidebarControl
+            Grid.Row="1"
+            Grid.Column="2"
+            DataContext="{x:Bind ViewModel.RightSidebar}"
+            Visibility="{x:Bind ViewModel.RightSidebar.ShouldBeOpen, Mode=OneWay, Converter={StaticResource TrueToVisibleConverter}}" />
+
+        <nowPlaying:BottomPlaybackControll
+            Grid.Row="1"
+            Grid.Column="0"
+            Grid.ColumnSpan="3"
+            Height="80"
+            Margin="24,24"
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Bottom"
+            DataContext="{x:Bind ViewModel.NowPlaying}"
+            RightSidebar="{x:Bind ViewModel.RightSidebar}" />
     </Grid>
 </UserControl>

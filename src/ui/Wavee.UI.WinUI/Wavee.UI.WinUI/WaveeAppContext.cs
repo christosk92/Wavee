@@ -72,13 +72,15 @@ public sealed class WaveeAppContext
         {
             if (ShellViewModel is null)
             {
+                var nowPlaying = new NowPlayingViewModel(_dispatcherWrapper);
                 ShellViewModel = new ShellViewModel(
                     feed: new FeedViewModel(),
                     library: new LibraryRootViewModel(new LibraryTracksViewModel(_dispatcherWrapper),
                         new LibraryArtistsViewModel(_dispatcherWrapper),
                         new LibraryAlbumsViewModel(_dispatcherWrapper)),
-                    nowPlaying: new NowPlayingViewModel(),
+                    nowPlaying: nowPlaying,
                     playlists: new PlaylistsViewModel(),
+                    new RightSidebarViewModel(new LyricsViewModel(nowPlaying, _dispatcherWrapper), _dispatcherWrapper),
                     authprovider.AuthenticatedProfile!);
             }
             else

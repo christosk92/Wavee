@@ -24,7 +24,7 @@ namespace Wavee.Spfy.Remote;
 public sealed class WaveeSpotifyRemoteClient
 {
     private const uint VOLUME_STEPS = 12;
-    private const uint MAX_VOLUME = 65535;
+    public const uint MAX_VOLUME = 65535;
 
     private SemaphoreSlim _semaphore = new(1, 1);
     private readonly Guid _instanceId;
@@ -638,74 +638,74 @@ public sealed class WaveeSpotifyRemoteClient
                         switch (endpoint)
                         {
                             case "set_shuffling_context":
-                            {
-                                var val = cmd.GetProperty("value").GetBoolean();
-                                _player.SetShuffling(val);
-                                break;
-                            }
-                            case "set_queue":
-                            {
-                                break;
-                            }
-                            case "update_context":
-                            {
-                                var ctx = Eum.Spotify.context.Context.Parser.ParseJson(cmd.GetProperty("context")
-                                    .GetRawText());
-                                if (_player.Context.IsSome)
                                 {
-                                    var currentContext = _player.Context.ValueUnsafe();
-                                    if (currentContext is ISpotifyContext spotifyCtx &&
-                                        spotifyCtx.ContextUri == ctx.Uri)
-                                    {
-                                        await spotifyCtx.RefreshContext(ctx, true);
-                                    }
+                                    var val = cmd.GetProperty("value").GetBoolean();
+                                    _player.SetShuffling(val);
+                                    break;
                                 }
+                            case "set_queue":
+                                {
+                                    break;
+                                }
+                            case "update_context":
+                                {
+                                    var ctx = Eum.Spotify.context.Context.Parser.ParseJson(cmd.GetProperty("context")
+                                        .GetRawText());
+                                    if (_player.Context.IsSome)
+                                    {
+                                        var currentContext = _player.Context.ValueUnsafe();
+                                        if (currentContext is ISpotifyContext spotifyCtx &&
+                                            spotifyCtx.ContextUri == ctx.Uri)
+                                        {
+                                            await spotifyCtx.RefreshContext(ctx, true);
+                                        }
+                                    }
 
-                                break;
-                            }
+                                    break;
+                                }
                             case "skip_prev":
-                            {
-                                _player.SkipPrevious();
-                                break;
-                            }
+                                {
+                                    _player.SkipPrevious();
+                                    break;
+                                }
                             case "skip_next":
-                            {
-                                _player.SkipNext();
-                                break;
-                            }
+                                {
+                                    _player.SkipNext();
+                                    break;
+                                }
                             case "play":
-                            {
-                                await PlayHandler.HandlePlay(cmd, _instanceId);
-                                break;
-                            }
+                                {
+                                    await PlayHandler.HandlePlay(cmd, _instanceId);
+                                    break;
+                                }
                             case "pause":
-                            {
-                                _player.Pause();
-                                break;
-                            }
+                                {
+                                    _player.Pause();
+                                    break;
+                                }
                             case "resume":
-                            {
-                                _player.Resume();
-                                break;
-                            }
+                                {
+                                    _player.Resume();
+                                    break;
+                                }
                             case "seek_to":
-                            {
-                                var value = cmd.GetProperty("value").GetDouble();
-                                _player.SeekToPosition(TimeSpan.FromMilliseconds(value));
-                                break;
-                            }
+                                {
+                                    var value = cmd.GetProperty("value").GetDouble();
+                                    _player.SeekToPosition(TimeSpan.FromMilliseconds(value));
+                                    break;
+                                }
                             case "transfer":
-                            {
-                                var transfer =
-                                    TransferState.Parser.ParseFrom(cmd.GetProperty("data").GetBytesFromBase64());
-                                await RemoteTransfer.HandleTransfer(transfer, _instanceId);
-                                break;
-                            }
+                                {
+                                    var transfer =
+                                        TransferState.Parser.ParseFrom(cmd.GetProperty("data").GetBytesFromBase64());
+                                    await RemoteTransfer.HandleTransfer(transfer, _instanceId);
+                                    break;
+                                }
                             default:
-                            {
-                                Debugger.Break();
-                                break;
-                            }
+                                {
+                                    Debugger.Break();
+                                    break;
+                                }
                         }
 
                         var reply = string.Format(
@@ -740,6 +740,110 @@ public sealed class WaveeSpotifyRemoteClient
             }
         }).Start();
     }
+
+    public Task<bool> Resume(bool waitForResponse)
+    {
+        var command = new { command = new { endpoint = "resume" } };
+        return SendCommand(command, waitForResponse);
+    }
+
+
+    public Task<bool> Pause(bool waitForResponse)
+    {
+        var command = new { command = new { endpoint = "pause" } };
+        return SendCommand(command, waitForResponse);
+    }
+    public Task<bool> SkipNext(bool waitForResponse)
+    {
+        var command = new { command = new { endpoint = "skip_next" } };
+        return SendCommand(command, waitForResponse);
+    }
+    public Task<bool> SkipPrev(bool waitForResponse)
+    {
+        var command = new { command = new { endpoint = "skip_prev" } };
+        return SendCommand(command, waitForResponse);
+    }
+
+    public Task<bool> SeekTo(TimeSpan position, bool waitForResponse)
+    {
+        var command = new { command = new { endpoint = "seek_to", value = position.TotalMilliseconds } };
+        return SendCommand(command, waitForResponse);
+    }
+
+    public Task<bool> SetShuffle(bool isShuffling, bool waitForResponse)
+    {
+        var command = new { command = new { endpoint = "set_shuffling_context", value = isShuffling } };
+        return SendCommand(command, waitForResponse);
+    }
+    public Task<bool> GoToRepeatState(WaveeRepeatStateType repeatState, bool waitForResponse)
+    {
+        var command = new
+        {
+            command = new
+            {
+                endpoint = "set_options",
+                repeating_context = repeatState >= WaveeRepeatStateType.Context,
+                repeating_track = repeatState >= WaveeRepeatStateType.Track
+            }
+        };
+        return SendCommand(command, waitForResponse);
+    }
+
+    public async Task<bool> SetVolume(double oneToZero, bool waitForResponse)
+    {
+        var activeDeviceId = _state.Bind(x => x.ActiveDeviceId);
+        if (activeDeviceId.IsNone) return false;
+
+        var token = await _tokenFactory();
+        try
+        {
+            using var response = await _httpClient.SendVolumeCommand(token, new
+            {
+                volume = Math.Min(oneToZero * MAX_VOLUME, MAX_VOLUME)
+            },
+                fromDeviceId: _deviceId,
+                activeDeviceId.ValueUnsafe());
+            response.EnsureSuccessStatusCode();
+            if (!waitForResponse) return true;
+
+            await using var ack = await response.Content.ReadAsStreamAsync();
+            using var json = await JsonDocument.ParseAsync(ack);
+            var ackId = json.RootElement.GetProperty("ack_id").GetString();
+            return true;
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "An error occurred while sending pause command");
+            return false;
+        }
+    }
+
+    private async Task<bool> SendCommand(object command, bool waitForResponse)
+    {
+        var activeDeviceId = _state.Bind(x => x.ActiveDeviceId);
+        if (activeDeviceId.IsNone) return false;
+
+        var token = await _tokenFactory();
+        try
+        {
+            using var response = await _httpClient.SendCommand(token, command,
+                fromDeviceId: _deviceId,
+                activeDeviceId.ValueUnsafe());
+            response.EnsureSuccessStatusCode();
+            if (!waitForResponse) return true;
+
+            await using var ack = await response.Content.ReadAsStreamAsync();
+            using var json = await JsonDocument.ParseAsync(ack);
+            var ackId = json.RootElement.GetProperty("ack_id").GetString();
+            return true;
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "An error occurred while sending pause command");
+            return false;
+        }
+    }
+
 }
 
 public readonly record struct SpotifyRemoteState
@@ -755,7 +859,8 @@ public readonly record struct SpotifyRemoteState
 
     public required
         HashMap<SpotifyRestrictionAppliesForType,
-            Seq<SpotifyKnownRestrictionType>> Restrictions { get; init; }
+            Seq<SpotifyKnownRestrictionType>> Restrictions
+    { get; init; }
 
     public Stopwatch PositionStopwatch { get; init; }
     public TimeSpan PositionOffset { get; init; }

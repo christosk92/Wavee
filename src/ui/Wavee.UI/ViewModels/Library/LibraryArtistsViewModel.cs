@@ -44,6 +44,7 @@ public sealed class LibraryArtistsViewModel : ObservableObject, ILibraryComponen
     {
         _profiles.Remove(profile);
     }
+
     public bool IsBusy
     {
         get => _isBusy;

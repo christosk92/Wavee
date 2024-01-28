@@ -7,7 +7,7 @@ public readonly record struct SpotifySimpleEpisode : ISpotifyPlayableItem
 {
     public required SpotifyId Uri { get; init; }
     public required string Name { get; init; }
-    public Seq<SpotifyPlayableItemDescription> Descriptions { get; }
+    public Seq<WaveePlayableItemDescription> Descriptions { get; }
     public ISpotifyPlayableItemGroup Group { get; }
     public Seq<SpotifyAudioFile> AudioFiles { get; }
     public Seq<SpotifyAudioFile> PreviewFiles { get; }

@@ -7,12 +7,12 @@ public readonly record struct SpotifySimpleTrack : ISpotifyPlayableItem
 {
     public required SpotifyId Uri { get; init; }
 
-    public Seq<UrlImage> Images => Group.Images;
+    public Seq<UrlImage> Images => Group?.Images ?? Seq<UrlImage>.Empty;
 
     public required string Name { get; init; }
     public required uint DiscNumber { get; init; }
     public required uint TrackNumber { get; init; }
-    public required Seq<SpotifyPlayableItemDescription> Descriptions { get; init; }
+    public required Seq<WaveePlayableItemDescription> Descriptions { get; init; }
     public required ISpotifyPlayableItemGroup Group { get; init; }
     public required Seq<SpotifyAudioFile> AudioFiles { get; init; }
     public required Seq<SpotifyAudioFile> PreviewFiles { get; init; }

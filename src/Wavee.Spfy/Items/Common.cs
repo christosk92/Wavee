@@ -13,7 +13,6 @@ public interface ISpotifyItem : IWaveeItem
 
 public interface ISpotifyPlayableItem : ISpotifyItem, IWaveePlayableItem
 {
-    Seq<SpotifyPlayableItemDescription> Descriptions { get; }
     ISpotifyPlayableItemGroup Group { get; }
 
     Seq<SpotifyAudioFile> AudioFiles { get; }
@@ -23,22 +22,6 @@ public interface ISpotifyPlayableItem : ISpotifyItem, IWaveePlayableItem
     bool Explicit { get; }
 }
 
-public readonly record struct SpotifyPlayableItemDescription : ISpotifyItem, IWaveeAlbumArtist
-{
-    public SpotifyPlayableItemDescription()
-    {
-        Name = null;
-        Uri = default;
-    }
-
-    public required string Name { get; init; }
-
-    public string Id => Uri.ToString();
-
-    public required SpotifyId Uri { get; init; }
-
-    public Seq<UrlImage> Images { get; } = Seq<UrlImage>.Empty;
-}
 
 public readonly struct SpotifyEmptyItem : ISpotifyItem
 {

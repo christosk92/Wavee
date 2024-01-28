@@ -1,10 +1,12 @@
 using System.Net.Http.Headers;
 using System.Text.Json;
+using System.Threading;
 using Eum.Spotify.extendedmetadata;
 using Google.Protobuf;
 using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
 using Microsoft.Extensions.Logging;
+using Spotify.ContextTrackColor;
 using Spotify.Metadata;
 using Wavee.Spfy.Exceptions;
 using Wavee.Spfy.Items;
@@ -212,7 +214,7 @@ public sealed class WaveeSpotifyMetadataClient
         var artistsArr = track.Descriptions.Select((x, i) => new
         {
             idx = i,
-            uri = x.Uri.ToString()
+            uri = x.Id.ToString()
         });
         var album = new
         {
@@ -336,5 +338,59 @@ public sealed class WaveeSpotifyMetadataClient
                     }
             }
         }
+    }
+
+    public async Task<IReadOnlyDictionary<string, (string Dark, string Light)>> FetchExtractedColors(Seq<string> urls)
+    {
+        const string operationName = "fetchExtractedColors";
+        const string operationHash = "d7696dd106f3c84a1f3ca37225a1de292e66a2d5aced37a66632585eeb3bbbfa";
+        var variables = new Dictionary<string, object>
+        {
+            ["uris"] = urls.ToArray()
+        };
+        var token = await _tokenFactory();
+        using var response = await _httpClient.GetGraphQL(token, operationName, operationHash, variables);
+        await using var stream = await response.Content.ReadAsStreamAsync();
+        using var jsondoc = await JsonDocument.ParseAsync(stream);
+        var colors = jsondoc.RootElement.GetProperty("data").GetProperty("extractedColors");
+        var output = new Dictionary<string, (string Dark, string Light)>();
+        using var enumerator = colors.EnumerateArray();
+        int idx = 0;
+        while (enumerator.MoveNext())
+        {
+            var curr = enumerator.Current;
+            var colorDark = curr.GetProperty("colorDark").GetProperty("hex").GetString();
+            var colorLight = curr.GetProperty("colorLight").GetProperty("hex").GetString();
+            var url = urls.At(idx).ValueUnsafe();
+            output[url] = (colorDark, colorLight);
+            idx++;
+        }
+
+        return output;
+    }
+
+    public async Task<IReadOnlyCollection<LyricsLine>> GetLyricsFor(SpotifyId id)
+    {
+        if (id.Type is not AudioItemType.Track) throw new NotSupportedException("Only tracks have lyrics !");
+        var accessToken = await _tokenFactory();
+        var spclient = await ApResolve.GetSpClient(_httpClient);
+        var finalEndpoint = $"https://{spclient}/color-lyrics/v2/track/{id.ToBase62()}?format=json&vocalRemoval=false&market=from_token";
+        using var request = new HttpRequestMessage(HttpMethod.Get, finalEndpoint);
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+        request.Headers.Add("App-Platform", "WebPlayer");
+        using var resp = await _httpClient.Send(request, CancellationToken.None);
+        await using var stream = await resp.Content.ReadAsStreamAsync(CancellationToken.None);
+        using var jsondoc = await JsonDocument.ParseAsync(stream);
+        using var lines = jsondoc.RootElement.GetProperty("lyrics").GetProperty("lines").EnumerateArray();
+        var output = new List<LyricsLine>();
+        while (lines.MoveNext())
+        {
+            var curr = lines.Current;
+            var startTime = TimeSpan.FromMilliseconds(long.Parse(curr.GetProperty("startTimeMs").GetString()!));
+            var words = curr.GetProperty("words").GetString()!;
+
+            output.Add(new LyricsLine(startTime, words));
+        }
+        return output;
     }
 }

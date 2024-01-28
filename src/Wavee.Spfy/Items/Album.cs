@@ -22,7 +22,7 @@ public readonly record struct SpotifyTrackAlbum : ISpotifyPlayableItemGroup, IWa
     public required SpotifyId Uri { get; init; }
     public required string Name { get; init; }
     public required Seq<UrlImage> Images { get; init; }
-    public required Seq<SpotifyPlayableItemDescription> Artists { get; init; }
+    public required Seq<WaveePlayableItemDescription> Artists { get; init; }
 
     public string Id => Uri.ToString();
     public required int Year { get; init; }

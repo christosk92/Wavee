@@ -26,6 +26,7 @@ internal sealed class ViewModelToTextConverter : IValueConverter
             LibraryTracksViewModel => "Tracks",
             LibraryAlbumsViewModel => "Albums",
             LibraryArtistsViewModel => "Artists",
+            LyricsViewModel => "Lyrics",
             _ => null
         };
 

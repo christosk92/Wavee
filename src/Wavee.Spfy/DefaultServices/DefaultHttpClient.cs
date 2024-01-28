@@ -1,4 +1,6 @@
+using System;
 using System.Diagnostics;
+using System.Net;
 using System.Net.Http.Headers;
 using System.Text.Json;
 using Eum.Spotify;
@@ -203,6 +205,48 @@ internal sealed class DefaultHttpClient : IHttpClient
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
         return await _httpClient.SendAsync(request);
     }
+
+    public Task<HttpResponseMessage> GetGraphQL(
+        string token,
+        string operationName, string operationHash, Dictionary<string, object> variables)
+    {
+        var extensions = $"%7B%22persistedQuery%22%3A%7B%22version%22%3A1%2C%22sha256Hash%22%3A%22{operationHash}%22%7D%7D";
+        var variablesEncoded = WebUtility.UrlEncode(JsonSerializer.Serialize(variables));
+
+        var url = $"https://api-partner.spotify.com/pathfinder/v1/query?operationName={operationName}&extensions={extensions}&variables={variablesEncoded}";
+        using var request = new HttpRequestMessage(HttpMethod.Get, url);
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        return _httpClient.SendAsync(request);
+    }
+
+    public async Task<HttpResponseMessage> SendCommand(string token, object command, string fromDeviceId, string activeDeviceId)
+    {
+        var spclient = await ApResolve.GetSpClient(this);
+        var finalUrl = $"https://{spclient}/connect-state/v1/player/command/from/{fromDeviceId}/to/{activeDeviceId}";
+        using var request = new HttpRequestMessage(HttpMethod.Post, finalUrl);
+        var bodyBytes = JsonSerializer.SerializeToUtf8Bytes(command);
+        request.Content = new ByteArrayContent(bodyBytes);
+        request.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        return await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
+    }
+
+    public async Task<HttpResponseMessage> SendVolumeCommand(string token, object command, string fromDeviceId, string activeDeviceId)
+    {
+        var spclient = await ApResolve.GetSpClient(this);
+        var finalUrl = $"https://{spclient}/connect-state/v1/connect/volume/from/{fromDeviceId}/to/{activeDeviceId}";
+        using var request = new HttpRequestMessage(HttpMethod.Put, finalUrl);
+        var bodyBytes = JsonSerializer.SerializeToUtf8Bytes(command);
+        request.Content = new ByteArrayContent(bodyBytes);
+        request.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        return await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
+    }
+
+    public Task<HttpResponseMessage> Send(HttpRequestMessage request, CancellationToken ct) =>
+        _httpClient.SendAsync(request, ct);
 
     private async Task<(byte[] bytes, long totalSize)> GetChunk(string cdnUrl, long start, long end,
         CancellationToken cancellationToken = default)

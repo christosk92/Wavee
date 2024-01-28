@@ -11,10 +11,11 @@ public interface IWaveeItem
     string Id { get; }
 }
 
-public interface IWaveePlayableItem
+public interface IWaveePlayableItem : IWaveeItem
 {
     TimeSpan Duration { get; }
-    string? Id { get; }
+    Seq<UrlImage> Images { get; }
+    Seq<WaveePlayableItemDescription> Descriptions { get; }
 }
 
 public readonly struct UrlImage
@@ -69,6 +70,10 @@ public readonly record struct LocalFile : IWaveePlayableItem
     public required TimeSpan Duration { get; init; }
     public string? Id { get; init; }
 
+    public Seq<UrlImage> Images => throw new NotImplementedException();
+    public string Name { get; }
+    public Seq<WaveePlayableItemDescription> Descriptions { get; }
+
     public static LocalFile FromPath(string path)
     {
         using var tag = TagLib.File.Create(path);
@@ -87,4 +92,19 @@ public readonly record struct LocalFile : IWaveePlayableItem
         var x = WebUtility.UrlEncode(path);
         return x;
     }
+}
+
+public readonly record struct WaveePlayableItemDescription : IWaveeAlbumArtist
+{
+    public WaveePlayableItemDescription()
+    {
+        Name = null;
+        Id = default;
+    }
+
+    public required string Name { get; init; }
+
+    public required string Id { get; init; }
+
+    public Seq<UrlImage> Images { get; } = Seq<UrlImage>.Empty;
 }

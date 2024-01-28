@@ -528,6 +528,12 @@ internal interface IHttpClient
     Task<ContextPage> ResolveContextRaw(string pageUrl, string accessToken);
     Task<HttpResponseMessage> Post(string url, string token, byte[] content,
         string contentType);
+
+    Task<HttpResponseMessage> GetGraphQL(string token, string operationName, string operationHash, Dictionary<string, object> variables);
+    Task<HttpResponseMessage> SendCommand(string token, object command, string fromDeviceId, string activeDeviceId);
+    Task<HttpResponseMessage> SendVolumeCommand(string token, object command, string fromDeviceId, string activeDeviceId);
+
+    Task<HttpResponseMessage> Send(HttpRequestMessage request, CancellationToken none);
 }
 
 internal interface IGzipHttpClient

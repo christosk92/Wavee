@@ -26,6 +26,7 @@ internal sealed class ViewModelToIconConverter : IValueConverter
             LibraryTracksViewModel => Create('\uE940', MediaPlayerIcons),
             LibraryAlbumsViewModel => Create('\uE93C', MediaPlayerIcons),
             LibraryArtistsViewModel => Create('\uEBDA', SegoeFluentIcons),
+            LyricsViewModel => Create('\uF12E', SegoeFluentIcons),
             _ => null
         };
 

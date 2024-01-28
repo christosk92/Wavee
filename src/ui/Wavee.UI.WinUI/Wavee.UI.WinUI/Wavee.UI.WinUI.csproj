@@ -23,14 +23,19 @@
 		<None Remove="Views\Library\LibraryRootView.xaml" />
 		<None Remove="Views\Library\LibraryTracksView.xaml" />
 		<None Remove="Views\Login\SpotifyLoginView.xaml" />
+		<None Remove="Views\NowPlaying\BottomPlaybackControll.xaml" />
 		<None Remove="Views\NowPlaying\NowPlayingVieww.xaml" />
+		<None Remove="Views\Shell\LyricsView.xaml" />
+		<None Remove="Views\Shell\RightSidebarControl.xaml" />
 		<None Remove="Views\Shell\ShellView.xaml" />
 		<None Remove="Windows\MainWindow.xaml" />
 	</ItemGroup>
 	<ItemGroup>
 		<Page Remove="Styles\ButtonStyles.xaml" />
 	</ItemGroup>
-
+	<ItemGroup>
+		<PublishReadyToRunExclude Include="LanguageExt.Core.dll" />
+	</ItemGroup>
 	<ItemGroup>
 		<Content Include="Assets\SplashScreen.scale-200.png" />
 		<Content Include="Assets\LockScreenLogo.scale-200.png" />
@@ -43,10 +48,13 @@
 
 	<ItemGroup>
 		<PackageReference Include="CommunityToolkit.WinUI.Behaviors" Version="8.0.240109" />
+		<PackageReference Include="CommunityToolkit.WinUI.Controls.MetadataControl" Version="8.0.240109" />
+		<PackageReference Include="CommunityToolkit.WinUI.Controls.Primitives" Version="8.0.240109" />
 		<PackageReference Include="CommunityToolkit.WinUI.Controls.Segmented" Version="8.0.240109" />
 		<PackageReference Include="CommunityToolkit.WinUI.Controls.Sizers" Version="8.0.240109" />
 		<PackageReference Include="CommunityToolkit.WinUI.Converters" Version="8.0.240109" />
 		<PackageReference Include="CommunityToolkit.WinUI.Helpers" Version="8.0.240109" />
+		<PackageReference Include="CommunityToolkit.WinUI.Media" Version="8.0.240109" />
 		<PackageReference Include="Microsoft.WindowsAppSDK" Version="1.5.240124002-experimental2" />
 		<Manifest Include="$(ApplicationManifest)" />
 	</ItemGroup>
@@ -83,32 +91,44 @@
 			<Generator>MSBuild:Compile</Generator>
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
+		<None Update="Views\Common\AlbumCoverControl.xaml">
+			<Generator>MSBuild:Compile</Generator>
+		</None>
+		<Page Update="Views\Shell\LyricsView.xaml">
+			<Generator>MSBuild:Compile</Generator>
+		</Page>
+		<Page Update="Views\Shell\RightSidebarControl.xaml">
+			<Generator>MSBuild:Compile</Generator>
+		</Page>
+		<Page Update="Views\NowPlaying\BottomPlaybackControll.xaml">
+			<Generator>MSBuild:Compile</Generator>
+		</Page>
 		<Page Update="Views\Common\ErrorsView.xaml">
-		  <Generator>MSBuild:Compile</Generator>
+			<Generator>MSBuild:Compile</Generator>
 		</Page>
 		<Page Update="Views\Library\Commands\LibraryFilteringComponentBar.xaml">
-		  <Generator>MSBuild:Compile</Generator>
+			<Generator>MSBuild:Compile</Generator>
 		</Page>
 		<Page Update="Views\Library\LibraryAlbumsView.xaml">
-		  <Generator>MSBuild:Compile</Generator>
+			<Generator>MSBuild:Compile</Generator>
 		</Page>
 		<Page Update="Views\Library\LibraryArtistsView.xaml">
-		  <Generator>MSBuild:Compile</Generator>
+			<Generator>MSBuild:Compile</Generator>
 		</Page>
 		<Page Update="Views\Library\LibraryTracksView.xaml">
-		  <Generator>MSBuild:Compile</Generator>
+			<Generator>MSBuild:Compile</Generator>
 		</Page>
 		<Page Update="Views\NowPlaying\NowPlayingVieww.xaml">
-		  <Generator>MSBuild:Compile</Generator>
+			<Generator>MSBuild:Compile</Generator>
 		</Page>
 		<Page Update="Views\Library\LibraryRootView.xaml">
-		  <Generator>MSBuild:Compile</Generator>
+			<Generator>MSBuild:Compile</Generator>
 		</Page>
 		<Page Update="Views\Feed\FeedView.xaml">
-		  <Generator>MSBuild:Compile</Generator>
+			<Generator>MSBuild:Compile</Generator>
 		</Page>
 		<Page Update="Views\Shell\ShellView.xaml">
-		  <Generator>MSBuild:Compile</Generator>
+			<Generator>MSBuild:Compile</Generator>
 		</Page>
 	</ItemGroup>
 

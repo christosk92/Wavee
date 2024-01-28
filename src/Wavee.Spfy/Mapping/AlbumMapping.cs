@@ -20,10 +20,10 @@ internal static class AlbumMapping
             Tracks = album.Disc.SelectMany(x => x.Track.Select(t => (SpotifyId.FromRaw(t.Gid.Span,
                     AudioItemType.Track), (ushort)x.Number)))
                 .ToSeq(),
-            Artists = album.Artist.Select(x => new SpotifyPlayableItemDescription
+            Artists = album.Artist.Select(x => new WaveePlayableItemDescription
             {
                 Name = x.Name,
-                Uri = SpotifyId.FromRaw(x.Gid.Span, AudioItemType.Artist)
+                Id = SpotifyId.FromRaw(x.Gid.Span, AudioItemType.Artist).ToString()
             }).Cast<IWaveeAlbumArtist>().ToSeq()
         };
     }
@@ -46,10 +46,10 @@ internal static class AlbumMapping
             Artists =
                 new[]
                 {
-                    new SpotifyPlayableItemDescription
+                    new WaveePlayableItemDescription
                     {
                         Name = fromTrack.Artist.First().Name,
-                        Uri = SpotifyId.FromRaw(fromTrack.Artist.First().Gid.Span, AudioItemType.Artist)
+                        Id = SpotifyId.FromRaw(fromTrack.Artist.First().Gid.Span, AudioItemType.Artist).ToString()
                     }
                 }.ToSeq()
         };

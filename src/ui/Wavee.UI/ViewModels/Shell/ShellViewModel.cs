@@ -19,14 +19,16 @@ public sealed class ShellViewModel : ObservableObject
         LibraryRootViewModel library,
         NowPlayingViewModel nowPlaying,
         PlaylistsViewModel playlists,
+        RightSidebarViewModel rightSidebar,
         IWaveeUIAuthenticatedProfile profile)
     {
         Playlists = playlists;
 
         RootNavigationClickedCommand = new RelayCommand<object>(RootNavigationClicked);
 
+        NowPlaying = nowPlaying;
         RootNavigationItems = [feed, library, nowPlaying];
-
+        RightSidebar = rightSidebar;
         PrepareProfile(profile);
     }
 
@@ -38,6 +40,8 @@ public sealed class ShellViewModel : ObservableObject
     public ICommand RootNavigationClickedCommand { get; }
     public IReadOnlyCollection<IHasProfileViewModel> RootNavigationItems { get; }
     public INavigationController NavigationController { get; private set; }
+    public NowPlayingViewModel NowPlaying { get; }
+    public RightSidebarViewModel RightSidebar { get; }
 
     public void PrepareProfile(IWaveeUIAuthenticatedProfile profile)
     {

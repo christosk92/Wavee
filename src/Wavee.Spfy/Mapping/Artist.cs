@@ -18,11 +18,11 @@ internal static class ArtistMapping
         };
     }
 
-    public static SpotifyPlayableItemDescription MapToDescription(this Artist artist)
+    public static WaveePlayableItemDescription MapToDescription(this Artist artist)
     {
-        return new SpotifyPlayableItemDescription
+        return new WaveePlayableItemDescription
         {
-            Uri = SpotifyId.FromRaw(artist.Gid.Span, AudioItemType.Artist),
+            Id = SpotifyId.FromRaw(artist.Gid.Span, AudioItemType.Artist).ToString(),
             Name = artist.Name
         };
     }

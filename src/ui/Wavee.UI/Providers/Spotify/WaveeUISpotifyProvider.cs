@@ -1,9 +1,15 @@
 ﻿using System.Collections.Immutable;
+using System.Threading.Tasks.Sources;
+using Eum.Spotify.connectstate;
+using LanguageExt;
+using LanguageExt.UnsafeValueAccess;
 using Microsoft.Extensions.Logging.Abstractions;
 using Wavee.Spfy;
 using Wavee.Spfy.Items;
+using Wavee.Spfy.Remote;
 using Wavee.UI.ViewModels.Library;
-
+using Wavee.UI.ViewModels.NowPlaying;
+using static LanguageExt.Prelude;
 namespace Wavee.UI.Providers.Spotify;
 
 public sealed class WaveeUISpotifyProvider : IWaveeUIProvider
@@ -148,9 +154,147 @@ internal sealed class WaveeUISpotifyProfile : IWaveeUIAuthenticatedProfile
     public WaveeUISpotifyProfile(WaveeUISpotifyProvider provider)
     {
         _provider = provider;
+        _provider.SpotifyClient.Remote.StateChanged += RemoteOnStateChanged;
+        _provider.SpotifyClient.Remote.StatusChanged += RemoteOnStatusChanged;
+    }
+
+    private void RemoteOnStatusChanged(object? sender, RemoteConnectionStatusType e)
+    {
+        switch (e)
+        {
+            case RemoteConnectionStatusType.NotConnectedDueToError:
+                PlaybackStateChanged?.Invoke(this, MapToUIState(_provider.SpotifyClient.Remote.LastError ?? new Exception("Unknown error")));
+                break;
+            case RemoteConnectionStatusType.Connecting:
+                //TODO
+                break;
+            case RemoteConnectionStatusType.Connected:
+                //TODO
+                break;
+            case RemoteConnectionStatusType.NotConnected:
+                //TODO
+                break;
+        }
+    }
+
+    private void RemoteOnStateChanged(object? sender, Option<SpotifyRemoteState> e)
+    {
+        if (e.IsSome)
+        {
+            PlaybackStateChanged?.Invoke(this, MapToUIState(e.ValueUnsafe()));
+        }
     }
 
     public IWaveeUIProvider Provider => _provider;
+    public event EventHandler<WaveeUIPlaybackState>? PlaybackStateChanged;
+
+    public ValueTask<WaveeUIPlaybackState> ConnectToRemoteStateIfApplicable()
+    {
+        var remote = _provider.SpotifyClient.Remote;
+        switch (remote.Status)
+        {
+            case RemoteConnectionStatusType.Connected when remote.State.IsSome:
+                return new ValueTask<WaveeUIPlaybackState>(MapToUIState(remote.State.ValueUnsafe()));
+            case RemoteConnectionStatusType.NotConnectedDueToError:
+                {
+                    var err = remote.LastError ?? new Exception("Unknown error");
+                    return new ValueTask<WaveeUIPlaybackState>(MapToUIState(err));
+                }
+            default:
+                return new ValueTask<WaveeUIPlaybackState>(MapToUIState(new Exception("Unknown error")));
+        }
+    }
+
+    private WaveeUIPlaybackState MapToUIState(Exception? remoteLastError)
+    {
+        throw new NotImplementedException();
+    }
+
+    private WaveeUIPlaybackState MapToUIState(SpotifyRemoteState x)
+    {
+        if (x.Item.IsSome)
+        {
+            var val = x.Item.ValueUnsafe();
+            return new WaveeUIPlaybackState(val.Item, x.IsShuffling, x.RepeatState, x.IsPaused, MutateTo(x.Devices, x.ActiveDeviceId), MutateTo(x.Restrictions))
+            {
+                PositionOffset = x.PositionOffset,
+                PositionSw = x.PositionStopwatch
+            };
+        }
+
+        return new WaveeUIPlaybackState(null, false, WaveeRepeatStateType.None, true,
+            LanguageExt.Seq<WaveeUIRemoteDevice>.Empty, LanguageExt.Seq<WaveePlaybackRestrictionType>.Empty)
+        {
+            PositionOffset = x.PositionOffset,
+            PositionSw = x.PositionStopwatch
+        };
+    }
+
+    private Seq<WaveePlaybackRestrictionType> MutateTo(HashMap<SpotifyRestrictionAppliesForType, Seq<SpotifyKnownRestrictionType>> xRestrictions)
+    {
+        var output = new List<WaveePlaybackRestrictionType>();
+        foreach (var restriction in xRestrictions)
+        {
+            if (restriction.Value.IsEmpty) continue;
+
+            switch (restriction.Key)
+            {
+                case SpotifyRestrictionAppliesForType.Shuffle:
+                    output.Add(WaveePlaybackRestrictionType.CannotShuffle);
+                    break;
+                case SpotifyRestrictionAppliesForType.SkippingNext:
+                    output.Add(WaveePlaybackRestrictionType.SkipNext);
+                    break;
+                case SpotifyRestrictionAppliesForType.SkippingPrevious:
+                    output.Add(WaveePlaybackRestrictionType.SkipPrevious);
+                    break;
+                case SpotifyRestrictionAppliesForType.RepeatContext:
+                    output.Add(WaveePlaybackRestrictionType.CannotRepeatContext);
+                    break;
+                case SpotifyRestrictionAppliesForType.RepeatTrack:
+                    output.Add(WaveePlaybackRestrictionType.CannotRepeatTrack);
+                    break;
+                case SpotifyRestrictionAppliesForType.Pausing:
+                    break;
+                case SpotifyRestrictionAppliesForType.Resuming:
+                    break;
+                case SpotifyRestrictionAppliesForType.Seeking:
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
+
+        return output.ToSeq();
+    }
+
+    private Seq<WaveeUIRemoteDevice> MutateTo(Seq<DeviceInfo> spDevices, Option<string> spActiveDeviceId)
+    {
+        string? activeDeviceId = null;
+        if (spActiveDeviceId.IsSome) activeDeviceId = spActiveDeviceId.ValueUnsafe();
+
+        var output = new WaveeUIRemoteDevice[spDevices.Count];
+        for (int i = 0; i < spDevices.Count; i++)
+        {
+            var spDevice = spDevices.At(i).ValueUnsafe();
+            Option<float> volume = Option<float>.None;
+            bool isActive = false;
+            if (!spDevice.Capabilities.DisableVolume)
+            {
+                volume = (float)spDevice.Volume / WaveeSpotifyRemoteClient.MAX_VOLUME;
+            }
+
+            if (spDevice.DeviceId == activeDeviceId)
+            {
+                isActive = true;
+            }
+
+            var remoteDevice = new WaveeUIRemoteDevice(Id: spDevice.DeviceId, Type: spDevice.DeviceType, Name: spDevice.Name, Volume: volume, IsActive: isActive);
+            output[i] = remoteDevice;
+        }
+
+        return output.ToSeq();
+    }
 
     public async Task<IReadOnlyCollection<LibraryItemViewModel>> GetLibraryArtists(KnownLibraryComponentFilterType sort, bool sortAscending, string? filter, CancellationToken cancellation)
     {
@@ -215,6 +359,57 @@ internal sealed class WaveeUISpotifyProfile : IWaveeUIAuthenticatedProfile
             _librarySemaphore.Release();
         }
     }
+
+    public Task<IReadOnlyCollection<LyricsLine>> GetLyricsFor(string id) =>
+        _provider.SpotifyClient.Metadata.GetLyricsFor(SpotifyId.FromUri(id));
+
+
+    public async Task<(string Dark, string Light)> ExtractColorFor(string url)
+    {
+        var colors = await _provider.SpotifyClient.Metadata.FetchExtractedColors(Seq1(url));
+        var color = colors[url];
+        return color;
+    }
+
+    public Task<bool> ResumeRemoteDevice(bool waitForResponse) =>
+        _provider.SpotifyClient.Remote.Resume(waitForResponse);
+
+    public Task<bool> PauseRemoteDevice(bool waitForResponse) =>
+        _provider.SpotifyClient.Remote.Pause(waitForResponse);
+
+    public Task<bool> SkipPrevious(bool waitForResponse)
+    {
+        Option<TimeSpan> seekIfMoreThan = TimeSpan.FromSeconds(2);
+        if (seekIfMoreThan.IsSome)
+        {
+            var position = _provider.SpotifyClient.Remote.State.Map(x => x.Position);
+            if (position.IsSome)
+            {
+                var currPos = position.ValueUnsafe();
+                if (currPos > seekIfMoreThan.ValueUnsafe())
+                {
+                    return SeekTo(TimeSpan.Zero, waitForResponse);
+                }
+            }
+        }
+
+        return _provider.SpotifyClient.Remote.SkipPrev(waitForResponse);
+    }
+
+    public Task<bool> SkipNext(bool waitForResponse) =>
+        _provider.SpotifyClient.Remote.SkipNext(waitForResponse);
+    public Task<bool> SeekTo(TimeSpan position, bool waitForResponse) =>
+        _provider.SpotifyClient.Remote.SeekTo(position, waitForResponse);
+
+    public Task<bool> SetShuffle(bool isShuffling, bool waitForResponse) =>
+        _provider.SpotifyClient.Remote.SetShuffle(isShuffling, waitForResponse);
+
+    public Task<bool> GoToRepeatState(WaveeRepeatStateType repeatState, bool waitForResponse)
+        => _provider.SpotifyClient.Remote.GoToRepeatState(repeatState, waitForResponse);
+
+    public Task<bool> SetVolume(double oneToZero, bool waitForResponse)
+        => _provider.SpotifyClient.Remote.SetVolume(oneToZero, waitForResponse);
+
 
     private IReadOnlyCollection<LibraryItemViewModel> Get(
         IEnumerable<KeyValuePair<WaveeSpotifyLibraryItem, ISpotifyItem>> items,
