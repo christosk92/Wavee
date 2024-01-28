@@ -42,7 +42,8 @@ namespace Wavee.UI.WinUI.Views.Shell
 
         private void VOnPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            if (e.PropertyName == nameof(LyricsViewModel.ActiveLine))
+            if (e.PropertyName == nameof(LyricsViewModel.ActiveLine)
+                || e.PropertyName == nameof(LyricsViewModel.HasLyrics))
             {
                 OnActiveLineChanged();
             }
@@ -62,18 +63,25 @@ namespace Wavee.UI.WinUI.Views.Shell
             var index = ViewModel?.ActiveLineIndex;
             if (index is -1 or null)
             {
+                var scroller = LyricsListView.FindDescendant<ScrollViewer>();
+                if (scroller is not null)
+                {
+                    scroller.ChangeView(null, 0, null);
+                }
+
                 return;
             }
-            var firstItemSize = ((UIElement)LyricsListView.ContainerFromIndex(0)).ActualSize.Y;
             var item = (UIElement)LyricsListView.ContainerFromIndex(index.Value);
             if (item is null)
             {
+                var scroller = LyricsListView.FindDescendant<ScrollViewer>();
+                if (scroller is not null)
+                {
+                    scroller.ChangeView(null, 0, null);
+                }
                 return;
             }
-            var y = item.ActualSize.Y;
-
-            var off = -(int)((y - firstItemSize));
-            //var off = 0;
+            //var off = 0;  
             LyricsListView.SmoothScrollIntoViewWithItemAsync(ViewModel.ActiveLine!.Value, ScrollItemPlacement.Top,
                 false,
                 scrollIfVisible: true,

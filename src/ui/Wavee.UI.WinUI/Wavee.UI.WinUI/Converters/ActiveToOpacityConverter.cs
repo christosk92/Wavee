@@ -21,6 +21,9 @@ public class ActiveToOpacityConverter : DependencyObject, IValueConverter
 
     public object Convert(object value, Type targetType, object parameter, string language)
     {
+        int idx = 0;
+        if (ActiveIndex is -1) idx = 0;
+        else idx = ActiveIndex;
         double OpacityDecrementPerStepDownward = 0.1;
         double OpacityDecrementPerStepUpwarwd = .15;
 
@@ -29,7 +32,7 @@ public class ActiveToOpacityConverter : DependencyObject, IValueConverter
         var line = value as LyricsLineViewModel;
         if (line != null)
         {
-            int distanceFromActive = line.Index - ActiveIndex;
+            int distanceFromActive = line.Index - idx;
 
             double opacity;
 

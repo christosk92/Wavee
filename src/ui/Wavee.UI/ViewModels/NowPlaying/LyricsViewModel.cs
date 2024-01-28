@@ -18,7 +18,7 @@ public sealed class LyricsViewModel : RightSidebarComponentViewModel
     private LinkedList<LyricsLineViewModel>? _linesLinked;
     private LinkedListNode<LyricsLineViewModel>? _activeLine;
     private List<LyricsLineViewModel>? _lines;
-
+    private readonly SemaphoreSlim _linesLock = new SemaphoreSlim(1, 1);
     public LyricsViewModel(NowPlayingViewModel nowPlayingViewModel, IDispatcher dispatcher)
     {
         _nowPlayingViewModel = nowPlayingViewModel;
@@ -51,10 +51,7 @@ public sealed class LyricsViewModel : RightSidebarComponentViewModel
         get => _activeLine;
         set
         {
-            if (SetProperty(ref _activeLine, value))
-            {
-                this.OnPropertyChanged(nameof(ActiveLineIndex));
-            }
+            if (SetProperty(ref _activeLine, value)) ;
         }
     }
     public bool HasLyrics => _lines?.Count > 0;
@@ -89,53 +86,92 @@ public sealed class LyricsViewModel : RightSidebarComponentViewModel
     }
     private void PositionCallback()
     {
-        //this callback is called every 10ms
-        //we can use this to determine the next lyrical line..
-        if (!HasLyrics) return;
-
-        var position = _nowPlayingViewModel?.Position.TotalMilliseconds ?? 0;
-        var nextLine = _lines?.FirstOrDefault(line => line.Position.TotalMilliseconds > position);
-        var newActiveLine = nextLine != null ? _linesLinked.Find(nextLine).Previous : _linesLinked?.Last;
-
-        if (newActiveLine != null && newActiveLine != _activeLine)
+        _linesLock.Wait();
+        try
         {
-            _dispatcher.Dispatch(() =>
-            {
-                if (ActiveLine != null)
-                {
-                    ActiveLine.Value.IsActive = false;
-                }
+            //this callback is called every 10ms
+            //we can use this to determine the next lyrical line..
+            if (!HasLyrics) return;
 
-                ActiveLine = newActiveLine;
-                ActiveLine!.Value.IsActive = true;
-                foreach (var line in _lines)
+            var position = _nowPlayingViewModel?.Position.TotalMilliseconds ?? 0;
+            var nextLine = _lines?.FirstOrDefault(line => line.Position.TotalMilliseconds > position);
+            var newActiveLine = nextLine != null ? _linesLinked?.Find(nextLine)?.Previous : _linesLinked?.Last;
+            if (newActiveLine is null)
+            {
+                ActiveLine = null;
+                this.OnPropertyChanged(nameof(ActiveLineIndex));
+                return;
+            }
+
+            if (newActiveLine != null && newActiveLine != _activeLine)
+            {
+                _dispatcher.Dispatch(() =>
                 {
-                    line.NotifyChangedThis();
-                }
-                Debug.WriteLine(ActiveLine.Value.Text);
-            }, true);
+                    if (ActiveLine != null)
+                    {
+                        ActiveLine.Value.IsActive = false;
+                    }
+
+                    ActiveLine = newActiveLine;
+                    ActiveLine!.Value.IsActive = true;
+                    this.OnPropertyChanged(nameof(ActiveLineIndex));
+                    foreach (var line in _lines)
+                    {
+                        line.NotifyChangedThis();
+                    }
+
+                    Debug.WriteLine(ActiveLine.Value.Text);
+                }, true);
+            }
+        }
+        catch (Exception x)
+        {
+
+        }
+        finally
+        {
+            _linesLock.Release();
         }
     }
     private async Task LoadLyricsForTrack(IWaveePlayableItem? currentTrackItem, IWaveeUIAuthenticatedProfile? profile)
     {
-        if (currentTrackItem is null)
-        {
-            Lines = null;
-            ActiveLine = null;
-            return;
-        }
-
         try
         {
-            var lyrics = await profile.GetLyricsFor(currentTrackItem.Id);
-            Lines = lyrics.OrderBy(x => x.Position)
-                .Select((x, i) => new LyricsLineViewModel(x.Text, x.Position, i)).ToList();
+            await _linesLock.WaitAsync();
+            if (currentTrackItem is null)
+            {
+                Lines = null;
+                ActiveLine = null;
+                this.OnPropertyChanged(nameof(ActiveLineIndex));
+                return;
+            }
+
+            try
+            {
+                var lyrics = await Task.Run(async () => await profile.GetLyricsFor(currentTrackItem.Id))
+                    .ConfigureAwait(false);
+
+                _dispatcher.Dispatch(() =>
+                {
+                    Lines = lyrics.OrderBy(x => x.Position)
+                        .Select((x, i) => new LyricsLineViewModel(x.Text, x.Position, i)).ToList();
+                }, true);
+            }
+            catch (Exception x)
+            {
+                Lines = null;
+                ActiveLine = null;
+                this.OnPropertyChanged(nameof(ActiveLineIndex));
+                return;
+            }
         }
         catch (Exception x)
         {
-            Lines = null;
-            ActiveLine = null;
-            return;
+
+        }
+        finally
+        {
+            _linesLock.Release();
         }
     }
 }
