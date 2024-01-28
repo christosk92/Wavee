@@ -393,4 +393,95 @@ public sealed class WaveeSpotifyMetadataClient
         }
         return output;
     }
+
+    public async Task<SpotifyFullAlbum> GetAlbum(SpotifyId fromUri)
+    {
+        const string operationName = "getAlbum";
+        const string operationHash = "01c6295923a9603d5a97eb945fc7e54d6fb5129ea801b54321647abe0d423c25";
+        var variables = new Dictionary<string, object>
+        {
+            ["uri"] = fromUri.ToString(),
+            ["locale"] = string.Empty,
+            ["offset"] = 0,
+            ["limit"] = 300
+        };
+        var token = await _tokenFactory();
+        using var response = await _httpClient.GetGraphQL(token, operationName, operationHash, variables);
+        await using var stream = await response.Content.ReadAsStreamAsync();
+        using var jsondoc = await JsonDocument.ParseAsync(stream);
+
+        var album = jsondoc.RootElement.GetProperty("data").GetProperty("albumUnion");
+
+
+
+        var name = album.GetProperty("name").GetString();
+        var label = album.GetProperty("label").GetString();
+        var releaseDate = DateTime.Parse(album.GetProperty("date").GetProperty("isoString").GetString()!);
+        var type = album.GetProperty("type").GetString()!;
+
+        Seq<UrlImage> images = LanguageExt.Seq<UrlImage>.Empty;
+        using var imagesEnumerator = album.GetProperty("coverArt").GetProperty("sources").EnumerateArray();
+        foreach (var imageElement in imagesEnumerator)
+        {
+            images = images.Add(new UrlImage
+            {
+                Url = imageElement.GetProperty("url").GetString(),
+                Width = imageElement.GetProperty("width").GetUInt32(),
+                Height = imageElement.GetProperty("height").GetUInt32(),
+                CommonSize = UrlImageSizeType.Default
+            });
+            // album.CoverArtImages.Add(new Image
+            // {
+            //     Url = imageElement.GetProperty("url").GetString(),
+            //     Width = imageElement.GetProperty("width").GetInt32(),
+            //     Height = imageElement.GetProperty("height").GetInt32()
+            // });
+        }
+
+
+        Seq<IWaveeAlbumArtist> artists = LanguageExt.Seq<IWaveeAlbumArtist>.Empty;
+        using var artistsItems = album.GetProperty("artists").GetProperty("items").EnumerateArray();
+        foreach (var artist in artistsItems)
+        {
+            artists = artists.Add(new WaveePlayableItemDescription
+            {
+                Id = artist.GetProperty("id").GetString()!,
+                Name = artist.GetProperty("profile").GetProperty("name").GetString()!
+            });
+        }
+
+        Seq<IWaveeTrackAlbum> tracks = LanguageExt.Seq<IWaveeTrackAlbum>.Empty;
+        using var tracksItems = album.GetProperty("tracks").GetProperty("items").EnumerateArray();
+        foreach (var trackItem in tracksItems)
+        {
+            var track = trackItem.GetProperty("track");
+            tracks = tracks.Add(new SpotifyTrackAlbum
+            {
+                Uri = SpotifyId.FromUri(track.GetProperty("uri")
+                    .GetString()),
+                Name = track.GetProperty("name")
+                    .GetString()!,
+                Images = images,
+                Artists = default,
+                Year = releaseDate.Year,
+                Playcount = long.Parse(track.GetProperty("playcount")
+                    .GetString()),
+                Number = track.GetProperty("trackNumber")
+                    .GetInt32(),
+                Duration = TimeSpan.FromMilliseconds(track.GetProperty("duration").GetProperty("totalMilliseconds").GetUInt64()),
+            });
+        }
+
+        return new SpotifyFullAlbum
+        {
+            Name = name,
+            Artists = artists,
+            Year = releaseDate.Year,
+            Type = type,
+            TotalTracks = tracks.Length,
+            Uri = fromUri,
+            Images = images,
+            Tracks = tracks
+        };
+    }
 }

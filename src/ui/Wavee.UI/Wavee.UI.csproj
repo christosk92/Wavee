@@ -8,6 +8,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.2" />
+		<PackageReference Include="NeoSmart.AsyncLock" Version="3.2.1" />
 	</ItemGroup>
 
 	<ItemGroup>

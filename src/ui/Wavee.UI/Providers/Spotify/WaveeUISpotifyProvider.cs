@@ -1,4 +1,5 @@
 ﻿using System.Collections.Immutable;
+using System.Security.Cryptography;
 using System.Threading.Tasks.Sources;
 using Eum.Spotify.connectstate;
 using LanguageExt;
@@ -7,6 +8,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Wavee.Spfy;
 using Wavee.Spfy.Items;
 using Wavee.Spfy.Remote;
+using Wavee.UI.ViewModels.Artist;
 using Wavee.UI.ViewModels.Library;
 using Wavee.UI.ViewModels.NowPlaying;
 using static LanguageExt.Prelude;
@@ -410,6 +412,12 @@ internal sealed class WaveeUISpotifyProfile : IWaveeUIAuthenticatedProfile
     public Task<bool> SetVolume(double oneToZero, bool waitForResponse)
         => _provider.SpotifyClient.Remote.SetVolume(oneToZero, waitForResponse);
 
+    public async Task<WaveeAlbumViewModel> GetAlbum(string albumId)
+    {
+        var spotifyAlbum = await _provider.SpotifyClient.Metadata.GetAlbum(SpotifyId.FromUri(albumId));
+        return new WaveeAlbumViewModel(albumId, spotifyAlbum.Name, (uint)spotifyAlbum.Year, spotifyAlbum.Tracks, spotifyAlbum.Images.Head.Url);
+    }
+
 
     private IReadOnlyCollection<LibraryItemViewModel> Get(
         IEnumerable<KeyValuePair<WaveeSpotifyLibraryItem, ISpotifyItem>> items,
@@ -425,7 +433,7 @@ internal sealed class WaveeUISpotifyProfile : IWaveeUIAuthenticatedProfile
         }
 
         return items
-            .Select(static x => new LibraryItemViewModel(x.Value, x.Key.AddedAt))
+            .Select(x => new LibraryItemViewModel(x.Value, x.Key.AddedAt, this))
             .ToImmutableArray();
     }
 }

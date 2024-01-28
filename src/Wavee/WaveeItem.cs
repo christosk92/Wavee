@@ -49,9 +49,12 @@ public enum WaveeRepeatStateType
 
 public interface IWaveeTrackAlbum : IWaveeItem
 {
+    int Number { get; }
     Seq<UrlImage> Images { get; }
     string Id { get; }
     int Year { get; }
+    long Playcount { get; }
+    TimeSpan Duration { get; }
 }
 
 public interface IWaveeAlbum : IWaveeItem

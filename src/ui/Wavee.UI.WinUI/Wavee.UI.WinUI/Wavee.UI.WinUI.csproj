@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<OutputType>WinExe</OutputType>
-		<TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+		<TargetFramework>net8.0-windows10.0.22621.0</TargetFramework>
 		<TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
 		<RootNamespace>Wavee.UI.WinUI</RootNamespace>
 		<ApplicationManifest>app.manifest</ApplicationManifest>
@@ -15,9 +15,10 @@
 	<ItemGroup>
 		<None Remove="Assets\Fonts\MediaPlayerIcons.ttf" />
 		<None Remove="Assets\Fonts\SegoeFluentIcons.ttf" />
+		<None Remove="Views\Artist\ArtistDiscographyComponent.xaml" />
 		<None Remove="Views\Common\ErrorsView.xaml" />
 		<None Remove="Views\Feed\FeedView.xaml" />
-		<None Remove="Views\Library\Commands\LibraryFilteringComponentBar.xaml" />
+		<None Remove="Views\Library\Components\LibraryFilteringComponentBar.xaml" />
 		<None Remove="Views\Library\LibraryAlbumsView.xaml" />
 		<None Remove="Views\Library\LibraryArtistsView.xaml" />
 		<None Remove="Views\Library\LibraryRootView.xaml" />
@@ -47,6 +48,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<PackageReference Include="CommunityToolkit.Labs.WinUI.Shimmer" Version="0.1.240124-build.1624" />
 		<PackageReference Include="CommunityToolkit.WinUI.Behaviors" Version="8.0.240109" />
 		<PackageReference Include="CommunityToolkit.WinUI.Controls.MetadataControl" Version="8.0.240109" />
 		<PackageReference Include="CommunityToolkit.WinUI.Controls.Primitives" Version="8.0.240109" />
@@ -91,6 +93,9 @@
 			<Generator>MSBuild:Compile</Generator>
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
+		<Page Update="Views\Artist\ArtistDiscographyComponent.xaml">
+			<Generator>MSBuild:Compile</Generator>
+		</Page>
 		<None Update="Views\Common\AlbumCoverControl.xaml">
 			<Generator>MSBuild:Compile</Generator>
 		</None>

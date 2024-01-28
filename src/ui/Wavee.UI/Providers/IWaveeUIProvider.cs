@@ -3,6 +3,7 @@ using System.Diagnostics;
 using Eum.Spotify.connectstate;
 using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
+using Wavee.UI.ViewModels.Artist;
 using Wavee.UI.ViewModels.Library;
 using Wavee.UI.ViewModels.NowPlaying;
 
@@ -45,6 +46,7 @@ public interface IWaveeUIAuthenticatedProfile
     Task<bool> SetShuffle(bool isShuffling, bool waitForResponse);
     Task<bool> GoToRepeatState(WaveeRepeatStateType nextRepeatStateType, bool waitForResponse);
     Task<bool> SetVolume(double oneToZero, bool waitForResponse);
+    Task<WaveeAlbumViewModel> GetAlbum(string albumId);
 }
 
 

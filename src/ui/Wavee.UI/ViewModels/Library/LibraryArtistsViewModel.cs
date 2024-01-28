@@ -1,8 +1,11 @@
 ﻿using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Windows.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using Wavee.UI.Providers;
 using Wavee.UI.Services;
+using Wavee.UI.ViewModels.Artist;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Wavee.UI.ViewModels.Library;
@@ -15,6 +18,9 @@ public sealed class LibraryArtistsViewModel : ObservableObject, ILibraryComponen
     private bool _isBusy;
     private bool _sortAscending;
     private readonly List<IWaveeUIAuthenticatedProfile> _profiles = [];
+    private WaveeArtistViewModel? _selectedItem;
+    public WaveeArtistViewModel? _changingTo;
+
     public LibraryArtistsViewModel(IDispatcher dispatcherWrapper)
     {
         Errors = new ObservableCollection<ExceptionForProfile>();
@@ -26,12 +32,34 @@ public sealed class LibraryArtistsViewModel : ObservableObject, ILibraryComponen
             new LibraryComponentFilterRecord(KnownLibraryComponentFilterType.DateAdded, "Date added", true),
             new LibraryComponentFilterRecord(KnownLibraryComponentFilterType.RecentlyPlayed, "Date Played", false)
         ];
+        OnItemInvoked = new RelayCommand<object>((x) =>
+        {
 
+        });
+        OnItemSelectedCommand = new RelayCommand<object>(x =>
+        {
+            if (x is null)
+            {
+                return;
+            }
+            var item = (LibraryItemViewModel)x;
+            SelectedItem = WaveeArtistViewModel.GetOrCreate(item.Item.Id, item.Item, profile: item.Profile, dispatcher: _dispatcherWrapper);
+        });
         IsBusy = true;
     }
 
     public ObservableCollection<ExceptionForProfile> Errors { get; }
     public ObservableCollection<LibraryItemViewModel> Items { get; }
+
+    public WaveeArtistViewModel? SelectedItem
+    {
+        get => _selectedItem;
+        set
+        {
+            _changingTo = value;
+            this.SetProperty(ref _selectedItem, value);
+        }
+    }
 
     public void AddFromProfile(IWaveeUIAuthenticatedProfile profile)
     {
@@ -71,6 +99,8 @@ public sealed class LibraryArtistsViewModel : ObservableObject, ILibraryComponen
     }
 
     public bool HasErrors => Errors.Count > 0;
+    public RelayCommand<object> OnItemInvoked { get; }
+    public RelayCommand<object> OnItemSelectedCommand { get; }
 
 
     private async Task FetchData(IWaveeUIAuthenticatedProfile profile, bool isRetrying)

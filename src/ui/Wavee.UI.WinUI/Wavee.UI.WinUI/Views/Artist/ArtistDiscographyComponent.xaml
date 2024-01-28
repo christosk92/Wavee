@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<UserControl
+    x:Class="Wavee.UI.WinUI.Views.Artist.ArtistDiscographyComponent"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:artist="using:Wavee.UI.ViewModels.Artist"
+    xmlns:converters="using:Wavee.UI.WinUI.Converters"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="using:Wavee.UI.WinUI.Views.Artist"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:panels="using:Wavee.UI.WinUI.Panels"
+    xmlns:system="using:System"
+    xmlns:winUi="using:CommunityToolkit.Labs.WinUI"
+    mc:Ignorable="d">
+    <UserControl.Resources>
+        <TransitionCollection x:Key="Transitions">
+            <EntranceThemeTransition FromVerticalOffset="100" IsStaggeringEnabled="True" />
+            <RepositionThemeTransition IsStaggeringEnabled="True" />
+            <AddDeleteThemeTransition />
+        </TransitionCollection>
+        <!-- <ItemsPanelTemplate x:Key="Stack"> -->
+        <!--  <StackPanel ChildrenTransitions="{StaticResource Transitions}"  -->
+        <!--  Orientation="Vertical" />  -->
+        <!-- </ItemsPanelTemplate> -->
+
+        <StackLayout
+            x:Key="Stack"
+            DisableVirtualization="True"
+            Spacing="8" />
+        <DataTemplate x:Key="LazyAlbumTrackTemplate" x:DataType="artist:WaveeAlbumTrackViewModel">
+            <Grid MinHeight="32">
+                <winUi:Shimmer IsActive="{x:Bind converters:FunctionBindings.Negate(Loaded), Mode=OneWay}" Visibility="{x:Bind converters:FunctionBindings.TrueThenCollapsed(Loaded), Mode=OneWay}" />
+
+                <Grid
+                    Padding="8"
+                    Style="{x:Bind converters:FunctionBindings.AlbumTrackStyleSelector(Number)}"
+                    Visibility="{x:Bind converters:FunctionBindings.TrueThenVisible(Loaded), Mode=OneWay}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="20" />
+                        <ColumnDefinition Width="40" />
+                        <ColumnDefinition Width="2*" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="50" />
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock
+                        FontWeight="Bold"
+                        Foreground="{ThemeResource ApplicationSecondaryForegroundThemeBrush}"
+                        Text="{x:Bind converters:FunctionBindings.FormatTrackNumber(Number)}" />
+
+                    <FontIcon
+                        Grid.Column="1"
+                        FontFamily="{StaticResource FluentIcons}"
+                        FontSize="15"
+                        Glyph="&#xEB51;" />
+
+                    <TextBlock
+                        Grid.Column="2"
+                        FontWeight="SemiBold"
+                        Text="{x:Bind Item.Name}" />
+
+                    <TextBlock
+                        Grid.Column="3"
+                        FontWeight="SemiBold"
+                        Foreground="{ThemeResource ApplicationSecondaryForegroundThemeBrush}"
+                        Text="{x:Bind converters:FunctionBindings.FormatPlaycount(Item.Playcount)}" />
+
+                    <TextBlock
+                        Grid.Column="4"
+                        FontWeight="Normal"
+                        Text="{x:Bind converters:FunctionBindings.FormatDuration(Item.Duration)}" />
+                </Grid>
+            </Grid>
+        </DataTemplate>
+        <DataTemplate x:Key="AlbumView" x:DataType="artist:LazyWaveeAlbumViewModel">
+            <RelativePanel Margin="0,12,0,0">
+                <Border x:Phase="1" Tag="{x:Bind Id}" />
+                <Grid
+                    x:Name="AlbumImge"
+                    Width="150"
+                    Height="150"
+                    Margin="0,0,12,0"
+                    CornerRadius="4"
+                    RelativePanel.AlignLeftWithPanel="True"
+                    RelativePanel.AlignTopWithPanel="True">
+                    <winUi:Shimmer IsActive="{x:Bind converters:FunctionBindings.Negate(Value.Loaded), Mode=OneWay}" Visibility="{x:Bind converters:FunctionBindings.TrueThenCollapsed(Value.Loaded), Mode=OneWay}" />
+
+                    <Image Source="{x:Bind Value.MediumImageUrl, Mode=OneWay}" Visibility="{x:Bind converters:FunctionBindings.TrueThenVisible(Value.Loaded), Mode=OneWay}" />
+                </Grid>
+
+                <Grid
+                    Width="150"
+                    MinHeight="28"
+                    Margin="0,4,0,0"
+                    RelativePanel.AlignLeftWithPanel="True"
+                    RelativePanel.Below="AlbumImge">
+                    <winUi:Shimmer IsActive="{x:Bind converters:FunctionBindings.Negate(Value.Loaded), Mode=OneWay}" Visibility="{x:Bind converters:FunctionBindings.TrueThenCollapsed(Value.Loaded), Mode=OneWay}" />
+
+                    <TextBlock
+                        FontSize="14"
+                        FontWeight="SemiBold"
+                        Text="{x:Bind Value.Name, Mode=OneWay}"
+                        TextWrapping="WrapWholeWords"
+                        Visibility="{x:Bind converters:FunctionBindings.TrueThenVisible(Value.Loaded), Mode=OneWay}" />
+                </Grid>
+
+                <ItemsRepeater
+                    ItemTemplate="{StaticResource LazyAlbumTrackTemplate}"
+                    ItemsSource="{x:Bind Value.Tracks, Mode=OneWay}"
+                    Layout="{StaticResource Stack}"
+                    RelativePanel.AlignTopWithPanel="True"
+                    RelativePanel.RightOf="AlbumImge" />
+            </RelativePanel>
+        </DataTemplate>
+
+        <DataTemplate x:Key="Group" x:DataType="artist:WaveeArtistDiscographyGroupViewModel">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition />
+                </Grid.RowDefinitions>
+
+                <TextBlock
+                    x:Phase="0"
+                    CanBeScrollAnchor="True"
+                    FontSize="14"
+                    FontWeight="Bold"
+                    Foreground="{ThemeResource ApplicationSecondaryForegroundThemeBrush}"
+                    Text="{x:Bind Name, Mode=OneWay}" />
+
+                <ItemsRepeater
+                    Grid.Row="1"
+                    x:Phase="1"
+                    CanBeScrollAnchor="False"
+                    ItemTemplate="{StaticResource AlbumView}"
+                    ItemsSource="{x:Bind Items, Mode=OneWay}">
+                    <ItemsRepeater.Layout>
+                        <panels:StackLayout
+                            DisableVirtualization="False"
+                            Orientation="Vertical"
+                            Spacing="14" />
+                    </ItemsRepeater.Layout>
+                </ItemsRepeater>
+            </Grid>
+        </DataTemplate>
+    </UserControl.Resources>
+    <Grid Margin="24,0">
+        <ItemsRepeater
+            x:Name="L"
+            ItemTemplate="{StaticResource Group}"
+            ItemsSource="{x:Bind Discography, Mode=OneWay}">
+            <ItemsRepeater.Layout>
+                <panels:StackLayout
+                    DisableVirtualization="True"
+                    Orientation="Vertical"
+                    Spacing="48" />
+            </ItemsRepeater.Layout>
+        </ItemsRepeater>
+    </Grid>
+</UserControl>

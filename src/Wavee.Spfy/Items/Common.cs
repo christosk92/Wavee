@@ -50,3 +50,19 @@ public readonly struct SpotifyAudioFile
     public required AudioFile.Types.Format Format { get; init; }
     public string FileIdBase16 => FileId.Span.ToBase16();
 }
+
+
+
+
+public sealed class SpotifyFullAlbum : ISpotifyItem, IWaveeAlbum
+{
+    public required string Name { get; init; }
+    public required Seq<IWaveeAlbumArtist> Artists { get; init; }
+    public required int Year { get; init; }
+    public required string Type { get; init; }
+    public required int TotalTracks { get; init; }
+    public required SpotifyId Uri { get; init; }
+    public required Seq<UrlImage> Images { get; init; }
+    public required Seq<IWaveeTrackAlbum> Tracks { get; init; }
+    public string Id => Uri.ToString();
+}

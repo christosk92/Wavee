@@ -48,12 +48,39 @@ internal static class AlbumMapping
                 {
                     new WaveePlayableItemDescription
                     {
-                        Name = fromTrack.Artist.First().Name,
-                        Id = SpotifyId.FromRaw(fromTrack.Artist.First().Gid.Span, AudioItemType.Artist).ToString()
+                        Name = fromTrack.Artist.First()
+                            .Name,
+                        Id = SpotifyId.FromRaw(fromTrack.Artist.First()
+                                    .Gid.Span,
+                                AudioItemType.Artist)
+                            .ToString()
                     }
-                }.ToSeq()
+                }.ToSeq(),
+            Number = FindTrackNumber(album,
+                    fromTrack)
+                .Number,
+            Playcount = 0,
+            Duration = TimeSpan.FromMilliseconds(fromTrack.Duration)
         };
 
         return res;
+    }
+
+    private static (int Disc, int Number) FindTrackNumber(Album album, Track fromTrack)
+    {
+        int x = 1;
+        foreach (var disc in album.Disc)
+        {
+            int y = 1;
+            foreach (var b in disc.Track)
+            {
+                if (b.Gid.SequenceEqual(fromTrack.Gid)) return (x, y);
+                y++;
+            }
+
+            x++;
+        }
+
+        return (0, 0);
     }
 }

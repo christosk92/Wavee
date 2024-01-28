@@ -92,11 +92,7 @@ namespace Wavee.UI.WinUI.Views.Shell
 
         private void LyricsListView_OnSizeChanged(object sender, SizeChangedEventArgs e)
         {
-            var sz = e.NewSize.Height - DoubleHeightBorder.ActualHeight;
-            if (sz is not 0 && sz > 0)
-            {
-                DoubleHeightBorder.Height = sz;
-            }
+            DoubleHeightBorder.Height = this.ActualSize.Y;
         }
     }
 }

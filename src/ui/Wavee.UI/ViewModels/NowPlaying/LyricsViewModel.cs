@@ -96,7 +96,7 @@ public sealed class LyricsViewModel : RightSidebarComponentViewModel
             var position = _nowPlayingViewModel?.Position.TotalMilliseconds ?? 0;
             var nextLine = _lines?.FirstOrDefault(line => line.Position.TotalMilliseconds > position);
             var newActiveLine = nextLine != null ? _linesLinked?.Find(nextLine)?.Previous : _linesLinked?.Last;
-            if (newActiveLine is null)
+            if (newActiveLine is null && ActiveLine is not null)
             {
                 ActiveLine = null;
                 this.OnPropertyChanged(nameof(ActiveLineIndex));
