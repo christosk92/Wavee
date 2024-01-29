@@ -29,6 +29,7 @@ public interface IWaveeUIAuthenticationProvider
 public interface IWaveeUIAuthenticatedProfile
 {
     IWaveeUIProvider Provider { get; }
+    WaveeUIPlaybackState LatestPlaybackState { get; }
     event EventHandler<WaveeUIPlaybackState>? PlaybackStateChanged;
     ValueTask<WaveeUIPlaybackState> ConnectToRemoteStateIfApplicable();
 
@@ -51,7 +52,9 @@ public interface IWaveeUIAuthenticatedProfile
 }
 
 
-public readonly record struct WaveeUIPlaybackState(IWaveePlayableItem? Item,
+public readonly record struct WaveeUIPlaybackState(
+    IWaveePlayableItem? Item,
+    Option<string> Uid,
     bool IsShuffling,
     WaveeRepeatStateType RepeatState,
     bool IsPaused,

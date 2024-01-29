@@ -48,7 +48,7 @@ public sealed class LibraryArtistsViewModel : ObservableObject, ILibraryComponen
         PlayCommand = new AsyncRelayCommand<WaveeAlbumTrackViewModel>(async x =>
         {
             x.PlaybackState = WaveeUITrackPlaybackStateType.Loading;
-            await Task.Delay(TimeSpan.FromMilliseconds(4000));
+            await Task.Delay(TimeSpan.FromMilliseconds(400));
             x.PlaybackState = WaveeUITrackPlaybackStateType.NotPlaying;
         });
         IsBusy = true;

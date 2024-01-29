@@ -189,6 +189,9 @@ internal sealed class WaveeUISpotifyProfile : IWaveeUIAuthenticatedProfile
     }
 
     public IWaveeUIProvider Provider => _provider;
+
+    public WaveeUIPlaybackState LatestPlaybackState { get; private set; }
+
     public event EventHandler<WaveeUIPlaybackState>? PlaybackStateChanged;
 
     public ValueTask<WaveeUIPlaybackState> ConnectToRemoteStateIfApplicable()
@@ -218,19 +221,29 @@ internal sealed class WaveeUISpotifyProfile : IWaveeUIAuthenticatedProfile
         if (x.Item.IsSome)
         {
             var val = x.Item.ValueUnsafe();
-            return new WaveeUIPlaybackState(val.Item, x.IsShuffling, x.RepeatState, x.IsPaused, MutateTo(x.Devices, x.ActiveDeviceId), MutateTo(x.Restrictions))
+            var z = new WaveeUIPlaybackState(val.Item,
+                val.Uid,
+                x.IsShuffling, x.RepeatState, x.IsPaused, MutateTo(x.Devices, x.ActiveDeviceId), MutateTo(x.Restrictions))
             {
                 PositionOffset = x.PositionOffset,
                 PositionSw = x.PositionStopwatch
             };
+
+            LatestPlaybackState = z;
+            return z;
         }
 
-        return new WaveeUIPlaybackState(null, false, WaveeRepeatStateType.None, true,
+        var y = new WaveeUIPlaybackState(null,
+            Option<string>.None,
+            false, WaveeRepeatStateType.None, true,
             LanguageExt.Seq<WaveeUIRemoteDevice>.Empty, LanguageExt.Seq<WaveePlaybackRestrictionType>.Empty)
         {
             PositionOffset = x.PositionOffset,
             PositionSw = x.PositionStopwatch
         };
+
+        LatestPlaybackState = y;
+        return y;
     }
 
     private Seq<WaveePlaybackRestrictionType> MutateTo(HashMap<SpotifyRestrictionAppliesForType, Seq<SpotifyKnownRestrictionType>> xRestrictions)

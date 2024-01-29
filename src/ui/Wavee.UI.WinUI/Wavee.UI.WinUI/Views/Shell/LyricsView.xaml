@@ -38,7 +38,18 @@
                 </ItemsPanelTemplate>
             </ListView.ItemsPanel>
             <ListView.Footer>
-                <Border x:Name="DoubleHeightBorder" />
+                <Border x:Name="DoubleHeightBorder">
+                    <StackPanel Spacing="8">
+                        <MenuFlyoutSeparator />
+                        <TextBlock
+                            HorizontalAlignment="Center"
+                            FontSize="12"
+                            FontWeight="ExtraBlack"
+                            Opacity=".5"
+                            Text="END"
+                            TextDecorations="Underline" />
+                    </StackPanel>
+                </Border>
             </ListView.Footer>
             <ListView.ItemTemplate>
                 <DataTemplate x:DataType="nowPlaying:LyricsLineViewModel">

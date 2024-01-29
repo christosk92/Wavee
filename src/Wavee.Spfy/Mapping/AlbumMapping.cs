@@ -60,7 +60,8 @@ internal static class AlbumMapping
                     fromTrack)
                 .Number,
             Playcount = 0,
-            Duration = TimeSpan.FromMilliseconds(fromTrack.Duration)
+            Duration = TimeSpan.FromMilliseconds(fromTrack.Duration),
+            Uid = null
         };
 
         return res;

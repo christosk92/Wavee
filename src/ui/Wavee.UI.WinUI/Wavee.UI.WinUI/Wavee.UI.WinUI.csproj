@@ -13,6 +13,10 @@
 		<UseRidGraph>true</UseRidGraph>
 	</PropertyGroup>
 	<ItemGroup>
+	  <Content Remove="Assets\Playing.cs" />
+	</ItemGroup>
+	<ItemGroup>
+		<None Remove="Assets\equaliser.gif" />
 		<None Remove="Assets\Fonts\MediaPlayerIcons.ttf" />
 		<None Remove="Assets\Fonts\SegoeFluentIcons.ttf" />
 		<None Remove="Views\Artist\ArtistDiscographyComponent.xaml" />
@@ -88,6 +92,9 @@
 		</Content>
 		<Content Update="Assets\Fonts\SegoeFluentIcons.ttf">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+		<Content Update="Assets\equaliser.gif">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Content>
 		<None Update="Styles\ButtonStyles.xaml">
 			<Generator>MSBuild:Compile</Generator>

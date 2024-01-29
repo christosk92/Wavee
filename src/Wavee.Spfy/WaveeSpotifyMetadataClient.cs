@@ -454,6 +454,7 @@ public sealed class WaveeSpotifyMetadataClient
         using var tracksItems = album.GetProperty("tracks").GetProperty("items").EnumerateArray();
         foreach (var trackItem in tracksItems)
         {
+            var uid = trackItem.GetProperty("uid").GetString();
             var track = trackItem.GetProperty("track");
             tracks = tracks.Add(new SpotifyTrackAlbum
             {
@@ -468,7 +469,10 @@ public sealed class WaveeSpotifyMetadataClient
                     .GetString()),
                 Number = track.GetProperty("trackNumber")
                     .GetInt32(),
-                Duration = TimeSpan.FromMilliseconds(track.GetProperty("duration").GetProperty("totalMilliseconds").GetUInt64()),
+                Duration = TimeSpan.FromMilliseconds(track.GetProperty("duration")
+                    .GetProperty("totalMilliseconds")
+                    .GetUInt64()),
+                Uid = uid,
             });
         }
 

@@ -1,16 +1,17 @@
-﻿using Microsoft.UI.Xaml;
+﻿using CommunityToolkit.WinUI.Behaviors;
+using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.Xaml.Interactivity;
 
 namespace Wavee.UI.WinUI.Behaviors.common;
 
-public sealed class ElementPointerBehaviors : Behavior<FrameworkElement>
+public sealed class ElementPointerBehaviors : BehaviorBase<FrameworkElement>
 {
     public static readonly DependencyProperty HasPointerProperty = DependencyProperty.Register(nameof(HasPointer), typeof(bool), typeof(ElementPointerBehaviors), new PropertyMetadata(default(bool)));
 
-    protected override void OnAttached()
+    protected override void OnAssociatedObjectLoaded()
     {
-        base.OnAttached();
+        base.OnAssociatedObjectLoaded();
 
         this.AssociatedObject.PointerEntered += AssociatedObjectOnPointerEntered;
         this.AssociatedObject.PointerExited += AssociatedObjectOnPointerExited;
@@ -18,9 +19,6 @@ public sealed class ElementPointerBehaviors : Behavior<FrameworkElement>
 
     protected override void OnDetaching()
     {
-        this.AssociatedObject.PointerEntered -= AssociatedObjectOnPointerEntered;
-        this.AssociatedObject.PointerExited -= AssociatedObjectOnPointerExited;
-
         HasPointer = false;
         base.OnDetaching();
     }

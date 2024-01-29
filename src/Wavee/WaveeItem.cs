@@ -55,6 +55,7 @@ public interface IWaveeTrackAlbum : IWaveeItem
     int Year { get; }
     long Playcount { get; }
     TimeSpan Duration { get; }
+    string Uid { get; }
 }
 
 public interface IWaveeAlbum : IWaveeItem

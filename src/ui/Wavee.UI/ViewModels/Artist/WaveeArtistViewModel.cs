@@ -6,6 +6,7 @@ using System.Windows.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using LanguageExt;
+using LanguageExt.UnsafeValueAccess;
 using NAudio.Wave;
 using NeoSmart.AsyncLock;
 using TagLib.Flac;
@@ -104,7 +105,7 @@ public class WaveeArtistDiscographyGroupViewModel
         TotalCount = ids.Length;
 
         Items = _ids.Select(x => new LazyWaveeAlbumViewModel(x, groupAverageTracks,
-            b => Task.Run(async () => await Realize(b, dispatcher)), playCommand)).ToImmutableArray();
+            b => Task.Run(async () => await Realize(b, dispatcher)), playCommand, profile)).ToImmutableArray();
         double estimatedHeight = 0;
         foreach (var item in Items)
         {
@@ -168,11 +169,15 @@ public sealed class LazyWaveeAlbumViewModel : ObservableObject
     private Action<LazyWaveeAlbumViewModel> _action;
     private bool _imageLoaded;
 
-    public LazyWaveeAlbumViewModel(string id, int lazyCount, Action<LazyWaveeAlbumViewModel> action, IAsyncRelayCommand<WaveeAlbumTrackViewModel> playTrackCommand)
+    public LazyWaveeAlbumViewModel(string id, int lazyCount,
+        Action<LazyWaveeAlbumViewModel> action,
+        IAsyncRelayCommand<WaveeAlbumTrackViewModel> playTrackCommand,
+        IWaveeUIAuthenticatedProfile profile)
     {
         _id = id;
         _action = action;
         PlayTrackCommand = playTrackCommand;
+        Profile = profile;
         Value = new WaveeAlbumViewModel(id, lazyCount);
     }
 
@@ -197,10 +202,12 @@ public sealed class LazyWaveeAlbumViewModel : ObservableObject
     }
 
     public IAsyncRelayCommand<WaveeAlbumTrackViewModel> PlayTrackCommand { get; }
+    public IWaveeUIAuthenticatedProfile Profile { get; }
 }
 public sealed class WaveeAlbumViewModel
 {
-    public WaveeAlbumViewModel(string id, string name,
+    public WaveeAlbumViewModel(string id,
+        string name,
         uint year,
         Seq<IWaveeTrackAlbum> tracks,
         string? mediumImageUrl,
@@ -230,40 +237,42 @@ public sealed class WaveeAlbumViewModel
     public bool Loaded { get; }
 }
 
-public sealed class WaveeAlbumTrackViewModel : ObservableObject
+public sealed class WaveeAlbumTrackViewModel : WaveeTrackViewModel
 {
-    private bool _isLoadingPlayback;
-    private WaveeUITrackPlaybackStateType _playbackState;
 
-    public WaveeAlbumTrackViewModel(IWaveeTrackAlbum item, ICommand playCommand)
+    public WaveeAlbumTrackViewModel(IWaveeTrackAlbum item, ICommand playCommand) : base(new ComposedKey(item.Id), playCommand)
     {
         Item = item;
-        PlayCommand = playCommand;
         Number = item.Number;
         Loaded = true;
-        Id = new ComposedKey(item.Id);
         This = this;
     }
 
-    public WaveeAlbumTrackViewModel(int number)
+    public WaveeAlbumTrackViewModel(int number) : base(new ComposedKey(number), null)
     {
         Number = number;
-        PlayCommand = null;
         Loaded = false;
         This = this;
-        Id = new ComposedKey(number);
     }
     public int Number { get; }
     public IWaveeTrackAlbum Item { get; }
     public bool Loaded { get; }
-    public ComposedKey Id { get; }
-
-    public WaveeUITrackPlaybackStateType PlaybackState
-    {
-        get => _playbackState;
-        set => this.SetProperty(ref _playbackState, value);
-    }
-
     public WaveeAlbumTrackViewModel This { get; }
-    public ICommand PlayCommand { get; }
+
+    public override string Name => Item.Name;
+
+    public override bool Is(IWaveePlayableItem x, Option<string> uid)
+    {
+        if (x is null) return false;
+        if (uid.IsSome)
+        {
+            var isEqual = uid.ValueUnsafe() == Item?.Uid;
+            if (isEqual) return true;
+        }
+
+        var trackId = x.Id;
+        var trackComposedKey = new ComposedKey(trackId);
+        var y = base.Id.Equals(trackComposedKey);
+        return y;
+    }
 }

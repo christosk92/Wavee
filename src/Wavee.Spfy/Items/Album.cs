@@ -32,4 +32,6 @@ public readonly record struct SpotifyTrackAlbum : ISpotifyPlayableItemGroup, IWa
     public required long Playcount { get; init; }
 
     public required TimeSpan Duration { get; init; }
+
+    public required string Uid { get; init; }
 }
