@@ -43,10 +43,18 @@ public sealed class LibraryArtistsViewModel : ObservableObject, ILibraryComponen
                 return;
             }
             var item = (LibraryItemViewModel)x;
-            SelectedItem = WaveeArtistViewModel.GetOrCreate(item.Item.Id, item.Item, profile: item.Profile, dispatcher: _dispatcherWrapper);
+            SelectedItem = WaveeArtistViewModel.GetOrCreate(item.Item.Id, item.Item, profile: item.Profile, dispatcher: _dispatcherWrapper, playCommand: PlayCommand);
+        });
+        PlayCommand = new AsyncRelayCommand<WaveeAlbumTrackViewModel>(async x =>
+        {
+            x.PlaybackState = WaveeUITrackPlaybackStateType.Loading;
+            await Task.Delay(TimeSpan.FromMilliseconds(4000));
+            x.PlaybackState = WaveeUITrackPlaybackStateType.NotPlaying;
         });
         IsBusy = true;
     }
+
+    public IAsyncRelayCommand<WaveeAlbumTrackViewModel> PlayCommand { get; }
 
     public ObservableCollection<ExceptionForProfile> Errors { get; }
     public ObservableCollection<LibraryItemViewModel> Items { get; }

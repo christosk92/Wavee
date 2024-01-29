@@ -6,7 +6,7 @@ using Wavee.UI.ViewModels.Library;
 using Wavee.UI.ViewModels.NowPlaying;
 using Wavee.UI.WinUI.Navigation;
 using Wavee.UI.WinUI.Views.Feed;
-using Wavee.UI.WinUI.Views.Library.Commands;
+using Wavee.UI.WinUI.Views.Library.Components;
 using Wavee.UI.WinUI.Views.NowPlaying;
 using Wavee.UI.WinUI.Views.Shell;
 

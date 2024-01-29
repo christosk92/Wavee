@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Diagnostics;
+using System.Windows.Input;
 using Eum.Spotify.connectstate;
 using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
@@ -46,7 +47,7 @@ public interface IWaveeUIAuthenticatedProfile
     Task<bool> SetShuffle(bool isShuffling, bool waitForResponse);
     Task<bool> GoToRepeatState(WaveeRepeatStateType nextRepeatStateType, bool waitForResponse);
     Task<bool> SetVolume(double oneToZero, bool waitForResponse);
-    Task<WaveeAlbumViewModel> GetAlbum(string albumId);
+    Task<WaveeAlbumViewModel> GetAlbum(string albumId, ICommand playCommand);
 }
 
 

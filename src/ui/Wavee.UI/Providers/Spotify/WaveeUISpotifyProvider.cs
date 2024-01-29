@@ -1,6 +1,7 @@
 ﻿using System.Collections.Immutable;
 using System.Security.Cryptography;
 using System.Threading.Tasks.Sources;
+using System.Windows.Input;
 using Eum.Spotify.connectstate;
 using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
@@ -412,10 +413,10 @@ internal sealed class WaveeUISpotifyProfile : IWaveeUIAuthenticatedProfile
     public Task<bool> SetVolume(double oneToZero, bool waitForResponse)
         => _provider.SpotifyClient.Remote.SetVolume(oneToZero, waitForResponse);
 
-    public async Task<WaveeAlbumViewModel> GetAlbum(string albumId)
+    public async Task<WaveeAlbumViewModel> GetAlbum(string albumId, ICommand playCommand)
     {
         var spotifyAlbum = await _provider.SpotifyClient.Metadata.GetAlbum(SpotifyId.FromUri(albumId));
-        return new WaveeAlbumViewModel(albumId, spotifyAlbum.Name, (uint)spotifyAlbum.Year, spotifyAlbum.Tracks, spotifyAlbum.Images.Head.Url);
+        return new WaveeAlbumViewModel(albumId, spotifyAlbum.Name, (uint)spotifyAlbum.Year, spotifyAlbum.Tracks, spotifyAlbum.Images.Head.Url, playCommand);
     }
 
 

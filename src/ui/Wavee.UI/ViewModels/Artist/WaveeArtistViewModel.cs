@@ -2,8 +2,11 @@
 using System.Diagnostics;
 using System.Security.Cryptography;
 using System.Threading;
+using System.Windows.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using LanguageExt;
+using NAudio.Wave;
 using NeoSmart.AsyncLock;
 using TagLib.Flac;
 using Wavee.Spfy;
@@ -28,7 +31,8 @@ public sealed class WaveeArtistViewModel
     public IReadOnlyCollection<WaveeArtistDiscographyGroupViewModel> Discography { get; }
     public double ScrollPosition { get; set; }
     public static WaveeArtistViewModel? GetOrCreate(string id, object item, IWaveeUIAuthenticatedProfile profile,
-        IDispatcher dispatcher)
+        IDispatcher dispatcher,
+        IAsyncRelayCommand<WaveeAlbumTrackViewModel> playCommand)
     {
         if (_holders.TryGetValue(id, out var x) && x.TryGetTarget(out var y)) return y;
 
@@ -39,7 +43,7 @@ public sealed class WaveeArtistViewModel
                     y = new WaveeArtistViewModel(
                         id: spotifySimpleArtist.Id,
                         name: spotifySimpleArtist.Name,
-                        discography: ConstructFrom(spotifySimpleArtist.Discography, profile, dispatcher));
+                        discography: ConstructFrom(spotifySimpleArtist.Discography, profile, dispatcher, playCommand));
                     _holders[id] = new WeakReference<WaveeArtistViewModel>(y);
                     return y;
                     break;
@@ -51,7 +55,8 @@ public sealed class WaveeArtistViewModel
 
     private static IReadOnlyCollection<WaveeArtistDiscographyGroupViewModel> ConstructFrom(
         IEnumerable<IGrouping<SpotifyDiscographyType, SpotifyId>>? discography,
-        IWaveeUIAuthenticatedProfile profile, IDispatcher dispatcher)
+        IWaveeUIAuthenticatedProfile profile, IDispatcher dispatcher,
+        IAsyncRelayCommand<WaveeAlbumTrackViewModel> playCommand)
     {
         if (discography is null) return ImmutableArray<WaveeArtistDiscographyGroupViewModel>.Empty;
         var output = new List<WaveeArtistDiscographyGroupViewModel>(3);
@@ -71,7 +76,7 @@ public sealed class WaveeArtistViewModel
             };
             var ids = groupInput.Select(x => x.ToString()).ToImmutableArray();
 
-            output.Add(new WaveeArtistDiscographyGroupViewModel(name, ids, profile, averageTracks, dispatcher));
+            output.Add(new WaveeArtistDiscographyGroupViewModel(name, ids, profile, averageTracks, dispatcher, playCommand));
         }
 
         return output;
@@ -89,7 +94,8 @@ public class WaveeArtistDiscographyGroupViewModel
     public WaveeArtistDiscographyGroupViewModel(string name, ImmutableArray<string> ids,
         IWaveeUIAuthenticatedProfile profile,
         int groupAverageTracks,
-        IDispatcher dispatcher)
+        IDispatcher dispatcher,
+        IAsyncRelayCommand<WaveeAlbumTrackViewModel> playCommand)
     {
         Name = name;
         _profile = profile;
@@ -98,7 +104,7 @@ public class WaveeArtistDiscographyGroupViewModel
         TotalCount = ids.Length;
 
         Items = _ids.Select(x => new LazyWaveeAlbumViewModel(x, groupAverageTracks,
-            b => Task.Run(async () => await Realize(b, dispatcher)))).ToImmutableArray();
+            b => Task.Run(async () => await Realize(b, dispatcher)), playCommand)).ToImmutableArray();
         double estimatedHeight = 0;
         foreach (var item in Items)
         {
@@ -136,7 +142,7 @@ public class WaveeArtistDiscographyGroupViewModel
             }
         }
 
-        var album = await Task.Run(async () => await _profile.GetAlbum(obj.IdNonBlocking));
+        var album = await Task.Run(async () => await _profile.GetAlbum(obj.IdNonBlocking, playCommand: obj.PlayTrackCommand));
         dispatcher.Dispatch(() =>
         {
             obj.Value = album;
@@ -160,11 +166,13 @@ public sealed class LazyWaveeAlbumViewModel : ObservableObject
     private WaveeAlbumViewModel? _value;
     private string _id;
     private Action<LazyWaveeAlbumViewModel> _action;
+    private bool _imageLoaded;
 
-    public LazyWaveeAlbumViewModel(string id, int lazyCount, Action<LazyWaveeAlbumViewModel> action)
+    public LazyWaveeAlbumViewModel(string id, int lazyCount, Action<LazyWaveeAlbumViewModel> action, IAsyncRelayCommand<WaveeAlbumTrackViewModel> playTrackCommand)
     {
         _id = id;
         _action = action;
+        PlayTrackCommand = playTrackCommand;
         Value = new WaveeAlbumViewModel(id, lazyCount);
     }
 
@@ -183,18 +191,25 @@ public sealed class LazyWaveeAlbumViewModel : ObservableObject
         get => _value;
         internal set => SetProperty(ref _value, value);
     }
+    public bool ImageLoaded
+    {
+        get => _imageLoaded; set => SetProperty(ref _imageLoaded, value);
+    }
+
+    public IAsyncRelayCommand<WaveeAlbumTrackViewModel> PlayTrackCommand { get; }
 }
 public sealed class WaveeAlbumViewModel
 {
     public WaveeAlbumViewModel(string id, string name,
         uint year,
         Seq<IWaveeTrackAlbum> tracks,
-        string? mediumImageUrl)
+        string? mediumImageUrl,
+        ICommand playCommand)
     {
         Id = id;
         Name = name;
         Year = year;
-        Tracks = tracks.Select(x => new WaveeAlbumTrackViewModel(x)).ToImmutableArray();
+        Tracks = tracks.Select(x => new WaveeAlbumTrackViewModel(x, playCommand)).ToImmutableArray();
         MediumImageUrl = mediumImageUrl;
         Loaded = true;
     }
@@ -215,21 +230,40 @@ public sealed class WaveeAlbumViewModel
     public bool Loaded { get; }
 }
 
-public sealed class WaveeAlbumTrackViewModel
+public sealed class WaveeAlbumTrackViewModel : ObservableObject
 {
-    public WaveeAlbumTrackViewModel(IWaveeTrackAlbum item)
+    private bool _isLoadingPlayback;
+    private WaveeUITrackPlaybackStateType _playbackState;
+
+    public WaveeAlbumTrackViewModel(IWaveeTrackAlbum item, ICommand playCommand)
     {
         Item = item;
+        PlayCommand = playCommand;
         Number = item.Number;
         Loaded = true;
+        Id = new ComposedKey(item.Id);
+        This = this;
     }
 
     public WaveeAlbumTrackViewModel(int number)
     {
         Number = number;
+        PlayCommand = null;
         Loaded = false;
+        This = this;
+        Id = new ComposedKey(number);
     }
     public int Number { get; }
     public IWaveeTrackAlbum Item { get; }
     public bool Loaded { get; }
+    public ComposedKey Id { get; }
+
+    public WaveeUITrackPlaybackStateType PlaybackState
+    {
+        get => _playbackState;
+        set => this.SetProperty(ref _playbackState, value);
+    }
+
+    public WaveeAlbumTrackViewModel This { get; }
+    public ICommand PlayCommand { get; }
 }
