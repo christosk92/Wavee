@@ -17,23 +17,28 @@ using Wavee.UI.Services;
 
 namespace Wavee.UI.ViewModels.Artist;
 
-public sealed class WaveeArtistViewModel
+public sealed class WaveeArtistViewModel : WaveePlayableItemViewModel
 {
     private static Dictionary<string, WeakReference<WaveeArtistViewModel>> _holders = new();
 
     public WaveeArtistViewModel(string id, string name, IReadOnlyCollection<WaveeArtistDiscographyGroupViewModel> discography)
+        : base(new ComposedKey(id), null)
     {
         Id = id;
         Name = name;
         Discography = discography;
     }
     public string Id { get; }
-    public string Name { get; }
+    public override string Name { get; }
+    public override bool Is(IWaveePlayableItem x, Option<string> uid, string eContextId)
+    {
+        return eContextId == Id;
+    }
     public IReadOnlyCollection<WaveeArtistDiscographyGroupViewModel> Discography { get; }
     public double ScrollPosition { get; set; }
     public static WaveeArtistViewModel? GetOrCreate(string id, object item, IWaveeUIAuthenticatedProfile profile,
         IDispatcher dispatcher,
-        IAsyncRelayCommand<WaveeAlbumTrackViewModel> playCommand)
+        IAsyncRelayCommand<WaveeAlbumPlayableItemViewModel> playCommand)
     {
         if (_holders.TryGetValue(id, out var x) && x.TryGetTarget(out var y)) return y;
 
@@ -57,7 +62,7 @@ public sealed class WaveeArtistViewModel
     private static IReadOnlyCollection<WaveeArtistDiscographyGroupViewModel> ConstructFrom(
         IEnumerable<IGrouping<SpotifyDiscographyType, SpotifyId>>? discography,
         IWaveeUIAuthenticatedProfile profile, IDispatcher dispatcher,
-        IAsyncRelayCommand<WaveeAlbumTrackViewModel> playCommand)
+        IAsyncRelayCommand<WaveeAlbumPlayableItemViewModel> playCommand)
     {
         if (discography is null) return ImmutableArray<WaveeArtistDiscographyGroupViewModel>.Empty;
         var output = new List<WaveeArtistDiscographyGroupViewModel>(3);
@@ -96,7 +101,7 @@ public class WaveeArtistDiscographyGroupViewModel
         IWaveeUIAuthenticatedProfile profile,
         int groupAverageTracks,
         IDispatcher dispatcher,
-        IAsyncRelayCommand<WaveeAlbumTrackViewModel> playCommand)
+        IAsyncRelayCommand<WaveeAlbumPlayableItemViewModel> playCommand)
     {
         Name = name;
         _profile = profile;
@@ -171,7 +176,7 @@ public sealed class LazyWaveeAlbumViewModel : ObservableObject
 
     public LazyWaveeAlbumViewModel(string id, int lazyCount,
         Action<LazyWaveeAlbumViewModel> action,
-        IAsyncRelayCommand<WaveeAlbumTrackViewModel> playTrackCommand,
+        IAsyncRelayCommand<WaveeAlbumPlayableItemViewModel> playTrackCommand,
         IWaveeUIAuthenticatedProfile profile)
     {
         _id = id;
@@ -201,7 +206,7 @@ public sealed class LazyWaveeAlbumViewModel : ObservableObject
         get => _imageLoaded; set => SetProperty(ref _imageLoaded, value);
     }
 
-    public IAsyncRelayCommand<WaveeAlbumTrackViewModel> PlayTrackCommand { get; }
+    public IAsyncRelayCommand<WaveeAlbumPlayableItemViewModel> PlayTrackCommand { get; }
     public IWaveeUIAuthenticatedProfile Profile { get; }
 }
 public sealed class WaveeAlbumViewModel
@@ -216,7 +221,7 @@ public sealed class WaveeAlbumViewModel
         Id = id;
         Name = name;
         Year = year;
-        Tracks = tracks.Select(x => new WaveeAlbumTrackViewModel(x, playCommand)).ToImmutableArray();
+        Tracks = tracks.Select(x => new WaveeAlbumPlayableItemViewModel(x, playCommand)).ToImmutableArray();
         MediumImageUrl = mediumImageUrl;
         Loaded = true;
     }
@@ -224,7 +229,7 @@ public sealed class WaveeAlbumViewModel
     public WaveeAlbumViewModel(string id, int lazyCount)
     {
         Id = id;
-        Tracks = Enumerable.Range(0, lazyCount).Select(_ => new WaveeAlbumTrackViewModel(_)).ToImmutableArray();
+        Tracks = Enumerable.Range(0, lazyCount).Select(_ => new WaveeAlbumPlayableItemViewModel(_)).ToImmutableArray();
         MediumImageUrl = "ms-appx:///Assets/AlbumPlaceholder.png";
         Loaded = false;
     }
@@ -232,15 +237,15 @@ public sealed class WaveeAlbumViewModel
     public string Id { get; }
     public string Name { get; }
     public uint Year { get; }
-    public IReadOnlyCollection<WaveeAlbumTrackViewModel> Tracks { get; }
+    public IReadOnlyCollection<WaveeAlbumPlayableItemViewModel> Tracks { get; }
     public string? MediumImageUrl { get; }
     public bool Loaded { get; }
 }
 
-public sealed class WaveeAlbumTrackViewModel : WaveeTrackViewModel
+public sealed class WaveeAlbumPlayableItemViewModel : WaveePlayableItemViewModel
 {
 
-    public WaveeAlbumTrackViewModel(IWaveeTrackAlbum item, ICommand playCommand) : base(new ComposedKey(item.Id), playCommand)
+    public WaveeAlbumPlayableItemViewModel(IWaveeTrackAlbum item, ICommand playCommand) : base(new ComposedKey(item.Id), playCommand)
     {
         Item = item;
         Number = item.Number;
@@ -248,7 +253,7 @@ public sealed class WaveeAlbumTrackViewModel : WaveeTrackViewModel
         This = this;
     }
 
-    public WaveeAlbumTrackViewModel(int number) : base(new ComposedKey(number), null)
+    public WaveeAlbumPlayableItemViewModel(int number) : base(new ComposedKey(number), null)
     {
         Number = number;
         Loaded = false;
@@ -257,11 +262,11 @@ public sealed class WaveeAlbumTrackViewModel : WaveeTrackViewModel
     public int Number { get; }
     public IWaveeTrackAlbum Item { get; }
     public bool Loaded { get; }
-    public WaveeAlbumTrackViewModel This { get; }
+    public WaveeAlbumPlayableItemViewModel This { get; }
 
     public override string Name => Item.Name;
 
-    public override bool Is(IWaveePlayableItem x, Option<string> uid)
+    public override bool Is(IWaveePlayableItem x, Option<string> uid, string eContextId)
     {
         if (x is null) return false;
         if (uid.IsSome)

@@ -4,12 +4,12 @@ using LanguageExt;
 
 namespace Wavee.UI.ViewModels.Artist;
 
-public abstract class WaveeTrackViewModel : ObservableObject
+public abstract class WaveePlayableItemViewModel : ObservableObject
 {
     private WaveeUITrackPlaybackStateType _playbackState;
     private bool _isHovered;
 
-    public WaveeTrackViewModel(ComposedKey id, ICommand playCommand)
+    public WaveePlayableItemViewModel(ComposedKey id, ICommand playCommand)
     {
         PlayCommand = playCommand;
         Id = id;
@@ -28,5 +28,5 @@ public abstract class WaveeTrackViewModel : ObservableObject
     public ICommand PlayCommand { get; }
     public abstract string Name { get; }
 
-    public abstract bool Is(IWaveePlayableItem x, Option<string> eUid);
+    public abstract bool Is(IWaveePlayableItem x, Option<string> uid, string contextId);
 }

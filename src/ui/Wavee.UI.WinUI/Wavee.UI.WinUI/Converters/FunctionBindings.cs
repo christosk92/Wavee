@@ -46,4 +46,18 @@ public static class FunctionBindings
     }
 
     public static string FormatDuration(TimeSpan timeSpan) => MilliSecondsToTimestampConverter.ConvertTo(timeSpan);
+
+    public static Visibility IsPlayingThenVisible(WaveeUITrackPlaybackStateType waveeUiTrackPlaybackStateType)
+    {
+        return waveeUiTrackPlaybackStateType is WaveeUITrackPlaybackStateType.Paused
+            or WaveeUITrackPlaybackStateType.Playing
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+    }
+
+    public static string IsPlayingThenPlayOrElsePausedIcon(WaveeUITrackPlaybackStateType waveeUiTrackPlaybackStateType)
+    {
+        if (waveeUiTrackPlaybackStateType is WaveeUITrackPlaybackStateType.Paused) return "\uF5B0";
+        return "\uE62E";
+    }
 }

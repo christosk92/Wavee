@@ -223,6 +223,7 @@ internal sealed class WaveeUISpotifyProfile : IWaveeUIAuthenticatedProfile
             var val = x.Item.ValueUnsafe();
             var z = new WaveeUIPlaybackState(val.Item,
                 val.Uid,
+                x.Context.ValueUnsafe().Uri,
                 x.IsShuffling, x.RepeatState, x.IsPaused, MutateTo(x.Devices, x.ActiveDeviceId), MutateTo(x.Restrictions))
             {
                 PositionOffset = x.PositionOffset,
@@ -235,6 +236,7 @@ internal sealed class WaveeUISpotifyProfile : IWaveeUIAuthenticatedProfile
 
         var y = new WaveeUIPlaybackState(null,
             Option<string>.None,
+            null,
             false, WaveeRepeatStateType.None, true,
             LanguageExt.Seq<WaveeUIRemoteDevice>.Empty, LanguageExt.Seq<WaveePlaybackRestrictionType>.Empty)
         {
@@ -376,8 +378,8 @@ internal sealed class WaveeUISpotifyProfile : IWaveeUIAuthenticatedProfile
         }
     }
 
-    public Task<IReadOnlyCollection<LyricsLine>> GetLyricsFor(string id) =>
-        _provider.SpotifyClient.Metadata.GetLyricsFor(SpotifyId.FromUri(id));
+    public Task<IReadOnlyCollection<LyricsLine>> GetLyricsFor(string id, string imageUrl) =>
+        _provider.SpotifyClient.Metadata.GetLyricsFor(SpotifyId.FromUri(id), imageUrl);
 
 
     public async Task<(string Dark, string Light)> ExtractColorFor(string url)

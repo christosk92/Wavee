@@ -45,7 +45,7 @@ public sealed class LibraryArtistsViewModel : ObservableObject, ILibraryComponen
             var item = (LibraryItemViewModel)x;
             SelectedItem = WaveeArtistViewModel.GetOrCreate(item.Item.Id, item.Item, profile: item.Profile, dispatcher: _dispatcherWrapper, playCommand: PlayCommand);
         });
-        PlayCommand = new AsyncRelayCommand<WaveeAlbumTrackViewModel>(async x =>
+        PlayCommand = new AsyncRelayCommand<WaveeAlbumPlayableItemViewModel>(async x =>
         {
             x.PlaybackState = WaveeUITrackPlaybackStateType.Loading;
             await Task.Delay(TimeSpan.FromMilliseconds(400));
@@ -54,7 +54,7 @@ public sealed class LibraryArtistsViewModel : ObservableObject, ILibraryComponen
         IsBusy = true;
     }
 
-    public IAsyncRelayCommand<WaveeAlbumTrackViewModel> PlayCommand { get; }
+    public IAsyncRelayCommand<WaveeAlbumPlayableItemViewModel> PlayCommand { get; }
 
     public ObservableCollection<ExceptionForProfile> Errors { get; }
     public ObservableCollection<LibraryItemViewModel> Items { get; }

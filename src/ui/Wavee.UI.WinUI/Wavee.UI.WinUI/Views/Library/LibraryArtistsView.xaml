@@ -6,6 +6,8 @@
     xmlns:artist="using:Wavee.UI.WinUI.Views.Artist"
     xmlns:artist1="using:Wavee.UI.ViewModels.Artist"
     xmlns:common="using:Wavee.UI.WinUI.Views.Common"
+    xmlns:common1="using:Wavee.UI.WinUI.Behaviors.common"
+    xmlns:converters="using:Wavee.UI.WinUI.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:interactivity="using:Microsoft.Xaml.Interactivity"
     xmlns:library="using:Wavee.UI.ViewModels.Library"
@@ -50,6 +52,7 @@
                 <ItemsView IsItemInvokedEnabled="True" ItemsSource="{x:Bind ViewModel.Items, Mode=OneWay}">
                     <interactivity:Interaction.Behaviors>
                         <listViewBase:ItemInvokedBehavior ItemInvokedCommand="{x:Bind ViewModel.OnItemInvoked}" ItemSelectedCommand="{x:Bind ViewModel.OnItemSelectedCommand}" />
+                        <common1:PlaybackStateBehavior />
                     </interactivity:Interaction.Behaviors>
                     <ItemsView.Layout>
                         <UniformGridLayout
@@ -62,32 +65,52 @@
                     <ItemsView.ItemTemplate>
                         <DataTemplate x:DataType="library:LibraryItemViewModel">
                             <ItemContainer CanUserInvoke="UserCanInvoke">
-                                <RelativePanel Padding="8">
-                                    <PersonPicture
-                                        x:Name="Avatar"
-                                        Width="58"
-                                        Height="58"
-                                        x:Phase="2"
-                                        ProfilePicture="{x:Bind Item, Mode=OneWay, Converter={StaticResource WaveeItemToImageConverter}, ConverterParameter='80'}"
-                                        RelativePanel.AlignLeftWithPanel="True" />
-                                    <TextBlock
-                                        x:Name="TitleBlock"
-                                        Margin="6,8,0,0"
-                                        x:Phase="1"
-                                        FontWeight="SemiBold"
-                                        RelativePanel.AlignTopWith="Avatar"
-                                        RelativePanel.RightOf="Avatar"
-                                        Text="{x:Bind Item.Name, Mode=OneWay}" />
-                                    <TextBlock
-                                        x:Name="AddedAtBlock"
-                                        Margin="6,0"
-                                        x:Phase="1"
-                                        FontSize="12"
-                                        Foreground="{ThemeResource ApplicationSecondaryForegroundThemeBrush}"
-                                        RelativePanel.Below="TitleBlock"
-                                        RelativePanel.RightOf="Avatar"
-                                        Text="{x:Bind AddedAt, Mode=OneWay, Converter={StaticResource DateTimeToRelativeConverter}}" />
-                                </RelativePanel>
+                                <common:WaveeTrackHost
+                                    HorizontalAlignment="Stretch"
+                                    HorizontalContentAlignment="Stretch"
+                                    PlaybackState="{x:Bind PlaybackState, Mode=OneWay}">
+                                    <RelativePanel Padding="8">
+                                        <PersonPicture
+                                            x:Name="Avatar"
+                                            Width="58"
+                                            Height="58"
+                                            x:Phase="2"
+                                            ProfilePicture="{x:Bind Item, Mode=OneWay, Converter={StaticResource WaveeItemToImageConverter}, ConverterParameter='80'}"
+                                            RelativePanel.AlignLeftWithPanel="True" />
+                                        <TextBlock
+                                            x:Name="TitleBlock"
+                                            Margin="6,8,0,0"
+                                            x:Phase="1"
+                                            FontWeight="SemiBold"
+                                            RelativePanel.AlignTopWith="Avatar"
+                                            RelativePanel.RightOf="Avatar"
+                                            Text="{x:Bind Item.Name, Mode=OneWay}" />
+                                        <TextBlock
+                                            x:Name="AddedAtBlock"
+                                            Margin="6,0,0,0"
+                                            x:Phase="1"
+                                            FontSize="12"
+                                            Foreground="{ThemeResource ApplicationSecondaryForegroundThemeBrush}"
+                                            RelativePanel.Below="TitleBlock"
+                                            RelativePanel.RightOf="Avatar"
+                                            Text="{x:Bind AddedAt, Mode=OneWay, Converter={StaticResource DateTimeToRelativeConverter}}" />
+
+                                        <Button
+                                            Width="32"
+                                            Height="32"
+                                            Padding="0"
+                                            CornerRadius="100"
+                                            RelativePanel.AlignRightWithPanel="True"
+                                            RelativePanel.AlignVerticalCenterWithPanel="True"
+                                            Style="{ThemeResource AccentButtonStyle}"
+                                            Visibility="{x:Bind converters:FunctionBindings.IsPlayingThenVisible(PlaybackState), Mode=OneWay}">
+                                            <FontIcon
+                                                FontFamily="{StaticResource MediaPlayerIcons}"
+                                                FontSize="13"
+                                                Glyph="{x:Bind converters:FunctionBindings.IsPlayingThenPlayOrElsePausedIcon(PlaybackState), Mode=OneWay}" />
+                                        </Button>
+                                    </RelativePanel>
+                                </common:WaveeTrackHost>
                             </ItemContainer>
                         </DataTemplate>
                     </ItemsView.ItemTemplate>

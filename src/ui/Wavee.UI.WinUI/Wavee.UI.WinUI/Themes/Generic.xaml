@@ -14,12 +14,14 @@
             <Setter.Value>
                 <ControlTemplate TargetType="common:WaveeTrackHost">
                     <Border
+                        HorizontalAlignment="Stretch"
                         Background="{TemplateBinding Background}"
                         BorderBrush="{TemplateBinding BorderBrush}"
                         BorderThickness="{TemplateBinding BorderThickness}">
-                        <StackPanel>
-                            <ContentPresenter Content="{TemplateBinding MainContent}" />
-                        </StackPanel>
+                        <ContentPresenter
+                            HorizontalAlignment="Stretch"
+                            HorizontalContentAlignment="Stretch"
+                            Content="{TemplateBinding MainContent}" />
                     </Border>
                 </ControlTemplate>
             </Setter.Value>

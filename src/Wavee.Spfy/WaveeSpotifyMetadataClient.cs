@@ -1,6 +1,7 @@
 using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Threading;
+using System.Web;
 using Eum.Spotify.extendedmetadata;
 using Google.Protobuf;
 using LanguageExt;
@@ -369,12 +370,12 @@ public sealed class WaveeSpotifyMetadataClient
         return output;
     }
 
-    public async Task<IReadOnlyCollection<LyricsLine>> GetLyricsFor(SpotifyId id)
+    public async Task<IReadOnlyCollection<LyricsLine>> GetLyricsFor(SpotifyId id, string imageUrl)
     {
         if (id.Type is not AudioItemType.Track) throw new NotSupportedException("Only tracks have lyrics !");
         var accessToken = await _tokenFactory();
         var spclient = await ApResolve.GetSpClient(_httpClient);
-        var finalEndpoint = $"https://{spclient}/color-lyrics/v2/track/{id.ToBase62()}?format=json&vocalRemoval=false&market=from_token";
+        var finalEndpoint = $"https://{spclient}/color-lyrics/v2/track/{id.ToBase62()}/image/{HttpUtility.UrlEncode(imageUrl)}?format=json&vocalRemoval=false&market=from_token";
         using var request = new HttpRequestMessage(HttpMethod.Get, finalEndpoint);
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
         request.Headers.Add("App-Platform", "WebPlayer");

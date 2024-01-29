@@ -32,6 +32,7 @@ public sealed class NowPlayingViewModel : ObservableObject, IHasProfileViewModel
 
     public NowPlayingViewModel(IDispatcher dispatcherWrapper)
     {
+        Instance = this;
         _dispatcherWrapper = dispatcherWrapper;
         _timerCallbacks = new Dictionary<Guid, Action>();
         Errors = new ObservableCollection<ExceptionForProfile>();
@@ -378,6 +379,9 @@ public sealed class NowPlayingViewModel : ObservableObject, IHasProfileViewModel
                 if (ActiveDevice.Volume is null) Volume = null;
                 else Volume = ActiveDevice.Volume * 100;
             }
+
+            LatestPlaybackState = e;
+            PlaybackStateChanged?.Invoke(this, e);
         }, true);
     }
 
@@ -409,6 +413,11 @@ public sealed class NowPlayingViewModel : ObservableObject, IHasProfileViewModel
     {
         _timerCallbacks.Remove(callback);
     }
+
+    public static NowPlayingViewModel Instance { get; private set; }
+    public WaveeUIPlaybackState LatestPlaybackState { get; private set; }
+
+    public event EventHandler<WaveeUIPlaybackState>? PlaybackStateChanged;
 }
 
 public enum WaveePlaybackRestrictionType

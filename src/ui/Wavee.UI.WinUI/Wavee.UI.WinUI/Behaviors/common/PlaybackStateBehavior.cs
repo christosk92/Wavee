@@ -9,23 +9,15 @@ using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml.Controls;
 using Wavee.UI.Providers;
 using Wavee.UI.ViewModels.Artist;
+using Wavee.UI.ViewModels.NowPlaying;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Wavee.UI.WinUI.Behaviors.common;
 
 public class PlaybackStateBehavior : BehaviorBase<Microsoft.UI.Xaml.Controls.ItemsView>
 {
     private DispatcherQueue? _dispatcherQueue;
-    public static readonly DependencyProperty ProfileProperty = DependencyProperty.Register(nameof(Profile),
-        typeof(IWaveeUIAuthenticatedProfile), typeof(PlaybackStateBehavior),
-        new PropertyMetadata(default(IWaveeUIAuthenticatedProfile), PropertyChangedCallback));
-
     private long _token;
-    private static void PropertyChangedCallback(DependencyObject d, DependencyPropertyChangedEventArgs e)
-    {
-        var x = (PlaybackStateBehavior)d;
-        x.OnChanged(e);
-    }
-
     protected override void OnAssociatedObjectLoaded()
     {
         base.OnAssociatedObjectLoaded();
@@ -42,19 +34,13 @@ public class PlaybackStateBehavior : BehaviorBase<Microsoft.UI.Xaml.Controls.Ite
     {
         base.OnAttached();
 
-        if (Profile is not null)
-        {
-            ProfileOnPlaybackStateChanged(Profile, Profile.LatestPlaybackState);
-            Profile.PlaybackStateChanged -= ProfileOnPlaybackStateChanged;
-            Profile.PlaybackStateChanged += ProfileOnPlaybackStateChanged;
-        }
+        ProfileOnPlaybackStateChanged(null, NowPlayingViewModel.Instance.LatestPlaybackState);
+        NowPlayingViewModel.Instance.PlaybackStateChanged -= ProfileOnPlaybackStateChanged;
+        NowPlayingViewModel.Instance.PlaybackStateChanged += ProfileOnPlaybackStateChanged;
 
         _token = AssociatedObject.RegisterPropertyChangedCallback(ItemsView.ItemsSourceProperty, (sender, dp) =>
         {
-            if (Profile is not null)
-            {
-                ProfileOnPlaybackStateChanged(Profile, Profile.LatestPlaybackState);
-            }
+            ProfileOnPlaybackStateChanged(null, NowPlayingViewModel.Instance.LatestPlaybackState);
         });
     }
 
@@ -66,11 +52,11 @@ public class PlaybackStateBehavior : BehaviorBase<Microsoft.UI.Xaml.Controls.Ite
         void DoStuff()
         {
             var enumerable = (IEnumerable)this.AssociatedObject.ItemsSource;
-            foreach (var item in enumerable.Cast<WaveeTrackViewModel>())
+            foreach (var item in enumerable.Cast<WaveePlayableItemViewModel>())
             {
-                if (item.Is(e.Item, e.Uid))
+                if (item.Is(e.Item, e.Uid, e.ContextId))
                 {
-                    Debug.WriteLine($"{e.Item.Name} is playing!");
+                    Debug.WriteLine($"{item.Name} is playing!");
                     item.PlaybackState = e.IsPaused
                         ? WaveeUITrackPlaybackStateType.Paused
                         : WaveeUITrackPlaybackStateType.Playing;
@@ -91,32 +77,9 @@ public class PlaybackStateBehavior : BehaviorBase<Microsoft.UI.Xaml.Controls.Ite
     {
         base.OnDetaching();
 
-        if (Profile is not null)
-        {
-            Profile.PlaybackStateChanged -= ProfileOnPlaybackStateChanged;
-        }
+        NowPlayingViewModel.Instance.PlaybackStateChanged -= ProfileOnPlaybackStateChanged;
 
         AssociatedObject.UnregisterPropertyChangedCallback(ItemsView.ItemsSourceProperty, _token);
-    }
-
-    public IWaveeUIAuthenticatedProfile Profile
-    {
-        get => (IWaveeUIAuthenticatedProfile)GetValue(ProfileProperty);
-        set => SetValue(ProfileProperty, value);
-    }
-
-    private void OnChanged(DependencyPropertyChangedEventArgs e)
-    {
-        if (e.OldValue is IWaveeUIAuthenticatedProfile oldProfile)
-        {
-            oldProfile.PlaybackStateChanged -= ProfileOnPlaybackStateChanged;
-        }
-
-        if (e.NewValue is IWaveeUIAuthenticatedProfile newProfile)
-        {
-            ProfileOnPlaybackStateChanged(newProfile, newProfile.LatestPlaybackState);
-            newProfile.PlaybackStateChanged += ProfileOnPlaybackStateChanged;
-        }
     }
 
 }

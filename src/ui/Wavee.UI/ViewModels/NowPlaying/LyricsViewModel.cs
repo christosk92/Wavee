@@ -148,7 +148,7 @@ public sealed class LyricsViewModel : RightSidebarComponentViewModel
 
             try
             {
-                var lyrics = await Task.Run(async () => await profile.GetLyricsFor(currentTrackItem.Id))
+                var lyrics = await Task.Run(async () => await profile.GetLyricsFor(currentTrackItem.Id, currentTrackItem.Images.Head.Url))
                     .ConfigureAwait(false);
 
                 _dispatcher.Dispatch(() =>

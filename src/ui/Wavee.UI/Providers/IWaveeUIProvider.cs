@@ -36,7 +36,7 @@ public interface IWaveeUIAuthenticatedProfile
     Task<IReadOnlyCollection<LibraryItemViewModel>> GetLibraryArtists(KnownLibraryComponentFilterType sort, bool sortAscending, string? filter, CancellationToken cancellation);
     Task<IReadOnlyCollection<LibraryItemViewModel>> GetLibraryAlbums(KnownLibraryComponentFilterType sort, bool sortAscending, string? filter, CancellationToken cancellation);
     Task<IReadOnlyCollection<LibraryItemViewModel>> GetLibraryTracks(KnownLibraryComponentFilterType sort, bool sortAscending, string? filter, CancellationToken cancellation);
-    Task<IReadOnlyCollection<LyricsLine>> GetLyricsFor(string id);
+    Task<IReadOnlyCollection<LyricsLine>> GetLyricsFor(string id, string imageUrl);
 
     Task<(string Dark, string Light)> ExtractColorFor(string url);
 
@@ -55,6 +55,7 @@ public interface IWaveeUIAuthenticatedProfile
 public readonly record struct WaveeUIPlaybackState(
     IWaveePlayableItem? Item,
     Option<string> Uid,
+    string ContextId,
     bool IsShuffling,
     WaveeRepeatStateType RepeatState,
     bool IsPaused,
