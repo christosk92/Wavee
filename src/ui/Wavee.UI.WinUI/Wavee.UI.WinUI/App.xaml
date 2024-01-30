@@ -27,7 +27,7 @@
             <Style x:Key="OddStyle" TargetType="Grid" />
             <Style x:Key="EvenStyle" TargetType="Grid">
                 <Setter Property="Background" Value="{ThemeResource ControlAltFillColorSecondaryBrush}" />
-                <Setter Property="BorderThickness" Value="0" />
+                <Setter Property="BorderThickness" Value="1" />
                 <Setter Property="CornerRadius" Value="8" />
             </Style>
             <converters:StringIsNullOrEmptyConverter x:Key="StringIsNullOrEmpty" />

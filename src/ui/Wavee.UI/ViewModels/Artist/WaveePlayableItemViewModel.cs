@@ -9,12 +9,12 @@ public abstract class WaveePlayableItemViewModel : ObservableObject
     private WaveeUITrackPlaybackStateType _playbackState;
     private bool _isHovered;
 
-    public WaveePlayableItemViewModel(ComposedKey id, ICommand playCommand)
+    public WaveePlayableItemViewModel(string id, ICommand playCommand)
     {
         PlayCommand = playCommand;
         Id = id;
     }
-    public ComposedKey Id { get; }
+    public string Id { get; }
     public WaveeUITrackPlaybackStateType PlaybackState
     {
         get => _playbackState;

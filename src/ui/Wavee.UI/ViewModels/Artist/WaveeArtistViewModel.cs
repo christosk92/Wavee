@@ -22,7 +22,7 @@ public sealed class WaveeArtistViewModel : WaveePlayableItemViewModel
     private static Dictionary<string, WeakReference<WaveeArtistViewModel>> _holders = new();
 
     public WaveeArtistViewModel(string id, string name, IReadOnlyCollection<WaveeArtistDiscographyGroupViewModel> discography)
-        : base(new ComposedKey(id), null)
+        : base(id, null)
     {
         Id = id;
         Name = name;
@@ -221,7 +221,7 @@ public sealed class WaveeAlbumViewModel
         Id = id;
         Name = name;
         Year = year;
-        Tracks = tracks.Select(x => new WaveeAlbumPlayableItemViewModel(x, playCommand)).ToImmutableArray();
+        Tracks = tracks.Select(x => new WaveeAlbumPlayableItemViewModel(x, playCommand)).ToImmutableList();
         MediumImageUrl = mediumImageUrl;
         Loaded = true;
     }
@@ -229,7 +229,7 @@ public sealed class WaveeAlbumViewModel
     public WaveeAlbumViewModel(string id, int lazyCount)
     {
         Id = id;
-        Tracks = Enumerable.Range(0, lazyCount).Select(_ => new WaveeAlbumPlayableItemViewModel(_)).ToImmutableArray();
+        Tracks = Enumerable.Range(0, lazyCount).Select(_ => new WaveeAlbumPlayableItemViewModel(_)).ToImmutableList();
         MediumImageUrl = "ms-appx:///Assets/AlbumPlaceholder.png";
         Loaded = false;
     }
@@ -245,7 +245,7 @@ public sealed class WaveeAlbumViewModel
 public sealed class WaveeAlbumPlayableItemViewModel : WaveePlayableItemViewModel
 {
 
-    public WaveeAlbumPlayableItemViewModel(IWaveeTrackAlbum item, ICommand playCommand) : base(new ComposedKey(item.Id), playCommand)
+    public WaveeAlbumPlayableItemViewModel(IWaveeTrackAlbum item, ICommand playCommand) : base(item.Id, playCommand)
     {
         Item = item;
         Number = item.Number;
@@ -253,7 +253,7 @@ public sealed class WaveeAlbumPlayableItemViewModel : WaveePlayableItemViewModel
         This = this;
     }
 
-    public WaveeAlbumPlayableItemViewModel(int number) : base(new ComposedKey(number), null)
+    public WaveeAlbumPlayableItemViewModel(int number) : base(number.ToString(), null)
     {
         Number = number;
         Loaded = false;

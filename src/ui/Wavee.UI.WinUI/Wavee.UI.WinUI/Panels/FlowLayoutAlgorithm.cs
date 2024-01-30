@@ -9,6 +9,7 @@ using Windows.Foundation;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Serilog.Events;
+using Exception = System.Exception;
 
 namespace Wavee.UI.WinUI.Panels;
 
@@ -150,12 +151,22 @@ internal class FlowLayoutAlgorithm
         Size availableSize,
         VirtualizingLayoutContext context)
     {
-        var measureSize = _algorithmCallbacks!.Algorithm_GetMeasureSize(index, availableSize, context);
-        element.Measure(measureSize);
-        var provisionalArrangeSize = _algorithmCallbacks.Algorithm_GetProvisionalArrangeSize(index, measureSize, element.DesiredSize, context);
-        _algorithmCallbacks.Algorithm_OnElementMeasured(element, index, availableSize, measureSize, element.DesiredSize, provisionalArrangeSize, context);
+        try
+        {
+            var measureSize = _algorithmCallbacks!.Algorithm_GetMeasureSize(index, availableSize, context);
+            element.Measure(measureSize);
+            var provisionalArrangeSize =
+                _algorithmCallbacks.Algorithm_GetProvisionalArrangeSize(index, measureSize, element.DesiredSize,
+                    context);
+            _algorithmCallbacks.Algorithm_OnElementMeasured(element, index, availableSize, measureSize,
+                element.DesiredSize, provisionalArrangeSize, context);
 
-        return provisionalArrangeSize;
+            return provisionalArrangeSize;
+        }
+        catch (Exception x)
+        {
+            return availableSize;
+        }
     }
 
     private int GetAnchorIndex(
@@ -262,9 +273,16 @@ internal class FlowLayoutAlgorithm
             {
                 // Disconnected, throw everything and create new anchor
                 _elementManager.ClearRealizedRange();
+                try
+                {
+                    var anchor = _context!.GetOrCreateElementAt(anchorIndex,
+                        ElementRealizationOptions.ForceCreate | ElementRealizationOptions.SuppressAutoRecycle);
+                    _elementManager.Add(anchor, anchorIndex);
+                }
+                catch (Exception x)
+                {
 
-                var anchor = _context!.GetOrCreateElementAt(anchorIndex, ElementRealizationOptions.ForceCreate | ElementRealizationOptions.SuppressAutoRecycle);
-                _elementManager.Add(anchor, anchorIndex);
+                }
             }
 
             var anchorElement = _elementManager.GetRealizedElement(anchorIndex);

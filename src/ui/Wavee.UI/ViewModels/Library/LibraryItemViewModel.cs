@@ -6,7 +6,7 @@ namespace Wavee.UI.ViewModels.Library;
 
 public sealed class LibraryItemViewModel : WaveePlayableItemViewModel
 {
-    public LibraryItemViewModel(IWaveeItem item, DateTimeOffset addedAt, IWaveeUIAuthenticatedProfile profile) : base(new ComposedKey(item.Id), null)
+    public LibraryItemViewModel(IWaveeItem item, DateTimeOffset addedAt, IWaveeUIAuthenticatedProfile profile) : base(item.Id, null)
     {
         Item = item;
         AddedAt = addedAt;

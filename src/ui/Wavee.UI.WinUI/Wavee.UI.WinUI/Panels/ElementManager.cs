@@ -72,31 +72,38 @@ internal class ElementManager
 
     public UIElement GetAt(int realizedIndex)
     {
-        UIElement? element;
-
-        if (IsVirtualizingContext)
+        try
         {
-            element = _realizedElements[realizedIndex];
+            UIElement? element;
 
-            if (element == null)
+            if (IsVirtualizingContext)
             {
-                // Sentinel. Create the element now since we need it.
-                int dataIndex = GetDataIndexFromRealizedRangeIndex(realizedIndex);
-                element = _context!.GetOrCreateElementAt(
-                    dataIndex,
-                    ElementRealizationOptions.ForceCreate | ElementRealizationOptions.SuppressAutoRecycle);
-                _realizedElements[realizedIndex] = element;
-            }
-        }
-        else
-        {
-            // realizedIndex and dataIndex are the same (everything is realized)
-            element = _context!.GetOrCreateElementAt(
-                realizedIndex,
-                ElementRealizationOptions.ForceCreate | ElementRealizationOptions.SuppressAutoRecycle);
-        }
+                element = _realizedElements[realizedIndex];
 
-        return element;
+                if (element == null)
+                {
+                    // Sentinel. Create the element now since we need it.
+                    int dataIndex = GetDataIndexFromRealizedRangeIndex(realizedIndex);
+                    element = _context!.GetOrCreateElementAt(
+                        dataIndex,
+                        ElementRealizationOptions.ForceCreate | ElementRealizationOptions.SuppressAutoRecycle);
+                    _realizedElements[realizedIndex] = element;
+                }
+            }
+            else
+            {
+                // realizedIndex and dataIndex are the same (everything is realized)
+                element = _context!.GetOrCreateElementAt(
+                    realizedIndex,
+                    ElementRealizationOptions.ForceCreate | ElementRealizationOptions.SuppressAutoRecycle);
+            }
+
+            return element;
+        }
+        catch (Exception x)
+        {
+            return null;
+        }
     }
 
     public void Add(UIElement element, int dataIndex)
@@ -178,6 +185,8 @@ internal class ElementManager
     public void SetLayoutBoundsForDataIndex(int dataIndex, in Rect bounds)
     {
         int realizedIndex = GetRealizedRangeIndexFromDataIndex(dataIndex);
+        if (realizedIndex >= _realizedElementLayoutBounds.Count)
+            return;
         _realizedElementLayoutBounds[realizedIndex] = bounds;
     }
 
@@ -218,20 +227,27 @@ internal class ElementManager
 
     public void EnsureElementRealized(bool forward, int dataIndex, string? layoutId)
     {
-        if (IsDataIndexRealized(dataIndex) == false)
+        try
         {
-            var element = _context!.GetOrCreateElementAt(
-                dataIndex,
-                ElementRealizationOptions.ForceCreate | ElementRealizationOptions.SuppressAutoRecycle);
+            if (IsDataIndexRealized(dataIndex) == false)
+            {
+                var element = _context!.GetOrCreateElementAt(
+                    dataIndex,
+                    ElementRealizationOptions.ForceCreate | ElementRealizationOptions.SuppressAutoRecycle);
 
-            if (forward)
-            {
-                Add(element, dataIndex);
+                if (forward)
+                {
+                    Add(element, dataIndex);
+                }
+                else
+                {
+                    Insert(0, dataIndex, element);
+                }
+
             }
-            else
-            {
-                Insert(0, dataIndex, element);
-            }
+        }
+        catch (Exception x)
+        {
 
         }
     }

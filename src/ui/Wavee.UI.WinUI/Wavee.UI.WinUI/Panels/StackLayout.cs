@@ -344,21 +344,30 @@ namespace Wavee.UI.WinUI.Panels
             VirtualizingLayoutContext context,
             StackLayoutState stackLayoutState)
         {
-            double averageElementSize = 0;
-
-            if (context.ItemCount > 0)
+            try
             {
-                if (stackLayoutState.TotalElementsMeasured == 0)
+                double averageElementSize = 0;
+
+                if (context.ItemCount > 0)
                 {
-                    var tmpElement = context.GetOrCreateElementAt(0, ElementRealizationOptions.ForceCreate | ElementRealizationOptions.SuppressAutoRecycle);
-                    stackLayoutState.FlowAlgorithm.MeasureElement(tmpElement, 0, availableSize, context);
-                    context.RecycleElement(tmpElement);
+                    if (stackLayoutState.TotalElementsMeasured == 0)
+                    {
+                        var tmpElement = context.GetOrCreateElementAt(0,
+                            ElementRealizationOptions.ForceCreate | ElementRealizationOptions.SuppressAutoRecycle);
+                        stackLayoutState.FlowAlgorithm.MeasureElement(tmpElement, 0, availableSize, context);
+                        context.RecycleElement(tmpElement);
+                    }
+
+                    averageElementSize =
+                        Math.Round(stackLayoutState.TotalElementSize / stackLayoutState.TotalElementsMeasured);
                 }
 
-                averageElementSize = Math.Round(stackLayoutState.TotalElementSize / stackLayoutState.TotalElementsMeasured);
+                return averageElementSize;
             }
-
-            return averageElementSize;
+            catch (Exception ex)
+            {
+                return 0;
+            }
         }
 
         private void InvalidateLayout() => InvalidateMeasure();

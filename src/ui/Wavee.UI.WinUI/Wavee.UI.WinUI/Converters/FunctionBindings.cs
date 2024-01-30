@@ -57,7 +57,43 @@ public static class FunctionBindings
 
     public static string IsPlayingThenPlayOrElsePausedIcon(WaveeUITrackPlaybackStateType waveeUiTrackPlaybackStateType)
     {
-        if (waveeUiTrackPlaybackStateType is WaveeUITrackPlaybackStateType.Paused) return "\uF5B0";
+        if (waveeUiTrackPlaybackStateType is WaveeUITrackPlaybackStateType.Paused or WaveeUITrackPlaybackStateType.NotPlaying) return "\uF5B0";
         return "\uE62E";
+    }
+
+    public static bool IsPlayingThenTrue(WaveeUITrackPlaybackStateType waveeUiTrackPlaybackStateType)
+    {
+        return waveeUiTrackPlaybackStateType is WaveeUITrackPlaybackStateType.Playing
+            or WaveeUITrackPlaybackStateType.Paused;
+    }
+
+    public static Visibility IsONLYPlayingOrNonHoveredThenVisible(WaveeUITrackPlaybackStateType waveeUiTrackPlaybackStateType, bool hovering)
+    {
+        if (!hovering)
+        {
+            //if not hoverng, and playing; show
+            if (waveeUiTrackPlaybackStateType is WaveeUITrackPlaybackStateType.Playing)
+                return Visibility.Visible;
+            return Visibility.Collapsed;
+        }
+
+        //if hovernig, collapse
+        return Visibility.Collapsed;
+    }
+
+    public static Visibility IsOnlyPausedOrHoveredThenVisible(WaveeUITrackPlaybackStateType waveeUiTrackPlaybackStateType, bool hovering)
+    {
+        if (hovering) return Visibility.Visible;
+
+        if (waveeUiTrackPlaybackStateType is WaveeUITrackPlaybackStateType.Paused) return Visibility.Visible;
+
+        return Visibility.Collapsed;
+    }
+
+    public static Visibility IsPlayingOrHovered(WaveeUITrackPlaybackStateType waveeUiTrackPlaybackStateType, bool hovering)
+    {
+        if (waveeUiTrackPlaybackStateType is WaveeUITrackPlaybackStateType.Playing
+            or WaveeUITrackPlaybackStateType.Paused) return Visibility.Visible;
+        return hovering ? Visibility.Visible : Visibility.Collapsed;
     }
 }

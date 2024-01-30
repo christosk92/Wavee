@@ -14,7 +14,15 @@ using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Wavee.UI.WinUI.Behaviors.common;
 
-public class PlaybackStateBehavior : BehaviorBase<Microsoft.UI.Xaml.Controls.ItemsView>
+public sealed class PlaybackStateBehaviorItemsView : PlaybackStateBehavior<ItemsView>
+{
+    public override IEnumerable ItemsSource => (IEnumerable)this.AssociatedObject.ItemsSource;
+}
+public sealed class PlaybackStateBehaviorItemsRepeater : PlaybackStateBehavior<ItemsRepeater>
+{
+    public override IEnumerable ItemsSource => (IEnumerable)this.AssociatedObject.ItemsSource;
+}
+public abstract class PlaybackStateBehavior<T> : BehaviorBase<T> where T : FrameworkElement
 {
     private DispatcherQueue? _dispatcherQueue;
     private long _token;
@@ -23,6 +31,7 @@ public class PlaybackStateBehavior : BehaviorBase<Microsoft.UI.Xaml.Controls.Ite
         base.OnAssociatedObjectLoaded();
         _dispatcherQueue = this.AssociatedObject.DispatcherQueue;
     }
+    public abstract IEnumerable ItemsSource { get; }
 
     protected override void OnAssociatedObjectUnloaded()
     {
@@ -51,7 +60,7 @@ public class PlaybackStateBehavior : BehaviorBase<Microsoft.UI.Xaml.Controls.Ite
 
         void DoStuff()
         {
-            var enumerable = (IEnumerable)this.AssociatedObject.ItemsSource;
+            var enumerable = ItemsSource;
             foreach (var item in enumerable.Cast<WaveePlayableItemViewModel>())
             {
                 if (item.Is(e.Item, e.Uid, e.ContextId))
@@ -83,3 +92,4 @@ public class PlaybackStateBehavior : BehaviorBase<Microsoft.UI.Xaml.Controls.Ite
     }
 
 }
+

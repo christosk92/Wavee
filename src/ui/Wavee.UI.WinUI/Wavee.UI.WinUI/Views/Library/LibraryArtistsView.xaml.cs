@@ -1,3 +1,4 @@
+using System;
 using System.ComponentModel;
 using System.Windows.Forms;
 using Microsoft.UI.Text;
@@ -39,6 +40,8 @@ public sealed partial class LibraryArtistsView : UserControl
                 {
                     new EntranceThemeTransition(),
                 };
+                Gr.Content = null;
+                GC.Collect();
                 Gr.Content = stkcp;
                 var txtblock = new TextBlock
                 {
@@ -74,4 +77,10 @@ public sealed partial class LibraryArtistsView : UserControl
     {
         this.Bindings.StopTracking();
     }
+
+    private void AnnotatedScrollBar_DetailLabelRequested(AnnotatedScrollBar sender, AnnotatedScrollBarDetailLabelRequestedEventArgs args)
+    {
+
+    }
+
 }

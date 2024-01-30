@@ -16,10 +16,6 @@ public sealed class WaveeTrackHost : Control
         DependencyProperty.Register(nameof(PlaybackState), typeof(WaveeUITrackPlaybackStateType),
             typeof(WaveeTrackHost), new PropertyMetadata(default(WaveeUITrackPlaybackStateType), PropertyChangedCallback));
 
-    public static readonly DependencyProperty TrackIdProperty =
-        DependencyProperty.Register(nameof(TrackId), typeof(ComposedKey), typeof(WaveeTrackHost),
-            new PropertyMetadata(default(ComposedKey)));
-
     private static void PropertyChangedCallback(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
         var x = (WaveeTrackHost)d;
@@ -37,11 +33,6 @@ public sealed class WaveeTrackHost : Control
         set => SetValue(PlaybackStateProperty, value);
     }
 
-    public ComposedKey TrackId
-    {
-        get => (ComposedKey)GetValue(TrackIdProperty);
-        set => SetValue(TrackIdProperty, value);
-    }
 
 
     public static DependencyProperty MainContentProperty =

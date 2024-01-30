@@ -21,6 +21,7 @@
 		<None Remove="Assets\Fonts\SegoeFluentIcons.ttf" />
 		<None Remove="Views\Artist\ArtistDiscographyComponent.xaml" />
 		<None Remove="Views\Common\ErrorsView.xaml" />
+		<None Remove="Views\Common\NumberOrPlayPauseButton.xaml" />
 		<None Remove="Views\Feed\FeedView.xaml" />
 		<None Remove="Views\Library\Components\LibraryFilteringComponentBar.xaml" />
 		<None Remove="Views\Library\LibraryAlbumsView.xaml" />
@@ -100,6 +101,9 @@
 			<Generator>MSBuild:Compile</Generator>
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
+		<Page Update="Views\Common\NumberOrPlayPauseButton.xaml">
+		  <Generator>MSBuild:Compile</Generator>
+		</Page>
 		<Page Update="Views\Artist\ArtistDiscographyComponent.xaml">
 			<Generator>MSBuild:Compile</Generator>
 		</Page>
