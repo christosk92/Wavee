@@ -72,38 +72,32 @@ internal class ElementManager
 
     public UIElement GetAt(int realizedIndex)
     {
-        try
+
+        UIElement? element;
+
+        if (IsVirtualizingContext)
         {
-            UIElement? element;
+            element = _realizedElements[realizedIndex];
 
-            if (IsVirtualizingContext)
+            if (element == null)
             {
-                element = _realizedElements[realizedIndex];
-
-                if (element == null)
-                {
-                    // Sentinel. Create the element now since we need it.
-                    int dataIndex = GetDataIndexFromRealizedRangeIndex(realizedIndex);
-                    element = _context!.GetOrCreateElementAt(
-                        dataIndex,
-                        ElementRealizationOptions.ForceCreate | ElementRealizationOptions.SuppressAutoRecycle);
-                    _realizedElements[realizedIndex] = element;
-                }
-            }
-            else
-            {
-                // realizedIndex and dataIndex are the same (everything is realized)
+                // Sentinel. Create the element now since we need it.
+                int dataIndex = GetDataIndexFromRealizedRangeIndex(realizedIndex);
                 element = _context!.GetOrCreateElementAt(
-                    realizedIndex,
+                    dataIndex,
                     ElementRealizationOptions.ForceCreate | ElementRealizationOptions.SuppressAutoRecycle);
+                _realizedElements[realizedIndex] = element;
             }
-
-            return element;
         }
-        catch (Exception x)
+        else
         {
-            return null;
+            // realizedIndex and dataIndex are the same (everything is realized)
+            element = _context!.GetOrCreateElementAt(
+                realizedIndex,
+                ElementRealizationOptions.ForceCreate | ElementRealizationOptions.SuppressAutoRecycle);
         }
+
+        return element;
     }
 
     public void Add(UIElement element, int dataIndex)
@@ -227,27 +221,20 @@ internal class ElementManager
 
     public void EnsureElementRealized(bool forward, int dataIndex, string? layoutId)
     {
-        try
+        if (IsDataIndexRealized(dataIndex) == false)
         {
-            if (IsDataIndexRealized(dataIndex) == false)
+            var element = _context!.GetOrCreateElementAt(
+                dataIndex,
+                ElementRealizationOptions.ForceCreate | ElementRealizationOptions.SuppressAutoRecycle);
+
+            if (forward)
             {
-                var element = _context!.GetOrCreateElementAt(
-                    dataIndex,
-                    ElementRealizationOptions.ForceCreate | ElementRealizationOptions.SuppressAutoRecycle);
-
-                if (forward)
-                {
-                    Add(element, dataIndex);
-                }
-                else
-                {
-                    Insert(0, dataIndex, element);
-                }
-
+                Add(element, dataIndex);
             }
-        }
-        catch (Exception x)
-        {
+            else
+            {
+                Insert(0, dataIndex, element);
+            }
 
         }
     }
