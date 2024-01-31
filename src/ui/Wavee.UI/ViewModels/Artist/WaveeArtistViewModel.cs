@@ -24,15 +24,16 @@ public sealed class WaveeArtistViewModel : WaveePlayableItemViewModel
     public WaveeArtistViewModel(string id, string name, IReadOnlyCollection<WaveeArtistDiscographyGroupViewModel> discography)
         : base(id, null)
     {
-        Id = id;
         Name = name;
         Discography = discography;
     }
-    public string Id { get; }
     public override string Name { get; }
     public override bool Is(IWaveePlayableItem x, Option<string> uid, string eContextId)
     {
-        return eContextId == Id;
+        return eContextId == Id || x.Descriptions.HeadOrNone().Match(
+            None: () => false,
+            Some: y => y.Id == Id
+        );
     }
     public IReadOnlyCollection<WaveeArtistDiscographyGroupViewModel> Discography { get; }
     public double ScrollPosition { get; set; }

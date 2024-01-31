@@ -40,8 +40,8 @@ public sealed partial class LibraryArtistsView : UserControl
                 {
                     new EntranceThemeTransition(),
                 };
-                Gr.Content = null;
-                GC.Collect();
+                // Gr.Content = null;
+                // GC.Collect();
                 Gr.Content = stkcp;
                 var txtblock = new TextBlock
                 {

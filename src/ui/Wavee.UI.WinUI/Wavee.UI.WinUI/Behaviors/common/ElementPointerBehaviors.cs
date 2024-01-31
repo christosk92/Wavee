@@ -13,13 +13,31 @@ public sealed class ElementPointerBehaviors : BehaviorBase<FrameworkElement>
     {
         base.OnAssociatedObjectLoaded();
 
+        this.AssociatedObject.PointerEntered -= AssociatedObjectOnPointerEntered;
+        this.AssociatedObject.PointerExited -= AssociatedObjectOnPointerExited;
+
         this.AssociatedObject.PointerEntered += AssociatedObjectOnPointerEntered;
         this.AssociatedObject.PointerExited += AssociatedObjectOnPointerExited;
     }
 
+    protected override void OnAttached()
+    {
+        base.OnAttached();
+
+        this.AssociatedObject.PointerEntered -= AssociatedObjectOnPointerEntered;
+        this.AssociatedObject.PointerExited -= AssociatedObjectOnPointerExited;
+
+        this.AssociatedObject.PointerEntered += AssociatedObjectOnPointerEntered;
+        this.AssociatedObject.PointerExited += AssociatedObjectOnPointerExited;
+    }
+
+
     protected override void OnDetaching()
     {
         HasPointer = false;
+
+        this.AssociatedObject.PointerEntered -= AssociatedObjectOnPointerEntered;
+        this.AssociatedObject.PointerExited -= AssociatedObjectOnPointerExited;
         base.OnDetaching();
     }
 

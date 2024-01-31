@@ -10,17 +10,23 @@ using Microsoft.UI.Xaml.Controls;
 using Wavee.UI.Providers;
 using Wavee.UI.ViewModels.Artist;
 using Wavee.UI.ViewModels.NowPlaying;
-using static System.Runtime.InteropServices.JavaScript.JSType;
+using Windows.System;
+using DispatcherQueue = Microsoft.UI.Dispatching.DispatcherQueue;
+using DispatcherQueuePriority = Microsoft.UI.Dispatching.DispatcherQueuePriority;
 
 namespace Wavee.UI.WinUI.Behaviors.common;
 
 public sealed class PlaybackStateBehaviorItemsView : PlaybackStateBehavior<ItemsView>
 {
     public override IEnumerable ItemsSource => (IEnumerable)this.AssociatedObject.ItemsSource;
+
+    public override DependencyProperty ItemsSourceProperty => ItemsView.ItemsSourceProperty;
 }
 public sealed class PlaybackStateBehaviorItemsRepeater : PlaybackStateBehavior<ItemsRepeater>
 {
-    public override IEnumerable ItemsSource => (IEnumerable)this.AssociatedObject.ItemsSource;
+    public override IEnumerable ItemsSource => (IEnumerable)this.AssociatedObject?.ItemsSource;
+
+    public override DependencyProperty ItemsSourceProperty => ItemsRepeater.ItemsSourceProperty;
 }
 public abstract class PlaybackStateBehavior<T> : BehaviorBase<T> where T : FrameworkElement
 {
@@ -29,14 +35,17 @@ public abstract class PlaybackStateBehavior<T> : BehaviorBase<T> where T : Frame
     protected override void OnAssociatedObjectLoaded()
     {
         base.OnAssociatedObjectLoaded();
-        _dispatcherQueue = this.AssociatedObject.DispatcherQueue;
+        _dispatcherQueue = this.DispatcherQueue;
+
+        ProfileOnPlaybackStateChanged(null, NowPlayingViewModel.Instance.LatestPlaybackState);
     }
     public abstract IEnumerable ItemsSource { get; }
+    public abstract DependencyProperty ItemsSourceProperty { get; }
+
 
     protected override void OnAssociatedObjectUnloaded()
     {
         base.OnAssociatedObjectUnloaded();
-        _dispatcherQueue = null;
     }
 
     protected override void OnAttached()
@@ -47,11 +56,14 @@ public abstract class PlaybackStateBehavior<T> : BehaviorBase<T> where T : Frame
         NowPlayingViewModel.Instance.PlaybackStateChanged -= ProfileOnPlaybackStateChanged;
         NowPlayingViewModel.Instance.PlaybackStateChanged += ProfileOnPlaybackStateChanged;
 
-        _token = AssociatedObject.RegisterPropertyChangedCallback(ItemsView.ItemsSourceProperty, (sender, dp) =>
+        _token = AssociatedObject.RegisterPropertyChangedCallback(ItemsSourceProperty, (sender, dp) =>
         {
             ProfileOnPlaybackStateChanged(null, NowPlayingViewModel.Instance.LatestPlaybackState);
         });
+
+        ProfileOnPlaybackStateChanged(null, NowPlayingViewModel.Instance.LatestPlaybackState);
     }
+
 
     private void ProfileOnPlaybackStateChanged(object sender, WaveeUIPlaybackState e)
     {
@@ -61,6 +73,7 @@ public abstract class PlaybackStateBehavior<T> : BehaviorBase<T> where T : Frame
         void DoStuff()
         {
             var enumerable = ItemsSource;
+            if (enumerable is null) return;
             foreach (var item in enumerable.Cast<WaveePlayableItemViewModel>())
             {
                 if (item.Is(e.Item, e.Uid, e.ContextId))

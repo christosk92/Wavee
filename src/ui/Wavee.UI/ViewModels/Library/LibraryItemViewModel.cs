@@ -18,6 +18,9 @@ public sealed class LibraryItemViewModel : WaveePlayableItemViewModel
     public override string Name => Item.Name;
     public override bool Is(IWaveePlayableItem x, Option<string> uid, string contextId)
     {
-        return contextId == Item.Id;
+        return contextId == Item.Id || x.Descriptions.HeadOrNone().Match(
+            None: () => false,
+            Some: y => y.Id == Id
+        );
     }
 }
