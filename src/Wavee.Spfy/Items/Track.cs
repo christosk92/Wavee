@@ -18,6 +18,9 @@ public readonly record struct SpotifySimpleTrack : ISpotifyPlayableItem
     public required Seq<SpotifyAudioFile> PreviewFiles { get; init; }
     public required TimeSpan Duration { get; init; }
     public string? Id => Uri.ToString();
+
+    public AudioItemType Type => AudioItemType.Track;
+
     public required bool Explicit { get; init; }
 
 }

@@ -1,5 +1,6 @@
 using System.Collections.Immutable;
 using LanguageExt;
+using Spotify.Metadata;
 
 namespace Wavee.Spfy.Items;
 
@@ -15,6 +16,9 @@ public readonly record struct SpotifySimpleEpisode : ISpotifyPlayableItem
     public required Seq<UrlImage> Images { get; init; }
     public required string Description { get; init; }
     public string? Id => Uri.ToString();
+
+    public AudioItemType Type => AudioItemType.PodcastEpisode;
+
     public bool Explicit { get; }
 }
 public readonly struct SpotifySimpleShow : ISpotifyItem
@@ -29,6 +33,8 @@ public readonly struct SpotifySimpleShow : ISpotifyItem
     public Seq<UrlImage> Images { get; } = Seq<UrlImage>.Empty;
 
     public string Id => Uri.ToString();
+
+    public AudioItemType Type => AudioItemType.PodcastShow;
 
     public string Name => throw new NotImplementedException();
 }

@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Net.WebSockets;
 using System.Text;
@@ -788,7 +789,58 @@ public sealed class WaveeSpotifyRemoteClient
         };
         return SendCommand(command, waitForResponse);
     }
+    public Task<bool> Play(SpotifyPlayCommand cmd)
+    {
+        var ctx = new Dictionary<string, object>
+        {
+            ["metadata"] = cmd.Context.ContextMetadata.ToDictionary(),
+            ["uri"] = cmd.Context.ContextUri
+        };
+        cmd.Context.ContextUrl.IfSome(x => ctx["url"] = x);
 
+        var skip_to = new Dictionary<string, object>();
+        cmd.SkipTo.Uri.IfSome(x => skip_to["track_uri"] = x);
+        //cmd.SkipTo.Index.IfSome(x => skip_to["track_index"] = x);
+        //cmd.SkipTo.Uid.IfSome(x => skip_to["track_uid"] = x);
+        cmd.SkipTo.PageIndex.IfSome(x => skip_to["page_index"] = x);
+
+
+        if (cmd.Context.Pages.IsSome)
+        {
+            var pages = new List<object>();
+            foreach (var page in cmd.Context.Pages.ValueUnsafe())
+            {
+                var pageObj = new Dictionary<string, object>();
+                page.PageUrl.IfSome(x => pageObj["page_url"] = x);
+                pages.Add(pageObj);
+            }
+
+            ctx["pages"] = pages;
+        }
+
+
+        var command = new
+        {
+            command = new
+            {
+                endpoint = "play",
+                context = ctx,
+                options = new
+                {
+                    license = "premium",
+                    player_options_override = new object(),
+                    skip_to = skip_to
+                },
+                play_origin = new
+                {
+                    feature_identifier = cmd.Origin.Type.ToString().ToLower(),
+                    feature_version = "web-player_2024-01-31_1706690831245_e0907ef",
+                    referrer_identifier = cmd.Origin.Referer
+                }
+            }
+        };
+        return SendCommand(command, true);
+    }
     public async Task<bool> SetVolume(double oneToZero, bool waitForResponse)
     {
         var activeDeviceId = _state.Bind(x => x.ActiveDeviceId);
@@ -1018,3 +1070,21 @@ public enum SpotifyRestrictionAppliesForType
     Resuming,
     Seeking,
 }
+public readonly record struct SpotifyPlayCommand(SpotifyPlayCommandContext Context,
+    SpotifyPlaySkipTo SkipTo,
+    SpotifyPlayOrigin Origin);
+
+public readonly record struct SpotifyPlayOrigin(AudioItemType Type, string Referer);
+public readonly record struct SpotifyPlaySkipTo(
+    Option<int> PageIndex,
+    Option<int> Index,
+    Option<string> Uri, Option<string> Uid);
+public readonly record struct SpotifyPlayCommandContext(
+    HashMap<string, string> ContextMetadata,
+    string ContextUri,
+    Option<string> ContextUrl,
+    Option<Seq<SpotifyPlayCommandContextPage>> Pages);
+
+public readonly record struct SpotifyPlayCommandContextPage(
+    Option<string> PageUrl,
+    HashMap<string, string> Metadata);

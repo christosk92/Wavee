@@ -57,7 +57,7 @@ public static class FunctionBindings
 
     public static string IsPlayingThenPlayOrElsePausedIcon(WaveeUITrackPlaybackStateType waveeUiTrackPlaybackStateType)
     {
-        if (waveeUiTrackPlaybackStateType is WaveeUITrackPlaybackStateType.Paused or WaveeUITrackPlaybackStateType.NotPlaying) return "\uF5B0";
+        if (waveeUiTrackPlaybackStateType is WaveeUITrackPlaybackStateType.Paused or WaveeUITrackPlaybackStateType.NotPlaying or WaveeUITrackPlaybackStateType.Loading) return "\uF5B0";
         return "\uE62E";
     }
 

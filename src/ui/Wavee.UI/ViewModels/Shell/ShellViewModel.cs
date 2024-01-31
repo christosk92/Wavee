@@ -27,7 +27,7 @@ public sealed class ShellViewModel : ObservableObject
         RootNavigationClickedCommand = new RelayCommand<object>(RootNavigationClicked);
 
         NowPlaying = nowPlaying;
-        RootNavigationItems = [feed, library, nowPlaying];
+        RootNavigationItems = [feed, library];
         RightSidebar = rightSidebar;
         PrepareProfile(profile);
     }
@@ -53,6 +53,7 @@ public sealed class ShellViewModel : ObservableObject
         {
             rootNav.AddFromProfile(profile);
         }
+        NowPlaying.AddFromProfile(profile);
     }
 
     public void RemoveProfile(IWaveeUIAuthenticatedProfile profile)

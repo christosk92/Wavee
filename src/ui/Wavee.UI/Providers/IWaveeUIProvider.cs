@@ -33,9 +33,17 @@ public interface IWaveeUIAuthenticatedProfile
     event EventHandler<WaveeUIPlaybackState>? PlaybackStateChanged;
     ValueTask<WaveeUIPlaybackState> ConnectToRemoteStateIfApplicable();
 
-    Task<IReadOnlyCollection<LibraryItemViewModel>> GetLibraryArtists(KnownLibraryComponentFilterType sort, bool sortAscending, string? filter, CancellationToken cancellation);
-    Task<IReadOnlyCollection<LibraryItemViewModel>> GetLibraryAlbums(KnownLibraryComponentFilterType sort, bool sortAscending, string? filter, CancellationToken cancellation);
-    Task<IReadOnlyCollection<LibraryItemViewModel>> GetLibraryTracks(KnownLibraryComponentFilterType sort, bool sortAscending, string? filter, CancellationToken cancellation);
+    Task<IReadOnlyCollection<LibraryItemViewModel>> GetLibraryArtists(KnownLibraryComponentFilterType sort,
+        bool sortAscending, string? filter,
+        ICommand playCommand,
+        CancellationToken cancellation);
+    Task<IReadOnlyCollection<LibraryItemViewModel>> GetLibraryAlbums(KnownLibraryComponentFilterType sort,
+        bool sortAscending, string? filter,
+        ICommand playCommand,
+        CancellationToken cancellation);
+    Task<IReadOnlyCollection<LibraryItemViewModel>> GetLibraryTracks(KnownLibraryComponentFilterType sort,
+        bool sortAscending, string? filter,
+        ICommand playCommand, CancellationToken cancellation);
     Task<IReadOnlyCollection<LyricsLine>> GetLyricsFor(string id, string imageUrl);
 
     Task<(string Dark, string Light)> ExtractColorFor(string url);
@@ -48,7 +56,8 @@ public interface IWaveeUIAuthenticatedProfile
     Task<bool> SetShuffle(bool isShuffling, bool waitForResponse);
     Task<bool> GoToRepeatState(WaveeRepeatStateType nextRepeatStateType, bool waitForResponse);
     Task<bool> SetVolume(double oneToZero, bool waitForResponse);
-    Task<WaveeAlbumViewModel> GetAlbum(string albumId, ICommand playCommand);
+    Task<WaveeAlbumViewModel> GetAlbum(string albumId, ICommand playCommand, WaveeArtistDiscographyGroupViewModel group);
+    Task<bool> Play(WaveePlayableItemViewModel waveePlayableItemViewModel);
 }
 
 

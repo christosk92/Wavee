@@ -23,7 +23,10 @@ internal static class AlbumMapping
             Artists = album.Artist.Select(x => new WaveePlayableItemDescription
             {
                 Name = x.Name,
-                Id = SpotifyId.FromRaw(x.Gid.Span, AudioItemType.Artist).ToString()
+                Id = SpotifyId.FromRaw(x.Gid.Span,
+                        AudioItemType.Artist)
+                    .ToString(),
+                Type = AudioItemType.Artist
             }).Cast<IWaveeAlbumArtist>().ToSeq()
         };
     }
@@ -35,36 +38,53 @@ internal static class AlbumMapping
             return null;
         }
 
-        var res = new SpotifyTrackAlbum
+        return new SpotifyTrackAlbum
         {
             Uri = SpotifyId.FromRaw(album.Gid.Span,
                 AudioItemType.Album),
             Name = album.Name,
             Images = album.CoverGroup.Image.Select(x => x.MapToDto())
                 .ToSeq(),
-            Year = album.Date.Year,
-            Artists =
-                new[]
-                {
-                    new WaveePlayableItemDescription
-                    {
-                        Name = fromTrack.Artist.First()
-                            .Name,
-                        Id = SpotifyId.FromRaw(fromTrack.Artist.First()
-                                    .Gid.Span,
-                                AudioItemType.Artist)
-                            .ToString()
-                    }
-                }.ToSeq(),
-            Number = FindTrackNumber(album,
-                    fromTrack)
-                .Number,
-            Playcount = 0,
-            Duration = TimeSpan.FromMilliseconds(fromTrack.Duration),
-            Uid = null
+            Year = album.Date.Year
         };
 
-        return res;
+        // var res = new SpotifyAlbumTrack
+        // {
+        //     Uri = SpotifyId.FromRaw(album.Gid.Span,
+        //         AudioItemType.Album),
+        //     Name = album.Name,
+        //     Artists =
+        //         new[]
+        //         {
+        //             new WaveePlayableItemDescription
+        //             {
+        //                 Name = fromTrack.Artist.First()
+        //                     .Name,
+        //                 Id = SpotifyId.FromRaw(fromTrack.Artist.First()
+        //                             .Gid.Span,
+        //                         AudioItemType.Artist)
+        //                     .ToString(),
+        //                 Type = AudioItemType.Artist
+        //             }
+        //         }.ToSeq(),
+        //     Number = FindTrackNumber(album,
+        //             fromTrack)
+        //         .Number,
+        //     Playcount = 0,
+        //     Duration = TimeSpan.FromMilliseconds(fromTrack.Duration),
+        //     Uid = null,
+        //     Album = new SpotifyTrackAlbum
+        //     {
+        //         Uri = SpotifyId.FromRaw(album.Gid.Span, AudioItemType.Album),
+        //         Name = album.Name,
+        //         Images = album.CoverGroup.Image.Select(x => x.MapToDto())
+        //             .ToSeq(),
+        //         Year = album.Date.Year
+        //
+        //     },
+        // };
+
+        //return res;
     }
 
     private static (int Disc, int Number) FindTrackNumber(Album album, Track fromTrack)

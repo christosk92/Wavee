@@ -10,6 +10,9 @@ public readonly record struct SpotifySimpleAlbum : ISpotifyItem, IWaveeAlbum
     public required Seq<UrlImage> Images { get; init; }
     public required Seq<IWaveeAlbumArtist> Artists { get; init; }
     public string Id => Uri.ToString();
+
+    AudioItemType IWaveeItem.Type => AudioItemType.Album;
+
     public required int Year { get; init; }
     public required string Type { get; init; }
 
@@ -21,17 +24,22 @@ public readonly record struct SpotifyTrackAlbum : ISpotifyPlayableItemGroup, IWa
 {
     public required SpotifyId Uri { get; init; }
     public required string Name { get; init; }
-
-    public required int Number { get; init; }
-
     public required Seq<UrlImage> Images { get; init; }
-    public required Seq<WaveePlayableItemDescription> Artists { get; init; }
-
     public string Id => Uri.ToString();
+    public AudioItemType Type => AudioItemType.Album;
     public required int Year { get; init; }
+}
+
+public readonly record struct SpotifyAlbumTrack : IWaveeAlbumTrack
+{
+    public required SpotifyId Uri { get; init; }
+    public required string Name { get; init; }
+    public required int Number { get; init; }
+    public required IWaveeTrackAlbum Album { get; init; }
+    public required Seq<WaveePlayableItemDescription> Artists { get; init; }
+    public string Id => Uri.ToString();
+    public AudioItemType Type => AudioItemType.Track;
     public required long Playcount { get; init; }
-
     public required TimeSpan Duration { get; init; }
-
     public required string Uid { get; init; }
 }

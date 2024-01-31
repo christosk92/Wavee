@@ -22,8 +22,11 @@ internal static class ArtistMapping
     {
         return new WaveePlayableItemDescription
         {
-            Id = SpotifyId.FromRaw(artist.Gid.Span, AudioItemType.Artist).ToString(),
-            Name = artist.Name
+            Id = SpotifyId.FromRaw(artist.Gid.Span,
+                    AudioItemType.Artist)
+                .ToString(),
+            Name = artist.Name,
+            Type = AudioItemType.Artist
         };
     }
 

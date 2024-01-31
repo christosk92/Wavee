@@ -6,6 +6,7 @@ using CommunityToolkit.Mvvm.Input;
 using Wavee.UI.Providers;
 using Wavee.UI.Services;
 using Wavee.UI.ViewModels.Artist;
+using Wavee.UI.ViewModels.NowPlaying;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Wavee.UI.ViewModels.Library;
@@ -36,6 +37,7 @@ public sealed class LibraryArtistsViewModel : ObservableObject, ILibraryComponen
         {
 
         });
+
         OnItemSelectedCommand = new RelayCommand<object>(x =>
         {
             if (x is null)
@@ -43,18 +45,11 @@ public sealed class LibraryArtistsViewModel : ObservableObject, ILibraryComponen
                 return;
             }
             var item = (LibraryItemViewModel)x;
-            SelectedItem = WaveeArtistViewModel.GetOrCreate(item.Item.Id, item.Item, profile: item.Profile, dispatcher: _dispatcherWrapper, playCommand: PlayCommand);
-        });
-        PlayCommand = new AsyncRelayCommand<WaveeAlbumPlayableItemViewModel>(async x =>
-        {
-            x.PlaybackState = WaveeUITrackPlaybackStateType.Loading;
-            await Task.Delay(TimeSpan.FromMilliseconds(400));
-            x.PlaybackState = WaveeUITrackPlaybackStateType.NotPlaying;
+            SelectedItem = WaveeArtistViewModel.GetOrCreate(item.Item.Id, item.Item, profile: item.Profile, dispatcher: _dispatcherWrapper,
+                playCommand: NowPlayingViewModel.Instance.PlayNewItemCommand);
         });
         IsBusy = true;
     }
-
-    public IAsyncRelayCommand<WaveeAlbumPlayableItemViewModel> PlayCommand { get; }
 
     public ObservableCollection<ExceptionForProfile> Errors { get; }
     public ObservableCollection<LibraryItemViewModel> Items { get; }
@@ -127,7 +122,12 @@ public sealed class LibraryArtistsViewModel : ObservableObject, ILibraryComponen
         var sortAscending = _sortAscending;
         try
         {
-            var artists = await profile.GetLibraryArtists(sort: sort.Key, sortAscending: sortAscending, _filter, CancellationToken.None);
+            var artists = await profile.GetLibraryArtists(sort:
+                sort.Key,
+                sortAscending: sortAscending,
+                _filter,
+                PlayCommand,
+                CancellationToken.None);
             _dispatcherWrapper.Dispatch(() =>
             {
                 IsBusy = false;
@@ -146,6 +146,9 @@ public sealed class LibraryArtistsViewModel : ObservableObject, ILibraryComponen
             }, highPriority: false);
         }
     }
+
+    public IAsyncRelayCommand<WaveePlayableItemViewModel> PlayCommand =>
+        NowPlayingViewModel.Instance.PlayNewItemCommand;
 
     private void AddError(IWaveeUIAuthenticatedProfile profile, Exception err, Action? retry)
     {

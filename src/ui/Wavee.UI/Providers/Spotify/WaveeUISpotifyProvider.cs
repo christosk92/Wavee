@@ -314,7 +314,11 @@ internal sealed class WaveeUISpotifyProfile : IWaveeUIAuthenticatedProfile
         return output.ToSeq();
     }
 
-    public async Task<IReadOnlyCollection<LibraryItemViewModel>> GetLibraryArtists(KnownLibraryComponentFilterType sort, bool sortAscending, string? filter, CancellationToken cancellation)
+    public async Task<IReadOnlyCollection<LibraryItemViewModel>> GetLibraryArtists(KnownLibraryComponentFilterType sort,
+        bool sortAscending, string? filter,
+        ICommand playCommand,
+
+        CancellationToken cancellation)
     {
         try
         {
@@ -326,7 +330,7 @@ internal sealed class WaveeUISpotifyProfile : IWaveeUIAuthenticatedProfile
                 _libraryCache["artist"] = items;
             }
 
-            return Get(items, sort, sortAscending, filter, cancellation);
+            return Get(items, sort, sortAscending, filter, playCommand, cancellation);
         }
         finally
         {
@@ -336,7 +340,9 @@ internal sealed class WaveeUISpotifyProfile : IWaveeUIAuthenticatedProfile
 
     public static Dictionary<KnownLibraryComponentFilterType, Func<KeyValuePair<WaveeSpotifyLibraryItem, ISpotifyItem>, object>> Comparers;
 
-    public async Task<IReadOnlyCollection<LibraryItemViewModel>> GetLibraryAlbums(KnownLibraryComponentFilterType sort, bool sortAscending, string? filter,
+    public async Task<IReadOnlyCollection<LibraryItemViewModel>> GetLibraryAlbums(KnownLibraryComponentFilterType sort,
+        bool sortAscending, string? filter,
+        ICommand playCommand,
         CancellationToken cancellation)
     {
         try
@@ -349,7 +355,7 @@ internal sealed class WaveeUISpotifyProfile : IWaveeUIAuthenticatedProfile
             }
 
             var albums = items.Where(x => x.Value is SpotifySimpleAlbum);
-            return Get(albums, sort, sortAscending, filter, cancellation);
+            return Get(albums, sort, sortAscending, filter, playCommand, cancellation);
         }
         finally
         {
@@ -358,6 +364,7 @@ internal sealed class WaveeUISpotifyProfile : IWaveeUIAuthenticatedProfile
     }
 
     public async Task<IReadOnlyCollection<LibraryItemViewModel>> GetLibraryTracks(KnownLibraryComponentFilterType sort, bool sortAscending, string? filter,
+        ICommand playCommand,
         CancellationToken cancellation)
     {
         try
@@ -370,7 +377,7 @@ internal sealed class WaveeUISpotifyProfile : IWaveeUIAuthenticatedProfile
             }
 
             var tracks = items.Where(x => x.Value is SpotifySimpleTrack);
-            return Get(tracks, sort, sortAscending, filter, cancellation);
+            return Get(tracks, sort, sortAscending, filter, playCommand, cancellation);
         }
         finally
         {
@@ -428,16 +435,100 @@ internal sealed class WaveeUISpotifyProfile : IWaveeUIAuthenticatedProfile
     public Task<bool> SetVolume(double oneToZero, bool waitForResponse)
         => _provider.SpotifyClient.Remote.SetVolume(oneToZero, waitForResponse);
 
-    public async Task<WaveeAlbumViewModel> GetAlbum(string albumId, ICommand playCommand)
+    public async Task<WaveeAlbumViewModel> GetAlbum(string albumId, ICommand playCommand,
+        WaveeArtistDiscographyGroupViewModel group)
     {
         var spotifyAlbum = await _provider.SpotifyClient.Metadata.GetAlbum(SpotifyId.FromUri(albumId));
-        return new WaveeAlbumViewModel(albumId, spotifyAlbum.Name, (uint)spotifyAlbum.Year, spotifyAlbum.Tracks, spotifyAlbum.Images.Head.Url, playCommand);
+        return new WaveeAlbumViewModel(albumId,
+            spotifyAlbum.Name, (uint)spotifyAlbum.Year, spotifyAlbum.Tracks, spotifyAlbum.Images.Head.Url, playCommand, group);
+    }
+
+    public Task<bool> Play(WaveePlayableItemViewModel waveePlayableItemViewModel)
+    {
+        SpotifyPlayCommand cmd = default;
+        switch (waveePlayableItemViewModel)
+        {
+            case WaveeAlbumPlayableItemViewModel albumTrack:
+                {
+                    Seq<SpotifyPlayCommandContextPage> pages = LanguageExt.Seq<SpotifyPlayCommandContextPage>.Empty;
+                    int pageIndex = 0;
+                    int idx = 0;
+                    foreach (var album in albumTrack.Parent.Parent.Items)
+                    {
+                        var albumId = SpotifyId.FromUri(album.IdNonBlocking);
+                        if (album.IdNonBlocking == albumTrack.Parent.Id)
+                        {
+                            pageIndex = idx;
+                        }
+                        var pageUrl =
+                            $"hm://artistplaycontext/v1/page/spotify/album/{albumId.ToBase62()}/km_artist";
+                        pages = pages.Add(new SpotifyPlayCommandContextPage(
+                            pageUrl,
+                            LanguageExt.HashMap<string, string>.Empty));
+                        idx++;
+                    }
+
+                    cmd = new SpotifyPlayCommand(new SpotifyPlayCommandContext(
+                            LanguageExt.HashMap<string, string>.Empty,
+                            albumTrack.Parent.Parent.ArtistId,
+                            Option<string>.None,
+                            pages), new SpotifyPlaySkipTo(
+                            pageIndex,
+                            (albumTrack.Item.Number - 1),
+                            albumTrack.Item.Id,
+                            !string.IsNullOrEmpty(albumTrack.Item.Uid) ? albumTrack.Item.Uid : Option<string>.None),
+                        new SpotifyPlayOrigin(AudioItemType.Artist, "your_library"));
+                    return _provider.SpotifyClient.Remote.Play(cmd);
+                }
+            case LibraryItemViewModel x:
+                {
+                    if (x.Item is IWaveeAlbumTrack alumTrack)
+                    {
+                        // play collection!
+                        //TODO:
+                        return Task.FromResult(false);
+                    }
+                    else if (x.Item is SpotifySimpleArtist artist)
+                    {
+                        Seq<SpotifyPlayCommandContextPage> pages = LanguageExt.Seq<SpotifyPlayCommandContextPage>.Empty;
+                        foreach (var group in artist.Discography)
+                        {
+                            foreach (var album in group)
+                            {
+                                //hm://artistplaycontext/v1/page/spotify/album/4X6tSchHruOdYX2GxQtKZb/km_artist
+                                var pageUrl =
+                                    $"hm://artistplaycontext/v1/page/spotify/album/{album.ToBase62()}/km_artist";
+                                pages = pages.Add(new SpotifyPlayCommandContextPage(
+                                    pageUrl,
+                                    LanguageExt.HashMap<string, string>.Empty));
+                            }
+                        }
+
+                        cmd = new SpotifyPlayCommand(new SpotifyPlayCommandContext(
+                                LanguageExt.HashMap<string, string>.Empty,
+                                x.Id,
+                                Option<string>.None,
+                                pages), new SpotifyPlaySkipTo(
+                                Option<int>.None,
+                                Option<int>.None,
+                                Option<string>.None,
+                                Option<string>.None),
+                            new SpotifyPlayOrigin(x.Item.Type, "your_library"));
+                    }
+
+                    return _provider.SpotifyClient.Remote.Play(cmd);
+                    break;
+                }
+        }
+
+        return Task.FromResult(false);
     }
 
 
     private IReadOnlyCollection<LibraryItemViewModel> Get(
         IEnumerable<KeyValuePair<WaveeSpotifyLibraryItem, ISpotifyItem>> items,
-        KnownLibraryComponentFilterType sort, bool sortAscending, string? filter, CancellationToken cancellation)
+        KnownLibraryComponentFilterType sort, bool sortAscending, string? filter, ICommand playCommand,
+        CancellationToken cancellation)
     {
         if (sortAscending)
         {
@@ -449,7 +540,7 @@ internal sealed class WaveeUISpotifyProfile : IWaveeUIAuthenticatedProfile
         }
 
         return items
-            .Select(x => new LibraryItemViewModel(x.Value, x.Key.AddedAt, this))
+            .Select(x => new LibraryItemViewModel(x.Value, x.Key.AddedAt, playCommand, this))
             .ToImmutableArray();
     }
 }

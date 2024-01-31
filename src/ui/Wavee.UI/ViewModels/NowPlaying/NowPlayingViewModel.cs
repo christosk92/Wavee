@@ -7,6 +7,7 @@ using Eum.Spotify.connectstate;
 using LanguageExt.UnsafeValueAccess;
 using Wavee.UI.Providers;
 using Wavee.UI.Services;
+using Wavee.UI.ViewModels.Artist;
 using Wavee.UI.ViewModels.Library;
 
 namespace Wavee.UI.ViewModels.NowPlaying;
@@ -53,6 +54,38 @@ public sealed class NowPlayingViewModel : ObservableObject, IHasProfileViewModel
                 await Task.Delay(10).ConfigureAwait(false);
             }
         });
+
+        PlayNewItemCommand = new AsyncRelayCommand<WaveePlayableItemViewModel>(async x =>
+        {
+            switch (x.PlaybackState)
+            {
+                case WaveeUITrackPlaybackStateType.NotPlaying:
+                    {
+                        if (ActiveDevice is null)
+                        {
+                            // pause/play on device
+                        }
+                        else
+                        {
+                            var profile = _profiles.Last();
+                            await profile.Play(x);
+                        }
+                        break;
+                    }
+                case WaveeUITrackPlaybackStateType.Paused:
+                case WaveeUITrackPlaybackStateType.Playing:
+                    await PlayPauseCommand.ExecuteAsync(null);
+                    x.PlaybackState = Instance.IsPaused
+                        ? WaveeUITrackPlaybackStateType.Paused
+                        : WaveeUITrackPlaybackStateType.Playing;
+                    break;
+                case WaveeUITrackPlaybackStateType.Loading:
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        });
+
 
         PlayPauseCommand = new AsyncRelayCommand(async () =>
         {
@@ -416,6 +449,7 @@ public sealed class NowPlayingViewModel : ObservableObject, IHasProfileViewModel
 
     public static NowPlayingViewModel Instance { get; private set; }
     public WaveeUIPlaybackState LatestPlaybackState { get; private set; }
+    public IAsyncRelayCommand<WaveePlayableItemViewModel> PlayNewItemCommand { get; }
 
     public event EventHandler<WaveeUIPlaybackState>? PlaybackStateChanged;
 }

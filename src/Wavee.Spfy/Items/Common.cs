@@ -33,6 +33,9 @@ public readonly struct SpotifyEmptyItem : ISpotifyItem
 
     public required string Name { get; init; }
     public string Id => Id.ToString();
+
+    public AudioItemType Type => AudioItemType.Unknown;
+
     public required SpotifyId Uri { get; init; }
 
     public Seq<UrlImage> Images { get; } = Seq<UrlImage>.Empty;
@@ -63,6 +66,8 @@ public sealed class SpotifyFullAlbum : ISpotifyItem, IWaveeAlbum
     public required int TotalTracks { get; init; }
     public required SpotifyId Uri { get; init; }
     public required Seq<UrlImage> Images { get; init; }
-    public required Seq<IWaveeTrackAlbum> Tracks { get; init; }
+    public required Seq<IWaveeAlbumTrack> Tracks { get; init; }
     public string Id => Uri.ToString();
+
+    AudioItemType IWaveeItem.Type => AudioItemType.Album;
 }

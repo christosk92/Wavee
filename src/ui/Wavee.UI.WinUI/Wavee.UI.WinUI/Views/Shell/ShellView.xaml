@@ -38,7 +38,9 @@
             Background="{ThemeResource LayerFillColorDefaultBrush}">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
-                <ColumnDefinition />
+                <ColumnDefinition Width="2*" />
+                <ColumnDefinition Width="200" />
+                <ColumnDefinition Width="130" />
             </Grid.ColumnDefinitions>
 
             <StackPanel
@@ -59,32 +61,52 @@
                 </Button>
             </StackPanel>
 
-            <toolkit:Segmented
+            <StackPanel
                 Grid.Column="1"
-                IsItemClickEnabled="True"
-                ItemsSource="{x:Bind ViewModel.RootNavigationItems}"
-                Style="{StaticResource PivotSegmentedStyle}">
-                <interactivity:Interaction.Behaviors>
-                    <behaviors:ItemClickedBehavior ItemClickedCommand="{x:Bind ViewModel.RootNavigationClickedCommand}" />
-                </interactivity:Interaction.Behaviors>
-                <toolkit:Segmented.ItemTemplate>
-                    <DataTemplate x:DataType="viewModels:IHasProfileViewModel">
-                        <Grid x:Name="ContentHolder" ColumnSpacing="8">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
-                            <ContentPresenter x:Name="PART_IconPresenter" Content="{x:Bind Converter={StaticResource ViewModelToIconConverter}}" />
+                Orientation="Horizontal"
+                Spacing="8">
+                <toolkit:Segmented
+                    IsItemClickEnabled="True"
+                    ItemsSource="{x:Bind ViewModel.RootNavigationItems}"
+                    Style="{StaticResource PivotSegmentedStyle}">
+                    <interactivity:Interaction.Behaviors>
+                        <behaviors:ItemClickedBehavior ItemClickedCommand="{x:Bind ViewModel.RootNavigationClickedCommand}" />
+                    </interactivity:Interaction.Behaviors>
+                    <toolkit:Segmented.ItemTemplate>
+                        <DataTemplate x:DataType="viewModels:IHasProfileViewModel">
+                            <Grid x:Name="ContentHolder" ColumnSpacing="8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <ContentPresenter x:Name="PART_IconPresenter" Content="{x:Bind Converter={StaticResource ViewModelToIconConverter}}" />
 
-                            <TextBlock
-                                x:Name="PART_ContentPresenter"
-                                Grid.Column="1"
-                                VerticalAlignment="Center"
-                                Text="{x:Bind Converter={StaticResource ViewModelToTextConverter}}" />
-                        </Grid>
-                    </DataTemplate>
-                </toolkit:Segmented.ItemTemplate>
-            </toolkit:Segmented>
+                                <TextBlock
+                                    x:Name="PART_ContentPresenter"
+                                    Grid.Column="1"
+                                    VerticalAlignment="Center"
+                                    Text="{x:Bind Converter={StaticResource ViewModelToTextConverter}}" />
+                            </Grid>
+                        </DataTemplate>
+                    </toolkit:Segmented.ItemTemplate>
+                </toolkit:Segmented>
+
+                <AppBarSeparator />
+                <ToggleButton Background="Transparent" BorderThickness="0">
+                    <FontIcon
+                        FontFamily="/Assets/Fonts/MediaPlayerIcons.ttf#Media Player Fluent Icons"
+                        FontSize="16"
+                        Glyph="&#xE93F;" />
+                </ToggleButton>
+            </StackPanel>
+
+            <AutoSuggestBox
+                Grid.Column="2"
+                Width="200"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Center"
+                PlaceholderText="Find..."
+                QueryIcon="Find" />
         </Grid>
 
         <ContentPresenter

@@ -25,6 +25,8 @@ public abstract class WaveePlayableItemViewModel : ObservableObject
         get => _isHovered;
         set => this.SetProperty(ref _isHovered, value);
     }
+
+    public WaveePlayableItemViewModel This => this;
     public ICommand PlayCommand { get; }
     public abstract string Name { get; }
 

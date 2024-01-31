@@ -9,6 +9,7 @@ public interface IWaveeItem
 {
     string Name { get; }
     string Id { get; }
+    AudioItemType Type { get; }
 }
 
 public interface IWaveePlayableItem : IWaveeItem
@@ -49,15 +50,19 @@ public enum WaveeRepeatStateType
 
 public interface IWaveeTrackAlbum : IWaveeItem
 {
-    int Number { get; }
     Seq<UrlImage> Images { get; }
-    string Id { get; }
     int Year { get; }
-    long Playcount { get; }
-    TimeSpan Duration { get; }
-    string Uid { get; }
 }
 
+public interface IWaveeAlbumTrack : IWaveeItem
+{
+    Seq<WaveePlayableItemDescription> Artists { get; }
+    int Number { get; }
+    IWaveeTrackAlbum Album { get; }
+    string Uid { get; }
+    long Playcount { get; }
+    TimeSpan Duration { get; }
+}
 public interface IWaveeAlbum : IWaveeItem
 {
     Seq<UrlImage> Images { get; }
@@ -73,6 +78,8 @@ public readonly record struct LocalFile : IWaveePlayableItem
     public required string Path { get; init; }
     public required TimeSpan Duration { get; init; }
     public string? Id { get; init; }
+
+    public AudioItemType Type => AudioItemType.Track;
 
     public Seq<UrlImage> Images => throw new NotImplementedException();
     public string Name { get; }
@@ -109,6 +116,8 @@ public readonly record struct WaveePlayableItemDescription : IWaveeAlbumArtist
     public required string Name { get; init; }
 
     public required string Id { get; init; }
+
+    public required AudioItemType Type { get; init; }
 
     public Seq<UrlImage> Images { get; } = Seq<UrlImage>.Empty;
 }

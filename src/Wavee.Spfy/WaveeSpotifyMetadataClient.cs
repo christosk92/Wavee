@@ -446,26 +446,36 @@ public sealed class WaveeSpotifyMetadataClient
         {
             artists = artists.Add(new WaveePlayableItemDescription
             {
-                Id = artist.GetProperty("id").GetString()!,
-                Name = artist.GetProperty("profile").GetProperty("name").GetString()!
+                Id = artist.GetProperty("id")
+                    .GetString()!,
+                Name = artist.GetProperty("profile")
+                    .GetProperty("name")
+                    .GetString()!,
+                Type = AudioItemType.Artist
             });
         }
 
-        Seq<IWaveeTrackAlbum> tracks = LanguageExt.Seq<IWaveeTrackAlbum>.Empty;
+        Seq<IWaveeAlbumTrack> tracks = LanguageExt.Seq<IWaveeAlbumTrack>.Empty;
         using var tracksItems = album.GetProperty("tracks").GetProperty("items").EnumerateArray();
+
+        var albumAsTrackAlbum = new SpotifyTrackAlbum
+        {
+            Uri = fromUri,
+            Name = name,
+            Images = images,
+            Year = releaseDate.Year
+        };
         foreach (var trackItem in tracksItems)
         {
             var uid = trackItem.GetProperty("uid").GetString();
             var track = trackItem.GetProperty("track");
-            tracks = tracks.Add(new SpotifyTrackAlbum
+            tracks = tracks.Add(new SpotifyAlbumTrack
             {
                 Uri = SpotifyId.FromUri(track.GetProperty("uri")
                     .GetString()),
                 Name = track.GetProperty("name")
                     .GetString()!,
-                Images = images,
                 Artists = default,
-                Year = releaseDate.Year,
                 Playcount = long.Parse(track.GetProperty("playcount")
                     .GetString()),
                 Number = track.GetProperty("trackNumber")
@@ -474,6 +484,7 @@ public sealed class WaveeSpotifyMetadataClient
                     .GetProperty("totalMilliseconds")
                     .GetUInt64()),
                 Uid = uid,
+                Album = albumAsTrackAlbum,
             });
         }
 

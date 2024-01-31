@@ -10,6 +10,8 @@ public readonly record struct SpotifySimpleArtist : ISpotifyItem
 
     public string Id => Uri.ToString();
 
+    public AudioItemType Type => AudioItemType.Artist;
+
     public required Seq<UrlImage> Images { get; init; }
     public required IEnumerable<IGrouping<SpotifyDiscographyType, SpotifyId>>? Discography { get; init; }
 }

@@ -90,7 +90,9 @@ public sealed class LibraryAlbumsViewModel : ObservableObject, ILibraryComponent
         var sortAscending = _sortAscending;
         try
         {
-            var albums = await profile.GetLibraryAlbums(sort: sort.Key, sortAscending: sortAscending, _filter, CancellationToken.None);
+            var albums = await profile.GetLibraryAlbums(sort: sort.Key, sortAscending: sortAscending, _filter,
+                null,
+                CancellationToken.None);
             _dispatcherWrapper.Dispatch(() =>
             {
                 IsBusy = false;

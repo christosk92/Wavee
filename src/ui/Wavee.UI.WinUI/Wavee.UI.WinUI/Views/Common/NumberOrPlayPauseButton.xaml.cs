@@ -15,6 +15,7 @@ using Microsoft.UI.Xaml.Navigation;
 using CommunityToolkit.Mvvm.Input;
 using NAudio.Wave;
 using System.Windows.Input;
+using Wavee.UI.ViewModels.NowPlaying;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -155,7 +156,7 @@ namespace Wavee.UI.WinUI.Views.Common
                 case NumberOrPlayButtonState.NonHoveringPlaying:
                     return false;
                 case NumberOrPlayButtonState.NonHoveringPaused:
-                    return false;
+                    return true;
                 case NumberOrPlayButtonState.Loading:
                     return false;
                 case NumberOrPlayButtonState.NonHoveringNotPlaying:
@@ -176,7 +177,7 @@ namespace Wavee.UI.WinUI.Views.Common
                 case NumberOrPlayButtonState.NonHoveringPlaying:
                     return false;
                 case NumberOrPlayButtonState.NonHoveringPaused:
-                    return true;
+                    return false;
                 case NumberOrPlayButtonState.Loading:
                     return false;
                 case NumberOrPlayButtonState.NonHoveringNotPlaying:
@@ -211,9 +212,17 @@ namespace Wavee.UI.WinUI.Views.Common
             }
         }
 
-        private void PlayPauseButton_OnTapped(object sender, TappedRoutedEventArgs e)
+        private async void PlayPauseButton_OnTapped(object sender, TappedRoutedEventArgs e)
         {
-
+            switch (PlaybackState)
+            {
+                case WaveeUITrackPlaybackStateType.NotPlaying:
+                    PlayCommand.Execute(PlayCommandParameter);
+                    break;
+                case WaveeUITrackPlaybackStateType.Paused or WaveeUITrackPlaybackStateType.Playing:
+                    await NowPlayingViewModel.Instance.PlayPauseCommand.ExecuteAsync(null);
+                    break;
+            }
         }
 
         public string GetGlyphFor(NumberOrPlayButtonState x)
