@@ -1,6 +1,6 @@
 namespace Wavee.Core;
 
-public interface IWaveeMediaSource
+public interface IWaveeMediaSource : IDisposable
 {
     
 }

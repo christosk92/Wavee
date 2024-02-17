@@ -4,12 +4,14 @@ using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Runtime.CompilerServices;
 using Eum.Spotify.connectstate;
+using Eum.Spotify.context;
 using Google.Protobuf.Collections;
 using ReactiveUI;
 using Wavee.Core;
 using Wavee.Spotify.Models.Common;
 using Wavee.Spotify.Models.Interfaces;
 using Wavee.Spotify.Playback;
+using Wavee.Spotify.Playback.Contexting;
 
 namespace Wavee.Spotify.Models.Response;
 
@@ -26,8 +28,11 @@ public sealed class SpotifyPrivateDevice : INotifyPropertyChanged, IDisposable
     private DeviceType _deviceType;
     private readonly CompositeDisposable _disposables;
     private ISpotifyClient? _parentClient;
+    private Cluster? _latestCluster;
+    private readonly IWaveePlayer _player;
 
     internal SpotifyPrivateDevice(
+        IWaveePlayer player,
         ISpotifyClient parentClient,
         string deviceId,
         string deviceName,
@@ -38,6 +43,7 @@ public sealed class SpotifyPrivateDevice : INotifyPropertyChanged, IDisposable
         Func<Task> onManualClose)
     {
         _onManualClose = onManualClose;
+        _player = player;
         _parentClient = parentClient;
         _disposables = new CompositeDisposable();
         DeviceId = deviceId;
@@ -47,6 +53,7 @@ public sealed class SpotifyPrivateDevice : INotifyPropertyChanged, IDisposable
                 (cluster, playbackState) => new { Cluster = cluster, PlaybackState = playbackState })
             .SelectMany(async x =>
             {
+                _latestCluster = x.Cluster;
                 if (x.PlaybackState is { IsActive: true, Source: SpotifyMediaSource spotifyMediaSource })
                 {
                     return await ConstructFromLocalPlaybackState(x.PlaybackState, spotifyMediaSource, x.Cluster.Device);
@@ -73,6 +80,94 @@ public sealed class SpotifyPrivateDevice : INotifyPropertyChanged, IDisposable
             })
             .Throttle(TimeSpan.FromMilliseconds(400))
             .Subscribe();
+    }
+
+    /// <summary>
+    /// Transfers the playback to this device.
+    /// </summary>
+    /// <param name="play">
+    /// Whether to start playing or start paused.
+    /// </param>
+    /// <param name="cancellationToken">
+    /// A token that can be used to cancel the transfer.
+    /// </param>
+    /// <returns>
+    /// A boolean that indicates whether the transfer was successful.
+    ///
+    /// This will return false if the device is not currently connected to the Spotify system.
+    /// </returns>
+    public async Task<bool> Transfer(bool play, CancellationToken cancellationToken)
+    {
+        if (_latestCluster is null)
+        {
+            return false;
+        }
+
+        var currentCluster = _latestCluster.Clone();
+        var contextUrl = currentCluster.PlayerState?.ContextUrl;
+        var contextUri = currentCluster.PlayerState?.ContextUri;
+        await Play(contextUri, contextUrl,
+            null,
+            (int?)currentCluster.PlayerState?.Index?.Page,
+            (int?)currentCluster.PlayerState?.Index?.Track,
+            currentCluster.PlayerState?.Track?.Uid,
+            !string.IsNullOrEmpty(currentCluster.PlayerState?.Track?.Uri)
+                ? SpotifyId.FromUri(currentCluster.PlayerState?.Track?.Uri)
+                : null);
+
+        return true;
+    }
+
+    /// <summary>
+    /// Plays the specified context on this device.
+    /// 
+    /// This will always create a new context object, playback will start from indicated position.
+    /// </summary>
+    /// <param name="contextId"></param>
+    /// <param name="startFrom"></param>
+    public Task Play(SpotifyId contextId, (int idx, int pageIdx) startFrom) => Play(contextId, startFrom, null, null);
+
+    /// <summary>
+    /// Plays the specified context on this device.
+    /// 
+    /// This will always create a new context object.
+    /// 
+    /// Wavee will try to find the track in the context and start playing from there.
+    /// The track will be found in the following order:
+    /// 1) if startFrom is not null, the track at the specified index will be used.
+    /// 2) if trackUid is not null, the track with the specified uid will be used.
+    /// 3) if trackId is not null, the track with the specified id will be used.
+    /// 4) if none of the above are specified, the first track in the context will be used.
+    /// </summary>
+    /// <param name="contextId"></param>
+    /// <param name="startFrom"></param>
+    /// <param name="trackUid"></param>
+    /// <param name="trackId"></param>
+    public async Task Play(SpotifyId contextId,
+        (int idx, int pageIdx)? startFrom,
+        string? trackUid,
+        SpotifyId? trackId)
+    {
+    }
+
+    private async Task Play(
+        string contextUri,
+        string contextUrl,
+        IReadOnlyList<ContextPage>? pages = null,
+        int? pageIndex = null,
+        int? trackIndex = null,
+        string? trackUid = null,
+        SpotifyId? trackId = null)
+    {
+        var spotifyPlayContext = new SpotifyPlayContext(
+            contextUri,
+            contextUrl,
+            pages,
+            _parentClient.Context
+        );
+
+        var (foundAbsIndex, foundIdxInPage, foundPageIdx) = await spotifyPlayContext.FindAsync(pageIndex, trackIndex, trackUid, trackId);
+        await _player.Play(spotifyPlayContext, foundAbsIndex, CancellationToken.None);
     }
 
     /// <summary>

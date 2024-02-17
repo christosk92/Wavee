@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System.Data;
+using System.Diagnostics;
 using Eum.Spotify.connectstate;
 using Wavee.Core;
 using Wavee.Spotify;
@@ -14,6 +15,7 @@ me.CurrentlyPlaying.Subscribe(x =>
     var pos = y.Position.ToString("g");
     Console.WriteLine($"Position: {pos}");
 });
+await me.Transfer(true, CancellationToken.None);
 Console.ReadKey();
 
 

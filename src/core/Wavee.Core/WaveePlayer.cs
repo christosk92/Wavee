@@ -19,9 +19,14 @@ public sealed class WaveePlayer : IWaveePlayer
     }
 
     public IObservable<WaveePlaybackState> Events => _events.StartWith(_state);
+    public Task Play(IWaveePlayContext spotifyPlayContext, int startAt, CancellationToken cancel)
+    {
+        throw new NotImplementedException();
+    }
 }
 
 public interface IWaveePlayer
 {
     IObservable<WaveePlaybackState> Events { get; }
+    Task Play(IWaveePlayContext spotifyPlayContext, int startAt, CancellationToken cancel);
 }

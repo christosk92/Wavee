@@ -1,4 +1,8 @@
 using System.Net;
+using System.Reflection;
+using Eum.Spotify.context;
+using Google.Protobuf;
+using Google.Protobuf.Reflection;
 using Spotify.Metadata;
 using Wavee.Core.Extensions;
 using Wavee.Spotify.Authenticators;
@@ -266,6 +270,20 @@ public sealed class ApiConnector : IAPIConnector
             {
                 return _protobufDeserializer.DeserializeResponse<T>(response);
             }
+        }
+
+        if (typeof(T) == typeof(Context) && response.ContentType == "application/json")
+        {
+            //Special case
+            await using var str = response.Body;
+            using var streamReader = new StreamReader(str);
+            var jsonString = await streamReader.ReadToEndAsync(cancel);
+            var typ = typeof(T);
+            var descriptor = (MessageDescriptor)typ.GetProperty("Descriptor", BindingFlags.Public | BindingFlags.Static)
+                .GetValue(null, null); // get the static property Descriptor
+
+            var result = descriptor.Parser.ParseJson(jsonString);
+            return new ApiResponse<T>(response, (T)result);
         }
 
         return response.ContentType switch

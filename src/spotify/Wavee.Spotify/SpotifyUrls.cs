@@ -36,4 +36,11 @@ public static class SpotifyUrls
 
         public static string Get(string base16Id) => Base + "/metadata/4/episode/" + base16Id + "?market=from_token";
     }
+
+    public static class Context
+    {
+        private const string Base = "https://spclient.com";
+
+        public static string Resolve(string contextId) => Base + "/context-resolve/v1/" + contextId;
+    }
 }

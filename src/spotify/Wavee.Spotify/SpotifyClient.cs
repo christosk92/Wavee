@@ -8,7 +8,7 @@ namespace Wavee.Spotify;
 public sealed class SpotifyClient : ISpotifyClient
 {
     private readonly IAPIConnector _apiConnector;
-
+    
     public SpotifyClient(SpotifyClientConfig config)
     {
         Guard.NotNull(nameof(config), config);
@@ -27,7 +27,7 @@ public sealed class SpotifyClient : ISpotifyClient
         UserProfile = new UserProfileClient(_apiConnector);
         Tracks = new TracksClient(_apiConnector);
         Episodes = new EpisodesClient(_apiConnector);
-        
+        ((ISpotifyClient)this).Context = new ContextClient(_apiConnector);
         Player = new PlayerClient(
             this,
             config.Player,
@@ -41,6 +41,7 @@ public sealed class SpotifyClient : ISpotifyClient
     public IUserProfileClient UserProfile { get; }
     public ITracksClient Tracks { get; }
     public IEpisodesClient Episodes { get; }
+    IContextClient ISpotifyClient.Context { get; set; }
     public IResponse? LastResponse { get; private set; }
 }
 
@@ -51,4 +52,5 @@ public interface ISpotifyClient
     IUserProfileClient UserProfile { get; }
     ITracksClient Tracks { get; }
     IEpisodesClient Episodes { get; }
+    internal IContextClient Context { get; set; }
 }
