@@ -49,8 +49,7 @@ public sealed class SpotifyPrivateDevice : INotifyPropertyChanged, IDisposable
         DeviceId = deviceId;
 
         CurrentlyPlaying = clusterChanged
-            .CombineLatest(localPlaybackStateChanged,
-                (cluster, playbackState) => new { Cluster = cluster, PlaybackState = playbackState })
+            .CombineLatest(localPlaybackStateChanged, (cluster, playbackState) => new { Cluster = cluster, PlaybackState = playbackState })
             .SelectMany(async x =>
             {
                 _latestCluster = x.Cluster;

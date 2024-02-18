@@ -1,4 +1,5 @@
 using System.Net.WebSockets;
+using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Text;
 using System.Text.Json;
@@ -13,17 +14,22 @@ internal sealed class SpotifyWebsocketConnection : IDisposable
 {
     private readonly ClientWebSocket _clientWebSocket;
     private readonly IAPIConnector _api;
-    private readonly Subject<Cluster> _clusterChanged = new();
-    private readonly Subject<(Exception?, WebSocketCloseStatus?)> _onDisconnected = new();
 
     internal Cluster? _cluster;
     private string? _connectionId;
 
 
-    public SpotifyWebsocketConnection(ClientWebSocket clientWebSocket, IAPIConnector api)
+    private readonly Subject<(Exception?, WebSocketCloseStatus?)> _onDisconnected;
+    private readonly Subject<(Cluster, string)> _clusterChanged;
+
+    public SpotifyWebsocketConnection(ClientWebSocket clientWebSocket, IAPIConnector api,
+        Subject<(Cluster, string)> clusterChanged, Subject<(Exception?, WebSocketCloseStatus?)> onDisconnected)
     {
+        _connectionId = null;
         _clientWebSocket = clientWebSocket;
         _api = api;
+        _clusterChanged = clusterChanged;
+        _onDisconnected = onDisconnected;
     }
 
     public ValueTask<string> ConnectionId(CancellationToken cancellationToken)
@@ -36,7 +42,10 @@ internal sealed class SpotifyWebsocketConnection : IDisposable
         return new ValueTask<string>(FetchConnectionIdAsync(cancellationToken));
     }
 
-    public IObservable<Cluster> ClusterChanged => _clusterChanged;
+    public IObservable<Cluster> ClusterChanged => _clusterChanged
+        .Where(x => x.Item2 == _connectionId)
+        .Select(x => x.Item1);
+
     public IObservable<(Exception?, WebSocketCloseStatus?)> OnDisconnected => _onDisconnected;
 
     private async Task<string> FetchConnectionIdAsync(CancellationToken cancellationToken)
@@ -76,7 +85,7 @@ internal sealed class SpotifyWebsocketConnection : IDisposable
                         var payload = ReadPayload(msg.RootElement, messageHeaders);
                         var clusterUpdate = ClusterUpdate.Parser.ParseFrom(payload.Span);
                         _cluster = clusterUpdate.Cluster;
-                        _clusterChanged.OnNext(_cluster);
+                        _clusterChanged.OnNext((_cluster, _connectionId));
                     }
 
                     Console.WriteLine("Incoming message: " + uri);
@@ -93,18 +102,18 @@ internal sealed class SpotifyWebsocketConnection : IDisposable
 
     private async Task<JsonDocument> ReadNextMessageAsync(CancellationToken cancellationToken)
     {
-        await using var message = await Receive(cancellationToken); 
+        await using var message = await Receive(cancellationToken);
         var jsondoc = await JsonDocument.ParseAsync(message, cancellationToken: cancellationToken);
 
         return jsondoc;
     }
 
-    public async Task UpdateState(
-        string deviceId,
+    public async Task UpdateState(string deviceId,
         string deviceName,
         DeviceType deviceType,
         PutStateReason reason,
         PlayerState? state,
+        DateTimeOffset? startedPlayingAt,
         CancellationToken cancel)
     {
         const uint VOLUME_STEPS = 12;
@@ -159,6 +168,12 @@ internal sealed class SpotifyWebsocketConnection : IDisposable
             LastCommandMessageId = 0,
             LastCommandSentByDeviceId = string.Empty
         };
+        if (startedPlayingAt != null)
+        {
+            putState.StartedPlayingAt = (ulong)startedPlayingAt.Value.ToUnixTimeMilliseconds();
+            putState.IsActive = true;
+        }
+
         if (state != null)
         {
             putState.Device.PlayerState = state;
@@ -174,7 +189,7 @@ internal sealed class SpotifyWebsocketConnection : IDisposable
         var cluster =
             await _api.Put<Cluster>(new Uri(putstateUrl), headers, content, RequestContentType.Protobuf, cancel);
         _cluster = cluster;
-        _clusterChanged.OnNext(cluster);
+        _clusterChanged.OnNext((cluster, connectionId));
     }
 
     public async Task<Stream> Receive(CancellationToken cancellationToken = default)
@@ -203,11 +218,6 @@ internal sealed class SpotifyWebsocketConnection : IDisposable
     public void Dispose()
     {
         _clientWebSocket.Dispose();
-        _clusterChanged.OnCompleted();
-        _onDisconnected.OnCompleted();
-
-        _clusterChanged.Dispose();
-        _onDisconnected.Dispose();
     }
 
     internal readonly record struct SpotifyWebsocketMessage(string Uri);

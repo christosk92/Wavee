@@ -19,9 +19,19 @@ public sealed class WaveePlayer : IWaveePlayer
     }
 
     public IObservable<WaveePlaybackState> Events => _events.StartWith(_state);
-    public Task Play(IWaveePlayContext spotifyPlayContext, int startAt, CancellationToken cancel)
+
+    public async Task Play(IWaveePlayContext spotifyPlayContext, int startAt, CancellationToken cancel)
     {
-        throw new NotImplementedException();
+        var source = await spotifyPlayContext.GetAt(startAt, cancel);
+        if (source is null) return;
+        _state = new WaveePlaybackState
+        {
+            IsActive = true,
+            Source = source,
+            PositionSinceStartStopwatch = TimeSpan.Zero,
+            PositionStopwatch = Stopwatch.StartNew()
+        };
+        _events.OnNext(_state);
     }
 }
 

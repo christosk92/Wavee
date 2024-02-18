@@ -106,7 +106,8 @@ internal sealed class SpotifyPlayContext : IWaveePlayContext
             {
                 var track = page.Tracks[j];
                 if (trackUid != null && track.Uid == trackUid ||
-                    trackId != null && (track.Uri == trackId.Value.ToString() || track.Gid.Span.SequenceEqual(trackId.Value.Id.ToByteArray(true, true))))
+                    trackId != null && (track.Uri == trackId.Value.ToString() ||
+                                        track.Gid.Span.SequenceEqual(trackId.Value.Id.ToByteArray(true, true))))
                 {
                     return (absoluteIndex + j, j, pageIndexCounter);
                 }
@@ -138,7 +139,7 @@ internal sealed class SpotifyPlayContext : IWaveePlayContext
 
     private async Task<IWaveeMediaSource?> CreateMediaSource(ContextTrack track, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        return new SpotifyMediaSource();
     }
 
     private async Task InitializePages(CancellationToken cancellationToken)

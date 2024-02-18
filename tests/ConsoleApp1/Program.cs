@@ -15,7 +15,7 @@ me.CurrentlyPlaying.Subscribe(x =>
     var pos = y.Position.ToString("g");
     Console.WriteLine($"Position: {pos}");
 });
-await me.Transfer(true, CancellationToken.None);
+//await me.Transfer(true, CancellationToken.None);
 Console.ReadKey();
 
 

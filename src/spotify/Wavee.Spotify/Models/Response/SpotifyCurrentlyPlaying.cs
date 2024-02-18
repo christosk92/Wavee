@@ -13,6 +13,10 @@ public sealed class SpotifyCurrentlyPlaying
     public SpotifyCurrentlyPlaying(TimeSpan positionOffset)
     {
         _positionOffset = positionOffset;
+        if (_positionOffset < TimeSpan.Zero)
+        {
+            _positionOffset = TimeSpan.Zero;
+        }
         _positionStopwatch = Paused ? new Stopwatch() : Stopwatch.StartNew();
     }
 

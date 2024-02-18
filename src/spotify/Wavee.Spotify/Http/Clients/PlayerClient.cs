@@ -3,6 +3,7 @@ using System.Net.WebSockets;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using System.Runtime.CompilerServices;
 using AsyncKeyedLock;
 using Eum.Spotify.connectstate;
@@ -27,6 +28,10 @@ public class PlayerClient : ApiClient, IPlayerClient, INotifyPropertyChanged
     private SpotifyWebsocketConnection? _connection;
     private IObservable<WaveePlaybackState> _localPlaybackStateChanged;
     private readonly ISpotifyClient _parentClient;
+    private readonly IWaveePlayer _player;
+    private DateTimeOffset? _startedPlayingAt;
+    private readonly Subject<(Cluster, string)> _clusterChangedSubj = new();
+    private readonly Subject<(Exception? error, WebSocketCloseStatus? socketCloseStatus)> _onDisconnectedSubj = new();
 
     public PlayerClient(
         ISpotifyClient parentClient,
@@ -38,15 +43,60 @@ public class PlayerClient : ApiClient, IPlayerClient, INotifyPropertyChanged
         _deviceId = deviceId;
         _authenticator = authenticator;
         _parentClient = parentClient;
+        _player = player;
         _device = null;
         _localPlaybackStateChanged = player.Events;
-        
-        _clusterChanged = this.WhenAnyValue(x => x.Connection)
-            .SelectMany(y =>
+
+        _clusterChanged = _clusterChangedSubj.Select(x => x.Item1);
+
+        _player.Events.SelectMany(async localState =>
+        {
+            if (localState.IsActive)
             {
-                if (y is null) return Observable.Empty<Cluster>();
-                return y.ClusterChanged.StartWith(y._cluster ?? new Cluster());
-            });
+                // update spotify playback state
+                if (Connection is not null && _device is not null)
+                {
+                    _startedPlayingAt ??= DateTimeOffset.Now;
+                    await Connection.UpdateState(_deviceId,
+                        _device.DeviceName,
+                        _device.DeviceType,
+                        PutStateReason.PlayerStateChanged,
+                        BuildPlayerState(localState),
+                        _startedPlayingAt,
+                        CancellationToken.None);
+                }
+            }
+            else
+            {
+                _startedPlayingAt = null;
+            }
+
+            return Unit.Default;
+        }).Subscribe();
+    }
+
+    private PlayerState BuildPlayerState(WaveePlaybackState localState)
+    {
+        var baseState = new PlayerState();
+        baseState.PlaybackSpeed = 1;
+        baseState.SessionId = string.Empty;
+        baseState.PlaybackId = string.Empty;
+        baseState.Suppressions = new();
+        baseState.ContextRestrictions = new Restrictions();
+        baseState.Options = new ContextPlayerOptions
+        {
+            RepeatingContext = localState.RepeatState >= RepeatState.Context,
+            RepeatingTrack = localState.RepeatState >= RepeatState.Track,
+            ShufflingContext = localState.ShuffleState
+        };
+        baseState.PositionAsOfTimestamp = 0;
+        baseState.Position = 0;
+        baseState.IsPlaying = true;
+        baseState.IsPaused = localState.Paused;
+
+        baseState.PositionAsOfTimestamp = (long)(localState.PositionStopwatch.Elapsed + localState.PositionSinceStartStopwatch).TotalMilliseconds;
+        baseState.Timestamp = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+        return baseState;
     }
 
     private SpotifyWebsocketConnection? Connection
@@ -80,7 +130,8 @@ public class PlayerClient : ApiClient, IPlayerClient, INotifyPropertyChanged
         var connection = await CreateConnection(deviceName, deviceType, true, cancel);
         _connection = connection;
 
-        return new SpotifyPrivateDevice(
+        var newDevice = new SpotifyPrivateDevice(
+            player: _player,
             parentClient: _parentClient,
             deviceId: _deviceId,
             deviceName: deviceName,
@@ -96,6 +147,8 @@ public class PlayerClient : ApiClient, IPlayerClient, INotifyPropertyChanged
                 }
             }
         );
+        _device = newDevice;
+        return newDevice;
     }
 
     private Task UpdateState(string name, DeviceType type, PutStateReason reason, PlayerState state,
@@ -106,7 +159,7 @@ public class PlayerClient : ApiClient, IPlayerClient, INotifyPropertyChanged
             return Task.CompletedTask;
         }
 
-        return Connection.UpdateState(_deviceId, name, type, reason, state, cancellationToken);
+        return Connection.UpdateState(_deviceId, name, type, reason, state, _startedPlayingAt, cancellationToken);
     }
 
     private async Task<SpotifyWebsocketConnection> CreateConnection(
@@ -137,7 +190,7 @@ public class PlayerClient : ApiClient, IPlayerClient, INotifyPropertyChanged
         await clientWebSocket.ConnectAsync(uri, cancel);
 
         var compositeDisposable = new CompositeDisposable();
-        var connection = new SpotifyWebsocketConnection(clientWebSocket, Api);
+        var connection = new SpotifyWebsocketConnection(clientWebSocket, Api, _clusterChangedSubj, _onDisconnectedSubj);
         compositeDisposable.Add(connection);
 
         connection.OnDisconnected
@@ -149,7 +202,7 @@ public class PlayerClient : ApiClient, IPlayerClient, INotifyPropertyChanged
             .Subscribe()
             .DisposeWith(compositeDisposable);
 
-        await connection.UpdateState(_deviceId, deviceName, deviceType, PutStateReason.NewDevice, null, cancel);
+        await connection.UpdateState(_deviceId, deviceName, deviceType, PutStateReason.NewDevice, null,null, cancel);
         return connection;
     }
 
