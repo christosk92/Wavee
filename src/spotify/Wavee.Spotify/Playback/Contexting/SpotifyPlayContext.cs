@@ -1,8 +1,9 @@
 using Eum.Spotify.context;
 using Wavee.Core;
-using Wavee.Spotify.Http.Interfaces;
-using Wavee.Spotify.Http.Interfaces.Clients;
+using Wavee.Core.Exceptions;
+using Wavee.Spotify.Extensions;
 using Wavee.Spotify.Models.Common;
+using Wavee.Spotify.Models.Response;
 
 namespace Wavee.Spotify.Playback.Contexting;
 
@@ -11,21 +12,23 @@ internal sealed class SpotifyPlayContext : IWaveePlayContext
     private readonly string _contextUri;
     private readonly string _contextUrl;
     private LinkedList<ContextPage>? _pages;
-    private readonly IContextClient _contextClient;
+    private readonly ISpotifyClient _spotifyClient;
 
-    public SpotifyPlayContext(string contextUri, string contextUrl, IReadOnlyList<ContextPage>? pages,
-        IContextClient contextClient)
+    public SpotifyPlayContext(string contextUri,
+        string contextUrl,
+        IReadOnlyList<ContextPage>? pages,
+        ISpotifyClient spotifyClient)
     {
         _contextUri = contextUri;
         _contextUrl = contextUrl;
-        _contextClient = contextClient;
+        _spotifyClient = spotifyClient;
         if (pages is not null)
         {
             _pages = new LinkedList<ContextPage>(pages);
         }
     }
 
-    public async ValueTask<IWaveeMediaSource?> GetAt(int index, CancellationToken cancellationToken = default)
+    public async ValueTask<WaveeMediaSource?> GetAt(int index, CancellationToken cancellationToken = default)
     {
         if (_pages is null || _pages.Count == 0)
         {
@@ -132,19 +135,104 @@ internal sealed class SpotifyPlayContext : IWaveePlayContext
         throw new NotImplementedException();
     }
 
-    private async Task<ContextPage?> FetchPageByPageUrl(string pagePageUrl, CancellationToken cancellationToken)
+    private async Task<Context?> FetchPageByPageUrl(string pagePageUrl, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        var finalPageurl = pagePageUrl.Replace("hm://", string.Empty);
+        var ctx = await _spotifyClient.Context.ResolveContext(finalPageurl, cancellationToken);
+        return ctx;
     }
 
-    private async Task<IWaveeMediaSource?> CreateMediaSource(ContextTrack track, CancellationToken cancellationToken)
+    private async Task<WaveeMediaSource?> CreateMediaSource(ContextTrack ctxTrack, CancellationToken cancellationToken)
     {
-        return new SpotifyMediaSource();
+        SpotifyId? trackId = null;
+        if (ctxTrack.HasUri && !string.IsNullOrEmpty(ctxTrack.Uri))
+        {
+            if (SpotifyId.TryParse(ctxTrack.Uri, out var id))
+            {
+                trackId = id;
+            }
+        }
+        else if (ctxTrack.HasGid && !ctxTrack.Gid.IsEmpty)
+        {
+            //TODO: Episode
+            trackId = SpotifyId.FromRaw(ctxTrack.Gid.Span, AudioItemType.Track);
+        }
+
+        if (trackId == null)
+        {
+            throw new CannotPlayException(CannotPlayException.Reason.UnsupportedMediaType);
+        }
+
+        var track = await _spotifyClient.Tracks.Get(trackId.Value, cancellationToken);
+        var files = track.AudioFiles;
+        if (files.Count is 0)
+        {
+            throw new CannotPlayException(CannotPlayException.Reason.NoAudioFiles);
+        }
+
+        var requestedFormat = SpotifyAudioFileType.OGG_VORBIS_320;
+        var file = files.FirstOrDefault(f => f.Type == requestedFormat);
+        if (file.FileId is null)
+        {
+            file = files.FirstOrDefault();
+        }
+
+        var encryptedFile = await SpotifyEncryptedStream.Open(this._spotifyClient, track, file);
+
+        var isCached = encryptedFile.IsCached;
+
+        // Not all audio files are encrypted. If we can't get a key, try loading the track
+        // without decryption. If the file was encrypted after all, the decoder will fail
+        // parsing and bail out, so we should be safe from outputting ear-piercing noise.
+        var audioKey =
+            await Task.Run(
+                async () => await _spotifyClient.AudioKey.GetAudioKey(trackId.Value, file.FileId, cancellationToken),
+                cancellationToken);
+
+        var decryptedFile = SpotifyClient.DecryptionFactory!(encryptedFile, audioKey);
+        var isOgg = file.Type switch
+        {
+            SpotifyAudioFileType.OGG_VORBIS_320 => true,
+            SpotifyAudioFileType.OGG_VORBIS_160 => true,
+            SpotifyAudioFileType.OGG_VORBIS_96 => true,
+            _ => false
+        };
+        var offSetAndMutData = isOgg
+            ? (SpotifyOggHeaderEnd, NormalisationDataHelper.ParseFromOgg(decryptedFile))
+            : (0, null);
+
+
+        var mediaSource = new SpotifyMediaSource(
+            stream: decryptedFile,
+            item: track,
+            offset: (int)offSetAndMutData.Item1,
+            normalisationData: offSetAndMutData.Item2);
+
+        //read first 30 bytes
+        var buffer = new byte[30];
+        mediaSource.Seek(0, SeekOrigin.Begin);
+        var read = mediaSource.Read(buffer);
+
+        return mediaSource;
+    }
+
+    public const uint SpotifyOggHeaderEnd = 0xa7;
+
+    private static int BytesPerSecond(SpotifyAudioFileType fileType)
+    {
+        var kbps = fileType switch
+        {
+            SpotifyAudioFileType.OGG_VORBIS_320 => 12,
+            SpotifyAudioFileType.OGG_VORBIS_160 => 20,
+            SpotifyAudioFileType.OGG_VORBIS_96 => 40,
+            _ => throw new ArgumentOutOfRangeException(nameof(fileType), fileType, null)
+        };
+        return kbps * 1024;
     }
 
     private async Task InitializePages(CancellationToken cancellationToken)
     {
-        var context = await _contextClient.ResolveContext(_contextUri, cancellationToken);
+        var context = await _spotifyClient.Context.ResolveContext(_contextUri, cancellationToken);
         _pages = new LinkedList<ContextPage>(context.Pages);
     }
 
@@ -152,12 +240,24 @@ internal sealed class SpotifyPlayContext : IWaveePlayContext
         CancellationToken cancellationToken)
     {
         var page = currentNode.Value;
-        if (page.Tracks != null) return page; // Page is already loaded
+        if (page.Tracks.Count > 0) return page; // Page is already loaded
 
         ContextPage? updatedPage = null;
         if (!string.IsNullOrEmpty(page.PageUrl))
         {
-            updatedPage = await FetchPageByPageUrl(page.PageUrl, cancellationToken);
+            var newContext = await FetchPageByPageUrl(page.PageUrl, cancellationToken);
+            if (newContext != null)
+            {
+                var firstPage = newContext.Pages.FirstOrDefault();
+                if (firstPage != null)
+                {
+                    updatedPage = firstPage;
+                    foreach (var p in newContext.Pages.Skip(1))
+                    {
+                        _pages.AddAfter(currentNode, p);
+                    }
+                }
+            }
         }
         else if (!string.IsNullOrEmpty(page.NextPageUrl))
         {

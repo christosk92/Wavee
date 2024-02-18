@@ -59,10 +59,10 @@ public class NetHttpClient : IHttpClient
         if (fullUri.AbsoluteUri.StartsWith("https://spclient.com"))
         {
             //gae2-spclient.spotify.com
-            fullUri = new Uri(fullUri.AbsoluteUri.Replace("https://spclient.com", 
+            fullUri = new Uri(fullUri.AbsoluteUri.Replace("https://spclient.com",
                 "https://gae2-spclient.spotify.com"));
         }
-        
+
         var requestMsg = new HttpRequestMessage(request.Method, fullUri);
         foreach (var header in request.Headers)
         {
@@ -88,6 +88,7 @@ public class NetHttpClient : IHttpClient
                     default:
                         throw new ArgumentOutOfRangeException();
                 }
+
                 break;
             case string body:
                 requestMsg.Content = new StringContent(body, Encoding.UTF8, "application/json");
@@ -134,6 +135,11 @@ public class NetHttpClient : IHttpClient
     public void SetRequestTimeout(TimeSpan timeout)
     {
         _httpClient.Timeout = timeout;
+    }
+
+    public Task<HttpResponseMessage> SendRaw(HttpRequestMessage request, CancellationToken cancel)
+    {
+        return _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancel);
     }
 }
 

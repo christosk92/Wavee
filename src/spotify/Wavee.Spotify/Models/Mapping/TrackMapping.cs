@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using System.Numerics;
 using Google.Protobuf.Collections;
 using Spotify.Metadata;
 using Wavee.Spotify.Extensions;
@@ -19,8 +20,20 @@ internal static class TrackMapping
             DiscNumber = track.DiscNumber,
             HasLyrics = track.HasLyrics,
             Album = track.Album.MapToTrackAlbum(),
-            Artists = track.Artist.Select(x => x.MapToTrackArtist()).ToImmutableList(),
-            Duration = TimeSpan.FromMilliseconds(track.Duration)
+            Artists = track.Artist.Select(x => x.MapToTrackArtist())
+                .ToImmutableList(),
+            Duration = TimeSpan.FromMilliseconds(track.Duration),
+            AudioFiles = track.File.Where(x =>
+                    x.Format is AudioFile.Types.Format.OggVorbis96 or AudioFile.Types.Format.OggVorbis160
+                        or AudioFile.Types.Format.OggVorbis320)
+                .Select(x => new SpotifyAudioFile(Type: x.Format switch
+                {
+                    AudioFile.Types.Format.OggVorbis96 => SpotifyAudioFileType.OGG_VORBIS_96,
+                    AudioFile.Types.Format.OggVorbis160 => SpotifyAudioFileType.OGG_VORBIS_160,
+                    AudioFile.Types.Format.OggVorbis320 => SpotifyAudioFileType.OGG_VORBIS_320,
+                    _ => throw new ArgumentOutOfRangeException()
+                }, x.FileId))
+                .ToImmutableList()
         };
     }
 

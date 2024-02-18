@@ -6,6 +6,7 @@ using Wavee.Spotify.Auth.OAuth;
 using Wavee.Spotify.Auth.Tcp;
 using Wavee.Spotify.Authenticators;
 using Wavee.Spotify.Http.Interfaces;
+using Wavee.Spotify.Models.Common;
 using ClientInfo = Eum.Spotify.ClientInfo;
 
 namespace Wavee.Spotify.Auth;
@@ -36,7 +37,8 @@ public sealed class SpotifyInternalAuthClient : ISpotifyInternalAuthClient
         _openBrowser = openBrowser;
         _credentials = null;
     }
-
+    public Task<byte[]?> RequestAudioKey(SpotifyId id, ByteString fileId, CancellationToken cancellationToken) 
+        => _tcpAuth!.GetAudioKey(id, fileId, cancellationToken);
     public async Task<BearerTokenResponse?> RequestToken(string deviceId, IAPIConnector apiConnector,
         CancellationToken cancellationToken)
     {

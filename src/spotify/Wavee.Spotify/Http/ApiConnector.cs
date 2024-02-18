@@ -159,6 +159,11 @@ public sealed class ApiConnector : IAPIConnector
         return SendAPIRequest<T>(uri, HttpMethod.Post, parameters, body, bodyType, headers, cancel: cancel);
     }
 
+    public Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancel)
+    {
+        return _httpClient.SendRaw(request, cancel);
+    }
+
     public async Task<HttpStatusCode> Post(Uri uri, IDictionary<string, string>? parameters, object? body,
         CancellationToken cancel)
     {
@@ -289,8 +294,9 @@ public sealed class ApiConnector : IAPIConnector
         return response.ContentType switch
         {
             "application/json" => _systemJsonSerializer.DeserializeResponse<T>(response),
+            "application/x-protobuf" => _protobufDeserializer.DeserializeResponse<T>(response),
             "application/protobuf" => _protobufDeserializer.DeserializeResponse<T>(response),
-            "vnd.spotify/metadata-track" => _protobufDeserializer.DeserializeResponse<T>(response),
+            string s when s.StartsWith("vnd.spotify") => _protobufDeserializer.DeserializeResponse<T>(response),
             _ => throw new ApiException(response)
         };
     }

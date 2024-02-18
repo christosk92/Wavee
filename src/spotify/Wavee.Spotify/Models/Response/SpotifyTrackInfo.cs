@@ -14,6 +14,7 @@ public sealed class SpotifyTrackInfo : ISpotifyPlayableItem
     public required IReadOnlyList<SpotifyTrackArtist> Artists { get; init; }
     public required SpotifyTrackAlbum Album { get; init; }
     public required TimeSpan Duration { get; init; }
+    public required IReadOnlyList<SpotifyAudioFile> AudioFiles { get; init; }
 }
 
 public sealed class SpotifyTrackArtist : ISpotifyItem

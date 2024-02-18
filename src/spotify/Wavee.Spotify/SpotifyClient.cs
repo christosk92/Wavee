@@ -2,13 +2,14 @@ using Wavee.Core.Extensions;
 using Wavee.Spotify.Http.Clients;
 using Wavee.Spotify.Http.Interfaces;
 using Wavee.Spotify.Http.Interfaces.Clients;
+using Wavee.Spotify.Playback;
 
 namespace Wavee.Spotify;
 
 public sealed class SpotifyClient : ISpotifyClient
 {
     private readonly IAPIConnector _apiConnector;
-    
+
     public SpotifyClient(SpotifyClientConfig config)
     {
         Guard.NotNull(nameof(config), config);
@@ -28,6 +29,8 @@ public sealed class SpotifyClient : ISpotifyClient
         Tracks = new TracksClient(_apiConnector);
         Episodes = new EpisodesClient(_apiConnector);
         ((ISpotifyClient)this).Context = new ContextClient(_apiConnector);
+        ((ISpotifyClient)this).AudioKey = new AudioKeyClient(config.Authenticator, Cache);
+        ((ISpotifyClient)this).Cdn = new CdnClient(_apiConnector);
         Player = new PlayerClient(
             this,
             config.Player,
@@ -42,7 +45,11 @@ public sealed class SpotifyClient : ISpotifyClient
     public ITracksClient Tracks { get; }
     public IEpisodesClient Episodes { get; }
     IContextClient ISpotifyClient.Context { get; set; }
+    IAudioKeyClient ISpotifyClient.AudioKey { get; set; }
+    ICdnClient ISpotifyClient.Cdn { get; set; }
     public IResponse? LastResponse { get; private set; }
+
+    internal static Func<SpotifyEncryptedStream, byte[], ISpotifyDecryptedStream>? DecryptionFactory { get; set; }
 }
 
 public interface ISpotifyClient
@@ -53,4 +60,6 @@ public interface ISpotifyClient
     ITracksClient Tracks { get; }
     IEpisodesClient Episodes { get; }
     internal IContextClient Context { get; set; }
+    internal IAudioKeyClient AudioKey { get; set; }
+    internal ICdnClient Cdn { get; set; }
 }

@@ -1,7 +1,13 @@
+using Wavee.Spotify.Decryption;
+
 namespace Wavee.Spotify.Auth;
 
 public static class Constants
 {
+    static Constants()
+    {
+        SpotifyDecryptedStream.Initialize();
+    }
     public static byte[] SERVER_KEY =
     {
         0xac, 0xe0, 0x46, 0x0b, 0xff, 0xc2, 0x30, 0xaf, 0xf4, 0x6b, 0xfe, 0xc3, 0xbf, 0xbf, 0x86, 0x3d,

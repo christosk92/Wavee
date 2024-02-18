@@ -22,17 +22,17 @@ internal sealed class SpotifyInMemoryCache : ISpotifyCache
 
     public static SpotifyInMemoryCache Instance { get; } = new SpotifyInMemoryCache();
 
-    public bool TryGet<T>(string id, out T track) where T : ISpotifyItem => _cache.TryGetValue(id, out track);
+    public bool TryGet<T>(string id, out T track) => _cache.TryGetValue(id, out track);
 
-    public void Add<T>(T track) where T : ISpotifyItem
+    public void Add<T>(string id, T track) 
     {
-        _cache.Set(track.Uri.ToString(), track, new MemoryCacheEntryOptions()
+        _cache.Set(id, track, new MemoryCacheEntryOptions()
             .SetAbsoluteExpiration(DateTimeOffset.Now.Add(_expiration))
             .SetSize(1)); 
     }
 
     public async Task<T?> TryGetOrFetch<T>(string id, Func<string, CancellationToken, Task<T?>> fetchTrack,
-        CancellationToken cancellationToken) where T : ISpotifyItem
+        CancellationToken cancellationToken) 
     {
         if (!TryGet(id, out T? track))
         {
@@ -47,7 +47,7 @@ internal sealed class SpotifyInMemoryCache : ISpotifyCache
                     if (track is null) return default;
 
                     // Add the fetched track to the cache.
-                    Add(track);
+                    Add(id, track);
                 }
             }
             catch
@@ -63,5 +63,16 @@ internal sealed class SpotifyInMemoryCache : ISpotifyCache
         }
 
         return track;
+    }
+
+    public bool TryGetFile(SpotifyAudioFile file, out FileStream o)
+    {
+        o = null;
+        return false;
+    }
+
+    public void AddFile(SpotifyAudioFile file, FileStream finalFile)
+    {
+        
     }
 }

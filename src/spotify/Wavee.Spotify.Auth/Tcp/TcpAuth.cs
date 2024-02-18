@@ -7,6 +7,8 @@ using System.Text;
 using AsyncKeyedLock;
 using Eum.Spotify;
 using Google.Protobuf;
+using Spotify.Metadata;
+using Wavee.Spotify.Models.Common;
 
 namespace Wavee.Spotify.Auth.Tcp;
 
@@ -24,7 +26,12 @@ public sealed class TcpAuth : IDisposable
 
     private readonly AsyncNonKeyedLocker _locksLocker = new();
     private readonly Dictionary<Guid, SpotifyPackageCallback> _callbacks = new();
+    private readonly Dictionary<uint, TaskCompletionSource<byte[]?>> _audioKeysCallbacks = new();
+
     private int _sendSeq = 1;
+
+    private AsyncNonKeyedLocker _audioKeySeqLock = new();
+    private uint _audioKeySeq = 0;
 
     public TcpAuth(LoginCredentials authenticationCredentials, string deviceId)
     {
@@ -65,6 +72,15 @@ public sealed class TcpAuth : IDisposable
                             _countryCode = Encoding.ASCII.GetString(payload.ToArray());
                             _countryCodeTask.TrySetResult(_countryCode);
                             break;
+                        case SpotifyPacketType.AesKeyError:
+                        case SpotifyPacketType.AesKey:
+                        {
+                            foreach (var callback in _callbacks.ToList())
+                            {
+                                callback.Value(type, payload);
+                            }
+                            break;
+                        }
                         default:
                             Console.WriteLine($"Unexpected packet type received: {type}");
                             break;
@@ -148,6 +164,72 @@ public sealed class TcpAuth : IDisposable
     }
 
     public bool Healthy => _client is { Connected: true } && !_receiveKey.IsEmpty && !_sendKey.IsEmpty;
+
+    public async Task<byte[]?> GetAudioKey(SpotifyId id, ByteString fileId, CancellationToken cancellationToken)
+    {
+        var (seq, callbackId) = SendAudioKeyRequest(id, fileId);
+        using var cts = new CancellationTokenSource();
+        cts.CancelAfter(5000);
+        try
+        {
+            var tcs = _audioKeysCallbacks[seq];
+            var result = await tcs.Task.WaitAsync(cts.Token);
+            return result;
+        }
+        finally
+        {
+            _audioKeysCallbacks.Remove(seq);
+            ClearCallback(callbackId);
+        }
+    }
+
+    private (uint, Guid) SendAudioKeyRequest(SpotifyId id, ByteString fileId)
+    {
+        uint GetNextSeq()
+        {
+            using var locker = _audioKeySeqLock.Lock();
+            var seq = _audioKeySeq;
+            _audioKeySeq++;
+            return seq;
+        }
+
+        var raw = id.ToRaw();
+        Span<byte> data = stackalloc byte[raw.Length + fileId.Length + 2 + sizeof(uint)];
+
+        fileId.Span.CopyTo(data);
+        raw.CopyTo(data.Slice(fileId.Length));
+
+        var seq = GetNextSeq();
+        BinaryPrimitives.WriteUInt32BigEndian(data.Slice(fileId.Length + raw.Length), seq);
+        BinaryPrimitives.WriteUInt16BigEndian(data.Slice(fileId.Length + raw.Length + sizeof(uint)), 0x0000);
+
+        var tcs = new TaskCompletionSource<byte[]>();
+        _audioKeysCallbacks.Add(seq, tcs);
+        var callbackIdMaybe = Send(SpotifyPacketType.RequestKey, data, (x, y) => AudioKeyCallback(x, y, seq));
+        return (seq, callbackIdMaybe);
+    }
+
+    private void AudioKeyCallback(SpotifyPacketType packagetype, ReadOnlySpan<byte> payload, uint checkAgainst)
+    {
+        if (packagetype is SpotifyPacketType.AesKey or SpotifyPacketType.AesKeyError)
+        {
+            var incomingSeq = BinaryPrimitives.ReadUInt32BigEndian(payload.Slice(0, 4));
+            if (incomingSeq != checkAgainst)
+            {
+                return;
+            }
+
+            var tcs = _audioKeysCallbacks[checkAgainst];
+            if (packagetype is SpotifyPacketType.AesKeyError)
+            {
+                tcs.TrySetResult(Array.Empty<byte>());
+            }
+            else
+            {
+                tcs.TrySetResult(payload.Slice(4, 16).ToArray());
+            }
+        }
+    }
 
     public async Task<LoginCredentials> Authenticate()
     {

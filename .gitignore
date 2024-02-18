@@ -10,6 +10,8 @@ Decrypt
 src/Wavee.Spotify/Application/Decrypt
 src/Wavee.Spfy/Playback/Decrypt
 src/Wavee.Spotify.Decrypt
+src/spotify/Wavee.Spotify.Decryption
+
 
 .idea/
 **/.idea

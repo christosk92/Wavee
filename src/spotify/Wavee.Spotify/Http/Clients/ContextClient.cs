@@ -19,4 +19,12 @@ internal sealed class ContextClient : ApiClient, IContextClient
 
         return Api.Get<Context>(uri, cancellationToken);
     }
+
+    public Task<Context> ResolveContextRaw(string contextUrl, CancellationToken cancellationToken)
+    {
+        Guard.NotNullOrEmptyOrWhitespace(contextUrl, nameof(contextUrl));
+        var uri = new Uri("https://spclient.com/" + contextUrl);
+
+        return Api.Get<Context>(uri, cancellationToken);
+    }
 }

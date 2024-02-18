@@ -43,4 +43,13 @@ public static class SpotifyUrls
 
         public static string Resolve(string contextId) => Base + "/context-resolve/v1/" + contextId;
     }
+
+    internal static class Cdn
+    {
+        private const string Base = "https://spclient.com";
+
+        public const int ChunkSize = 2 * 2 * 128 * 1024;
+
+        public static string AudioStorage(string fileId) => Base + "/storage-resolve/files/audio/interactive/" + fileId;
+    }
 }

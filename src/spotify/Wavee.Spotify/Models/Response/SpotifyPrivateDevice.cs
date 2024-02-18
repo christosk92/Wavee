@@ -30,6 +30,7 @@ public sealed class SpotifyPrivateDevice : INotifyPropertyChanged, IDisposable
     private ISpotifyClient? _parentClient;
     private Cluster? _latestCluster;
     private readonly IWaveePlayer _player;
+    private readonly ManualResetEvent _waitForCluster = new(false);
 
     internal SpotifyPrivateDevice(
         IWaveePlayer player,
@@ -48,11 +49,18 @@ public sealed class SpotifyPrivateDevice : INotifyPropertyChanged, IDisposable
         _disposables = new CompositeDisposable();
         DeviceId = deviceId;
 
+        //set cluster
+        clusterChanged.Subscribe(x =>
+        {
+            _latestCluster = x;
+            _waitForCluster.Set();
+        });
+        
         CurrentlyPlaying = clusterChanged
-            .CombineLatest(localPlaybackStateChanged, (cluster, playbackState) => new { Cluster = cluster, PlaybackState = playbackState })
+            .CombineLatest(localPlaybackStateChanged,
+                (cluster, playbackState) => new { Cluster = cluster, PlaybackState = playbackState })
             .SelectMany(async x =>
             {
-                _latestCluster = x.Cluster;
                 if (x.PlaybackState is { IsActive: true, Source: SpotifyMediaSource spotifyMediaSource })
                 {
                     return await ConstructFromLocalPlaybackState(x.PlaybackState, spotifyMediaSource, x.Cluster.Device);
@@ -97,6 +105,8 @@ public sealed class SpotifyPrivateDevice : INotifyPropertyChanged, IDisposable
     /// </returns>
     public async Task<bool> Transfer(bool play, CancellationToken cancellationToken)
     {
+        await Task.Run(() => _waitForCluster.WaitOne(5000), cancellationToken);
+
         if (_latestCluster is null)
         {
             return false;
@@ -162,10 +172,11 @@ public sealed class SpotifyPrivateDevice : INotifyPropertyChanged, IDisposable
             contextUri,
             contextUrl,
             pages,
-            _parentClient.Context
+            _parentClient!
         );
 
-        var (foundAbsIndex, foundIdxInPage, foundPageIdx) = await spotifyPlayContext.FindAsync(pageIndex, trackIndex, trackUid, trackId);
+        var (foundAbsIndex, foundIdxInPage, foundPageIdx) =
+            await spotifyPlayContext.FindAsync(pageIndex, trackIndex, trackUid, trackId);
         await _player.Play(spotifyPlayContext, foundAbsIndex, CancellationToken.None);
     }
 

@@ -47,7 +47,10 @@ public class PlayerClient : ApiClient, IPlayerClient, INotifyPropertyChanged
         _device = null;
         _localPlaybackStateChanged = player.Events;
 
-        _clusterChanged = _clusterChangedSubj.Select(x => x.Item1);
+        _clusterChanged = _clusterChangedSubj.Select(x =>
+        {
+            return x.Item1;
+        });
 
         _player.Events.SelectMany(async localState =>
         {
@@ -136,7 +139,7 @@ public class PlayerClient : ApiClient, IPlayerClient, INotifyPropertyChanged
             deviceId: _deviceId,
             deviceName: deviceName,
             deviceType: deviceType,
-            clusterChanged: _clusterChanged,
+            clusterChanged: _clusterChanged.Replay(1).RefCount(),
             localPlaybackStateChanged: _localPlaybackStateChanged,
             updateState: UpdateState,
             async () =>
@@ -147,6 +150,7 @@ public class PlayerClient : ApiClient, IPlayerClient, INotifyPropertyChanged
                 }
             }
         );
+        _clusterChangedSubj.OnNext((connection._cluster, await connection.ConnectionId(cancel)));
         _device = newDevice;
         return newDevice;
     }

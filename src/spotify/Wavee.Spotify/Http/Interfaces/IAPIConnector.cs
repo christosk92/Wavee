@@ -12,4 +12,6 @@ public interface IAPIConnector
     Task<T> Post<T>(Uri uri, IDictionary<string, string>? parameters, object? body,
         RequestContentType? bodyType,
         Dictionary<string, string>? headers, CancellationToken cancel = default);
+
+    Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken none);
 }

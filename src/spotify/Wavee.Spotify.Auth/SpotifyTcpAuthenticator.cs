@@ -1,7 +1,9 @@
 using AsyncKeyedLock;
+using Google.Protobuf;
 using Wavee.Core.Extensions;
 using Wavee.Spotify.Authenticators;
 using Wavee.Spotify.Http.Interfaces;
+using Wavee.Spotify.Models.Common;
 
 namespace Wavee.Spotify.Auth;
 
@@ -25,7 +27,11 @@ public abstract class SpotifyTcpAuthenticator : IAuthenticator
         return GetTokenVal(deviceId, apiConnector, cancel).ContinueWith(x => x.Result.AccessToken, cancel);
     }
 
-    public async Task<BearerTokenResponse> GetTokenVal(string deviceId, IAPIConnector apiConnector, CancellationToken cancel = default)
+    Task<byte[]?> IAuthenticator.GetAudioKey(SpotifyId id, ByteString fileId, CancellationToken cancellationToken)
+        => AuthClient.RequestAudioKey(id, fileId, cancellationToken);
+
+    public async Task<BearerTokenResponse> GetTokenVal(string deviceId, IAPIConnector apiConnector,
+        CancellationToken cancel = default)
     {
         if (AuthClient == null)
         {
@@ -38,6 +44,7 @@ public abstract class SpotifyTcpAuthenticator : IAuthenticator
             Console.WriteLine("Token is null or expired");
             var token = await AuthClient!.RequestToken(deviceId, apiConnector, CancellationToken.None)
                 .ConfigureAwait(false);
+            Token = token;
             return token!;
         }
 
