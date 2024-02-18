@@ -57,10 +57,14 @@ public sealed class VorbisWaveReader : WaveStream
 
     public override TimeSpan CurrentTime
     {
-        get => _oggReader.Position.Match(
-            None: () => _currentPacket.Map(f => f.Item2),
-            Some: x => x
-        ).IfNone(TimeSpan.Zero);
+        // get => _oggReader.Position.Match(
+        //     None: () => _currentPacket.Map(f => f.Item2),
+        //     Some: x => x
+        // ).IfNone(TimeSpan.Zero);
+        get => _currentPacket.Match(
+            Some: x => x.Item2,
+            None: () => _oggReader.Position.IfNone(TimeSpan.Zero)
+        );
         set => SeekToBytesPos((long)(value.TotalSeconds * WaveFormat.AverageBytesPerSecond));
     }
 

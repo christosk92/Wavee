@@ -205,7 +205,7 @@ public sealed class WaveePlayer : IWaveePlayer
                             var newDiff = (position - previousTime.Value).TotalSeconds;
                             if (previousDiff is not null)
                             {
-                                if (Math.Abs(newDiff - previousDiff.Value) > 0.1)
+                                if (Math.Abs(newDiff - previousDiff.Value) > .1)
                                 {
                                     previousDiff = newDiff;
                                     _latestState = _latestState with
