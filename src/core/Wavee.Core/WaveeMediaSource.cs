@@ -2,9 +2,10 @@ namespace Wavee.Core;
 
 public abstract class WaveeMediaSource : Stream
 {
-    protected WaveeMediaSource(long length)
+    protected WaveeMediaSource(long length, TimeSpan duration)
     {
         Length = length;
+        Duration = duration;
     }
     
     public override void SetLength(long value)
@@ -21,6 +22,8 @@ public abstract class WaveeMediaSource : Stream
     public override bool CanSeek => true;
     public override bool CanWrite => false;
     public override long Length { get; }
+    public TimeSpan Duration { get; }
+
     public override void Flush()
     {
         throw new NotSupportedException();

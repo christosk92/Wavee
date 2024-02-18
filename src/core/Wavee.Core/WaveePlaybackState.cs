@@ -2,14 +2,16 @@ using System.Diagnostics;
 
 namespace Wavee.Core;
 
-public sealed class WaveePlaybackState
+public sealed record WaveePlaybackState
 {
-    public WaveeMediaSource Source { get; set; }
+    public bool EndOfContextReached { get; set; }
+    public IWaveePlayContext Context { get; set; }
+    public WaveeMediaSource? Source { get; set; }
     public bool IsActive { get; set; }
+    public bool IsBuffering { get; set; }
     public bool Paused { get; set; }
     public bool ShuffleState { get; set; }
     public RepeatState RepeatState { get; set; }
-    
     public Stopwatch PositionStopwatch { get; set; }
     public TimeSpan PositionSinceStartStopwatch { get; set; }
 }

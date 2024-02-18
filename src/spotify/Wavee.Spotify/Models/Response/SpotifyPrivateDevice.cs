@@ -55,15 +55,15 @@ public sealed class SpotifyPrivateDevice : INotifyPropertyChanged, IDisposable
             _latestCluster = x;
             _waitForCluster.Set();
         });
-        
+
         CurrentlyPlaying = clusterChanged
             .CombineLatest(localPlaybackStateChanged,
                 (cluster, playbackState) => new { Cluster = cluster, PlaybackState = playbackState })
             .SelectMany(async x =>
             {
-                if (x.PlaybackState is { IsActive: true, Source: SpotifyMediaSource spotifyMediaSource })
+                if (x.PlaybackState is { IsActive: true, Context: SpotifyPlayContext spotifyMediaSource })
                 {
-                    return await ConstructFromLocalPlaybackState(x.PlaybackState, spotifyMediaSource, x.Cluster.Device);
+                    return await ConstructFromLocalPlaybackState(x.PlaybackState, x.PlaybackState.Source as SpotifyMediaSource,x.Cluster.Device);
                 }
 
                 return await ConstructFromRemoteCluster(x.Cluster);
@@ -177,7 +177,7 @@ public sealed class SpotifyPrivateDevice : INotifyPropertyChanged, IDisposable
 
         var (foundAbsIndex, foundIdxInPage, foundPageIdx) =
             await spotifyPlayContext.FindAsync(pageIndex, trackIndex, trackUid, trackId);
-        await _player.Play(spotifyPlayContext, foundAbsIndex, CancellationToken.None);
+        _player.Play(spotifyPlayContext, foundAbsIndex, CancellationToken.None);
     }
 
     /// <summary>
@@ -298,7 +298,7 @@ public sealed class SpotifyPrivateDevice : INotifyPropertyChanged, IDisposable
     }
 
     private async Task<SpotifyCurrentlyPlaying> ConstructFromLocalPlaybackState(WaveePlaybackState playbackState,
-        SpotifyMediaSource spotifyMediaSource,
+        SpotifyMediaSource? spotifyMediaSource,
         MapField<string, DeviceInfo> device)
     {
         return new SpotifyCurrentlyPlaying(playbackState.PositionSinceStartStopwatch, playbackState.PositionStopwatch)

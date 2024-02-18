@@ -207,28 +207,11 @@ internal sealed class SpotifyPlayContext : IWaveePlayContext
             item: track,
             offset: (int)offSetAndMutData.Item1,
             normalisationData: offSetAndMutData.Item2);
-
-        //read first 30 bytes
-        var buffer = new byte[30];
         mediaSource.Seek(0, SeekOrigin.Begin);
-        var read = mediaSource.Read(buffer);
-
         return mediaSource;
     }
 
     public const uint SpotifyOggHeaderEnd = 0xa7;
-
-    private static int BytesPerSecond(SpotifyAudioFileType fileType)
-    {
-        var kbps = fileType switch
-        {
-            SpotifyAudioFileType.OGG_VORBIS_320 => 12,
-            SpotifyAudioFileType.OGG_VORBIS_160 => 20,
-            SpotifyAudioFileType.OGG_VORBIS_96 => 40,
-            _ => throw new ArgumentOutOfRangeException(nameof(fileType), fileType, null)
-        };
-        return kbps * 1024;
-    }
 
     private async Task InitializePages(CancellationToken cancellationToken)
     {

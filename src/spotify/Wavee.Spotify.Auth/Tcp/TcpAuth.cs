@@ -219,7 +219,10 @@ public sealed class TcpAuth : IDisposable
                 return;
             }
 
-            var tcs = _audioKeysCallbacks[checkAgainst];
+            if(!_audioKeysCallbacks.TryGetValue(checkAgainst, out var tcs))
+            {
+                return;
+            }
             if (packagetype is SpotifyPacketType.AesKeyError)
             {
                 tcs.TrySetResult(Array.Empty<byte>());

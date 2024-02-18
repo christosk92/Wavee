@@ -13,7 +13,7 @@ public class SpotifyMediaSource : WaveeMediaSource
     public SpotifyMediaSource(ISpotifyDecryptedStream stream,
         ISpotifyPlayableItem item,
         int offset,
-        NormalisationData? normalisationData) : base(stream.Length - offset)
+        NormalisationData? normalisationData) : base(stream.Length - offset, item.Duration)
     {
         _stream = stream;
         Item = item;
@@ -49,6 +49,7 @@ public class SpotifyMediaSource : WaveeMediaSource
         _pos = to - _offset;
         return _stream.Seek(to, SeekOrigin.Begin);
     }
+
     public override long Position
     {
         get => _pos;

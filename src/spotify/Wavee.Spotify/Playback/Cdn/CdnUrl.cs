@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using Eum.Spotify.storage;
 using Google.Protobuf;
 using Wavee.Core.Exceptions;
@@ -63,13 +64,16 @@ internal readonly record struct MaybeExpiringUrl(string Url, DateTimeOffset? Exp
 
             if (isExpiring)
             {
-                var expiryStr = uri.Query.TrimStart('?')
-                    .Split('&')
-                    .Select(part => part.Split('='))
-                    .Where(part => part.Length == 2 && (part[0] == "__token__" || part[0] == "Expires"))
-                    .Select(part => part[1])
-                    .FirstOrDefault();
-
+                // var expiryStr = uri.Query.TrimStart('?')
+                //     .Split('&')
+                //     .Select(part => part.Split('='))
+                //     .Where(part => part.Length == 2 && (part[0] == "__token__" || part[0] == "Expires"))
+                //     .Select(part => part[1])
+                //     .FirstOrDefault();
+                //__token__=exp= OR Expires=
+                var regex = new Regex(@"(?:__token__=exp=|Expires=)(\d+)");
+                var expiryStrMatch = regex.Match(uri.Query);
+                var expiryStr = expiryStrMatch.Success ? expiryStrMatch.Groups[1].Value : null;
                 if (expiryStr != null)
                 {
                     if (expiryStr.Contains("exp="))
