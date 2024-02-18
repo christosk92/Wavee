@@ -48,12 +48,21 @@ public sealed class VorbisWaveReader : WaveStream
             sampleRate: (int)track.CodecParams.SampleRate.ValueUnsafe(),
             channels: track.CodecParams.ChannelsCount.ValueUnsafe()
         );
-        
+
         TotalTime = _oggReader.TotalTime.ValueUnsafe();
     }
 
-    private Option<byte[]> _currentPacket = Option<byte[]>.None;
+    private Option<(byte[], TimeSpan)> _currentPacket = Option<(byte[], TimeSpan)>.None;
     private int _currentPacketOffset = 0; // to keep track of how much of the current packet is consumed
+
+    public override TimeSpan CurrentTime
+    {
+        get => _oggReader.Position.Match(
+            None: () => _currentPacket.Map(f => f.Item2),
+            Some: x => x
+        ).IfNone(TimeSpan.Zero);
+        set => SeekToBytesPos((long)(value.TotalSeconds * WaveFormat.AverageBytesPerSecond));
+    }
 
     public override int Read(byte[] buffer, int offset, int count)
     {
@@ -65,7 +74,7 @@ public sealed class VorbisWaveReader : WaveStream
             while (bytesRead < count)
             {
                 // If current packet is None or fully consumed, fetch a new packet
-                if (!_currentPacket.IsSome || _currentPacketOffset >= _currentPacket.ValueUnsafe().Length)
+                if (!_currentPacket.IsSome || _currentPacketOffset >= _currentPacket.ValueUnsafe().Item1.Length)
                 {
                     _currentPacket = FetchNewPacket();
                     _currentPacketOffset = 0;
@@ -75,12 +84,13 @@ public sealed class VorbisWaveReader : WaveStream
                         break;
                 }
 
+                var currentPacketValue = _currentPacket.ValueUnsafe();
                 // Calculate how much bytes can be read from the current packet
                 int bytesToRead = Math.Min(count - bytesRead,
-                    _currentPacket.ValueUnsafe().Length - _currentPacketOffset);
+                    currentPacketValue.Item1.Length - _currentPacketOffset);
 
                 // Copy data from current packet to buffer
-                Array.Copy(_currentPacket.ValueUnsafe(), _currentPacketOffset, buffer, offset + bytesRead, bytesToRead);
+                Array.Copy(currentPacketValue.Item1, _currentPacketOffset, buffer, offset + bytesRead, bytesToRead);
 
                 // Update counters
                 bytesRead += bytesToRead;
@@ -103,7 +113,7 @@ public sealed class VorbisWaveReader : WaveStream
 
     public override TimeSpan TotalTime { get; }
 
-    private Option<byte[]> FetchNewPacket()
+    private Option<(byte[], TimeSpan)> FetchNewPacket()
     {
         // Logic to fetch new packet from _oggReader
         // If a new packet is available return Option<byte[]>.Some(packetData)
@@ -118,9 +128,9 @@ public sealed class VorbisWaveReader : WaveStream
 
         if (oggpacketMaybe.IsNone)
         {
-            return Option<byte[]>.None;
+            return Option<(byte[], TimeSpan)>.None;
         }
-        
+
         var oggpacket = oggpacketMaybe.ValueUnsafe();
         // Decode the packet into audio samples.
         var decodeResult = _decoder.Decode(oggpacket);
@@ -128,13 +138,14 @@ public sealed class VorbisWaveReader : WaveStream
         {
             Console.WriteLine(decodeResult.Match(Succ: _ => throw new Exception("Unexpected success"), Fail: e => e));
             //Log.Error(decodeResult.Match(Succ: _ => throw new Exception("Unexpected success"), Fail: e => e),
-              //  "Error decoding packet");
-            return Option<byte[]>.None;
+            //  "Error decoding packet");
+            return Option<(byte[], TimeSpan)>.None;
         }
-        
+
         var samples = decodeResult.Match(x => x, e => throw e);
         var bytes = MemoryMarshal.Cast<float, byte>(samples).ToArray();
-        return Option<byte[]>.Some(bytes);
+        var pos = _oggReader.PositionOfPacket(oggpacket).IfNone(TimeSpan.Zero);
+        return Option<(byte[], TimeSpan)>.Some((bytes, pos));
     }
 
     public override WaveFormat WaveFormat { get; }

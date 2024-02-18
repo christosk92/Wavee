@@ -33,8 +33,9 @@ public class SpotifyMediaSource : WaveeMediaSource
 
         // Create a Span<byte> over the portion of the array we're interested in.
         Span<byte> span = new Span<byte>(buffer, offset, count);
-
-        return _stream.Read(span);
+        var read = _stream.Read(span);
+        _pos += read;
+        return read;
     }
 
     public override long Seek(long offset, SeekOrigin origin)
