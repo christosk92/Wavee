@@ -7,4 +7,6 @@ public sealed class SpotifyEpisodeInfo : ISpotifyPlayableItem
 {
     public required TimeSpan Duration { get; init; }
     public required SpotifyId Uri { get; init; }
+
+    public string Name => throw new NotImplementedException();
 }

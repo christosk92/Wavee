@@ -12,7 +12,9 @@ using Wavee.Core;
 using Wavee.Spotify.Authenticators;
 using Wavee.Spotify.Http.Interfaces;
 using Wavee.Spotify.Http.Interfaces.Clients;
+using Wavee.Spotify.Models.Interfaces;
 using Wavee.Spotify.Models.Response;
+using Wavee.Spotify.Playback.Contexting;
 
 namespace Wavee.Spotify.Http.Clients;
 
@@ -47,10 +49,7 @@ public class PlayerClient : ApiClient, IPlayerClient, INotifyPropertyChanged
         _device = null;
         _localPlaybackStateChanged = player.Events;
 
-        _clusterChanged = _clusterChangedSubj.Select(x =>
-        {
-            return x.Item1;
-        });
+        _clusterChanged = _clusterChangedSubj.Select(x => { return x.Item1; });
 
         _player.Events.SelectMany(async localState =>
         {
@@ -96,9 +95,27 @@ public class PlayerClient : ApiClient, IPlayerClient, INotifyPropertyChanged
         baseState.Position = 0;
         baseState.IsPlaying = true;
         baseState.IsPaused = localState.Paused;
+        baseState.IsBuffering = localState.IsBuffering;
 
-        baseState.PositionAsOfTimestamp = (long)(localState.PositionStopwatch.Elapsed + localState.PositionSinceStartStopwatch).TotalMilliseconds;
+        baseState.PositionAsOfTimestamp = (long)_player.Position.TotalMilliseconds;
         baseState.Timestamp = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+        if (localState.Source is { Metadata: ISpotifyPlayableItem spotifyPlayableItem })
+        {
+            var newTrack = new ProvidedTrack();
+            baseState.Track = newTrack;
+            newTrack.Uri = spotifyPlayableItem.Uri.ToString();
+            newTrack.Provider = "context";
+            baseState.Duration = (long)spotifyPlayableItem.Duration.TotalMilliseconds;
+        }
+
+        if (localState.Context is SpotifyPlayContext spotifyPlayContext)
+        {
+            baseState.ContextUri = spotifyPlayContext.ContextUri;
+            baseState.ContextUrl = spotifyPlayContext.ContextUrl;
+            baseState.ContextRestrictions = new();
+            baseState.ContextMetadata.Clear();
+        }
+
         return baseState;
     }
 
@@ -206,7 +223,7 @@ public class PlayerClient : ApiClient, IPlayerClient, INotifyPropertyChanged
             .Subscribe()
             .DisposeWith(compositeDisposable);
 
-        await connection.UpdateState(_deviceId, deviceName, deviceType, PutStateReason.NewDevice, null,null, cancel);
+        await connection.UpdateState(_deviceId, deviceName, deviceType, PutStateReason.NewDevice, null, null, cancel);
         return connection;
     }
 

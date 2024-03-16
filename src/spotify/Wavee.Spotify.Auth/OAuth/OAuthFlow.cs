@@ -3,6 +3,7 @@ using Eum.Spotify;
 using Google.Protobuf;
 using Wavee.Spotify.Authenticators;
 using Wavee.Spotify.Http.Interfaces;
+using Wavee.Spotify.Http.Serializers;
 
 namespace Wavee.Spotify.Auth.OAuth;
 

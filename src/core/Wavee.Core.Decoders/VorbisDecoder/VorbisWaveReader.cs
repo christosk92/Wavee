@@ -63,7 +63,7 @@ public sealed class VorbisWaveReader : WaveStream
         // ).IfNone(TimeSpan.Zero);
         get => _currentPacket.Match(
             Some: x => x.Item2,
-            None: () => _oggReader.Position.IfNone(TimeSpan.Zero)
+            None: () => _oggReader.Position.IfNone(_oggReader.TotalTime.IfNone(TimeSpan.Zero))
         );
         set => SeekToBytesPos((long)(value.TotalSeconds * WaveFormat.AverageBytesPerSecond));
     }

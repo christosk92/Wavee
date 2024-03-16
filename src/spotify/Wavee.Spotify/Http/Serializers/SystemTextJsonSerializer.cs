@@ -1,11 +1,13 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Text.Json.Serialization.Metadata;
 using Wavee.Core.Extensions;
+using Wavee.Spotify.Authenticators;
 using Wavee.Spotify.Http.Interfaces;
 
 namespace Wavee.Spotify.Http.Serializers;
 
-internal sealed class SystemTextJsonSerializer : IJsonSerializer
+internal sealed partial class SystemTextJsonSerializer : IJsonSerializer
 {
     private readonly JsonSerializerOptions _serializerSettings;
 
@@ -15,7 +17,10 @@ internal sealed class SystemTextJsonSerializer : IJsonSerializer
         {
             DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
             PropertyNameCaseInsensitive = true,
-            PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower
+            PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
+            TypeInfoResolver = JsonSerializer.IsReflectionEnabledByDefault
+            ? new DefaultJsonTypeInfoResolver()
+            : MyContext.Default
         };
     }
 
@@ -51,4 +56,24 @@ internal sealed class SystemTextJsonSerializer : IJsonSerializer
 
         return new ApiResponse<T>(response);
     }
+
+    static JsonSerializerOptions CreateDefaultOptions()
+    {
+        return new()
+        {
+            TypeInfoResolver = JsonSerializer.IsReflectionEnabledByDefault
+                ? new DefaultJsonTypeInfoResolver()
+                : MyContext.Default
+        };
+    }
+
+    [JsonSerializable(typeof(BearerTokenResponse))]
+    [JsonSerializable(typeof(AuthorizationCodeTokenResponse))]
+    public partial class MyContext : JsonSerializerContext { }
+}
+
+public sealed class AuthorizationCodeTokenResponse
+{
+    [JsonPropertyName("access_token")] public required string AccessToken { get; init; }
+    [JsonPropertyName("username")] public required string Username { get; init; }
 }

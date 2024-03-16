@@ -2,10 +2,11 @@ namespace Wavee.Core;
 
 public abstract class WaveeMediaSource : Stream
 {
-    protected WaveeMediaSource(long length, TimeSpan duration)
+    protected WaveeMediaSource(long length, TimeSpan duration, IWaveePlayableItem metadata)
     {
         Length = length;
         Duration = duration;
+        Metadata = metadata;
     }
     
     public override void SetLength(long value)
@@ -23,6 +24,7 @@ public abstract class WaveeMediaSource : Stream
     public override bool CanWrite => false;
     public override long Length { get; }
     public TimeSpan Duration { get; }
+    public IWaveePlayableItem Metadata { get; }
 
     public override void Flush()
     {

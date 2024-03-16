@@ -28,6 +28,9 @@ internal sealed class SpotifyPlayContext : IWaveePlayContext
         }
     }
 
+    public string ContextUri => _contextUri;
+    public string ContextUrl => _contextUrl;
+
     public async ValueTask<WaveeMediaSource?> GetAt(int index, CancellationToken cancellationToken = default)
     {
         if (_pages is null || _pages.Count == 0)
@@ -178,6 +181,7 @@ internal sealed class SpotifyPlayContext : IWaveePlayContext
         }
 
         var encryptedFile = await SpotifyEncryptedStream.Open(this._spotifyClient, track, file);
+        Console.WriteLine("Created Encrypted file for streaming");
 
         var isCached = encryptedFile.IsCached;
 
@@ -188,6 +192,8 @@ internal sealed class SpotifyPlayContext : IWaveePlayContext
             await Task.Run(
                 async () => await _spotifyClient.AudioKey.GetAudioKey(trackId.Value, file.FileId, cancellationToken),
                 cancellationToken);
+
+        Console.WriteLine("Fetched audiokey");
 
         var decryptedFile = SpotifyClient.DecryptionFactory!(encryptedFile, audioKey);
         var isOgg = file.Type switch
@@ -208,6 +214,8 @@ internal sealed class SpotifyPlayContext : IWaveePlayContext
             offset: (int)offSetAndMutData.Item1,
             normalisationData: offSetAndMutData.Item2);
         mediaSource.Seek(0, SeekOrigin.Begin);
+
+        Console.WriteLine("Created final audio stream");
         return mediaSource;
     }
 

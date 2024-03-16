@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "Wavee.UI.WInUI (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "Wavee.UI.WInUI (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}

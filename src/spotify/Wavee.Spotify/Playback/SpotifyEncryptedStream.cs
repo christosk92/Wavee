@@ -46,6 +46,7 @@ public abstract class SpotifyEncryptedStream : IDisposable
         var chunkRequestChannel = Channel.CreateUnbounded<ChunkRequest>();
         var chunkRequestRx = chunkRequestChannel.Reader;
         var chunkRequestTx = chunkRequestChannel.Writer;
+        Console.WriteLine("Starting audiofetching");
         _ = Task.Run(async () => await AudioFileFetch(
             spotifyClient,
             chunkRequestRx,

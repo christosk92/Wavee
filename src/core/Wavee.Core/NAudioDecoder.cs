@@ -38,6 +38,10 @@ internal sealed class NAudioDecoder : IAudioDecoder
         var bytes = samples.Length * sizeof(float);
         Span<byte> buffer = new byte[bytes];
         var read = _stream.Read(buffer);
+        if (read == 0)
+        {
+            return 0;
+        }
         var floats = MemoryMarshal.Cast<byte, float>(buffer.Slice(0, read));
         floats.CopyTo(samples);
         return read / sizeof(float);

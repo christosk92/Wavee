@@ -14,4 +14,5 @@ public sealed record WaveePlaybackState
     public RepeatState RepeatState { get; set; }
     public Stopwatch PositionStopwatch { get; set; }
     public TimeSpan PositionSinceStartStopwatch { get; set; }
+    public int? IndexInContext { get; set; }
 }
