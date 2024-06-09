@@ -1,0 +1,2079 @@
+﻿{
+  "data": {
+    "lookup": [
+      {
+        "__typename": "ArtistResponseWrapper",
+        "_uri": "spotify:artist:1xwuTSJVlnBEOecAEHGRfY",
+        "data": {
+          "__typename": "Artist",
+          "profile": {
+            "name": "ITOWOKASHI"
+          },
+          "uri": "spotify:artist:1xwuTSJVlnBEOecAEHGRfY",
+          "visuals": {
+            "avatarImage": {
+              "sources": [
+                {
+                  "height": 640,
+                  "url": "https://i.scdn.co/image/ab6761610000e5ebd74ee238a1afc43582575427",
+                  "width": 640
+                },
+                {
+                  "height": 160,
+                  "url": "https://i.scdn.co/image/ab6761610000f178d74ee238a1afc43582575427",
+                  "width": 160
+                },
+                {
+                  "height": 320,
+                  "url": "https://i.scdn.co/image/ab67616100005174d74ee238a1afc43582575427",
+                  "width": 320
+                }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "__typename": "ArtistResponseWrapper",
+        "_uri": "spotify:artist:3WGpXCj9YhhfX11TToZcXP",
+        "data": {
+          "__typename": "Artist",
+          "profile": {
+            "name": "Troye Sivan"
+          },
+          "uri": "spotify:artist:3WGpXCj9YhhfX11TToZcXP",
+          "visuals": {
+            "avatarImage": {
+              "sources": [
+                {
+                  "height": 640,
+                  "url": "https://i.scdn.co/image/ab6761610000e5eb26e8cb3ff6fc7744b312811b",
+                  "width": 640
+                },
+                {
+                  "height": 160,
+                  "url": "https://i.scdn.co/image/ab6761610000f17826e8cb3ff6fc7744b312811b",
+                  "width": 160
+                },
+                {
+                  "height": 320,
+                  "url": "https://i.scdn.co/image/ab6761610000517426e8cb3ff6fc7744b312811b",
+                  "width": 320
+                }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "__typename": "ArtistResponseWrapper",
+        "_uri": "spotify:artist:0r2CfjmaWc0FMbbmsb4zgD",
+        "data": {
+          "__typename": "Artist",
+          "profile": {
+            "name": "WEAVER"
+          },
+          "uri": "spotify:artist:0r2CfjmaWc0FMbbmsb4zgD",
+          "visuals": {
+            "avatarImage": {
+              "sources": [
+                {
+                  "height": 640,
+                  "url": "https://i.scdn.co/image/ab6761610000e5ebebee996d57f1bef03464a930",
+                  "width": 640
+                },
+                {
+                  "height": 160,
+                  "url": "https://i.scdn.co/image/ab6761610000f178ebee996d57f1bef03464a930",
+                  "width": 160
+                },
+                {
+                  "height": 320,
+                  "url": "https://i.scdn.co/image/ab67616100005174ebee996d57f1bef03464a930",
+                  "width": 320
+                }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "__typename": "AlbumResponseWrapper",
+        "_uri": "spotify:album:178MyVBgrjKDFvwYclbee6",
+        "data": {
+          "__typename": "Album",
+          "artists": {
+            "items": [
+              {
+                "profile": {
+                  "name": "ITOWOKASHI"
+                },
+                "uri": "spotify:artist:1xwuTSJVlnBEOecAEHGRfY"
+              }
+            ]
+          },
+          "coverArt": {
+            "sources": [
+              {
+                "height": 300,
+                "url": "https://i.scdn.co/image/ab67616d00001e02db1512179763def2bda5887c",
+                "width": 300
+              },
+              {
+                "height": 64,
+                "url": "https://i.scdn.co/image/ab67616d00004851db1512179763def2bda5887c",
+                "width": 64
+              },
+              {
+                "height": 640,
+                "url": "https://i.scdn.co/image/ab67616d0000b273db1512179763def2bda5887c",
+                "width": 640
+              }
+            ]
+          },
+          "name": "中央突破",
+          "uri": "spotify:album:178MyVBgrjKDFvwYclbee6"
+        }
+      },
+      {
+        "__typename": "PlaylistResponseWrapper",
+        "_uri": "spotify:playlist:37i9dQZF1E8O6fZHjiVp3s",
+        "data": {
+          "__typename": "Playlist",
+          "attributes": [
+            {
+              "key": "mediaListConfig",
+              "value": "spotify:medialistconfig:track-radio-inspiredby:default_v33"
+            },
+            {
+              "key": "request_id",
+              "value": "ssp~061a3621217ba37e183b003015a455ba1976"
+            },
+            {
+              "key": "madeFor.username",
+              "value": "7ucghdgquf6byqusqkliltwc2"
+            },
+            {
+              "key": "correlation-id",
+              "value": "ssp~061a3621217ba37e183b003015a455ba1976"
+            }
+          ],
+          "description": "With The Flight, Niels van der Leest, Joris de Man and more",
+          "format": "inspiredby-mix",
+          "images": {
+            "items": [
+              {
+                "sources": [
+                  {
+                    "height": null,
+                    "url": "https://seeded-session-images.scdn.co/v2/img/540/r/track/5orWtYpFEkW5nAoEjYvDkw/en",
+                    "width": null
+                  }
+                ]
+              }
+            ]
+          },
+          "name": "Years of Training - Part 1 - Motherland Radio",
+          "ownerV2": {
+            "data": {
+              "__typename": "User",
+              "name": "Spotify",
+              "uri": "spotify:user:spotify",
+              "username": "spotify"
+            }
+          },
+          "uri": "spotify:playlist:37i9dQZF1E8O6fZHjiVp3s"
+        }
+      },
+      {
+        "__typename": "AlbumResponseWrapper",
+        "_uri": "spotify:album:1tnJU98uHAWkkAsRekqtTe",
+        "data": {
+          "__typename": "Album",
+          "artists": {
+            "items": [
+              {
+                "profile": {
+                  "name": "Joris de Man"
+                },
+                "uri": "spotify:artist:7FzXqfhbeFzALmcyi1j90U"
+              },
+              {
+                "profile": {
+                  "name": "The Flight"
+                },
+                "uri": "spotify:artist:633wBWQrbgm4Tugw7MmsgA"
+              },
+              {
+                "profile": {
+                  "name": "Niels van der Leest"
+                },
+                "uri": "spotify:artist:5PcieKHIXvRQ73ooTBA7eh"
+              }
+            ]
+          },
+          "coverArt": {
+            "sources": [
+              {
+                "height": 300,
+                "url": "https://i.scdn.co/image/ab67616d00001e022523b2f62d91b1c9a82a0645",
+                "width": 300
+              },
+              {
+                "height": 64,
+                "url": "https://i.scdn.co/image/ab67616d000048512523b2f62d91b1c9a82a0645",
+                "width": 64
+              },
+              {
+                "height": 640,
+                "url": "https://i.scdn.co/image/ab67616d0000b2732523b2f62d91b1c9a82a0645",
+                "width": 640
+              }
+            ]
+          },
+          "name": "Horizon Zero Dawn (Original Soundtrack)",
+          "uri": "spotify:album:1tnJU98uHAWkkAsRekqtTe"
+        }
+      },
+      {
+        "__typename": "PlaylistResponseWrapper",
+        "_uri": "spotify:playlist:37i9dQZF1DXbcPC6Vvqudd",
+        "data": {
+          "__typename": "Playlist",
+          "attributes": [
+            {
+              "key": "mediaListConfig",
+              "value": "spotify:medialistconfig:editorial:default_v48"
+            },
+            {
+              "key": "request_id",
+              "value": "ssp~061a362106270f9a4e4098a08b33400ff291"
+            },
+            {
+              "key": "uri",
+              "value": "spotify:user:spotify:playlist:37i9dQZF1DXbcPC6Vvqudd"
+            },
+            {
+              "key": "status",
+              "value": "PUBLISHED"
+            },
+            {
+              "key": "transforming.url",
+              "value": "https://spclient.wg.spotify.com/cuepoints-transitions/v2/decorate"
+            },
+            {
+              "key": "transforming.shuffle",
+              "value": "true"
+            },
+            {
+              "key": "isAlgotorial",
+              "value": "true"
+            },
+            {
+              "key": "transforming.timeout",
+              "value": "5000"
+            },
+            {
+              "key": "primary_color",
+              "value": "#ffffff"
+            },
+            {
+              "key": "autoplay",
+              "value": "spotify:playlist:37i9dQZF1DXdr85jQlDL6f"
+            },
+            {
+              "key": "madeFor.username",
+              "value": "7ucghdgquf6byqusqkliltwc2"
+            },
+            {
+              "key": "correlation-id",
+              "value": "ssp~061a362106270f9a4e4098a08b33400ff291"
+            }
+          ],
+          "description": "Sleep with sounds of pouring rain and occasional rolling thunder.",
+          "format": "editorial",
+          "images": {
+            "items": [
+              {
+                "sources": [
+                  {
+                    "height": null,
+                    "url": "https://i.scdn.co/image/ab67706f000000028998614b3281e12596844039",
+                    "width": null
+                  }
+                ]
+              }
+            ]
+          },
+          "name": "Night Rain",
+          "ownerV2": {
+            "data": {
+              "__typename": "User",
+              "name": "Spotify",
+              "uri": "spotify:user:spotify",
+              "username": "spotify"
+            }
+          },
+          "uri": "spotify:playlist:37i9dQZF1DXbcPC6Vvqudd"
+        }
+      },
+      {
+        "__typename": "AlbumResponseWrapper",
+        "_uri": "spotify:album:7KDMHe0BgyhOmk4Oz6g293",
+        "data": {
+          "__typename": "Album",
+          "artists": {
+            "items": [
+              {
+                "profile": {
+                  "name": "Gaho"
+                },
+                "uri": "spotify:artist:3ybZTNrlK0QhL4rBxfLHOc"
+              }
+            ]
+          },
+          "coverArt": {
+            "sources": [
+              {
+                "height": 300,
+                "url": "https://i.scdn.co/image/ab67616d00001e029c176966fec78dfc60d37fad",
+                "width": 300
+              },
+              {
+                "height": 64,
+                "url": "https://i.scdn.co/image/ab67616d000048519c176966fec78dfc60d37fad",
+                "width": 64
+              },
+              {
+                "height": 640,
+                "url": "https://i.scdn.co/image/ab67616d0000b2739c176966fec78dfc60d37fad",
+                "width": 640
+              }
+            ]
+          },
+          "name": "ITAEWON CLASS (Original Television Soundtrack) Pt.2",
+          "uri": "spotify:album:7KDMHe0BgyhOmk4Oz6g293"
+        }
+      },
+      {
+        "__typename": "PlaylistResponseWrapper",
+        "_uri": "spotify:playlist:0OksVgLTn1GVkuvvhqD1qe",
+        "data": {
+          "__typename": "Playlist",
+          "attributes": [],
+          "description": "",
+          "format": "",
+          "images": {
+            "items": [
+              {
+                "sources": [
+                  {
+                    "height": null,
+                    "url": "https://i.scdn.co/image/ab67616d00001e022df1d8cc8ad11e0f1687d081",
+                    "width": null
+                  }
+                ]
+              }
+            ]
+          },
+          "name": "My Playlist #8",
+          "ownerV2": {
+            "data": {
+              "__typename": "User",
+              "name": "Chris",
+              "uri": "spotify:user:7ucghdgquf6byqusqkliltwc2",
+              "username": "7ucghdgquf6byqusqkliltwc2"
+            }
+          },
+          "uri": "spotify:playlist:0OksVgLTn1GVkuvvhqD1qe"
+        }
+      },
+      {
+        "__typename": "ArtistResponseWrapper",
+        "_uri": "spotify:artist:164Uj4eKjl6zTBKfJLFKKK",
+        "data": {
+          "__typename": "Artist",
+          "profile": {
+            "name": "JVKE"
+          },
+          "uri": "spotify:artist:164Uj4eKjl6zTBKfJLFKKK",
+          "visuals": {
+            "avatarImage": {
+              "sources": [
+                {
+                  "height": 640,
+                  "url": "https://i.scdn.co/image/ab6761610000e5ebce33386a81a202e149934ec1",
+                  "width": 640
+                },
+                {
+                  "height": 160,
+                  "url": "https://i.scdn.co/image/ab6761610000f178ce33386a81a202e149934ec1",
+                  "width": 160
+                },
+                {
+                  "height": 320,
+                  "url": "https://i.scdn.co/image/ab67616100005174ce33386a81a202e149934ec1",
+                  "width": 320
+                }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "__typename": "PlaylistResponseWrapper",
+        "_uri": "spotify:playlist:37i9dQZF1E39hxDSAkURDQ",
+        "data": {
+          "__typename": "Playlist",
+          "attributes": [
+            {
+              "key": "mediaListConfig",
+              "value": "spotify:medialistconfig:dailymix:default_v45"
+            },
+            {
+              "key": "request_id",
+              "value": "ssp~061a36210625c99a4e3398a0cc38b1037d22"
+            },
+            {
+              "key": "canContainArtists.uris",
+              "value": "spotify:artist:5d8IWNN5vBsIDVskioGQLw,spotify:artist:4im5G9baIDRzJa4xpPdDz6,spotify:artist:62N2aSzYqfNISn3LS3xQ01,spotify:artist:5mzHhrVaow1CgOAEJdrfdx,spotify:artist:1d1rh6BlGzeXaj67hVeDXe"
+            },
+            {
+              "key": "enhancedImageUriSmall",
+              "value": "https://dailymix-images.scdn.co/v2/img/ab6761610000e5eb6f183e2f73483c006df06e3b/1/en/small"
+            },
+            {
+              "key": "enhancedImageUriNormal",
+              "value": "https://dailymix-images.scdn.co/v2/img/ab6761610000e5eb6f183e2f73483c006df06e3b/1/en/large"
+            },
+            {
+              "key": "enhancedImageUriLarge",
+              "value": "https://dailymix-images.scdn.co/v2/img/ab6761610000e5eb6f183e2f73483c006df06e3b/1/en/large"
+            },
+            {
+              "key": "enhancedImageUriXlarge",
+              "value": "https://dailymix-images.scdn.co/v2/img/ab6761610000e5eb6f183e2f73483c006df06e3b/1/en/xlarge"
+            },
+            {
+              "key": "image",
+              "value": "https://dailymix-images.scdn.co/v2/img/ab6761610000e5eb6f183e2f73483c006df06e3b/1/en/default"
+            },
+            {
+              "key": "madeFor.username",
+              "value": "7ucghdgquf6byqusqkliltwc2"
+            },
+            {
+              "key": "temporary_hack_prefer_linear_playback",
+              "value": "true"
+            },
+            {
+              "key": "correlation-id",
+              "value": "ssp~061a36210625c99a4e3398a0cc38b1037d22"
+            }
+          ],
+          "description": "Ogień, Zuni, Love Nature and more",
+          "format": "daily-mix",
+          "images": {
+            "items": [
+              {
+                "sources": [
+                  {
+                    "height": null,
+                    "url": "https://dailymix-images.scdn.co/v2/img/ab6761610000e5eb6f183e2f73483c006df06e3b/1/en/default",
+                    "width": null
+                  }
+                ]
+              }
+            ]
+          },
+          "name": "Daily Mix 1",
+          "ownerV2": {
+            "data": {
+              "__typename": "User",
+              "name": "Spotify",
+              "uri": "spotify:user:spotify",
+              "username": "spotify"
+            }
+          },
+          "uri": "spotify:playlist:37i9dQZF1E39hxDSAkURDQ"
+        }
+      },
+      {
+        "__typename": "PlaylistResponseWrapper",
+        "_uri": "spotify:playlist:37i9dQZF1DZ06evO4rvWRa",
+        "data": {
+          "__typename": "Playlist",
+          "attributes": [
+            {
+              "key": "mediaListConfig",
+              "value": "spotify:medialistconfig:this-is:default_v7"
+            },
+            {
+              "key": "request_id",
+              "value": "ssp~061a36210c0cc23ae9303a750f389c34bd1a"
+            },
+            {
+              "key": "artistGid",
+              "value": "f6991c61fca64a59b10ca4554fcc4aab"
+            },
+            {
+              "key": "correlation-id",
+              "value": "ssp~061a36210c0cc23ae9303a750f389c34bd1a"
+            }
+          ],
+          "description": "This is Alan Walker. The essential tracks, all in one playlist.",
+          "format": "artistsets",
+          "images": {
+            "items": [
+              {
+                "sources": [
+                  {
+                    "height": null,
+                    "url": "https://thisis-images.spotifycdn.com/37i9dQZF1DZ06evO4rvWRa-default.jpg",
+                    "width": null
+                  }
+                ]
+              }
+            ]
+          },
+          "name": "This Is Alan Walker",
+          "ownerV2": {
+            "data": {
+              "__typename": "User",
+              "name": "Spotify",
+              "uri": "spotify:user:spotify",
+              "username": "spotify"
+            }
+          },
+          "uri": "spotify:playlist:37i9dQZF1DZ06evO4rvWRa"
+        }
+      },
+      {
+        "__typename": "ArtistResponseWrapper",
+        "_uri": "spotify:artist:7vk5e3vY1uw9plTHJAMwjN",
+        "data": {
+          "__typename": "Artist",
+          "profile": {
+            "name": "Alan Walker"
+          },
+          "uri": "spotify:artist:7vk5e3vY1uw9plTHJAMwjN",
+          "visuals": {
+            "avatarImage": {
+              "sources": [
+                {
+                  "height": 640,
+                  "url": "https://i.scdn.co/image/ab6761610000e5ebbf753c009fd9c2d53351dd3c",
+                  "width": 640
+                },
+                {
+                  "height": 160,
+                  "url": "https://i.scdn.co/image/ab6761610000f178bf753c009fd9c2d53351dd3c",
+                  "width": 160
+                },
+                {
+                  "height": 320,
+                  "url": "https://i.scdn.co/image/ab67616100005174bf753c009fd9c2d53351dd3c",
+                  "width": 320
+                }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "__typename": "PlaylistResponseWrapper",
+        "_uri": "spotify:playlist:37i9dQZF1E3516JmeiOXbv",
+        "data": {
+          "__typename": "Playlist",
+          "attributes": [
+            {
+              "key": "mediaListConfig",
+              "value": "spotify:medialistconfig:dailymix:default_v45"
+            },
+            {
+              "key": "request_id",
+              "value": "ssp~061a36210c07c03ae9003a757f13622e5cb4"
+            },
+            {
+              "key": "canContainArtists.uris",
+              "value": "spotify:artist:0YLlTW9rW7ZCy2cA2u3RYk,spotify:artist:0gRFVzEkjFmFifMlqVlTta,spotify:artist:4XQhU3S4TyPkiPIsSu2hmA,spotify:artist:5wV3FoaNbDB6X9INuQvs1K,spotify:artist:06eTdzI1FA6c2cPQAeVHY2"
+            },
+            {
+              "key": "enhancedImageUriSmall",
+              "value": "https://dailymix-images.scdn.co/v2/img/ab6761610000e5eb231e5a50579656af2eaa22b2/4/en/small"
+            },
+            {
+              "key": "enhancedImageUriNormal",
+              "value": "https://dailymix-images.scdn.co/v2/img/ab6761610000e5eb231e5a50579656af2eaa22b2/4/en/large"
+            },
+            {
+              "key": "enhancedImageUriLarge",
+              "value": "https://dailymix-images.scdn.co/v2/img/ab6761610000e5eb231e5a50579656af2eaa22b2/4/en/large"
+            },
+            {
+              "key": "enhancedImageUriXlarge",
+              "value": "https://dailymix-images.scdn.co/v2/img/ab6761610000e5eb231e5a50579656af2eaa22b2/4/en/xlarge"
+            },
+            {
+              "key": "image",
+              "value": "https://dailymix-images.scdn.co/v2/img/ab6761610000e5eb231e5a50579656af2eaa22b2/4/en/default"
+            },
+            {
+              "key": "madeFor.username",
+              "value": "7ucghdgquf6byqusqkliltwc2"
+            },
+            {
+              "key": "temporary_hack_prefer_linear_playback",
+              "value": "true"
+            },
+            {
+              "key": "correlation-id",
+              "value": "ssp~061a36210c07c03ae9003a757f13622e5cb4"
+            }
+          ],
+          "description": "FLEMMING, Pjotr, Diggy Dex and more",
+          "format": "daily-mix",
+          "images": {
+            "items": [
+              {
+                "sources": [
+                  {
+                    "height": null,
+                    "url": "https://dailymix-images.scdn.co/v2/img/ab6761610000e5eb231e5a50579656af2eaa22b2/4/en/default",
+                    "width": null
+                  }
+                ]
+              }
+            ]
+          },
+          "name": "Daily Mix 4",
+          "ownerV2": {
+            "data": {
+              "__typename": "User",
+              "name": "Spotify",
+              "uri": "spotify:user:spotify",
+              "username": "spotify"
+            }
+          },
+          "uri": "spotify:playlist:37i9dQZF1E3516JmeiOXbv"
+        }
+      },
+      {
+        "__typename": "ArtistResponseWrapper",
+        "_uri": "spotify:artist:3QJUFtGBGL05vo0kCJZsmT",
+        "data": {
+          "__typename": "Artist",
+          "profile": {
+            "name": "salem ilese"
+          },
+          "uri": "spotify:artist:3QJUFtGBGL05vo0kCJZsmT",
+          "visuals": {
+            "avatarImage": {
+              "sources": [
+                {
+                  "height": 640,
+                  "url": "https://i.scdn.co/image/ab6761610000e5eb3da79849ed72fe525fb8ac00",
+                  "width": 640
+                },
+                {
+                  "height": 160,
+                  "url": "https://i.scdn.co/image/ab6761610000f1783da79849ed72fe525fb8ac00",
+                  "width": 160
+                },
+                {
+                  "height": 320,
+                  "url": "https://i.scdn.co/image/ab676161000051743da79849ed72fe525fb8ac00",
+                  "width": 320
+                }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "__typename": "ArtistResponseWrapper",
+        "_uri": "spotify:artist:4Xj0peBt3EZHbdF20JmdWC",
+        "data": {
+          "__typename": "Artist",
+          "profile": {
+            "name": "Lee Mujin"
+          },
+          "uri": "spotify:artist:4Xj0peBt3EZHbdF20JmdWC",
+          "visuals": {
+            "avatarImage": {
+              "sources": [
+                {
+                  "height": 640,
+                  "url": "https://i.scdn.co/image/ab6761610000e5ebc5607fb8bdd9008b222ce94a",
+                  "width": 640
+                },
+                {
+                  "height": 160,
+                  "url": "https://i.scdn.co/image/ab6761610000f178c5607fb8bdd9008b222ce94a",
+                  "width": 160
+                },
+                {
+                  "height": 320,
+                  "url": "https://i.scdn.co/image/ab67616100005174c5607fb8bdd9008b222ce94a",
+                  "width": 320
+                }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "__typename": "PlaylistResponseWrapper",
+        "_uri": "spotify:playlist:7oZD8NMwdP1lhApmz83jzM",
+        "data": {
+          "__typename": "Playlist",
+          "attributes": [],
+          "description": "A decade of Worlds bangers from League of Legends.",
+          "format": "",
+          "images": {
+            "items": [
+              {
+                "sources": [
+                  {
+                    "height": null,
+                    "url": "https://image-cdn-ak.spotifycdn.com/image/ab67706c0000da84b5e8a343bc4d23f833956e52",
+                    "width": null
+                  }
+                ]
+              }
+            ]
+          },
+          "name": "Worlds Anthems | League of Legends",
+          "ownerV2": {
+            "data": {
+              "__typename": "User",
+              "name": "Riot Games",
+              "uri": "spotify:user:riotrecords",
+              "username": "riotrecords"
+            }
+          },
+          "uri": "spotify:playlist:7oZD8NMwdP1lhApmz83jzM"
+        }
+      },
+      {
+        "__typename": "PlaylistResponseWrapper",
+        "_uri": "spotify:playlist:37i9dQZF1DXdfOcg1fm0VG",
+        "data": {
+          "__typename": "Playlist",
+          "attributes": [
+            {
+              "key": "mediaListConfig",
+              "value": "spotify:medialistconfig:editorial:default_v48"
+            },
+            {
+              "key": "request_id",
+              "value": "ssp~061a36211998f73b43b43a75d569ec49def7"
+            },
+            {
+              "key": "uri",
+              "value": "spotify:user:spotify:playlist:37i9dQZF1DXdfOcg1fm0VG"
+            },
+            {
+              "key": "status",
+              "value": "PUBLISHED"
+            },
+            {
+              "key": "isAlgotorial",
+              "value": "false"
+            },
+            {
+              "key": "moveFollowersJobId",
+              "value": "59731f06-3723-4d11-bd7c-2fa01eb76b6b"
+            },
+            {
+              "key": "primary_color",
+              "value": "#ffffff"
+            },
+            {
+              "key": "recs.hasArtists",
+              "value": "spotify:artist:4W3fa7tiXGVXl3KilbACqt,spotify:artist:5oERdzrfb6kmNMzPNINZib,spotify:artist:2ifvIECHAlEgPMBuBOJ0lG,spotify:artist:4uFZsG1vXrPcvnZ4iSQyrx,spotify:artist:77yY2QmM6bYvjJ3y5L2R0v"
+            },
+            {
+              "key": "autoplay",
+              "value": "spotify:playlist:37i9dQZF1DX1tz6EDao8it"
+            },
+            {
+              "key": "correlation-id",
+              "value": "ssp~061a36211998f73b43b43a75d569ec49def7"
+            }
+          ],
+          "description": "Double-jump into these legendary video game soundtracks, featuring old favorites and new classics.",
+          "format": "editorial",
+          "images": {
+            "items": [
+              {
+                "sources": [
+                  {
+                    "height": null,
+                    "url": "https://i.scdn.co/image/ab67706f00000002c94fd5639e1bd451f55b103c",
+                    "width": null
+                  }
+                ]
+              }
+            ]
+          },
+          "name": "Video Game Soundtracks",
+          "ownerV2": {
+            "data": {
+              "__typename": "User",
+              "name": "Spotify",
+              "uri": "spotify:user:spotify",
+              "username": "spotify"
+            }
+          },
+          "uri": "spotify:playlist:37i9dQZF1DXdfOcg1fm0VG"
+        }
+      },
+      {
+        "__typename": "PlaylistResponseWrapper",
+        "_uri": "spotify:playlist:37i9dQZF1DZ06evO0MGNSK",
+        "data": {
+          "__typename": "Playlist",
+          "attributes": [
+            {
+              "key": "mediaListConfig",
+              "value": "spotify:medialistconfig:this-is:default_v7"
+            },
+            {
+              "key": "request_id",
+              "value": "ssp~061a3536ceb1fb21dde5ff39248a5b2b793b"
+            },
+            {
+              "key": "artistGid",
+              "value": "2ed331e20c0b43d4913b48d04710a51a"
+            },
+            {
+              "key": "correlation-id",
+              "value": "ssp~061a3536ceb1fb21dde5ff39248a5b2b793b"
+            }
+          ],
+          "description": "This is Mr.Children. The essential tracks, all in one playlist.",
+          "format": "artistsets",
+          "images": {
+            "items": [
+              {
+                "sources": [
+                  {
+                    "height": null,
+                    "url": "https://thisis-images.spotifycdn.com/37i9dQZF1DZ06evO0MGNSK-default.jpg",
+                    "width": null
+                  }
+                ]
+              }
+            ]
+          },
+          "name": "This Is Mr.Children",
+          "ownerV2": {
+            "data": {
+              "__typename": "User",
+              "name": "Spotify",
+              "uri": "spotify:user:spotify",
+              "username": "spotify"
+            }
+          },
+          "uri": "spotify:playlist:37i9dQZF1DZ06evO0MGNSK"
+        }
+      },
+      {
+        "__typename": "PlaylistResponseWrapper",
+        "_uri": "spotify:playlist:37i9dQZF1E37ErKfQ79QXe",
+        "data": {
+          "__typename": "Playlist",
+          "attributes": [
+            {
+              "key": "mediaListConfig",
+              "value": "spotify:medialistconfig:dailymix:default_v45"
+            },
+            {
+              "key": "request_id",
+              "value": "ssp~061a36210625c99a4e3398a0cc38b1037d22"
+            },
+            {
+              "key": "canContainArtists.uris",
+              "value": "spotify:artist:529ZdRwFoSKtQ0LPwKxGiu,spotify:artist:4Xj0peBt3EZHbdF20JmdWC,spotify:artist:7bWYN0sHvyH7yv1uefX07U,spotify:artist:12AUp9oqeJDhNfO6IhQiNi,spotify:artist:7jFUYMpMUBDL4JQtMZ5ilc"
+            },
+            {
+              "key": "enhancedImageUriSmall",
+              "value": "https://dailymix-images.scdn.co/v2/img/ab67616d0000b27351c2dca2df814c291f0b7c6a/3/en/small"
+            },
+            {
+              "key": "enhancedImageUriNormal",
+              "value": "https://dailymix-images.scdn.co/v2/img/ab67616d0000b27351c2dca2df814c291f0b7c6a/3/en/large"
+            },
+            {
+              "key": "enhancedImageUriLarge",
+              "value": "https://dailymix-images.scdn.co/v2/img/ab67616d0000b27351c2dca2df814c291f0b7c6a/3/en/large"
+            },
+            {
+              "key": "enhancedImageUriXlarge",
+              "value": "https://dailymix-images.scdn.co/v2/img/ab67616d0000b27351c2dca2df814c291f0b7c6a/3/en/xlarge"
+            },
+            {
+              "key": "image",
+              "value": "https://dailymix-images.scdn.co/v2/img/ab67616d0000b27351c2dca2df814c291f0b7c6a/3/en/default"
+            },
+            {
+              "key": "madeFor.username",
+              "value": "7ucghdgquf6byqusqkliltwc2"
+            },
+            {
+              "key": "temporary_hack_prefer_linear_playback",
+              "value": "true"
+            },
+            {
+              "key": "correlation-id",
+              "value": "ssp~061a36210625c99a4e3398a0cc38b1037d22"
+            }
+          ],
+          "description": "Jang Beom June, Lee Mujin, Jukjae and more",
+          "format": "daily-mix",
+          "images": {
+            "items": [
+              {
+                "sources": [
+                  {
+                    "height": null,
+                    "url": "https://dailymix-images.scdn.co/v2/img/ab67616d0000b27351c2dca2df814c291f0b7c6a/3/en/default",
+                    "width": null
+                  }
+                ]
+              }
+            ]
+          },
+          "name": "Daily Mix 3",
+          "ownerV2": {
+            "data": {
+              "__typename": "User",
+              "name": "Spotify",
+              "uri": "spotify:user:spotify",
+              "username": "spotify"
+            }
+          },
+          "uri": "spotify:playlist:37i9dQZF1E37ErKfQ79QXe"
+        }
+      },
+      {
+        "__typename": "ArtistResponseWrapper",
+        "_uri": "spotify:artist:0WqQHeEmg4YoMJBGT7hZkH",
+        "data": {
+          "__typename": "Artist",
+          "profile": {
+            "name": "Kiefer Sutherland"
+          },
+          "uri": "spotify:artist:0WqQHeEmg4YoMJBGT7hZkH",
+          "visuals": {
+            "avatarImage": {
+              "sources": [
+                {
+                  "height": 640,
+                  "url": "https://i.scdn.co/image/ab6761610000e5eb5775d71d107ae6759ffaedf4",
+                  "width": 640
+                },
+                {
+                  "height": 160,
+                  "url": "https://i.scdn.co/image/ab6761610000f1785775d71d107ae6759ffaedf4",
+                  "width": 160
+                },
+                {
+                  "height": 320,
+                  "url": "https://i.scdn.co/image/ab676161000051745775d71d107ae6759ffaedf4",
+                  "width": 320
+                }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "__typename": "AlbumResponseWrapper",
+        "_uri": "spotify:album:4iJ9B2uDKJzclQo7U9BqS8",
+        "data": {
+          "__typename": "Album",
+          "artists": {
+            "items": [
+              {
+                "profile": {
+                  "name": "STARSET"
+                },
+                "uri": "spotify:artist:0kD8IT1CzF7js2XKM9lLLa"
+              }
+            ]
+          },
+          "coverArt": {
+            "sources": [
+              {
+                "height": 300,
+                "url": "https://i.scdn.co/image/ab67616d00001e02a51a854b037ead2c9b7e25d3",
+                "width": 300
+              },
+              {
+                "height": 64,
+                "url": "https://i.scdn.co/image/ab67616d00004851a51a854b037ead2c9b7e25d3",
+                "width": 64
+              },
+              {
+                "height": 640,
+                "url": "https://i.scdn.co/image/ab67616d0000b273a51a854b037ead2c9b7e25d3",
+                "width": 640
+              }
+            ]
+          },
+          "name": "Vessels",
+          "uri": "spotify:album:4iJ9B2uDKJzclQo7U9BqS8"
+        }
+      },
+      {
+        "__typename": "PlaylistResponseWrapper",
+        "_uri": "spotify:playlist:37i9dQZF1E8O4gOkNHOwHN",
+        "data": {
+          "__typename": "Playlist",
+          "attributes": [
+            {
+              "key": "mediaListConfig",
+              "value": "spotify:medialistconfig:track-radio-inspiredby:default_v33"
+            },
+            {
+              "key": "request_id",
+              "value": "ssp~061a3621217ba37e183b003015a455ba1976"
+            },
+            {
+              "key": "madeFor.username",
+              "value": "7ucghdgquf6byqusqkliltwc2"
+            },
+            {
+              "key": "correlation-id",
+              "value": "ssp~061a3621217ba37e183b003015a455ba1976"
+            }
+          ],
+          "description": "With FLEMMING, Zoë Tauran, Antoon and more",
+          "format": "inspiredby-mix",
+          "images": {
+            "items": [
+              {
+                "sources": [
+                  {
+                    "height": null,
+                    "url": "https://seeded-session-images.scdn.co/v2/img/540/r/track/7N1bFUtCEXwD2LnXtxNXaS/en",
+                    "width": null
+                  }
+                ]
+              }
+            ]
+          },
+          "name": "Amsterdam Radio",
+          "ownerV2": {
+            "data": {
+              "__typename": "User",
+              "name": "Spotify",
+              "uri": "spotify:user:spotify",
+              "username": "spotify"
+            }
+          },
+          "uri": "spotify:playlist:37i9dQZF1E8O4gOkNHOwHN"
+        }
+      },
+      {
+        "__typename": "ArtistResponseWrapper",
+        "_uri": "spotify:artist:0YLlTW9rW7ZCy2cA2u3RYk",
+        "data": {
+          "__typename": "Artist",
+          "profile": {
+            "name": "FLEMMING"
+          },
+          "uri": "spotify:artist:0YLlTW9rW7ZCy2cA2u3RYk",
+          "visuals": {
+            "avatarImage": {
+              "sources": [
+                {
+                  "height": 640,
+                  "url": "https://i.scdn.co/image/ab6761610000e5eb231e5a50579656af2eaa22b2",
+                  "width": 640
+                },
+                {
+                  "height": 160,
+                  "url": "https://i.scdn.co/image/ab6761610000f178231e5a50579656af2eaa22b2",
+                  "width": 160
+                },
+                {
+                  "height": 320,
+                  "url": "https://i.scdn.co/image/ab67616100005174231e5a50579656af2eaa22b2",
+                  "width": 320
+                }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "__typename": "PlaylistResponseWrapper",
+        "_uri": "spotify:playlist:37i9dQZF1EQpesGsmIyqcW",
+        "data": {
+          "__typename": "Playlist",
+          "attributes": [
+            {
+              "key": "mediaListConfig",
+              "value": "spotify:medialistconfig:topic-mix-genre-decade:default_v26"
+            },
+            {
+              "key": "request_id",
+              "value": "ssp~061a3536ceb2a521ddfaff392ca2e2299e18"
+            },
+            {
+              "key": "cloud_artists_uris",
+              "value": "spotify:artist:3HqSLMAZ3g3d5poNaI7GOU,spotify:artist:4Xj0peBt3EZHbdF20JmdWC,spotify:artist:4SpbR6yFEvexJuaBpgAU5p"
+            },
+            {
+              "key": "madeFor.username",
+              "value": "7ucghdgquf6byqusqkliltwc2"
+            },
+            {
+              "key": "correlation-id",
+              "value": "ssp~061a3536ceb2a521ddfaff392ca2e2299e18"
+            }
+          ],
+          "description": "<a href=spotify:playlist:37i9dQZF1EIY8zK37CJ73d>IU</a>, <a href=spotify:playlist:37i9dQZF1EIVRD3yI5jMra>Lee Mujin</a>, <a href=spotify:playlist:37i9dQZF1EIZDxu28y8bpW>LE SSERAFIM</a> and more",
+          "format": "topic-mix",
+          "images": {
+            "items": [
+              {
+                "sources": [
+                  {
+                    "height": null,
+                    "url": "https://seed-mix-image.spotifycdn.com/v6/img/k_pop/3HqSLMAZ3g3d5poNaI7GOU/en/default",
+                    "width": null
+                  }
+                ]
+              }
+            ]
+          },
+          "name": "K-Pop Mix",
+          "ownerV2": {
+            "data": {
+              "__typename": "User",
+              "name": "Spotify",
+              "uri": "spotify:user:spotify",
+              "username": "spotify"
+            }
+          },
+          "uri": "spotify:playlist:37i9dQZF1EQpesGsmIyqcW"
+        }
+      },
+      {
+        "__typename": "PlaylistResponseWrapper",
+        "_uri": "spotify:playlist:37i9dQZF1E4xptzFi20KXi",
+        "data": {
+          "__typename": "Playlist",
+          "attributes": [
+            {
+              "key": "mediaListConfig",
+              "value": "spotify:medialistconfig:artist-radio-inspiredby:default_v39"
+            },
+            {
+              "key": "request_id",
+              "value": "ssp~061a36210c0b8f3ae9213a75f50c57fc7e13"
+            },
+            {
+              "key": "madeFor.username",
+              "value": "7ucghdgquf6byqusqkliltwc2"
+            },
+            {
+              "key": "correlation-id",
+              "value": "ssp~061a36210c0b8f3ae9213a75f50c57fc7e13"
+            }
+          ],
+          "description": "With Mark Knopfler, Supertramp, Joe Cocker and more",
+          "format": "inspiredby-mix",
+          "images": {
+            "items": [
+              {
+                "sources": [
+                  {
+                    "height": null,
+                    "url": "https://seeded-session-images.scdn.co/v2/img/540/r/artist/0WwSkZ7LtFUFjGjMZBMt6T/en",
+                    "width": null
+                  }
+                ]
+              }
+            ]
+          },
+          "name": "Dire Straits Radio",
+          "ownerV2": {
+            "data": {
+              "__typename": "User",
+              "name": "Spotify",
+              "uri": "spotify:user:spotify",
+              "username": "spotify"
+            }
+          },
+          "uri": "spotify:playlist:37i9dQZF1E4xptzFi20KXi"
+        }
+      },
+      {
+        "__typename": "ArtistResponseWrapper",
+        "_uri": "spotify:artist:5WxnXxSCyhDSyi6elhBZd4",
+        "data": {
+          "__typename": "Artist",
+          "profile": {
+            "name": "Jaap Reesema"
+          },
+          "uri": "spotify:artist:5WxnXxSCyhDSyi6elhBZd4",
+          "visuals": {
+            "avatarImage": {
+              "sources": [
+                {
+                  "height": 640,
+                  "url": "https://i.scdn.co/image/ab6761610000e5ebd1e0bc14399b6d801d29f330",
+                  "width": 640
+                },
+                {
+                  "height": 160,
+                  "url": "https://i.scdn.co/image/ab6761610000f178d1e0bc14399b6d801d29f330",
+                  "width": 160
+                },
+                {
+                  "height": 320,
+                  "url": "https://i.scdn.co/image/ab67616100005174d1e0bc14399b6d801d29f330",
+                  "width": 320
+                }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "__typename": "ArtistResponseWrapper",
+        "_uri": "spotify:artist:6RHTUrRF63xao58xh9FXYJ",
+        "data": {
+          "__typename": "Artist",
+          "profile": {
+            "name": "IVE"
+          },
+          "uri": "spotify:artist:6RHTUrRF63xao58xh9FXYJ",
+          "visuals": {
+            "avatarImage": {
+              "sources": [
+                {
+                  "height": 640,
+                  "url": "https://i.scdn.co/image/ab6761610000e5eb8939960e5144b51d7903899f",
+                  "width": 640
+                },
+                {
+                  "height": 160,
+                  "url": "https://i.scdn.co/image/ab6761610000f1788939960e5144b51d7903899f",
+                  "width": 160
+                },
+                {
+                  "height": 320,
+                  "url": "https://i.scdn.co/image/ab676161000051748939960e5144b51d7903899f",
+                  "width": 320
+                }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "__typename": "PlaylistResponseWrapper",
+        "_uri": "spotify:playlist:37i9dQZEVXcWZn0ZycxMML",
+        "data": {
+          "__typename": "Playlist",
+          "attributes": [
+            {
+              "key": "madeFor.name",
+              "value": "Chris"
+            },
+            {
+              "key": "madeFor.username",
+              "value": "7ucghdgquf6byqusqkliltwc2"
+            },
+            {
+              "key": "madeFor.displayed",
+              "value": "1"
+            }
+          ],
+          "description": "Your weekly mixtape of fresh music. Enjoy new music and deep cuts picked for you. Updates every Monday.",
+          "format": "discover-weekly",
+          "images": {
+            "items": [
+              {
+                "sources": [
+                  {
+                    "height": null,
+                    "url": "https://newjams-images.scdn.co/image/ab676477000033ad/dt/v3/discover-weekly/OwzS3AlbCDwUZchHYciS4sVKBjXFGJ8qMjfVnEEitMb_5tETUKXT5EHKf0GGPTwsSdyf___7QIwDoLyyQZHdxdKlqriKfwJiRO-sd1rXGY8=/NTI6NTU6MjFUNTEtNjAtNA==",
+                    "width": null
+                  }
+                ]
+              }
+            ]
+          },
+          "name": "Discover Weekly",
+          "ownerV2": {
+            "data": {
+              "__typename": "User",
+              "name": "Spotify",
+              "uri": "spotify:user:spotify",
+              "username": "spotify"
+            }
+          },
+          "uri": "spotify:playlist:37i9dQZEVXcWZn0ZycxMML"
+        }
+      },
+      {
+        "__typename": "AlbumResponseWrapper",
+        "_uri": "spotify:album:38VzP4yWfHdHafITKKRHEB",
+        "data": {
+          "__typename": "Album",
+          "artists": {
+            "items": [
+              {
+                "profile": {
+                  "name": "IVE"
+                },
+                "uri": "spotify:artist:6RHTUrRF63xao58xh9FXYJ"
+              }
+            ]
+          },
+          "coverArt": {
+            "sources": [
+              {
+                "height": 300,
+                "url": "https://i.scdn.co/image/ab67616d00001e0225ef3cec1eceefd4db2f91c8",
+                "width": 300
+              },
+              {
+                "height": 64,
+                "url": "https://i.scdn.co/image/ab67616d0000485125ef3cec1eceefd4db2f91c8",
+                "width": 64
+              },
+              {
+                "height": 640,
+                "url": "https://i.scdn.co/image/ab67616d0000b27325ef3cec1eceefd4db2f91c8",
+                "width": 640
+              }
+            ]
+          },
+          "name": "I've IVE",
+          "uri": "spotify:album:38VzP4yWfHdHafITKKRHEB"
+        }
+      },
+      {
+        "__typename": "AlbumResponseWrapper",
+        "_uri": "spotify:album:44CdsgXhU5R2esprq0tf43",
+        "data": {
+          "__typename": "Album",
+          "artists": {
+            "items": [
+              {
+                "profile": {
+                  "name": "Troye Sivan"
+                },
+                "uri": "spotify:artist:3WGpXCj9YhhfX11TToZcXP"
+              }
+            ]
+          },
+          "coverArt": {
+            "sources": [
+              {
+                "height": 300,
+                "url": "https://i.scdn.co/image/ab67616d00001e025cf05521594fbf41d2a48893",
+                "width": 300
+              },
+              {
+                "height": 64,
+                "url": "https://i.scdn.co/image/ab67616d000048515cf05521594fbf41d2a48893",
+                "width": 64
+              },
+              {
+                "height": 640,
+                "url": "https://i.scdn.co/image/ab67616d0000b2735cf05521594fbf41d2a48893",
+                "width": 640
+              }
+            ]
+          },
+          "name": "Angel Baby",
+          "uri": "spotify:album:44CdsgXhU5R2esprq0tf43"
+        }
+      },
+      {
+        "__typename": "PlaylistResponseWrapper",
+        "_uri": "spotify:playlist:37i9dQZF1E8N4AV80GIA1W",
+        "data": {
+          "__typename": "Playlist",
+          "attributes": [
+            {
+              "key": "mediaListConfig",
+              "value": "spotify:medialistconfig:track-radio-inspiredby:default_v33"
+            },
+            {
+              "key": "request_id",
+              "value": "ssp~061a3621217ba37e183b003015a455ba1976"
+            },
+            {
+              "key": "madeFor.username",
+              "value": "7ucghdgquf6byqusqkliltwc2"
+            },
+            {
+              "key": "correlation-id",
+              "value": "ssp~061a3621217ba37e183b003015a455ba1976"
+            }
+          ],
+          "description": "With Troye Sivan, Lauv, Charli XCX and more",
+          "format": "inspiredby-mix",
+          "images": {
+            "items": [
+              {
+                "sources": [
+                  {
+                    "height": null,
+                    "url": "https://seeded-session-images.scdn.co/v2/img/540/r/track/2m6Ko3CY1qXNNja8AlugNc/en",
+                    "width": null
+                  }
+                ]
+              }
+            ]
+          },
+          "name": "Angel Baby Radio",
+          "ownerV2": {
+            "data": {
+              "__typename": "User",
+              "name": "Spotify",
+              "uri": "spotify:user:spotify",
+              "username": "spotify"
+            }
+          },
+          "uri": "spotify:playlist:37i9dQZF1E8N4AV80GIA1W"
+        }
+      },
+      {
+        "__typename": "AlbumResponseWrapper",
+        "_uri": "spotify:album:4015DFzdg5NzUaR1yT5rcz",
+        "data": {
+          "__typename": "Album",
+          "artists": {
+            "items": [
+              {
+                "profile": {
+                  "name": "もさを。"
+                },
+                "uri": "spotify:artist:71KI7v1YqVU8cIFzBl47dh"
+              }
+            ]
+          },
+          "coverArt": {
+            "sources": [
+              {
+                "height": 300,
+                "url": "https://i.scdn.co/image/ab67616d00001e02bc4bd45694b345b9e17bdaa9",
+                "width": 300
+              },
+              {
+                "height": 64,
+                "url": "https://i.scdn.co/image/ab67616d00004851bc4bd45694b345b9e17bdaa9",
+                "width": 64
+              },
+              {
+                "height": 640,
+                "url": "https://i.scdn.co/image/ab67616d0000b273bc4bd45694b345b9e17bdaa9",
+                "width": 640
+              }
+            ]
+          },
+          "name": "こいのうた",
+          "uri": "spotify:album:4015DFzdg5NzUaR1yT5rcz"
+        }
+      },
+      {
+        "__typename": "AlbumResponseWrapper",
+        "_uri": "spotify:album:031envKZiWUDD9cRdb0ZbX",
+        "data": {
+          "__typename": "Album",
+          "artists": {
+            "items": [
+              {
+                "profile": {
+                  "name": "Lee Moon Sae"
+                },
+                "uri": "spotify:artist:2eVlgLy3Aym09gM3dqx6cq"
+              }
+            ]
+          },
+          "coverArt": {
+            "sources": [
+              {
+                "height": 300,
+                "url": "https://i.scdn.co/image/ab67616d00001e02cc1386a402d65b68ff748bc0",
+                "width": 300
+              },
+              {
+                "height": 64,
+                "url": "https://i.scdn.co/image/ab67616d00004851cc1386a402d65b68ff748bc0",
+                "width": 64
+              },
+              {
+                "height": 640,
+                "url": "https://i.scdn.co/image/ab67616d0000b273cc1386a402d65b68ff748bc0",
+                "width": 640
+              }
+            ]
+          },
+          "name": "이문세 4집",
+          "uri": "spotify:album:031envKZiWUDD9cRdb0ZbX"
+        }
+      },
+      {
+        "__typename": "ArtistResponseWrapper",
+        "_uri": "spotify:artist:6RQ9kYbHisp1UUbnfwHNeU",
+        "data": {
+          "__typename": "Artist",
+          "profile": {
+            "name": "Feint"
+          },
+          "uri": "spotify:artist:6RQ9kYbHisp1UUbnfwHNeU",
+          "visuals": {
+            "avatarImage": {
+              "sources": [
+                {
+                  "height": 640,
+                  "url": "https://i.scdn.co/image/ab6761610000e5eb7ce019cab4cdc2bc93c2ebb3",
+                  "width": 640
+                },
+                {
+                  "height": 160,
+                  "url": "https://i.scdn.co/image/ab6761610000f1787ce019cab4cdc2bc93c2ebb3",
+                  "width": 160
+                },
+                {
+                  "height": 320,
+                  "url": "https://i.scdn.co/image/ab676161000051747ce019cab4cdc2bc93c2ebb3",
+                  "width": 320
+                }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "__typename": "AlbumResponseWrapper",
+        "_uri": "spotify:album:67ExLGAc8JcGet2d4CgJKg",
+        "data": {
+          "__typename": "Album",
+          "artists": {
+            "items": [
+              {
+                "profile": {
+                  "name": "Tristam"
+                },
+                "uri": "spotify:artist:28Ky95tmlHktB96DBUoB0g"
+              }
+            ]
+          },
+          "coverArt": {
+            "sources": [
+              {
+                "height": 300,
+                "url": "https://i.scdn.co/image/ab67616d00001e02bca27e89b082e7fa21a6b1e9",
+                "width": 300
+              },
+              {
+                "height": 64,
+                "url": "https://i.scdn.co/image/ab67616d00004851bca27e89b082e7fa21a6b1e9",
+                "width": 64
+              },
+              {
+                "height": 640,
+                "url": "https://i.scdn.co/image/ab67616d0000b273bca27e89b082e7fa21a6b1e9",
+                "width": 640
+              }
+            ]
+          },
+          "name": "Over the Edge",
+          "uri": "spotify:album:67ExLGAc8JcGet2d4CgJKg"
+        }
+      },
+      {
+        "__typename": "ArtistResponseWrapper",
+        "_uri": "spotify:artist:2p4FqHnazRucYQHyDCdBrJ",
+        "data": {
+          "__typename": "Artist",
+          "profile": {
+            "name": "Simple Plan"
+          },
+          "uri": "spotify:artist:2p4FqHnazRucYQHyDCdBrJ",
+          "visuals": {
+            "avatarImage": {
+              "sources": [
+                {
+                  "height": 640,
+                  "url": "https://i.scdn.co/image/ab6761610000e5eb9e889e992f5dc0e7bb632713",
+                  "width": 640
+                },
+                {
+                  "height": 160,
+                  "url": "https://i.scdn.co/image/ab6761610000f1789e889e992f5dc0e7bb632713",
+                  "width": 160
+                },
+                {
+                  "height": 320,
+                  "url": "https://i.scdn.co/image/ab676161000051749e889e992f5dc0e7bb632713",
+                  "width": 320
+                }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "__typename": "AlbumResponseWrapper",
+        "_uri": "spotify:album:7MejfRSNnrpcLZIxkeZDqR",
+        "data": {
+          "__typename": "Album",
+          "artists": {
+            "items": [
+              {
+                "profile": {
+                  "name": "Kansas"
+                },
+                "uri": "spotify:artist:2hl0xAkS2AIRAu23TVMBG1"
+              }
+            ]
+          },
+          "coverArt": {
+            "sources": [
+              {
+                "height": 300,
+                "url": "https://i.scdn.co/image/ab67616d00001e021be40e44db112e123e5e8b51",
+                "width": 300
+              },
+              {
+                "height": 64,
+                "url": "https://i.scdn.co/image/ab67616d000048511be40e44db112e123e5e8b51",
+                "width": 64
+              },
+              {
+                "height": 640,
+                "url": "https://i.scdn.co/image/ab67616d0000b2731be40e44db112e123e5e8b51",
+                "width": 640
+              }
+            ]
+          },
+          "name": "Leftoverture (Expanded Edition)",
+          "uri": "spotify:album:7MejfRSNnrpcLZIxkeZDqR"
+        }
+      },
+      {
+        "__typename": "AlbumResponseWrapper",
+        "_uri": "spotify:album:2jxyIfyUY0yhPANWWrwnca",
+        "data": {
+          "__typename": "Album",
+          "artists": {
+            "items": [
+              {
+                "profile": {
+                  "name": "JJ Lin"
+                },
+                "uri": "spotify:artist:7Dx7RhX0mFuXhCOUgB01uM"
+              }
+            ]
+          },
+          "coverArt": {
+            "sources": [
+              {
+                "height": 300,
+                "url": "https://i.scdn.co/image/ab67616d00001e0290bcdb7a0c28de15b4d40062",
+                "width": 300
+              },
+              {
+                "height": 64,
+                "url": "https://i.scdn.co/image/ab67616d0000485190bcdb7a0c28de15b4d40062",
+                "width": 64
+              },
+              {
+                "height": 640,
+                "url": "https://i.scdn.co/image/ab67616d0000b27390bcdb7a0c28de15b4d40062",
+                "width": 640
+              }
+            ]
+          },
+          "name": "Like You Do",
+          "uri": "spotify:album:2jxyIfyUY0yhPANWWrwnca"
+        }
+      },
+      {
+        "__typename": "AlbumResponseWrapper",
+        "_uri": "spotify:album:5AEDGbliTTfjOB8TSm1sxt",
+        "data": {
+          "__typename": "Album",
+          "artists": {
+            "items": [
+              {
+                "profile": {
+                  "name": "Taylor Swift"
+                },
+                "uri": "spotify:artist:06HL4z0CvFAxyc27GXpf02"
+              }
+            ]
+          },
+          "coverArt": {
+            "sources": [
+              {
+                "height": 300,
+                "url": "https://i.scdn.co/image/ab67616d00001e020b04da4f224b51ff86e0a481",
+                "width": 300
+              },
+              {
+                "height": 64,
+                "url": "https://i.scdn.co/image/ab67616d000048510b04da4f224b51ff86e0a481",
+                "width": 64
+              },
+              {
+                "height": 640,
+                "url": "https://i.scdn.co/image/ab67616d0000b2730b04da4f224b51ff86e0a481",
+                "width": 640
+              }
+            ]
+          },
+          "name": "Speak Now (Taylor's Version)",
+          "uri": "spotify:album:5AEDGbliTTfjOB8TSm1sxt"
+        }
+      },
+      {
+        "__typename": "AlbumResponseWrapper",
+        "_uri": "spotify:album:6kZ42qRrzov54LcAk4onW9",
+        "data": {
+          "__typename": "Album",
+          "artists": {
+            "items": [
+              {
+                "profile": {
+                  "name": "Taylor Swift"
+                },
+                "uri": "spotify:artist:06HL4z0CvFAxyc27GXpf02"
+              }
+            ]
+          },
+          "coverArt": {
+            "sources": [
+              {
+                "height": 300,
+                "url": "https://i.scdn.co/image/ab67616d00001e02318443aab3531a0558e79a4d",
+                "width": 300
+              },
+              {
+                "height": 64,
+                "url": "https://i.scdn.co/image/ab67616d00004851318443aab3531a0558e79a4d",
+                "width": 64
+              },
+              {
+                "height": 640,
+                "url": "https://i.scdn.co/image/ab67616d0000b273318443aab3531a0558e79a4d",
+                "width": 640
+              }
+            ]
+          },
+          "name": "Red (Taylor's Version)",
+          "uri": "spotify:album:6kZ42qRrzov54LcAk4onW9"
+        }
+      },
+      {
+        "__typename": "AlbumResponseWrapper",
+        "_uri": "spotify:album:2luSxY6Y2fyFA9nK3OzVts",
+        "data": {
+          "__typename": "Album",
+          "artists": {
+            "items": [
+              {
+                "profile": {
+                  "name": "Mr.Children"
+                },
+                "uri": "spotify:artist:1qma7XhwZotCAucL7NHVLY"
+              }
+            ]
+          },
+          "coverArt": {
+            "sources": [
+              {
+                "height": 300,
+                "url": "https://i.scdn.co/image/ab67616d00001e0238bc031c333bd7828c3cc095",
+                "width": 300
+              },
+              {
+                "height": 64,
+                "url": "https://i.scdn.co/image/ab67616d0000485138bc031c333bd7828c3cc095",
+                "width": 64
+              },
+              {
+                "height": 640,
+                "url": "https://i.scdn.co/image/ab67616d0000b27338bc031c333bd7828c3cc095",
+                "width": 640
+              }
+            ]
+          },
+          "name": "miss you",
+          "uri": "spotify:album:2luSxY6Y2fyFA9nK3OzVts"
+        }
+      },
+      {
+        "__typename": "AlbumResponseWrapper",
+        "_uri": "spotify:album:2L9vhlQVpynwCRWGbjs8Ue",
+        "data": {
+          "__typename": "Album",
+          "artists": {
+            "items": [
+              {
+                "profile": {
+                  "name": "Mr.Children"
+                },
+                "uri": "spotify:artist:1qma7XhwZotCAucL7NHVLY"
+              }
+            ]
+          },
+          "coverArt": {
+            "sources": [
+              {
+                "height": 300,
+                "url": "https://i.scdn.co/image/ab67616d00001e02b3d2b9a5e0c638a6254bb5f4",
+                "width": 300
+              },
+              {
+                "height": 64,
+                "url": "https://i.scdn.co/image/ab67616d00004851b3d2b9a5e0c638a6254bb5f4",
+                "width": 64
+              },
+              {
+                "height": 640,
+                "url": "https://i.scdn.co/image/ab67616d0000b273b3d2b9a5e0c638a6254bb5f4",
+                "width": 640
+              }
+            ]
+          },
+          "name": "記憶の旅人",
+          "uri": "spotify:album:2L9vhlQVpynwCRWGbjs8Ue"
+        }
+      },
+      {
+        "__typename": "ArtistResponseWrapper",
+        "_uri": "spotify:artist:1qma7XhwZotCAucL7NHVLY",
+        "data": {
+          "__typename": "Artist",
+          "profile": {
+            "name": "Mr.Children"
+          },
+          "uri": "spotify:artist:1qma7XhwZotCAucL7NHVLY",
+          "visuals": {
+            "avatarImage": {
+              "sources": [
+                {
+                  "height": 640,
+                  "url": "https://i.scdn.co/image/ab6761610000e5eb76133e7ebec7005f5f9964a3",
+                  "width": 640
+                },
+                {
+                  "height": 160,
+                  "url": "https://i.scdn.co/image/ab6761610000f17876133e7ebec7005f5f9964a3",
+                  "width": 160
+                },
+                {
+                  "height": 320,
+                  "url": "https://i.scdn.co/image/ab6761610000517476133e7ebec7005f5f9964a3",
+                  "width": 320
+                }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "__typename": "ArtistResponseWrapper",
+        "_uri": "spotify:artist:1Mxqyy3pSjf8kZZL4QVxS0",
+        "data": {
+          "__typename": "Artist",
+          "profile": {
+            "name": "Frank Sinatra"
+          },
+          "uri": "spotify:artist:1Mxqyy3pSjf8kZZL4QVxS0",
+          "visuals": {
+            "avatarImage": {
+              "sources": [
+                {
+                  "height": 416,
+                  "url": "https://i.scdn.co/image/883de3e492364891543bc0313ffe516626778a16",
+                  "width": 640
+                },
+                {
+                  "height": 42,
+                  "url": "https://i.scdn.co/image/a283ecdc6252ae305c53d283846cae2e8b22e94c",
+                  "width": 64
+                },
+                {
+                  "height": 130,
+                  "url": "https://i.scdn.co/image/810f29651e05c9eae5a31f8151c2e05dc46390f9",
+                  "width": 200
+                },
+                {
+                  "height": 650,
+                  "url": "https://i.scdn.co/image/fc4e0f474fb4c4cb83617aa884dc9fd9822d4411",
+                  "width": 999
+                }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "__typename": "AlbumResponseWrapper",
+        "_uri": "spotify:album:1KEfhUPBUnf56x7Rh8KoG0",
+        "data": {
+          "__typename": "Album",
+          "artists": {
+            "items": [
+              {
+                "profile": {
+                  "name": "vaultboy"
+                },
+                "uri": "spotify:artist:0K87f3owemzI8NUCoEIXOB"
+              }
+            ]
+          },
+          "coverArt": {
+            "sources": [
+              {
+                "height": 300,
+                "url": "https://i.scdn.co/image/ab67616d00001e02c53d28897126f809d7b3c06f",
+                "width": 300
+              },
+              {
+                "height": 64,
+                "url": "https://i.scdn.co/image/ab67616d00004851c53d28897126f809d7b3c06f",
+                "width": 64
+              },
+              {
+                "height": 640,
+                "url": "https://i.scdn.co/image/ab67616d0000b273c53d28897126f809d7b3c06f",
+                "width": 640
+              }
+            ]
+          },
+          "name": "everything hits me at once",
+          "uri": "spotify:album:1KEfhUPBUnf56x7Rh8KoG0"
+        }
+      },
+      {
+        "__typename": "AlbumResponseWrapper",
+        "_uri": "spotify:album:5GsSoccwm4oOWG2l50yM8B",
+        "data": {
+          "__typename": "Album",
+          "artists": {
+            "items": [
+              {
+                "profile": {
+                  "name": "IVE"
+                },
+                "uri": "spotify:artist:6RHTUrRF63xao58xh9FXYJ"
+              }
+            ]
+          },
+          "coverArt": {
+            "sources": [
+              {
+                "height": 300,
+                "url": "https://i.scdn.co/image/ab67616d00001e024b2628b8a9cdb1fc37a687f6",
+                "width": 300
+              },
+              {
+                "height": 64,
+                "url": "https://i.scdn.co/image/ab67616d000048514b2628b8a9cdb1fc37a687f6",
+                "width": 64
+              },
+              {
+                "height": 640,
+                "url": "https://i.scdn.co/image/ab67616d0000b2734b2628b8a9cdb1fc37a687f6",
+                "width": 640
+              }
+            ]
+          },
+          "name": "WAVE",
+          "uri": "spotify:album:5GsSoccwm4oOWG2l50yM8B"
+        }
+      },
+      {
+        "__typename": "AlbumResponseWrapper",
+        "_uri": "spotify:album:1V78TBOwsEy3F87x0rAxhO",
+        "data": {
+          "__typename": "Album",
+          "artists": {
+            "items": [
+              {
+                "profile": {
+                  "name": "vaultboy"
+                },
+                "uri": "spotify:artist:0K87f3owemzI8NUCoEIXOB"
+              }
+            ]
+          },
+          "coverArt": {
+            "sources": [
+              {
+                "height": 300,
+                "url": "https://i.scdn.co/image/ab67616d00001e022e83d68593643bd2ead5b61e",
+                "width": 300
+              },
+              {
+                "height": 64,
+                "url": "https://i.scdn.co/image/ab67616d000048512e83d68593643bd2ead5b61e",
+                "width": 64
+              },
+              {
+                "height": 640,
+                "url": "https://i.scdn.co/image/ab67616d0000b2732e83d68593643bd2ead5b61e",
+                "width": 640
+              }
+            ]
+          },
+          "name": "everything and nothing",
+          "uri": "spotify:album:1V78TBOwsEy3F87x0rAxhO"
+        }
+      },
+      {
+        "__typename": "PlaylistResponseWrapper",
+        "_uri": "spotify:playlist:5KdYwEOaaug9Fk1VpYEhqk",
+        "data": {
+          "__typename": "Playlist",
+          "attributes": [],
+          "description": "",
+          "format": "",
+          "images": {
+            "items": [
+              {
+                "sources": [
+                  {
+                    "height": null,
+                    "url": "https://i2o.scdn.co/image/ab67706c0000cfa3e204d4349ced9ee95b7b5aa6",
+                    "width": null
+                  }
+                ]
+              }
+            ]
+          },
+          "name": "LCK",
+          "ownerV2": {
+            "data": {
+              "__typename": "User",
+              "name": "Chris",
+              "uri": "spotify:user:7ucghdgquf6byqusqkliltwc2",
+              "username": "7ucghdgquf6byqusqkliltwc2"
+            }
+          },
+          "uri": "spotify:playlist:5KdYwEOaaug9Fk1VpYEhqk"
+        }
+      }
+    ]
+  },
+  "extensions": {
+    "requestIds": {}
+  }
+}

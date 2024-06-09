@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <RootNamespace>Wavee.UI.Spotify</RootNamespace>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    </PropertyGroup>
+    <ItemGroup>
+        <PackageReference Include="CommunityToolkit.HighPerformance" Version="8.2.2" />
+        <PackageReference Include="Nito.AsyncEx" Version="5.1.2" />
+        <PackageReference Include="NodaTime" Version="3.1.11" />
+        <PackageReference Include="Refit" Version="7.0.0" />
+        <PackageReference Include="System.Reactive" Version="6.0.1" />
+    </ItemGroup>
+    <ItemGroup>
+      <ProjectReference Include="..\Wavee.Contracts\Wavee.Contracts.csproj" />
+      <ProjectReference Include="..\Wavee.Spotify.Proto\Wavee.Spotify.Proto.csproj" />
+    </ItemGroup>
+</Project>
