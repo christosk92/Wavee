@@ -1,9 +1,11 @@
 ﻿using System.Reactive.Linq;
 using Eum.Spotify.connectstate;
+using Wavee;
 using Wavee.UI.Spotify;
 using Wavee.UI.Spotify.Auth;
 
-var client = new SpotifyClient(new SpotifyConfig(new SpotifyOAuthConfiguration(OpenBrowserRequest)));
+var player = new WaveePlayer();
+var client = new SpotifyClient(new SpotifyConfig(new SpotifyOAuthConfiguration(OpenBrowserRequest), player));
 
 ValueTask OpenBrowserRequest(string url)
 {

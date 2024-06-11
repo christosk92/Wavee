@@ -9,6 +9,7 @@ using Microsoft.VisualBasic;
 using Refit;
 using Wavee.UI.Spotify.ContentSerializers;
 using Wavee.UI.Spotify.Interfaces;
+using Wavee.UI.Spotify.Interfaces.Api;
 using Wavee.UI.Spotify.Responses;
 
 namespace Wavee.UI.Spotify.Auth;

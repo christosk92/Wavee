@@ -73,7 +73,7 @@ internal sealed partial class SpotifyMessageHandler : ISpotifyMessageHandler
     private void HandleCluster(JsonElement root, Dictionary<string, string> messageHeaders)
     {
         var payload = SpotifyWsUtils.ReadPayload(root, messageHeaders);
-        var clusterUpdate = ClusterUpdate.Parser.ParseFrom(payload.Span);
+        var clusterUpdate = ClusterUpdate.Parser.ParseFrom(payload);
         _cluster.OnNext(clusterUpdate.Cluster);
     }
 

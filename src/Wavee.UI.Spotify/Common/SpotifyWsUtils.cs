@@ -10,9 +10,9 @@ namespace Wavee.UI.Spotify.Common;
 
 internal static class SpotifyWsUtils
 {
-    public static ReadOnlyMemory<byte> ReadPayload(JsonElement messageRootElement, Dictionary<string, string> headers)
+    public static ReadOnlySpan<byte> ReadPayload(JsonElement messageRootElement, Dictionary<string, string> headers)
     {
-        Memory<byte> payload = Memory<byte>.Empty;
+        Span<byte> payload = Span<byte>.Empty;
         var gzip = false;
         var plainText = false;
         if (headers.TryGetValue("Transfer-Encoding", out var trnsfEncoding))
@@ -52,7 +52,7 @@ internal static class SpotifyWsUtils
             var offset = 0;
             foreach (var payloadPart in payloads)
             {
-                payloadPart.CopyTo(payload.Slice(offset));
+                payloadPart.Span.CopyTo(payload.Slice(offset));
                 offset += payloadPart.Length;
             }
         }
@@ -69,7 +69,7 @@ internal static class SpotifyWsUtils
         }
         else
         {
-            payload = Memory<byte>.Empty;
+            payload = Span<byte>.Empty;
         }
 
         switch (gzip)
@@ -79,7 +79,7 @@ internal static class SpotifyWsUtils
                 break;
             case true:
             {
-                payload = UnsafeDecompressAltAsMemory(payload.Span);
+                payload = UnsafeDecompressAltAsMemory(payload);
                 break;
             }
             default:
@@ -90,7 +90,7 @@ internal static class SpotifyWsUtils
         return payload;
     }
     
-    public static unsafe Memory<byte> UnsafeDecompressAltAsMemory(ReadOnlySpan<byte> compressedData)
+    public static unsafe Span<byte> UnsafeDecompressAltAsMemory(ReadOnlySpan<byte> compressedData)
     {
         fixed (byte* pBuffer = &compressedData[0])
         {

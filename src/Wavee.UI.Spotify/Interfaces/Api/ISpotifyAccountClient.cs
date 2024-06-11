@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using Refit;
 using Wavee.UI.Spotify.Responses;
 
-namespace Wavee.UI.Spotify.Interfaces;
+namespace Wavee.UI.Spotify.Interfaces.Api;
 
 public interface ISpotifyAccountClient
 {

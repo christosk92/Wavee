@@ -13,12 +13,12 @@ using Google.Protobuf;
 using OneOf;
 using Wavee.Contracts.Common;
 using Wavee.Contracts.Enums;
+using Wavee.Contracts.Interfaces;
 using Wavee.Contracts.Interfaces.Contracts;
 using Wavee.UI.Spotify.Clients;
 using Wavee.UI.Spotify.Common;
 using Wavee.UI.Spotify.Interfaces;
 using Wavee.UI.Spotify.Interfaces.Api;
-using Wavee.UI.Spotify.Remote;
 
 namespace Wavee.UI.Spotify.Playback;
 
@@ -40,7 +40,7 @@ internal class SpotifyPlaybackDevice : IPlaybackDevice
         new(PlaybackConnectionStatusType.Disconnected);
 
     private readonly SpotifyMessageHandler _messageHandler = new();
-    private readonly SpotifyRequestHandler _requestHandler = new();
+    private readonly SpotifyRequestHandler _requestHandler;
 
     public SpotifyPlaybackDevice(string deviceId,
         string name,
@@ -48,8 +48,10 @@ internal class SpotifyPlaybackDevice : IPlaybackDevice
         ISpClient spClient,
         SpotifyTokenClient tokensClient,
         SpotifyClient parentClient,
-        ISpotifyWebsocketConnectionFactory connectionFactory)
+        ISpotifyWebsocketConnectionFactory connectionFactory,
+        IWaveePlayer player)
     {
+        _requestHandler = new SpotifyRequestHandler(player, (SpotifyPlaybackClient)parentClient.Playback);
         _deviceId = deviceId;
         _name = name;
         _type = type;

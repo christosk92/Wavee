@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using Eum.Spotify.login5v3;
 using Refit;
 
-namespace Wavee.UI.Spotify.Interfaces;
+namespace Wavee.UI.Spotify.Interfaces.Api;
 
 public interface ISpotifyLoginClient
 {

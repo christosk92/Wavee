@@ -32,4 +32,6 @@ public static class SpotifyConstants
 
     public const string Scopes =
         "playlist-modify ugc-image-upload user-follow-read user-read-email user-read-private app-remote-control streaming user-follow-modify user-modify-playback-state user-library-modify playlist-modify-public playlist-read user-read-birthdate user-top-read playlist-read-private playlist-read-collaborative user-modify-private playlist-modify-private user-modify user-library-read user-personalized user-read-play-history user-read-playback-state user-read-currently-playing user-read-recently-played user-read-playback-position";
+
+    public const int ChunkSize = 2 * 2 * 128 * 1024;
 }

@@ -40,6 +40,7 @@ public sealed class SpotifyException : Exception
             SpotifyFailureReason.AuthFailure => "The Spotify API authentication failed.",
             SpotifyFailureReason.InvalidId => "The Spotify ID is invalid.",
             SpotifyFailureReason.AudioKeyError => "The Spotify audio key could not be retrieved.",
+            SpotifyFailureReason.CannotPlayTrack => "The Spotify track could not be played. Check message for more details.",
             _ => throw new ArgumentOutOfRangeException(nameof(reason), reason, null)
         };
     }
@@ -51,5 +52,6 @@ public enum SpotifyFailureReason
     RateLimited,
     AuthFailure,
     InvalidId,
-    AudioKeyError
+    AudioKeyError,
+    CannotPlayTrack
 }

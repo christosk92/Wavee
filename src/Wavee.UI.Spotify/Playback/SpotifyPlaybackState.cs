@@ -1,10 +1,8 @@
-using System;
 using Wavee.Contracts.Common;
 using Wavee.Contracts.Enums;
-using Wavee.Contracts.Interfaces;
 using Wavee.Contracts.Interfaces.Contracts;
 
-namespace Wavee.UI.Spotify.Remote;
+namespace Wavee.UI.Spotify.Playback;
 
 internal sealed class SpotifyPlaybackState : IPlaybackState
 {

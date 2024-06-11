@@ -42,7 +42,7 @@ public sealed class SpotifyClient : IAccountClient
         {
             ContentSerializer = new SystemTextJsonContentSerializer(contentSerializer)
         });
-        
+
         var gzipDecompressionHandler = new GzipDecompressionHandler(customHandler);
         var gzipCompressionHandler = new GzipCompressionHandler(gzipDecompressionHandler);
         var refitSettings = new RefitSettings
@@ -55,13 +55,14 @@ public sealed class SpotifyClient : IAccountClient
         };
         var spClient = RestService.For<ISpClient>(spHttpClient, refitSettings);
         var connectionFactory = new SpotifyWebsocketConnectionFactory();
-        
+
         Home = new SpotifyHomeClient(partnerApi);
         Tracks = new SpotifyTrackClient(spClient);
         Episodes = new SpotifyEpisodeClient(spClient);
-        
-        
-        Playback = new SpotifyPlaybackClient(spClient, tokensClient, config.DeviceId, this, DeviceConnected, connectionFactory);
+
+
+        Playback = new SpotifyPlaybackClient(spClient, tokensClient, config.DeviceId, this, DeviceConnected,
+            connectionFactory, config.Player);
     }
 
     public IHomeClient Home { get; }

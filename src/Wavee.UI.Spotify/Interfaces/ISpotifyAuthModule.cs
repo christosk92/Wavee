@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Eum.Spotify;
 using Wavee.UI.Spotify.Common;
+using Wavee.UI.Spotify.Interfaces.Api;
 
 namespace Wavee.UI.Spotify.Interfaces;
 

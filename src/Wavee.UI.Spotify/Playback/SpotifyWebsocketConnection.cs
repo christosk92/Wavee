@@ -26,7 +26,8 @@ internal sealed class SpotifyWebsocketConnection : ISpotifyWebsocketConnection
     private readonly ISpotifyMessageHandler _messageHandler;
     private readonly ISpotifyRequestHandler _requestHandler;
 
-    public SpotifyWebsocketConnection(string url, ISpotifyMessageHandler messageHandler, ISpotifyRequestHandler requestHandler)
+    public SpotifyWebsocketConnection(string url, ISpotifyMessageHandler messageHandler,
+        ISpotifyRequestHandler requestHandler)
     {
         _url = url;
         _messageHandler = messageHandler;
@@ -38,11 +39,21 @@ internal sealed class SpotifyWebsocketConnection : ISpotifyWebsocketConnection
         Task.Factory.StartNew(async () =>
         {
             await _waitForConnection.WaitAsync(_cts.Token);
-            try
+            while (!_cts.Token.IsCancellationRequested)
             {
-                while (!_cts.Token.IsCancellationRequested)
+                JsonDocument message;
+                try
                 {
-                    using var message = await ReadNextMessageAsync(_cts.Token);
+                    message = await ReadNextMessageAsync(_cts.Token);
+                }
+                catch (Exception e)
+                {
+                    Disconnected?.Invoke(this, (e, _socket.CloseStatus));
+                    break;
+                }
+
+                try
+                {
                     var root = message.RootElement;
                     var messageHeaders = new Dictionary<string, string>();
                     if (root.TryGetProperty("headers", out var headersElement))
@@ -71,15 +82,17 @@ internal sealed class SpotifyWebsocketConnection : ISpotifyWebsocketConnection
                         }
                     }
                 }
+                catch (Exception e)
+                {
+                    Debug.WriteLine(e);
+                }
+                finally
+                {
+                    message.Dispose();
+                }
             }
-            catch (Exception e)
-            {
-                Disconnected?.Invoke(this, (e, _socket.CloseStatus));
-            }
-            finally
-            {
-                _cts.Dispose();
-            }
+
+            _cts.Dispose();
         });
     }
 
@@ -137,7 +150,7 @@ internal sealed class SpotifyWebsocketConnection : ISpotifyWebsocketConnection
         _socket?.Dispose();
         _cts.Cancel();
     }
-    
+
     private async Task HandleCommandAsync(JsonElement cmd, uint messageId, string sentBy)
     {
         var endpoint = cmd.GetProperty("endpoint").GetString();
@@ -156,5 +169,4 @@ internal sealed class SpotifyWebsocketConnection : ISpotifyWebsocketConnection
     {
         throw new NotImplementedException();
     }
-    
 }
