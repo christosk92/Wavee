@@ -1,0 +1,37 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Service\**" />
+    <Compile Include="Service\SingleInstanceChecker.cs" />
+    <Compile Include="Service\TerminateService.cs" />
+    <EmbeddedResource Remove="Service\**" />
+    <None Remove="Service\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\lib\Wavee.Spotify.Proto\Wavee.Spotify.Proto.csproj" />
+    <ProjectReference Include="..\..\lib\Wavee\Wavee.csproj" />
+    <!-- See explanation of the additional properties here: https://github.com/dotnet/roslyn/issues/60744#issuecomment-1438273464 -->
+    <ProjectReference Include="..\Wavee.UI.Generators\Wavee.UI.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" AdditionalProperties="IsRidAgnostic=true" />
+  </ItemGroup>
+
+
+  <ItemGroup>
+    <PackageReference Include="DynamicData" Version="9.0.4" />
+    <PackageReference Include="LibVLCSharp" Version="3.9.0" />
+    <PackageReference Include="Microsoft.Win32.SystemEvents" Version="9.0.0-rc.2.24473.5" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="ReactiveUI" Version="20.1.63" />
+    <PackageReference Include="Serilog" Version="4.1.0-dev-02238" />
+    <PackageReference Include="Serilog.Extensions.Hosting" Version="8.0.0" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
+    <PackageReference Include="Serilog.Sinks.Debug" Version="3.0.0" />
+  </ItemGroup>
+
+</Project>

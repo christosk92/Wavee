@@ -1,0 +1,51 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <PublishAot>true</PublishAot>
+        <PublishAot>true</PublishAot>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="CommunityToolkit.HighPerformance" Version="8.3.2" />
+      <PackageReference Include="DynamicData" Version="9.0.4" />
+      <PackageReference Include="Google.Protobuf" Version="3.29.0-rc1" />
+      <PackageReference Include="Microsoft.Data.Sqlite" Version="9.0.0-rc.2.24474.1" />
+      <PackageReference Include="Microsoft.Extensions.Http.Resilience" Version="9.0.0-preview.9.24507.7" />
+      <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.0-rc.2.24473.5" />
+      <PackageReference Include="NeoSmart.AsyncLock" Version="3.2.1" />
+      <PackageReference Include="Nito.AsyncEx.Coordination" Version="5.1.2" />
+      <PackageReference Include="System.Reactive" Version="6.0.1" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Wavee.Spotify.Proto\Wavee.Spotify.Proto.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Exceptions\Network\" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Remove="unplayplay.dll" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Remove="Assets\Windows\unplayplay.dll" />
+      <Content Include="Assets\Windows\unplayplay.dll">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <None Remove="Assets\Win32\re-unplayplay-csharp.dll" />
+      <Content Include="Assets\Win32\re-unplayplay-csharp.dll">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <None Remove="Assets\WinArm\re-unplayplay-csharp-arm.dll" />
+      <Content Include="Assets\WinArm\re-unplayplay-csharp.dll">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+    </ItemGroup>
+
+</Project>

@@ -1,0 +1,197 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:controls="using:Wavee.UI.WinUI.Controls"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:media="using:Microsoft.UI.Xaml.Media"
+                    xmlns:interactivity="using:Microsoft.Xaml.Interactivity"
+                    xmlns:core="using:Microsoft.Xaml.Interactions.Core">
+
+    <!-- Custom Style for CustomDialog -->
+    <Style TargetType="controls:CustomDialog">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="controls:CustomDialog">
+                    <Grid x:Name="RootGrid"
+                          Background="Transparent"
+                          HorizontalAlignment="Stretch"
+                          VerticalAlignment="Stretch">
+
+                        <!-- Overlay -->
+                        <Grid x:Name="Overlay"
+                              Background="{TemplateBinding OverlayBackground}"
+                              Opacity="0"
+                              IsHitTestVisible="False" />
+
+                        <!-- Dialog Host -->
+                        <Grid x:Name="DialogHost"
+                              HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                              VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                              Margin="{TemplateBinding DialogMargin}"
+                              Opacity="0"
+                              IsHitTestVisible="False">
+
+                            <!-- Dialog Border -->
+                            <Border x:Name="DialogBorder"
+                                    Background="{TemplateBinding DialogBackground}"
+                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                    BorderThickness="{TemplateBinding BorderThickness}"
+                                    CornerRadius="{TemplateBinding CornerRadius}"
+                                    Margin="{TemplateBinding BorderMargin}">
+
+                                <!-- Content Presenter -->
+                                <ContentPresenter x:Name="ContentPresenter"
+                                                  Content="{TemplateBinding Content}"
+                                                  ContentTemplate="{TemplateBinding ContentTemplate}"
+                                                  Margin="{TemplateBinding ContentMargin}"
+                                                  HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                                  VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
+
+                            </Border>
+                        </Grid>
+
+                        <!-- Visual States -->
+                        <VisualStateManager.VisualStateGroups>
+                            <!-- Dialog Open/Closed States -->
+                            <VisualStateGroup x:Name="DialogStates">
+                                <VisualState x:Name="Closed">
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="Overlay"
+                                                         Storyboard.TargetProperty="Opacity"
+                                                         To="0"
+                                                         Duration="0" />
+                                        <DoubleAnimation Storyboard.TargetName="DialogHost"
+                                                         Storyboard.TargetProperty="Opacity"
+                                                         To="0"
+                                                         Duration="0" />
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="Overlay"
+                                                                       Storyboard.TargetProperty="IsHitTestVisible">
+                                            <DiscreteObjectKeyFrame KeyTime="0"
+                                                                    Value="False" />
+                                        </ObjectAnimationUsingKeyFrames>
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="DialogHost"
+                                                                       Storyboard.TargetProperty="IsHitTestVisible">
+                                            <DiscreteObjectKeyFrame KeyTime="0"
+                                                                    Value="False" />
+                                        </ObjectAnimationUsingKeyFrames>
+                                    </Storyboard>
+                                </VisualState>
+                                <VisualState x:Name="Open">
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="Overlay"
+                                                         Storyboard.TargetProperty="Opacity"
+                                                         To="1"
+                                                         Duration="0:0:0.25" />
+                                        <DoubleAnimation Storyboard.TargetName="DialogHost"
+                                                         Storyboard.TargetProperty="Opacity"
+                                                         To="1"
+                                                         Duration="0:0:0.25" />
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="Overlay"
+                                                                       Storyboard.TargetProperty="IsHitTestVisible">
+                                            <DiscreteObjectKeyFrame KeyTime="0"
+                                                                    Value="True" />
+                                        </ObjectAnimationUsingKeyFrames>
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="DialogHost"
+                                                                       Storyboard.TargetProperty="IsHitTestVisible">
+                                            <DiscreteObjectKeyFrame KeyTime="0"
+                                                                    Value="True" />
+                                        </ObjectAnimationUsingKeyFrames>
+                                    </Storyboard>
+                                </VisualState>
+                            </VisualStateGroup>
+
+                            <!-- Busy States -->
+                            <VisualStateGroup x:Name="BusyStates">
+                                <VisualState x:Name="NormalState" />
+                                <VisualState x:Name="BusyState">
+                                    <!-- Define visual changes when busy (e.g., show a ProgressRing) -->
+                                    <VisualState.Setters>
+                                        <!-- Example: You can overlay a semi-transparent grid with a ProgressRing -->
+                                    </VisualState.Setters>
+                                </VisualState>
+                            </VisualStateGroup>
+
+                            <!-- Alert State -->
+                            <VisualStateGroup x:Name="AlertStates">
+                                <VisualState x:Name="NoAlertState" />
+                                <VisualState x:Name="AlertState">
+                                    <Storyboard RepeatBehavior="1x">
+                                        <!-- Simulate the BoxShadow animation -->
+                                        <ColorAnimationUsingKeyFrames Storyboard.TargetName="DialogBorder"
+                                                                      Storyboard.TargetProperty="(Border.BorderBrush).(SolidColorBrush.Color)">
+                                            <DiscreteColorKeyFrame KeyTime="0:0:0.15"
+                                                                   Value="Red" />
+                                            <DiscreteColorKeyFrame KeyTime="0:0:0.3"
+                                                                   Value="Transparent" />
+                                            <DiscreteColorKeyFrame KeyTime="0:0:0.45"
+                                                                   Value="Red" />
+                                            <DiscreteColorKeyFrame KeyTime="0:0:0.6"
+                                                                   Value="Transparent" />
+                                        </ColorAnimationUsingKeyFrames>
+                                    </Storyboard>
+                                </VisualState>
+                            </VisualStateGroup>
+
+                            <!-- Size States -->
+                            <VisualStateGroup x:Name="SizeStates">
+                                <VisualState x:Name="NormalSize" />
+                                <VisualState x:Name="IncreasedWidthEnabled">
+                                    <VisualState.Setters>
+                                        <Setter Target="DialogBorder.Margin"
+                                                Value="{TemplateBinding IncreasedWidthMargin}" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="IncreasedHeightEnabled">
+                                    <VisualState.Setters>
+                                        <Setter Target="DialogBorder.Margin"
+                                                Value="{TemplateBinding IncreasedHeightMargin}" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="IncreasedSizeEnabled">
+                                    <VisualState.Setters>
+                                        <Setter Target="DialogBorder.Margin"
+                                                Value="{TemplateBinding IncreasedSizeMargin}" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="FullScreenEnabled">
+                                    <VisualState.Setters>
+                                        <Setter Target="DialogBorder.Margin"
+                                                Value="{TemplateBinding FullScreenMargin}" />
+                                        <Setter Target="DialogBorder.BorderThickness"
+                                                Value="0" />
+                                        <!-- Additional properties for fullscreen -->
+                                    </VisualState.Setters>
+                                </VisualState>
+                            </VisualStateGroup>
+                        </VisualStateManager.VisualStateGroups>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+
+        <!-- Default Property Values -->
+        <Setter Property="OverlayBackground"
+                Value="{ThemeResource ContentDialogOverlayBackground}" />
+        <Setter Property="DialogBackground"
+                Value="{ThemeResource ContentDialogBackground}" />
+        <Setter Property="BorderBrush"
+                Value="{ThemeResource ContentDialogBorderBrush}" />
+        <Setter Property="BorderThickness"
+                Value="1" />
+        <Setter Property="CornerRadius"
+                Value="8" />
+        <Setter Property="DialogMargin"
+                Value="20,30,20,20" />
+        <Setter Property="BorderMargin"
+                Value="40" />
+        <Setter Property="ContentMargin"
+                Value="16,28,16,16" />
+        <!-- Margins for different size states -->
+        <Setter Property="IncreasedWidthMargin"
+                Value="0,40,0,0" />
+        <Setter Property="IncreasedHeightMargin"
+                Value="40,0,0,0" />
+        <Setter Property="IncreasedSizeMargin"
+                Value="0,0,0,0" />
+        <Setter Property="FullScreenMargin"
+                Value="0,30,0,0" />
+    </Style>
+</ResourceDictionary>
